@@ -1,7 +1,6 @@
 import {
   CSSProperties,
   memo,
-  PropsWithChildren,
   useCallback,
   useState,
   useTransition,
@@ -9,12 +8,7 @@ import {
 import NextImage from "next/image";
 import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
 import { OwnedObjekt } from "@/lib/universal/cosmo/objekts";
-import {
-  getObjektArtist,
-  getObjektSlug,
-  getObjektType,
-  replaceUrlSize,
-} from "./objekt-util";
+import { getObjektSlug, replaceUrlSize } from "./objekt-util";
 import { Badge, GridList, Tabs, Modal } from "../ui";
 import Tilt from "react-parallax-tilt";
 import TradeView from "./trade-view";
@@ -22,6 +16,7 @@ import ObjektSidebar from "./objekt-sidebar";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { useMediaQuery } from "usehooks-ts";
+import { AttributePanel } from "./objekt-attribute";
 
 type Props = {
   objekts: ValidObjekt[];
@@ -271,30 +266,6 @@ function ObjektDetail({ objekts, isOwned = false }: ObjektDetailProps) {
   );
 }
 
-function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
-  const artist = getObjektArtist(objekt);
-  const onOffline = getObjektType(objekt);
-  return (
-    <div className="flex flex-wrap gap-2 p-2">
-      <Pill label="Artist" value={artist} />
-      <Pill label="Member" value={objekt.member} />
-      <Pill label="Season" value={objekt.season} />
-      <Pill label="Class" value={objekt.class} />
-      <Pill
-        label="Type"
-        value={onOffline === "online" ? "Digital" : "Physical"}
-      />
-      <Pill label="Collection No." value={objekt.collectionNo} />
-      <PillColor
-        label="Accent Color"
-        value={objekt.accentColor.toUpperCase()}
-        objekt={objekt}
-      />
-      <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />
-    </div>
-  );
-}
-
 function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
   return (
     <GridList
@@ -309,38 +280,5 @@ function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
         </GridList.Item>
       )}
     </GridList>
-  );
-}
-
-type PillProps = {
-  label: string;
-  value: string;
-  objekt?: ValidObjekt;
-};
-
-function Pill({ label, value }: PillProps) {
-  return (
-    <Badge intent="secondary" className="" shape="square">
-      <span className="font-semibold">{label}</span>
-      <span>{value}</span>
-    </Badge>
-  );
-}
-
-function PillColor({ label, value, objekt }: PillProps) {
-  return (
-    <Badge
-      shape="square"
-      style={
-        {
-          "--objekt-accent-color": objekt?.accentColor,
-          "--objekt-text-color": objekt?.textColor,
-        } as CSSProperties
-      }
-      className="!bg-[var(--objekt-accent-color)] !text-[var(--objekt-text-color)]"
-    >
-      <span className="font-semibold">{label}</span>
-      <span>{value}</span>
-    </Badge>
   );
 }

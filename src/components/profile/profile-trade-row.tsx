@@ -8,8 +8,7 @@ import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
 import { memo, useState } from "react";
 import { ObjektModal } from "../objekt/objekt-view";
 import { IconOpenLink } from "justd-icons";
-
-const nullAddress = "0x0000000000000000000000000000000000000000";
+import { NULL_ADDRESS } from "@/lib/utils";
 
 export default memo(function TradeRow({
   row,
@@ -40,7 +39,7 @@ export default memo(function TradeRow({
   const onOpen = () => setOpen(true);
 
   const user = isReceiver ? (
-    row.transfer.from === nullAddress ? (
+    row.transfer.from === NULL_ADDRESS ? (
       <span>COSMO</span>
     ) : (
       <UserLink address={row.transfer.from} nickname={row.fromNickname} />

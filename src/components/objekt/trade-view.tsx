@@ -13,24 +13,20 @@ import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import UserLink from "../user-link";
+import { ObjektSerial, ObjektTransfer } from "./common";
 
 type TradeViewProps = {
   slug: string;
   initialSerial?: number;
 };
 
-type ObjektSerial = {
-  serial: number;
-  owner: string;
-  transferable: boolean;
-};
-
-type ObjektTransfer = {
-  id: string;
-  to: string;
-  timestamp: Date;
-  nickname?: string;
-};
+export const fetchObjektsQuery = (slug: string) => ({
+  queryKey: ["objekts", "list", slug],
+  queryFn: async ({}) =>
+    await ofetch<{ objekts: ObjektSerial[] }>(`/api/objekts/list/${slug}`).then(
+      (res) => res.objekts
+    ),
+});
 
 export default function TradeView({ ...props }: TradeViewProps) {
   return (
@@ -53,13 +49,7 @@ export default function TradeView({ ...props }: TradeViewProps) {
 }
 
 function TradeViewRender({ slug, initialSerial }: TradeViewProps) {
-  const { data } = useSuspenseQuery({
-    queryKey: ["objekts", "list", slug],
-    queryFn: async ({ signal }) =>
-      await ofetch<{ objekts: ObjektSerial[] }>(`/api/objekts/list/${slug}`, {
-        signal,
-      }).then((res) => res.objekts),
-  });
+  const { data } = useSuspenseQuery(fetchObjektsQuery(slug));
 
   const objekts = useMemo(() => data ?? [], [data]);
 

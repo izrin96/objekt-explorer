@@ -18,10 +18,9 @@ export default function UserSearch() {
 
   const { status, data } = useQuery({
     queryKey: ["user-search", debouncedQuery],
-    queryFn: ({ signal }) => {
+    queryFn: () => {
       return ofetch<CosmoSearchResult>(`/api/user/search`, {
         query: { query: query },
-        signal,
       }).then((res) => res.results);
     },
     enabled: enable,
