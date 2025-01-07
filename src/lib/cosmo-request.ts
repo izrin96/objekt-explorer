@@ -1,6 +1,7 @@
 import { ofetch } from "ofetch";
 import { COSMO_ENDPOINT } from "./universal/cosmo/common";
 import { OwnedObjektsResult } from "./universal/cosmo/objekts";
+import { overrideColor } from "./utils";
 
 const RESULT_OBJEKTS_COUNT = 30;
 const PARALLEL_REQUEST_COUNT = 5;
@@ -8,14 +9,6 @@ const PARALLEL_REQUEST_COUNT = 5;
 type OwnedObjektRequest = {
   address: string;
   startAfter: number;
-};
-
-const overrideColors: Record<string, string> = {
-  "Divine01 SeoYeon 117Z": "#B400FF",
-  "Divine01 SeoYeon 118Z": "#B400FF",
-  "Divine01 SeoYeon 119Z": "#B400FF",
-  "Divine01 SeoYeon 120Z": "#B400FF",
-  "Divine01 SeoYeon 317Z": "#df2e37",
 };
 
 export async function fetchOwnedObjekts({
@@ -39,19 +32,10 @@ export async function fetchOwnedObjekts({
     })
     .then((res) => ({
       ...res,
-      objekts: res.objekts.map((objekt) => {
-        // temporary fix accent color for some collection
-        const accentColor = overrideColors[objekt.collectionId];
-        if (accentColor) {
-          return {
-            ...objekt,
-            backgroundColor: accentColor,
-            accentColor: accentColor,
-          };
-        }
-
-        return objekt;
-      }),
+      objekts: res.objekts.map((objekt) => ({
+        ...objekt,
+        ...overrideColor(objekt),
+      })),
     }));
 }
 
