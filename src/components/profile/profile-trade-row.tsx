@@ -5,10 +5,10 @@ import { AggregatedTransfer } from "@/lib/universal/transfers";
 import UserLink from "../user-link";
 import { format } from "date-fns";
 import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
-import { memo, useState } from "react";
-import { ObjektModal } from "../objekt/objekt-view";
+import { memo, useCallback } from "react";
 import { IconOpenLink } from "justd-icons";
 import { NULL_ADDRESS } from "@/lib/utils";
+import { useObjektModal } from "@/hooks/use-objekt-modal";
 
 export default memo(function TradeRow({
   row,
@@ -17,7 +17,7 @@ export default memo(function TradeRow({
   row: AggregatedTransfer;
   address: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const { openObjekts } = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const tdClass = "group whitespace-nowrap px-3 py-3";
@@ -36,7 +36,18 @@ export default memo(function TradeRow({
     </Badge>
   );
 
-  const onOpen = () => setOpen(true);
+  const onOpen = useCallback(
+    () =>
+      row.collection &&
+      openObjekts([
+        {
+          ...row.collection,
+          artists: [row.collection.artist],
+          objektNo: row.serial,
+        } as ValidObjekt,
+      ]),
+    [row, openObjekts]
+  );
 
   const user = isReceiver ? (
     row.transfer.from === NULL_ADDRESS ? (
@@ -67,21 +78,6 @@ export default memo(function TradeRow({
         <td className={tdClass}>{action}</td>
         <td className={tdClass}>{user}</td>
       </tr>
-
-      {row.collection && (
-        <ObjektModal
-          open={open}
-          isOwned
-          objekts={[
-            {
-              ...row.collection,
-              artists: [row.collection.artist],
-              objektNo: row.serial,
-            } as ValidObjekt,
-          ]}
-          onClose={() => setOpen(false)}
-        />
-      )}
     </>
   );
 });

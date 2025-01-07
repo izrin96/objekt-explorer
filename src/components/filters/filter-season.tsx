@@ -2,7 +2,7 @@
 
 import { type Selection } from "@react-types/shared";
 import { ValidSeason, validSeasons } from "@/lib/universal/cosmo/common";
-import { useMemo, useCallback, memo } from "react";
+import { useMemo, useCallback } from "react";
 import { Menu, Button } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
 

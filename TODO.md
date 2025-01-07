@@ -1,6 +1,6 @@
 ## todo
 
-- [ ] fix performance issue with modal
+- [x] fix performance issue with modal
 - [ ] group by
 - [ ] transfer objekt
 - [ ] filter by date in user trade history

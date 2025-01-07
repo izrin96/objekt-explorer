@@ -130,7 +130,7 @@ function ProfileObjekt({ profile, artists }: Props) {
         </span>
       </div>
 
-      <ObjektModalProvider initialTab="owned">
+      <ObjektModalProvider initialTab="owned" isOwned>
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
     </div>
