@@ -1,6 +1,7 @@
-import { RefreshTokenResult } from "./cosmo/auth";
+import { refresh, RefreshTokenResult } from "./cosmo/auth";
 import { db } from "./db";
 import { accessToken } from "./db/schema";
+import { validateExpiry } from "./jwt";
 
 export async function getAccessToken() {
   const result = await db.query.accessToken.findFirst();
@@ -9,6 +10,16 @@ export async function getAccessToken() {
       accessToken: "",
       refreshToken: "",
     };
+
+  // not ideal, temporary
+  if (!validateExpiry(result.accessToken)) {
+    if (validateExpiry(result.refreshToken)) {
+      const newTokens = await refresh(result.refreshToken);
+      await updateAccessToken(newTokens);
+      return newTokens;
+    }
+  }
+
   return result;
 }
 
