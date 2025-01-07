@@ -1,4 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
+import { getAccessToken, updateAccessToken } from "./lib/server/token";
+import { refresh } from "./lib/server/cosmo/auth";
+import { validateExpiry } from "./lib/server/jwt";
 
 export const config = {
   matcher: [
@@ -14,5 +17,18 @@ export const config = {
 };
 
 export async function middleware(_: NextRequest) {
+  try {
+    // not ideal, temporary
+    const { accessToken, refreshToken } = await getAccessToken();
+    if (!validateExpiry(accessToken)) {
+      if (validateExpiry(refreshToken)) {
+        const newTokens = await refresh(refreshToken);
+        await updateAccessToken(newTokens);
+      }
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
   return NextResponse.next();
 }

@@ -1,8 +1,8 @@
 ## todo
 
 - [x] fix performance issue with modal
-- [ ] update token
-- [ ] objekt sidebar
+- [x] update token
+- [x] objekt sidebar
 - [ ] rework on database schema
 - [ ] wishlist
 - [ ] group by
