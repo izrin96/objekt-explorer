@@ -1,12 +1,20 @@
 ## todo
 
 - [x] fix performance issue with modal
+- [ ] update token
+- [ ] objekt sidebar
+- [ ] rework on database schema
+- [ ] wishlist
 - [ ] group by
+- [ ] setup analytic
+- [ ] setup sentry
 - [ ] transfer objekt
-- [ ] filter by date in user trade history
 - [ ] leaderboard
-- [ ] improve navbar
-- [ ] user collection progress
+- [ ] collection progress
+- [ ] gravity
+- [ ] improve navbar (low prio)
+- [ ] filter by date in user trade history (low prio)
+- [ ] test neon local proxy (low prio)
 - [ ] tRPC (low prio)
 - [ ] dehydrate react-query and use suspense (low prio)
 - [ ] user's como, profile picture (low prio)

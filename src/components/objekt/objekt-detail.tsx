@@ -1,10 +1,9 @@
 import { Tabs } from "../ui";
-import { CSSProperties } from "react";
+import { CSSProperties, useState } from "react";
 import { replaceUrlSize, getObjektSlug } from "./objekt-util";
 import Tilt from "react-parallax-tilt";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
-import { useState } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { OwnedObjekt } from "@/lib/universal/cosmo/objekts";
 import ObjektSidebar from "./objekt-sidebar";

@@ -20,6 +20,19 @@ export async function fetchUserByIdentifier(
     };
   }
 
+  const cachedUser = await db.query.userAddress.findFirst({
+    where: (t, { eq }) => eq(t.nickname, identifier),
+  });
+
+  if (cachedUser) {
+    return {
+      nickname: cachedUser.nickname,
+      address: cachedUser.address,
+      profileImageUrl: "",
+      profile: [],
+    };
+  }
+
   const user = await fetchByNickname(token, identifier);
   if (!user) {
     notFound();

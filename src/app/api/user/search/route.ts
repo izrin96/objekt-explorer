@@ -1,13 +1,18 @@
 import { search } from "@/lib/server/cosmo/auth";
 import { db } from "@/lib/server/db";
-import { sql } from "drizzle-orm";
+import { like, sql } from "drizzle-orm";
 import { userAddress } from "@/lib/server/db/schema";
 import { getAccessToken } from "@/lib/server/token";
 import { after, NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const accessToken = await getAccessToken();
   const searchParams = request.nextUrl.searchParams;
+  const query = searchParams.get("query") ?? "";
+
+  if (query.length < 4) return Response.json({ results: [] });
+
+  const accessToken = await getAccessToken();
+
   const results = await search(
     accessToken.accessToken,
     searchParams.get("query") ?? ""
@@ -16,23 +21,40 @@ export async function GET(request: NextRequest) {
   // caching user address
   if (results.results.length > 0) {
     after(async () => {
+      const users = await db
+        .select({
+          nickname: userAddress.nickname,
+          address: userAddress.address,
+        })
+        .from(userAddress)
+        .where(like(userAddress.nickname, `${query}%`));
+
       const newAddress = results.results.map((r) => ({
         nickname: r.nickname,
         address: r.address,
       }));
 
-      try {
-        await db
-          .insert(userAddress)
-          .values(newAddress)
-          .onConflictDoUpdate({
-            target: userAddress.address,
-            set: {
-              nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
-            },
-          });
-      } catch (err) {
-        console.error(err);
+      const newAddressFiltered = newAddress.filter(
+        (a) =>
+          !users.some(
+            (b) => b.address === a.address && b.nickname === a.nickname
+          )
+      );
+
+      if (newAddressFiltered.length > 0) {
+        try {
+          await db
+            .insert(userAddress)
+            .values(newAddressFiltered)
+            .onConflictDoUpdate({
+              target: userAddress.address,
+              set: {
+                nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
+              },
+            });
+        } catch (err) {
+          console.error(err);
+        }
       }
     });
   }

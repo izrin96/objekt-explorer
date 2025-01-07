@@ -6,7 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-import React, { Suspense, useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { Badge, Button, Card, Loader, NumberField, Table } from "../ui";
 import { IconArrowLeft, IconArrowRight } from "justd-icons";
 import { format } from "date-fns";
