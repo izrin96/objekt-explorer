@@ -42,9 +42,8 @@ export default memo(function TradeRow({
       openObjekts([
         {
           ...row.collection,
-          artists: [row.collection.artist],
-          objektNo: row.serial,
-        } as ValidObjekt,
+          serial: row.serial ?? 0,
+        },
       ]),
     [row, openObjekts]
   );
