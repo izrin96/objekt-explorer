@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, props: Params) {
   return Response.json({
     hasNext,
     nextStartAfter,
-    objekts: results.map((a) => ({
+    objekts: results.splice(0, PER_PAGE).map((a) => ({
       collectionId: a.collections?.collectionId,
       season: a.collections?.season,
       member: a.collections?.member,
