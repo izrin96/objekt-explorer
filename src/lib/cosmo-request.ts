@@ -1,5 +1,4 @@
 import { ofetch } from "ofetch";
-import { COSMO_ENDPOINT } from "./universal/cosmo/common";
 import { OwnedObjektsResult } from "./universal/cosmo/objekts";
 import { overrideColor } from "./utils";
 
@@ -15,28 +14,19 @@ export async function fetchOwnedObjekts({
   address,
   startAfter,
 }: OwnedObjektRequest) {
-  const endpoint = `${COSMO_ENDPOINT}/objekt/v1/owned-by/${address}`;
-  return await ofetch(endpoint, {
+  const endpoint = `/api/objekts/owned-by/${address}`;
+  return await ofetch<OwnedObjektsResult>(endpoint, {
     query: {
       start_after: `${startAfter}`,
       sort: "newest",
     },
-  })
-    .then<OwnedObjektsResult>((res) => {
-      return {
-        ...res,
-        nextStartAfter: res.nextStartAfter
-          ? parseInt(res.nextStartAfter)
-          : undefined,
-      };
-    })
-    .then((res) => ({
-      ...res,
-      objekts: res.objekts.map((objekt) => ({
-        ...objekt,
-        ...overrideColor(objekt),
-      })),
-    }));
+  }).then((res) => ({
+    ...res,
+    objekts: res.objekts.map((objekt) => ({
+      ...objekt,
+      ...overrideColor(objekt),
+    })),
+  }));
 }
 
 export async function fetchOwnedObjektsParallel({

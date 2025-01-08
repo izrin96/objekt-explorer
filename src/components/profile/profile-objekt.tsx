@@ -20,7 +20,7 @@ import { filterAndGroupObjektsOwned } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
-import { fetchOwnedObjektsParallel } from "@/lib/cosmo-request";
+import { fetchOwnedObjekts } from "@/lib/cosmo-request";
 import { OwnedObjekt } from "@/lib/universal/cosmo/objekts";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
@@ -58,7 +58,7 @@ function ProfileObjekt({ profile, artists }: Props) {
 
   const queryFunction = useCallback(
     ({ pageParam = 0 }: { pageParam?: number }) => {
-      return fetchOwnedObjektsParallel({
+      return fetchOwnedObjekts({
         address: profile.address,
         startAfter: pageParam,
       });

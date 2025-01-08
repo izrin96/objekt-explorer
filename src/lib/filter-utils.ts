@@ -179,11 +179,11 @@ function filterObjektsOwned(filters: Filters, objekts: OwnedObjekt[]) {
   if (filters.transferable) {
     objekts = objekts.filter((a) => a.transferable === true);
   }
-  if (filters.gridable) {
-    objekts = objekts.filter(
-      (a) => a.usedForGrid === false && a.class === "First"
-    );
-  }
+  // if (filters.gridable) {
+  //   objekts = objekts.filter(
+  //     (a) => a.usedForGrid === false && a.class === "First"
+  //   );
+  // }
 
   if (filters.search) {
     // support multiple query split by commas

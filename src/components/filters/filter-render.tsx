@@ -30,7 +30,7 @@ export default function FilterRender({ isOwned, artists }: Props) {
     <div className="flex gap-2 items-center flex-wrap justify-center">
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
-      {isOwned && <FilterGridable />}
+      {/* {isOwned && <FilterGridable />} */}
       {isOwned && <FilterTransferable />}
       <FilterSeason />
       <FilterOnline />
