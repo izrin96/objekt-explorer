@@ -1,7 +1,7 @@
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { Badge, Skeleton } from "../ui";
 import { CSSProperties } from "react";
-import { getObjektArtist, getObjektSlug, getObjektType } from "./objekt-util";
+import { getObjektArtist, getObjektSlug } from "./objekt-util";
 import { useQuery } from "@tanstack/react-query";
 import { fetchObjektsQuery } from "./trade-view";
 
@@ -41,7 +41,6 @@ function PillColor({ label, value, objekt }: PillProps) {
 function PillCopies({ objekt }: { objekt: ValidObjekt }) {
   const slug = getObjektSlug(objekt);
   const { data, status } = useQuery(fetchObjektsQuery(slug));
-  const onlineType = getObjektType(objekt);
   return (
     <>
       {status === "pending" && <Skeleton className="w-20 h-6" />}
@@ -52,7 +51,7 @@ function PillCopies({ objekt }: { objekt: ValidObjekt }) {
       )}
       {status === "success" && (
         <Pill
-          label={onlineType === "online" ? "Copies" : "Scanned Copies"}
+          label={objekt.onOffline === "online" ? "Copies" : "Scanned Copies"}
           value={`${data.length}`}
         />
       )}
@@ -62,7 +61,6 @@ function PillCopies({ objekt }: { objekt: ValidObjekt }) {
 
 export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
   const artist = getObjektArtist(objekt);
-  const onOffline = getObjektType(objekt);
   return (
     <div className="flex flex-wrap gap-2 p-2">
       <Pill label="Artist" value={artist} />
@@ -71,7 +69,7 @@ export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
       <Pill label="Class" value={objekt.class} />
       <Pill
         label="Type"
-        value={onOffline === "online" ? "Digital" : "Physical"}
+        value={objekt.onOffline === "online" ? "Digital" : "Physical"}
       />
       <Pill label="Collection No." value={objekt.collectionNo} />
       <PillColor
