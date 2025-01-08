@@ -1,7 +1,10 @@
 import { CSSProperties, memo, useCallback } from "react";
 import NextImage from "next/image";
-import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
-import { OwnedObjekt } from "@/lib/universal/cosmo/objekts";
+import {
+  getCollectionShortId,
+  OwnedObjekt,
+  ValidObjekt,
+} from "@/lib/universal/objekts";
 import { replaceUrlSize } from "./objekt-util";
 import { Badge } from "../ui";
 import Tilt from "react-parallax-tilt";
@@ -27,7 +30,7 @@ export default memo(function ObjektView({
   const isDesktop = useMediaQuery("(min-width: 765px)");
   const [filters] = useFilters();
   const objekts = props.objekts.toSorted(
-    (a, b) => (a as OwnedObjekt).objektNo - (b as OwnedObjekt).objektNo
+    (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
   );
   const [objekt] = objekts;
 
@@ -71,7 +74,7 @@ export default memo(function ObjektView({
 
             <ObjektSidebar
               collection={objekt.collectionNo}
-              serial={(objekt as OwnedObjekt).objektNo}
+              serial={(objekt as OwnedObjekt).serial}
             />
 
             {objekts.length > 1 && (
@@ -91,7 +94,7 @@ export default memo(function ObjektView({
             {getCollectionShortId(objekt)}
             {isOwned &&
               !filters.grouped &&
-              ` #${(objekt as OwnedObjekt).objektNo}`}
+              ` #${(objekt as OwnedObjekt).serial}`}
           </Badge>
         </div>
       </div>

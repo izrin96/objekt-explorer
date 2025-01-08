@@ -1,9 +1,6 @@
 import { ofetch } from "ofetch";
-import { OwnedObjektsResult } from "./universal/cosmo/objekts";
+import { OwnedObjektsResult } from "./universal/objekts";
 import { overrideColor } from "./utils";
-
-const RESULT_OBJEKTS_COUNT = 30;
-const PARALLEL_REQUEST_COUNT = 5;
 
 type OwnedObjektRequest = {
   address: string;
@@ -27,23 +24,4 @@ export async function fetchOwnedObjekts({
       ...overrideColor(objekt),
     })),
   }));
-}
-
-export async function fetchOwnedObjektsParallel({
-  address,
-  startAfter,
-}: OwnedObjektRequest) {
-  const results = await Promise.all(
-    Array.from({ length: PARALLEL_REQUEST_COUNT }).map((_, i) =>
-      fetchOwnedObjekts({
-        address: address,
-        startAfter: startAfter + RESULT_OBJEKTS_COUNT * i,
-      })
-    )
-  );
-
-  return {
-    ...results[results.length - 1],
-    objekts: results.flatMap((result) => result.objekts),
-  } satisfies OwnedObjektsResult;
 }

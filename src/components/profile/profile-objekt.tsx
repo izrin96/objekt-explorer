@@ -16,16 +16,16 @@ import {
   useInfiniteQuery,
 } from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
-import { filterAndGroupObjektsOwned } from "@/lib/filter-utils";
+import { filterAndGroupObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
 import { fetchOwnedObjekts } from "@/lib/cosmo-request";
-import { OwnedObjekt } from "@/lib/universal/cosmo/objekts";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useMediaQuery } from "usehooks-ts";
+import { OwnedObjekt } from "@/lib/universal/objekts";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -92,7 +92,7 @@ function ProfileObjekt({ profile, artists }: Props) {
               <div className="flex-1" key={j}>
                 {objekts && (
                   <ObjektView
-                    key={objekts[0].tokenId}
+                    key={objekts[0].id}
                     objekts={objekts}
                     priority={j < columns * 3}
                     isOwned
@@ -109,7 +109,7 @@ function ProfileObjekt({ profile, artists }: Props) {
 
   useEffect(() => {
     startTransition(() => {
-      setObjektsFiltered(filterAndGroupObjektsOwned(filters, objektsOwned));
+      setObjektsFiltered(filterAndGroupObjekts(filters, objektsOwned));
     });
   }, [filters, objektsOwned]);
 

@@ -1,5 +1,6 @@
 import { indexer } from "@/lib/server/db/indexer";
 import { objekts, collections } from "@/lib/server/db/indexer/schema";
+import { OwnedObjekt } from "@/lib/universal/objekts";
 import { eq, desc } from "drizzle-orm";
 import { NextRequest } from "next/server";
 
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest, props: Params) {
       collections,
     })
     .from(objekts)
-    .leftJoin(collections, eq(objekts.collectionId, collections.id))
+    .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(eq(objekts.owner, params.address.toLowerCase()))
     .orderBy(desc(objekts.receivedAt))
     .limit(PER_PAGE + 1)
@@ -32,29 +33,18 @@ export async function GET(request: NextRequest, props: Params) {
   const hasNext = results.length > PER_PAGE;
   const nextStartAfter = hasNext ? startAfter + PER_PAGE : undefined;
 
-  // temporary solution
-
   return Response.json({
     hasNext,
     nextStartAfter,
-    objekts: results.splice(0, PER_PAGE).map((a) => ({
-      collectionId: a.collections?.collectionId,
-      season: a.collections?.season,
-      member: a.collections?.member,
-      collectionNo: a.collections?.collectionNo,
-      class: a.collections?.class,
-      artists: [a.collections?.artist],
-      thumbnailImage: a.collections?.thumbnailImage,
-      frontImage: a.collections?.frontImage,
-      backImage: a.collections?.backImage,
-      accentColor: a.collections?.accentColor,
-      backgroundColor: a.collections?.backgroundColor,
-      textColor: a.collections?.textColor,
-      comoAmount: a.collections?.comoAmount,
-      objektNo: a.objekts.serial,
-      transferable: a.objekts.transferable,
-      receivedAt: a.objekts.receivedAt,
-      mintedAt: a.objekts.mintedAt,
-    })),
+    objekts: results.slice(0, PER_PAGE).map(
+      (a) =>
+        ({
+          ...a.collections,
+          id: a.objekts.id,
+          serial: a.objekts.serial,
+          receivedAt: a.objekts.receivedAt,
+          mintedAt: a.objekts.mintedAt,
+        } satisfies OwnedObjekt)
+    ),
   });
 }

@@ -2,10 +2,9 @@ import { Filters } from "@/hooks/use-filters";
 import { ValidClass, ValidSeason } from "@/lib/universal/cosmo/common";
 import {
   getSeasonCollectionNo,
-  IndexedObjekt,
+  OwnedObjekt,
   ValidObjekt,
 } from "./universal/objekts";
-import { OwnedObjekt } from "./universal/cosmo/objekts";
 import { groupBy, prop } from "remeda";
 
 const shortformMembers: Record<string, string> = {
@@ -65,11 +64,9 @@ const searchFilter = (search: string, objekt: ValidObjekt) => {
   );
 };
 
-// todo: refactor and optimize this filtering
-
-export function filterObjektsIndexed(
+export function filterObjekts<T extends ValidObjekt>(
   filters: Filters,
-  objekts: IndexedObjekt[]
+  objekts: T[]
 ) {
   if (filters.member) {
     objekts = objekts.filter((a) => filters.member?.includes(a.member));
@@ -108,167 +105,68 @@ export function filterObjektsIndexed(
   );
 
   const sort = filters.sort ?? "newest";
-  switch (sort) {
-    case "newest":
-      objekts = objekts.toSorted(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-      break;
-    case "oldest":
-      objekts = objekts.toSorted(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
-      break;
-    case "noDescending":
-      objekts = objekts.toSorted((a, b) =>
-        b.collectionNo.localeCompare(a.collectionNo)
-      );
-      break;
-    case "noAscending":
-      objekts = objekts.toSorted((a, b) =>
-        a.collectionNo.localeCompare(b.collectionNo)
-      );
-      break;
-    case "newestSeason":
-      objekts = objekts
-        .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
-        .toSorted((a, b) => b.season.localeCompare(a.season));
-      break;
-    case "oldestSeason":
-      objekts = objekts
-        .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-        .toSorted((a, b) => a.season.localeCompare(b.season));
-      break;
+
+  const getSortDate = (obj: T) =>
+    "receivedAt" in obj
+      ? new Date((obj as OwnedObjekt).receivedAt).getTime()
+      : new Date(obj.createdAt).getTime();
+
+  if (sort === "newest") {
+    objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
+  } else if (sort === "oldest") {
+    objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
+  } else if (sort === "noDescending") {
+    objekts = objekts.toSorted((a, b) =>
+      b.collectionNo.localeCompare(a.collectionNo)
+    );
+  } else if (sort === "noAscending") {
+    objekts = objekts.toSorted((a, b) =>
+      a.collectionNo.localeCompare(b.collectionNo)
+    );
+  } else if (sort === "newestSeason") {
+    objekts = objekts
+      .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
+      .toSorted((a, b) => b.season.localeCompare(a.season));
+  } else if (sort === "oldestSeason") {
+    objekts = objekts
+      .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+      .toSorted((a, b) => a.season.localeCompare(b.season));
+  } else if (sort === "serialDesc") {
+    objekts = objekts.toSorted(
+      (a, b) => (b as OwnedObjekt).serial - (a as OwnedObjekt).serial
+    );
+  } else if (sort === "serialAsc") {
+    objekts = objekts.toSorted(
+      (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
+    );
   }
 
   return objekts;
 }
 
-function filterObjektsOwned(filters: Filters, objekts: OwnedObjekt[]) {
-  if (filters.member) {
-    objekts = objekts.filter((a) => filters.member?.includes(a.member));
-  }
-  if (filters.artist) {
-    objekts = objekts.filter((a) =>
-      a.artists.includes(filters.artist ?? "tripleS")
-    );
-  }
-  if (filters.class) {
-    objekts = objekts.filter((a) =>
-      filters.class?.includes(a.class as ValidClass)
-    );
-  }
-  if (filters.season) {
-    objekts = objekts.filter((a) =>
-      filters.season?.includes(a.season as ValidSeason)
-    );
-  }
-  if (filters.on_offline) {
-    objekts = objekts.filter(
-      (a) =>
-        (filters.on_offline?.includes("online")
-          ? a.collectionNo.includes("Z")
-          : false) ||
-        (filters.on_offline?.includes("offline")
-          ? a.collectionNo.includes("A")
-          : false)
-    );
-  }
-  if (filters.transferable) {
-    objekts = objekts.filter((a) => a.transferable === true);
-  }
-  // if (filters.gridable) {
-  //   objekts = objekts.filter(
-  //     (a) => a.usedForGrid === false && a.class === "First"
-  //   );
-  // }
-
-  if (filters.search) {
-    // support multiple query split by commas
-    const searches = filters.search
-      .split(",")
-      .filter(Boolean)
-      .map((a) => a.trim());
-    objekts = objekts.filter((objekt) =>
-      searches.some((s) => searchFilter(s, objekt))
-    );
-  }
-
-  // sort by noDescending first
-  objekts = objekts.toSorted((a, b) =>
-    b.collectionNo.localeCompare(a.collectionNo)
-  );
-
-  const sort = filters.sort ?? "newest";
-  switch (sort) {
-    case "newest":
-      objekts = objekts.toSorted(
-        (a, b) =>
-          new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime()
-      );
-      break;
-    case "oldest":
-      objekts = objekts.toSorted(
-        (a, b) =>
-          new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime()
-      );
-      break;
-    case "noDescending":
-      objekts = objekts.toSorted((a, b) =>
-        b.collectionNo.localeCompare(a.collectionNo)
-      );
-      break;
-    case "noAscending":
-      objekts = objekts.toSorted((a, b) =>
-        a.collectionNo.localeCompare(b.collectionNo)
-      );
-      break;
-    case "serialDesc":
-      objekts = objekts.toSorted((a, b) => b.objektNo - a.objektNo);
-      break;
-    case "serialAsc":
-      objekts = objekts.toSorted((a, b) => a.objektNo - b.objektNo);
-      break;
-    case "newestSeason":
-      objekts = objekts
-        .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
-        .toSorted((a, b) => b.season.localeCompare(a.season));
-      break;
-    case "oldestSeason":
-      objekts = objekts
-        .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-        .toSorted((a, b) => a.season.localeCompare(b.season));
-      break;
-  }
-
-  return objekts;
-}
-
-function filterGroupedObjektsOwned(filters: Filters, objekts: OwnedObjekt[][]) {
-  const sort = filters.sort ?? "newest";
-  switch (sort) {
-    case "duplicateDesc":
-      objekts = objekts.toSorted((a, b) => b.length - a.length);
-      break;
-    case "duplicateAsc":
-      objekts = objekts.toSorted((a, b) => a.length - b.length);
-      break;
-  }
-  return objekts;
-}
-
-export function filterAndGroupObjektsOwned(
+function sortDuplicate<T extends ValidObjekt>(
   filters: Filters,
-  objekts: OwnedObjekt[]
+  objekts: T[][]
 ) {
-  objekts = filterObjektsOwned(filters, objekts);
-  let groupedObjekts: OwnedObjekt[][];
+  const sort = filters.sort ?? "newest";
+  if (sort === "duplicateDesc") {
+    objekts = objekts.toSorted((a, b) => b.length - a.length);
+  } else if (sort === "duplicateAsc") {
+    objekts = objekts.toSorted((a, b) => a.length - b.length);
+  }
+  return objekts;
+}
+
+export function filterAndGroupObjekts<T extends ValidObjekt>(
+  filters: Filters,
+  objekts: T[]
+) {
+  objekts = filterObjekts(filters, objekts);
+  let groupedObjekts: T[][];
   if (filters.grouped) {
     groupedObjekts = Object.values(groupBy(objekts, prop("collectionId")));
   } else {
     groupedObjekts = objekts.map((objekt) => [objekt]);
   }
-  return filterGroupedObjektsOwned(filters, groupedObjekts);
+  return sortDuplicate(filters, groupedObjekts);
 }

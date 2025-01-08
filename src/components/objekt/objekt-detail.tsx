@@ -3,9 +3,12 @@ import { CSSProperties, useState } from "react";
 import { replaceUrlSize, getObjektSlug } from "./objekt-util";
 import Tilt from "react-parallax-tilt";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
-import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
+import {
+  getCollectionShortId,
+  OwnedObjekt,
+  ValidObjekt,
+} from "@/lib/universal/objekts";
 import { useMediaQuery } from "usehooks-ts";
-import { OwnedObjekt } from "@/lib/universal/cosmo/objekts";
 import ObjektSidebar from "./objekt-sidebar";
 import { AttributePanel } from "./objekt-attribute";
 import NextImage from "next/image";
@@ -70,7 +73,7 @@ export default function ObjektDetail({
               />
               <ObjektSidebar
                 collection={objekt.collectionNo}
-                serial={(objekt as OwnedObjekt).objektNo}
+                serial={(objekt as OwnedObjekt).serial}
               />
             </div>
             <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">
@@ -109,7 +112,7 @@ export default function ObjektDetail({
             <Tabs.Panel id="trades">
               <TradeView
                 slug={slug}
-                initialSerial={(objekt as OwnedObjekt).objektNo}
+                initialSerial={(objekt as OwnedObjekt).serial}
               />
             </Tabs.Panel>
           </Tabs>
@@ -125,9 +128,9 @@ function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
       {objekts.map((item) => (
         <div
           className="group -mb-px relative flex gap-3 border-y px-3 py-2 text-fg first:rounded-t-md first:border-t-0 last:mb-0 last:rounded-b-md last:border-b-0 sm:text-sm"
-          key={item.objektNo}
+          key={item.serial}
         >
-          #{item.objektNo}
+          #{item.serial}
         </div>
       ))}
     </div>

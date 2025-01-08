@@ -6,7 +6,7 @@ import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import ObjektView from "../objekt/objekt-view";
-import { filterObjektsIndexed } from "@/lib/filter-utils";
+import { filterObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { WindowVirtualizer } from "virtua";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
@@ -59,7 +59,7 @@ export default function IndexView({
 
   useEffect(() => {
     startTransition(() => {
-      setObjektsFiltered(filterObjektsIndexed(filters, objekts));
+      setObjektsFiltered(filterObjekts(filters, objekts));
     });
   }, [filters, objekts]);
 
