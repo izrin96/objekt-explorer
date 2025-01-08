@@ -30,7 +30,7 @@ export async function GET(request: NextRequest, props: Params) {
     .offset(startAfter);
 
   const hasNext = results.length > PER_PAGE;
-  const nextStartAfter = hasNext ? startAfter + results.length : undefined;
+  const nextStartAfter = hasNext ? startAfter + PER_PAGE : undefined;
 
   // temporary solution
 
