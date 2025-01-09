@@ -24,4 +24,4 @@ export type OwnedObjektsResult = {
 };
 
 export type OwnedObjekt = Omit<IndexedObjekt, "id"> &
-  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "id">;
+  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "id" | "transferable">;

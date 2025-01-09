@@ -31,7 +31,7 @@ export default function FilterRender({ isOwned, artists }: Props) {
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
       {/* {isOwned && <FilterGridable />} */}
-      {/* {isOwned && <FilterTransferable />} */}
+      {isOwned && <FilterTransferable />}
       <FilterSeason />
       <FilterOnline />
       <FilterClass />

@@ -87,6 +87,9 @@ export function filterObjekts<T extends ValidObjekt>(
   if (filters.on_offline) {
     objekts = objekts.filter((a) => filters.on_offline?.includes(a.onOffline));
   }
+  if (filters.transferable) {
+    objekts = objekts.filter((a) => (a as OwnedObjekt).transferable);
+  }
 
   if (filters.search) {
     // support multiple query split by commas

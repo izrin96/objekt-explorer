@@ -47,9 +47,6 @@ function ProfileTrades({ address }: { address: string }) {
     staleTime: 1000 * 60,
   });
 
-  const thClass =
-    "relative whitespace-nowrap px-3 py-3 text-left font-medium w-0";
-
   const rows = useMemo(
     () => query.data?.pages.flatMap((p) => p.results) ?? [],
     [query.data]
@@ -62,11 +59,11 @@ function ProfileTrades({ address }: { address: string }) {
           <table className="table w-full min-w-full text-sm">
             <thead data-slot="table-header" className="border-b">
               <tr>
-                <th className={thClass}>Date</th>
-                <th className={thClass}>Objekt</th>
-                <th className={thClass}>Serial</th>
-                <th className={thClass}>Action</th>
-                <th className={thClass}>User</th>
+                <Th label="Date" />
+                <Th label="Objekt" />
+                <Th label="Serial" />
+                <Th label="Action" />
+                <Th label="User" />
               </tr>
             </thead>
             <tbody className="[&_.tr:last-child]:border-0">
@@ -91,4 +88,10 @@ function ProfileTrades({ address }: { address: string }) {
       />
     </>
   );
+}
+
+function Th({ label }: { label: string }) {
+  const thClass =
+    "relative whitespace-nowrap px-3 py-3 text-left font-medium w-0";
+  return <th className={thClass}>{label}</th>;
 }

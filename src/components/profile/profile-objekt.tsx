@@ -60,7 +60,7 @@ function ProfileObjekt({ profile, artists }: Props) {
     ({ pageParam = 0 }: { pageParam?: number }) => {
       return fetchOwnedObjekts({
         address: profile.address,
-        startAfter: pageParam,
+        page: pageParam,
       });
     },
     [profile.address]

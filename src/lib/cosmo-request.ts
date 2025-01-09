@@ -4,17 +4,14 @@ import { overrideColor } from "./utils";
 
 type OwnedObjektRequest = {
   address: string;
-  startAfter: number;
+  page: number;
 };
 
-export async function fetchOwnedObjekts({
-  address,
-  startAfter,
-}: OwnedObjektRequest) {
+export async function fetchOwnedObjekts({ address, page }: OwnedObjektRequest) {
   const endpoint = `/api/objekts/owned-by/${address}`;
   return await ofetch<OwnedObjektsResult>(endpoint, {
     query: {
-      start_after: `${startAfter}`,
+      page: `${page}`,
       sort: "newest",
     },
   }).then((res) => ({
