@@ -40,17 +40,24 @@ export async function GET(
     .limit(PER_PAGE + 1)
     .offset(page * PER_PAGE);
 
-  const addresses = results.flatMap((r) => [r.transfer.from, r.transfer.to]);
+  const hasNext = results.length > PER_PAGE;
+  const nextStartAfter = hasNext ? page + 1 : undefined;
+  const slicedResults = results.slice(0, PER_PAGE);
+
+  const addresses = slicedResults.flatMap((r) => [
+    r.transfer.from,
+    r.transfer.to,
+  ]);
 
   const knownAddresses = await db.query.userAddress.findMany({
     where: (userAddress, { inArray }) =>
       inArray(userAddress.address, addresses),
   });
 
-  const hasNext = results.length > PER_PAGE;
-
   return Response.json({
-    results: results.map((row) => ({
+    hasNext,
+    nextStartAfter,
+    results: slicedResults.map((row) => ({
       ...row,
       collection: {
         ...row.collection,
@@ -63,7 +70,5 @@ export async function GET(
         (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase()
       )?.nickname,
     })),
-    hasNext,
-    nextStartAfter: hasNext ? page + 1 : undefined,
   });
 }
