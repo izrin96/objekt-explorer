@@ -1,4 +1,4 @@
-import { Tabs } from "../ui";
+import { Badge, Card, Table, Tabs } from "../ui";
 import { CSSProperties, useState } from "react";
 import { replaceUrlSize, getObjektSlug } from "./objekt-util";
 import Tilt from "react-parallax-tilt";
@@ -13,6 +13,7 @@ import ObjektSidebar from "./objekt-sidebar";
 import { AttributePanel } from "./objekt-attribute";
 import NextImage from "next/image";
 import TradeView from "./trade-view";
+import { format } from "date-fns";
 
 type ObjektDetailProps = {
   isOwned?: boolean;
@@ -124,15 +125,40 @@ export default function ObjektDetail({
 
 function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
   return (
-    <div className="relative overflow-auto rounded-lg border min-w-64 max-h-full">
-      {objekts.map((item) => (
-        <div
-          className="group -mb-px relative flex gap-3 border-y px-3 py-2 text-fg first:rounded-t-md first:border-t-0 last:mb-0 last:rounded-b-md last:border-b-0 sm:text-sm"
-          key={item.serial}
-        >
-          #{item.serial}
-        </div>
-      ))}
-    </div>
+    <Card>
+      <Table allowResize aria-label="Trades">
+        <Table.Header>
+          <Table.Column isRowHeader isResizable maxWidth={110}>
+            Serial
+          </Table.Column>
+          <Table.Column isResizable minWidth={200}>
+            Received
+          </Table.Column>
+          <Table.Column>Transferable</Table.Column>
+        </Table.Header>
+        <Table.Body items={objekts}>
+          {(item) => (
+            <Table.Row id={item.id}>
+              <Table.Cell>{item.serial}</Table.Cell>
+              <Table.Cell>
+                {format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}
+              </Table.Cell>
+              <Table.Cell>
+                <Badge
+                  className={
+                    item.transferable
+                      ? ""
+                      : "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
+                  }
+                  shape="square"
+                >
+                  {item.transferable ? "Yes" : "No"}
+                </Badge>
+              </Table.Cell>
+            </Table.Row>
+          )}
+        </Table.Body>
+      </Table>
+    </Card>
   );
 }

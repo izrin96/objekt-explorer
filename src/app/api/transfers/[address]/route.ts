@@ -24,12 +24,16 @@ export async function GET(
   const results = await indexer
     .select({
       transfer: transfers,
-      serial: objekts.serial,
-      collection: collections,
+      objekt: {
+        ...collections,
+        serial: objekts.serial,
+        receivedAt: objekts.receivedAt,
+        transferable: objekts.transferable,
+      },
     })
     .from(transfers)
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
-    .leftJoin(objekts, eq(transfers.objektId, objekts.id))
+    .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .where(
       or(
         eq(transfers.from, params.address.toLowerCase()),
@@ -59,9 +63,9 @@ export async function GET(
     nextStartAfter,
     results: slicedResults.map((row) => ({
       ...row,
-      collection: {
-        ...row.collection,
-        ...overrideColor(row.collection),
+      objekt: {
+        ...row.objekt,
+        ...overrideColor(row.objekt),
       },
       fromNickname: knownAddresses.find(
         (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase()

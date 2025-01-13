@@ -4,7 +4,7 @@ import { Badge, Link } from "../ui";
 import { AggregatedTransfer } from "@/lib/universal/transfers";
 import UserLink from "../user-link";
 import { format } from "date-fns";
-import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
+import { getCollectionShortId } from "@/lib/universal/objekts";
 import { memo, useCallback } from "react";
 import { IconOpenLink } from "justd-icons";
 import { NULL_ADDRESS } from "@/lib/utils";
@@ -22,9 +22,7 @@ export default memo(function TradeRow({
 
   const tdClass = "group whitespace-nowrap px-3 py-3";
 
-  const name = row.collection
-    ? `${getCollectionShortId(row.collection)}`
-    : "Unknown";
+  const name = `${getCollectionShortId(row.objekt)}`;
 
   const action = isReceiver ? (
     <Badge className="bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
@@ -37,14 +35,7 @@ export default memo(function TradeRow({
   );
 
   const onOpen = useCallback(
-    () =>
-      row.collection &&
-      openObjekts([
-        {
-          ...row.collection,
-          serial: row.serial ?? 0,
-        },
-      ]),
+    () => openObjekts([row.objekt]),
     [row, openObjekts]
   );
 
@@ -73,7 +64,7 @@ export default memo(function TradeRow({
             <IconOpenLink />
           </Link>
         </td>
-        <td className={tdClass}>{row.serial}</td>
+        <td className={tdClass}>{row.objekt.serial}</td>
         <td className={tdClass}>{action}</td>
         <td className={tdClass}>{user}</td>
       </tr>
