@@ -32,7 +32,7 @@ export async function GET(_: Request, props: Params) {
         eq(objekts.serial, parseInt(params.serial))
       )
     )
-    .orderBy(asc(transfers.timestamp));
+    .orderBy(asc(transfers.timestamp), asc(transfers.id));
 
   const addresses = results.map((r) => r.to);
 

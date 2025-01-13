@@ -1,7 +1,7 @@
 import { indexer } from "@/lib/server/db/indexer";
 import { objekts, collections } from "@/lib/server/db/indexer/schema";
 import { OwnedObjekt } from "@/lib/universal/objekts";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, props: Params) {
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(eq(objekts.owner, params.address.toLowerCase()))
-    .orderBy(desc(objekts.receivedAt))
+    .orderBy(desc(objekts.receivedAt), asc(objekts.id))
     .limit(PER_PAGE + 1)
     .offset(page * PER_PAGE);
 
