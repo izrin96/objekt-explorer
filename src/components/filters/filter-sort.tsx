@@ -39,7 +39,7 @@ const mapDesc: Record<ValidSort, string> = {
 export default function SortFilter({ isOwned = false }: Props) {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(
-    () => new Set(filters.sort ? [filters.sort] : []),
+    () => new Set(filters.sort ? [filters.sort] : ["newest"]),
     [filters.sort]
   );
 
@@ -69,12 +69,12 @@ export default function SortFilter({ isOwned = false }: Props) {
         className="min-w-52"
       >
         {(item) => (
-          <Menu.Radio id={item.value} textValue={map[item.value]}>
+          <Menu.Item id={item.value} textValue={map[item.value]}>
             <Menu.ItemDetails
               label={map[item.value]}
               description={mapDesc[item.value]}
             />
-          </Menu.Radio>
+          </Menu.Item>
         )}
       </Menu.Content>
     </Menu>

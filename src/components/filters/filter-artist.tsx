@@ -49,9 +49,9 @@ export default function ArtistFilter({ artists }: Props) {
         className="min-w-52"
       >
         {(item) => (
-          <Menu.Radio id={item.name} textValue={item.title}>
-            {item.title}
-          </Menu.Radio>
+          <Menu.Item id={item.name} textValue={item.title}>
+            <Menu.Label>{item.title}</Menu.Label>
+          </Menu.Item>
         )}
       </Menu.Content>
     </Menu>

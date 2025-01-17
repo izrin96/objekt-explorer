@@ -19,6 +19,7 @@ export default function ColumnFilter() {
       aria-label="Column"
       placeholder="Grid Column"
       onChange={update}
+      maxValue={12}
       value={filters.column ?? GRID_COLUMNS}
       minValue={3}
     />

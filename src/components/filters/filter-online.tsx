@@ -50,9 +50,9 @@ export default function OnlineFilter() {
         items={Object.values(validOnlineTypes).map((value) => ({ value }))}
       >
         {(item) => (
-          <Menu.Checkbox id={item.value} textValue={item.value}>
-            {map[item.value]}
-          </Menu.Checkbox>
+          <Menu.Item id={item.value} textValue={item.value}>
+            <Menu.Label>{map[item.value]}</Menu.Label>
+          </Menu.Item>
         )}
       </Menu.Content>
     </Menu>

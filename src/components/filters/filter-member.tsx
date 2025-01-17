@@ -51,9 +51,9 @@ export default function MemberFilter({ artists }: Props) {
             id={artist.name}
           >
             {(member) => (
-              <Menu.Checkbox id={member.name} textValue={member.name}>
-                {member.name}
-              </Menu.Checkbox>
+              <Menu.Item id={member.name} textValue={member.name}>
+                <Menu.Label>{member.name}</Menu.Label>
+              </Menu.Item>
             )}
           </Menu.Section>
         )}

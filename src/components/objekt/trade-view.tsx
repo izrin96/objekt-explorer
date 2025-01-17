@@ -14,6 +14,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import UserLink from "../user-link";
 import { ObjektSerial, ObjektTransfer } from "./common";
+import { cn } from "@/utils/classes";
 
 type TradeViewProps = {
   slug: string;
@@ -181,9 +182,12 @@ function TradeTable({
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">Transferable</span>
           <Badge
-            className="text-sm"
+            className={cn(
+              "text-sm",
+              !objekt.transferable &&
+                "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
+            )}
             shape="square"
-            intent={objekt.transferable ? "primary" : "danger"}
           >
             {objekt.transferable ? "Yes" : "No"}
           </Badge>

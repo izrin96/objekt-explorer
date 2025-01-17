@@ -1,7 +1,12 @@
 "use client";
 
 import { IndexedObjekt } from "@/lib/universal/objekts";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
@@ -27,18 +32,17 @@ export default function IndexView({
     : GRID_COLUMNS_MOBILE;
 
   const [objektsFiltered, setObjektsFiltered] = useState<IndexedObjekt[]>([]);
-
-  const [_, startTransition] = useTransition();
+  const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const virtualList = useMemo(() => {
     var rows = Array.from({
-      length: Math.ceil(objektsFiltered.length / columns),
+      length: Math.ceil(deferredObjektsFiltered.length / columns),
     }).map((_, i) => {
       return (
         <div key={i} className="flex gap-3 md:gap-4 pb-4">
           {Array.from({ length: columns }).map((_, j) => {
             const index = i * columns + j;
-            const objekt = objektsFiltered[index];
+            const objekt = deferredObjektsFiltered[index];
             return (
               <div className="flex-1" key={j}>
                 {objekt && (
@@ -55,18 +59,16 @@ export default function IndexView({
       );
     });
     return rows;
-  }, [objektsFiltered, columns]);
+  }, [deferredObjektsFiltered, columns]);
 
   useEffect(() => {
-    startTransition(() => {
-      setObjektsFiltered(filterObjekts(filters, objekts));
-    });
+    setObjektsFiltered(filterObjekts(filters, objekts));
   }, [filters, objekts]);
 
   return (
     <div className="flex flex-col gap-2">
       <FilterView artists={artists} />
-      <span className="font-semibold">{objektsFiltered.length} total</span>
+      <span className="font-semibold">{deferredObjektsFiltered.length} total</span>
 
       <ObjektModalProvider initialTab="trades">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>

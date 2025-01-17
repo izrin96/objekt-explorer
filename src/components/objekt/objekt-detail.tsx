@@ -14,6 +14,7 @@ import { AttributePanel } from "./objekt-attribute";
 import NextImage from "next/image";
 import TradeView from "./trade-view";
 import { format } from "date-fns";
+import { cn } from "@/utils/classes";
 
 type ObjektDetailProps = {
   isOwned?: boolean;
@@ -145,11 +146,10 @@ function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
               </Table.Cell>
               <Table.Cell>
                 <Badge
-                  className={
-                    item.transferable
-                      ? ""
-                      : "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
-                  }
+                  className={cn(
+                    !item.transferable &&
+                      "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
+                  )}
                   shape="square"
                 >
                   {item.transferable ? "Yes" : "No"}

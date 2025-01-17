@@ -39,9 +39,9 @@ export default function ClassFilter() {
         items={Object.values(validClasses).map((value) => ({ value }))}
       >
         {(item) => (
-          <Menu.Checkbox id={item.value} textValue={item.value}>
-            {item.value}
-          </Menu.Checkbox>
+          <Menu.Item id={item.value} textValue={item.value}>
+            <Menu.Label>{item.value}</Menu.Label>
+          </Menu.Item>
         )}
       </Menu.Content>
     </Menu>

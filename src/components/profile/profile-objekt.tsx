@@ -2,10 +2,10 @@
 
 import {
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useState,
-  useTransition,
 } from "react";
 import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import FilterView from "../filters/filter-render";
@@ -53,8 +53,7 @@ function ProfileObjekt({ profile, artists }: Props) {
     : GRID_COLUMNS_MOBILE;
 
   const [objektsFiltered, setObjektsFiltered] = useState<OwnedObjekt[][]>([]);
-
-  const [_, startTransition] = useTransition();
+  const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const queryFunction = useCallback(
     ({ pageParam = 0 }: { pageParam?: number }) => {
@@ -81,13 +80,13 @@ function ProfileObjekt({ profile, artists }: Props) {
 
   const virtualList = useMemo(() => {
     var rows = Array.from({
-      length: Math.ceil(objektsFiltered.length / columns),
+      length: Math.ceil(deferredObjektsFiltered.length / columns),
     }).map((_, i) => {
       return (
         <div key={i} className="flex gap-4 pb-4">
           {Array.from({ length: columns }).map((_, j) => {
             const index = i * columns + j;
-            const objekts = objektsFiltered[index];
+            const objekts = deferredObjektsFiltered[index];
             return (
               <div className="flex-1" key={j}>
                 {objekts && (
@@ -105,12 +104,10 @@ function ProfileObjekt({ profile, artists }: Props) {
       );
     });
     return rows;
-  }, [objektsFiltered, columns]);
+  }, [deferredObjektsFiltered, columns]);
 
   useEffect(() => {
-    startTransition(() => {
-      setObjektsFiltered(filterAndGroupObjekts(filters, objektsOwned));
-    });
+    setObjektsFiltered(filterAndGroupObjekts(filters, objektsOwned));
   }, [filters, objektsOwned]);
 
   useEffect(() => {
@@ -125,8 +122,10 @@ function ProfileObjekt({ profile, artists }: Props) {
       <div className="flex items-center gap-2">
         {hasNextPage && <Loader />}
         <span className="font-semibold">
-          {objektsFiltered.flatMap((item) => item).length} total
-          {filters.grouped ? ` (${objektsFiltered.length} grouped)` : ""}
+          {deferredObjektsFiltered.flatMap((item) => item).length} total
+          {filters.grouped
+            ? ` (${deferredObjektsFiltered.length} grouped)`
+            : ""}
         </span>
       </div>
 
