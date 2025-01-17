@@ -27,7 +27,7 @@ export default memo(function ObjektView({
   ...props
 }: Props) {
   const { openObjekts } = useObjektModal();
-  const isDesktop = useMediaQuery("(min-width: 765px)");
+  const isDesktop = useMediaQuery("(min-width: 640px)");
   const [filters] = useFilters();
   const objekts = props.objekts.toSorted(
     (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial

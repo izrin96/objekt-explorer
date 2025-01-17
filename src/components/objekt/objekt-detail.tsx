@@ -2,7 +2,7 @@ import { Badge, Card, Table, Tabs } from "../ui";
 import { CSSProperties, useState } from "react";
 import { replaceUrlSize, getObjektSlug } from "./objekt-util";
 import Tilt from "react-parallax-tilt";
-import { useObjektModal } from "@/hooks/use-objekt-modal";
+import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
 import {
   getCollectionShortId,
   OwnedObjekt,
@@ -25,7 +25,7 @@ export default function ObjektDetail({
   objekts,
   isOwned = false,
 }: ObjektDetailProps) {
-  const isDesktop = useMediaQuery("(min-width: 765px)");
+  const isDesktop = useMediaQuery("(min-width: 640px)");
   const [objekt] = objekts;
   const [flipped, setFlipped] = useState(false);
   const [hide, setHide] = useState(false);
@@ -99,7 +99,9 @@ export default function ObjektDetail({
           <Tabs
             aria-label="Objekt tab"
             selectedKey={currentTab}
-            onSelectionChange={(key) => setCurrentTab(key.toString())}
+            onSelectionChange={(key) =>
+              setCurrentTab(key.toString() as ValidTab)
+            }
             className="p-2"
           >
             <Tabs.List>
@@ -112,10 +114,7 @@ export default function ObjektDetail({
               </Tabs.Panel>
             )}
             <Tabs.Panel id="trades">
-              <TradeView
-                slug={slug}
-                initialSerial={(objekt as OwnedObjekt).serial}
-              />
+              <TradeView slug={slug} />
             </Tabs.Panel>
           </Tabs>
         </div>
@@ -125,22 +124,28 @@ export default function ObjektDetail({
 }
 
 function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
+  const { openTrades } = useObjektModal();
   return (
     <Card>
-      <Table allowResize aria-label="Trades">
+      <Table aria-label="Trades">
         <Table.Header>
-          <Table.Column isRowHeader isResizable maxWidth={110}>
+          <Table.Column isRowHeader maxWidth={110}>
             Serial
           </Table.Column>
-          <Table.Column isResizable minWidth={200}>
-            Received
-          </Table.Column>
+          <Table.Column minWidth={200}>Received</Table.Column>
           <Table.Column>Transferable</Table.Column>
         </Table.Header>
         <Table.Body items={objekts}>
           {(item) => (
             <Table.Row id={item.id}>
-              <Table.Cell>{item.serial}</Table.Cell>
+              <Table.Cell>
+                <span
+                  onClick={() => openTrades(item.serial)}
+                  className="cursor-pointer"
+                >
+                  {item.serial}
+                </span>
+              </Table.Cell>
               <Table.Cell>
                 {format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}
               </Table.Cell>

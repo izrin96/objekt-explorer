@@ -26,7 +26,7 @@ export default function IndexView({
 }) {
   const [filters] = useFilters();
 
-  const isDesktop = useMediaQuery("(min-width: 765px)");
+  const isDesktop = useMediaQuery("(min-width: 640px)");
   const columns = isDesktop
     ? filters.column ?? GRID_COLUMNS
     : GRID_COLUMNS_MOBILE;

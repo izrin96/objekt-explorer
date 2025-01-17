@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:upgrade": "drizzle-kit up",
     "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {

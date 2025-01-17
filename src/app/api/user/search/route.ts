@@ -12,14 +12,10 @@ export async function GET(request: NextRequest) {
 
   if (query.length < 4) return Response.json({ results: [] });
 
-  let results: CosmoSearchResult = {
-    results: [],
-  };
-
   try {
     const accessToken = await getAccessToken();
 
-    results = await search(accessToken.accessToken, query);
+    const results = await search(accessToken.accessToken, query);
 
     // caching user address
     if (results.results.length > 0) {

@@ -3,7 +3,6 @@
 import { useFilters } from "@/hooks/use-filters";
 import FilterSeason from "./filter-season";
 import FilterSort from "./filter-sort";
-import FilterGridable from "./filter-gridable";
 import FilterTransferable from "./filter-transferable";
 import FilterOnline from "./filter-online";
 import FilterClass from "./filter-class";
@@ -21,7 +20,7 @@ type Props = {
 };
 
 export default function FilterRender({ isOwned, artists }: Props) {
-  const isDesktop = useMediaQuery("(min-width: 765px)", {
+  const isDesktop = useMediaQuery("(min-width: 640px)", {
     initializeWithValue: false,
   });
   const [filters, setFilters] = useFilters();
@@ -30,7 +29,6 @@ export default function FilterRender({ isOwned, artists }: Props) {
     <div className="flex gap-2 items-center flex-wrap justify-center">
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
-      {/* {isOwned && <FilterGridable />} */}
       {isOwned && <FilterTransferable />}
       <FilterSeason />
       <FilterOnline />

@@ -34,8 +34,6 @@ export function useFilters() {
       parseAsStringEnum<ValidOnlineType>(Object.values(validOnlineTypes))
     ),
     transferable: parseAsBoolean,
-    gridable: parseAsBoolean,
-    used_for_grid: parseAsBoolean,
     search: parseAsString,
     grouped: parseAsBoolean,
     column: parseAsInteger,

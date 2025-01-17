@@ -15,10 +15,10 @@ import ErrorFallbackRender from "../error-fallback";
 import UserLink from "../user-link";
 import { ObjektSerial, ObjektTransfer } from "./common";
 import { cn } from "@/utils/classes";
+import { useObjektModal } from "@/hooks/use-objekt-modal";
 
 type TradeViewProps = {
   slug: string;
-  initialSerial?: number;
 };
 
 export const fetchObjektsQuery = (slug: string) => ({
@@ -49,7 +49,8 @@ export default function TradeView({ ...props }: TradeViewProps) {
   );
 }
 
-function TradeViewRender({ slug, initialSerial }: TradeViewProps) {
+function TradeViewRender({ slug }: TradeViewProps) {
+  const { currentSerial } = useObjektModal();
   const { data } = useSuspenseQuery(fetchObjektsQuery(slug));
 
   const objekts = useMemo(() => data ?? [], [data]);
@@ -59,7 +60,7 @@ function TradeViewRender({ slug, initialSerial }: TradeViewProps) {
       {objekts.length > 0 && (
         <Trades
           objekts={objekts}
-          initialSerial={initialSerial ?? objekts[0].serial}
+          initialSerial={currentSerial ?? objekts[0].serial}
           slug={slug}
         />
       )}
@@ -195,11 +196,9 @@ function TradeTable({
       </div>
 
       <Card>
-        <Table allowResize aria-label="Trades">
+        <Table aria-label="Trades">
           <Table.Header>
-            <Table.Column isRowHeader isResizable>
-              Owner
-            </Table.Column>
+            <Table.Column isRowHeader>Owner</Table.Column>
             <Table.Column minWidth={200}>Date</Table.Column>
           </Table.Header>
           <Table.Body items={data}>

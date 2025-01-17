@@ -2,20 +2,24 @@
 
 import ObjektDetail from "@/components/objekt/objekt-detail";
 import { Modal } from "@/components/ui";
-import { ValidObjekt } from "@/lib/universal/objekts";
+import { OwnedObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { ReactNode, createContext, useContext, useState } from "react";
 
+export type ValidTab = "owned" | "trades";
+
 type ContextProps = {
-  currentTab?: string;
-  setCurrentTab: (val: string) => void;
-  openObjekts: (val: ValidObjekt[]) => void;
+  currentTab?: ValidTab;
+  currentSerial?: number;
+  setCurrentTab: (tab: ValidTab) => void;
+  openObjekts: (objekt: ValidObjekt[]) => void;
+  openTrades: (serial: number) => void;
 };
 
 const ObjektModalContext = createContext<ContextProps>({} as ContextProps);
 
 type ProviderProps = {
   children: ReactNode;
-  initialTab?: string;
+  initialTab?: ValidTab;
   isOwned?: boolean;
 };
 
@@ -24,19 +28,31 @@ export function ObjektModalProvider({
   initialTab,
   isOwned = false,
 }: ProviderProps) {
-  const [currentTab, setCurrentTab] = useState(initialTab);
+  const [currentTab, setCurrentTab] = useState<ValidTab | undefined>(
+    initialTab
+  );
   const [open, setOpen] = useState(false);
   const [objekts, setObjekts] = useState<ValidObjekt[]>([]);
-  function openObjekts(val: ValidObjekt[]) {
-    setObjekts(val);
+  const [currentSerial, setCurrentSerial] = useState<number | undefined>();
+  function openObjekts(objekts: ValidObjekt[]) {
+    const [objekt] = objekts;
+    setCurrentSerial((objekt as OwnedObjekt).serial);
+    setObjekts(objekts);
     setOpen(true);
   }
+  function openTrades(serial: number) {
+    setCurrentSerial(serial);
+    setCurrentTab("trades");
+  }
+
   return (
     <ObjektModalContext
       value={{
         currentTab,
+        currentSerial,
         setCurrentTab,
         openObjekts,
+        openTrades,
       }}
     >
       <Modal.Content isOpen={open} onOpenChange={setOpen} size="5xl">

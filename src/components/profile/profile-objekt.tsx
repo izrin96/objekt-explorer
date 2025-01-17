@@ -47,7 +47,7 @@ export default function ProfileObjektRender({ ...props }: Props) {
 function ProfileObjekt({ profile, artists }: Props) {
   const [filters] = useFilters();
 
-  const isDesktop = useMediaQuery("(min-width: 765px)");
+  const isDesktop = useMediaQuery("(min-width: 640px)");
   const columns = isDesktop
     ? filters.column ?? GRID_COLUMNS
     : GRID_COLUMNS_MOBILE;
