@@ -1,7 +1,7 @@
 import { IconMoonFill } from "justd-icons";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Container } from "./ui";
-import UserSearch from "./user-search";
+import UserSearchNew from "./user-search-new";
 import Link from "next/link";
 
 export default function Navbar() {
@@ -20,7 +20,7 @@ export default function Navbar() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
-          <UserSearch />
+          <UserSearchNew />
         </div>
       </Container>
     </nav>
