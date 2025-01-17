@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { ComboBox, Loader } from "./ui";
-import { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+import { Button, CommandMenu, Keyboard } from "./ui";
 import { useDebounceValue } from "usehooks-ts";
-import { ofetch } from "ofetch";
 import { useQuery } from "@tanstack/react-query";
+import { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+import { ofetch } from "ofetch";
 import { useRouter } from "nextjs-toploader/app";
+import { IconSearch } from "justd-icons";
 
 export default function UserSearch() {
-  const [query, setQuery] = useState<string>("");
-  const [debouncedQuery] = useDebounceValue<string>(query, 200);
-
   const router = useRouter();
-
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [debouncedQuery] = useDebounceValue<string>(query, 200);
   const enable = debouncedQuery.length > 3;
 
-  const { status, data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: ["user-search", debouncedQuery],
     queryFn: () => {
       return ofetch<CosmoSearchResult>(`/api/user/search`, {
@@ -26,35 +26,45 @@ export default function UserSearch() {
     enabled: enable,
   });
 
-  const navigateTo = (value: string) => {
-    if (value) router.push(`/@${value}`);
-    setQuery("");
-  };
+  function onAction(nickname: string) {
+    setIsOpen(false);
+    router.push(`/@${nickname}`);
+  }
 
   return (
     <>
-      {status === "pending" && enable && <Loader />}
-      <ComboBox
-        placeholder="Search user"
-        aria-label="Search user"
-        className="max-w-48"
-        inputValue={query}
+      <Button onPress={() => setIsOpen(true)} size="small" appearance="outline">
+        <IconSearch />
+        <span className="text-muted-fg">Search user</span>
+        <Keyboard className="-mr-1" keys="⌘K" />
+      </Button>
+      <CommandMenu
+        shortcut="k"
+        isPending={enable && isPending}
         onInputChange={setQuery}
-        allowsEmptyCollection
-        shouldFocusWrap
-        onSelectionChange={(key) => navigateTo(key?.toString() ?? "")}
+        inputValue={query}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
       >
-        <ComboBox.Input />
-        {status === "success" && data?.length > 0 && (
-          <ComboBox.List items={data}>
-            {(item) => (
-              <ComboBox.Option id={item.nickname} textValue={item.nickname}>
-                {item.nickname}
-              </ComboBox.Option>
-            )}
-          </ComboBox.List>
-        )}
-      </ComboBox>
+        <CommandMenu.Search placeholder="Search user..." />
+        <CommandMenu.List
+          autoFocus="first"
+          shouldFocusWrap
+          onAction={(key) => onAction(key.toString())}
+        >
+          <CommandMenu.Section title="Results">
+            {data?.map((user) => (
+              <CommandMenu.Item
+                key={user.nickname}
+                id={user.nickname}
+                textValue={user.nickname}
+              >
+                {user.nickname}
+              </CommandMenu.Item>
+            ))}
+          </CommandMenu.Section>
+        </CommandMenu.List>
+      </CommandMenu>
     </>
   );
 }
