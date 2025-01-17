@@ -4,6 +4,7 @@ import { like, sql } from "drizzle-orm";
 import { userAddress } from "@/lib/server/db/schema";
 import { getAccessToken } from "@/lib/server/token";
 import { after, NextRequest } from "next/server";
+import type { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -11,53 +12,76 @@ export async function GET(request: NextRequest) {
 
   if (query.length < 4) return Response.json({ results: [] });
 
-  const accessToken = await getAccessToken();
+  let results: CosmoSearchResult = {
+    results: [],
+  };
 
-  const results = await search(
-    accessToken.accessToken,
-    searchParams.get("query") ?? ""
-  );
+  try {
+    const accessToken = await getAccessToken();
 
-  // caching user address
-  if (results.results.length > 0) {
-    after(async () => {
-      const users = await db
-        .select({
-          nickname: userAddress.nickname,
-          address: userAddress.address,
-        })
-        .from(userAddress)
-        .where(like(userAddress.nickname, `${query}%`));
+    results = await search(accessToken.accessToken, query);
 
-      const newAddress = results.results.map((r) => ({
-        nickname: r.nickname,
-        address: r.address,
-      }));
+    // caching user address
+    if (results.results.length > 0) {
+      after(async () => {
+        const users = await db
+          .select({
+            nickname: userAddress.nickname,
+            address: userAddress.address,
+          })
+          .from(userAddress)
+          .where(like(userAddress.nickname, `${query}%`));
 
-      const newAddressFiltered = newAddress.filter(
-        (a) =>
-          !users.some(
-            (b) => b.address === a.address && b.nickname === a.nickname
-          )
-      );
+        const newAddress = results.results.map((r) => ({
+          nickname: r.nickname,
+          address: r.address,
+        }));
 
-      if (newAddressFiltered.length > 0) {
-        try {
-          await db
-            .insert(userAddress)
-            .values(newAddressFiltered)
-            .onConflictDoUpdate({
-              target: userAddress.address,
-              set: {
-                nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
-              },
-            });
-        } catch (err) {
-          console.error(err);
+        const newAddressFiltered = newAddress.filter(
+          (a) =>
+            !users.some(
+              (b) => b.address === a.address && b.nickname === a.nickname
+            )
+        );
+
+        if (newAddressFiltered.length > 0) {
+          try {
+            await db
+              .insert(userAddress)
+              .values(newAddressFiltered)
+              .onConflictDoUpdate({
+                target: userAddress.address,
+                set: {
+                  nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
+                },
+              });
+          } catch (err) {
+            console.error("Bulk user caching failed:", err);
+          }
         }
-      }
-    });
+      });
+    }
+
+    return Response.json(results);
+  } catch (err) {
+    console.error("Cosmo user search failed:", err);
   }
 
-  return Response.json(results);
+  // fallback to db
+  const users = await db
+    .select({
+      nickname: userAddress.nickname,
+      address: userAddress.address,
+    })
+    .from(userAddress)
+    .where(like(userAddress.nickname, `${query}%`));
+
+  return Response.json({
+    results: users.map((a) => ({
+      nickname: a.nickname,
+      address: a.address,
+      profileImageUrl: "",
+      profile: [],
+    })),
+  } satisfies CosmoSearchResult);
 }
