@@ -15,6 +15,7 @@ import NextImage from "next/image";
 import TradeView from "./trade-view";
 import { format } from "date-fns";
 import { cn } from "@/utils/classes";
+import { IconOpenLink } from "justd-icons";
 
 type ObjektDetailProps = {
   isOwned?: boolean;
@@ -107,6 +108,14 @@ export default function ObjektDetail({
             <Tabs.List>
               {isOwned && <Tabs.Tab id="owned">Owned</Tabs.Tab>}
               <Tabs.Tab id="trades">Trades</Tabs.Tab>
+              <Tabs.Tab
+                id="apollo"
+                href={`https://apollo.cafe/objekts?id=${slug}`}
+                target="_blank"
+              >
+                <IconOpenLink />
+                View in Apollo
+              </Tabs.Tab>
             </Tabs.List>
             {isOwned && (
               <Tabs.Panel id="owned">
