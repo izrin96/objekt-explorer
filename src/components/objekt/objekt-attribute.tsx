@@ -1,7 +1,7 @@
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { Badge, Skeleton } from "../ui";
 import { CSSProperties } from "react";
-import { getObjektArtist, getObjektSlug } from "./objekt-util";
+import { getObjektArtist } from "./objekt-util";
 import { useQuery } from "@tanstack/react-query";
 import { fetchObjektsQuery } from "./trade-view";
 
@@ -39,8 +39,7 @@ function PillColor({ label, value, objekt }: PillProps) {
 }
 
 function PillCopies({ objekt }: { objekt: ValidObjekt }) {
-  const slug = getObjektSlug(objekt);
-  const { data, status } = useQuery(fetchObjektsQuery(slug));
+  const { data, status } = useQuery(fetchObjektsQuery(objekt.slug));
   return (
     <>
       {status === "pending" && <Skeleton className="w-20 h-6" />}

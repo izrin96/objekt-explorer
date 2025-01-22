@@ -1,6 +1,6 @@
 import { Badge, Card, Table, Tabs } from "../ui";
 import { CSSProperties, useState } from "react";
-import { replaceUrlSize, getObjektSlug } from "./objekt-util";
+import { replaceUrlSize } from "./objekt-util";
 import Tilt from "react-parallax-tilt";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
 import {
@@ -31,8 +31,6 @@ export default function ObjektDetail({
   const [flipped, setFlipped] = useState(false);
   const [hide, setHide] = useState(false);
   const { currentTab, setCurrentTab } = useObjektModal();
-
-  const slug = getObjektSlug(objekt);
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
@@ -110,7 +108,7 @@ export default function ObjektDetail({
               <Tabs.Tab id="trades">Trades</Tabs.Tab>
               <Tabs.Tab
                 id="apollo"
-                href={`https://apollo.cafe/objekts?id=${slug}`}
+                href={`https://apollo.cafe/objekts?id=${objekt.slug}`}
                 target="_blank"
               >
                 <IconOpenLink />
@@ -123,7 +121,7 @@ export default function ObjektDetail({
               </Tabs.Panel>
             )}
             <Tabs.Panel id="trades">
-              <TradeView slug={slug} />
+              <TradeView slug={objekt.slug} />
             </Tabs.Panel>
           </Tabs>
         </div>
