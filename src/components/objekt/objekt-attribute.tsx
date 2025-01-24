@@ -4,6 +4,7 @@ import { CSSProperties } from "react";
 import { getObjektArtist } from "./objekt-util";
 import { useQuery } from "@tanstack/react-query";
 import { fetchObjektsQuery } from "./trade-view";
+import { format } from "date-fns";
 
 type PillProps = {
   label: string;
@@ -78,6 +79,10 @@ export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
       />
       <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />
       <PillCopies objekt={objekt} />
+      <Pill
+        label="Created at"
+        value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
+      />
     </div>
   );
 }
