@@ -1,5 +1,6 @@
 {
   "$schema": "https://getjustd.com/schema.json",
+  "language": "typescript",
   "ui": "src/components/ui",
   "utils": "src/utils",
   "gray": "neutral",

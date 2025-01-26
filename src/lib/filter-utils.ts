@@ -5,7 +5,7 @@ import {
   OwnedObjekt,
   ValidObjekt,
 } from "./universal/objekts";
-import { groupBy, prop } from "remeda";
+import { groupBy } from "es-toolkit";
 
 const shortformMembers: Record<string, string> = {
   naky: "NaKyoung",
@@ -167,7 +167,7 @@ export function filterAndGroupObjekts<T extends ValidObjekt>(
   objekts = filterObjekts(filters, objekts);
   let groupedObjekts: T[][];
   if (filters.grouped) {
-    groupedObjekts = Object.values(groupBy(objekts, prop("collectionId")));
+    groupedObjekts = Object.values(groupBy(objekts, (a) => a.collectionId));
   } else {
     groupedObjekts = objekts.map((objekt) => [objekt]);
   }
