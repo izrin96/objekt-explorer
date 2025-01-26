@@ -7,7 +7,7 @@ This project required [cosmo-db](https://github.com/teamreflex/cosmo-db/) indexe
 ## Tooling
 
 - [Next 15](https://nextjs.org/)
-- [Tailwind 4](https://tailwindcss.com/blog/tailwindcss-v4-beta)
+- [Tailwind 4](https://tailwindcss.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [Justd](https://getjustd.com/)
 
