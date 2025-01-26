@@ -15,8 +15,6 @@
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {
-    "@aws-sdk/client-kms": "^3.734.0",
-    "@aws-sdk/credential-providers": "^3.734.0",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@tanstack/react-query": "^5.64.2",
@@ -24,7 +22,6 @@
     "cmdk": "^1.0.4",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.38.4",
-    "firebase": "^11.2.0",
     "jose": "^5.9.6",
     "jotai": "^2.11.1",
     "justd-icons": "^1.10.24",
