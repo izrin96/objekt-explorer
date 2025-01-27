@@ -24,11 +24,7 @@ export default function ClassFilter() {
     <Menu>
       <Button
         appearance="outline"
-        className={
-          filters.class?.length
-            ? "data-pressed:border-primary data-hovered:border-primary border-primary"
-            : ""
-        }
+        className={filters.class?.length ? "border-primary" : ""}
       >
         Class
       </Button>

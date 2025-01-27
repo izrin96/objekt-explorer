@@ -37,7 +37,7 @@ export default function FilterRender({ isOwned, artists }: Props) {
       <FilterSearch />
       {isOwned && (
         <Toggle
-          className="data-selected:border-primary"
+          className="data-selected:inset-ring-primary"
           appearance="outline"
           size="medium"
           isSelected={filters.grouped ?? false}

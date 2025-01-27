@@ -29,11 +29,7 @@ export default function MemberFilter({ artists }: Props) {
     <Menu>
       <Button
         appearance="outline"
-        className={
-          filters.member
-            ? "data-pressed:border-primary data-hovered:border-primary border-primary"
-            : ""
-        }
+        className={filters.member ? "border-primary" : ""}
       >
         Member
       </Button>

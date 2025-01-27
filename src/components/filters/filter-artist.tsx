@@ -33,11 +33,7 @@ export default function ArtistFilter({ artists }: Props) {
     <Menu>
       <Button
         appearance="outline"
-        className={
-          filters.artist
-            ? "data-pressed:border-primary data-hovered:border-primary border-primary"
-            : ""
-        }
+        className={filters.artist ? "border-primary" : ""}
       >
         Artist
       </Button>

@@ -35,11 +35,7 @@ export default function OnlineFilter() {
     <Menu>
       <Button
         appearance="outline"
-        className={
-          filters.on_offline?.length
-            ? "data-pressed:border-primary data-hovered:border-primary border-primary"
-            : ""
-        }
+        className={filters.on_offline?.length ? "border-primary" : ""}
       >
         Physical
       </Button>

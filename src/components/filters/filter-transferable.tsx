@@ -7,7 +7,7 @@ export default function TransferableFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
-      className="data-selected:border-primary"
+      className="data-selected:inset-ring-primary"
       size="medium"
       appearance="outline"
       isSelected={filters.transferable ?? false}

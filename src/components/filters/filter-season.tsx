@@ -24,11 +24,7 @@ export default function FilterSeason() {
     <Menu>
       <Button
         appearance="outline"
-        className={
-          filters.season?.length
-            ? "data-pressed:border-primary data-hovered:border-primary border-primary"
-            : ""
-        }
+        className={filters.season?.length ? "border-primary" : ""}
       >
         Season
       </Button>
