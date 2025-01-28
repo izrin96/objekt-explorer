@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import UserLink from "../user-link";
-import { ObjektSerial, ObjektTransfer } from "./common";
+import { ObjektSerial, ObjektTransferResponse } from "./common";
 import { cn } from "@/utils/classes";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 
@@ -24,8 +24,8 @@ type TradeViewProps = {
 export const fetchObjektsQuery = (slug: string) => ({
   queryKey: ["objekts", "list", slug],
   queryFn: async ({}) =>
-    await ofetch<{ objekts: ObjektSerial[] }>(`/api/objekts/list/${slug}`).then(
-      (res) => res.objekts
+    await ofetch<{ serials: ObjektSerial[] }>(`/api/objekts/list/${slug}`).then(
+      (res) => res.serials
     ),
 });
 
@@ -53,14 +53,12 @@ function TradeViewRender({ slug }: TradeViewProps) {
   const { currentSerial } = useObjektModal();
   const { data } = useSuspenseQuery(fetchObjektsQuery(slug));
 
-  const objekts = useMemo(() => data ?? [], [data]);
-
   return (
     <>
-      {objekts.length > 0 && (
+      {data.length > 0 && (
         <Trades
-          objekts={objekts}
-          initialSerial={currentSerial ?? objekts[0].serial}
+          serials={data}
+          initialSerial={currentSerial ?? data[0]}
           slug={slug}
         />
       )}
@@ -69,38 +67,31 @@ function TradeViewRender({ slug }: TradeViewProps) {
 }
 
 function Trades({
-  objekts,
+  serials,
   initialSerial,
   slug,
 }: {
-  objekts: ObjektSerial[];
+  serials: ObjektSerial[];
   initialSerial: number;
   slug: string;
 }) {
   const [serial, setSerial] = useState(initialSerial);
 
-  const objekt = useMemo(
-    () => objekts.find((objekt) => objekt.serial === serial),
-    [serial, objekts]
-  );
-
   const updateSerial = useCallback(
     (mode: "prev" | "next") => {
       setSerial((prevSerial) => {
         if (mode == "prev") {
-          const newSerial = objekts
-            .filter((objekt) => objekt.serial < prevSerial)
-            .pop()?.serial;
+          const newSerial = serials
+            .filter((serial) => serial < prevSerial)
+            .pop();
           return newSerial ?? prevSerial;
         }
 
-        const newSerial = objekts.filter(
-          (objekt) => objekt.serial > prevSerial
-        )?.[0]?.serial;
+        const newSerial = serials.filter((serial) => serial > prevSerial)?.[0];
         return newSerial ?? prevSerial;
       });
     },
-    [objekts]
+    [serials]
   );
 
   return (
@@ -131,34 +122,27 @@ function Trades({
         </Button>
       </div>
 
-      {objekt && <TradeTable objekt={objekt} slug={slug} serial={serial} />}
+      <TradeTable slug={slug} serial={serial} />
     </div>
   );
 }
 
-function TradeTable({
-  objekt,
-  slug,
-  serial,
-}: {
-  objekt: ObjektSerial;
-  slug: string;
-  serial: number;
-}) {
+function TradeTable({ slug, serial }: { slug: string; serial: number }) {
   const { data, status, refetch } = useQuery({
     queryFn: async () =>
-      await ofetch<{ transfers: ObjektTransfer[] }>(
+      await ofetch<ObjektTransferResponse>(
         `/api/objekts/transfers/${slug}/${serial}`
-      ).then((res) => res.transfers),
+      ),
     queryKey: ["objekts", "transfer", slug, serial],
     retry: 1,
   });
 
   const ownerNickname = useMemo(
     () =>
-      data?.find((a) => a.to.toLowerCase() === objekt.owner.toLowerCase())
-        ?.nickname,
-    [data, objekt]
+      data?.transfers?.find(
+        (a) => a.to.toLowerCase() === data.owner?.toLowerCase()
+      )?.nickname,
+    [data]
   );
 
   if (status === "pending")
@@ -177,7 +161,7 @@ function TradeTable({
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">Owner</span>
           <span>
-            <UserLink address={objekt.owner} nickname={ownerNickname} />
+            <UserLink address={data.owner ?? ""} nickname={ownerNickname} />
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -185,12 +169,12 @@ function TradeTable({
           <Badge
             className={cn(
               "text-sm",
-              !objekt.transferable &&
+              !data.transferable &&
                 "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
             )}
             shape="square"
           >
-            {objekt.transferable ? "Yes" : "No"}
+            {data.transferable ? "Yes" : "No"}
           </Badge>
         </div>
       </div>
@@ -201,7 +185,7 @@ function TradeTable({
             <Table.Column isRowHeader>Owner</Table.Column>
             <Table.Column minWidth={200}>Date</Table.Column>
           </Table.Header>
-          <Table.Body items={data}>
+          <Table.Body items={data.transfers}>
             {(item) => (
               <Table.Row id={item.id}>
                 <Table.Cell>

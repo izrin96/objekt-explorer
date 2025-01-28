@@ -11,7 +11,7 @@ export default function UserLink({
 }) {
   return (
     <div className="inline-flex gap-2">
-      <Link href={`/@${nickname ?? address}`}>
+      <Link href={`/@${nickname ?? address}`} prefetch={false}>
         {nickname ?? address.substring(0, 6)}
       </Link>
 

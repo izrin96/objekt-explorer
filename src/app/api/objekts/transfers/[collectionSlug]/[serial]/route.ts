@@ -22,6 +22,8 @@ export async function GET(_: Request, props: Params) {
       id: transfers.id,
       to: transfers.to,
       timestamp: transfers.timestamp,
+      owner: objekts.owner,
+      transferable: objekts.transferable,
     })
     .from(transfers)
     .leftJoin(objekts, eq(transfers.objektId, objekts.id))
@@ -42,8 +44,12 @@ export async function GET(_: Request, props: Params) {
   });
 
   return Response.json({
+    owner: results[0]?.owner ?? undefined,
+    transferable: results[0]?.transferable ?? undefined,
     transfers: results.map((result) => ({
-      ...result,
+      id: result.id,
+      to: result.to,
+      timestamp: result.timestamp,
       nickname: knownAddresses.find(
         (a) => a.address.toLowerCase() === result.to.toLowerCase()
       )?.nickname,

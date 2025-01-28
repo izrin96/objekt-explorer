@@ -14,8 +14,6 @@ export async function GET(_: Request, props: Params) {
   const results = await indexer
     .select({
       serial: objekts.serial,
-      owner: objekts.owner,
-      transferable: objekts.transferable,
     })
     .from(objekts)
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
@@ -23,6 +21,6 @@ export async function GET(_: Request, props: Params) {
     .orderBy(asc(objekts.serial));
 
   return Response.json({
-    objekts: results,
+    serials: results.map((a) => a.serial),
   });
 }
