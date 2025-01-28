@@ -50,6 +50,7 @@ function getMemberShortKeys(value: string) {
 }
 
 const searchFilter = (search: string, objekt: ValidObjekt) => {
+  // todo: improve this
   const searchLower = search.toLowerCase();
   const keys = [...getMemberShortKeys(objekt.member), objekt.member];
   return (
@@ -172,4 +173,11 @@ export function filterAndGroupObjekts<T extends ValidObjekt>(
     groupedObjekts = objekts.map((objekt) => [objekt]);
   }
   return sortDuplicate(filters, groupedObjekts);
+}
+
+// todo: grouping feature
+export function groupGroupedObjekts<T extends ValidObjekt>(
+  groupedObjekts: T[][]
+) {
+  
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, CommandMenu, Keyboard } from "./ui";
 import { useDebounceValue } from "usehooks-ts";
 import { useQuery } from "@tanstack/react-query";
-import { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+import { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 import { ofetch } from "ofetch";
 import { useRouter } from "nextjs-toploader/app";
 import { IconSearch } from "justd-icons";
@@ -12,8 +12,9 @@ import { IconSearch } from "justd-icons";
 export default function UserSearch() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [result, setResult] = useState<CosmoPublicUser[]>([]);
   const [query, setQuery] = useState("");
-  const [debouncedQuery] = useDebounceValue<string>(query, 200);
+  const [debouncedQuery] = useDebounceValue<string>(query, 250);
   const enable = debouncedQuery.length > 3;
 
   const { data, isPending } = useQuery({
@@ -26,10 +27,18 @@ export default function UserSearch() {
     enabled: enable,
   });
 
-  function onAction(nickname: string) {
-    setIsOpen(false);
-    router.push(`/@${nickname}`);
-  }
+  const onAction = useCallback(
+    (nickname: string) => {
+      setIsOpen(false);
+      router.push(`/@${nickname}`);
+    },
+    [router, setIsOpen]
+  );
+
+  useEffect(() => {
+    if (isPending) return;
+    setResult(data ?? []);
+  }, [isPending, data]);
 
   return (
     <>
@@ -53,7 +62,7 @@ export default function UserSearch() {
           onAction={(key) => onAction(key.toString())}
         >
           <CommandMenu.Section title="Results">
-            {data?.map((user) => (
+            {result.map((user) => (
               <CommandMenu.Item
                 key={user.nickname}
                 id={user.nickname}
