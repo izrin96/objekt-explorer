@@ -219,12 +219,14 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
           .flatMap((a) => a.artistMembers)
           .find((member) => member.name === keyB)?.order ?? 0;
 
-      if (sortDir == "desc") return memberOrderB - memberOrderA;
+      // if (sortDir == "desc") return memberOrderB - memberOrderA;
+      // return memberOrderA - memberOrderB;
       return memberOrderA - memberOrderB;
     }
 
-    if (sortDir === "desc") return keyB.localeCompare(keyA);
-    return keyA.localeCompare(keyB);
+    // if (sortDir === "desc") return keyB.localeCompare(keyA);
+    // return keyA.localeCompare(keyB);
+    return keyB.localeCompare(keyA);
   });
 }
 

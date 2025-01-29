@@ -9,9 +9,9 @@ export const validSorts = [
   "date",
   "season",
   "collectionNo",
+  "member",
   "serial",
   "duplicate",
-  "member",
 ] as const;
 export type ValidSort = (typeof validSorts)[number];
 
