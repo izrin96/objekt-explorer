@@ -16,9 +16,9 @@ export default function FilterSearch() {
   return (
     <div>
       <TextField
-        placeholder={`Search (eg: naky 305, jw e304)`}
+        placeholder={`naky 305, jw e304 (split by comma)`}
         onChange={debounced}
-        className="min-w-56"
+        className="min-w-65"
         defaultValue={filters.search ?? ""}
         aria-label="Search"
       />
