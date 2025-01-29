@@ -23,8 +23,10 @@ export default function GroupByFilter() {
   const update = useCallback(
     (key: Selection) => {
       const newFilters = [...key] as ValidGroupBy[];
+      const newValue = newFilters.length > 0 ? newFilters[0] : null;
       setFilters({
-        group_by: newFilters.length > 0 ? newFilters[0] : null,
+        group_by: newValue,
+        group_dir: newValue === "member" ? "asc" : null,
       });
     },
     [setFilters]

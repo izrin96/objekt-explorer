@@ -161,12 +161,12 @@ function filterObjekts<T extends ValidObjekt>(
         artists
           .find((artist) => artist.name === a.artist)
           ?.artistMembers.find((member) => member.name === a.member)?.order ??
-        0;
+        Infinity;
       const memberOrderB =
         artists
           .find((artist) => artist.name === b.artist)
           ?.artistMembers.find((member) => member.name === b.member)?.order ??
-        0;
+        Infinity;
       if (sortDir === "desc") return memberOrderB - memberOrderA;
       return memberOrderA - memberOrderB;
     });
@@ -205,28 +205,26 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
     results = groupBy(objekts, () => "");
   }
 
-  const sortDir = filters.sort_dir ?? "desc";
+  const groupDir = filters.group_dir ?? "desc";
 
   return Object.entries(results).toSorted(([keyA], [keyB]) => {
     if (filters.group_by === "member") {
       const memberOrderA =
         artists
           .flatMap((a) => a.artistMembers)
-          .find((member) => member.name === keyA)?.order ?? 0;
+          .find((member) => member.name === keyA)?.order ?? Infinity;
 
       const memberOrderB =
         artists
           .flatMap((a) => a.artistMembers)
-          .find((member) => member.name === keyB)?.order ?? 0;
+          .find((member) => member.name === keyB)?.order ?? Infinity;
 
-      // if (sortDir == "desc") return memberOrderB - memberOrderA;
-      // return memberOrderA - memberOrderB;
+      if (groupDir == "desc") return memberOrderB - memberOrderA;
       return memberOrderA - memberOrderB;
     }
 
-    // if (sortDir === "desc") return keyB.localeCompare(keyA);
-    // return keyA.localeCompare(keyB);
-    return keyB.localeCompare(keyA);
+    if (groupDir === "desc") return keyB.localeCompare(keyA);
+    return keyA.localeCompare(keyB);
   });
 }
 

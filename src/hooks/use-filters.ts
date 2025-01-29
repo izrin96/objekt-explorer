@@ -45,6 +45,9 @@ export function useFilters() {
     sort_dir: parseAsStringEnum<ValidSortDirection>(
       Object.values(validSortDirection)
     ),
+    group_dir: parseAsStringEnum<ValidSortDirection>(
+      Object.values(validSortDirection)
+    ),
   });
 }
 
