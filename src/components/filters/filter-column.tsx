@@ -15,6 +15,7 @@ export default function ColumnFilter() {
 
   return (
     <NumberField
+      isWheelDisabled
       className="w-32"
       aria-label="Column"
       placeholder="Grid Column"

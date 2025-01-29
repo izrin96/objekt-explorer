@@ -8,7 +8,11 @@ import {
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useMemo, useState } from "react";
 import { Badge, Button, Card, Loader, NumberField, Table } from "../ui";
-import { IconArrowLeft, IconArrowRight } from "justd-icons";
+import {
+  IconArrowLeft,
+  IconArrowRight,
+  IconCircleQuestionmark,
+} from "justd-icons";
 import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
@@ -103,6 +107,7 @@ function Trades({
           aria-label="Serial no."
           value={serial}
           onChange={setSerial}
+          isWheelDisabled
         />
         <Button
           size="square-petite"
@@ -155,13 +160,21 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
   if (status === "error")
     return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
 
+  if (!data.owner)
+    return (
+      <div className="flex flex-col justify-center gap-3 items-center text-muted-fg py-3">
+        <IconCircleQuestionmark className="size-12" />
+        <p>Not found</p>
+      </div>
+    );
+
   return (
     <>
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">Owner</span>
           <span>
-            <UserLink address={data.owner ?? ""} nickname={ownerNickname} />
+            <UserLink address={data.owner} nickname={ownerNickname} />
           </span>
         </div>
         <div className="flex items-center gap-3">
