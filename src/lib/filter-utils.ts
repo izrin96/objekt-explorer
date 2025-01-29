@@ -68,7 +68,7 @@ const searchFilter = (search: string, objekt: ValidObjekt) => {
     getSeasonCollectionNo(objekt),
   ];
   return keywords.every((keyword) =>
-    values.some((value) => value.toLowerCase().includes(keyword))
+    values.some((value) => value.toLowerCase().startsWith(keyword))
   );
 };
 
