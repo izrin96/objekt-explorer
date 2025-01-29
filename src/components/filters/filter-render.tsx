@@ -7,6 +7,7 @@ import FilterTransferable from "./filter-transferable";
 import FilterOnline from "./filter-online";
 import FilterClass from "./filter-class";
 import FilterSearch from "./filter-search";
+import FilterGroupBy from "./filter-groupby";
 import { Toggle } from "../ui";
 import MemberFilter from "./filter-member";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
@@ -34,6 +35,7 @@ export default function FilterRender({ isOwned, artists }: Props) {
       <FilterOnline />
       <FilterClass />
       <FilterSort isOwned={isOwned} />
+      <FilterGroupBy />
       <FilterSearch />
       {isOwned && (
         <Toggle

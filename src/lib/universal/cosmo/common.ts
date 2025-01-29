@@ -40,6 +40,14 @@ export const validClasses = [
 ] as const;
 export type ValidClass = (typeof validClasses)[number];
 
+export const validGroupBy = [
+  "season",
+  "member",
+  "class",
+  "collectionNo",
+] as const;
+export type ValidGroupBy = (typeof validGroupBy)[number];
+
 // online types
 export const validOnlineTypes = ["online", "offline"] as const;
 export type ValidOnlineType = (typeof validOnlineTypes)[number];

@@ -9,6 +9,8 @@ import {
   validOnlineTypes,
   ValidSeason,
   ValidSort,
+  ValidGroupBy,
+  validGroupBy,
 } from "@/lib/universal/cosmo/common";
 import {
   parseAsArrayOf,
@@ -37,6 +39,7 @@ export function useFilters() {
     search: parseAsString,
     grouped: parseAsBoolean,
     column: parseAsInteger,
+    group_by: parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy)),
   });
 }
 

@@ -1,5 +1,9 @@
 import { Filters } from "@/hooks/use-filters";
-import { ValidClass, ValidSeason } from "@/lib/universal/cosmo/common";
+import {
+  ValidClass,
+  ValidGroupBy,
+  ValidSeason,
+} from "@/lib/universal/cosmo/common";
 import {
   getSeasonCollectionNo,
   OwnedObjekt,
@@ -50,25 +54,24 @@ function getMemberShortKeys(value: string) {
 }
 
 const searchFilter = (search: string, objekt: ValidObjekt) => {
-  // todo: improve this
-  const searchLower = search.toLowerCase();
-  const keys = [...getMemberShortKeys(objekt.member), objekt.member];
-  return (
-    keys.some((key) =>
-      `${key} ${objekt.collectionNo}`.toLowerCase().includes(searchLower)
-    ) ||
-    keys.some((key) =>
-      `${key} ${getSeasonCollectionNo(objekt)}`
-        .toLowerCase()
-        .includes(searchLower)
-    )
+  const keywords = search
+    .toLowerCase()
+    .split(" ")
+    .map((a) => a.trim())
+    .filter(Boolean);
+
+  const values = [
+    ...getMemberShortKeys(objekt.member),
+    objekt.member,
+    objekt.collectionNo,
+    getSeasonCollectionNo(objekt),
+  ];
+  return keywords.every((keyword) =>
+    values.some((value) => value.toLowerCase().includes(keyword))
   );
 };
 
-export function filterObjekts<T extends ValidObjekt>(
-  filters: Filters,
-  objekts: T[]
-) {
+function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
   if (filters.member) {
     objekts = objekts.filter((a) => filters.member?.includes(a.member));
   }
@@ -96,8 +99,8 @@ export function filterObjekts<T extends ValidObjekt>(
     // support multiple query split by commas
     const searches = filters.search
       .split(",")
-      .filter(Boolean)
-      .map((a) => a.trim());
+      .map((a) => a.trim())
+      .filter(Boolean);
     objekts = objekts.filter((objekt) =>
       searches.some((s) => searchFilter(s, objekt))
     );
@@ -161,23 +164,36 @@ function sortDuplicate<T extends ValidObjekt>(
   return objekts;
 }
 
-export function filterAndGroupObjekts<T extends ValidObjekt>(
+export function shapeIndexedObjekts<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[]
-) {
+): [string, T[]][] {
   objekts = filterObjekts(filters, objekts);
-  let groupedObjekts: T[][];
-  if (filters.grouped) {
-    groupedObjekts = Object.values(groupBy(objekts, (a) => a.collectionId));
+
+  let results: Record<string, T[]>;
+  if (filters.group_by) {
+    results = groupBy(objekts, (a) => a[filters.group_by as ValidGroupBy]);
   } else {
-    groupedObjekts = objekts.map((objekt) => [objekt]);
+    results = groupBy(objekts, () => "");
   }
-  return sortDuplicate(filters, groupedObjekts);
+
+  // sort key descending
+  return Object.entries(results).toSorted(([keyA], [keyB]) =>
+    keyB.localeCompare(keyA)
+  );
 }
 
-// todo: grouping feature
-export function groupGroupedObjekts<T extends ValidObjekt>(
-  groupedObjekts: T[][]
-) {
-  
+export function shapeProfileObjekts<T extends ValidObjekt>(
+  filters: Filters,
+  objekts: T[]
+): [string, T[][]][] {
+  return shapeIndexedObjekts(filters, objekts).map(([key, objekts]) => {
+    let grouped: T[][];
+    if (filters.grouped) {
+      grouped = Object.values(groupBy(objekts, (a) => a.collectionId));
+    } else {
+      grouped = objekts.map((objekt) => [objekt]);
+    }
+    return [key, sortDuplicate(filters, grouped)];
+  });
 }

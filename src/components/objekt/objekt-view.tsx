@@ -62,7 +62,7 @@ export default memo(function ObjektView({
           glareBorderRadius={isDesktop ? "12px" : undefined}
         >
           <div
-            className="cursor-pointer relative overflow-hidden aspect-photocard drop-shadow"
+            className="cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none"
             onClick={onClick}
           >
             <NextImage

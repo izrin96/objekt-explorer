@@ -14,7 +14,7 @@ type PillProps = {
 
 function Pill({ label, value }: PillProps) {
   return (
-    <Badge intent="secondary" className="" shape="square">
+    <Badge intent="secondary" shape="square">
       <span className="font-semibold">{label}</span>
       <span>{value}</span>
     </Badge>
