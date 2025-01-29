@@ -116,10 +116,10 @@ function filterObjekts<T extends ValidObjekt>(
     );
   }
 
-  // sort by noDescending first
-  objekts = objekts.toSorted((a, b) =>
-    b.collectionNo.localeCompare(a.collectionNo)
-  );
+  // default sort
+  objekts = objekts
+    .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
+    .toSorted((a, b) => b.season.localeCompare(a.season));
 
   const sort = filters.sort ?? "date";
   const sortDir = filters.sort_dir ?? "desc";
