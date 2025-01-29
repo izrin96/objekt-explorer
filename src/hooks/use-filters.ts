@@ -11,6 +11,8 @@ import {
   ValidSort,
   ValidGroupBy,
   validGroupBy,
+  ValidSortDirection,
+  validSortDirection,
 } from "@/lib/universal/cosmo/common";
 import {
   parseAsArrayOf,
@@ -40,6 +42,9 @@ export function useFilters() {
     grouped: parseAsBoolean,
     column: parseAsInteger,
     group_by: parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy)),
+    sort_dir: parseAsStringEnum<ValidSortDirection>(
+      Object.values(validSortDirection)
+    ),
   });
 }
 

@@ -11,64 +11,53 @@ type Props = {
 };
 
 const map: Record<ValidSort, string> = {
-  newest: "Newest",
-  oldest: "Oldest",
-  newestSeason: "Newest Season",
-  oldestSeason: "Oldest Season",
-  noDescending: "Highest Collection No.",
-  noAscending: "Lowest Collection No.",
-  serialDesc: "Highest Serial",
-  serialAsc: "Lowest Serial",
-  duplicateDesc: "Highest Duplicate",
-  duplicateAsc: "Lowest Duplicate",
-  memberDesc: "Highest Member Order",
-  memberAsc: "Lowest Member Order",
+  date: "Date",
+  season: "Season",
+  collectionNo: "Collection No.",
+  serial: "Serial",
+  duplicate: "Duplicate",
+  member: "Member Order",
 };
 
 const mapDesc: Record<ValidSort, string> = {
-  newest: "Sort by date (desc)",
-  oldest: "Sort by date (asc)",
-  newestSeason: "Sort by Season (desc) and Collection No. (desc)",
-  oldestSeason: "Sort by Season (asc) and Collection No. (asc)",
-  noDescending: "Sort by Collection No. (desc)",
-  noAscending: "Sort by Collection No. (asc)",
-  serialDesc: "Sort by Serial (desc)",
-  serialAsc: "Sort by Serial (asc)",
-  duplicateDesc: "Sort by duplicate count (desc)",
-  duplicateAsc: "Sort by duplicate count (asc)",
-  memberDesc: "Sort by Member order (desc)",
-  memberAsc: "Sort by Member order (asc)",
+  date: "Sort by date",
+  season: "Sort by Season and Collection No.",
+  collectionNo: "Sort by Collection No.",
+  serial: "Sort by Serial",
+  duplicate: "Sort by duplicate count",
+  member: "Sort by Member",
 };
 
 export default function SortFilter({ isOwned = false }: Props) {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(
-    () => new Set(filters.sort ? [filters.sort] : ["newest"]),
+    () => new Set(filters.sort ? [filters.sort] : ["date"]),
     [filters.sort]
   );
 
   function update(key: Selection) {
     const newFilters = [...key] as string[];
     const newValue =
-      newFilters.length > 0 ? (newFilters[0] as ValidSort) : "newest";
+      newFilters.length > 0 ? (newFilters[0] as ValidSort) : "date";
 
     setFilters((current) => ({
-      sort: newValue === "newest" ? null : newValue,
-      grouped: newValue.startsWith("duplicate")
-        ? true
-        : newValue.startsWith("serial")
-        ? false
-        : current.grouped,
+      sort: newValue === "date" ? null : newValue,
+      grouped:
+        newValue === "duplicate"
+          ? true
+          : newValue === "serial"
+          ? false
+          : current.grouped,
     }));
   }
 
   const availableSorts = validSorts.filter((s) =>
-    isOwned ? true : !(s.startsWith("serial") || s.startsWith("duplicate"))
+    isOwned ? true : !(s === "serial" || s === "duplicate")
   );
 
   return (
     <Menu>
-      <Button appearance="outline">{map[filters.sort ?? "newest"]}</Button>
+      <Button appearance="outline">Sort by {map[filters.sort ?? "date"]}</Button>
       <Menu.Content
         selectionMode="single"
         selectedKeys={selected}

@@ -36,7 +36,7 @@ export default function GroupByFilter() {
         appearance="outline"
         className={filters.group_by ? "border-primary" : ""}
       >
-        Group By
+        Group By{filters.group_by && ` ${map[filters.group_by]}`}
       </Button>
       <Menu.Content
         selectionMode="single"

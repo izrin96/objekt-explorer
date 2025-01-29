@@ -6,20 +6,21 @@ export type ValidArtist = (typeof validArtists)[number];
 
 // sort values
 export const validSorts = [
-  "newest",
-  "oldest",
-  "newestSeason",
-  "oldestSeason",
-  "noDescending",
-  "noAscending",
-  "serialDesc",
-  "serialAsc",
-  "duplicateDesc",
-  "duplicateAsc",
-  "memberDesc",
-  "memberAsc",
+  "date",
+  "season",
+  "collectionNo",
+  "serial",
+  "duplicate",
+  "member",
 ] as const;
 export type ValidSort = (typeof validSorts)[number];
+
+// sortDir
+export const validSortDirection = [
+  "desc",
+  "asc",
+] as const;
+export type ValidSortDirection = (typeof validSortDirection)[number];
 
 // seasons
 export const validSeasons = [
@@ -42,6 +43,7 @@ export const validClasses = [
 ] as const;
 export type ValidClass = (typeof validClasses)[number];
 
+// groupBy
 export const validGroupBy = [
   "season",
   "member",

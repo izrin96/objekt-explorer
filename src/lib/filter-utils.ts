@@ -121,37 +121,41 @@ function filterObjekts<T extends ValidObjekt>(
     b.collectionNo.localeCompare(a.collectionNo)
   );
 
-  const sort = filters.sort ?? "newest";
+  const sort = filters.sort ?? "date";
+  const sortDir = filters.sort_dir ?? "desc";
 
-  if (sort === "newest") {
-    objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
-  } else if (sort === "oldest") {
-    objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
-  } else if (sort === "noDescending") {
-    objekts = objekts.toSorted((a, b) =>
-      b.collectionNo.localeCompare(a.collectionNo)
-    );
-  } else if (sort === "noAscending") {
-    objekts = objekts.toSorted((a, b) =>
-      a.collectionNo.localeCompare(b.collectionNo)
-    );
-  } else if (sort === "newestSeason") {
-    objekts = objekts
-      .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
-      .toSorted((a, b) => b.season.localeCompare(a.season));
-  } else if (sort === "oldestSeason") {
-    objekts = objekts
-      .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-      .toSorted((a, b) => a.season.localeCompare(b.season));
-  } else if (sort === "serialDesc") {
-    objekts = objekts.toSorted(
-      (a, b) => (b as OwnedObjekt).serial - (a as OwnedObjekt).serial
-    );
-  } else if (sort === "serialAsc") {
-    objekts = objekts.toSorted(
-      (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
-    );
-  } else if (sort === "memberDesc" || sort === "memberAsc") {
+  if (sort === "date") {
+    if (sortDir === "desc")
+      objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
+    else objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
+  } else if (sort === "collectionNo") {
+    if (sortDir === "desc")
+      objekts = objekts.toSorted((a, b) =>
+        b.collectionNo.localeCompare(a.collectionNo)
+      );
+    else
+      objekts = objekts.toSorted((a, b) =>
+        a.collectionNo.localeCompare(b.collectionNo)
+      );
+  } else if (sort === "season") {
+    if (sortDir === "desc")
+      objekts = objekts
+        .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
+        .toSorted((a, b) => b.season.localeCompare(a.season));
+    else
+      objekts = objekts
+        .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+        .toSorted((a, b) => a.season.localeCompare(b.season));
+  } else if (sort === "serial") {
+    if (sortDir === "desc")
+      objekts = objekts.toSorted(
+        (a, b) => (b as OwnedObjekt).serial - (a as OwnedObjekt).serial
+      );
+    else
+      objekts = objekts.toSorted(
+        (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
+      );
+  } else if (sort === "member") {
     objekts = objekts.toSorted((a, b) => {
       const memberOrderA =
         artists
@@ -163,7 +167,7 @@ function filterObjekts<T extends ValidObjekt>(
           .find((artist) => artist.name === b.artist)
           ?.artistMembers.find((member) => member.name === b.member)?.order ??
         0;
-      if (sort === "memberDesc") return memberOrderB - memberOrderA;
+      if (sortDir === "desc") return memberOrderB - memberOrderA;
       return memberOrderA - memberOrderB;
     });
   }
@@ -175,12 +179,15 @@ function sortDuplicate<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[][]
 ) {
-  const sort = filters.sort ?? "newest";
-  if (sort === "duplicateDesc") {
-    objekts = objekts.toSorted((a, b) => b.length - a.length);
-  } else if (sort === "duplicateAsc") {
-    objekts = objekts.toSorted((a, b) => a.length - b.length);
+  const sort = filters.sort ?? "date";
+  const sortDir = filters.sort_dir ?? "desc";
+
+  if (sort === "duplicate") {
+    if (sortDir === "desc")
+      objekts = objekts.toSorted((a, b) => b.length - a.length);
+    else objekts = objekts.toSorted((a, b) => a.length - b.length);
   }
+
   return objekts;
 }
 
@@ -198,6 +205,8 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
     results = groupBy(objekts, () => "");
   }
 
+  const sortDir = filters.sort_dir ?? "desc";
+
   return Object.entries(results).toSorted(([keyA], [keyB]) => {
     if (filters.group_by === "member") {
       const memberOrderA =
@@ -210,18 +219,12 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
           .flatMap((a) => a.artistMembers)
           .find((member) => member.name === keyB)?.order ?? 0;
 
-      if (filters.sort == "memberDesc") return memberOrderB - memberOrderA;
+      if (sortDir == "desc") return memberOrderB - memberOrderA;
       return memberOrderA - memberOrderB;
     }
-    if (filters.group_by === "season") {
-      if (filters.sort === "newestSeason") return keyB.localeCompare(keyA);
-      return keyA.localeCompare(keyB);
-    }
-    if (filters.group_by === "collectionNo") {
-      if (filters.sort === "noDescending") return keyB.localeCompare(keyA);
-      return keyA.localeCompare(keyB);
-    }
-    return keyB.localeCompare(keyA);
+
+    if (sortDir === "desc") return keyB.localeCompare(keyA);
+    return keyA.localeCompare(keyB);
   });
 }
 
