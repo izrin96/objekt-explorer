@@ -16,6 +16,7 @@ export default function SortDirectionFilter() {
       }
     >
       {filters.sort_dir === "asc" ? <IconSortAsc /> : <IconSortDesc />}
+      {filters.sort_dir === "asc" ? "Ascending" : "Descending"}
     </Toggle>
   );
 }

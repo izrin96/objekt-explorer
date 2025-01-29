@@ -33,8 +33,8 @@ export default function FilterRender({ isOwned, artists }: Props) {
       <FilterSeason />
       <FilterOnline />
       <FilterClass />
-      <FilterGroupBy />
       <FilterSort isOwned={isOwned} />
+      <FilterGroupBy />
       <SortDirectionFilter />
       <FilterSearch />
       {isOwned && <CombineDuplicateFilter />}
