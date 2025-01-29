@@ -16,6 +16,8 @@ export const validSorts = [
   "serialAsc",
   "duplicateDesc",
   "duplicateAsc",
+  "memberDesc",
+  "memberAsc",
 ] as const;
 export type ValidSort = (typeof validSorts)[number];
 

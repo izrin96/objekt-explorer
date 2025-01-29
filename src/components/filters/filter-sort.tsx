@@ -21,6 +21,8 @@ const map: Record<ValidSort, string> = {
   serialAsc: "Lowest Serial",
   duplicateDesc: "Highest Duplicate",
   duplicateAsc: "Lowest Duplicate",
+  memberDesc: "Highest Member Order",
+  memberAsc: "Lowest Member Order",
 };
 
 const mapDesc: Record<ValidSort, string> = {
@@ -34,6 +36,8 @@ const mapDesc: Record<ValidSort, string> = {
   serialAsc: "Sort by Serial (asc)",
   duplicateDesc: "Sort by duplicate count (desc)",
   duplicateAsc: "Sort by duplicate count (asc)",
+  memberDesc: "Sort by Member order (desc)",
+  memberAsc: "Sort by Member order (asc)",
 };
 
 export default function SortFilter({ isOwned = false }: Props) {
@@ -50,12 +54,16 @@ export default function SortFilter({ isOwned = false }: Props) {
 
     setFilters((current) => ({
       sort: newValue === "newest" ? null : newValue,
-      grouped: newValue.startsWith("duplicate") ? true : current.grouped,
+      grouped: newValue.startsWith("duplicate")
+        ? true
+        : newValue.startsWith("serial")
+        ? false
+        : current.grouped,
     }));
   }
 
   const availableSorts = validSorts.filter((s) =>
-    isOwned ? true : !s.startsWith("serial") && !s.startsWith("duplicate")
+    isOwned ? true : !(s.startsWith("serial") || s.startsWith("duplicate"))
   );
 
   return (

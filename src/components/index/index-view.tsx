@@ -47,8 +47,8 @@ export default function IndexView({
   );
 
   useEffect(() => {
-    setObjektsFiltered(shapeIndexedObjekts(filters, objekts));
-  }, [filters, objekts]);
+    setObjektsFiltered(shapeIndexedObjekts(filters, objekts, artists));
+  }, [filters, objekts, artists]);
 
   return (
     <div className="flex flex-col gap-2">

@@ -104,8 +104,8 @@ function ProfileObjekt({ profile, artists }: Props) {
   );
 
   useEffect(() => {
-    setObjektsFiltered(shapeProfileObjekts(filters, objektsOwned));
-  }, [filters, objektsOwned]);
+    setObjektsFiltered(shapeProfileObjekts(filters, objektsOwned, artists));
+  }, [filters, objektsOwned, artists]);
 
   useEffect(() => {
     if (hasNextPage && isFetching === false) {

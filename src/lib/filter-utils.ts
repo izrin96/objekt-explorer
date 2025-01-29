@@ -10,6 +10,7 @@ import {
   ValidObjekt,
 } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
+import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 
 const shortformMembers: Record<string, string> = {
   naky: "NaKyoung",
@@ -71,7 +72,16 @@ const searchFilter = (search: string, objekt: ValidObjekt) => {
   );
 };
 
-function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
+const getSortDate = <T extends ValidObjekt>(obj: T) =>
+  "receivedAt" in obj
+    ? new Date((obj as OwnedObjekt).receivedAt).getTime()
+    : new Date(obj.createdAt).getTime();
+
+function filterObjekts<T extends ValidObjekt>(
+  filters: Filters,
+  objekts: T[],
+  artists: CosmoArtistWithMembersBFF[]
+) {
   if (filters.member) {
     objekts = objekts.filter((a) => filters.member?.includes(a.member));
   }
@@ -113,11 +123,6 @@ function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
 
   const sort = filters.sort ?? "newest";
 
-  const getSortDate = (obj: T) =>
-    "receivedAt" in obj
-      ? new Date((obj as OwnedObjekt).receivedAt).getTime()
-      : new Date(obj.createdAt).getTime();
-
   if (sort === "newest") {
     objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
   } else if (sort === "oldest") {
@@ -146,6 +151,21 @@ function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
     objekts = objekts.toSorted(
       (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
     );
+  } else if (sort === "memberDesc" || sort === "memberAsc") {
+    objekts = objekts.toSorted((a, b) => {
+      const memberOrderA =
+        artists
+          .find((artist) => artist.name === a.artist)
+          ?.artistMembers.find((member) => member.name === a.member)?.order ??
+        0;
+      const memberOrderB =
+        artists
+          .find((artist) => artist.name === b.artist)
+          ?.artistMembers.find((member) => member.name === b.member)?.order ??
+        0;
+      if (sort === "memberDesc") return memberOrderB - memberOrderA;
+      return memberOrderA - memberOrderB;
+    });
   }
 
   return objekts;
@@ -166,9 +186,10 @@ function sortDuplicate<T extends ValidObjekt>(
 
 export function shapeIndexedObjekts<T extends ValidObjekt>(
   filters: Filters,
-  objekts: T[]
+  objekts: T[],
+  artists: CosmoArtistWithMembersBFF[]
 ): [string, T[]][] {
-  objekts = filterObjekts(filters, objekts);
+  objekts = filterObjekts(filters, objekts, artists);
 
   let results: Record<string, T[]>;
   if (filters.group_by) {
@@ -177,23 +198,47 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
     results = groupBy(objekts, () => "");
   }
 
-  // sort key descending
-  return Object.entries(results).toSorted(([keyA], [keyB]) =>
-    keyB.localeCompare(keyA)
-  );
+  return Object.entries(results).toSorted(([keyA], [keyB]) => {
+    if (filters.group_by === "member") {
+      const memberOrderA =
+        artists
+          .flatMap((a) => a.artistMembers)
+          .find((member) => member.name === keyA)?.order ?? 0;
+
+      const memberOrderB =
+        artists
+          .flatMap((a) => a.artistMembers)
+          .find((member) => member.name === keyB)?.order ?? 0;
+
+      if (filters.sort == "memberDesc") return memberOrderB - memberOrderA;
+      return memberOrderA - memberOrderB;
+    }
+    if (filters.group_by === "season") {
+      if (filters.sort === "newestSeason") return keyB.localeCompare(keyA);
+      return keyA.localeCompare(keyB);
+    }
+    if (filters.group_by === "collectionNo") {
+      if (filters.sort === "noDescending") return keyB.localeCompare(keyA);
+      return keyA.localeCompare(keyB);
+    }
+    return keyB.localeCompare(keyA);
+  });
 }
 
 export function shapeProfileObjekts<T extends ValidObjekt>(
   filters: Filters,
-  objekts: T[]
+  objekts: T[],
+  artists: CosmoArtistWithMembersBFF[]
 ): [string, T[][]][] {
-  return shapeIndexedObjekts(filters, objekts).map(([key, objekts]) => {
-    let grouped: T[][];
-    if (filters.grouped) {
-      grouped = Object.values(groupBy(objekts, (a) => a.collectionId));
-    } else {
-      grouped = objekts.map((objekt) => [objekt]);
+  return shapeIndexedObjekts(filters, objekts, artists).map(
+    ([key, objekts]) => {
+      let grouped: T[][];
+      if (filters.grouped) {
+        grouped = Object.values(groupBy(objekts, (a) => a.collectionId));
+      } else {
+        grouped = objekts.map((objekt) => [objekt]);
+      }
+      return [key, sortDuplicate(filters, grouped)];
     }
-    return [key, sortDuplicate(filters, grouped)];
-  });
+  );
 }
