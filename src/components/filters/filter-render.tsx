@@ -26,7 +26,7 @@ export default function FilterRender({ isOwned, artists }: Props) {
   });
 
   return (
-    <div className="flex gap-2 items-center flex-wrap">
+    <div className="flex gap-2 items-center flex-wrap justify-center">
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
       {isOwned && <FilterTransferable />}

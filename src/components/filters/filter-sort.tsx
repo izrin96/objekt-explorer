@@ -42,6 +42,7 @@ export default function SortFilter({ isOwned = false }: Props) {
 
     setFilters((current) => ({
       sort: newValue === "date" ? null : newValue,
+      sort_dir: newValue === "serial" || newValue === "member" ? "asc" : null,
       grouped:
         newValue === "duplicate"
           ? true
@@ -57,7 +58,7 @@ export default function SortFilter({ isOwned = false }: Props) {
 
   return (
     <Menu>
-      <Button appearance="outline">Sort by {map[filters.sort ?? "date"]}</Button>
+      <Button appearance="outline">Sort by</Button>
       <Menu.Content
         selectionMode="single"
         selectedKeys={selected}

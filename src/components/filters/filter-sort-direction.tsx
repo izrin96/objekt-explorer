@@ -8,6 +8,7 @@ export default function SortDirectionFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
+      className="w-[125px]"
       isSelected={filters.sort_dir === "asc"}
       onChange={(v) =>
         setFilters({
