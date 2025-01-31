@@ -117,7 +117,7 @@ function ProfileObjekt({ profile, artists }: Props) {
     <div className="flex flex-col gap-2">
       <FilterView isOwned artists={artists} />
       <div className="flex items-center gap-2">
-        {hasNextPage && <Loader />}
+        {hasNextPage && <Loader variant="ring" />}
         <span className="font-semibold">
           {count} total
           {filters.grouped ? ` (${groupedCount} grouped)` : undefined}

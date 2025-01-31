@@ -34,7 +34,7 @@ export function InfiniteQueryNext({
         </InView>
       )}
 
-      {isFetchingNextPage && <Loader />}
+      {isFetchingNextPage && <Loader variant="ring" />}
 
       {status === "success" && !hasNextPage && <IconShieldCheck />}
     </div>

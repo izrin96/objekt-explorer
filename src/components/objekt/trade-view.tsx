@@ -41,7 +41,7 @@ export default function TradeView({ ...props }: TradeViewProps) {
           <Suspense
             fallback={
               <div className="flex justify-center">
-                <Loader />
+                <Loader variant="ring" />
               </div>
             }
           >
@@ -153,7 +153,7 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
   if (status === "pending")
     return (
       <div className="self-center">
-        <Loader />
+        <Loader variant="ring" />
       </div>
     );
 
