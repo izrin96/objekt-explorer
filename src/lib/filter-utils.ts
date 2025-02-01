@@ -116,8 +116,9 @@ function filterObjekts<T extends ValidObjekt>(
     );
   }
 
-  // default sort
+  // default sort and season sort
   objekts = objekts
+    .toSorted((a, b) => compareMember(a.member, b.member, "asc", artists))
     .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
     .toSorted((a, b) => b.season.localeCompare(a.season));
 
@@ -137,15 +138,6 @@ function filterObjekts<T extends ValidObjekt>(
       objekts = objekts.toSorted((a, b) =>
         a.collectionNo.localeCompare(b.collectionNo)
       );
-  } else if (sort === "season") {
-    if (sortDir === "desc")
-      objekts = objekts
-        .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
-        .toSorted((a, b) => b.season.localeCompare(a.season));
-    else
-      objekts = objekts
-        .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-        .toSorted((a, b) => a.season.localeCompare(b.season));
   } else if (sort === "serial") {
     if (sortDir === "desc")
       objekts = objekts.toSorted(
@@ -157,18 +149,7 @@ function filterObjekts<T extends ValidObjekt>(
       );
   } else if (sort === "member") {
     objekts = objekts.toSorted((a, b) => {
-      const memberOrderA =
-        artists
-          .find((artist) => artist.name === a.artist)
-          ?.artistMembers.find((member) => member.name === a.member)?.order ??
-        Infinity;
-      const memberOrderB =
-        artists
-          .find((artist) => artist.name === b.artist)
-          ?.artistMembers.find((member) => member.name === b.member)?.order ??
-        Infinity;
-      if (sortDir === "desc") return memberOrderB - memberOrderA;
-      return memberOrderA - memberOrderB;
+      return compareMember(a.member, b.member, sortDir, artists);
     });
   }
 
@@ -209,18 +190,7 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
 
   return Object.entries(results).toSorted(([keyA], [keyB]) => {
     if (filters.group_by === "member") {
-      const memberOrderA =
-        artists
-          .flatMap((a) => a.artistMembers)
-          .find((member) => member.name === keyA)?.order ?? Infinity;
-
-      const memberOrderB =
-        artists
-          .flatMap((a) => a.artistMembers)
-          .find((member) => member.name === keyB)?.order ?? Infinity;
-
-      if (groupDir == "desc") return memberOrderB - memberOrderA;
-      return memberOrderA - memberOrderB;
+      return compareMember(keyA, keyB, groupDir, artists);
     }
 
     if (groupDir === "desc") return keyB.localeCompare(keyA);
@@ -244,4 +214,24 @@ export function shapeProfileObjekts<T extends ValidObjekt>(
       return [key, sortDuplicate(filters, grouped)];
     }
   );
+}
+
+function compareMember(
+  memberA: string,
+  memberB: string,
+  direction: "asc" | "desc",
+  artists: CosmoArtistWithMembersBFF[]
+) {
+  const memberOrderA =
+    artists
+      .flatMap((a) => a.artistMembers)
+      .find((member) => member.name === memberA)?.order ?? Infinity;
+
+  const memberOrderB =
+    artists
+      .flatMap((a) => a.artistMembers)
+      .find((member) => member.name === memberB)?.order ?? Infinity;
+
+  if (direction == "desc") return memberOrderB - memberOrderA;
+  return memberOrderA - memberOrderB;
 }
