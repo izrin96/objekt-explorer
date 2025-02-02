@@ -18,8 +18,6 @@ export function getSeasonCollectionNo(objekt: ValidObjekt) {
 }
 
 export type OwnedObjektsResult = {
-  hasNext: boolean;
-  nextStartAfter?: number;
   objekts: OwnedObjekt[];
 };
 

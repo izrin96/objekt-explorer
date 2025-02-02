@@ -25,7 +25,7 @@ type TradeViewProps = {
   slug: string;
 };
 
-export const fetchObjektsQuery = (slug: string) => ({
+const fetchObjektsQuery = (slug: string) => ({
   queryKey: ["objekts", "list", slug],
   queryFn: async ({}) =>
     await ofetch<{ serials: ObjektSerial[] }>(`/api/objekts/list/${slug}`).then(

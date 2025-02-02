@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -13,14 +14,14 @@ import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import {
   QueryErrorResetBoundary,
-  useInfiniteQuery,
+  useSuspenseQuery,
 } from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
-import { fetchOwnedObjekts } from "@/lib/cosmo-request";
+import { fetchOwnedObjekts } from "./fetching-util";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
@@ -38,7 +39,15 @@ export default function ProfileObjektRender({ ...props }: Props) {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <ProfileObjekt {...props} />
+          <Suspense
+            fallback={
+              <div className="flex justify-center">
+                <Loader variant="ring" />
+              </div>
+            }
+          >
+            <ProfileObjekt {...props} />
+          </Suspense>
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
@@ -58,28 +67,20 @@ function ProfileObjekt({ profile, artists }: Props) {
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
-  const queryFunction = useCallback(
-    ({ pageParam = 0 }: { pageParam?: number }) => {
-      return fetchOwnedObjekts({
-        address: profile.address,
-        page: pageParam,
-      });
-    },
-    [profile.address]
-  );
+  const queryFunction = useCallback(() => {
+    return fetchOwnedObjekts({
+      address: profile.address,
+    });
+  }, [profile.address]);
 
-  const { data, fetchNextPage, hasNextPage, isFetching } = useInfiniteQuery({
+  const { data } = useSuspenseQuery({
     queryKey: ["owned-collections", profile.address],
     queryFn: queryFunction,
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextStartAfter,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
-  const objektsOwned = useMemo(() => {
-    return data?.pages?.flatMap((page) => page.objekts) ?? [];
-  }, [data]);
+  const objektsOwned = data.objekts;
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([key, groupedObjekts]) => {
@@ -107,17 +108,10 @@ function ProfileObjekt({ profile, artists }: Props) {
     setObjektsFiltered(shapeProfileObjekts(filters, objektsOwned, artists));
   }, [filters, objektsOwned, artists]);
 
-  useEffect(() => {
-    if (hasNextPage && isFetching === false) {
-      fetchNextPage();
-    }
-  }, [hasNextPage, fetchNextPage, isFetching]);
-
   return (
     <div className="flex flex-col gap-2">
       <FilterView isOwned artists={artists} />
       <div className="flex items-center gap-2">
-        {hasNextPage && <Loader variant="ring" />}
         <span className="font-semibold">
           {count} total
           {filters.grouped ? ` (${groupedCount} grouped)` : undefined}

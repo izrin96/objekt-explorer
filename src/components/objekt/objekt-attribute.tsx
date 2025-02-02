@@ -3,8 +3,8 @@ import { Badge, Skeleton } from "../ui";
 import { CSSProperties } from "react";
 import { getObjektArtist } from "./objekt-util";
 import { useQuery } from "@tanstack/react-query";
-import { fetchObjektsQuery } from "./trade-view";
 import { format } from "date-fns";
+import { ofetch } from "ofetch";
 
 type PillProps = {
   label: string;
@@ -40,7 +40,7 @@ function PillColor({ label, value, objekt }: PillProps) {
 }
 
 function PillCopies({ objekt }: { objekt: ValidObjekt }) {
-  const { data, status } = useQuery(fetchObjektsQuery(objekt.slug));
+  const { data, status } = useQuery(fetchMetadata(objekt.slug));
   return (
     <>
       {status === "pending" && <Skeleton className="w-20 h-6" />}
@@ -52,12 +52,40 @@ function PillCopies({ objekt }: { objekt: ValidObjekt }) {
       {status === "success" && (
         <Pill
           label={objekt.onOffline === "online" ? "Copies" : "Scanned Copies"}
-          value={`${data.length}`}
+          value={`${data.total}`}
         />
       )}
     </>
   );
 }
+
+function PillTradable({ objekt }: { objekt: ValidObjekt }) {
+  const { data, status } = useQuery(fetchMetadata(objekt.slug));
+  return (
+    <>
+      {status === "pending" && <Skeleton className="w-20 h-6" />}
+      {status === "error" && (
+        <Badge shape="square" intent="danger">
+          Error
+        </Badge>
+      )}
+      {status === "success" && (
+        <Pill
+          label={"Tradable"}
+          value={`${((data.transferable / data.total) * 100.0).toFixed(2)}% (${data.transferable})`}
+        />
+      )}
+    </>
+  );
+}
+
+const fetchMetadata = (slug: string) => ({
+  queryKey: ["objekts", "metadata", slug],
+  queryFn: async ({}) =>
+    await ofetch<{ transferable: number; total: number }>(
+      `/api/objekts/metadata/${slug}`
+    ),
+});
 
 export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
   const artist = getObjektArtist(objekt);
@@ -83,6 +111,7 @@ export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
         label="Created at"
         value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
       />
+      <PillTradable objekt={objekt} />
     </div>
   );
 }
