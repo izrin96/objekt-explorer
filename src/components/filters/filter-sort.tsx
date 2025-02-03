@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useFilters } from "@/hooks/use-filters";
 
 type Props = {
-  isOwned?: boolean;
+  isProfile?: boolean;
 };
 
 const map: Record<ValidSort, string> = {
@@ -28,7 +28,7 @@ const mapDesc: Record<ValidSort, string> = {
   member: "Sort by Member",
 };
 
-export default function SortFilter({ isOwned = false }: Props) {
+export default function SortFilter({ isProfile = false }: Props) {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(
     () => new Set(filters.sort ? [filters.sort] : ["date"]),
@@ -53,7 +53,7 @@ export default function SortFilter({ isOwned = false }: Props) {
   }
 
   const availableSorts = validSorts.filter((s) =>
-    isOwned ? true : !(s === "serial" || s === "duplicate")
+    isProfile ? true : !(s === "serial" || s === "duplicate")
   );
 
   return (

@@ -20,10 +20,10 @@ import UnownedFilter from "./filter-unowned";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
-  isOwned?: boolean;
+  isProfile?: boolean;
 };
 
-export default function FilterRender({ isOwned, artists }: Props) {
+export default function FilterRender({ isProfile, artists }: Props) {
   const isDesktop = useMediaQuery("(min-width: 640px)", {
     initializeWithValue: false,
   });
@@ -34,18 +34,18 @@ export default function FilterRender({ isOwned, artists }: Props) {
     <div className="flex gap-2 items-center flex-wrap justify-center">
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
-      {isOwned && <FilterTransferable />}
+      {isProfile && <FilterTransferable />}
       <FilterSeason />
       <FilterOnline />
       <FilterClass />
-      <FilterSort isOwned={isOwned} />
+      <FilterSort isProfile={isProfile} />
       <SortDirectionFilter />
-      {isOwned && <CombineDuplicateFilter />}
+      {isProfile && <CombineDuplicateFilter />}
       <FilterSearch />
       <FilterGroupBy />
       {filters.group_by && <GroupDirectionFilter />}
       {isDesktop && <ColumnFilter />}
-      {isOwned && <UnownedFilter />}
+      {isProfile && <UnownedFilter />}
     </div>
   );
 }

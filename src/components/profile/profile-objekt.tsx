@@ -113,7 +113,7 @@ function ProfileObjekt({ profile, artists, objekts }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <FilterView isOwned artists={artists} />
+      <FilterView isProfile artists={artists} />
       <div className="flex items-center gap-2">
         <span className="font-semibold">
           {count} total
@@ -121,7 +121,7 @@ function ProfileObjekt({ profile, artists, objekts }: Props) {
         </span>
       </div>
 
-      <ObjektModalProvider>
+      <ObjektModalProvider isProfile>
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
     </div>

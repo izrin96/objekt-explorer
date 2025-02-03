@@ -16,12 +16,17 @@ import TradeView from "./trade-view";
 import { format } from "date-fns";
 import { cn } from "@/utils/classes";
 import { IconOpenLink } from "justd-icons";
+import { ArchiveXIcon } from "lucide-react";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
+  isProfile?: boolean;
 };
 
-export default function ObjektDetail({ objekts }: ObjektDetailProps) {
+export default function ObjektDetail({
+  objekts,
+  isProfile,
+}: ObjektDetailProps) {
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
@@ -101,7 +106,7 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
             className="p-2"
           >
             <Tabs.List>
-              {isOwned && <Tabs.Tab id="owned">Owned</Tabs.Tab>}
+              {isProfile && <Tabs.Tab id="owned">Owned</Tabs.Tab>}
               <Tabs.Tab id="trades">Trades</Tabs.Tab>
               <Tabs.Tab
                 id="apollo"
@@ -112,9 +117,16 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
                 View in Apollo
               </Tabs.Tab>
             </Tabs.List>
-            {isOwned && (
+            {isProfile && (
               <Tabs.Panel id="owned">
-                <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
+                {isOwned ? (
+                  <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
+                ) : (
+                  <div className="flex flex-col justify-center gap-3 items-center">
+                    <ArchiveXIcon strokeWidth="1.2" size="64" />
+                    <p>Not owned</p>
+                  </div>
+                )}
               </Tabs.Panel>
             )}
             <Tabs.Panel id="trades">
