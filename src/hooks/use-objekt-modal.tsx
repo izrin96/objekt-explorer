@@ -20,14 +20,9 @@ const ObjektModalContext = createContext<ContextProps>({} as ContextProps);
 type ProviderProps = {
   children: ReactNode;
   initialTab?: ValidTab;
-  isOwned?: boolean;
 };
 
-export function ObjektModalProvider({
-  children,
-  initialTab,
-  isOwned = false,
-}: ProviderProps) {
+export function ObjektModalProvider({ children, initialTab }: ProviderProps) {
   const [currentTab, setCurrentTab] = useState<ValidTab | undefined>(
     initialTab
   );
@@ -60,9 +55,7 @@ export function ObjektModalProvider({
           <Modal.Title>Objekt display</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0 sm:p-0 overflow-y-auto sm:overflow-y-hidden">
-          {objekts.length > 0 && (
-            <ObjektDetail isOwned={isOwned} objekts={objekts} />
-          )}
+          {objekts.length > 0 && <ObjektDetail objekts={objekts} />}
         </Modal.Body>
       </Modal.Content>
 

@@ -48,6 +48,7 @@ export function useFilters() {
     group_dir: parseAsStringEnum<ValidSortDirection>(
       Object.values(validSortDirection)
     ),
+    unowned: parseAsBoolean,
   });
 }
 

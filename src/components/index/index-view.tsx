@@ -33,12 +33,10 @@ export default function IndexView({
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([key, objekts]) => {
-      return [
-        GroupLabelRender({ key }),
-        ...ObjektsRender({ objekts, columns, key }),
-      ];
-    });
+    return deferredObjektsFiltered.flatMap(([key, objekts]) => [
+      GroupLabelRender({ key }),
+      ...ObjektsRender({ objekts, columns, key }),
+    ]);
   }, [deferredObjektsFiltered, columns]);
 
   const count = useMemo(
@@ -55,7 +53,7 @@ export default function IndexView({
       <FilterView artists={artists} />
       <span className="font-semibold">{count} total</span>
 
-      <ObjektModalProvider initialTab="trades">
+      <ObjektModalProvider>
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
     </div>

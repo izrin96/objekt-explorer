@@ -67,7 +67,7 @@ function ProfileTrades({ address }: { address: string }) {
               </tr>
             </thead>
             <tbody className="[&_.tr:last-child]:border-0">
-              <ObjektModalProvider initialTab="trades" isOwned>
+              <ObjektModalProvider initialTab="trades">
                 {rows.map((row) => (
                   <ProfileTradeRow
                     key={row.transfer.id}

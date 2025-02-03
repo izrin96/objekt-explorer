@@ -16,6 +16,7 @@ import GroupDirectionFilter from "./filter-group-direction";
 import { useMediaQuery } from "usehooks-ts";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useFilters } from "@/hooks/use-filters";
+import UnownedFilter from "./filter-unowned";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -44,6 +45,7 @@ export default function FilterRender({ isOwned, artists }: Props) {
       <FilterGroupBy />
       {filters.group_by && <GroupDirectionFilter />}
       {isDesktop && <ColumnFilter />}
+      {isOwned && <UnownedFilter />}
     </div>
   );
 }

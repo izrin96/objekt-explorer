@@ -1,9 +1,13 @@
 import { ofetch } from "ofetch";
-import { OwnedObjektsResult } from "@/lib/universal/objekts";
+import { OwnedObjekt } from "@/lib/universal/objekts";
 import { overrideColor } from "@/lib/utils";
 
 type OwnedObjektRequest = {
   address: string;
+};
+
+type OwnedObjektsResult = {
+  objekts: OwnedObjekt[];
 };
 
 export async function fetchOwnedObjekts({ address }: OwnedObjektRequest) {

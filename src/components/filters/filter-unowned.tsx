@@ -3,19 +3,19 @@
 import { Toggle } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
 
-export default function TransferableFilter() {
+export default function UnownedFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
       className="data-selected:inset-ring-primary font-medium"
-      isSelected={filters.transferable ?? false}
+      isSelected={filters.unowned ?? false}
       onChange={(v) =>
         setFilters({
-          transferable: v ? true : null,
+          unowned: v ? true : null,
         })
       }
     >
-      Transferable
+      Show Unowned
     </Toggle>
   );
 }

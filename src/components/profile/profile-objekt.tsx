@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Suspense,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -12,10 +11,7 @@ import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
-import {
-  QueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
@@ -26,12 +22,13 @@ import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useMediaQuery } from "usehooks-ts";
-import { OwnedObjekt } from "@/lib/universal/objekts";
+import { IndexedObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
   profile: CosmoPublicUser;
+  objekts: IndexedObjekt[];
 };
 
 export default function ProfileObjektRender({ ...props }: Props) {
@@ -39,22 +36,14 @@ export default function ProfileObjektRender({ ...props }: Props) {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <Suspense
-            fallback={
-              <div className="flex justify-center">
-                <Loader variant="ring" />
-              </div>
-            }
-          >
-            <ProfileObjekt {...props} />
-          </Suspense>
+          <ProfileObjekt {...props} />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
   );
 }
 
-function ProfileObjekt({ profile, artists }: Props) {
+function ProfileObjekt({ profile, artists, objekts }: Props) {
   const [filters] = useFilters();
 
   const isDesktop = useMediaQuery("(min-width: 640px)");
@@ -63,32 +52,39 @@ function ProfileObjekt({ profile, artists }: Props) {
     : GRID_COLUMNS_MOBILE;
 
   const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, OwnedObjekt[][]][]
+    [string, ValidObjekt[][]][]
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const queryFunction = useCallback(() => {
     return fetchOwnedObjekts({
       address: profile.address,
-    });
+    }).then((a) => a.objekts);
   }, [profile.address]);
 
-  const { data } = useSuspenseQuery({
+  const { data, isPending } = useQuery({
     queryKey: ["owned-collections", profile.address],
     queryFn: queryFunction,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
   });
 
-  const objektsOwned = data.objekts;
+  const joinedObjekts = useMemo(() => {
+    let ownedObjekts: ValidObjekt[] = data ?? [];
+    if (filters.unowned) {
+      const missingObjekts = objekts.filter(
+        (a) => !ownedObjekts.some((b) => b.slug === a.slug)
+      );
+      ownedObjekts = [...ownedObjekts, ...missingObjekts];
+    }
+    return ownedObjekts;
+  }, [data, filters.unowned, objekts]);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([key, groupedObjekts]) => {
-      return [
-        GroupLabelRender({ key }),
-        ...ObjektsRender({ groupedObjekts, columns, key }),
-      ];
-    });
+    return deferredObjektsFiltered.flatMap(([key, groupedObjekts]) => [
+      GroupLabelRender({ key }),
+      ...ObjektsRender({ groupedObjekts, columns, key }),
+    ]);
   }, [deferredObjektsFiltered, columns]);
 
   const count = useMemo(
@@ -105,8 +101,15 @@ function ProfileObjekt({ profile, artists }: Props) {
   );
 
   useEffect(() => {
-    setObjektsFiltered(shapeProfileObjekts(filters, objektsOwned, artists));
-  }, [filters, objektsOwned, artists]);
+    setObjektsFiltered(shapeProfileObjekts(filters, joinedObjekts, artists));
+  }, [filters, joinedObjekts, artists]);
+
+  if (isPending)
+    return (
+      <div className="justify-center flex">
+        <Loader variant="ring" />
+      </div>
+    );
 
   return (
     <div className="flex flex-col gap-2">
@@ -118,7 +121,7 @@ function ProfileObjekt({ profile, artists }: Props) {
         </span>
       </div>
 
-      <ObjektModalProvider initialTab="owned" isOwned>
+      <ObjektModalProvider>
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
     </div>
@@ -142,7 +145,7 @@ function ObjektsRender({
   columns,
 }: {
   key: string;
-  groupedObjekts: OwnedObjekt[][];
+  groupedObjekts: ValidObjekt[][];
   columns: number;
 }) {
   return Array.from({
@@ -165,7 +168,7 @@ function ObjektsRowRender({
   columns,
 }: {
   rowIndex: number;
-  groupedObjekts: OwnedObjekt[][];
+  groupedObjekts: ValidObjekt[][];
   columns: number;
 }) {
   return (
@@ -175,12 +178,12 @@ function ObjektsRowRender({
         const objekts = groupedObjekts[index];
         return (
           <div className="flex-1" key={j}>
-            {objekts && (
+            {objekts?.length > 0 && (
               <ObjektView
                 key={objekts[0].id}
                 objekts={objekts}
                 priority={index < columns * 3}
-                isOwned
+                isProfile
               />
             )}
           </div>

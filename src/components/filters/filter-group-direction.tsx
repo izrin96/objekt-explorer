@@ -8,7 +8,7 @@ export default function GroupDirectionFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
-      className="w-[125px]"
+      className="w-[125px] font-medium"
       isSelected={filters.group_dir === "asc"}
       onChange={(v) =>
         setFilters({

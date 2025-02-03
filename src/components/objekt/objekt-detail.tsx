@@ -18,16 +18,13 @@ import { cn } from "@/utils/classes";
 import { IconOpenLink } from "justd-icons";
 
 type ObjektDetailProps = {
-  isOwned?: boolean;
   objekts: ValidObjekt[];
 };
 
-export default function ObjektDetail({
-  objekts,
-  isOwned = false,
-}: ObjektDetailProps) {
+export default function ObjektDetail({ objekts }: ObjektDetailProps) {
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const [objekt] = objekts;
+  const isOwned = "serial" in objekt;
   const [flipped, setFlipped] = useState(false);
   const [hide, setHide] = useState(false);
   const { currentTab, setCurrentTab } = useObjektModal();
@@ -97,7 +94,7 @@ export default function ObjektDetail({
           <AttributePanel objekt={objekt} />
           <Tabs
             aria-label="Objekt tab"
-            selectedKey={currentTab}
+            defaultSelectedKey={currentTab}
             onSelectionChange={(key) =>
               setCurrentTab(key.toString() as ValidTab)
             }

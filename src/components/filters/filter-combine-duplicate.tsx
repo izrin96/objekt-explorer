@@ -7,9 +7,7 @@ export default function CombineDuplicateFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
-      className="data-selected:inset-ring-primary"
-      appearance="outline"
-      size="medium"
+      className="data-selected:inset-ring-primary font-medium"
       isSelected={filters.grouped ?? false}
       onChange={(v) =>
         setFilters({

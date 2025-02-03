@@ -129,6 +129,12 @@ function filterObjekts<T extends ValidObjekt>(
     if (sortDir === "desc")
       objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
     else objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
+  } else if (sort === "season") {
+    // for desc, use default
+    if (sortDir === "asc")
+      objekts = objekts
+        .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+        .toSorted((a, b) => a.season.localeCompare(b.season));
   } else if (sort === "collectionNo") {
     if (sortDir === "desc")
       objekts = objekts.toSorted((a, b) =>

@@ -12,18 +12,19 @@ import ObjektSidebar from "./objekt-sidebar";
 import { useFilters } from "@/hooks/use-filters";
 import { useMediaQuery } from "usehooks-ts";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
+import { cn } from "@/utils/classes";
 
 type Props = {
   objekts: ValidObjekt[];
-  isOwned?: boolean;
   priority?: boolean;
   setActive?: (slug: string | null) => void;
+  isProfile?: boolean;
 };
 
 export default memo(function ObjektView({
-  isOwned = false,
   priority = false,
   setActive,
+  isProfile = false,
   ...props
 }: Props) {
   const { openObjekts } = useObjektModal();
@@ -33,6 +34,7 @@ export default memo(function ObjektView({
     (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
   );
   const [objekt] = objekts;
+  const isOwned = "serial" in objekt;
 
   const css = {
     "--objekt-accent-color": objekt.accentColor,
@@ -48,7 +50,13 @@ export default memo(function ObjektView({
 
   return (
     <>
-      <div className="flex flex-col gap-2" style={css}>
+      <div
+        className={cn(
+          "flex flex-col gap-2",
+          isProfile && !isOwned && "opacity-50"
+        )}
+        style={css}
+      >
         <Tilt
           tiltEnable={isDesktop}
           tiltReverse

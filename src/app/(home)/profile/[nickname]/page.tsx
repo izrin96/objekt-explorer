@@ -1,6 +1,7 @@
 import ProfileObjektRender from "@/components/profile/profile-objekt";
 import {
   getArtistsWithMembers,
+  getObjektsIndex,
   getUserByIdentifier,
 } from "@/lib/client-fetching";
 import { Metadata } from "next";
@@ -23,10 +24,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function UserCollectionPage(props: Props) {
   const params = await props.params;
 
-  const [targetUser, artists] = await Promise.all([
+  const [targetUser, artists, objekts] = await Promise.all([
     getUserByIdentifier(params.nickname),
     getArtistsWithMembers(),
+    getObjektsIndex(),
   ]);
 
-  return <ProfileObjektRender profile={targetUser} artists={artists} />;
+  return (
+    <ProfileObjektRender
+      objekts={objekts}
+      profile={targetUser}
+      artists={artists}
+    />
+  );
 }
