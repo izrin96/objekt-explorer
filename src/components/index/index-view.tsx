@@ -53,7 +53,7 @@ export default function IndexView({
       <FilterView artists={artists} />
       <span className="font-semibold">{count} total</span>
 
-      <ObjektModalProvider>
+      <ObjektModalProvider initialTab="trades">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
     </div>

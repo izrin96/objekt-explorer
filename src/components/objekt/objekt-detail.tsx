@@ -99,7 +99,7 @@ export default function ObjektDetail({
           <AttributePanel objekt={objekt} />
           <Tabs
             aria-label="Objekt tab"
-            defaultSelectedKey={currentTab}
+            selectedKey={currentTab}
             onSelectionChange={(key) =>
               setCurrentTab(key.toString() as ValidTab)
             }

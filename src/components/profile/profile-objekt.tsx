@@ -121,7 +121,7 @@ function ProfileObjekt({ profile, artists, objekts }: Props) {
         </span>
       </div>
 
-      <ObjektModalProvider isProfile>
+      <ObjektModalProvider initialTab="owned" isProfile>
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
     </div>

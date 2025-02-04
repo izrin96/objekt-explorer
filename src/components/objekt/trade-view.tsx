@@ -162,8 +162,8 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
 
   if (!data.owner)
     return (
-      <div className="flex flex-col justify-center gap-3 items-center text-muted-fg py-3">
-        <IconCircleQuestionmark className="size-12" />
+      <div className="flex flex-col justify-center gap-3 items-center py-3">
+        <IconCircleQuestionmark className="size-16" />
         <p>Not found</p>
       </div>
     );
