@@ -11,7 +11,11 @@ import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
-import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
@@ -22,13 +26,13 @@ import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useMediaQuery } from "usehooks-ts";
-import { IndexedObjekt, ValidObjekt } from "@/lib/universal/objekts";
-import { cn } from "@/utils/classes";
+import { ValidObjekt } from "@/lib/universal/objekts";
+import { GroupLabelRender } from "../index/index-view";
+import { collectionOptions } from "@/lib/query-options";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
   profile: CosmoPublicUser;
-  objekts: IndexedObjekt[];
 };
 
 export default function ProfileObjektRender({ ...props }: Props) {
@@ -43,8 +47,9 @@ export default function ProfileObjektRender({ ...props }: Props) {
   );
 }
 
-function ProfileObjekt({ profile, artists, objekts }: Props) {
+function ProfileObjekt({ profile, artists }: Props) {
   const [filters] = useFilters();
+  const { data: objekts } = useSuspenseQuery(collectionOptions);
 
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const columns = isDesktop
@@ -124,17 +129,6 @@ function ProfileObjekt({ profile, artists, objekts }: Props) {
       <ObjektModalProvider initialTab="owned" isProfile>
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
-    </div>
-  );
-}
-
-function GroupLabelRender({ key }: { key: string }) {
-  return (
-    <div
-      key={key}
-      className={cn("font-semibold text-base pb-3 pt-3", !key && "hidden")}
-    >
-      {key}
     </div>
   );
 }

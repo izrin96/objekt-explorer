@@ -12,15 +12,33 @@ import { WindowVirtualizer } from "virtua";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/utils/classes";
+import {
+  QueryErrorResetBoundary,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
+import { collectionOptions } from "@/lib/query-options";
+import ErrorFallbackRender from "../error-fallback";
 
-export default function IndexView({
-  objekts,
-  artists,
-}: {
+type Props = {
   artists: CosmoArtistWithMembersBFF[];
-  objekts: IndexedObjekt[];
-}) {
+};
+
+export default function IndexRender({ ...props }: Props) {
+  return (
+    <QueryErrorResetBoundary>
+      {({ reset }) => (
+        <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+          <IndexView {...props} />
+        </ErrorBoundary>
+      )}
+    </QueryErrorResetBoundary>
+  );
+}
+
+function IndexView({ artists }: Props) {
   const [filters] = useFilters();
+  const { data: objekts } = useSuspenseQuery(collectionOptions);
 
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const columns = isDesktop
@@ -71,7 +89,7 @@ export function GroupLabelRender({ key }: { key: string }) {
   );
 }
 
-export function ObjektsRender({
+function ObjektsRender({
   key,
   objekts,
   columns,

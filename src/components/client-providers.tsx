@@ -7,6 +7,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import NextTopLoader from "nextjs-toploader";
 import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -15,7 +16,6 @@ declare module "react-aria-components" {
     >;
   }
 }
-
 
 export default function ClientProviders({ children }: PropsWithChildren) {
   const queryClient = new QueryClient();
@@ -28,6 +28,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
         <NuqsAdapter>
           <QueryClientProvider client={queryClient}>
             {children}
+            <ReactQueryDevtools />
           </QueryClientProvider>
         </NuqsAdapter>
       </ThemeProvider>
