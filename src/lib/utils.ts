@@ -40,8 +40,8 @@ export function getBaseURL() {
   if (!isServer) {
     return "";
   }
-  if (env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+  if (env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
   return "http://localhost:3000";
 }
