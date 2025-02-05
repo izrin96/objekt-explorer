@@ -8,6 +8,7 @@ const Analytics = () => {
     <OpenPanelComponent
       clientId={env.ANALYTICS_CLIENT_ID}
       clientSecret={env.ANALYTICS_SECRET}
+      trackScreenViews
     />
   );
 };
