@@ -8,8 +8,10 @@ import { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 import { ofetch } from "ofetch";
 import { useRouter } from "nextjs-toploader/app";
 import { IconSearch } from "justd-icons";
+import { usePathname } from "next/navigation";
 
 export default function UserSearch() {
+  const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [result, setResult] = useState<CosmoPublicUser[]>([]);
@@ -39,6 +41,10 @@ export default function UserSearch() {
     if (isPending) return;
     setResult(data ?? []);
   }, [isPending, data]);
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
 
   return (
     <>

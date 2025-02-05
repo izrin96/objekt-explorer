@@ -53,7 +53,7 @@ export function ObjektModalProvider({
         openTrades,
       }}
     >
-      <Modal.Content isOpen={open} onOpenChange={setOpen} size="5xl">
+      <Modal.Content isOpen={open} onOpenChange={() => setOpen(false)} size="5xl">
         <Modal.Header className="hidden">
           <Modal.Title>Objekt display</Modal.Title>
         </Modal.Header>

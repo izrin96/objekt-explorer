@@ -106,11 +106,11 @@ export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
         objekt={objekt}
       />
       <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />
-      <PillCopies objekt={objekt} />
       <Pill
         label="Created at"
         value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
       />
+      <PillCopies objekt={objekt} />
       <PillTradable objekt={objekt} />
     </div>
   );
