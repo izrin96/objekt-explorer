@@ -5,6 +5,7 @@ import { Toast } from "@/components/ui";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import { Analytics } from "@/components/analytics";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -51,6 +52,7 @@ export default function RootLayout({
               {children}
             </main>
           </div>
+          <Analytics />
         </ClientProviders>
       </body>
     </html>

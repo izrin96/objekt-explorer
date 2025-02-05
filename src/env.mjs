@@ -9,6 +9,8 @@ export const env = createEnv({
     DB_PROXY_URL: z.string(),
     DATABASE_URL: z.string().optional(),
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
+    ANALYTICS_CLIENT_ID: z.string(),
+    ANALYTICS_SECRET: z.string().optional(),
   },
   client: {},
   experimental__runtimeEnv: {},
