@@ -2,39 +2,31 @@
 
 import { useFilters } from "@/hooks/use-filters";
 import { Button, Popover, TextField } from "../ui";
-import { useDebounceCallback } from "usehooks-ts";
+import { useDebounceValue } from "usehooks-ts";
 import { IconCircleQuestionmark, IconX } from "justd-icons";
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function FilterSearch() {
   const [filters, setFilters] = useFilters();
   const [query, setQuery] = useState(filters.search ?? "");
 
-  const debounced = useDebounceCallback((value: string) => {
-    setFilters({
-      search: value === "" ? null : value,
-    });
-  }, 250);
+  const [debounced] = useDebounceValue(query, 250);
 
-  const handleChange = useCallback(
-    (value: string) => {
-      setQuery(value);
-      debounced(value);
-    },
-    [setQuery, debounced]
-  );
+  useEffect(() => {
+    setFilters({ search: debounced === "" ? null : debounced });
+  }, [debounced, setFilters]);
 
   return (
     <div>
       <TextField
         placeholder={`Quick search..`}
-        onChange={handleChange}
+        onChange={setQuery}
         className="min-w-65"
         value={query}
         aria-label="Search"
         suffix={
           query.length > 0 ? (
-            <Button appearance="plain" onPress={() => handleChange("")}>
+            <Button appearance="plain" onPress={() => setQuery("")}>
               <IconX />
             </Button>
           ) : (
