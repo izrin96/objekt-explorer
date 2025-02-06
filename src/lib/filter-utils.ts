@@ -14,44 +14,63 @@ import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 
 const shortformMembers: Record<string, string> = {
   naky: "NaKyoung",
+  n: "Nien",
+  nk: "NaKyoung",
   tone: "Kotone",
   sulin: "Sullin",
+  sh: "SoHyun",
+  c: "Choerry",
   choery: "Choerry",
+  cw: "ChaeWon",
+  cy: "ChaeYeon",
   sy: "SeoYeon",
-  yy: "YooYeon",
+  sm: "SooMin",
+  so: "ShiOn",
+  sa: "SeoAh",
+  sl: "Sullin",
+  jw: "JiWoo",
   jb: "JooBin",
+  jy: "JiYeon",
+  js: "JinSoul",
   dh: "DaHyun",
   kd: "Kaede",
-  hr: "HyeRin",
-  jw: "JiWoo",
-  cy: "ChaeYeon",
-  sm: "SooMin",
-  nk: "NaKyoung",
-  yb: "YuBin",
+  kl: "KimLip",
   k: "Kaede",
+  hr: "HyeRin",
+  hy: "HaYeon",
+  hj: "HeeJin",
+  hs: "HaSeul",
+  yb: "YuBin",
   yj: "YeonJi",
-  n: "Nien",
-  sh: "SoHyun",
+  yy: "YooYeon",
   x: "Xinyu",
   m: "Mayu",
   l: "Lynn",
-  hy: "HaYeon",
-  so: "ShiOn",
-  cw: "ChaeWon",
-  s: "Sullin",
-  sa: "SeoAh",
-  jy: "JiYeon",
-  hj: "HeeJin",
-  hs: "HaSeul",
-  kl: "KimLip",
-  js: "JinSoul",
-  c: "Choerry",
 };
 
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter(
     (key) => shortformMembers[key] === value
   );
+}
+
+function parseCollectionNo(value: string) {
+  const expression = /^([a-zA-Z]?)(\d{3})([azAZ]?)$/;
+  const match = value.match(expression);
+  if (!match) throw new Error("Failed to parse collectionNo");
+  const [, seasonCode, collectionNo, type] = match;
+  return {
+    seasonCode,
+    collectionNo,
+    type,
+  };
+}
+
+function parseSerial(value: string) {
+  const expression = /\d+/;
+  const match = value.match(expression);
+  if (!match) throw new Error("Failed to parse serial");
+  return parseInt(match[0]);
 }
 
 const searchFilter = (search: string, objekt: ValidObjekt) => {
@@ -61,15 +80,48 @@ const searchFilter = (search: string, objekt: ValidObjekt) => {
     .map((a) => a.trim())
     .filter(Boolean);
 
-  const values = [
-    ...getMemberShortKeys(objekt.member),
-    objekt.member,
-    objekt.collectionNo,
-    getSeasonCollectionNo(objekt),
-  ];
-  return keywords.every((keyword) =>
-    values.some((value) => value.toLowerCase().startsWith(keyword))
-  );
+  return keywords.every((keyword) => {
+    // handle serial search
+    if (keyword.startsWith("#") && "serial" in objekt) {
+      try {
+        if (keyword.includes("-")) {
+          const [start, end] = keyword.split("-").map((a) => parseSerial(a));
+          if (objekt.serial >= start && objekt.serial <= end) return true;
+        } else if (objekt.serial === parseSerial(keyword)) return true;
+      } catch {}
+    }
+
+    // handle collectionNo search by range
+    if (!keyword.startsWith("#") && keyword.includes("-")) {
+      try {
+        const [left, right] = keyword
+          .split("-")
+          .map((a) => parseCollectionNo(a));
+
+        const collectionNo = objekt.collectionNo.toLowerCase();
+        const seasonCode = objekt.season.charAt(0).toLowerCase();
+        if (
+          collectionNo >= `${left.collectionNo}${left.type || "a"}` &&
+          collectionNo <= `${right.collectionNo}${right.type || "z"}` &&
+          seasonCode >= (left.seasonCode || "a") &&
+          seasonCode <= (right.seasonCode || "z")
+        )
+          return true;
+      } catch {}
+    }
+
+    // handle member search
+    const memberKeys = [...getMemberShortKeys(objekt.member), objekt.member];
+    if (memberKeys.some((value) => value.toLowerCase() === keyword))
+      return true;
+
+    // handle collectionNo search
+    const collectionNos = [objekt.collectionNo, getSeasonCollectionNo(objekt)];
+    if (collectionNos.some((value) => value.toLowerCase().startsWith(keyword)))
+      return true;
+
+    return false;
+  });
 };
 
 const getSortDate = <T extends ValidObjekt>(obj: T) =>
