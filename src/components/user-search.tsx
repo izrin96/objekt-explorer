@@ -32,6 +32,7 @@ export default function UserSearch() {
   const onAction = useCallback(
     (nickname: string) => {
       setIsOpen(false);
+      setQuery("");
       router.push(`/@${nickname}`);
     },
     [router, setIsOpen]
