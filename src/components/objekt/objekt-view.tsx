@@ -82,7 +82,7 @@ export default memo(function ObjektView({
 
             <ObjektSidebar
               collection={objekt.collectionNo}
-              serial={(objekt as OwnedObjekt).serial}
+              serial={isOwned ? objekt.serial : undefined}
             />
 
             {objekts.length > 1 && (
@@ -100,9 +100,7 @@ export default memo(function ObjektView({
             onClick={onClick}
           >
             {getCollectionShortId(objekt)}
-            {isOwned &&
-              !filters.grouped &&
-              ` #${(objekt as OwnedObjekt).serial}`}
+            {isOwned && !filters.grouped && ` #${objekt.serial}`}
           </Badge>
         </div>
       </div>

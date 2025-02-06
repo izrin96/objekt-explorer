@@ -76,7 +76,7 @@ export default function ObjektDetail({
               />
               <ObjektSidebar
                 collection={objekt.collectionNo}
-                serial={(objekt as OwnedObjekt).serial}
+                serial={isOwned ? objekt.serial : undefined}
               />
             </div>
             <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">

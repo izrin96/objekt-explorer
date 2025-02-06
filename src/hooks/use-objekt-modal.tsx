@@ -34,7 +34,7 @@ export function ObjektModalProvider({
   const [currentSerial, setCurrentSerial] = useState<number | undefined>();
   function openObjekts(objekts: ValidObjekt[]) {
     const [objekt] = objekts;
-    setCurrentSerial((objekt as OwnedObjekt).serial);
+    setCurrentSerial("serial" in objekt ? objekt.serial : undefined);
     setObjekts(objekts);
     setOpen(true);
   }
@@ -53,7 +53,11 @@ export function ObjektModalProvider({
         openTrades,
       }}
     >
-      <Modal.Content isOpen={open} onOpenChange={() => setOpen(false)} size="5xl">
+      <Modal.Content
+        isOpen={open}
+        onOpenChange={() => setOpen(false)}
+        size="5xl"
+      >
         <Modal.Header className="hidden">
           <Modal.Title>Objekt display</Modal.Title>
         </Modal.Header>
