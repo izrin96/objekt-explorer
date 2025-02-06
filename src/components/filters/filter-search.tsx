@@ -38,12 +38,12 @@ export default function FilterSearch() {
                 <Popover.Header>
                   <Popover.Title hidden>Info</Popover.Title>
                   <Popover.Description className="prose text-fg">
-                    This quick search support:
+                    <p>This quick search supports:</p>
                     <ul>
-                      <li>Multiple query separate by comma ( , )</li>
-                      <li>Member name in shortform (e.g. naky, yy)</li>
-                      <li>Collection No. range (e.g. 301z-302z)</li>
-                      <li>Serial No. range (e.g. #1-20)</li>
+                      <li>Multiple queries separated by commas ( , )</li>
+                      <li>Member names in short form (e.g. naky, yy)</li>
+                      <li>Collection No. ranges (e.g. 301z-302z)</li>
+                      <li>Serial No. ranges (e.g. #1-20)</li>
                     </ul>
                     <p>Example: yy c301-302 #10-100, jw 201z</p>
                   </Popover.Description>

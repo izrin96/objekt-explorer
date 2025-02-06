@@ -74,40 +74,42 @@ function parseSerial(value: string) {
 }
 
 const searchFilter = (keyword: string, objekt: ValidObjekt) => {
-  // handle serial search
+  // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && "serial" in objekt) {
-    const [start, end] = keyword.split("-").map((a) => parseSerial(a));
-    if (start && objekt.serial >= start && objekt.serial <= (end ?? start))
-      return true;
+    const [start, end] = keyword.split("-").map(parseSerial);
+    if (!start) return false;
+    return objekt.serial >= start && objekt.serial <= (end ?? start);
   }
 
-  // handle collectionNo search by range
+  // Handle collection range search (e.g. 301z-302z)
   if (!keyword.startsWith("#") && keyword.includes("-")) {
-    const [start, end] = keyword.split("-").map((a) => parseCollectionNo(a));
+    const [start, end] = keyword.split("-").map(parseCollectionNo);
+    if (!start || !end) return false;
 
-    if (start && end) {
-      const collectionNo = objekt.collectionNo.toLowerCase();
-      const seasonCode = objekt.season.charAt(0).toLowerCase();
-      if (
-        collectionNo >= `${start.collectionNo}${start.type || "a"}` &&
-        collectionNo <= `${end.collectionNo}${end.type || "z"}` &&
-        seasonCode >= (start.seasonCode || "a") &&
-        seasonCode <= (end.seasonCode || start.seasonCode || "z")
-      )
-        return true;
-    }
+    const collectionNo = objekt.collectionNo.toLowerCase();
+    const seasonCode = objekt.season.charAt(0).toLowerCase();
+    const startType = start.type || "a";
+    const endType = end.type || "z";
+    const startSeason = start.seasonCode || "a";
+    const endSeason = end.seasonCode || start.seasonCode || "z";
+
+    return (
+      collectionNo >= `${start.collectionNo}${startType}` &&
+      collectionNo <= `${end.collectionNo}${endType}` &&
+      seasonCode >= startSeason &&
+      seasonCode <= endSeason
+    );
   }
 
-  // handle member search
+  // Handle member search (e.g. naky, yy)
   const memberKeys = [...getMemberShortKeys(objekt.member), objekt.member];
-  if (memberKeys.some((value) => value.toLowerCase() === keyword)) return true;
-
-  // handle collectionNo search
-  const collectionNos = [objekt.collectionNo, getSeasonCollectionNo(objekt)];
-  if (collectionNos.some((value) => value.toLowerCase().startsWith(keyword)))
+  if (memberKeys.some((value) => value.toLowerCase() === keyword)) {
     return true;
+  }
 
-  return false;
+  // Handle collection number search
+  const collectionNos = [objekt.collectionNo, getSeasonCollectionNo(objekt)];
+  return collectionNos.some((value) => value.toLowerCase().startsWith(keyword));
 };
 
 const getSortDate = <T extends ValidObjekt>(obj: T) =>
