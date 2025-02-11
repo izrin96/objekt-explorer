@@ -2,7 +2,7 @@
 
 import ObjektDetail from "@/components/objekt/objekt-detail";
 import { Modal } from "@/components/ui";
-import { OwnedObjekt, ValidObjekt } from "@/lib/universal/objekts";
+import { ValidObjekt } from "@/lib/universal/objekts";
 import { ReactNode, createContext, useContext, useState } from "react";
 
 export type ValidTab = "owned" | "trades";

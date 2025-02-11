@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element */
+
 import { type VariantProps, tv } from "tailwind-variants"
 
 const avatar = tv({

@@ -19,6 +19,7 @@ export async function GET(_: Request, props: Params) {
 
   const results = await indexer
     .select({
+      tokenId: objekts.id,
       id: transfers.id,
       to: transfers.to,
       timestamp: transfers.timestamp,
@@ -44,6 +45,7 @@ export async function GET(_: Request, props: Params) {
   });
 
   return Response.json({
+    tokenId: results[0]?.tokenId ?? undefined,
     owner: results[0]?.owner ?? undefined,
     transferable: results[0]?.transferable ?? undefined,
     transfers: results.map((result) => ({

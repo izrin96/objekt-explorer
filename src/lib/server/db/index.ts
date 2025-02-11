@@ -1,5 +1,5 @@
 import { drizzle } from "drizzle-orm/pg-proxy";
-import { env } from "@/env.mjs";
+import { env } from "@/env";
 import * as schema from "./schema";
 import { ofetch } from "ofetch";
 

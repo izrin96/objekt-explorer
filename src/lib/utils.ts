@@ -1,4 +1,4 @@
-import { env } from "@/env.mjs";
+import { env } from "@/env";
 import { ValidObjekt } from "./universal/objekts";
 import { isServer } from "@tanstack/react-query";
 

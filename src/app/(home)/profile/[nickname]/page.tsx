@@ -1,4 +1,5 @@
 import ProfileObjektRender from "@/components/profile/profile-objekt";
+import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import {
   getArtistsWithMembers,
   getUserByIdentifier,
@@ -28,5 +29,9 @@ export default async function UserCollectionPage(props: Props) {
     getArtistsWithMembers(),
   ]);
 
-  return <ProfileObjektRender profile={targetUser} artists={artists} />;
+  return (
+    <CosmoArtistProvider artists={artists}>
+      <ProfileObjektRender profile={targetUser} artists={artists} />
+    </CosmoArtistProvider>
+  );
 }

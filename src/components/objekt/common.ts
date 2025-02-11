@@ -8,6 +8,7 @@ export type ObjektTransfer = {
 };
 
 export type ObjektTransferResponse = {
+  tokenId: number | undefined;
   owner: string | undefined;
   transferable: boolean | undefined;
   transfers: ObjektTransfer[];

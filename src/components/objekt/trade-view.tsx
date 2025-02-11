@@ -7,11 +7,12 @@ import {
 } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useMemo, useState } from "react";
-import { Badge, Button, Card, Loader, NumberField, Table } from "../ui";
+import { Badge, Button, Card, Link, Loader, NumberField, Table } from "../ui";
 import {
   IconArrowLeft,
   IconArrowRight,
   IconCircleQuestionmark,
+  IconOpenLink,
 } from "justd-icons";
 import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
@@ -20,9 +21,11 @@ import UserLink from "../user-link";
 import { ObjektSerial, ObjektTransferResponse } from "./common";
 import { cn } from "@/utils/classes";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { ValidObjekt } from "@/lib/universal/objekts";
 
 type TradeViewProps = {
-  slug: string;
+  objekt: ValidObjekt;
 };
 
 const fetchObjektsQuery = (slug: string) => ({
@@ -53,9 +56,9 @@ export default function TradeView({ ...props }: TradeViewProps) {
   );
 }
 
-function TradeViewRender({ slug }: TradeViewProps) {
+function TradeViewRender({ objekt }: TradeViewProps) {
   const { currentSerial } = useObjektModal();
-  const { data } = useSuspenseQuery(fetchObjektsQuery(slug));
+  const { data } = useSuspenseQuery(fetchObjektsQuery(objekt.slug));
 
   return (
     <>
@@ -63,7 +66,7 @@ function TradeViewRender({ slug }: TradeViewProps) {
         <Trades
           serials={data}
           initialSerial={currentSerial ?? data[0]}
-          slug={slug}
+          objekt={objekt}
         />
       )}
     </>
@@ -73,11 +76,11 @@ function TradeViewRender({ slug }: TradeViewProps) {
 function Trades({
   serials,
   initialSerial,
-  slug,
+  objekt,
 }: {
   serials: ObjektSerial[];
   initialSerial: number;
-  slug: string;
+  objekt: ValidObjekt;
 }) {
   const [serial, setSerial] = useState(initialSerial);
 
@@ -127,18 +130,26 @@ function Trades({
         </Button>
       </div>
 
-      <TradeTable slug={slug} serial={serial} />
+      <TradeTable objekt={objekt} serial={serial} />
     </div>
   );
 }
 
-function TradeTable({ slug, serial }: { slug: string; serial: number }) {
+function TradeTable({
+  objekt,
+  serial,
+}: {
+  objekt: ValidObjekt;
+  serial: number;
+}) {
+  const { getArtist } = useCosmoArtist();
+  const contract = getArtist(objekt.artist)?.contracts.Objekt;
   const { data, status, refetch } = useQuery({
     queryFn: async () =>
       await ofetch<ObjektTransferResponse>(
-        `/api/objekts/transfers/${slug}/${serial}`
+        `/api/objekts/transfers/${objekt.slug}/${serial}`
       ),
-    queryKey: ["objekts", "transfer", slug, serial],
+    queryKey: ["objekts", "transfer", objekt.slug, serial],
     retry: 1,
   });
 
@@ -170,7 +181,7 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
 
   return (
     <>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">Owner</span>
           <span>
@@ -178,10 +189,23 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <span className="font-semibold text-sm">Token ID</span>
+          <span>
+            <Link
+              href={`https://opensea.io/assets/matic/${contract}/${data.tokenId}`}
+              className="cursor-pointer inline-flex gap-2 items-center"
+              target="_blank"
+            >
+              {data.tokenId}
+              <IconOpenLink />
+            </Link>
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">Transferable</span>
           <Badge
             className={cn(
-              "text-sm",
+              "text-xs",
               !data.transferable &&
                 "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
             )}

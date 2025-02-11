@@ -60,7 +60,7 @@ export default memo(function ObjektView({
         <Tilt
           tiltEnable={isDesktop}
           tiltReverse
-          scale={isDesktop ? 1.03 : undefined}
+          scale={isDesktop ? 1.01 : undefined}
           transitionSpeed={500}
           tiltMaxAngleX={4}
           tiltMaxAngleY={4}

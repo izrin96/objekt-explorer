@@ -23,7 +23,10 @@ export default async function UserCollectionPage(props: Props) {
       </div>
       <div className="py-2"></div>
 
-      <ProfileTabs nickname={params.nickname}>{props.children}</ProfileTabs>
+      <div className="flex flex-col gap-4">
+        <ProfileTabs nickname={params.nickname} />
+        {props.children}
+      </div>
     </>
   );
 }

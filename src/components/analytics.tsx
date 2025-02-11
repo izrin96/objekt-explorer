@@ -1,4 +1,4 @@
-import { env } from "@/env.mjs";
+import { env } from "@/env";
 import { OpenPanelComponent } from "@openpanel/nextjs";
 
 const Analytics = () => {
