@@ -1,5 +1,9 @@
 import ProfileTradesRender from "@/components/profile/profile-trades";
-import { getUserByIdentifier } from "@/lib/client-fetching";
+import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import {
+  getArtistsWithMembers,
+  getUserByIdentifier,
+} from "@/lib/client-fetching";
 import { Metadata } from "next";
 
 type Props = {
@@ -20,9 +24,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function UserTransfersPage(props: Props) {
   const params = await props.params;
 
-  const [targetUser] = await Promise.all([
+  const [targetUser, artists] = await Promise.all([
     getUserByIdentifier(params.nickname),
+    getArtistsWithMembers(),
   ]);
 
-  return <ProfileTradesRender profile={targetUser} />;
+  return (
+    <CosmoArtistProvider artists={artists}>
+      <ProfileTradesRender profile={targetUser} />
+    </CosmoArtistProvider>
+  );
 }

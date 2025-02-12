@@ -122,7 +122,7 @@ function ProfileObjekt({ profile, artists }: Props) {
       <div className="flex items-center gap-2">
         <span className="font-semibold">
           {count} total
-          {filters.grouped ? ` (${groupedCount} grouped)` : undefined}
+          {filters.grouped ? ` (${groupedCount} combined)` : undefined}
         </span>
       </div>
 
