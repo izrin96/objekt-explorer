@@ -58,7 +58,6 @@ const NumberField = ({
       <FieldGroup className="overflow-hidden">
         {(renderProps) => (
           <>
-            {isMobile ? <StepperButton slot="decrement" className="border-r" /> : null}
             <Input className="tabular-nums" placeholder={placeholder} />
             <div
               className={fieldBorderStyles({
@@ -66,9 +65,7 @@ const NumberField = ({
                 className: "grid h-10 place-content-center border-s",
               })}
             >
-              {isMobile ? (
-                <StepperButton slot="increment" />
-              ) : (
+              {isMobile ? null : (
                 <div className="flex h-full flex-col">
                   <StepperButton slot="increment" emblemType="chevron" className="h-5 px-1" />
                   <div
