@@ -46,6 +46,7 @@ interface NumberFieldProps extends NumberFieldPrimitiveProps {
   description?: string;
   placeholder?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
+  hideStepper?: boolean;
 }
 
 const NumberField = ({
@@ -67,7 +68,7 @@ const NumberField = ({
         {(renderProps) => (
           <>
             <Input className="tabular-nums" placeholder={placeholder} />
-            {isMobile ? null : (
+            {isMobile || props.hideStepper ? null : (
               <div
                 className={fieldBorderStyles({
                   ...renderProps,
