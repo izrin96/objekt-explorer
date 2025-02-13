@@ -22,6 +22,7 @@ export const overrideFonts: Record<string, string> = {
   "Atom01 HeeJin 323Z": "#FFFFFF",
   "Atom01 HeeJin 324Z": "#FFFFFF",
   "Atom01 HeeJin 325Z": "#FFFFFF",
+  "Ever01 SeoYeon 338Z": "#07328D",
 };
 
 export function overrideColor(objekt: ValidObjekt) {
