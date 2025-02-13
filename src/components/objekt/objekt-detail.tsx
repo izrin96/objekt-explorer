@@ -3,11 +3,7 @@ import { CSSProperties, useState } from "react";
 import { replaceUrlSize } from "./objekt-util";
 import Tilt from "react-parallax-tilt";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
-import {
-  getCollectionShortId,
-  OwnedObjekt,
-  ValidObjekt,
-} from "@/lib/universal/objekts";
+import { OwnedObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { useMediaQuery } from "usehooks-ts";
 import ObjektSidebar from "./objekt-sidebar";
 import { AttributePanel } from "./objekt-attribute";
@@ -105,7 +101,9 @@ export default function ObjektDetail({
             className="p-2"
           >
             <Tabs.List>
-              {isProfile && <Tabs.Tab id="owned">Owned</Tabs.Tab>}
+              {isProfile && (
+                <Tabs.Tab id="owned">Owned{objekts.length > 1 ? ` (${objekts.length})` : ''}</Tabs.Tab>
+              )}
               <Tabs.Tab id="trades">Trades</Tabs.Tab>
               <Tabs.Tab
                 id="apollo"
