@@ -102,7 +102,11 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   }
 
   // Handle member search (e.g. naky, yy)
-  const memberKeys = [...getMemberShortKeys(objekt.member), objekt.member];
+  const memberKeys = [
+    ...getMemberShortKeys(objekt.member),
+    objekt.member,
+    objekt.artist,
+  ];
   if (memberKeys.some((value) => value.toLowerCase() === keyword)) {
     return true;
   }
@@ -238,7 +242,11 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
 
   let results: Record<string, T[]>;
   if (filters.group_by) {
-    results = groupBy(objekts, (a) => a[filters.group_by as ValidGroupBy]);
+    results = groupBy(objekts, (a) =>
+      filters.group_by === "seasonCollectionNo"
+        ? `${a.season} ${a.collectionNo}`
+        : a[filters.group_by!]
+    );
   } else {
     results = groupBy(objekts, () => "");
   }

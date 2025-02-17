@@ -11,6 +11,7 @@ const map: Record<ValidGroupBy, string> = {
   collectionNo: "Collection No.",
   member: "Member",
   season: "Season",
+  seasonCollectionNo: "Season & Collection No.",
 };
 
 export default function GroupByFilter() {

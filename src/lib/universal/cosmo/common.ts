@@ -49,6 +49,7 @@ export const validGroupBy = [
   "member",
   "class",
   "collectionNo",
+  "seasonCollectionNo",
 ] as const;
 export type ValidGroupBy = (typeof validGroupBy)[number];
 
