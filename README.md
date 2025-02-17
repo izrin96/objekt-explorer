@@ -14,3 +14,7 @@ This project required [cosmo-db](https://github.com/teamreflex/cosmo-db/) indexe
 ## Credit/Acknowledgment
 
 - [cosmo-web](https://github.com/teamreflex/cosmo-web) for Cosmo type, data fetching and Cosmo utils
+
+## Contact
+
+- **Discord**: .ryusion

@@ -25,6 +25,7 @@
     "drizzle-orm": "^0.39.3",
     "es-toolkit": "^1.32.0",
     "hono": "^4.7.1",
+    "ioredis": "^5.5.0",
     "jose": "^5.9.6",
     "jotai": "^2.12.0",
     "justd-icons": "^1.10.25",
