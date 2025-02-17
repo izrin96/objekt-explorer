@@ -1,6 +1,7 @@
 import { indexer } from "@/lib/server/db/indexer";
 import { asc, eq } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
+import { cacheHeaders } from "@/app/api/common";
 
 type Params = {
   params: Promise<{
@@ -20,7 +21,12 @@ export async function GET(_: Request, props: Params) {
     .where(eq(collections.slug, params.collectionSlug))
     .orderBy(asc(objekts.serial));
 
-  return Response.json({
-    serials: results.map((a) => a.serial),
-  });
+  return Response.json(
+    {
+      serials: results.map((a) => a.serial),
+    },
+    {
+      headers: cacheHeaders(),
+    }
+  );
 }

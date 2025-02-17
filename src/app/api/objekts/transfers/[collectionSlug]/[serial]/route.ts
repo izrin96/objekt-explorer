@@ -1,3 +1,4 @@
+import { cacheHeaders } from "@/app/api/common";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import {
@@ -44,17 +45,22 @@ export async function GET(_: Request, props: Params) {
       inArray(userAddress.address, addresses),
   });
 
-  return Response.json({
-    tokenId: results[0]?.tokenId ?? undefined,
-    owner: results[0]?.owner ?? undefined,
-    transferable: results[0]?.transferable ?? undefined,
-    transfers: results.map((result) => ({
-      id: result.id,
-      to: result.to,
-      timestamp: result.timestamp,
-      nickname: knownAddresses.find(
-        (a) => a.address.toLowerCase() === result.to.toLowerCase()
-      )?.nickname,
-    })),
-  });
+  return Response.json(
+    {
+      tokenId: results[0]?.tokenId ?? undefined,
+      owner: results[0]?.owner ?? undefined,
+      transferable: results[0]?.transferable ?? undefined,
+      transfers: results.map((result) => ({
+        id: result.id,
+        to: result.to,
+        timestamp: result.timestamp,
+        nickname: knownAddresses.find(
+          (a) => a.address.toLowerCase() === result.to.toLowerCase()
+        )?.nickname,
+      })),
+    },
+    {
+      headers: cacheHeaders(),
+    }
+  );
 }
