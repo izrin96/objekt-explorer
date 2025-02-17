@@ -11,6 +11,7 @@ export const env = createEnv({
     VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
     ANALYTICS_CLIENT_ID: z.string(),
     ANALYTICS_SECRET: z.string().optional(),
+    REDIS_URL: z.string().optional(),
   },
   client: {},
   experimental__runtimeEnv: {},

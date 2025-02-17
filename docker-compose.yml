@@ -1,0 +1,42 @@
+services:
+  redis-stack:
+    image: redis/redis-stack:latest
+    command: /bin/sh -c "redis-server --requirepass $$REDIS_HOST_PASSWORD"
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+  postgres:
+    restart: always
+    image: postgres:latest
+    command: '-d 1'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=main
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  proxy:
+    build:
+      context: .
+      dockerfile: ./docker/proxy.Dockerfile
+    restart: always
+    environment:
+      - PROXY_HOST=postgres
+      - PROXY_USER=postgres
+      - PROXY_NAME=main
+      - PROXY_PASS=postgres
+      - PROXY_PORT=5432
+      - PROXY_HTTP_PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+volumes:
+  db_data:
