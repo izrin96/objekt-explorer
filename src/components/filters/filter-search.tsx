@@ -44,6 +44,7 @@ export default function FilterSearch() {
                       <li>Member names in short form (e.g. naky, yy)</li>
                       <li>Collection No. ranges (e.g. 301z-302z)</li>
                       <li>Serial No. ranges (e.g. #1-20)</li>
+                      <li>Artist name (e.g. triples)</li>
                     </ul>
                     <p>Example: yy c301-302 #10-100, jw 201z</p>
                   </Popover.Description>
