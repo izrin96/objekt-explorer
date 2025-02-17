@@ -31,7 +31,7 @@ function PillColor({ label, value, objekt }: PillProps) {
           "--objekt-text-color": objekt?.textColor,
         } as CSSProperties
       }
-      className="!bg-[var(--objekt-accent-color)] !text-[var(--objekt-text-color)]"
+      className="!bg-(--objekt-accent-color) !text-(--objekt-text-color)"
     >
       <span className="font-semibold">{label}</span>
       <span>{value}</span>
