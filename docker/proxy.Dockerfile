@@ -9,3 +9,4 @@ COPY . .
 ENV NODE_ENV production
 
 RUN bun build ./src/http-proxy.ts --outdir ./dist --target bun
+CMD ["bun", "run", "dist/http-proxy.js"]
