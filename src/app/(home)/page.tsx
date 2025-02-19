@@ -5,8 +5,6 @@ import { getQueryClient } from "@/lib/query-client";
 import { collectionOptions } from "@/lib/query-options";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
-export const revalidate = 0;
-
 export default async function Home() {
   const [artists] = await Promise.all([getArtistsWithMembers()]);
 

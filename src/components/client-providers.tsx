@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PropsWithChildren } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import NextTopLoader from "nextjs-toploader";
 import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -24,7 +23,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
   return (
     <RouterProvider navigate={router.push}>
       <ThemeProvider attribute="class">
-        <NextTopLoader color="var(--primary)" height={2} showSpinner={false} />
+        {/* <NextTopLoader color="var(--primary)" height={2} showSpinner={false} /> */}
         <NuqsAdapter>
           <QueryClientProvider client={queryClient}>
             {children}
