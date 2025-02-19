@@ -12,7 +12,7 @@ export const getArtistsWithMembers = async () => {
   const result = await Promise.all(
     validArtists.map((artist) => fetchArtistBff(artist))
   );
-  await redis.set(KEY, JSON.stringify(result), "EX", 60 * 60);
+  await redis.set(KEY, JSON.stringify(result));
   return result;
 };
 

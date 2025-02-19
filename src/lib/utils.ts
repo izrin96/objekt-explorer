@@ -1,6 +1,5 @@
 import { env } from "@/env";
 import { ValidObjekt } from "./universal/objekts";
-import { isServer } from "@tanstack/react-query";
 
 export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_MOBILE = 3;
@@ -38,11 +37,8 @@ export function overrideColor(objekt: ValidObjekt) {
 }
 
 export function getBaseURL() {
-  if (!isServer) {
-    return "";
-  }
-  if (env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
   }
   return "http://localhost:3000";
 }
