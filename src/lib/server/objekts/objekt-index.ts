@@ -1,4 +1,4 @@
-import { asc, desc } from "drizzle-orm";
+import { asc, count, desc } from "drizzle-orm";
 import { indexer } from "../db/indexer";
 import { collections } from "../db/indexer/schema";
 import { overrideColor } from "@/lib/utils";
@@ -13,4 +13,14 @@ export async function fetchObjektsIndex() {
     ...objekt,
     ...overrideColor(objekt),
   }));
+}
+
+export async function fetchObjektsIndexCount() {
+  const result = await indexer
+    .select({
+      count: count(),
+    })
+    .from(collections);
+
+  return result[0].count;
 }
