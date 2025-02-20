@@ -11,6 +11,8 @@ export const env = createEnv({
     ANALYTICS_CLIENT_ID: z.string(),
     ANALYTICS_SECRET: z.string().optional(),
     REDIS_URL: z.string().optional(),
+    UPSTASH_REDIS_REST_URL: z.string().optional(),
+    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),

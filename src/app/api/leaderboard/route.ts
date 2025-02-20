@@ -160,20 +160,17 @@ async function getUnobtainableSlugs() {
 }
 
 async function getUnobtainableSlugsCached() {
-  const cached = await redis.get("unobtainable_slugs");
+  const cached = await redis.get<string[]>("unobtainable_slugs");
   if (cached) {
-    return JSON.parse(cached) as string[];
+    return cached;
   }
 
   const unobtainable = await getUnobtainableSlugs();
 
   after(async () => {
-    await redis.set(
-      "unobtainable_slugs",
-      JSON.stringify(unobtainable),
-      "EX",
-      3600
-    );
+    await redis.set("unobtainable_slugs", unobtainable, {
+      ex: 3600,
+    });
   });
 
   return unobtainable;

@@ -7,14 +7,15 @@ import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { after } from "next/server";
 
 export const getArtistsWithMembers = async () => {
-  const KEY = "artists";
-  const cached = await redis.get(KEY);
-  if (cached) return JSON.parse(cached) as CosmoArtistWithMembersBFF[];
+  const cached = await redis.get<CosmoArtistWithMembersBFF[]>("artists");
+  if (cached) return cached;
   const result = await Promise.all(
     validArtists.map((artist) => fetchArtistBff(artist))
   );
   after(async () => {
-    await redis.set(KEY, JSON.stringify(result));
+    await redis.set("artists", result, {
+      ex: 24 * 60 * 60,
+    });
   });
   return result;
 };

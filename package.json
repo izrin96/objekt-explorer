@@ -19,6 +19,7 @@
     "@openpanel/nextjs": "^1.0.7",
     "@t3-oss/env-nextjs": "^0.12.0",
     "@tanstack/react-query": "^5.66.7",
+    "@upstash/redis": "^1.34.4",
     "ably": "^2.6.3",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
