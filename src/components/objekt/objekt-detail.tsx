@@ -1,5 +1,5 @@
 import { Badge, Card, Link, Table, Tabs } from "../ui";
-import { CSSProperties, useState } from "react";
+import { CSSProperties, memo, useState } from "react";
 import { replaceUrlSize } from "./objekt-util";
 import Tilt from "react-parallax-tilt";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
@@ -102,7 +102,9 @@ export default function ObjektDetail({
           >
             <Tabs.List>
               {isProfile && (
-                <Tabs.Tab id="owned">Owned{objekts.length > 1 ? ` (${objekts.length})` : ''}</Tabs.Tab>
+                <Tabs.Tab id="owned">
+                  Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}
+                </Tabs.Tab>
               )}
               <Tabs.Tab id="trades">Trades</Tabs.Tab>
               <Tabs.Tab
@@ -136,7 +138,11 @@ export default function ObjektDetail({
   );
 }
 
-function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
+const OwnedListPanel = memo(function OwnedListPanel({
+  objekts,
+}: {
+  objekts: OwnedObjekt[];
+}) {
   const { openTrades } = useObjektModal();
   const { getArtist } = useCosmoArtist();
   return (
@@ -194,4 +200,4 @@ function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
       </Table>
     </Card>
   );
-}
+});
