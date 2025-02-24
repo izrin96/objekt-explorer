@@ -108,7 +108,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="flex gap-4 py-4 flex-wrap cursor-pointer select-none items-center border-border transition rounded-lg p-4 border hover:bg-secondary/50"
+        className="flex gap-4 py-4 flex-wrap cursor-pointer select-none items-center transition rounded-lg p-4 border border-border bg-secondary/30 hover:bg-secondary/60"
         onClick={() => setShow(!show)}
       >
         <div className="font-semibold text-base inline-flex gap-2 items-center min-w-64">

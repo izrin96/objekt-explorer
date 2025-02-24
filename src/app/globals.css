@@ -2,8 +2,6 @@
 @plugin 'tailwindcss-animate';
 @plugin '@tailwindcss/typography';
 
-@variant dark (&:is(.dark *));
-
 @theme {
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -91,10 +89,10 @@
     --input: oklch(0.871 0.006 286.286);
     --ring: oklch(0.546 0.245 262.881);
 
-    --navbar: oklch(0.967 0.001 286.375);
+    --navbar: oklch(0.985 0 0);
     --navbar-fg: oklch(0.141 0.005 285.823);
 
-    --sidebar: oklch(0.967 0.001 286.375);
+    --sidebar: oklch(0.985 0 0);
     --sidebar-fg: oklch(0.141 0.005 285.823);
 
     --chart-1: oklch(0.546 0.245 262.881);
@@ -159,6 +157,8 @@
   }
 }
 
+@variant dark (&:is(.dark *));
+
 @layer base {
   *,
   ::after,
@@ -167,6 +167,11 @@
   ::file-selector-button {
     border-color: var(--border, currentColor);
   }
+
+  /* ::selection {
+    background-color: var(--primary);
+    color: var(--primary-fg);
+  } */
 }
 
 @layer base {

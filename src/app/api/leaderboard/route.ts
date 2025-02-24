@@ -102,15 +102,13 @@ export async function GET(request: NextRequest) {
     );
 
   // map nickname from known address
-  const results = query.map((q, i) => {
-    const known = knownAddresses.find(
-      (a) => a.address.toLowerCase() === q.owner.toLowerCase()
-    );
-
+  const results = query.map((q) => {
     return {
       count: q.count,
       address: q.owner,
-      nickname: known?.nickname ?? q.owner.substring(0, 6),
+      nickname: knownAddresses.find(
+        (a) => a.address.toLowerCase() === q.owner.toLowerCase()
+      )?.nickname,
     };
   });
 
