@@ -123,7 +123,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
         />
       </div>
       {show && (
-        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 lg:gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-4">
           {objekts.map((objekt) => (
             <ObjektView
               key={objekt.slug}
