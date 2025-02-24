@@ -6,7 +6,11 @@ import { useCallback, useMemo } from "react";
 import { Button, Menu } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
 
-export default function ClassFilter() {
+type Props = {
+  hideZeroWelcome?: boolean;
+};
+
+export default function ClassFilter({ hideZeroWelcome = false }: Props) {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.class), [filters.class]);
 
@@ -18,6 +22,10 @@ export default function ClassFilter() {
       });
     },
     [setFilters]
+  );
+
+  const availableClasses = validClasses.filter((s) =>
+    hideZeroWelcome ? !["Zero", "Welcome"].includes(s) : true
   );
 
   return (
@@ -32,7 +40,7 @@ export default function ClassFilter() {
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
-        items={Object.values(validClasses).map((value) => ({ value }))}
+        items={Object.values(availableClasses).map((value) => ({ value }))}
       >
         {(item) => (
           <Menu.Item id={item.value} textValue={item.value}>

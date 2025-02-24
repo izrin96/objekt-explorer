@@ -42,6 +42,7 @@ export function useFilters() {
     grouped: parseAsBoolean,
     column: parseAsInteger,
     group_by: parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy)),
+    group_bys: parseAsArrayOf(parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy))),
     sort_dir: parseAsStringEnum<ValidSortDirection>(
       Object.values(validSortDirection)
     ),

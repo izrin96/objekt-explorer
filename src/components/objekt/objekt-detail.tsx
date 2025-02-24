@@ -1,7 +1,6 @@
 import { Badge, Card, Link, Table, Tabs } from "../ui";
 import { CSSProperties, memo, useState } from "react";
 import { replaceUrlSize } from "./objekt-util";
-import Tilt from "react-parallax-tilt";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
 import { OwnedObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { useMediaQuery } from "usehooks-ts";
@@ -45,47 +44,39 @@ export default function ObjektDetail({
         className="flex h-[21rem] sm:h-[32rem] aspect-photocard self-center flex-none select-none"
         style={css}
       >
-        <Tilt
-          tiltReverse
-          transitionSpeed={1000}
-          tiltEnable={isDesktop}
-          tiltMaxAngleX={3}
-          tiltMaxAngleY={3}
+        <div
+          data-flipped={flipped}
+          className="relative h-full aspect-photocard cursor-pointer touch-manipulation transition-transform transform-3d transform-gpu duration-300 data-[flipped=true]:rotate-y-180"
         >
-          <div
-            data-flipped={flipped}
-            className="relative h-full aspect-photocard cursor-pointer touch-manipulation transition-transform transform-3d transform-gpu duration-300 data-[flipped=true]:rotate-y-180"
-          >
-            <div className="absolute inset-0 backface-hidden drop-shadow">
-              <NextImage
-                fill
-                loading="eager"
-                src={resizedUrl}
-                alt={objekt.collectionId}
-                hidden={hide}
-              />
-              <NextImage
-                fill
-                loading="eager"
-                onLoad={() => setHide(true)}
-                src={objekt.frontImage}
-                alt={objekt.collectionId}
-              />
-              <ObjektSidebar
-                collection={objekt.collectionNo}
-                serial={isOwned ? objekt.serial : undefined}
-              />
-            </div>
-            <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">
-              <NextImage
-                fill
-                loading="eager"
-                src={objekt.backImage}
-                alt={objekt.collectionId}
-              />
-            </div>
+          <div className="absolute inset-0 backface-hidden drop-shadow">
+            <NextImage
+              fill
+              loading="eager"
+              src={resizedUrl}
+              alt={objekt.collectionId}
+              hidden={hide}
+            />
+            <NextImage
+              fill
+              loading="eager"
+              onLoad={() => setHide(true)}
+              src={objekt.frontImage}
+              alt={objekt.collectionId}
+            />
+            <ObjektSidebar
+              collection={objekt.collectionNo}
+              serial={isOwned ? objekt.serial : undefined}
+            />
           </div>
-        </Tilt>
+          <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">
+            <NextImage
+              fill
+              loading="eager"
+              src={objekt.backImage}
+              alt={objekt.collectionId}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col h-full min-h-screen sm:min-h-full sm:h-[32rem]">

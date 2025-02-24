@@ -36,8 +36,8 @@ export default function FilterRender({ isProfile, artists }: Props) {
       <MemberFilter artists={artists} />
       {isProfile && <FilterTransferable />}
       <FilterSeason />
-      <FilterOnline />
       <FilterClass />
+      <FilterOnline />
       <FilterSort isProfile={isProfile} />
       <SortDirectionFilter />
       {isProfile && <CombineDuplicateFilter />}

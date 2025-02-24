@@ -154,7 +154,7 @@ const Close = ({ className, appearance = "outline", ref, ...props }: ButtonProps
   return <Button slot="close" className={className} ref={ref} appearance={appearance} {...props} />
 }
 
-interface CloseButtonIndicatorProps extends ButtonProps {
+interface CloseButtonIndicatorProps extends Omit<ButtonProps, "children"> {
   className?: string
   isDismissable?: boolean | undefined
 }

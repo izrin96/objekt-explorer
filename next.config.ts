@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
         source: "/@:nickname/trades",
         destination: "/profile/:nickname/trades",
       },
+      {
+        source: "/@:nickname/progress",
+        destination: "/profile/:nickname/progress",
+      },
     ];
   },
 

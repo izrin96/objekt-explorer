@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  useCallback,
+  Suspense,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -13,7 +13,6 @@ import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import {
   QueryErrorResetBoundary,
-  useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
@@ -21,14 +20,13 @@ import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
-import { fetchOwnedObjekts } from "./fetching-util";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useMediaQuery } from "usehooks-ts";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { GroupLabelRender } from "../index/index-view";
-import { collectionOptions } from "@/lib/query-options";
+import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -40,7 +38,15 @@ export default function ProfileObjektRender({ ...props }: Props) {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <ProfileObjekt {...props} />
+          <Suspense
+            fallback={
+              <div className="justify-center flex">
+                <Loader variant="ring" />
+              </div>
+            }
+          >
+            <ProfileObjekt {...props} />
+          </Suspense>
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
@@ -61,18 +67,7 @@ function ProfileObjekt({ profile, artists }: Props) {
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
-  const queryFunction = useCallback(() => {
-    return fetchOwnedObjekts({
-      address: profile.address,
-    }).then((a) => a.objekts);
-  }, [profile.address]);
-
-  const { data, isPending } = useQuery({
-    queryKey: ["owned-collections", profile.address],
-    queryFn: queryFunction,
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data } = useSuspenseQuery(ownedCollectionOptions(profile.address));
 
   const joinedObjekts = useMemo(() => {
     let ownedObjekts: ValidObjekt[] = data ?? [];
@@ -108,13 +103,6 @@ function ProfileObjekt({ profile, artists }: Props) {
   useEffect(() => {
     setObjektsFiltered(shapeProfileObjekts(filters, joinedObjekts, artists));
   }, [filters, joinedObjekts, artists]);
-
-  if (isPending)
-    return (
-      <div className="justify-center flex">
-        <Loader variant="ring" />
-      </div>
-    );
 
   return (
     <div className="flex flex-col gap-2">
@@ -176,8 +164,8 @@ function ObjektsRowRender({
               <ObjektView
                 key={objekts[0].id}
                 objekts={objekts}
+                isFade={!("serial" in objekts[0])}
                 priority={index < columns * 3}
-                isProfile
               />
             )}
           </div>

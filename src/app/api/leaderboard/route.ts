@@ -1,5 +1,5 @@
 import { indexer } from "@/lib/server/db/indexer";
-import { and, count, eq, desc, not, inArray, sql } from "drizzle-orm";
+import { and, count, eq, desc, not, inArray } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { z } from "zod";
 import {
@@ -7,11 +7,11 @@ import {
   validOnlineTypes,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import { after, NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/server/db";
 import { userAddress } from "@/lib/server/db/schema";
-import { redis } from "@/lib/redis-client";
 import { cacheHeaders } from "../common";
+import { unobtainables } from "@/lib/universal/objekts";
 
 const schema = z.object({
   artist: z.enum(validArtists).nullable().optional(),
@@ -51,12 +51,9 @@ export async function GET(request: NextRequest) {
   const options = parsedParams.data;
   const filter = filters(options);
 
-  // get collection transferable count
-  const unobtainable = await getUnobtainableSlugsCached();
-
   const wheres = and(
     not(inArray(collections.class, ["Welcome", "Zero"])),
-    not(inArray(collections.slug, unobtainable)),
+    not(inArray(collections.slug, unobtainables)),
     ...filter
   );
 
@@ -122,56 +119,7 @@ export async function GET(request: NextRequest) {
     results,
   };
 
-  // const fullPath =
-  //   `${request.nextUrl.pathname}?${request.nextUrl.searchParams}`.toLowerCase();
-
-  // after(async () => {
-  //   redis.set(fullPath, JSON.stringify(null), "EX", 3600);
-  // });
-
   return Response.json(response, {
     headers: cacheHeaders(3600),
   });
-}
-
-async function getUnobtainableSlugs() {
-  const collectionTransferable = await indexer
-    .select({
-      slug: collections.slug,
-      total: count(objekts.id),
-      transferable:
-        sql`count(case when transferable = true then 1 end)`.mapWith(Number),
-    })
-    .from(collections)
-    .leftJoin(objekts, eq(collections.id, objekts.collectionId))
-    .where(and(not(inArray(collections.class, ["Welcome", "Zero"]))))
-    .groupBy(collections.slug);
-
-  const unobtainable = collectionTransferable
-    .map((result) => ({
-      ...result,
-      percentage: (result.transferable / result.total) * 100.0,
-    }))
-    // assume percentage less than 2 should be unobtainable
-    .filter((a) => a.percentage < 2)
-    .map((a) => a.slug);
-
-  return unobtainable;
-}
-
-async function getUnobtainableSlugsCached() {
-  const cached = await redis.get<string[]>("unobtainable_slugs");
-  if (cached) {
-    return cached;
-  }
-
-  const unobtainable = await getUnobtainableSlugs();
-
-  after(async () => {
-    await redis.set("unobtainable_slugs", unobtainable, {
-      ex: 3600,
-    });
-  });
-
-  return unobtainable;
 }

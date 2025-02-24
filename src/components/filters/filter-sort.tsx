@@ -25,7 +25,7 @@ const mapDesc: Record<ValidSort, string> = {
   collectionNo: "Sort by Collection No.",
   serial: "Sort by Serial",
   duplicate: "Sort by duplicate count",
-  member: "Sort by Member",
+  member: "Sort by Member order",
 };
 
 export default function SortFilter({ isProfile = false }: Props) {
@@ -42,7 +42,7 @@ export default function SortFilter({ isProfile = false }: Props) {
 
     setFilters((current) => ({
       sort: newValue === "date" ? null : newValue,
-      sort_dir: newValue === "serial" || newValue === "member" ? "asc" : null,
+      sort_dir: ["serial", "member"].includes(newValue) ? "asc" : null,
       grouped:
         newValue === "duplicate"
           ? true
@@ -53,7 +53,7 @@ export default function SortFilter({ isProfile = false }: Props) {
   }
 
   const availableSorts = validSorts.filter((s) =>
-    isProfile ? true : !(s === "serial" || s === "duplicate")
+    isProfile ? true : !["serial", "duplicate"].includes(s)
   );
 
   return (

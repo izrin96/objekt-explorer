@@ -1,6 +1,7 @@
 import { Filters } from "@/hooks/use-filters";
 import {
   ValidClass,
+  validClasses,
   ValidGroupBy,
   ValidSeason,
 } from "@/lib/universal/cosmo/common";
@@ -121,11 +122,7 @@ const getSortDate = <T extends ValidObjekt>(obj: T) =>
     ? new Date(obj.receivedAt).getTime()
     : new Date(obj.createdAt).getTime();
 
-function filterObjekts<T extends ValidObjekt>(
-  filters: Filters,
-  objekts: T[],
-  artists: CosmoArtistWithMembersBFF[]
-) {
+function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
   if (filters.member) {
     objekts = objekts.filter((a) => filters.member?.includes(a.member));
   }
@@ -171,11 +168,28 @@ function filterObjekts<T extends ValidObjekt>(
       );
   }
 
+  return objekts;
+}
+
+function defaultSortObjekts<T extends ValidObjekt>(
+  objekts: T[],
+  artists: CosmoArtistWithMembersBFF[]
+) {
   // default sort and season sort
   objekts = objekts
     .toSorted((a, b) => compareMember(a.member, b.member, "asc", artists))
     .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
     .toSorted((a, b) => b.season.localeCompare(a.season));
+  return objekts;
+}
+
+function sortObjekts<T extends ValidObjekt>(
+  filters: Filters,
+  objekts: T[],
+  artists: CosmoArtistWithMembersBFF[]
+) {
+  // default sort and season sort
+  objekts = defaultSortObjekts(objekts, artists);
 
   const sort = filters.sort ?? "date";
   const sortDir = filters.sort_dir ?? "desc";
@@ -238,7 +252,8 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
   objekts: T[],
   artists: CosmoArtistWithMembersBFF[]
 ): [string, T[]][] {
-  objekts = filterObjekts(filters, objekts, artists);
+  objekts = filterObjekts(filters, objekts);
+  objekts = sortObjekts(filters, objekts, artists);
 
   let results: Record<string, T[]>;
   if (filters.group_by) {
@@ -256,6 +271,10 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
   return Object.entries(results).toSorted(([keyA], [keyB]) => {
     if (filters.group_by === "member") {
       return compareMember(keyA, keyB, groupDir, artists);
+    }
+
+    if (filters.group_by === "class") {
+      return compareClass(keyA, keyB, groupDir);
     }
 
     if (groupDir === "desc") return keyB.localeCompare(keyA);
@@ -299,4 +318,57 @@ function compareMember(
 
   if (direction == "desc") return memberOrderB - memberOrderA;
   return memberOrderA - memberOrderB;
+}
+
+function compareClass(
+  classA: string,
+  classB: string,
+  direction: "asc" | "desc"
+) {
+  const posA = validClasses.findIndex((a) => a === classA);
+  const posB = validClasses.findIndex((a) => a === classB);
+
+  if (direction == "desc") return posB - posA;
+  return posA - posB;
+}
+
+export function shapeProgressCollections<T extends ValidObjekt>(
+  artists: CosmoArtistWithMembersBFF[],
+  filters: Filters,
+  objekts: T[]
+): [string, T[]][] {
+  objekts = filterObjekts(filters, objekts).filter(
+    (a) => !["Welcome", "Zero"].includes(a.class)
+  );
+
+  const defaultGroupBys = ["member", "season", "class"] as ValidGroupBy[];
+  const groupBys =
+    filters.group_bys?.toSorted(
+      (a, b) =>
+        defaultGroupBys.findIndex((c) => c === a) -
+        defaultGroupBys.findIndex((c) => c === b)
+    ) ?? defaultGroupBys;
+
+  const grouped = groupBy(objekts, (a) =>
+    groupBys.map((key) => a[key as keyof typeof a]).join(" ")
+  );
+
+  return Object.entries(grouped)
+    .filter(([, objekts]) => objekts.length > 0)
+    .toSorted(([, [objektA]], [, [objektB]]) =>
+      groupBys.includes("class")
+        ? compareClass(objektA.class, objektB.class, "asc")
+        : 0
+    )
+    .toSorted(([, [objektA]], [, [objektB]]) =>
+      groupBys.includes("season")
+        ? objektB.season.localeCompare(objektA.season)
+        : 0
+    )
+    .toSorted(([, [objektA]], [, [objektB]]) =>
+      groupBys.includes("member")
+        ? compareMember(objektA.member, objektB.member, "asc", artists)
+        : 0
+    )
+    .map(([key, objekts]) => [key, defaultSortObjekts(objekts, artists)]);
 }
