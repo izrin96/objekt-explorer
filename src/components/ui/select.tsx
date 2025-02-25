@@ -93,6 +93,7 @@ const SelectList = <T extends object>({
       respectScreen={false}
       className={cn("sm:min-w-(--trigger-width)", popoverClassName)}
       placement={props.placement}
+      aria-label="Select list"
     >
       <ListBox className={cn("border-0", className)} items={items} {...props}>
         {children}
