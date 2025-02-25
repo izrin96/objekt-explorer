@@ -87,18 +87,31 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     const [start, end] = keyword.split("-").map(parseCollectionNo);
     if (!start || !end) return false;
 
-    const collectionNo = objekt.collectionNo.toLowerCase();
-    const seasonCode = objekt.season.charAt(0).toLowerCase();
-    const startType = start.type || "a";
-    const endType = end.type || "z";
-    const startSeason = start.seasonCode || "a";
-    const endSeason = end.seasonCode || start.seasonCode || "z";
+    const objektBreakdown = {
+      collectionNo: objekt.collectionNo.toLowerCase(),
+      seasonCode: objekt.season.charAt(0).toLowerCase(),
+      type: objekt.collectionNo.toLowerCase().charAt(3),
+    };
+
+    const startBreakdown = {
+      collectionNo: start.collectionNo,
+      seasonCode: start.seasonCode || "a",
+      type: start.type || "a",
+    };
+
+    const endBreakdown = {
+      collectionNo: end.collectionNo,
+      seasonCode: end.seasonCode || start.seasonCode || "z",
+      type: end.type || "z",
+    };
 
     return (
-      collectionNo >= `${start.collectionNo}${startType}` &&
-      collectionNo <= `${end.collectionNo}${endType}` &&
-      seasonCode >= startSeason &&
-      seasonCode <= endSeason
+      objektBreakdown.collectionNo >= startBreakdown.collectionNo &&
+      objektBreakdown.collectionNo <= endBreakdown.collectionNo &&
+      objektBreakdown.seasonCode >= startBreakdown.seasonCode &&
+      objektBreakdown.seasonCode <= endBreakdown.seasonCode &&
+      objektBreakdown.type >= startBreakdown.type &&
+      objektBreakdown.type <= endBreakdown.type
     );
   }
 
