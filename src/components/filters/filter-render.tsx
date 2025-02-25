@@ -43,7 +43,6 @@ export default function FilterRender({ isProfile, artists }: Props) {
       transferable: null,
       search: null,
       grouped: null,
-      column: null,
       group_by: null,
       group_bys: null,
       sort_dir: null,
