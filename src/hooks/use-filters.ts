@@ -14,6 +14,7 @@ import {
   ValidSortDirection,
   validSortDirection,
 } from "@/lib/universal/cosmo/common";
+import { GRID_COLUMNS } from "@/lib/utils";
 import {
   parseAsArrayOf,
   parseAsString,
@@ -27,7 +28,9 @@ export function useFilters() {
   return useQueryStates({
     member: parseAsArrayOf(parseAsString),
     artist: parseAsStringEnum<ValidArtist>(Object.values(validArtists)),
-    sort: parseAsStringEnum<ValidSort>(Object.values(validSorts)),
+    sort: parseAsStringEnum<ValidSort>(Object.values(validSorts)).withDefault(
+      "date"
+    ),
     class: parseAsArrayOf(
       parseAsStringEnum<ValidClass>(Object.values(validClasses))
     ),
@@ -37,19 +40,21 @@ export function useFilters() {
     on_offline: parseAsArrayOf(
       parseAsStringEnum<ValidOnlineType>(Object.values(validOnlineTypes))
     ),
-    transferable: parseAsBoolean,
-    search: parseAsString,
-    grouped: parseAsBoolean,
-    column: parseAsInteger,
+    transferable: parseAsBoolean.withDefault(false),
+    search: parseAsString.withDefault(""),
+    grouped: parseAsBoolean.withDefault(false),
+    column: parseAsInteger.withDefault(GRID_COLUMNS),
     group_by: parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy)),
-    group_bys: parseAsArrayOf(parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy))),
+    group_bys: parseAsArrayOf(
+      parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy))
+    ),
     sort_dir: parseAsStringEnum<ValidSortDirection>(
       Object.values(validSortDirection)
-    ),
+    ).withDefault("desc"),
     group_dir: parseAsStringEnum<ValidSortDirection>(
       Object.values(validSortDirection)
-    ),
-    unowned: parseAsBoolean,
+    ).withDefault("desc"),
+    unowned: parseAsBoolean.withDefault(false),
   });
 }
 

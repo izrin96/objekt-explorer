@@ -17,6 +17,8 @@ import { useMediaQuery } from "usehooks-ts";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useFilters } from "@/hooks/use-filters";
 import UnownedFilter from "./filter-unowned";
+import { Button } from "../ui";
+import { IconX } from "justd-icons";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -28,10 +30,30 @@ export default function FilterRender({ isProfile, artists }: Props) {
     initializeWithValue: false,
   });
 
-  const [filters] = useFilters();
+  const [filters, setFilters] = useFilters();
+
+  function resetFilters() {
+    setFilters({
+      member: null,
+      artist: null,
+      sort: null,
+      class: null,
+      season: null,
+      on_offline: null,
+      transferable: null,
+      search: null,
+      grouped: null,
+      column: null,
+      group_by: null,
+      group_bys: null,
+      sort_dir: null,
+      group_dir: null,
+      unowned: null,
+    });
+  }
 
   return (
-    <div className="flex gap-2 items-center flex-wrap justify-center">
+    <div className="flex gap-2 flex-wrap mb-2">
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
       {isProfile && <FilterTransferable />}
@@ -46,6 +68,10 @@ export default function FilterRender({ isProfile, artists }: Props) {
       {filters.group_by && <GroupDirectionFilter />}
       {isDesktop && <ColumnFilter />}
       {isProfile && <UnownedFilter />}
+      <Button appearance="outline" onPress={() => resetFilters()}>
+        <IconX />
+        Reset filter
+      </Button>
     </div>
   );
 }

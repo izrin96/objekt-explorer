@@ -1,7 +1,6 @@
 "use client";
 
 import { Select } from "../ui";
-import { GRID_COLUMNS } from "@/lib/utils";
 import type { Key } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 
@@ -13,7 +12,7 @@ export default function ColumnFilter() {
   function update(key: Key) {
     const value = parseInt(key.toString());
     setFilters({
-      column: value === GRID_COLUMNS ? null : value,
+      column: value,
     });
   }
 
@@ -21,12 +20,15 @@ export default function ColumnFilter() {
     <Select
       className="w-[120px]"
       placeholder="test"
-      selectedKey={filters.column ?? 7}
+      selectedKey={filters.column}
       onSelectionChange={update}
       aria-label="Columns"
     >
       <Select.Trigger />
-      <Select.List className="min-w-[160px]" items={cols.map((a) => ({ id: a, name: `${a} columns` }))}>
+      <Select.List
+        className="min-w-[160px]"
+        items={cols.map((a) => ({ id: a, name: `${a} columns` }))}
+      >
         {(item) => (
           <Select.Option id={item.id} textValue={item.name}>
             {item.name}

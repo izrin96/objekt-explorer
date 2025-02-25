@@ -10,7 +10,7 @@ import {
 import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
-import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
+import { GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import {
   QueryErrorResetBoundary,
   useSuspenseQuery,
@@ -58,9 +58,7 @@ function ProfileObjekt({ profile, artists }: Props) {
   const { data: objekts } = useSuspenseQuery(collectionOptions);
 
   const isDesktop = useMediaQuery("(min-width: 640px)");
-  const columns = isDesktop
-    ? filters.column ?? GRID_COLUMNS
-    : GRID_COLUMNS_MOBILE;
+  const columns = isDesktop ? filters.column : GRID_COLUMNS_MOBILE;
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, ValidObjekt[][]][]
@@ -70,7 +68,7 @@ function ProfileObjekt({ profile, artists }: Props) {
   const { data } = useSuspenseQuery(ownedCollectionOptions(profile.address));
 
   const joinedObjekts = useMemo(() => {
-    let ownedObjekts: ValidObjekt[] = data ?? [];
+    let ownedObjekts: ValidObjekt[] = data;
     if (filters.unowned) {
       const missingObjekts = objekts.filter(
         (a) => !ownedObjekts.some((b) => b.slug === a.slug)

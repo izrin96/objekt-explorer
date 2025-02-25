@@ -2,7 +2,7 @@ import { Filters } from "@/hooks/use-filters";
 import {
   ValidClass,
   validClasses,
-  ValidGroupBy,
+  validGroupBy,
   ValidSeason,
 } from "@/lib/universal/cosmo/common";
 import {
@@ -204,8 +204,8 @@ function sortObjekts<T extends ValidObjekt>(
   // default sort and season sort
   objekts = defaultSortObjekts(objekts, artists);
 
-  const sort = filters.sort ?? "date";
-  const sortDir = filters.sort_dir ?? "desc";
+  const sort = filters.sort;
+  const sortDir = filters.sort_dir;
 
   if (sort === "date") {
     if (sortDir === "desc")
@@ -248,8 +248,8 @@ function sortDuplicate<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[][]
 ) {
-  const sort = filters.sort ?? "date";
-  const sortDir = filters.sort_dir ?? "desc";
+  const sort = filters.sort;
+  const sortDir = filters.sort_dir;
 
   if (sort === "duplicate") {
     if (sortDir === "desc")
@@ -279,7 +279,7 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
     results = groupBy(objekts, () => "");
   }
 
-  const groupDir = filters.group_dir ?? "desc";
+  const groupDir = filters.group_dir;
 
   return Object.entries(results).toSorted(([keyA], [keyB]) => {
     if (filters.group_by === "member") {
@@ -354,13 +354,11 @@ export function shapeProgressCollections<T extends ValidObjekt>(
     (a) => !["Welcome", "Zero"].includes(a.class)
   );
 
-  const defaultGroupBys = ["member", "season", "class"] as ValidGroupBy[];
-  const groupBys =
-    filters.group_bys?.toSorted(
-      (a, b) =>
-        defaultGroupBys.findIndex((c) => c === a) -
-        defaultGroupBys.findIndex((c) => c === b)
-    ) ?? defaultGroupBys;
+  const groupBys = filters.group_bys?.toSorted(
+    (a, b) =>
+      validGroupBy.findIndex((c) => c === a) -
+      validGroupBy.findIndex((c) => c === b)
+  ) ?? ["member", "season", "class"];
 
   const grouped = groupBy(objekts, (a) =>
     groupBys.map((key) => a[key as keyof typeof a]).join(" ")

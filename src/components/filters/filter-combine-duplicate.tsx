@@ -8,10 +8,10 @@ export default function CombineDuplicateFilter() {
   return (
     <Toggle
       className="data-selected:inset-ring-primary font-medium"
-      isSelected={filters.grouped ?? false}
+      isSelected={filters.grouped}
       onChange={(v) =>
         setFilters({
-          grouped: v ? true : null,
+          grouped: v,
         })
       }
     >

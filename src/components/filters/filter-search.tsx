@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
 export default function FilterSearch() {
   const [filters, setFilters] = useFilters();
-  const [query, setQuery] = useState(filters.search ?? "");
+  const [query, setQuery] = useState(filters.search);
 
   const [debounced] = useDebounceValue(query, 250);
 

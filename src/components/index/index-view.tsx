@@ -4,7 +4,7 @@ import { IndexedObjekt } from "@/lib/universal/objekts";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
-import { GRID_COLUMNS, GRID_COLUMNS_MOBILE } from "@/lib/utils";
+import { GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import ObjektView from "../objekt/objekt-view";
 import { shapeIndexedObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
@@ -41,9 +41,7 @@ function IndexView({ artists }: Props) {
   const { data: objekts } = useSuspenseQuery(collectionOptions);
 
   const isDesktop = useMediaQuery("(min-width: 640px)");
-  const columns = isDesktop
-    ? filters.column ?? GRID_COLUMNS
-    : GRID_COLUMNS_MOBILE;
+  const columns = isDesktop ? filters.column : GRID_COLUMNS_MOBILE;
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, IndexedObjekt[]][]

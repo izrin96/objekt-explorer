@@ -27,7 +27,7 @@ export default function GroupByFilter() {
       const newValue = newFilters.length > 0 ? newFilters[0] : null;
       setFilters({
         group_by: newValue,
-        group_dir: newValue === "member" ? "asc" : null,
+        group_dir: ["member", "class"].includes(newValue ?? "") ? "asc" : null,
       });
     },
     [setFilters]
