@@ -102,7 +102,7 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     const endBreakdown = {
       collectionNo: end.collectionNo,
       seasonCode: end.seasonCode || start.seasonCode || "z",
-      type: end.type || "z",
+      type: end.type || start.type || "z",
     };
 
     return (
