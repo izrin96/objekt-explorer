@@ -103,7 +103,12 @@ const ProgressCollapse = memo(function ProgressCollapse({
     ownedObjekts.some((b) => a.slug === b.slug)
   );
 
-  const percentage = Math.floor((owned.length / filteredObjekts.length) * 100);
+  const percentage = useMemo(() => {
+    const percentage = Math.floor(
+      (owned.length / filteredObjekts.length) * 100
+    );
+    return isNaN(percentage) ? 0 : percentage;
+  }, [owned, filteredObjekts]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -129,6 +134,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
               key={objekt.slug}
               objekts={[objekt]}
               isFade={!owned.some((a) => a.slug === objekt.slug)}
+              unobtainable={unobtainables.includes(objekt.slug)}
             />
           ))}
         </div>

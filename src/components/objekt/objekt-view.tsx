@@ -6,21 +6,24 @@ import {
   ValidObjekt,
 } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "./objekt-util";
-import { Badge } from "../ui";
+import { Badge, Tooltip } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { cn } from "@/utils/classes";
+import { Star } from "lucide-react";
 
 type Props = {
   objekts: ValidObjekt[];
   isFade?: boolean;
   priority?: boolean;
+  unobtainable?: boolean;
 };
 
 export default memo(function ObjektView({
   priority = false,
   isFade = false,
+  unobtainable = false,
   ...props
 }: Props) {
   const { openObjekts } = useObjektModal();
@@ -71,7 +74,7 @@ export default memo(function ObjektView({
             </div>
           )}
         </div>
-        <div className="flex justify-center text-sm text-center">
+        <div className="flex justify-center text-sm text-center items-center gap-1">
           <Badge
             intent="secondary"
             className="font-semibold cursor-pointer"
@@ -81,6 +84,14 @@ export default memo(function ObjektView({
             {getCollectionShortId(objekt)}
             {isOwned && !filters.grouped && ` #${objekt.serial}`}
           </Badge>
+          {unobtainable && (
+            <Tooltip delay={0} closeDelay={0}>
+              <Tooltip.Trigger aria-label="Unobtainable">
+                <Star strokeWidth={3} className="flex-none" size={14} />
+              </Tooltip.Trigger>
+              <Tooltip.Content>Unobtainable</Tooltip.Content>
+            </Tooltip>
+          )}
         </div>
       </div>
     </>
