@@ -16,6 +16,7 @@ export type OwnedObjekt = Omit<IndexedObjekt, "id"> &
 
 // from apollo cosmo-web repo
 export const unobtainables = [
+  "binary01-savior-322z",
   // test
   "atom01-artmstest-100u",
   // error in minting
