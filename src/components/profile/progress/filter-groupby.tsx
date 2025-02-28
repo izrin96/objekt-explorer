@@ -7,6 +7,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { ValidGroupBy } from "@/lib/universal/cosmo/common";
 
 const map: Record<string, string> = {
+  artist: "Artist",
   member: "Member",
   season: "Season",
   class: "Class",
@@ -30,8 +31,6 @@ export default function ProgressGroupByFilter() {
     [setFilters]
   );
 
-  const availableGroupBys = ["member", "season", "class"];
-
   return (
     <Menu>
       <Button
@@ -44,7 +43,7 @@ export default function ProgressGroupByFilter() {
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
-        items={Object.values(availableGroupBys).map((value) => ({ value }))}
+        items={Object.keys(map).map((value) => ({ value }))}
         className="min-w-52"
       >
         {(item) => (

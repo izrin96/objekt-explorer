@@ -4,9 +4,11 @@ import MemberFilter from "@/components/filters/filter-member";
 import FilterSeason from "@/components/filters/filter-season";
 import FilterOnline from "@/components/filters/filter-online";
 import FilterClass from "@/components/filters/filter-class";
+import ArtistFilter from "@/components/filters/filter-artist";
+import ResetFilter from "@/components/filters/reset-filter";
+import ProgressGroupByFilter from "./filter-groupby";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import React from "react";
-import ProgressGroupByFilter from "./filter-groupby";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -15,11 +17,13 @@ type Props = {
 export default function ProgressFilter({ artists }: Props) {
   return (
     <div className="flex gap-2 items-center flex-wrap justify-center">
+      <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
       <FilterSeason />
       <FilterClass hideZeroWelcome />
       <FilterOnline />
       <ProgressGroupByFilter />
+      <ResetFilter />
     </div>
   );
 }

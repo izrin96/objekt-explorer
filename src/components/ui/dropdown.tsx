@@ -73,7 +73,7 @@ type DropdownItemProps = ListBoxItemProps
 
 const DropdownItem = ({ className, ...props }: DropdownItemProps) => {
   const textValue =
-    props.textValue || (typeof props.children === "string" ? props.children : undefined)
+    props.textValue ?? (typeof props.children === "string" ? props.children : undefined)
   return (
     <ListBoxItemPrimitive
       textValue={textValue}

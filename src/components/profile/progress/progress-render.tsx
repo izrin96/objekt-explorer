@@ -65,9 +65,9 @@ function Progress({ artists, profile }: Props) {
     <ObjektModalProvider initialTab="trades">
       <div className="flex flex-col gap-8 mb-8">
         <ProgressFilter artists={artists} />
-        {!filters.member ? (
+        {!filters.artist && !filters.member ? (
           <div className="flex justify-center text-sm text-muted-fg">
-            Select at least 1 member
+            Select at least 1 artist or 1 member
           </div>
         ) : (
           shaped.map(([key, objekts]) => {
@@ -111,7 +111,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
         className="flex gap-4 py-4 flex-wrap cursor-pointer select-none items-center transition rounded-lg p-4 border border-border bg-secondary/30 hover:bg-secondary/60"
         onClick={() => setShow(!show)}
       >
-        <div className="font-semibold text-base inline-flex gap-2 items-center min-w-64">
+        <div className="font-semibold text-base inline-flex gap-2 items-center min-w-72">
           {title}
           {show ? <IconMinimize45 /> : <IconExpand45 />}
         </div>
