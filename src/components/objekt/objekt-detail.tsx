@@ -3,7 +3,6 @@ import { CSSProperties, memo, useState } from "react";
 import { replaceUrlSize } from "./objekt-util";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
 import { OwnedObjekt, ValidObjekt } from "@/lib/universal/objekts";
-import { useMediaQuery } from "usehooks-ts";
 import ObjektSidebar from "./objekt-sidebar";
 import { AttributePanel } from "./objekt-attribute";
 import NextImage from "next/image";
@@ -23,7 +22,6 @@ export default function ObjektDetail({
   objekts,
   isProfile,
 }: ObjektDetailProps) {
-  const isDesktop = useMediaQuery("(min-width: 640px)");
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
   const [flipped, setFlipped] = useState(false);
