@@ -65,18 +65,19 @@ function ProfileObjekt({ profile, artists }: Props) {
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
-  const { data } = useSuspenseQuery(ownedCollectionOptions(profile.address));
+  const { data: ownedObjekts } = useSuspenseQuery(
+    ownedCollectionOptions(profile.address)
+  );
 
   const joinedObjekts = useMemo(() => {
-    let ownedObjekts: ValidObjekt[] = data;
     if (filters.unowned) {
       const missingObjekts = objekts.filter(
         (a) => !ownedObjekts.some((b) => b.slug === a.slug)
       );
-      ownedObjekts = [...ownedObjekts, ...missingObjekts];
+      return [...ownedObjekts, ...missingObjekts];
     }
     return ownedObjekts;
-  }, [data, filters.unowned, objekts]);
+  }, [ownedObjekts, filters.unowned, objekts]);
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([key, groupedObjekts]) => [
