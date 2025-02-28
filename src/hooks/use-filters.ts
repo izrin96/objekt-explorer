@@ -27,7 +27,7 @@ import {
 export function useFilters() {
   return useQueryStates({
     member: parseAsArrayOf(parseAsString),
-    artist: parseAsStringEnum<ValidArtist>(Object.values(validArtists)),
+    artist: parseAsArrayOf(parseAsStringEnum<ValidArtist>(Object.values(validArtists))),
     sort: parseAsStringEnum<ValidSort>(Object.values(validSorts)).withDefault(
       "date"
     ),

@@ -13,10 +13,10 @@ const map: Record<string, string> = {
   class: "Class",
 };
 
-export default function ProgressGroupByFilter() {
+export default function GroupBysFilter() {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(
-    () => new Set(filters.group_bys ? filters.group_bys : []),
+    () => new Set(filters.group_bys ?? []),
     [filters.group_bys]
   );
 

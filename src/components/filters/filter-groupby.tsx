@@ -7,6 +7,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { validGroupBy, ValidGroupBy } from "@/lib/universal/cosmo/common";
 
 const map: Record<ValidGroupBy, string> = {
+  artist: "Artist",
   class: "Class",
   collectionNo: "Collection No.",
   member: "Member",

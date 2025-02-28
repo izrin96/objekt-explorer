@@ -6,7 +6,7 @@ import FilterOnline from "@/components/filters/filter-online";
 import FilterClass from "@/components/filters/filter-class";
 import ArtistFilter from "@/components/filters/filter-artist";
 import ResetFilter from "@/components/filters/reset-filter";
-import ProgressGroupByFilter from "./filter-groupby";
+import GroupBysFilter from "./filter-groupbys";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import React from "react";
 
@@ -22,7 +22,7 @@ export default function ProgressFilter({ artists }: Props) {
       <FilterSeason />
       <FilterClass hideZeroWelcome />
       <FilterOnline />
-      <ProgressGroupByFilter />
+      <GroupBysFilter />
       <ResetFilter />
     </div>
   );

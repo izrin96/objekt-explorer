@@ -45,6 +45,7 @@ export type ValidClass = (typeof validClasses)[number];
 
 // groupBy
 export const validGroupBy = [
+  "artist",
   "member",
   "season",
   "class",

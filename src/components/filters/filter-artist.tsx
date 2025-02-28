@@ -14,7 +14,7 @@ type Props = {
 export default function ArtistFilter({ artists }: Props) {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(
-    () => new Set(filters.artist ? [filters.artist] : []),
+    () => new Set(filters.artist ?? []),
     [filters.artist]
   );
 
@@ -22,7 +22,7 @@ export default function ArtistFilter({ artists }: Props) {
     (key: Selection) => {
       const newFilters = [...key] as ValidArtist[];
       setFilters({
-        artist: newFilters.length > 0 ? newFilters[0] : null,
+        artist: newFilters.length > 0 ? newFilters : null,
         member: null,
       });
     },
@@ -38,7 +38,7 @@ export default function ArtistFilter({ artists }: Props) {
         Artist
       </Button>
       <Menu.Content
-        selectionMode="single"
+        selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
         items={artists}

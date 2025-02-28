@@ -1,5 +1,6 @@
 import { Filters } from "@/hooks/use-filters";
 import {
+  ValidArtist,
   ValidClass,
   validClasses,
   validGroupBy,
@@ -140,7 +141,9 @@ function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
     objekts = objekts.filter((a) => filters.member?.includes(a.member));
   }
   if (filters.artist) {
-    objekts = objekts.filter((a) => a.artist === filters.artist);
+    objekts = objekts.filter((a) =>
+      filters.artist?.includes(a.artist as ValidArtist)
+    );
   }
   if (filters.class) {
     objekts = objekts.filter((a) =>
