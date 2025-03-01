@@ -7,11 +7,8 @@ import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
-import {
-  QueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import React, { memo, Suspense, useMemo, useState } from "react";
+import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
+import React, { memo, useMemo, useState } from "react";
 import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-fallback";
@@ -33,15 +30,7 @@ export default function ProgressRender({ ...props }: Props) {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <Suspense
-            fallback={
-              <div className="justify-center flex">
-                <Loader variant="ring" />
-              </div>
-            }
-          >
-            <Progress {...props} />
-          </Suspense>
+          <Progress {...props} />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
@@ -50,16 +39,24 @@ export default function ProgressRender({ ...props }: Props) {
 
 function Progress({ artists, profile }: Props) {
   const [filters] = useFilters();
-  const { data: objekts } = useSuspenseQuery(collectionOptions);
 
-  const { data: ownedObjekts } = useSuspenseQuery(
-    ownedCollectionOptions(profile.address)
-  );
+  const objektsQuery = useQuery(collectionOptions);
+  const ownedQuery = useQuery(ownedCollectionOptions(profile.address));
+
+  const objekts = useMemo(() => objektsQuery.data ?? [], [objektsQuery.data]);
+  const ownedObjekts = useMemo(() => ownedQuery.data ?? [], [ownedQuery.data]);
 
   const shaped = useMemo(
     () => shapeProgressCollections(artists, filters, objekts),
     [artists, filters, objekts]
   );
+
+  if (objektsQuery.isLoading || ownedQuery.isLoading)
+    return (
+      <div className="justify-center flex">
+        <Loader variant="ring" />
+      </div>
+    );
 
   return (
     <ObjektModalProvider initialTab="trades">

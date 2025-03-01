@@ -1,20 +1,11 @@
 "use client";
 
-import {
-  Suspense,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS_MOBILE } from "@/lib/utils";
-import {
-  QueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
@@ -38,15 +29,7 @@ export default function ProfileObjektRender({ ...props }: Props) {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <Suspense
-            fallback={
-              <div className="justify-center flex">
-                <Loader variant="ring" />
-              </div>
-            }
-          >
-            <ProfileObjekt {...props} />
-          </Suspense>
+          <ProfileObjekt {...props} />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
@@ -55,8 +38,6 @@ export default function ProfileObjektRender({ ...props }: Props) {
 
 function ProfileObjekt({ profile, artists }: Props) {
   const [filters] = useFilters();
-  const { data: objekts } = useSuspenseQuery(collectionOptions);
-
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const columns = isDesktop ? filters.column : GRID_COLUMNS_MOBILE;
 
@@ -65,9 +46,11 @@ function ProfileObjekt({ profile, artists }: Props) {
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
-  const { data: ownedObjekts } = useSuspenseQuery(
-    ownedCollectionOptions(profile.address)
-  );
+  const objektsQuery = useQuery(collectionOptions);
+  const ownedQuery = useQuery(ownedCollectionOptions(profile.address));
+
+  const objekts = useMemo(() => objektsQuery.data ?? [], [objektsQuery.data]);
+  const ownedObjekts = useMemo(() => ownedQuery.data ?? [], [ownedQuery.data]);
 
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
@@ -102,6 +85,13 @@ function ProfileObjekt({ profile, artists }: Props) {
   useEffect(() => {
     setObjektsFiltered(shapeProfileObjekts(filters, joinedObjekts, artists));
   }, [filters, joinedObjekts, artists]);
+
+  if (objektsQuery.isLoading || ownedQuery.isLoading)
+    return (
+      <div className="justify-center flex">
+        <Loader variant="ring" />
+      </div>
+    );
 
   return (
     <div className="flex flex-col gap-2">
