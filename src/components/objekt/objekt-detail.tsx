@@ -1,4 +1,4 @@
-import { Badge, Card, Link, Table, Tabs } from "../ui";
+import { Badge, Button, Card, Link, NumberField, Table, Tabs } from "../ui";
 import { CSSProperties, memo, useState } from "react";
 import { replaceUrlSize } from "./objekt-util";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
@@ -9,7 +9,11 @@ import NextImage from "next/image";
 import TradeView from "./trade-view";
 import { format } from "date-fns";
 import { cn } from "@/utils/classes";
-import { IconOpenLink } from "justd-icons";
+import {
+  IconChevronLgLeft,
+  IconChevronLgRight,
+  IconOpenLink,
+} from "justd-icons";
 import { ArchiveXIcon } from "lucide-react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 
@@ -134,59 +138,98 @@ const OwnedListPanel = memo(function OwnedListPanel({
 }) {
   const { openTrades } = useObjektModal();
   const { getArtist } = useCosmoArtist();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.ceil(objekts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = objekts.slice(startIndex, endIndex);
+
   return (
-    <Card>
-      <Table aria-label="Trades">
-        <Table.Header>
-          <Table.Column isRowHeader maxWidth={110}>
-            Serial
-          </Table.Column>
-          <Table.Column>Token ID</Table.Column>
-          <Table.Column minWidth={200}>Received</Table.Column>
-          <Table.Column>Transferable</Table.Column>
-        </Table.Header>
-        <Table.Body items={objekts}>
-          {(item) => (
-            <Table.Row id={item.id}>
-              <Table.Cell>
-                <span
-                  onClick={() => openTrades(item.serial)}
-                  className="cursor-pointer"
-                >
-                  {item.serial}
-                </span>
-              </Table.Cell>
-              <Table.Cell>
-                <Link
-                  href={`https://opensea.io/assets/matic/${
-                    getArtist(item.artist)?.contracts.Objekt
-                  }/${item.id}`}
-                  className="cursor-pointer inline-flex gap-2 items-center"
-                  target="_blank"
-                >
-                  {item.id}
-                  <IconOpenLink />
-                </Link>
-              </Table.Cell>
-              <Table.Cell>
-                {format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}
-              </Table.Cell>
-              <Table.Cell>
-                <Badge
-                  className={cn(
-                    "text-xs",
-                    !item.transferable &&
-                      "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
-                  )}
-                  shape="square"
-                >
-                  {item.transferable ? "Yes" : "No"}
-                </Badge>
-              </Table.Cell>
-            </Table.Row>
-          )}
-        </Table.Body>
-      </Table>
-    </Card>
+    <div className="flex flex-col gap-2">
+      <Card>
+        <Table aria-label="Trades">
+          <Table.Header>
+            <Table.Column isRowHeader maxWidth={110}>
+              Serial
+            </Table.Column>
+            <Table.Column>Token ID</Table.Column>
+            <Table.Column minWidth={200}>Received</Table.Column>
+            <Table.Column>Transferable</Table.Column>
+          </Table.Header>
+          <Table.Body items={currentItems}>
+            {(item) => (
+              <Table.Row id={item.id}>
+                <Table.Cell>
+                  <span
+                    onClick={() => openTrades(item.serial)}
+                    className="cursor-pointer"
+                  >
+                    {item.serial}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  <Link
+                    href={`https://opensea.io/assets/matic/${
+                      getArtist(item.artist)?.contracts.Objekt
+                    }/${item.id}`}
+                    className="cursor-pointer inline-flex gap-2 items-center"
+                    target="_blank"
+                  >
+                    {item.id}
+                    <IconOpenLink />
+                  </Link>
+                </Table.Cell>
+                <Table.Cell>
+                  {format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}
+                </Table.Cell>
+                <Table.Cell>
+                  <Badge
+                    className={cn(
+                      "text-xs",
+                      !item.transferable &&
+                        "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
+                    )}
+                    shape="square"
+                  >
+                    {item.transferable ? "Yes" : "No"}
+                  </Badge>
+                </Table.Cell>
+              </Table.Row>
+            )}
+          </Table.Body>
+        </Table>
+      </Card>
+      {totalPages > 1 && (
+        <div className="flex gap-3 items-center justify-center">
+          <Button
+            size="square-petite"
+            appearance="outline"
+            isDisabled={currentPage <= 1}
+            onPress={() => setCurrentPage(currentPage - 1)}
+          >
+            <IconChevronLgLeft />
+          </Button>
+          <NumberField
+            className="max-w-16"
+            minValue={1}
+            aria-label="Page"
+            value={currentPage}
+            onChange={setCurrentPage}
+            isWheelDisabled
+          />
+          <span>/ {totalPages}</span>
+          <Button
+            size="square-petite"
+            appearance="outline"
+            isDisabled={currentPage >= totalPages}
+            onPress={() => setCurrentPage(currentPage + 1)}
+          >
+            <IconChevronLgRight />
+          </Button>
+        </div>
+      )}
+    </div>
   );
 });
