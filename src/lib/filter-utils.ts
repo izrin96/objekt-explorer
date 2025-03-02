@@ -89,9 +89,9 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     if (!start || !end) return false;
 
     const objektBreakdown = {
-      collectionNo: objekt.collectionNo.toLowerCase(),
+      collectionNo: objekt.collectionNo.substring(0, 3).toLowerCase(),
       seasonCode: objekt.season.charAt(0).toLowerCase(),
-      type: objekt.collectionNo.toLowerCase().charAt(3),
+      type: objekt.collectionNo.charAt(3).toLowerCase(),
     };
 
     const startBreakdown = {
