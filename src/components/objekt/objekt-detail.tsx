@@ -214,6 +214,7 @@ const OwnedListPanel = memo(function OwnedListPanel({
           <NumberField
             className="max-w-16"
             minValue={1}
+            maxValue={totalPages}
             aria-label="Page"
             value={currentPage}
             onChange={setCurrentPage}

@@ -93,11 +93,20 @@ const ProgressCollapse = memo(function ProgressCollapse({
   ownedObjekts: OwnedObjekt[];
 }) {
   const [show, setShow] = useState(false);
-  const filteredObjekts = objekts.filter(
-    (a) => !unobtainables.includes(a.slug)
+
+  const filteredObjekts = useMemo(
+    () => objekts.filter((a) => !unobtainables.includes(a.slug)),
+    [objekts]
   );
-  const owned = filteredObjekts.filter((a) =>
-    ownedObjekts.some((b) => a.slug === b.slug)
+
+  const ownedSlugs = useMemo(
+    () => new Set(ownedObjekts.map((obj) => obj.slug)),
+    [ownedObjekts]
+  );
+
+  const owned = useMemo(
+    () => filteredObjekts.filter((a) => ownedSlugs.has(a.slug)),
+    [filteredObjekts, ownedSlugs]
   );
 
   const percentage = useMemo(() => {
@@ -130,7 +139,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
             <ObjektView
               key={objekt.slug}
               objekts={[objekt]}
-              isFade={!owned.some((a) => a.slug === objekt.slug)}
+              isFade={!ownedSlugs.has(objekt.slug)}
               unobtainable={unobtainables.includes(objekt.slug)}
             />
           ))}

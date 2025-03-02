@@ -54,9 +54,10 @@ function ProfileObjekt({ profile, artists }: Props) {
 
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
-      const missingObjekts = objekts.filter(
-        (a) => !ownedObjekts.some((b) => b.slug === a.slug)
-      );
+      const ownedSlugs = new Set(ownedObjekts.map(obj => obj.slug));
+      
+      const missingObjekts = objekts.filter(obj => !ownedSlugs.has(obj.slug));
+      
       return [...ownedObjekts, ...missingObjekts];
     }
     return ownedObjekts;
