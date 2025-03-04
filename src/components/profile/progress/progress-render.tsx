@@ -11,11 +11,7 @@ import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-fallback";
 import { Loader, ProgressBar } from "@/components/ui";
-import {
-  IndexedObjekt,
-  OwnedObjekt,
-  unobtainables,
-} from "@/lib/universal/objekts";
+import { IndexedObjekt, unobtainables } from "@/lib/universal/objekts";
 import { IconExpand45, IconMinimize45 } from "justd-icons";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
@@ -48,6 +44,11 @@ function Progress() {
     [artists, filters, objekts]
   );
 
+  const ownedSlugs = useMemo(
+    () => new Set(ownedObjekts.map((obj) => obj.slug)),
+    [ownedObjekts]
+  );
+
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (
       <div className="justify-center flex">
@@ -70,7 +71,7 @@ function Progress() {
                 key={key}
                 title={key}
                 objekts={objekts}
-                ownedObjekts={ownedObjekts}
+                ownedSlugs={ownedSlugs}
               />
             );
           })
@@ -83,22 +84,17 @@ function Progress() {
 const ProgressCollapse = memo(function ProgressCollapse({
   title,
   objekts,
-  ownedObjekts,
+  ownedSlugs,
 }: {
   title: string;
   objekts: IndexedObjekt[];
-  ownedObjekts: OwnedObjekt[];
+  ownedSlugs: Set<string>;
 }) {
   const [show, setShow] = useState(false);
 
   const filteredObjekts = useMemo(
     () => objekts.filter((a) => !unobtainables.includes(a.slug)),
     [objekts]
-  );
-
-  const ownedSlugs = useMemo(
-    () => new Set(ownedObjekts.map((obj) => obj.slug)),
-    [ownedObjekts]
   );
 
   const owned = useMemo(
