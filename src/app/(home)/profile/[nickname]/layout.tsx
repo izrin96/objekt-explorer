@@ -1,4 +1,5 @@
 import ProfileTabs from "@/components/profile/profile-tabs";
+import { ProfileProvider } from "@/hooks/use-profile";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { PropsWithChildren } from "react";
 
@@ -16,7 +17,7 @@ export default async function UserCollectionPage(props: Props) {
   ]);
 
   return (
-    <>
+    <ProfileProvider profile={targetUser}>
       <div className="text-xl font-semibold">{targetUser.nickname}</div>
       <div className="overflow-auto text-xs text-muted-fg">
         {targetUser.address}
@@ -27,6 +28,6 @@ export default async function UserCollectionPage(props: Props) {
         <ProfileTabs nickname={params.nickname} />
         {props.children}
       </div>
-    </>
+    </ProfileProvider>
   );
 }

@@ -7,7 +7,6 @@ import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import ObjektView from "../objekt/objekt-view";
 import { shapeIndexedObjekts } from "@/lib/filter-utils";
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { WindowVirtualizer } from "virtua";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useMediaQuery } from "usehooks-ts";
@@ -19,24 +18,22 @@ import {
 import { ErrorBoundary } from "react-error-boundary";
 import { collectionOptions } from "@/lib/query-options";
 import ErrorFallbackRender from "../error-fallback";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 
-type Props = {
-  artists: CosmoArtistWithMembersBFF[];
-};
-
-export default function IndexRender({ ...props }: Props) {
+export default function IndexRender() {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <IndexView {...props} />
+          <IndexView />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
   );
 }
 
-function IndexView({ artists }: Props) {
+function IndexView() {
+  const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { data: objekts } = useSuspenseQuery(collectionOptions);
 

@@ -14,24 +14,23 @@ import { InfiniteQueryNext } from "../infinite-query-pending";
 import ProfileTradeRow from "./profile-trade-row";
 import { Card } from "../ui";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import { useProfile } from "@/hooks/use-profile";
 
-export default function ProfileTradesRender({
-  profile,
-}: {
-  profile: CosmoPublicUser;
-}) {
+export default function ProfileTradesRender() {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <ProfileTrades address={profile.address} />
+          <ProfileTrades />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
   );
 }
 
-function ProfileTrades({ address }: { address: string }) {
+function ProfileTrades() {
+  const { profile } = useProfile();
+  const address = profile.address;
   const query = useInfiniteQuery({
     queryKey: ["transfers", address],
     queryFn: async ({ pageParam = 0 }: { pageParam?: string | number }) => {

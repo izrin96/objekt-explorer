@@ -1,25 +1,30 @@
 "use client";
 
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
-import { ReactNode, createContext, useCallback, useContext } from "react";
+import {
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+} from "react";
 
 type ContextProps = {
-  artists: Map<string, CosmoArtistWithMembersBFF>;
+  artistMap: Map<string, CosmoArtistWithMembersBFF>;
+  artists: CosmoArtistWithMembersBFF[];
 };
 
 const CosmoArtistContext = createContext<ContextProps | null>(null);
 
-type ProviderProps = {
-  children: ReactNode;
+type ProviderProps = PropsWithChildren<{
   artists: CosmoArtistWithMembersBFF[];
-};
+}>;
 
 export function CosmoArtistProvider({ children, artists }: ProviderProps) {
   const artistMap = new Map(
     artists.map((artist) => [artist.id.toLowerCase(), artist])
   );
   return (
-    <CosmoArtistContext value={{ artists: artistMap }}>
+    <CosmoArtistContext value={{ artists, artistMap }}>
       {children}
     </CosmoArtistContext>
   );
@@ -31,11 +36,12 @@ export function useCosmoArtist() {
     throw new Error("useCosmoArtist must be used within CosmoArtistProvider");
 
   const getArtist = useCallback(
-    (artistName: string) => ctx.artists.get(artistName.toLowerCase()),
-    [ctx.artists]
+    (artistName: string) => ctx.artistMap.get(artistName.toLowerCase()),
+    [ctx.artistMap]
   );
 
   return {
     getArtist,
+    artists: ctx.artists,
   };
 }

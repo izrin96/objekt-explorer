@@ -6,6 +6,7 @@ import ClientProviders from "@/components/client-providers";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import { Analytics } from "@/components/analytics";
+import { PropsWithChildren } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -32,11 +33,7 @@ export const metadata: Metadata = {
   description: "Cosmo objekt explorer",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang="en"

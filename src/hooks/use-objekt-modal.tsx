@@ -3,7 +3,7 @@
 import ObjektDetail from "@/components/objekt/objekt-detail";
 import { Modal } from "@/components/ui";
 import { ValidObjekt } from "@/lib/universal/objekts";
-import { ReactNode, createContext, useContext, useState } from "react";
+import { PropsWithChildren, createContext, useContext, useState } from "react";
 
 export type ValidTab = "owned" | "trades";
 
@@ -17,11 +17,10 @@ type ContextProps = {
 
 const ObjektModalContext = createContext<ContextProps>({} as ContextProps);
 
-type ProviderProps = {
-  children: ReactNode;
+type ProviderProps = PropsWithChildren<{
   initialTab: ValidTab;
   isProfile?: boolean;
-};
+}>;
 
 export function ObjektModalProvider({
   children,

@@ -1,14 +1,12 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
 import { ErrorBoundary } from "react-error-boundary";
@@ -18,25 +16,24 @@ import { useMediaQuery } from "usehooks-ts";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { GroupLabelRender } from "../index/index-view";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useProfile } from "@/hooks/use-profile";
 
-type Props = {
-  artists: CosmoArtistWithMembersBFF[];
-  profile: CosmoPublicUser;
-};
-
-export default function ProfileObjektRender({ ...props }: Props) {
+export default function ProfileObjektRender() {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <ProfileObjekt {...props} />
+          <ProfileObjekt />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
   );
 }
 
-function ProfileObjekt({ profile, artists }: Props) {
+function ProfileObjekt() {
+  const { profile } = useProfile();
+  const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const columns = isDesktop ? filters.column : GRID_COLUMNS_MOBILE;
@@ -54,10 +51,10 @@ function ProfileObjekt({ profile, artists }: Props) {
 
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
-      const ownedSlugs = new Set(ownedObjekts.map(obj => obj.slug));
-      
-      const missingObjekts = objekts.filter(obj => !ownedSlugs.has(obj.slug));
-      
+      const ownedSlugs = new Set(ownedObjekts.map((obj) => obj.slug));
+
+      const missingObjekts = objekts.filter((obj) => !ownedSlugs.has(obj.slug));
+
       return [...ownedObjekts, ...missingObjekts];
     }
     return ownedObjekts;

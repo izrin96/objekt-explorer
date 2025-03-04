@@ -5,8 +5,6 @@ import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
-import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import React, { memo, useMemo, useState } from "react";
 import ProgressFilter from "./progress-filter";
@@ -19,25 +17,24 @@ import {
   unobtainables,
 } from "@/lib/universal/objekts";
 import { IconExpand45, IconMinimize45 } from "justd-icons";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useProfile } from "@/hooks/use-profile";
 
-type Props = {
-  artists: CosmoArtistWithMembersBFF[];
-  profile: CosmoPublicUser;
-};
-
-export default function ProgressRender({ ...props }: Props) {
+export default function ProgressRender() {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <Progress {...props} />
+          <Progress />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
   );
 }
 
-function Progress({ artists, profile }: Props) {
+function Progress() {
+  const { artists } = useCosmoArtist();
+  const { profile } = useProfile();
   const [filters] = useFilters();
 
   const objektsQuery = useQuery(collectionOptions);
