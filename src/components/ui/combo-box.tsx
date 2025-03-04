@@ -97,7 +97,7 @@ const ComboBoxInput = (props: InputProps) => {
   return (
     <FieldGroup className="relative pl-0">
       <Input {...props} placeholder={props?.placeholder} />
-      <Button size="square-petite" appearance="plain" className={chevronButton()}>
+      <Button size="square-petite" intent="plain" className={chevronButton()}>
         {!context?.inputValue && <IconChevronLgDown className={chevronIcon()} />}
       </Button>
       {context?.inputValue && <ComboBoxClearButton />}

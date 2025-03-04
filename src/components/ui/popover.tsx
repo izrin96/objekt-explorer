@@ -1,12 +1,12 @@
 "use client"
 
 import type {
+  DialogProps,
   DialogTriggerProps,
   ModalOverlayProps,
   PopoverProps as PopoverPrimitiveProps,
 } from "react-aria-components"
 import {
-  type DialogProps,
   DialogTrigger,
   Modal,
   ModalOverlay,

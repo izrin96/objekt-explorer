@@ -31,7 +31,7 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
   return (
     <Menu>
       <Button
-        appearance="outline"
+        intent="outline"
         className={filters.class?.length ? "border-primary" : ""}
       >
         Class

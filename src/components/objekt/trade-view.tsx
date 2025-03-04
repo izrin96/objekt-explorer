@@ -114,7 +114,7 @@ function Trades({
         />
         <Button
           size="square-petite"
-          appearance="outline"
+          intent="outline"
           className="flex-none"
           onPress={() => updateSerial("prev")}
         >
@@ -122,7 +122,7 @@ function Trades({
         </Button>
         <Button
           size="square-petite"
-          appearance="outline"
+          intent="outline"
           className="flex-none"
           onPress={() => updateSerial("next")}
         >

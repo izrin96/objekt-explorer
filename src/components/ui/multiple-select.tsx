@@ -261,7 +261,7 @@ const MultipleSelect = <T extends SelectedKey>({
                   slot="remove"
                   type="button"
                   aria-label="Remove"
-                  appearance="plain"
+                  intent="plain"
                   size="square-petite"
                   ref={triggerButtonRef}
                 >

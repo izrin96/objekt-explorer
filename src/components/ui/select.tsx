@@ -94,7 +94,7 @@ const SelectList = <T extends object>({
       className={cn("sm:min-w-(--trigger-width)", popoverClassName)}
       placement={props.placement}
     >
-      <ListBox className={cn("border-0", className)} items={items} {...props}>
+      <ListBox className={cn("border-0 shadow-none", className)} items={items} {...props}>
         {children}
       </ListBox>
     </PopoverContent>

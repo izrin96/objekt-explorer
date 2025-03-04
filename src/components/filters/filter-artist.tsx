@@ -32,7 +32,7 @@ export default function ArtistFilter({ artists }: Props) {
   return (
     <Menu>
       <Button
-        appearance="outline"
+        intent="outline"
         className={filters.artist ? "border-primary" : ""}
       >
         Artist

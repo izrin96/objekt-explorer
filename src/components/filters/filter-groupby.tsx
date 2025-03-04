@@ -37,7 +37,7 @@ export default function GroupByFilter() {
   return (
     <Menu>
       <Button
-        appearance="outline"
+        intent="outline"
         className={filters.group_by ? "border-primary" : ""}
       >
         Group By

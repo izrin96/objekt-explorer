@@ -58,7 +58,7 @@ export default function SortFilter({ isProfile = false }: Props) {
 
   return (
     <Menu>
-      <Button appearance="outline">Sort by</Button>
+      <Button intent="outline">Sort by</Button>
       <Menu.Content
         selectionMode="single"
         selectedKeys={selected}

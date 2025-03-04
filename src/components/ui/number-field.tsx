@@ -25,7 +25,6 @@ interface NumberFieldProps extends NumberFieldPrimitiveProps {
   description?: string;
   placeholder?: string;
   errorMessage?: string | ((validation: ValidationResult) => string);
-  hideStepper?: boolean;
 }
 
 const NumberField = ({

@@ -26,7 +26,7 @@ export default function ResetFilter() {
     });
   }
   return (
-    <Button appearance="outline" onPress={() => resetFilters()}>
+    <Button intent="outline" onPress={() => resetFilters()}>
       <IconX />
       Reset filter
     </Button>

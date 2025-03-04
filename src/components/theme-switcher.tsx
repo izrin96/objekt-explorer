@@ -7,7 +7,7 @@ import { Button } from "./ui"
 
 export function ThemeSwitcher({
   shape = "square",
-  appearance = "outline",
+  intent = "outline",
   className,
   ...props
 }: React.ComponentProps<typeof Button>) {
@@ -28,7 +28,7 @@ export function ThemeSwitcher({
   return (
     <Button
       shape={shape}
-      appearance={appearance}
+      intent={intent}
       size="square-petite"
       aria-label="Switch theme"
       onPress={toggleTheme}

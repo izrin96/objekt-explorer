@@ -26,12 +26,12 @@ export default function FilterSearch() {
         aria-label="Search"
         suffix={
           query.length > 0 ? (
-            <Button appearance="plain" onPress={() => setQuery("")}>
+            <Button intent="plain" onPress={() => setQuery("")}>
               <IconX />
             </Button>
           ) : (
             <Popover>
-              <Button appearance="plain">
+              <Button intent="plain">
                 <IconCircleQuestionmark />
               </Button>
               <Popover.Content className="sm:max-w-96">

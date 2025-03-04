@@ -210,7 +210,7 @@ const OwnedListPanel = memo(function OwnedListPanel({
         <div className="flex gap-3 items-center justify-center">
           <Button
             size="square-petite"
-            appearance="outline"
+            intent="outline"
             isDisabled={currentPage <= 1}
             onPress={() => setCurrentPage(currentPage - 1)}
           >
@@ -228,7 +228,7 @@ const OwnedListPanel = memo(function OwnedListPanel({
           <span>/ {totalPages}</span>
           <Button
             size="square-petite"
-            appearance="outline"
+            intent="outline"
             isDisabled={currentPage >= totalPages}
             onPress={() => setCurrentPage(currentPage + 1)}
           >

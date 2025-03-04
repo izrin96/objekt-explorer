@@ -28,7 +28,7 @@ export default function MemberFilter({ artists }: Props) {
   return (
     <Menu>
       <Button
-        appearance="outline"
+        intent="outline"
         className={filters.member ? "border-primary" : ""}
       >
         Member

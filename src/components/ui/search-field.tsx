@@ -43,7 +43,7 @@ const SearchField = ({
             <Input placeholder={placeholder ?? "Search..."} />
 
             <Button
-              appearance="plain"
+              intent="plain"
               className="size-8 text-muted-fg data-hovered:bg-transparent data-pressed:bg-transparent data-hovered:text-fg data-pressed:text-fg group-data-empty/search-field:invisible"
             >
               <IconX />

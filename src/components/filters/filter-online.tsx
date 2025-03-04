@@ -34,7 +34,7 @@ export default function OnlineFilter() {
   return (
     <Menu>
       <Button
-        appearance="outline"
+        intent="outline"
         className={filters.on_offline?.length ? "border-primary" : ""}
       >
         Physical

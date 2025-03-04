@@ -9,27 +9,27 @@ import { tv } from "tailwind-variants"
 type ToggleGroupContextProps = {
   isDisabled?: boolean
   gap?: 0 | 1 | 2 | 3 | 4
-  appearance?: "plain" | "outline" | "solid"
+  intent?: "plain" | "outline" | "solid"
   orientation?: "horizontal" | "vertical"
   size?: "extra-small" | "small" | "medium" | "large" | "square-petite"
 }
 
 const ToggleGroupContext = createContext<ToggleGroupContextProps>({
   gap: 1,
-  appearance: "outline",
+  intent: "outline",
   orientation: "horizontal",
   size: "medium",
 })
 
-type BaseToggleGroupProps = Omit<ToggleGroupContextProps, "gap" | "appearance">
+type BaseToggleGroupProps = Omit<ToggleGroupContextProps, "gap" | "intent">
 interface ToggleGroupPropsNonZeroGap extends BaseToggleGroupProps {
   gap?: Exclude<ToggleGroupContextProps["gap"], 0>
-  appearance?: ToggleGroupContextProps["appearance"]
+  intent?: ToggleGroupContextProps["intent"]
 }
 
 interface ToggleGroupPropsGapZero extends BaseToggleGroupProps {
   gap?: 0
-  appearance?: Exclude<ToggleGroupContextProps["appearance"], "plain">
+  intent?: Exclude<ToggleGroupContextProps["intent"], "plain">
 }
 
 type ToggleGroupProps = ToggleButtonGroupProps &
@@ -76,7 +76,7 @@ const toggleGroupStyles = tv({
 const ToggleGroup = ({
   className,
   ref,
-  appearance = "outline",
+  intent = "outline",
   gap = 0,
   size = "medium",
   orientation = "horizontal",
@@ -84,7 +84,7 @@ const ToggleGroup = ({
 }: ToggleGroupProps) => {
   return (
     <ToggleGroupContext.Provider
-      value={{ appearance, gap, orientation, size, isDisabled: props.isDisabled }}
+      value={{ intent, gap, orientation, size, isDisabled: props.isDisabled }}
     >
       <ToggleButtonGroup
         ref={ref}
@@ -116,7 +116,7 @@ const toggleStyles = tv({
     isFocusVisible: {
       true: "inset-ring-ring/70 z-20 ring-4 ring-ring/20",
     },
-    appearance: {
+    intent: {
       plain: "inset-ring-0 data-selected:bg-secondary data-selected:text-secondary-fg",
       solid: ["inset-ring data-selected:inset-ring-fg data-selected:bg-fg data-selected:text-bg"],
       outline: [
@@ -141,7 +141,7 @@ const toggleStyles = tv({
     },
   },
   defaultVariants: {
-    appearance: "outline",
+    intent: "outline",
     size: "small",
     shape: "square",
   },
@@ -158,9 +158,9 @@ interface ToggleProps extends ToggleButtonProps, VariantProps<typeof toggleStyle
   ref?: React.RefObject<HTMLButtonElement>
 }
 
-const Toggle = ({ className, appearance, ref, ...props }: ToggleProps) => {
+const Toggle = ({ className, intent, ref, ...props }: ToggleProps) => {
   const {
-    appearance: groupAppearance,
+    intent: groupIntent,
     orientation,
     gap,
     size,
@@ -173,7 +173,7 @@ const Toggle = ({ className, appearance, ref, ...props }: ToggleProps) => {
       className={composeRenderProps(className, (className, renderProps) =>
         toggleStyles({
           ...renderProps,
-          appearance: appearance ?? groupAppearance,
+          intent: intent ?? groupIntent,
           size: props.size ?? size,
           orientation,
           shape: props.shape,

@@ -254,10 +254,12 @@ const CommandMenuSeparator = ({
   <Menu.Separator className={cn("-mx-2", className)} {...props} />
 )
 
+const CommandMenuLabel = Menu.Label
+
 CommandMenu.Search = CommandMenuSearch
 CommandMenu.List = CommandMenuList
 CommandMenu.Item = CommandMenuItem
-CommandMenu.Label = Menu.Label
+CommandMenu.Label = CommandMenuLabel
 CommandMenu.Section = CommandMenuSection
 CommandMenu.Description = CommandMenuDescription
 CommandMenu.Keyboard = DropdownKeyboard

@@ -23,7 +23,7 @@ export default function FilterSeason() {
   return (
     <Menu>
       <Button
-        appearance="outline"
+        intent="outline"
         className={filters.season?.length ? "border-primary" : ""}
       >
         Season
