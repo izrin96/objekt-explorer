@@ -82,7 +82,12 @@ export default function ObjektDetail({
       </div>
 
       <div className="flex flex-col h-full min-h-screen sm:min-h-full sm:h-[32rem]">
-        <div className="overflow-y-auto">
+        <div
+          className="overflow-y-auto"
+          style={{
+            scrollbarGutter: "stable",
+          }}
+        >
           <div className="px-2 font-semibold">{objekt.collectionId}</div>
           <AttributePanel objekt={objekt} />
           <Tabs
