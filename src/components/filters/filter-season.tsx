@@ -24,7 +24,7 @@ export default function FilterSeason() {
     <Menu>
       <Button
         intent="outline"
-        className={filters.season?.length ? "border-primary" : ""}
+        className={filters.season?.length ? "inset-ring-primary" : ""}
       >
         Season
       </Button>

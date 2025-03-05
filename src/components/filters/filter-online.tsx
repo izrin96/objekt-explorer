@@ -35,7 +35,7 @@ export default function OnlineFilter() {
     <Menu>
       <Button
         intent="outline"
-        className={filters.on_offline?.length ? "border-primary" : ""}
+        className={filters.on_offline?.length ? "inset-ring-primary" : ""}
       >
         Physical
       </Button>

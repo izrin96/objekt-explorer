@@ -32,7 +32,7 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
     <Menu>
       <Button
         intent="outline"
-        className={filters.class?.length ? "border-primary" : ""}
+        className={filters.class?.length ? "inset-ring-primary" : ""}
       >
         Class
       </Button>
