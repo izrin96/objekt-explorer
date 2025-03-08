@@ -22,12 +22,8 @@ const ProgressBar = ({ label, ref, className, ...props }: ProgressBarProps) => {
       {...props}
     >
       {({ percentage, valueText, isIndeterminate }) => (
-        <>
-          <div className="flex justify-between gap-2">
-            {label && <Label>{label}</Label>}
-            <span className="text-muted-fg text-sm tabular-nums">{valueText}</span>
-          </div>
-          <div className="-outline-offset-1 relative mt-1 h-2 min-w-64 overflow-hidden rounded-full bg-secondary outline-1 outline-transparent">
+        <div className="flex gap-3 items-center">
+          <div className="-outline-offset-1 relative h-2 min-w-32 overflow-hidden rounded-full bg-secondary outline-1 outline-transparent">
             {!isIndeterminate ? (
               <motion.div
                 data-slot="progress-content"
@@ -50,7 +46,11 @@ const ProgressBar = ({ label, ref, className, ...props }: ProgressBarProps) => {
               />
             )}
           </div>
-        </>
+          <div className="flex justify-between gap-2">
+            {label && <Label>{label}</Label>}
+            <span className="text-muted-fg text-sm tabular-nums">{valueText}</span>
+          </div>
+        </div>
       )}
     </ProgressBarPrimitive>
   )
