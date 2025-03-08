@@ -103,10 +103,11 @@ const ProgressCollapse = memo(function ProgressCollapse({
   );
 
   const percentage = useMemo(() => {
+    if (filteredObjekts.length === 0) return 100;
     const percentage = Math.floor(
       (owned.length / filteredObjekts.length) * 100
     );
-    return isNaN(percentage) ? 0 : percentage;
+    return percentage;
   }, [owned, filteredObjekts]);
 
   return (
@@ -127,7 +128,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
         />
       </div>
       {show && (
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3">
           {objekts.map((objekt) => (
             <ObjektView
               key={objekt.slug}
