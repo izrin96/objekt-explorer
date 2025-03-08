@@ -2,7 +2,7 @@
 
 This project aims to build a simple explorer for Cosmo's Objekts, focusing on the client-side. Cosmo is an app developed by Modhaus Inc. that decentralizes K-pop using blockchain technology. Modhaus has introduced digital photocard NFTs called Objekts.
 
-This project required [cosmo-db](https://github.com/teamreflex/cosmo-db/) indexer.
+This project required [teamreflex/cosmo-db](https://github.com/teamreflex/cosmo-db/) indexer.
 
 ## Tooling
 
@@ -13,7 +13,7 @@ This project required [cosmo-db](https://github.com/teamreflex/cosmo-db/) indexe
 
 ## Credit/Acknowledgment
 
-- [cosmo-web](https://github.com/teamreflex/cosmo-web) for Cosmo type, data fetching and Cosmo utils
+- [teamreflex/cosmo-web](https://github.com/teamreflex/cosmo-web) for Cosmo type, data fetching and Cosmo utils
 
 ## Contact
 
