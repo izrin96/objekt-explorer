@@ -29,10 +29,10 @@ const comboboxStyles = tv({
   slots: {
     base: "group flex w-full flex-col gap-y-1.5",
     chevronButton:
-      "h-7 w-8 rounded outline-offset-0 active:bg-transparent data-hovered:bg-transparent data-pressed:bg-transparent **:data-[slot=icon]:data-pressed:text-fg **:data-[slot=icon]:text-muted-fg **:data-[slot=icon]:hover:text-fg",
+      "h-7 w-8 rounded pressed:bg-transparent outline-offset-0 hover:bg-transparent active:bg-transparent **:data-[slot=icon]:pressed:text-fg **:data-[slot=icon]:text-muted-fg **:data-[slot=icon]:hover:text-fg",
     chevronIcon: "size-4 shrink-0 transition duration-200 group-open:rotate-180 group-open:text-fg",
     clearButton:
-      "absolute inset-y-0 right-0 flex items-center pr-2 text-muted-fg data-hovered:text-fg data-focused:outline-hidden",
+      "absolute inset-y-0 right-0 flex items-center pr-2 text-muted-fg hover:text-fg data-focused:outline-hidden",
   },
 })
 

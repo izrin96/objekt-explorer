@@ -23,29 +23,13 @@ import {
   TableBody as TableBodyPrimitive,
   TableHeader as TableHeaderPrimitive,
   Table as TablePrimitive,
-  composeRenderProps,
   useTableOptions,
 } from "react-aria-components"
 import { tv } from "tailwind-variants"
 
+import { composeTailwindRenderProps } from "@/components/ui/primitive"
 import { cn } from "@/utils/classes"
 import { Checkbox } from "./checkbox"
-
-const table = tv({
-  slots: {
-    root: "table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden [--table-selected-bg:color-mix(in_oklab,var(--color-primary)_5%,white_90%)] **:data-drop-target:border **:data-drop-target:border-primary dark:[--table-selected-bg:color-mix(in_oklab,var(--color-primary)_25%,black_70%)]",
-    header: "x32 border-b",
-    row: "tr group relative cursor-default border-b bg-bg text-fg outline-hidden ring-primary data-selected:data-hovered:bg-(--table-selected-bg)/70 data-selected:bg-(--table-selected-bg) data-focus-visible:ring-1 data-focused:ring-0 dark:data-selected:data-hovered:bg-[color-mix(in_oklab,var(--color-primary)_30%,black_70%)]",
-    cellIcon:
-      "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
-    columnResizer: [
-      "absolute top-0 right-0 bottom-0 grid w-px touch-none place-content-center px-1 [&[data-resizing]>div]:bg-primary",
-      "&[data-resizable-direction=left]:cursor-e-resize &[data-resizable-direction=right]:cursor-w-resize data-[resizable-direction=both]:cursor-ew-resize",
-    ],
-  },
-})
-
-const { root, header, row, cellIcon, columnResizer } = table()
 
 interface TableProps extends TablePrimitiveProps {
   className?: string
@@ -58,32 +42,44 @@ const TableContext = React.createContext<TableProps>({
 
 const useTableContext = () => React.useContext(TableContext)
 
-const Table = ({ children, className, ...props }: TableProps) => (
-  <TableContext.Provider value={props}>
-    <div className="relative w-full overflow-auto">
-      {props.allowResize ? (
-        <ResizableTableContainer className="overflow-auto">
-          <TablePrimitive {...props} className={root({ className })}>
+const Table = ({ children, className, ...props }: TableProps) => {
+  return (
+    <TableContext.Provider value={props}>
+      <div className="relative w-full overflow-auto **:data-[slot=table-resizable-container]:overflow-auto">
+        {props.allowResize ? (
+          <ResizableTableContainer>
+            <TablePrimitive
+              {...props}
+              className={cn(
+                "table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden [--table-selected-bg:color-mix(in_oklab,var(--color-primary)_5%,white_90%)] **:data-drop-target:border **:data-drop-target:border-primary dark:[--table-selected-bg:color-mix(in_oklab,var(--color-primary)_25%,black_70%)]",
+                className,
+              )}
+            >
+              {children}
+            </TablePrimitive>
+          </ResizableTableContainer>
+        ) : (
+          <TablePrimitive
+            {...props}
+            className={cn(
+              "table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden [--table-selected-bg:color-mix(in_oklab,var(--color-primary)_5%,white_90%)] **:data-drop-target:border **:data-drop-target:border-primary dark:[--table-selected-bg:color-mix(in_oklab,var(--color-primary)_25%,black_70%)]",
+              className,
+            )}
+          >
             {children}
           </TablePrimitive>
-        </ResizableTableContainer>
-      ) : (
-        <TablePrimitive {...props} className={root({ className })}>
-          {children}
-        </TablePrimitive>
-      )}
-    </div>
-  </TableContext.Provider>
-)
+        )}
+      </div>
+    </TableContext.Provider>
+  )
+}
 
 const ColumnResizer = ({ className, ...props }: ColumnResizerProps) => (
   <ColumnResizerPrimitive
     {...props}
-    className={composeRenderProps(className, (className, renderProps) =>
-      columnResizer({
-        ...renderProps,
-        className,
-      }),
+    className={composeTailwindRenderProps(
+      className,
+      "absolute top-0 right-0 bottom-0 grid w-px &[data-resizable-direction=left]:cursor-e-resize &[data-resizable-direction=right]:cursor-w-resize touch-none place-content-center px-1 data-[resizable-direction=both]:cursor-ew-resize [&[data-resizing]>div]:bg-primary",
     )}
   >
     <div className="h-full w-px bg-border py-3" />
@@ -148,7 +144,13 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
           <>
             {props.children as React.ReactNode}
             {allowsSorting && (
-              <span className={cellIcon({ className: isHovered ? "bg-secondary-fg/10" : "" })}>
+              <span
+                className={cn(
+                  "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
+                  isHovered ? "bg-secondary-fg/10" : "",
+                  className,
+                )}
+              >
                 <IconChevronLgDown className={sortDirection === "ascending" ? "rotate-180" : ""} />
               </span>
             )}
@@ -177,7 +179,7 @@ const TableHeader = <T extends object>({
     <TableHeaderPrimitive
       data-slot="table-header"
       ref={ref}
-      className={header({ className })}
+      className={cn("border-b", className)}
       {...props}
     >
       {allowsDragging && <Column className="w-0" />}
@@ -211,20 +213,16 @@ const TableRow = <T extends object>({
       data-slot="table-row"
       id={id}
       {...props}
-      className={row({
-        className:
-          "href" in props
-            ? cn(
-                "cursor-pointer data-hovered:bg-secondary/50 data-hovered:text-secondary-fg",
-                className,
-              )
-            : "",
-      })}
+      className={cn(
+        "tr group relative cursor-default border-b bg-bg selected:bg-(--table-selected-bg) text-fg outline-hidden ring-primary selected:hover:bg-(--table-selected-bg)/70 data-focus-visible:ring-1 data-focused:ring-0 dark:selected:hover:bg-[color-mix(in_oklab,var(--color-primary)_30%,black_70%)]",
+        "href" in props ? "cursor-pointer hover:bg-secondary/50 hover:text-secondary-fg" : "",
+        className,
+      )}
     >
       {allowsDragging && (
         <Cell className="group cursor-grab pr-0 ring-primary data-dragging:cursor-grabbing">
           <Button
-            className="relative bg-transparent py-1.5 pl-3.5 text-muted-fg data-pressed:text-fg"
+            className="relative bg-transparent py-1.5 pl-3.5 pressed:text-fg text-muted-fg"
             slot="drag"
           >
             <IconHamburger />
@@ -235,7 +233,7 @@ const TableRow = <T extends object>({
         <Cell className="pl-4">
           <span
             aria-hidden
-            className="absolute inset-y-0 left-0 hidden h-full w-0.5 bg-primary group-data-selected:block"
+            className="absolute inset-y-0 left-0 hidden h-full w-0.5 bg-primary group-selected:block"
           />
           <Checkbox slot="selection" />
         </Cell>

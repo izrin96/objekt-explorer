@@ -26,51 +26,51 @@ const intents = {
   primary: {
     base: [
       badgeIntents.primary,
-      "**:[[slot=remove]]:data-hovered:bg-primary **:[[slot=remove]]:data-hovered:text-primary-fg",
+      "**:[[slot=remove]]:hover:bg-primary **:[[slot=remove]]:hover:text-primary-fg",
     ],
     selected: [
-      "bg-primary dark:data-hovered:bg-primary dark:bg-primary data-hovered:bg-primary text-primary-fg dark:text-primary-fg data-hovered:text-primary-fg",
-      "**:[[slot=remove]]:data-hovered:bg-primary-fg/50 **:[[slot=remove]]:data-hovered:text-primary",
+      "bg-primary dark:hover:bg-primary dark:bg-primary hover:bg-primary text-primary-fg dark:text-primary-fg hover:text-primary-fg",
+      "**:[[slot=remove]]:hover:bg-primary-fg/50 **:[[slot=remove]]:hover:text-primary",
     ],
   },
   secondary: {
     base: [
       badgeIntents.secondary,
-      "**:[[slot=remove]]:data-hovered:bg-fg **:[[slot=remove]]:data-hovered:text-bg",
+      "**:[[slot=remove]]:hover:bg-fg **:[[slot=remove]]:hover:text-bg",
     ],
     selected: [
       "bg-fg text-bg dark:bg-fg/90 dark:text-secondary",
-      "**:[[slot=remove]]:data-hovered:bg-secondary/30 **:[[slot=remove]]:data-hovered:text-secondary",
+      "**:[[slot=remove]]:hover:bg-secondary/30 **:[[slot=remove]]:hover:text-secondary",
     ],
   },
   success: {
     base: [
       badgeIntents.success,
-      "**:[[slot=remove]]:data-hovered:bg-success **:[[slot=remove]]:data-hovered:text-success-fg",
+      "**:[[slot=remove]]:hover:bg-success **:[[slot=remove]]:hover:text-success-fg",
     ],
     selected: [
-      "bg-success dark:bg-success dark:text-success-fg dark:data-hovered:bg-success data-hovered:bg-success text-success-fg data-hovered:text-success-fg",
-      "**:[[slot=remove]]:data-hovered:bg-success-fg/30 **:[[slot=remove]]:data-hovered:text-success-fg",
+      "bg-success dark:bg-success dark:text-success-fg dark:hover:bg-success hover:bg-success text-success-fg hover:text-success-fg",
+      "**:[[slot=remove]]:hover:bg-success-fg/30 **:[[slot=remove]]:hover:text-success-fg",
     ],
   },
   warning: {
     base: [
       badgeIntents.warning,
-      "**:[[slot=remove]]:data-hovered:bg-warning **:[[slot=remove]]:data-hovered:text-warning-fg",
+      "**:[[slot=remove]]:hover:bg-warning **:[[slot=remove]]:hover:text-warning-fg",
     ],
     selected: [
-      "bg-warning dark:data-hovered:bg-warning dark:bg-warning dark:text-bg data-hovered:bg-warning text-warning-fg data-hovered:text-warning-fg",
-      "**:[[slot=remove]]:data-hovered:bg-warning-fg/30 **:[[slot=remove]]:data-hovered:text-warning-fg",
+      "bg-warning dark:hover:bg-warning dark:bg-warning dark:text-bg hover:bg-warning text-warning-fg hover:text-warning-fg",
+      "**:[[slot=remove]]:hover:bg-warning-fg/30 **:[[slot=remove]]:hover:text-warning-fg",
     ],
   },
   danger: {
     base: [
       badgeIntents.danger,
-      "**:[[slot=remove]]:data-hovered:bg-danger **:[[slot=remove]]:data-hovered:text-danger-fg",
+      "**:[[slot=remove]]:hover:bg-danger **:[[slot=remove]]:hover:text-danger-fg",
     ],
     selected: [
-      "bg-danger dark:bg-danger dark:data-hovered:bg-danger/90 data-hovered:bg-danger text-danger-fg data-hovered:text-danger-fg",
-      "**:[[slot=remove]]:data-hovered:bg-danger-fg/30 **:[[slot=remove]]:data-hovered:text-danger-fg",
+      "bg-danger dark:bg-danger dark:hover:bg-danger/90 hover:bg-danger text-danger-fg hover:text-danger-fg",
+      "**:[[slot=remove]]:hover:bg-danger-fg/30 **:[[slot=remove]]:hover:text-danger-fg",
     ],
   },
 }

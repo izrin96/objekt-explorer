@@ -35,7 +35,7 @@ const multiSelectStyles = tv({
       "has-[input[data-focused=true]]:ring-4 has-[input[data-focused=true]]:ring-ring/20",
     ],
     chevronButton:
-      "-mr-2 grid size-8 place-content-center rounded-sm text-muted-fg data-focused:text-fg data-hovered:text-fg",
+      "-mr-2 grid size-8 place-content-center rounded-sm text-muted-fg hover:text-fg data-focused:text-fg",
     input: "ml-1 flex-1 px-0.5 py-1 shadow-none ring-0",
     comboBoxChild: "inline-flex flex-1 flex-wrap items-center px-0",
     comboBox: "group peer flex flex-1",

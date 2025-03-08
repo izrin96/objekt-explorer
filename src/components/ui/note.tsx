@@ -4,7 +4,7 @@ import { type VariantProps, tv } from "tailwind-variants"
 const noteStyles = tv({
   base: [
     "inset-ring-1 inset-ring-current/10 w-full overflow-hidden rounded-lg p-4 sm:text-sm/6",
-    "[&_a]:underline data-hovered:[&_a]:underline **:[strong]:font-semibold",
+    "[&_a]:underline hover:[&_a]:underline **:[strong]:font-semibold",
   ],
   variants: {
     intent: {
@@ -13,12 +13,12 @@ const noteStyles = tv({
         "dark:**:data-[slot=icon]:text-secondary-fg dark:[&_a]:text-secondary-fg",
       ],
       info: [
-        "bg-sky-500/5 text-sky-700 group-data-hovered:bg-sky-500/25 dark:bg-sky-500/10 dark:text-sky-300 dark:group-data-hovered:bg-sky-500/20",
+        "bg-sky-500/5 text-sky-700 group-hover:bg-sky-500/25 dark:bg-sky-500/10 dark:text-sky-300 dark:group-hover:bg-sky-500/20",
       ],
       warning:
-        "bg-amber-400/20 text-amber-700 group-data-hovered:bg-amber-400/30 dark:bg-amber-400/10 dark:text-amber-400 dark:group-data-hovered:bg-amber-400/15",
+        "bg-amber-400/20 text-amber-700 group-hover:bg-amber-400/30 dark:bg-amber-400/10 dark:text-amber-400 dark:group-hover:bg-amber-400/15",
       danger:
-        "bg-red-500/15 text-red-700 group-data-hovered:bg-red-500/25 dark:bg-red-500/10 dark:text-red-400 dark:group-data-hovered:bg-red-500/20",
+        "bg-red-500/15 text-red-700 group-hover:bg-red-500/25 dark:bg-red-500/10 dark:text-red-400 dark:group-hover:bg-red-500/20",
       success: [
         "border-success/20 bg-success/50 text-emerald-900 leading-4 **:data-[slot=icon]:text-success [&_a]:text-emerald-600",
         "dark:bg-success/10 dark:text-emerald-200 dark:**:data-[slot=icon]:text-emerald-400 dark:[&_a]:text-emerald-50",
