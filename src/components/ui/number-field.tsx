@@ -45,7 +45,7 @@ const NumberField = ({
         {() => (
           <>
             <Input
-              className="px-13 tabular-nums sm:px-2.5"
+              className="tabular-nums"
               placeholder={placeholder}
             />
           </>
