@@ -14,7 +14,7 @@ export function getSeasonCollectionNo(objekt: ValidObjekt) {
 export type OwnedObjekt = Omit<IndexedObjekt, "id"> &
   Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "id" | "transferable">;
 
-// from apollo cosmo-web repo
+// list taken from teamreflex/cosmo-web
 export const unobtainables = [
   "binary01-savior-322z",
   // test
