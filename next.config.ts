@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
         source: "/@:nickname/progress",
         destination: "/profile/:nickname/progress",
       },
+      {
+        source: "/@:nickname/stats",
+        destination: "/profile/:nickname/stats",
+      },
     ];
   },
 

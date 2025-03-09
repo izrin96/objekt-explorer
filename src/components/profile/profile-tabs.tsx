@@ -13,6 +13,7 @@ export default function ProfileTabs({ nickname }: { nickname: string }) {
           { url: `/@${nickname}`, label: "Collection" },
           { url: `/@${nickname}/trades`, label: "Trade History" },
           { url: `/@${nickname}/progress`, label: "Progress" },
+          { url: `/@${nickname}/stats`, label: "Statistics" },
         ]}
       >
         {(item) => (
