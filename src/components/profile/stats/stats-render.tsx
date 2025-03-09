@@ -45,11 +45,13 @@ function ProfileStats() {
       .flatMap((a) => a.artistMembers)
       .map((a) => ({ color: a.primaryColorHex, name: a.name }));
 
-    return members.map((a) => ({
-      name: a.name,
-      fill: a.color,
-      count: ownedObjekts?.filter((obj) => obj.member === a.name).length ?? 0,
-    }));
+    return members
+      .map((a) => ({
+        name: a.name,
+        fill: a.color,
+        count: ownedObjekts?.filter((obj) => obj.member === a.name).length ?? 0,
+      }))
+      .toSorted((a, b) => b.count - a.count);
   }, [artists, ownedObjekts]);
 
   if (isLoading)
@@ -78,7 +80,13 @@ function ProfileStats() {
                   cursor={false}
                   content={<ChartTooltipContent hideLabel />}
                 />
-                <Pie data={chartData} dataKey="count" nameKey="name" />
+                <Pie
+                  startAngle={90}
+                  endAngle={-270}
+                  data={chartData}
+                  dataKey="count"
+                  nameKey="name"
+                />
               </PieChart>
             </Chart>
           </Card.Content>
