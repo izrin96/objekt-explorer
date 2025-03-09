@@ -19,6 +19,8 @@ const badgeIntents = {
     "bg-amber-400/20 text-amber-700 group-hover:bg-amber-400/30 dark:bg-amber-400/10 dark:text-amber-400 dark:group-hover:bg-amber-400/15",
   danger:
     "bg-red-500/15 text-red-700 group-hover:bg-red-500/25 dark:bg-red-500/10 dark:text-red-400 dark:group-hover:bg-red-500/20",
+  custom:
+    "bg-pink-500/15 text-pink-700 group-hover:bg-pink-500/25 dark:bg-pink-500/10 dark:text-pink-300 dark:group-hover:bg-pink-500/20",
 }
 const badgeShapes = {
   square: "rounded-md px-1.5",

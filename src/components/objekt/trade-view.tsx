@@ -204,11 +204,8 @@ function TradeTable({
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">Transferable</span>
           <Badge
-            className={cn(
-              "text-xs",
-              !data.transferable &&
-                "bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300"
-            )}
+            className={cn("text-xs")}
+            intent={!data.transferable ? "custom" : "primary"}
             shape="square"
           >
             {data.transferable ? "Yes" : "No"}

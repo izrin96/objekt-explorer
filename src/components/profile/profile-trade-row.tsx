@@ -25,11 +25,11 @@ export default memo(function TradeRow({
   const name = `${getCollectionShortId(row.objekt)}`;
 
   const action = isReceiver ? (
-    <Badge className="bg-sky-500/15 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
+    <Badge intent="info">
       Received From
     </Badge>
   ) : (
-    <Badge className="bg-pink-500/15 text-pink-700 dark:bg-pink-500/10 dark:text-pink-300">
+    <Badge intent="custom">
       Sent To
     </Badge>
   );
