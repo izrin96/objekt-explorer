@@ -12,6 +12,7 @@ import { db } from "@/lib/server/db";
 import { userAddress } from "@/lib/server/db/schema";
 import { cacheHeaders } from "../common";
 import { unobtainables } from "@/lib/universal/objekts";
+import { SPIN_ADDRESS } from "@/lib/utils";
 
 const schema = z.object({
   artist: z.enum(validArtists).nullable().optional(),
@@ -19,18 +20,6 @@ const schema = z.object({
   onlineType: z.enum(validOnlineTypes).nullable().optional(),
   season: z.enum(validSeasons).nullable().optional(),
 });
-
-function filters(options: z.infer<typeof schema>) {
-  return [
-    not(inArray(collections.class, ["Welcome", "Zero"])),
-    ...(options.artist ? [eq(collections.artist, options.artist)] : []),
-    ...(options.member ? [eq(collections.member, options.member)] : []),
-    ...(options.season ? [eq(collections.season, options.season)] : []),
-    ...(options.onlineType
-      ? [eq(collections.onOffline, options.onlineType)]
-      : []),
-  ];
-}
 
 export async function GET(request: NextRequest) {
   const parsedParams = schema.safeParse({
@@ -49,12 +38,16 @@ export async function GET(request: NextRequest) {
     );
 
   const options = parsedParams.data;
-  const filter = filters(options);
 
   const wheres = and(
-    not(inArray(collections.class, ["Welcome", "Zero"])),
     not(inArray(collections.slug, unobtainables)),
-    ...filter
+    not(inArray(collections.class, ["Welcome", "Zero"])),
+    ...(options.artist ? [eq(collections.artist, options.artist)] : []),
+    ...(options.member ? [eq(collections.member, options.member)] : []),
+    ...(options.season ? [eq(collections.season, options.season)] : []),
+    ...(options.onlineType
+      ? [eq(collections.onOffline, options.onlineType)]
+      : [])
   );
 
   // get total collection
@@ -75,7 +68,7 @@ export async function GET(request: NextRequest) {
     })
     .from(objekts)
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(wheres)
+    .where(and(wheres, not(eq(objekts.owner, SPIN_ADDRESS))))
     .as("subquery");
 
   const query = await indexer
@@ -102,8 +95,9 @@ export async function GET(request: NextRequest) {
     );
 
   // map nickname from known address
-  const results = query.map((q) => {
+  const results = query.map((q, i) => {
     return {
+      rank: i + 1,
       count: q.count,
       address: q.owner,
       nickname: knownAddresses.find(
@@ -112,12 +106,13 @@ export async function GET(request: NextRequest) {
     };
   });
 
-  const response = {
-    total,
-    results,
-  };
-
-  return Response.json(response, {
-    headers: cacheHeaders(3600),
-  });
+  return Response.json(
+    {
+      total,
+      results,
+    },
+    {
+      headers: cacheHeaders(3600),
+    }
+  );
 }
