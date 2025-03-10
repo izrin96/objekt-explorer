@@ -1,7 +1,4 @@
 import { Client } from "pg";
-import { Hono } from "hono";
-
-const app = new Hono();
 
 const client = new Client({
   host: process.env.PROXY_HOST,
@@ -13,13 +10,15 @@ const client = new Client({
 
 await client.connect();
 
-app.post("/query", async (c) => {
-  const key = c.req.header("proxy-key");
+const port = Number(process.env.PROXY_HTTP_PORT);
+
+async function query(req: Request) {
+  const key = req.headers.get("proxy-key");
   if (key !== process.env.PROXY_KEY) {
-    return c.json({ error: "Invalid key" }, 401);
+    return Response.json({ error: "Invalid key" }, { status: 401 });
   }
 
-  const { sql, params, method } = await c.req.json();
+  const { sql, params, method } = await req.json();
 
   // prevent multiple queries
   const sqlBody = sql.replace(/;/g, "");
@@ -31,7 +30,7 @@ app.post("/query", async (c) => {
         values: params,
         rowMode: "array",
       });
-      return c.json(result.rows);
+      return Response.json(result.rows);
     }
 
     if (method === "execute") {
@@ -39,20 +38,23 @@ app.post("/query", async (c) => {
         text: sqlBody,
         values: params,
       });
-      return c.json(result.rows);
+      return Response.json(result.rows);
     }
 
-    return c.json({ error: "Unknown method value" }, 500);
+    return Response.json({ error: "Unknown method value" }, { status: 500 });
   } catch (e) {
     console.error(e);
-    return c.json({ error: "error" }, 500);
+    return Response.json({ error: "error" }, { status: 500 });
   }
-});
+}
 
 console.log(`Proxy listening on port ${process.env.PROXY_HTTP_PORT}`);
 
-// eslint-disable-next-line import/no-anonymous-default-export
-export default {
-  port: process.env.PROXY_HTTP_PORT,
-  fetch: app.fetch,
-};
+Bun.serve({
+  port,
+  routes: {
+    "/query": {
+      POST: query,
+    },
+  },
+});
