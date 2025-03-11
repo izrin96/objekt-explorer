@@ -13,6 +13,8 @@ import {
   validGroupBy,
   ValidSortDirection,
   validSortDirection,
+  ValidEdition,
+  validEdition,
 } from "@/lib/universal/cosmo/common";
 import { GRID_COLUMNS } from "@/lib/utils";
 import {
@@ -27,7 +29,9 @@ import {
 export function useFilters() {
   return useQueryStates({
     member: parseAsArrayOf(parseAsString),
-    artist: parseAsArrayOf(parseAsStringEnum<ValidArtist>(Object.values(validArtists))),
+    artist: parseAsArrayOf(
+      parseAsStringEnum<ValidArtist>(Object.values(validArtists))
+    ),
     sort: parseAsStringEnum<ValidSort>(Object.values(validSorts)).withDefault(
       "date"
     ),
@@ -55,6 +59,9 @@ export function useFilters() {
       Object.values(validSortDirection)
     ).withDefault("desc"),
     unowned: parseAsBoolean.withDefault(false),
+    edition: parseAsArrayOf(
+      parseAsStringEnum<ValidEdition>(Object.values(validEdition))
+    ),
   });
 }
 

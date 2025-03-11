@@ -18,6 +18,7 @@ import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useFilters } from "@/hooks/use-filters";
 import UnownedFilter from "./filter-unowned";
 import ResetFilter from "./reset-filter";
+import EditionFilter from "./filter-edition";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -38,6 +39,7 @@ export default function FilterRender({ isProfile, artists }: Props) {
       {isProfile && <FilterTransferable />}
       <FilterSeason />
       <FilterClass />
+      <EditionFilter />
       <FilterOnline />
       <FilterSort isProfile={isProfile} />
       <SortDirectionFilter />

@@ -16,10 +16,7 @@ export const validSorts = [
 export type ValidSort = (typeof validSorts)[number];
 
 // sortDir
-export const validSortDirection = [
-  "desc",
-  "asc",
-] as const;
+export const validSortDirection = ["desc", "asc"] as const;
 export type ValidSortDirection = (typeof validSortDirection)[number];
 
 // seasons
@@ -42,6 +39,10 @@ export const validClasses = [
   "Zero",
 ] as const;
 export type ValidClass = (typeof validClasses)[number];
+
+// edition
+export const validEdition = ["1st", "2nd", "3rd"] as const;
+export type ValidEdition = (typeof validEdition)[number];
 
 // groupBy
 export const validGroupBy = [

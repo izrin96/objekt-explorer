@@ -13,6 +13,7 @@ import {
 } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
+import { getEdition } from "./utils";
 
 const shortformMembers: Record<string, string> = {
   naky: "NaKyoung",
@@ -161,6 +162,13 @@ function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
   if (filters.transferable) {
     objekts = objekts.filter((a) =>
       "transferable" in a ? a.transferable : undefined
+    );
+  }
+  if (filters.edition) {
+    objekts = objekts.filter((a) =>
+      a.class === "First"
+        ? filters.edition?.includes(getEdition(a.collectionNo)!)
+        : false
     );
   }
 

@@ -25,6 +25,21 @@ export const overrideFonts: Record<string, string> = {
   "Ever01 SeoYeon 338Z": "#07328D",
 };
 
+export function getEdition(collectionNo: string) {
+  const collection = parseInt(collectionNo);
+
+  if (collection >= 101 && collection <= 108) {
+    return "1st";
+  }
+  if (collection >= 109 && collection <= 116) {
+    return "2nd";
+  }
+  if (collection >= 117 && collection <= 120) {
+    return "3rd";
+  }
+  return null;
+}
+
 export function overrideColor(objekt: ValidObjekt) {
   // temporary fix accent color for some collection
   const accentColor = overrideAccents[objekt.collectionId];
