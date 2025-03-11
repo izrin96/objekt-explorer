@@ -23,6 +23,7 @@ export default function ResetFilter() {
       sort_dir: null,
       group_dir: null,
       unowned: null,
+      edition: null,
     });
   }
   return (
