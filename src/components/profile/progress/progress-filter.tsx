@@ -9,6 +9,7 @@ import ResetFilter from "@/components/filters/reset-filter";
 import GroupBysFilter from "./filter-groupbys";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import React from "react";
+import EditionFilter from "@/components/filters/filter-edition";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -21,6 +22,7 @@ export default function ProgressFilter({ artists }: Props) {
       <MemberFilter artists={artists} />
       <FilterSeason />
       <FilterClass hideZeroWelcome />
+      <EditionFilter />
       <FilterOnline />
       <GroupBysFilter />
       <ResetFilter />
