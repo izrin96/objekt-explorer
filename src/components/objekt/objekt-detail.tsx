@@ -40,7 +40,7 @@ export default function ObjektDetail({
   } as CSSProperties;
 
   return (
-    <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2">
+    <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2 h-full sm:h-[33.5rem]">
       <div
         onClick={() => setFlipped((prev) => !prev)}
         className="flex h-[21rem] sm:h-fit self-center select-none"
@@ -82,7 +82,7 @@ export default function ObjektDetail({
       </div>
 
       <div
-        className="flex flex-col overflow-y-auto col-span-2 h-screen sm:h-[32rem]"
+        className="flex flex-col overflow-y-auto col-span-2 h-screen sm:h-full"
         style={{
           scrollbarGutter: "stable",
         }}

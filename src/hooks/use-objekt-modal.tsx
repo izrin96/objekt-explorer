@@ -60,7 +60,7 @@ export function ObjektModalProvider({
         <Modal.Header className="hidden">
           <Modal.Title>Objekt display</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-0 sm:p-0 overflow-y-auto sm:overflow-y-hidden">
+        <Modal.Body className="p-0 sm:p-0">
           {objekts.length > 0 && (
             <ObjektDetail objekts={objekts} isProfile={isProfile} />
           )}
