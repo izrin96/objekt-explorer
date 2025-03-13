@@ -47,7 +47,6 @@ export function useFilters() {
     transferable: parseAsBoolean.withDefault(false),
     search: parseAsString.withDefault(""),
     grouped: parseAsBoolean.withDefault(false),
-    column: parseAsInteger.withDefault(GRID_COLUMNS),
     group_by: parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy)),
     group_bys: parseAsArrayOf(
       parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy))
