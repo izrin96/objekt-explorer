@@ -82,7 +82,7 @@ export default function ObjektDetail({
       </div>
 
       <div
-        className="flex flex-col overflow-y-auto col-span-2 h-screen sm:h-full"
+        className="flex flex-col overflow-y-auto col-span-2 min-h-screen sm:min-h-full"
         style={{
           scrollbarGutter: "stable",
         }}
