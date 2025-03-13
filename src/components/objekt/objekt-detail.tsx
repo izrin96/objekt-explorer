@@ -40,15 +40,15 @@ export default function ObjektDetail({
   } as CSSProperties;
 
   return (
-    <div className="flex flex-col sm:flex-row p-2 sm:p-3 gap-2">
+    <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2">
       <div
         onClick={() => setFlipped((prev) => !prev)}
-        className="flex h-[21rem] sm:h-[32rem] aspect-photocard self-center flex-none select-none"
+        className="flex h-[21rem] sm:h-fit self-center select-none"
         style={css}
       >
         <div
           data-flipped={flipped}
-          className="relative h-full aspect-photocard cursor-pointer touch-manipulation transition-transform transform-3d transform-gpu duration-300 data-[flipped=true]:rotate-y-180"
+          className="relative w-full h-full aspect-photocard cursor-pointer touch-manipulation transition-transform transform-3d transform-gpu duration-300 data-[flipped=true]:rotate-y-180"
         >
           <div className="absolute inset-0 backface-hidden drop-shadow">
             <NextImage
@@ -81,56 +81,52 @@ export default function ObjektDetail({
         </div>
       </div>
 
-      <div className="flex flex-col h-full min-h-screen sm:min-h-full sm:h-[32rem]">
-        <div
-          className="overflow-y-auto"
-          style={{
-            scrollbarGutter: "stable",
-          }}
+      <div
+        className="flex flex-col overflow-y-auto col-span-2 h-screen sm:h-[32rem]"
+        style={{
+          scrollbarGutter: "stable",
+        }}
+      >
+        <div className="px-2 font-semibold">{objekt.collectionId}</div>
+        <AttributePanel objekt={objekt} />
+        <Tabs
+          aria-label="Objekt tab"
+          selectedKey={currentTab}
+          onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
+          className="p-2"
         >
-          <div className="px-2 font-semibold">{objekt.collectionId}</div>
-          <AttributePanel objekt={objekt} />
-          <Tabs
-            aria-label="Objekt tab"
-            selectedKey={currentTab}
-            onSelectionChange={(key) =>
-              setCurrentTab(key.toString() as ValidTab)
-            }
-            className="p-2"
-          >
-            <Tabs.List>
-              {isProfile && (
-                <Tabs.Tab id="owned">
-                  Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}
-                </Tabs.Tab>
-              )}
-              <Tabs.Tab id="trades">Trades</Tabs.Tab>
-              <Tabs.Tab
-                id="apollo"
-                href={`https://apollo.cafe/objekts?id=${objekt.slug}`}
-                target="_blank"
-              >
-                <IconOpenLink />
-                View in Apollo
-              </Tabs.Tab>
-            </Tabs.List>
+          <Tabs.List>
             {isProfile && (
-              <Tabs.Panel id="owned">
-                {isOwned ? (
-                  <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
-                ) : (
-                  <div className="flex flex-col justify-center gap-3 items-center">
-                    <ArchiveXIcon strokeWidth="1.2" size="64" />
-                    <p>Not owned</p>
-                  </div>
-                )}
-              </Tabs.Panel>
+              <Tabs.Tab id="owned">
+                Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}
+              </Tabs.Tab>
             )}
-            <Tabs.Panel id="trades">
-              <TradeView objekt={objekt} />
+            <Tabs.Tab id="trades">Trades</Tabs.Tab>
+            <Tabs.Tab
+              id="apollo"
+              href={`https://apollo.cafe/objekts?id=${objekt.slug}`}
+              target="_blank"
+            >
+              <IconOpenLink />
+              View in Apollo
+            </Tabs.Tab>
+          </Tabs.List>
+          {isProfile && (
+            <Tabs.Panel id="owned">
+              {isOwned ? (
+                <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
+              ) : (
+                <div className="flex flex-col justify-center gap-3 items-center">
+                  <ArchiveXIcon strokeWidth="1.2" size="64" />
+                  <p>Not owned</p>
+                </div>
+              )}
             </Tabs.Panel>
-          </Tabs>
-        </div>
+          )}
+          <Tabs.Panel id="trades">
+            <TradeView objekt={objekt} />
+          </Tabs.Panel>
+        </Tabs>
       </div>
     </div>
   );

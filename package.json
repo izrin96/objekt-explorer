@@ -72,6 +72,7 @@
     "eslint-config-next": "^15.2.2",
     "postcss": "^8",
     "tailwindcss": "^4.0.13",
+    "tailwindcss-debug-screens": "^3.0.1",
     "tsx": "^4.19.3",
     "typescript": "^5"
   }

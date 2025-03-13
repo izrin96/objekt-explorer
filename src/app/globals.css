@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin 'tailwindcss-animate';
 @plugin '@tailwindcss/typography';
+@plugin 'tailwindcss-debug-screens';
 
 @theme {
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif,

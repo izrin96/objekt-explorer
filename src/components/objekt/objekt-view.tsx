@@ -47,53 +47,51 @@ export default memo(function ObjektView({
   );
 
   return (
-    <>
+    <div
+      className={cn("flex flex-col gap-2", isFade && "opacity-50")}
+      style={css}
+    >
       <div
-        className={cn("flex flex-col gap-2", isFade && "opacity-50")}
-        style={css}
+        className="cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150"
+        onClick={onClick}
       >
-        <div
-          className="cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150"
+        <NextImage
+          fill
+          priority={priority}
+          src={resizedUrl}
+          alt={objekt.collectionId}
+        />
+
+        <ObjektSidebar
+          collection={objekt.collectionNo}
+          serial={isOwned ? objekt.serial : undefined}
+        />
+
+        {objekts.length > 1 && (
+          <div className="flex absolute bottom-2 left-2 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
+            {objekts.length}
+          </div>
+        )}
+      </div>
+      <div className="flex justify-center text-sm text-center items-center gap-1">
+        <Badge
+          intent="secondary"
+          className="font-semibold cursor-pointer"
+          shape="square"
           onClick={onClick}
         >
-          <NextImage
-            fill
-            priority={priority}
-            src={resizedUrl}
-            alt={objekt.collectionId}
-          />
-
-          <ObjektSidebar
-            collection={objekt.collectionNo}
-            serial={isOwned ? objekt.serial : undefined}
-          />
-
-          {objekts.length > 1 && (
-            <div className="flex absolute bottom-2 left-2 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
-              {objekts.length}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-center text-sm text-center items-center gap-1">
-          <Badge
-            intent="secondary"
-            className="font-semibold cursor-pointer"
-            shape="square"
-            onClick={onClick}
-          >
-            {getCollectionShortId(objekt)}
-            {isOwned && !filters.grouped && ` #${objekt.serial}`}
-          </Badge>
-          {unobtainable && (
-            <Tooltip delay={0} closeDelay={0}>
-              <Tooltip.Trigger aria-label="Unobtainable">
-                <Star strokeWidth={3} className="flex-none" size={14} />
-              </Tooltip.Trigger>
-              <Tooltip.Content>Unobtainable</Tooltip.Content>
-            </Tooltip>
-          )}
-        </div>
+          {getCollectionShortId(objekt)}
+          {isOwned && !filters.grouped && ` #${objekt.serial}`}
+        </Badge>
+        {unobtainable && (
+          <Tooltip delay={0} closeDelay={0}>
+            <Tooltip.Trigger aria-label="Unobtainable">
+              <Star strokeWidth={3} className="flex-none" size={14} />
+            </Tooltip.Trigger>
+            <Tooltip.Content>Unobtainable</Tooltip.Content>
+          </Tooltip>
+        )}
       </div>
-    </>
+    </div>
   );
 });

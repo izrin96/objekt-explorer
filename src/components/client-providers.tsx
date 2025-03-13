@@ -7,6 +7,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { BreakpointColumnProvider } from "@/hooks/use-breakpoint-column";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -26,7 +27,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
         {/* <NextTopLoader color="var(--primary)" height={2} showSpinner={false} /> */}
         <NuqsAdapter>
           <QueryClientProvider client={queryClient}>
-            {children}
+            <BreakpointColumnProvider>{children}</BreakpointColumnProvider>
             <ReactQueryDevtools />
           </QueryClientProvider>
         </NuqsAdapter>

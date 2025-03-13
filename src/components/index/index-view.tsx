@@ -1,15 +1,19 @@
 "use client";
 
 import { IndexedObjekt } from "@/lib/universal/objekts";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  CSSProperties,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
-import { GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import ObjektView from "../objekt/objekt-view";
 import { shapeIndexedObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { useMediaQuery } from "usehooks-ts";
 import { cn } from "@/utils/classes";
 import {
   QueryErrorResetBoundary,
@@ -19,6 +23,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { collectionOptions } from "@/lib/query-options";
 import ErrorFallbackRender from "../error-fallback";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 
 export default function IndexRender() {
   return (
@@ -35,10 +40,8 @@ export default function IndexRender() {
 function IndexView() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
+  const { columns } = useBreakpointColumn();
   const { data: objekts } = useSuspenseQuery(collectionOptions);
-
-  const isDesktop = useMediaQuery("(min-width: 640px)");
-  const columns = isDesktop ? filters.column : GRID_COLUMNS_MOBILE;
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, IndexedObjekt[]][]
@@ -62,7 +65,7 @@ function IndexView() {
   }, [filters, objekts, artists]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 mb-8">
       <FilterView artists={artists} />
       <span className="font-semibold">{count} total</span>
 
@@ -116,21 +119,21 @@ function ObjektsRowRender({
   objekts: IndexedObjekt[];
   columns: number;
 }) {
+  const start = rowIndex * columns;
+  const end = start + columns;
   return (
-    <div className="flex gap-3 md:gap-4 pb-4">
-      {Array.from({ length: columns }).map((_, j) => {
+    <div
+      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-4 pb-4"
+      style={{ "--grid-columns": columns } as CSSProperties}
+    >
+      {objekts.slice(start, end).map((objekt, j) => {
         const index = rowIndex * columns + j;
-        const objekt = objekts[index];
         return (
-          <div className="flex-1" key={j}>
-            {objekt && (
-              <ObjektView
-                key={objekt.slug}
-                objekts={[objekt]}
-                priority={index < columns * 3}
-              />
-            )}
-          </div>
+          <ObjektView
+            key={objekt.slug}
+            objekts={[objekt]}
+            priority={index < columns * 3}
+          />
         );
       })}
     </div>

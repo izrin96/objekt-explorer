@@ -2,25 +2,22 @@
 
 import { Select } from "../ui";
 import type { Key } from "react-aria-components";
-import { useFilters } from "@/hooks/use-filters";
+import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 
-const cols = [4, 5, 6, 7, 8, 9, 10, 11, 12];
+const cols = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export default function ColumnFilter() {
-  const [filters, setFilters] = useFilters();
+  const { columns, setColumns } = useBreakpointColumn();
 
   function update(key: Key) {
     const value = parseInt(key.toString());
-    setFilters({
-      column: value,
-    });
+    setColumns(value);
   }
 
   return (
     <Select
-      className="w-[120px]"
-      placeholder="test"
-      selectedKey={filters.column}
+      className="w-[130px]"
+      selectedKey={columns}
       onSelectionChange={update}
       aria-label="Columns"
     >

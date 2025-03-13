@@ -13,7 +13,6 @@ import ColumnFilter from "./filter-column";
 import SortDirectionFilter from "./filter-sort-direction";
 import CombineDuplicateFilter from "./filter-combine-duplicate";
 import GroupDirectionFilter from "./filter-group-direction";
-import { useMediaQuery } from "usehooks-ts";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useFilters } from "@/hooks/use-filters";
 import UnownedFilter from "./filter-unowned";
@@ -26,10 +25,6 @@ type Props = {
 };
 
 export default function FilterRender({ isProfile, artists }: Props) {
-  const isDesktop = useMediaQuery("(min-width: 640px)", {
-    initializeWithValue: false,
-  });
-
   const [filters] = useFilters();
 
   return (
@@ -47,7 +42,7 @@ export default function FilterRender({ isProfile, artists }: Props) {
       <FilterSearch />
       <FilterGroupBy />
       {filters.group_by && <GroupDirectionFilter />}
-      {isDesktop && <ColumnFilter />}
+      <ColumnFilter />
       {isProfile && <UnownedFilter />}
       <ResetFilter />
     </div>

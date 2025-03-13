@@ -1,9 +1,14 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  CSSProperties,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
-import { GRID_COLUMNS_MOBILE } from "@/lib/utils";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import ObjektView from "../objekt/objekt-view";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
@@ -12,12 +17,12 @@ import { WindowVirtualizer } from "virtua";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { useMediaQuery } from "usehooks-ts";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { GroupLabelRender } from "../index/index-view";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
+import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 
 export default function ProfileObjektRender() {
   return (
@@ -35,8 +40,7 @@ function ProfileObjekt() {
   const { profile } = useProfile();
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
-  const isDesktop = useMediaQuery("(min-width: 640px)");
-  const columns = isDesktop ? filters.column : GRID_COLUMNS_MOBILE;
+  const { columns } = useBreakpointColumn();
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, ValidObjekt[][]][]
@@ -92,7 +96,7 @@ function ProfileObjekt() {
     );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 mb-8">
       <FilterView isProfile artists={artists} />
       <div className="flex items-center gap-2">
         <span className="font-semibold">
@@ -140,22 +144,23 @@ function ObjektsRowRender({
   groupedObjekts: ValidObjekt[][];
   columns: number;
 }) {
+  const start = rowIndex * columns;
+  const end = start + columns;
   return (
-    <div className="flex gap-3 md:gap-4 pb-4">
-      {Array.from({ length: columns }).map((_, j) => {
+    <div
+      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-4 pb-4"
+      style={{ "--grid-columns": columns } as CSSProperties}
+    >
+      {groupedObjekts.slice(start, end).map((objekts, j) => {
         const index = rowIndex * columns + j;
-        const objekts = groupedObjekts[index];
+        const [objekt] = objekts;
         return (
-          <div className="flex-1" key={j}>
-            {objekts?.length > 0 && (
-              <ObjektView
-                key={objekts[0].id}
-                objekts={objekts}
-                isFade={!("serial" in objekts[0])}
-                priority={index < columns * 3}
-              />
-            )}
-          </div>
+          <ObjektView
+            key={objekt.id}
+            objekts={objekts}
+            isFade={!("serial" in objekt)}
+            priority={index < columns * 3}
+          />
         );
       })}
     </div>

@@ -7,6 +7,7 @@ import "./globals.css";
 import Navbar from "@/components/navbar";
 import { Analytics } from "@/components/analytics";
 import { PropsWithChildren } from "react";
+import { cn } from "@/utils/classes";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -60,7 +61,12 @@ export default function RootLayout({ children }: PropsWithChildren) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable}`}
     >
-      <body className="min-h-svh antialiased">
+      <body
+        className={cn(
+          "min-h-svh antialiased",
+          process.env.NODE_ENV === "development" ? "debug-screens" : ""
+        )}
+      >
         <Toast />
         <ClientProviders>
           <div className="relative flex flex-col">
