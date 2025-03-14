@@ -1,6 +1,5 @@
 "use client";
 
-import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import {
   QueryErrorResetBoundary,
   useInfiniteQuery,
@@ -15,6 +14,7 @@ import ProfileTradeRow from "./profile-trade-row";
 import { Card } from "../ui";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProfile } from "@/hooks/use-profile";
+import { Loader } from "../ui";
 
 export default function ProfileTradesRender() {
   return (
@@ -50,6 +50,13 @@ function ProfileTrades() {
     () => query.data?.pages.flatMap((p) => p.results) ?? [],
     [query.data]
   );
+
+  if (query.isLoading)
+    return (
+      <div className="justify-center flex">
+        <Loader variant="ring" />
+      </div>
+    );
 
   return (
     <>
