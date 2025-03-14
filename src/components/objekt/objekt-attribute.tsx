@@ -64,7 +64,7 @@ function PillTradable({ objekt }: { objekt: ValidObjekt }) {
   const { data, status } = useQuery(fetchMetadata(objekt.slug));
   return (
     <>
-      {status === "pending" && <Skeleton className="w-20 h-6" />}
+      {status === "pending" && <Skeleton className="w-35 h-6" />}
       {status === "error" && (
         <Badge shape="square" intent="danger">
           Error
