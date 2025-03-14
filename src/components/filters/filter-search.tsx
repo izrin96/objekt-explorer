@@ -21,7 +21,7 @@ export default function FilterSearch() {
       <TextField
         placeholder={`Quick search..`}
         onChange={setQuery}
-        className="min-w-65"
+        className="max-w-65 min-w-40"
         value={query}
         aria-label="Search"
         suffix={
