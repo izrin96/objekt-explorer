@@ -5,13 +5,13 @@ import {
   OwnedObjekt,
   ValidObjekt,
 } from "@/lib/universal/objekts";
-import { replaceUrlSize } from "./objekt-util";
 import { Badge, Tooltip } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { cn } from "@/utils/classes";
 import { Star } from "lucide-react";
+import { replaceUrlSize } from "@/lib/utils";
 
 type Props = {
   objekts: ValidObjekt[];

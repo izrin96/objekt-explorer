@@ -1,6 +1,5 @@
 import { Badge, Button, Card, Link, NumberField, Table, Tabs } from "../ui";
 import { CSSProperties, memo, useState } from "react";
-import { replaceUrlSize } from "./objekt-util";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
 import { OwnedObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import ObjektSidebar from "./objekt-sidebar";
@@ -16,6 +15,7 @@ import {
 } from "justd-icons";
 import { ArchiveXIcon } from "lucide-react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { replaceUrlSize } from "@/lib/utils";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
@@ -29,7 +29,6 @@ export default function ObjektDetail({
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
   const [flipped, setFlipped] = useState(false);
-  const [hide, setHide] = useState(false);
   const { currentTab, setCurrentTab } = useObjektModal();
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
@@ -50,18 +49,18 @@ export default function ObjektDetail({
           data-flipped={flipped}
           className="relative w-full h-full aspect-photocard cursor-pointer touch-manipulation transition-transform transform-3d transform-gpu duration-300 data-[flipped=true]:rotate-y-180"
         >
-          <div className="absolute inset-0 backface-hidden drop-shadow">
+          <div className="absolute inset-0 backface-hidden rotate-y-0 drop-shadow">
+            {/* smaller image */}
             <NextImage
               fill
               loading="eager"
               src={resizedUrl}
               alt={objekt.collectionId}
-              hidden={hide}
             />
+            {/* original image */}
             <NextImage
               fill
               loading="eager"
-              onLoad={() => setHide(true)}
               src={objekt.frontImage}
               alt={objekt.collectionId}
             />
