@@ -214,7 +214,7 @@ const TableRow = <T extends object>({
       id={id}
       {...props}
       className={cn(
-        "tr group relative cursor-default border-b bg-bg selected:bg-(--table-selected-bg) text-fg outline-hidden ring-primary selected:hover:bg-(--table-selected-bg)/70 data-focus-visible:ring-1 data-focused:ring-0 dark:selected:hover:bg-[color-mix(in_oklab,var(--color-primary)_30%,black_70%)]",
+        "tr group relative cursor-default border-b bg-transparent selected:bg-(--table-selected-bg) text-fg outline-hidden ring-primary selected:hover:bg-(--table-selected-bg)/70 data-focus-visible:ring-1 data-focused:ring-0 dark:selected:hover:bg-[color-mix(in_oklab,var(--color-primary)_30%,black_70%)]",
         "href" in props ? "cursor-pointer hover:bg-secondary/50 hover:text-secondary-fg" : "",
         className,
       )}

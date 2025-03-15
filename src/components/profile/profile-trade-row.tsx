@@ -51,7 +51,7 @@ export default memo(function TradeRow({
 
   return (
     <>
-      <tr className="tr group relative border-b bg-bg text-fg">
+      <tr className="tr group relative border-b bg-transparent text-fg">
         <td className={tdClass}>
           {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
         </td>
