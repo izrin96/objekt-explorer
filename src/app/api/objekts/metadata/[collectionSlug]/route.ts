@@ -1,7 +1,8 @@
 import { indexer } from "@/lib/server/db/indexer";
-import { count, eq, sql } from "drizzle-orm";
+import { and, count, eq, not, sql } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { cacheHeaders } from "@/app/api/common";
+import { SPIN_ADDRESS } from "@/lib/utils";
 
 type Params = {
   params: Promise<{
@@ -20,11 +21,16 @@ export async function GET(_: Request, props: Params) {
     })
     .from(collections)
     .leftJoin(objekts, eq(collections.id, objekts.collectionId))
-    .where(eq(collections.slug, params.collectionSlug))
+    .where(
+      and(
+        eq(collections.slug, params.collectionSlug),
+        not(eq(objekts.owner, SPIN_ADDRESS))
+      )
+    )
     .groupBy(collections.id);
-  const collection = results[0];
+  const result = results[0];
 
-  return Response.json(collection, {
+  return Response.json(result, {
     headers: cacheHeaders(),
   });
 }

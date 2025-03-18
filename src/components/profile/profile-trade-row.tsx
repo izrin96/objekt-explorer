@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { getCollectionShortId } from "@/lib/universal/objekts";
 import { memo, useCallback } from "react";
 import { IconOpenLink } from "justd-icons";
-import { NULL_ADDRESS } from "@/lib/utils";
+import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 
 export default memo(function TradeRow({
@@ -25,13 +25,9 @@ export default memo(function TradeRow({
   const name = `${getCollectionShortId(row.objekt)}`;
 
   const action = isReceiver ? (
-    <Badge intent="info">
-      Received From
-    </Badge>
+    <Badge intent="info">Received From</Badge>
   ) : (
-    <Badge intent="custom">
-      Sent To
-    </Badge>
+    <Badge intent="custom">Sent To</Badge>
   );
 
   const onOpen = useCallback(
@@ -45,6 +41,8 @@ export default memo(function TradeRow({
     ) : (
       <UserLink address={row.transfer.from} nickname={row.fromNickname} />
     )
+  ) : row.transfer.to === SPIN_ADDRESS ? (
+    <span>COSMO Spin</span>
   ) : (
     <UserLink address={row.transfer.to} nickname={row.toNickname} />
   );
