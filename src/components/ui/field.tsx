@@ -98,10 +98,14 @@ const fieldGroupStyles = tv({
   },
 })
 
-const FieldGroup = ({ className, ...props }: GroupProps) => {
+interface FieldGroupProps extends GroupProps {
+  ref?: React.RefObject<HTMLDivElement>
+}
+const FieldGroup = ({ className, ref, ...props }: FieldGroupProps) => {
   return (
     <Group
       {...props}
+      ref={ref}
       className={composeRenderProps(className, (className, renderProps) =>
         fieldGroupStyles({
           ...renderProps,
@@ -123,11 +127,11 @@ const Input = ({ className, ref, ...props }: InputProps) => {
       {...props}
       className={composeTailwindRenderProps(
         className,
-        "w-full min-w-0 bg-transparent px-2.5 py-2 text-base text-fg placeholder-muted-fg outline-hidden data-focused:outline-hidden sm:text-sm/6 [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
+        "w-full min-w-0 bg-transparent px-2.5 py-2 text-base text-fg placeholder-muted-fg outline-hidden focus:outline-hidden sm:text-sm/6 [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
       )}
     />
   )
 }
 
 export type { FieldProps, InputProps, FieldErrorProps }
-export { Description, FieldError, FieldGroup, Input, Label }
+export { Description, FieldError, FieldGroup, Input, Label, fieldStyles }

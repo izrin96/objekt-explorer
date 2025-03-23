@@ -148,7 +148,7 @@ const OwnedListPanel = memo(function OwnedListPanel({
 
   return (
     <div className="flex flex-col gap-2">
-      <Card>
+      <Card className="py-0">
         <Table aria-label="Trades">
           <Table.Header>
             <Table.Column isRowHeader maxWidth={110}>

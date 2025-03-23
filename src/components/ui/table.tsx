@@ -28,7 +28,7 @@ import {
 import { tv } from "tailwind-variants"
 
 import { composeTailwindRenderProps } from "@/components/ui/primitive"
-import { cn } from "@/utils/classes"
+import { twMerge } from "tailwind-merge"
 import { Checkbox } from "./checkbox"
 
 interface TableProps extends TablePrimitiveProps {
@@ -50,7 +50,7 @@ const Table = ({ children, className, ...props }: TableProps) => {
           <ResizableTableContainer>
             <TablePrimitive
               {...props}
-              className={cn(
+              className={twMerge(
                 "table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden [--table-selected-bg:color-mix(in_oklab,var(--color-primary)_5%,white_90%)] **:data-drop-target:border **:data-drop-target:border-primary dark:[--table-selected-bg:color-mix(in_oklab,var(--color-primary)_25%,black_70%)]",
                 className,
               )}
@@ -61,7 +61,7 @@ const Table = ({ children, className, ...props }: TableProps) => {
         ) : (
           <TablePrimitive
             {...props}
-            className={cn(
+            className={twMerge(
               "table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden [--table-selected-bg:color-mix(in_oklab,var(--color-primary)_5%,white_90%)] **:data-drop-target:border **:data-drop-target:border-primary dark:[--table-selected-bg:color-mix(in_oklab,var(--color-primary)_25%,black_70%)]",
               className,
             )}
@@ -90,7 +90,7 @@ const TableBody = <T extends object>(props: TableBodyProps<T>) => (
   <TableBodyPrimitive
     data-slot="table-body"
     {...props}
-    className={cn("[&_.tr:last-child]:border-0")}
+    className={twMerge("[&_.tr:last-child]:border-0")}
   />
 )
 
@@ -145,7 +145,7 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
             {props.children as React.ReactNode}
             {allowsSorting && (
               <span
-                className={cn(
+                className={twMerge(
                   "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
                   isHovered ? "bg-secondary-fg/10" : "",
                   className,
@@ -179,7 +179,7 @@ const TableHeader = <T extends object>({
     <TableHeaderPrimitive
       data-slot="table-header"
       ref={ref}
-      className={cn("border-b", className)}
+      className={twMerge("border-b", className)}
       {...props}
     >
       {allowsDragging && <Column className="w-0" />}
@@ -213,8 +213,8 @@ const TableRow = <T extends object>({
       data-slot="table-row"
       id={id}
       {...props}
-      className={cn(
-        "tr group relative cursor-default border-b bg-transparent selected:bg-(--table-selected-bg) text-fg outline-hidden ring-primary selected:hover:bg-(--table-selected-bg)/70 data-focus-visible:ring-1 data-focused:ring-0 dark:selected:hover:bg-[color-mix(in_oklab,var(--color-primary)_30%,black_70%)]",
+      className={twMerge(
+        "tr group relative cursor-default border-b bg-transparent selected:bg-(--table-selected-bg) text-fg outline-hidden ring-primary selected:hover:bg-(--table-selected-bg)/70 focus:ring-0 focus-visible:ring-1 dark:selected:hover:bg-[color-mix(in_oklab,var(--color-primary)_30%,black_70%)]",
         "href" in props ? "cursor-pointer hover:bg-secondary/50 hover:text-secondary-fg" : "",
         className,
       )}

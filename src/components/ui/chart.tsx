@@ -4,8 +4,7 @@ import { createContext, use, useId, useMemo } from "react"
 
 import type { LegendProps } from "recharts"
 import { Legend, ResponsiveContainer, Tooltip } from "recharts"
-
-import { cn } from "@/utils/classes"
+import { twMerge } from "tailwind-merge"
 
 const THEMES = { light: "", dark: ".dark" } as const
 
@@ -54,7 +53,7 @@ const Chart = ({
       <div
         data-chart={chartId}
         ref={ref}
-        className={cn(
+        className={twMerge(
           "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-fg [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/80 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
           className,
         )}
@@ -161,7 +160,7 @@ const ChartTooltipContent = ({
   return (
     <div
       ref={ref}
-      className={cn(
+      className={twMerge(
         "grid min-w-[12rem] items-start gap-1.5 rounded-lg border bg-overlay px-3 py-2 text-overlay-fg text-xs shadow-xl",
         className,
       )}
@@ -176,7 +175,7 @@ const ChartTooltipContent = ({
           return (
             <div
               key={item.dataKey}
-              className={cn(
+              className={twMerge(
                 "flex w-full flex-wrap items-stretch gap-2 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:text-muted-fg",
                 indicator === "dot" && "items-center",
               )}
@@ -190,7 +189,7 @@ const ChartTooltipContent = ({
                   ) : (
                     !hideIndicator && (
                       <div
-                        className={cn(
+                        className={twMerge(
                           "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
                           indicator === "dot" && "size-2.5",
                           indicator === "line" && "w-1",
@@ -208,7 +207,7 @@ const ChartTooltipContent = ({
                     )
                   )}
                   <div
-                    className={cn(
+                    className={twMerge(
                       "flex flex-1 justify-between leading-none",
                       nestLabel ? "items-end" : "items-center",
                     )}
@@ -256,7 +255,7 @@ const ChartLegendContent = ({
   return (
     <div
       ref={ref}
-      className={cn(
+      className={twMerge(
         "flex items-center justify-center gap-4",
         verticalAlign === "top" ? "pb-3" : "pt-3",
         className,
@@ -269,9 +268,7 @@ const ChartLegendContent = ({
         return (
           <div
             key={item.value}
-            className={cn(
-              "flex items-center gap-1.5 *:data-[slot=icon]:size-3 *:data-[slot=icon]:text-muted-fg",
-            )}
+            className="flex items-center gap-1.5 *:data-[slot=icon]:size-3 *:data-[slot=icon]:text-muted-fg"
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />

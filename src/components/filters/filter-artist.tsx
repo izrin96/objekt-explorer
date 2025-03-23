@@ -33,7 +33,7 @@ export default function ArtistFilter({ artists }: Props) {
     <Menu>
       <Button
         intent="outline"
-        className={filters.artist ? "inset-ring-primary" : ""}
+        className={filters.artist ? "!inset-ring-primary" : ""}
       >
         Artist
       </Button>

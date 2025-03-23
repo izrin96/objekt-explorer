@@ -29,7 +29,7 @@ export default function MemberFilter({ artists }: Props) {
     <Menu>
       <Button
         intent="outline"
-        className={filters.member ? "inset-ring-primary" : ""}
+        className={filters.member ? "!inset-ring-primary" : ""}
       >
         Member
       </Button>

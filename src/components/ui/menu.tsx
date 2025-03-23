@@ -22,10 +22,8 @@ import {
   SubmenuTrigger as SubmenuTriggerPrimitive,
   composeRenderProps,
 } from "react-aria-components"
+import { twMerge } from "tailwind-merge"
 import type { VariantProps } from "tailwind-variants"
-import { tv } from "tailwind-variants"
-
-import { cn } from "@/utils/classes"
 import {
   DropdownItemDetails,
   DropdownKeyboard,
@@ -35,6 +33,7 @@ import {
   dropdownSectionStyles,
 } from "./dropdown"
 import { PopoverContent } from "./popover"
+import { composeTailwindRenderProps } from "./primitive"
 
 interface MenuContextProps {
   respectScreen: boolean
@@ -60,25 +59,21 @@ const MenuSubMenu = ({ delay = 0, ...props }) => (
   </SubmenuTriggerPrimitive>
 )
 
-const menuStyles = tv({
-  slots: {
-    menu: "grid max-h-[calc(var(--visual-viewport-height)-10rem)] grid-cols-[auto_1fr] overflow-auto rounded-xl p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-lg)-2px))] sm:max-h-[inherit] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
-    popover: "z-50 p-0 shadow-xs outline-hidden sm:min-w-40",
-    trigger: [
-      "relative inline text-left outline-hidden data-focus-visible:ring-1 data-focus-visible:ring-primary",
-    ],
-  },
-})
-
-const { menu, popover, trigger } = menuStyles()
-
 interface MenuTriggerProps extends ButtonProps {
   className?: string
   ref?: React.Ref<HTMLButtonElement>
 }
 
 const MenuTrigger = ({ className, ref, ...props }: MenuTriggerProps) => (
-  <Button ref={ref} data-slot="menu-trigger" className={trigger({ className })} {...props}>
+  <Button
+    ref={ref}
+    data-slot="menu-trigger"
+    className={composeTailwindRenderProps(
+      className,
+      "relative inline text-left outline-hidden focus-visible:ring-1 focus-visible:ring-primary",
+    )}
+    {...props}
+  >
     {(values) => (
       <>{typeof props.children === "function" ? props.children(values) : props.children}</>
     )}
@@ -123,11 +118,19 @@ const MenuContent = <T extends object>({
       crossOffset={props.crossOffset}
       triggerRef={props.triggerRef}
       arrowBoundaryOffset={props.arrowBoundaryOffset}
-      className={popover({
-        className: popoverClassName,
-      })}
+      className={composeTailwindRenderProps(
+        popoverClassName,
+        "z-50 p-0 shadow-xs outline-hidden sm:min-w-40",
+      )}
     >
-      <MenuPrimitive className={menu({ className })} {...props} />
+      <MenuPrimitive
+        data-slot="menu-content"
+        className={composeTailwindRenderProps(
+          className,
+          "grid max-h-[calc(var(--visual-viewport-height)-10rem)] grid-cols-[auto_1fr] overflow-auto rounded-xl p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-lg)-2px))] sm:max-h-[inherit] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+        )}
+        {...props}
+      />
     </PopoverContent>
   )
 }
@@ -144,7 +147,7 @@ const MenuItem = ({ className, isDanger = false, children, ...props }: MenuItemP
         dropdownItemStyles({
           ...renderProps,
           className: renderProps.hasSubmenu
-            ? cn([
+            ? twMerge([
                 "data-open:data-danger:bg-danger/10 data-open:data-danger:text-danger",
                 "data-open:bg-accent data-open:text-accent-fg data-open:*:data-[slot=icon]:text-accent-fg data-open:*:[.text-muted-fg]:text-accent-fg",
                 className,
@@ -191,7 +194,7 @@ export interface MenuHeaderProps extends React.ComponentProps<typeof Header> {
 
 const MenuHeader = ({ className, separator = false, ...props }: MenuHeaderProps) => (
   <Header
-    className={cn(
+    className={twMerge(
       "col-span-full px-2.5 py-2 font-semibold text-base sm:text-sm",
       separator && "-mx-1 mb-1 border-b sm:px-3 sm:pb-[0.625rem]",
       className,

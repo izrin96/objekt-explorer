@@ -60,7 +60,7 @@ function ProfileTrades() {
 
   return (
     <>
-      <Card className="overflow-x-auto">
+      <Card className="overflow-x-auto py-0">
         <div className="relative w-full overflow-auto">
           <table className="table w-full min-w-full text-sm">
             <thead data-slot="table-header" className="border-b">

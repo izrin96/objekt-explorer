@@ -24,7 +24,7 @@ export default function EditionFilter() {
     <Menu>
       <Button
         intent="outline"
-        className={filters.edition?.length ? "inset-ring-primary" : ""}
+        className={filters.edition?.length ? "!inset-ring-primary" : ""}
       >
         Edition
       </Button>

@@ -33,12 +33,7 @@ export default function GroupBysFilter() {
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.group_by ? "inset-ring-primary" : ""}
-      >
-        Group By
-      </Button>
+      <Button intent="outline">Group By</Button>
       <Menu.Content
         selectionMode="multiple"
         selectedKeys={selected}

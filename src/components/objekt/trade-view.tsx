@@ -213,7 +213,7 @@ function TradeTable({
         </div>
       </div>
 
-      <Card>
+      <Card className="py-0">
         <Table aria-label="Trades">
           <Table.Header>
             <Table.Column isRowHeader>Owner</Table.Column>

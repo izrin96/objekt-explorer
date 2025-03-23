@@ -1,30 +1,19 @@
-"use client";
+"use client"
 
 import {
   NumberField as NumberFieldPrimitive,
   type NumberFieldProps as NumberFieldPrimitiveProps,
   type ValidationResult,
-} from "react-aria-components";
-import { tv } from "tailwind-variants";
+} from "react-aria-components"
 
-import { Description, FieldError, FieldGroup, Input, Label } from "./field";
-import { composeTailwindRenderProps } from "./primitive";
-
-const numberFieldStyles = tv({
-  slots: {
-    base: "group flex flex-col gap-y-1.5",
-    stepperButton:
-      "h-10 cursor-default pressed:bg-primary px-3 pressed:text-primary-fg text-muted-fg group-disabled:bg-secondary/70 forced-colors:group-disabled:text-[GrayText]",
-  },
-});
-
-const { base } = numberFieldStyles();
+import { Description, FieldError, FieldGroup, Input, Label } from "./field"
+import { composeTailwindRenderProps } from "./primitive"
 
 interface NumberFieldProps extends NumberFieldPrimitiveProps {
-  label?: string;
-  description?: string;
-  placeholder?: string;
-  errorMessage?: string | ((validation: ValidationResult) => string);
+  label?: string
+  description?: string
+  placeholder?: string
+  errorMessage?: string | ((validation: ValidationResult) => string)
 }
 
 const NumberField = ({
@@ -38,7 +27,7 @@ const NumberField = ({
   return (
     <NumberFieldPrimitive
       {...props}
-      className={composeTailwindRenderProps(className, base())}
+      className={composeTailwindRenderProps(className, "group flex flex-col gap-y-1.5")}
     >
       {label && <Label>{label}</Label>}
       <FieldGroup className="overflow-hidden">
@@ -54,8 +43,8 @@ const NumberField = ({
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
     </NumberFieldPrimitive>
-  );
-};
+  )
+}
 
-export type { NumberFieldProps };
-export { NumberField };
+export type { NumberFieldProps }
+export { NumberField }

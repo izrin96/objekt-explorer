@@ -10,10 +10,10 @@ import {
   Heading,
   Text,
 } from "react-aria-components"
-import { tv } from "tailwind-variants"
 
-import { cn } from "@/utils/classes"
+import { composeTailwindRenderProps } from "@/components/ui/primitive"
 import { useMediaQuery } from "@/utils/use-media-query"
+import { twJoin, twMerge } from "tailwind-merge"
 import { Button, type ButtonProps } from "./button"
 
 const Dialog = ({
@@ -24,7 +24,7 @@ const Dialog = ({
   return (
     <DialogPrimitive
       role={role}
-      className={cn(
+      className={twMerge(
         "peer/dialog group/dialog relative flex max-h-[inherit] flex-col overflow-hidden outline-hidden [scrollbar-width:thin] [&::-webkit-scrollbar]:size-0.5",
         className,
       )}
@@ -68,7 +68,7 @@ const Header = ({ className, ...props }: DialogHeaderProps) => {
     <div
       data-slot="dialog-header"
       ref={headerRef}
-      className={cn(
+      className={twMerge(
         "relative flex flex-col gap-0.5 p-4 sm:gap-1 sm:p-6 [&[data-slot=dialog-header]:has(+[data-slot=dialog-footer])]:pb-0",
         className,
       )}
@@ -80,18 +80,6 @@ const Header = ({ className, ...props }: DialogHeaderProps) => {
   )
 }
 
-const titleStyles = tv({
-  base: "flex flex-1 items-center text-fg",
-  variants: {
-    level: {
-      1: "font-semibold text-lg sm:text-xl",
-      2: "font-semibold text-lg sm:text-xl",
-      3: "font-semibold text-base sm:text-lg",
-      4: "font-semibold text-base",
-    },
-  },
-})
-
 interface DialogTitleProps extends Omit<HeadingProps, "level"> {
   level?: 1 | 2 | 3 | 4
   ref?: React.Ref<HTMLHeadingElement>
@@ -101,7 +89,16 @@ const Title = ({ level = 2, className, ref, ...props }: DialogTitleProps) => (
     slot="title"
     level={level}
     ref={ref}
-    className={titleStyles({ level, className })}
+    className={twMerge(
+      twJoin(
+        "flex flex-1 items-center text-fg",
+        level === 1 && "font-semibold text-lg sm:text-xl",
+        level === 2 && "font-semibold text-lg sm:text-xl",
+        level === 3 && "font-semibold text-base sm:text-lg",
+        level === 4 && "font-semibold text-base",
+      ),
+      className,
+    )}
     {...props}
   />
 )
@@ -110,7 +107,7 @@ type DialogDescriptionProps = React.ComponentProps<"div">
 const Description = ({ className, ref, ...props }: DialogDescriptionProps) => (
   <Text
     slot="description"
-    className={cn("text-muted-fg text-sm", className)}
+    className={twMerge("text-muted-fg text-sm", className)}
     ref={ref}
     {...props}
   />
@@ -121,7 +118,7 @@ const Body = ({ className, ref, ...props }: DialogBodyProps) => (
   <div
     data-slot="dialog-body"
     ref={ref}
-    className={cn(
+    className={twMerge(
       "isolate flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding)-var(--dialog-header-height,0px)-var(--dialog-footer-height,0px))] flex-1 flex-col overflow-auto px-4 py-1 sm:px-6",
       className,
     )}
@@ -158,7 +155,7 @@ const Footer = ({ className, ...props }: DialogFooterProps) => {
     <div
       ref={footerRef}
       data-slot="dialog-footer"
-      className={cn(
+      className={twMerge(
         "isolate mt-auto flex flex-col-reverse justify-between gap-3 p-4 pt-3 sm:flex-row sm:p-6 sm:pt-5",
         className,
       )}
@@ -191,9 +188,9 @@ const CloseIndicator = ({ className, ...props }: CloseButtonIndicatorProps) => {
       {...(isMobile ? { autoFocus: true } : {})}
       aria-label="Close"
       slot="close"
-      className={cn(
-        "close absolute top-1 right-1 z-50 grid size-8 place-content-center rounded-xl hover:bg-secondary data-focused:bg-secondary data-focused:outline-hidden data-focus-visible:ring-1 data-focus-visible:ring-primary sm:top-2 sm:right-2 sm:size-7 sm:rounded-md",
+      className={composeTailwindRenderProps(
         className,
+        "close absolute top-1 right-1 z-50 grid size-8 place-content-center rounded-xl hover:bg-secondary focus:bg-secondary focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary sm:top-2 sm:right-2 sm:size-7 sm:rounded-md",
       )}
     >
       <IconX className="size-4" />

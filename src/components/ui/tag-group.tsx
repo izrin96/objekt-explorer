@@ -15,9 +15,8 @@ import {
   Tag as TagPrimitive,
   composeRenderProps,
 } from "react-aria-components"
+import { twJoin, twMerge } from "tailwind-merge"
 import { tv } from "tailwind-variants"
-
-import { cn } from "@/utils/classes"
 import { badgeIntents, badgeShapes, badgeStyles } from "./badge"
 import { Description, Label } from "./field"
 import { composeTailwindRenderProps } from "./primitive"
@@ -100,11 +99,11 @@ interface TagGroupProps extends TagGroupPrimitiveProps {
   ref?: React.RefObject<HTMLDivElement>
 }
 
-const TagGroup = ({ children, ref, ...props }: TagGroupProps) => {
+const TagGroup = ({ children, ref, className, ...props }: TagGroupProps) => {
   return (
     <TagGroupPrimitive
       ref={ref}
-      className={cn("flex flex-col flex-wrap", props.className)}
+      className={twMerge("flex flex-col flex-wrap", className)}
       {...props}
     >
       <TagGroupContext.Provider
@@ -158,7 +157,7 @@ const Tag = ({ className, intent, shape, ...props }: TagProps) => {
 
         return tagStyles({
           ...renderProps,
-          className: cn([
+          className: twJoin([
             intents[finalIntent]?.base,
             badgeShapes[finalShape],
             renderProps.isSelected ? intents[finalIntent].selected : undefined,

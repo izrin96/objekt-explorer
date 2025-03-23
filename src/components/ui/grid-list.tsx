@@ -12,7 +12,7 @@ import {
 } from "react-aria-components"
 import { tv } from "tailwind-variants"
 
-import { cn } from "@/utils/classes"
+import { twMerge } from "tailwind-merge"
 import { Checkbox } from "./checkbox"
 import { composeTailwindRenderProps } from "./primitive"
 
@@ -83,7 +83,7 @@ const GridListItem = ({ className, ...props }: GridListItemProps) => {
 }
 
 const GridEmptyState = ({ ref, className, ...props }: React.ComponentProps<"div">) => (
-  <div ref={ref} className={cn("p-6", className)} {...props} />
+  <div ref={ref} className={twMerge("p-6", className)} {...props} />
 )
 
 GridList.Item = GridListItem

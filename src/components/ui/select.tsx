@@ -1,6 +1,4 @@
 "use client"
-
-import { cn } from "@/utils/classes"
 import { IconChevronLgDown } from "justd-icons"
 import type {
   ListBoxProps,
@@ -24,7 +22,7 @@ import {
 } from "./dropdown"
 import { Description, FieldError, Label } from "./field"
 import { ListBox } from "./list-box"
-import { PopoverContent } from "./popover"
+import { PopoverContent, type PopoverContentProps } from "./popover"
 import { composeTailwindRenderProps, focusStyles } from "./primitive"
 
 const selectTriggerStyles = tv({
@@ -74,10 +72,10 @@ const Select = <T extends object>({
 }
 
 interface SelectListProps<T extends object>
-  extends ListBoxProps<T>,
+  extends Omit<ListBoxProps<T>, "layout" | "orientation">,
     Pick<PopoverProps, "placement"> {
   items?: Iterable<T>
-  popoverClassName?: PopoverProps["className"]
+  popoverClassName?: PopoverContentProps["className"]
 }
 
 const SelectList = <T extends object>({
@@ -91,10 +89,16 @@ const SelectList = <T extends object>({
     <PopoverContent
       showArrow={false}
       respectScreen={false}
-      className={cn("sm:min-w-(--trigger-width)", popoverClassName)}
+      className={composeTailwindRenderProps(popoverClassName, "sm:min-w-(--trigger-width)")}
       placement={props.placement}
     >
-      <ListBox className={cn("border-0 shadow-none", className)} items={items} {...props}>
+      <ListBox
+        layout="stack"
+        orientation="vertical"
+        className={composeTailwindRenderProps(className, "border-0 shadow-none")}
+        items={items}
+        {...props}
+      >
         {children}
       </ListBox>
     </PopoverContent>

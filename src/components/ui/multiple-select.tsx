@@ -12,9 +12,7 @@ import type {
 import { ComboBox } from "react-aria-components"
 import type { ListData } from "react-stately"
 import { useListData } from "react-stately"
-import { tv } from "tailwind-variants"
-
-import { cn } from "@/utils/classes"
+import { twMerge } from "tailwind-merge"
 import { Button } from "./button"
 import type { FieldProps } from "./field"
 import { Description, FieldError, Input, Label } from "./field"
@@ -23,27 +21,6 @@ import { PopoverContent } from "./popover"
 import type { RestrictedIntent, TagGroupProps } from "./tag-group"
 import { Tag, TagGroup, TagList } from "./tag-group"
 import { VisuallyHidden } from "./visually-hidden"
-
-const multiSelectStyles = tv({
-  slots: {
-    multiSelectField: "group flex w-full min-w-80 flex-col",
-    multiSelect: [
-      "relative flex min-h-10 flex-row flex-wrap items-center rounded-lg border px-1 shadow-xs transition",
-      "has-[input[data-focused=true]]:border-ring/70",
-      "has-[input[data-invalid=true][data-focused=true]]:border-blue-500",
-      "has-[input[data-invalid=true]]:border-danger",
-      "has-[input[data-focused=true]]:ring-4 has-[input[data-focused=true]]:ring-ring/20",
-    ],
-    chevronButton:
-      "-mr-2 grid size-8 place-content-center rounded-sm text-muted-fg hover:text-fg data-focused:text-fg",
-    input: "ml-1 flex-1 px-0.5 py-1 shadow-none ring-0",
-    comboBoxChild: "inline-flex flex-1 flex-wrap items-center px-0",
-    comboBox: "group peer flex flex-1",
-  },
-})
-
-const { multiSelectField, multiSelect, chevronButton, input, comboBox, comboBoxChild } =
-  multiSelectStyles()
 
 interface SelectedKey {
   id: Key
@@ -209,10 +186,22 @@ const MultipleSelect = <T extends SelectedKey>({
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null)
 
   return (
-    <div className={multiSelectField({ className })}>
+    <div className={twMerge("group flex w-full min-w-80 flex-col", className)}>
       {props.label && <Label className="mb-1">{props.label}</Label>}
       <div className={props.isDisabled ? "opacity-50" : ""}>
-        <div ref={triggerRef} className={multiSelect({ className })}>
+        <div
+          ref={triggerRef}
+          className={twMerge(
+            [
+              "relative flex min-h-10 flex-row flex-wrap items-center rounded-lg border px-1 shadow-xs transition",
+              "has-[input[focus=true]]:border-ring/70",
+              "has-[input[data-invalid=true][focus=true]]:border-blue-500",
+              "has-[input[data-invalid=true]]:border-danger",
+              "has-[input[focus=true]]:ring-4 has-[input[focus=true]]:ring-ring/20",
+            ],
+            className,
+          )}
+        >
           <TagGroup
             shape={props.shape}
             intent={props.intent}
@@ -222,7 +211,7 @@ const MultipleSelect = <T extends SelectedKey>({
           >
             <TagList
               items={selectedItems.items}
-              className={cn(
+              className={twMerge(
                 selectedItems.items.length !== 0 && "px-1 py-1.5",
                 "[&_.jdt3lr2x]:last:-mr-1 gap-1.5 outline-hidden",
                 props.shape === "square" && "[&_.jdt3lr2x]:rounded-[calc(var(--radius-lg)-4px)]",
@@ -235,17 +224,17 @@ const MultipleSelect = <T extends SelectedKey>({
             {...props}
             allowsEmptyCollection
             aria-label="Available items"
-            className={comboBox()}
+            className="group peer flex flex-1"
             items={accessibleList.items}
             selectedKey={fieldState.selectedKey}
             inputValue={fieldState.inputValue}
             onSelectionChange={onSelectionChange}
             onInputChange={onInputChange}
           >
-            <div className={comboBoxChild({ className })}>
+            <div className={twMerge("inline-flex flex-1 flex-wrap items-center px-0", className)}>
               <Input
                 placeholder={props.placeholder}
-                className={input()}
+                className="ml-1 flex-1 px-0.5 py-1 shadow-none ring-0"
                 onBlur={() => {
                   setFieldState({
                     inputValue: "",
@@ -303,7 +292,7 @@ const MultipleSelect = <T extends SelectedKey>({
           <div className="relative ml-auto flex items-center justify-center px-1" aria-hidden>
             <button
               type="button"
-              className={chevronButton()}
+              className="-mr-2 grid size-8 place-content-center rounded-sm text-muted-fg hover:text-fg focus:text-fg"
               onClick={() => triggerButtonRef.current?.click()}
               tabIndex={-1}
             >

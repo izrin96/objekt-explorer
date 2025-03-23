@@ -67,7 +67,7 @@ function ProfileStats() {
       <div className="grid md:grid-cols-2">
         <Card>
           <Card.Header className="items-center pb-0">
-            <Card.Title>Member Breakdown</Card.Title>
+            <Card.Title>Objekt Breakdown (by Member)</Card.Title>
             <Card.Description>Total objekt by member</Card.Description>
           </Card.Header>
           <Card.Content className="flex-1 pb-0">

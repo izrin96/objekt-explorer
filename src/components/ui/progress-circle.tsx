@@ -1,8 +1,7 @@
 "use client"
 
 import { ProgressBar, type ProgressBarProps } from "react-aria-components"
-
-import { cn } from "@/utils/classes"
+import { twMerge } from "tailwind-merge"
 
 interface ProgressCircleProps extends Omit<ProgressBarProps, "className"> {
   className?: string
@@ -16,7 +15,7 @@ const ProgressCircle = ({ className, ref, ...props }: ProgressCircleProps) => {
     <ProgressBar {...props} ref={ref}>
       {({ percentage, isIndeterminate }) => (
         <svg
-          className={cn("size-4 shrink-0", className)}
+          className={twMerge("size-4 shrink-0", className)}
           viewBox="0 0 24 24"
           fill="none"
           data-slot="icon"

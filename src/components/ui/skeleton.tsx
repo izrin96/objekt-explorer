@@ -1,5 +1,5 @@
-import { cn } from "@/utils/classes"
 import type React from "react"
+import { twMerge } from "tailwind-merge"
 
 interface SkeletonProps extends React.ComponentProps<"div"> {
   soft?: boolean
@@ -10,7 +10,7 @@ const Skeleton = ({ ref, soft = false, className, ...props }: SkeletonProps) => 
     <div
       data-slot="skeleton"
       ref={ref}
-      className={cn(
+      className={twMerge(
         "shrink-0 animate-pulse rounded-lg",
         soft ? "bg-muted" : "bg-secondary",
         className,
