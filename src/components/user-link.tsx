@@ -1,5 +1,5 @@
 import { Tooltip } from "./ui";
-import { IconCircleInfo } from "justd-icons";
+import { InfoIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function UserLink({
@@ -18,7 +18,7 @@ export default function UserLink({
       {!nickname && (
         <Tooltip delay={0} closeDelay={0}>
           <Tooltip.Trigger aria-label="Preview">
-            <IconCircleInfo />
+            <InfoIcon className="size-3.5" />
           </Tooltip.Trigger>
           <Tooltip.Content>
             Displayed as a wallet address. Nickname not yet available.
