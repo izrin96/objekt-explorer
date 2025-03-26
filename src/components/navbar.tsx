@@ -12,7 +12,7 @@ export default function Navbar() {
           <Link href="/">
             <div className="flex gap-2 items-center">
               <IconMoonFill className="size-5" />
-              <span className="font-semibold text-xl sm:block hidden">
+              <span className="font-semibold text-xl sm:block hidden select-none">
                 Lunar
               </span>
             </div>

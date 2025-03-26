@@ -20,6 +20,13 @@ export const validSortDirection = ["desc", "asc"] as const;
 export type ValidSortDirection = (typeof validSortDirection)[number];
 
 // seasons
+export const seasonColors = [
+  "#FFDD00",
+  "#75FB4C",
+  "#FF7477",
+  "#B400FF",
+  "#33ECFD",
+];
 export const validSeasons = [
   "Atom01",
   "Binary01",

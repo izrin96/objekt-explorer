@@ -6,6 +6,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useRef,
 } from "react";
 
 type ContextProps = {
@@ -20,11 +21,14 @@ type ProviderProps = PropsWithChildren<{
 }>;
 
 export function CosmoArtistProvider({ children, artists }: ProviderProps) {
-  const artistMap = new Map(
-    artists.map((artist) => [artist.id.toLowerCase(), artist])
+  const artistsRef = useRef(artists);
+  const artistMap = useRef(
+    new Map(artists.map((artist) => [artist.id.toLowerCase(), artist]))
   );
   return (
-    <CosmoArtistContext value={{ artists, artistMap }}>
+    <CosmoArtistContext
+      value={{ artists: artistsRef.current, artistMap: artistMap.current }}
+    >
       {children}
     </CosmoArtistContext>
   );

@@ -1,7 +1,8 @@
 import { getAccessToken } from "./server/token";
 import { fetchUserByIdentifier } from "./server/auth";
-import { validArtists } from "./universal/cosmo/common";
+import { ValidArtist, validArtists } from "./universal/cosmo/common";
 import { fetchArtistBff } from "./server/cosmo/artists";
+import { fetchSeasons } from "./server/cosmo/season";
 import { redis } from "./redis-client";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { after } from "next/server";
@@ -24,4 +25,9 @@ export const getArtistsWithMembers = cache(async () => {
 export const getUserByIdentifier = cache(async (identifier: string) => {
   const accessToken = await getAccessToken();
   return await fetchUserByIdentifier(identifier, accessToken.accessToken);
+});
+
+export const getSeasons = cache(async (artist: ValidArtist) => {
+  const accessToken = await getAccessToken();
+  return await fetchSeasons(accessToken.accessToken, artist);
 });

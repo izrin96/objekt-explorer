@@ -49,7 +49,12 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button onPress={() => setIsOpen(true)} size="small" intent="outline">
+      <Button
+        className="select-none"
+        onPress={() => setIsOpen(true)}
+        size="small"
+        intent="outline"
+      >
         <IconSearch />
         <span className="text-muted-fg">Search user</span>
         <Keyboard className="-mr-1" keys="⌘K" />
