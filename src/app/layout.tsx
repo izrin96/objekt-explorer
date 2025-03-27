@@ -75,7 +75,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
               {children}
             </main>
           </div>
-          <Analytics />
+          {/* <Analytics /> */}
         </ClientProviders>
       </body>
     </html>
