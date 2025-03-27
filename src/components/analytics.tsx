@@ -1,11 +1,16 @@
 import { env } from "@/env";
-import { OpenPanelComponent } from "@openpanel/nextjs";
+import Script from "next/script";
 
 const Analytics = () => {
   if (process.env.NODE_ENV !== "production") return null;
 
   return (
-    <OpenPanelComponent clientId={env.ANALYTICS_CLIENT_ID} trackScreenViews />
+    <Script
+      strategy="afterInteractive"
+      async
+      src={env.NEXT_PUBLIC_UMAMI_SCRIPT_URL}
+      data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+    />
   );
 };
 
