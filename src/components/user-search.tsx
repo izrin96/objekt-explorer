@@ -49,13 +49,11 @@ export default function UserSearch() {
 
   return (
     <>
-      <div className="select-none">
-        <Button onPress={() => setIsOpen(true)} size="small" intent="primary">
-          <IconSearch />
-          <span>Search user</span>
-          {/* <Keyboard className="-mr-1" keys="⌘K" /> */}
-        </Button>
-      </div>
+      <Button onPress={() => setIsOpen(true)} size="small" intent="primary">
+        <IconSearch />
+        <span className="sm:block hidden">Search user</span>
+        {/* <Keyboard className="-mr-1" keys="⌘K" /> */}
+      </Button>
       <CommandMenu
         shortcut="k"
         isPending={enable && isPending}

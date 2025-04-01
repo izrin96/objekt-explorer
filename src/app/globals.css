@@ -8,7 +8,9 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: var(--font-geist-mono), "ui-monospace", "SFMono-Regular", "Menlo",
     "Monaco", "Consolas", '"Liberation Mono"', '"Courier New"', "monospace";
+  --font-alt: var(--font-alt), var(--font-sans);
   --font-doto: var(--font-doto);
+  --font-drawing: var(--font-drawing);
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -179,6 +181,8 @@
     --border: oklch(0.74 0.063 80.8);
     --input: oklch(0.74 0.063 80.8);
     --ring: oklch(0.51 0.077 74.3);
+
+    font-family: var(--font-alt);
   }
 }
 

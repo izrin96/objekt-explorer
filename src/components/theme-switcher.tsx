@@ -1,6 +1,6 @@
 "use client"
 
-import { IconDeviceDesktop2, IconMoon, IconSun } from "justd-icons"
+import { IconDeviceDesktop2, IconMoon, IconSun, IconColorPalette } from "justd-icons"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { Button } from "./ui"
@@ -19,7 +19,7 @@ export function ThemeSwitcher({
   }, [])
 
   const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "system" : "light"
+    const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "matsu" : theme === "matsu" ? "system" : "light"
     setTheme(nextTheme)
   }
 
@@ -34,7 +34,15 @@ export function ThemeSwitcher({
       onPress={toggleTheme}
       {...props}
     >
-      {theme === "light" ? <IconSun /> : theme === "dark" ? <IconMoon /> : <IconDeviceDesktop2 />}
+      {theme === "light" ? (
+        <IconSun />
+      ) : theme === "dark" ? (
+        <IconMoon />
+      ) : theme === "matsu" ? (
+        <IconColorPalette />
+      ) : (
+        <IconDeviceDesktop2 />
+      )}
     </Button>
   )
 }

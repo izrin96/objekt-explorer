@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Shantell_Sans, Doto } from "next/font/google";
+import { Geist, Geist_Mono, Shantell_Sans, Doto, Nunito_Sans } from "next/font/google";
 import { Toast } from "@/components/ui";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
@@ -7,6 +7,7 @@ import Navbar from "@/components/navbar";
 import { Analytics } from "@/components/analytics";
 import { PropsWithChildren } from "react";
 import { cn } from "@/utils/classes";
+import ThemeTexture from "@/components/theme-texture";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -18,7 +19,14 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const tempFont = Shantell_Sans({
+const altFont = Nunito_Sans({
+  variable: "--font-alt",
+  weight: "700",
+  subsets: ["latin"],
+});
+
+const drawingFont = Shantell_Sans({
+  variable: "--font-drawing",
   weight: "400",
   subsets: ["latin"],
 });
@@ -62,7 +70,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${doto.variable} ${tempFont.className}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${doto.variable} ${altFont.variable} ${drawingFont.variable}`}
     >
       <body
         className={cn(
@@ -72,7 +80,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       >
         <Toast />
         <ClientProviders>
-          <div className="texture"></div>
+          <ThemeTexture />
           <div className="relative flex flex-col">
             <Navbar />
             <main className="flex min-w-full flex-col items-center">
