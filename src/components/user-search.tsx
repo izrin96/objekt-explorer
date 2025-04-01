@@ -50,10 +50,10 @@ export default function UserSearch() {
   return (
     <>
       <div className="select-none">
-        <Button onPress={() => setIsOpen(true)} size="small" intent="outline">
+        <Button onPress={() => setIsOpen(true)} size="small" intent="primary">
           <IconSearch />
-          <span className="text-muted-fg">Search user</span>
-          <Keyboard className="-mr-1" keys="⌘K" />
+          <span className="">Search user</span>
+          {/* <Keyboard className="-mr-1" keys="⌘K" /> */}
         </Button>
       </div>
       <CommandMenu
