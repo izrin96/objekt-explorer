@@ -189,7 +189,7 @@ const OwnedListPanel = memo(function OwnedListPanel({
                 <Table.Cell>
                   <Badge
                     className={cn("text-xs")}
-                    intent={!item.transferable ? "custom" : "primary"}
+                    intent={!item.transferable ? "custom" : "info"}
                     shape="square"
                   >
                     {item.transferable ? "Yes" : "No"}

@@ -205,7 +205,7 @@ function TradeTable({
           <span className="font-semibold text-sm">Transferable</span>
           <Badge
             className={cn("text-xs")}
-            intent={!data.transferable ? "custom" : "primary"}
+            intent={!data.transferable ? "custom" : "info"}
             shape="square"
           >
             {data.transferable ? "Yes" : "No"}
