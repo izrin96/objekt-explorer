@@ -156,6 +156,30 @@
     --chart-4: oklch(0.809 0.105 251.813);
     --chart-5: oklch(0.882 0.059 254.128);
   }
+
+  .ghibli {
+    --bg: oklch(0.91 0.048 83.6);
+    --fg: oklch(0.41 0.077 78.9);
+
+    --primary: oklch(0.71 0.097 111.7);
+    --primary-fg: oklch(0.98 0.005 0);
+
+    --secondary: oklch(0.88 0.055 83.6);
+    --secondary-fg: oklch(0.51 0.077 78.9);
+
+    --overlay: oklch(0.92 0.042 83.6);
+    --overlay-fg: oklch(0.41 0.077 74.3);
+
+    --accent: oklch(0.86 0.055 83.6);
+    --accent-fg: oklch(0.26 0.016 0);
+
+    --muted: oklch(0.86 0.064 83.7);
+    --muted-fg: oklch(0.51 0.077 74.3);
+
+    --border: oklch(0.74 0.063 80.8);
+    --input: oklch(0.74 0.063 80.8);
+    --ring: oklch(0.51 0.077 74.3);
+  }
 }
 
 @variant dark (&:is(.dark *));
