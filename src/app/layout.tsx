@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import { Geist, Geist_Mono, Shantell_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Shantell_Sans, Doto } from "next/font/google";
 import { Toast } from "@/components/ui";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
@@ -19,14 +18,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const dotMatrix = localFont({
-  src: "./fonts/dot_matrix.woff2",
-  variable: "--font-dotmatrix",
+const tempFont = Shantell_Sans({
   weight: "400",
+  subsets: ["latin"],
 });
 
-const altFont = Shantell_Sans({
-  weight: "400",
+const doto = Doto({
+  variable: "--font-doto",
   subsets: ["latin"],
 });
 
@@ -64,7 +62,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${altFont.className}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${doto.variable} ${tempFont.className}`}
     >
       <body
         className={cn(

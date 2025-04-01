@@ -8,7 +8,7 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: var(--font-geist-mono), "ui-monospace", "SFMono-Regular", "Menlo",
     "Monaco", "Consolas", '"Liberation Mono"', '"Courier New"', "monospace";
-  --font-dotmatrix: var(--font-dotmatrix);
+  --font-doto: var(--font-doto);
 
   --color-border: var(--border);
   --color-input: var(--input);
