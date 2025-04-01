@@ -74,6 +74,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       >
         <Toast />
         <ClientProviders>
+          <div className="texture"></div>
           <div className="relative flex flex-col">
             <Navbar />
             <main className="flex min-w-full flex-col items-center">
