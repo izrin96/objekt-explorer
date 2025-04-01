@@ -27,6 +27,7 @@ const dotMatrix = localFont({
 
 const altFont = Finger_Paint({
   weight: "400",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
