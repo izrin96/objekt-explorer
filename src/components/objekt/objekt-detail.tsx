@@ -16,6 +16,7 @@ import {
 import { ArchiveXIcon } from "lucide-react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { replaceUrlSize } from "@/lib/utils";
+import { useFilters } from "@/hooks/use-filters";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
@@ -26,6 +27,7 @@ export default function ObjektDetail({
   objekts,
   isProfile,
 }: ObjektDetailProps) {
+  const [filters] = useFilters();
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
   const [flipped, setFlipped] = useState(false);
@@ -66,7 +68,7 @@ export default function ObjektDetail({
             />
             <ObjektSidebar
               collection={objekt.collectionNo}
-              serial={isOwned ? objekt.serial : undefined}
+              serial={isOwned && !filters.grouped ? objekt.serial : undefined}
             />
           </div>
           <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">

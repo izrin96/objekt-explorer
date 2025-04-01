@@ -64,7 +64,7 @@ export default memo(function ObjektView({
 
         <ObjektSidebar
           collection={objekt.collectionNo}
-          serial={isOwned ? objekt.serial : undefined}
+          serial={isOwned && !filters.grouped ? objekt.serial : undefined}
         />
 
         {objekts.length > 1 && (
