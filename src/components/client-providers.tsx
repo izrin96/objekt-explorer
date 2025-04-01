@@ -23,7 +23,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
 
   return (
     <RouterProvider navigate={router.push}>
-      <ThemeProvider attribute="class">
+      <ThemeProvider attribute="class" forcedTheme="matsu">
         {/* <NextTopLoader color="var(--primary)" height={2} showSpinner={false} /> */}
         <NuqsAdapter>
           <QueryClientProvider client={queryClient}>

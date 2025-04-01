@@ -157,7 +157,7 @@
     --chart-5: oklch(0.882 0.059 254.128);
   }
 
-  .ghibli {
+  .matsu {
     --bg: oklch(0.91 0.048 83.6);
     --fg: oklch(0.41 0.077 78.9);
 
@@ -176,39 +176,9 @@
     --muted: oklch(0.86 0.064 83.7);
     --muted-fg: oklch(0.51 0.077 74.3);
 
-    --success: oklch(0.596 0.145 163.225);
-    --success-fg: oklch(1 0 0);
-
-    --warning: oklch(0.828 0.189 84.429);
-    --warning-fg: oklch(0.279 0.077 45.635);
-
-    --danger: oklch(0.577 0.245 27.325);
-    --danger-fg: oklch(0.971 0.013 17.38);
-
     --border: oklch(0.74 0.063 80.8);
     --input: oklch(0.74 0.063 80.8);
     --ring: oklch(0.51 0.077 74.3);
-
-    --navbar: oklch(0.985 0 0);
-    --navbar-fg: oklch(0.141 0.005 285.823);
-
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-fg: oklch(0.141 0.005 285.823);
-
-    --chart-1: oklch(0.546 0.245 262.881);
-    --chart-2: oklch(0.707 0.165 254.624);
-    --chart-3: oklch(0.809 0.105 251.813);
-    --chart-4: oklch(0.882 0.059 254.128);
-    --chart-5: oklch(0.932 0.032 255.585);
-
-    --radius-lg: 0.5rem;
-    --radius-xs: calc(var(--radius-lg) * 0.5);
-    --radius-sm: calc(var(--radius-lg) * 0.75);
-    --radius-md: calc(var(--radius-lg) * 0.9);
-    --radius-xl: calc(var(--radius-lg) * 1.25);
-    --radius-2xl: calc(var(--radius-lg) * 1.5);
-    --radius-3xl: calc(var(--radius-lg) * 2);
-    --radius-4xl: calc(var(--radius-lg) * 3);
   }
 }
 

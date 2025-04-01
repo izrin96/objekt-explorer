@@ -64,7 +64,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${altFont.className} ghibli`}
+      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${altFont.className}`}
     >
       <body
         className={cn(
