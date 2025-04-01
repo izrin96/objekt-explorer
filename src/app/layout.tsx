@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Finger_Paint } from "next/font/google";
 import { Toast } from "@/components/ui";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
@@ -22,6 +22,10 @@ const geistMono = Geist_Mono({
 const dotMatrix = localFont({
   src: "./fonts/dot_matrix.woff2",
   variable: "--font-dotmatrix",
+  weight: "400",
+});
+
+const altFont = Finger_Paint({
   weight: "400",
 });
 
@@ -59,7 +63,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${altFont.className}`}
     >
       <body
         className={cn(
