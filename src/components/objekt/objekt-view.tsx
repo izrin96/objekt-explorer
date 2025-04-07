@@ -48,7 +48,7 @@ export default memo(function ObjektView({
 
   return (
     <div
-      className={cn("flex flex-col gap-2", isFade && "opacity-50")}
+      className={cn("flex flex-col gap-2", isFade && "opacity-35")}
       style={css}
     >
       <div
