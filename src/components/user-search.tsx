@@ -33,7 +33,9 @@ export default function UserSearch() {
     (nickname: string) => {
       setIsOpen(false);
       setQuery("");
-      router.push(`/@${nickname}`);
+      setTimeout(() => {
+        router.push(`/@${nickname}`);
+      }, 500);
     },
     [router, setIsOpen]
   );
@@ -60,7 +62,7 @@ export default function UserSearch() {
         onInputChange={setQuery}
         inputValue={query}
         isOpen={isOpen}
-        onOpenChange={() => setIsOpen(false)}
+        onOpenChange={setIsOpen}
       >
         <CommandMenu.Search placeholder="Search user..." />
         <CommandMenu.List
