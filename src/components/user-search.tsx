@@ -60,7 +60,7 @@ export default function UserSearch() {
         onInputChange={setQuery}
         inputValue={query}
         isOpen={isOpen}
-        onOpenChange={setIsOpen}
+        onOpenChange={() => setIsOpen(false)}
       >
         <CommandMenu.Search placeholder="Search user..." />
         <CommandMenu.List
