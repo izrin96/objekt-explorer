@@ -137,7 +137,10 @@ const getSortDate = <T extends ValidObjekt>(obj: T) =>
     ? new Date(obj.receivedAt).getTime()
     : new Date(obj.createdAt).getTime();
 
-export function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]) {
+export function filterObjekts<T extends ValidObjekt>(
+  filters: Filters,
+  objekts: T[]
+) {
   if (filters.member) {
     objekts = objekts.filter((a) => filters.member?.includes(a.member));
   }
@@ -173,7 +176,8 @@ export function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: 
   }
 
   if (filters.search) {
-    // support multiple query split by commas
+    // support OR query operation by commas
+    // support AND query operation by space
     const queries = filters.search
       .toLowerCase()
       .split(",")
@@ -188,7 +192,14 @@ export function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: 
 
     if (queries.length > 0)
       objekts = objekts.filter((objekt) =>
-        queries.some((s) => s.every((a) => searchFilter(a, objekt)))
+        queries.some((s) =>
+          s.every((a) =>
+            // exclude by !
+            a.startsWith("!")
+              ? !searchFilter(a.slice(1), objekt)
+              : searchFilter(a, objekt)
+          )
+        )
       );
   }
 

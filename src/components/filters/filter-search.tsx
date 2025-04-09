@@ -40,11 +40,19 @@ export default function FilterSearch() {
                   <Popover.Description className="prose text-fg">
                     <p>This quick search supports:</p>
                     <ul>
-                      <li>Multiple queries separated by commas ( , )</li>
-                      <li>Member names in short form (e.g. naky, yy)</li>
-                      <li>Collection No. ranges (e.g. 301z-302z)</li>
-                      <li>Serial No. ranges (e.g. #1-20)</li>
-                      <li>Artist name (e.g. triples)</li>
+                      <li>OR query operation by comma</li>
+                      <li>AND query operation by space</li>
+                      <li>
+                        NOT query operation by starting with an exclamation mark
+                        (example: !seoyeon, !d201-202)
+                      </li>
+                      <li>Artist names (example: triples)</li>
+                      <li>Member short names (example: naky, yy)</li>
+                      <li>Collection numbers (example: d207)</li>
+                      <li>Collection number ranges (example: 301z-302z)</li>
+                      <li>Serial numbers (example: #1)</li>
+                      <li>Serial number ranges (example: #1-20)</li>
+                      <li>Grouping query using brackets is not supported</li>
                     </ul>
                     <p>Example: yy c301-302 #10-100, jw 201z</p>
                   </Popover.Description>

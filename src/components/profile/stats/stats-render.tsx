@@ -84,7 +84,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <Card.Header className="items-center pb-0">
-        <Card.Title>Objekt Breakdown (by Member)</Card.Title>
+        <Card.Title>Objekt Breakdown By Member</Card.Title>
         <Card.Description>Total objekt by member</Card.Description>
       </Card.Header>
       <Card.Content className="flex-1 pb-0">
@@ -125,7 +125,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <Card.Header className="items-center pb-0">
-        <Card.Title>Objekt Breakdown (by Season)</Card.Title>
+        <Card.Title>Objekt Breakdown By Season</Card.Title>
         <Card.Description>Total objekt by season</Card.Description>
       </Card.Header>
       <Card.Content className="flex-1 pb-0">
