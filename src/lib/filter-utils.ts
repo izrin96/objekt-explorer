@@ -76,6 +76,14 @@ function parseSerial(value: string) {
   return parseInt(match[0]);
 }
 
+function getObjektBreakdown(objekt: ValidObjekt) {
+  return {
+    collectionNo: objekt.collectionNo.substring(0, 3).toLowerCase(),
+    seasonCode: objekt.season.charAt(0).toLowerCase(),
+    type: objekt.collectionNo.charAt(3).toLowerCase(),
+  };
+}
+
 const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && "serial" in objekt) {
@@ -89,11 +97,7 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     const [start, end] = keyword.split("-").map(parseCollectionNo);
     if (!start || !end) return false;
 
-    const objektBreakdown = {
-      collectionNo: objekt.collectionNo.substring(0, 3).toLowerCase(),
-      seasonCode: objekt.season.charAt(0).toLowerCase(),
-      type: objekt.collectionNo.charAt(3).toLowerCase(),
-    };
+    const objektBreakdown = getObjektBreakdown(objekt);
 
     const startBreakdown = {
       collectionNo: start.collectionNo,
@@ -117,19 +121,27 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     );
   }
 
+  // Handle collection number search
+  const keywordNoBreakdown = parseCollectionNo(keyword);
+  if (keywordNoBreakdown) {
+    const objektBreakdown = getObjektBreakdown(objekt);
+    return (
+      (!keywordNoBreakdown.collectionNo ||
+        objektBreakdown.collectionNo === keywordNoBreakdown.collectionNo) &&
+      (!keywordNoBreakdown.seasonCode ||
+        objektBreakdown.seasonCode === keywordNoBreakdown.seasonCode) &&
+      (!keywordNoBreakdown.type ||
+        objektBreakdown.type == keywordNoBreakdown.type)
+    );
+  }
+
   // Handle member search (e.g. naky, yy)
   const memberKeys = [
     ...getMemberShortKeys(objekt.member),
     objekt.member,
     objekt.artist,
   ];
-  if (memberKeys.some((value) => value.toLowerCase() === keyword)) {
-    return true;
-  }
-
-  // Handle collection number search
-  const collectionNos = [objekt.collectionNo, getSeasonCollectionNo(objekt)];
-  return collectionNos.some((value) => value.toLowerCase().startsWith(keyword));
+  return memberKeys.some((value) => value.toLowerCase() === keyword);
 };
 
 const getSortDate = <T extends ValidObjekt>(obj: T) =>
