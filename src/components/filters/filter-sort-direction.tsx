@@ -1,6 +1,6 @@
 "use client";
 
-import { IconSortDesc, IconSortAsc } from "justd-icons";
+import { IconSortDesc, IconSortAsc } from "@intentui/icons";
 import { Toggle } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
-import { IconChevronLgDown } from "justd-icons"
+import { IconChevronLgDown } from "@intentui/icons"
 import { useFilter } from "react-aria"
 import type {
   ComboBoxProps as ComboBoxPrimitiveProps,
@@ -261,12 +261,13 @@ const MultipleSelect = <T extends SelectedKey>({
             <PopoverContent
               respectScreen={false}
               isNonModal
-              className="max-w-none"
+              className="max-w-none overflow-hidden"
               style={{ width: `${width}px` }}
               triggerRef={triggerRef}
               trigger="ComboBox"
             >
               <ListBox
+                className="border-0 shadow-0"
                 renderEmptyState={() =>
                   renderEmptyState ? (
                     renderEmptyState(fieldState.inputValue)

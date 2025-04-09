@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { IconChevronLgDown, IconHamburger } from "justd-icons"
+import { IconChevronLgDown, IconHamburger } from "@intentui/icons"
 import type {
   CellProps,
   ColumnProps,

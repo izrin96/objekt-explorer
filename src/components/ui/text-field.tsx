@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { IconEye, IconEyeClosed } from "justd-icons"
+import { IconEye, IconEyeClosed } from "@intentui/icons"
 import { Button as ButtonPrimitive, TextField as TextFieldPrimitive } from "react-aria-components"
 import type { InputProps, TextFieldProps as TextFieldPrimitiveProps } from "react-aria-components"
 import type { FieldProps } from "./field"

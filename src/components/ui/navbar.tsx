@@ -3,7 +3,7 @@
 import { createContext, use, useCallback, useId, useMemo, useState } from "react"
 
 import { useMediaQuery } from "@/utils/use-media-query"
-import { IconHamburger } from "justd-icons"
+import { IconHamburger } from "@intentui/icons"
 import { LayoutGroup, motion } from "motion/react"
 import type { LinkProps } from "react-aria-components"
 import { Link } from "react-aria-components"

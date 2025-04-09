@@ -6,7 +6,7 @@ import UserLink from "../user-link";
 import { format } from "date-fns";
 import { getCollectionShortId } from "@/lib/universal/objekts";
 import { memo, useCallback } from "react";
-import { IconOpenLink } from "justd-icons";
+import { IconOpenLink } from "@intentui/icons";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 

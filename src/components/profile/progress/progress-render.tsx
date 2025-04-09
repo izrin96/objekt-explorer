@@ -12,7 +12,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-fallback";
 import { Loader, ProgressBar } from "@/components/ui";
 import { IndexedObjekt, unobtainables } from "@/lib/universal/objekts";
-import { IconExpand45, IconMinimize45 } from "justd-icons";
+import { IconExpand45, IconMinimize45 } from "@intentui/icons";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
 

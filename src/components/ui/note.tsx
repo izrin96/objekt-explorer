@@ -1,4 +1,4 @@
-import { IconCircleCheckFill, IconCircleExclamationFill, IconCircleInfoFill } from "justd-icons"
+import { IconCircleCheckFill, IconCircleExclamationFill, IconCircleInfoFill } from "@intentui/icons"
 import { type VariantProps, tv } from "tailwind-variants"
 
 const noteStyles = tv({

@@ -6,7 +6,7 @@ import {
   IconChevronWallLeft,
   IconChevronWallRight,
   IconDotsHorizontal,
-} from "justd-icons"
+} from "@intentui/icons"
 import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components"
 import { ListBox, ListBoxItem, ListBoxSection, Separator } from "react-aria-components"
 

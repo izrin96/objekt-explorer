@@ -1,5 +1,5 @@
 import { QueryStatus } from "@tanstack/react-query";
-import { IconChevronDown, IconShieldCheck } from "justd-icons";
+import { IconChevronDown, IconShieldCheck } from "@intentui/icons";
 import { InView } from "react-intersection-observer";
 import { Loader } from "./ui";
 

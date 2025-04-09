@@ -1,4 +1,4 @@
-import { IconMoonFill } from "justd-icons";
+import { IconMoonFill } from "@intentui/icons";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Container } from "./ui";
 import UserSearch from "./user-search";

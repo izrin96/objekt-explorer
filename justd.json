@@ -1,10 +1,9 @@
 {
-  "$schema": "https://getjustd.com/schema.json",
+  "$schema": "https://intentui.com/schema.json",
   "language": "typescript",
   "ui": "src/components/ui",
   "utils": "src/utils",
   "gray": "neutral",
   "css": "src/app/globals.css",
-  "alias": "@",
-  "classes": "src/utils"
+  "alias": "@"
 }

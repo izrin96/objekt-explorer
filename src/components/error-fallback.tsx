@@ -1,4 +1,4 @@
-import { IconBrokenChainLink } from "justd-icons";
+import { IconBrokenChainLink } from "@intentui/icons";
 import { Button } from "./ui";
 
 export default function ErrorFallbackRender({

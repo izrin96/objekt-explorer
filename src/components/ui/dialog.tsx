@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 
-import { IconX } from "justd-icons"
+import { IconX } from "@intentui/icons"
 import type { HeadingProps } from "react-aria-components"
 import {
   Button as ButtonPrimitive,

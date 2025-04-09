@@ -9,7 +9,7 @@ This project required [teamreflex/cosmo-db](https://github.com/teamreflex/cosmo-
 - [Next 15](https://nextjs.org/)
 - [Tailwind 4](https://tailwindcss.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
-- [Justd](https://getjustd.com/)
+- [IntentUI](https://intentui.com/)
 
 ## Credit/Acknowledgment
 

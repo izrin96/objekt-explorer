@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 import { ofetch } from "ofetch";
 import { useRouter } from "nextjs-toploader/app";
-import { IconSearch } from "justd-icons";
+import { IconSearch } from "@intentui/icons";
 import { usePathname } from "next/navigation";
 
 export default function UserSearch() {

@@ -3,7 +3,7 @@
 import { useFilters } from "@/hooks/use-filters";
 import { Button, Popover, TextField } from "../ui";
 import { useDebounceValue } from "usehooks-ts";
-import { IconCircleQuestionmark, IconX } from "justd-icons";
+import { IconCircleQuestionmark, IconX } from "@intentui/icons";
 import { useEffect, useState } from "react";
 
 export default function FilterSearch() {

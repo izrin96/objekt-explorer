@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "../ui";
-import { IconX } from "justd-icons";
+import { IconX } from "@intentui/icons";
 import { useFilters } from "@/hooks/use-filters";
 
 export default function ResetFilter() {

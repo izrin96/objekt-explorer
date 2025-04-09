@@ -1,6 +1,6 @@
 "use client"
 
-import { IconCheck, IconHamburger } from "justd-icons"
+import { IconCheck, IconHamburger } from "@intentui/icons"
 import type {
   ListBoxItemProps as ListBoxItemPrimitiveProps,
   ListBoxProps,
@@ -51,17 +51,17 @@ const ListBoxItem = <T extends object>({ children, className, ...props }: ListBo
             {allowsDragging && (
               <IconHamburger
                 className={twMerge(
-                  'text-muted-fg size-4 shrink-0 transition',
-                  isFocused && 'text-fg',
-                  isDragging && 'text-fg',
-                  isSelected && 'text-accent-fg/70',
+                  "size-4 shrink-0 text-muted-fg transition",
+                  isFocused && "text-fg",
+                  isDragging && "text-fg",
+                  isSelected && "text-accent-fg/70",
                 )}
               />
             )}
             {isSelected && <IconCheck className="-mx-0.5 mr-2" data-slot="checked-icon" />}
-            {typeof children === 'function' ? (
+            {typeof children === "function" ? (
               children(renderProps)
-            ) : typeof children === 'string' ? (
+            ) : typeof children === "string" ? (
               <DropdownLabel>{children}</DropdownLabel>
             ) : (
               children

@@ -13,7 +13,7 @@ import {
   IconArrowRight,
   IconCircleQuestionmark,
   IconOpenLink,
-} from "justd-icons";
+} from "@intentui/icons";
 import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";

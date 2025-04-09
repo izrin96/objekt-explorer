@@ -1,6 +1,6 @@
 "use client"
 
-import { IconDeviceDesktop2, IconMoon, IconSun, IconColorPalette } from "justd-icons"
+import { IconDeviceDesktop2, IconMoon, IconSun, IconColorPalette } from "@intentui/icons"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 import { Button } from "./ui"

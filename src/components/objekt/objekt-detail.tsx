@@ -12,7 +12,7 @@ import {
   IconChevronLgLeft,
   IconChevronLgRight,
   IconOpenLink,
-} from "justd-icons";
+} from "@intentui/icons";
 import { ArchiveXIcon } from "lucide-react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { replaceUrlSize } from "@/lib/utils";
