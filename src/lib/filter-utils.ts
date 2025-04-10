@@ -6,11 +6,7 @@ import {
   validGroupBy,
   ValidSeason,
 } from "@/lib/universal/cosmo/common";
-import {
-  getSeasonCollectionNo,
-  OwnedObjekt,
-  ValidObjekt,
-} from "./universal/objekts";
+import { OwnedObjekt, ValidObjekt } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { getEdition } from "./utils";
