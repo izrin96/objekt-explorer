@@ -48,13 +48,15 @@ export default function FilterSearch() {
                       </li>
                       <li>Artist names (example: triples)</li>
                       <li>Member short names (example: naky, yy)</li>
+                      <li>Class (example: special)</li>
+                      <li>Season (example: atom)</li>
                       <li>Collection numbers (example: d207)</li>
                       <li>Collection number ranges (example: 301z-302z)</li>
                       <li>Serial numbers (example: #1)</li>
                       <li>Serial number ranges (example: #1-20)</li>
-                      <li>Grouping query using brackets is not supported</li>
                     </ul>
-                    <p>Example: yy c301-302 #10-100, jw 201z</p>
+                    <p>Grouping query using brackets is not supported</p>
+                    <p>Example: yy c201-204 !c202 #1-200, jw 201z, yb special divine</p>
                   </Popover.Description>
                 </Popover.Header>
               </Popover.Content>
