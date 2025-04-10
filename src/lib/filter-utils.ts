@@ -140,6 +140,8 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     ...getMemberShortKeys(objekt.member),
     objekt.member,
     objekt.artist,
+    objekt.class,
+    objekt.season.replace(/\d+/, ""),
   ];
   return memberKeys.some((value) => value.toLowerCase() === keyword);
 };
