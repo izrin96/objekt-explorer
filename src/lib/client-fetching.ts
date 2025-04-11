@@ -11,8 +11,11 @@ import { cache } from "react";
 export const getArtistsWithMembers = cache(async () => {
   const cached = await redis.get<CosmoArtistWithMembersBFF[]>("artists");
   if (cached) return cached;
+  const accessToken = await getAccessToken();
   const result = await Promise.all(
-    validArtists.map((artist) => fetchArtistBff(artist))
+    validArtists.map((artist) =>
+      fetchArtistBff(artist, accessToken.accessToken)
+    )
   );
   after(async () => {
     await redis.set("artists", result, {
