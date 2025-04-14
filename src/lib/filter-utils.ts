@@ -139,6 +139,7 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     objekt.member,
     objekt.artist,
     objekt.class,
+    objekt.class.substring(0, 1) + "co",
     objekt.season.replace(/\d+/, ""),
   ];
   return memberKeys.some((value) => value.toLowerCase() === keyword);
