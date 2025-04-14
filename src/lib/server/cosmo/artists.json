@@ -14,6 +14,9 @@
     },
     "fandomName": "OURII",
     "primaryImageUrl": "https://s3.ap-northeast-2.amazonaws.com/resources.cosmo.fans/artist/ARTMS.jpg",
+    "comoTokenId": 2,
+    "category": "A",
+    "wasReleased": true,
     "artistMembers": [
       {
         "id": 15,
@@ -119,6 +122,9 @@
     },
     "fandomName": "WAV",
     "primaryImageUrl": "https://s3.ap-northeast-2.amazonaws.com/resources.cosmo.fans/artist/tripleS.jpg",
+    "comoTokenId": 1,
+    "category": "A",
+    "wasReleased": true,
     "artistMembers": [
       {
         "id": 1,
@@ -128,7 +134,7 @@
         "profileImageUrl": "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S1-E9B675B4-D7DD-466A-B04F-E612D77422C5.jpg",
         "order": 1,
         "createdAt": "2022-11-17T14:26:05.102Z",
-        "updatedAt": "2024-05-24T06:59:16.535Z",
+        "updatedAt": "2025-04-09T08:12:51.368Z",
         "mainObjektImageUrl": "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/1c14ab05-5adc-4eba-d553-795f75ce3300/2x",
         "artistId": "tripleS",
         "primaryColorHex": "#22AEFF"
