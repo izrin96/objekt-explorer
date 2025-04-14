@@ -12,7 +12,6 @@ export const getArtistsWithMembers = cache(async () => {
 
 export const getUserByIdentifier = cache(async (identifier: string) => {
   const accessToken = await getAccessToken();
-  console.log(accessToken.accessToken)
   return await fetchUserByIdentifier(identifier, accessToken.accessToken);
 });
 
