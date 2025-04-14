@@ -73,9 +73,11 @@ const DropdownSection = <T extends object>({ className, ...props }: DropdownSect
 type DropdownItemProps = ListBoxItemProps
 
 const DropdownItem = ({ className, ...props }: DropdownItemProps) => {
+  const textValue =
+    props.textValue || (typeof props.children === "string" ? props.children : undefined)
   return (
     <ListBoxItemPrimitive
-      textValue={typeof props.children === "string" ? props.children : props.textValue}
+      textValue={textValue}
       className={composeRenderProps(className, (className, renderProps) =>
         dropdownItemStyles({ ...renderProps, className }),
       )}

@@ -30,7 +30,7 @@ interface ListBoxItemProps<T extends object> extends ListBoxItemPrimitiveProps<T
 }
 
 const ListBoxItem = <T extends object>({ children, className, ...props }: ListBoxItemProps<T>) => {
-  const textValue = typeof children === "string" ? children : undefined
+  const textValue = props.textValue || (typeof children === "string" ? children : undefined)
 
   return (
     <ListBoxItemPrimitive
@@ -90,4 +90,4 @@ ListBox.ItemDetails = ListBoxItemDetails
 ListBox.Item = ListBoxItem
 
 export type { ListBoxItemProps, ListBoxSectionProps }
-export { ListBox }
+export { ListBox, ListBoxSection, ListBoxItem }

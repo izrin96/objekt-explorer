@@ -47,8 +47,8 @@ const itemStyles = tv({
   },
 })
 
-const GridListItem = ({ className, ...props }: GridListItemProps) => {
-  const textValue = typeof props.children === "string" ? props.children : undefined
+const GridListItem = ({ className, children, ...props }: GridListItemProps) => {
+  const textValue = props.textValue || (typeof children === "string" ? children : undefined)
   return (
     <GridListItemPrimitive
       textValue={textValue}
@@ -75,7 +75,7 @@ const GridListItem = ({ className, ...props }: GridListItemProps) => {
           {values.selectionMode === "multiple" && values.selectionBehavior === "toggle" && (
             <Checkbox className="-mr-2" slot="selection" />
           )}
-          {typeof props.children === "function" ? props.children(values) : props.children}
+          {typeof children === "function" ? children(values) : children}
         </>
       )}
     </GridListItemPrimitive>
