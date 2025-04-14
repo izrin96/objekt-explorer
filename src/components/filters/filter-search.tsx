@@ -48,7 +48,7 @@ export default function FilterSearch() {
                       </li>
                       <li>Artist names (example: triples)</li>
                       <li>Member short names (example: naky, yy)</li>
-                      <li>Class (example: special)</li>
+                      <li>Class (example: special, sco)</li>
                       <li>Season (example: atom)</li>
                       <li>Collection numbers (example: d207)</li>
                       <li>Collection number ranges (example: 301z-302z)</li>
