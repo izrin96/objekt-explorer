@@ -16,6 +16,7 @@ import { IconExpand45, IconMinimize45 } from "@intentui/icons";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
 import { groupBy } from "es-toolkit";
+import { cn } from "@/utils/classes";
 
 export default function ProgressRender() {
   return (
@@ -136,7 +137,10 @@ const ProgressCollapse = memo(function ProgressCollapse({
   return (
     <div className="flex flex-col gap-4">
       <div
-        className="flex gap-4 py-4 flex-wrap cursor-pointer select-none items-center transition rounded-lg p-4 border border-border bg-secondary/30 hover:bg-secondary/60"
+        className={cn(
+          "flex gap-4 py-4 flex-wrap cursor-pointer select-none items-center transition rounded-lg p-4 inset-ring inset-ring-fg/10 bg-secondary/30 hover:bg-secondary/60",
+          percentage >= 100 && "inset-ring-primary"
+        )}
         onClick={() => setShow(!show)}
       >
         <div className="font-semibold text-base inline-flex gap-2 items-center min-w-72">
