@@ -15,6 +15,7 @@ import { IndexedObjekt, unobtainables } from "@/lib/universal/objekts";
 import { IconExpand45, IconMinimize45 } from "@intentui/icons";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
+import { groupBy } from "es-toolkit";
 
 export default function ProgressRender() {
   return (
@@ -54,11 +55,12 @@ function Progress() {
     if (!ownedObjekts.length) return;
 
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
+    const grouped = Object.values(groupBy(ownedObjekts, (a) => a.collectionId));
 
     const ranks = members
       .map((member) => ({
         name: member,
-        count: ownedObjekts.filter((obj) => obj.member === member).length,
+        count: grouped.filter(([objekt]) => objekt.member === member).length,
       }))
       .toSorted((a, b) => b.count - a.count);
 
