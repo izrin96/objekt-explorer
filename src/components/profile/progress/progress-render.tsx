@@ -6,7 +6,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-fallback";
@@ -31,7 +31,7 @@ export default function ProgressRender() {
 function Progress() {
   const { artists } = useCosmoArtist();
   const { profile } = useProfile();
-  const [filters] = useFilters();
+  const [filters, setFilters] = useFilters();
 
   const objektsQuery = useQuery(collectionOptions);
   const ownedQuery = useQuery(ownedCollectionOptions(profile.address));
@@ -48,6 +48,27 @@ function Progress() {
     () => new Set(ownedObjekts.map((obj) => obj.slug)),
     [ownedObjekts]
   );
+
+  useEffect(() => {
+    // find member with highest objekt count and auto set filter
+    if (!ownedObjekts.length) return;
+
+    const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
+
+    const ranks = members
+      .map((member) => ({
+        name: member,
+        count: ownedObjekts.filter((obj) => obj.member === member).length,
+      }))
+      .toSorted((a, b) => b.count - a.count);
+
+    if (ranks.length) {
+      const { name } = ranks[0];
+      setFilters({
+        member: [name],
+      });
+    }
+  }, [ownedObjekts, setFilters, artists]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (

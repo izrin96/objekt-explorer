@@ -76,7 +76,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
       .map((a) => ({
         name: a.name,
         fill: a.color,
-        count: objekts.filter((obj) => obj.member === a.name).length ?? 0,
+        count: objekts.filter((obj) => obj.member === a.name).length,
       }))
       .toSorted((a, b) => b.count - a.count);
   }, [artists, objekts]);
@@ -117,7 +117,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
       .map((season, i) => ({
         name: season,
         fill: seasonColors[i],
-        count: objekts.filter((obj) => obj.season === season).length ?? 0,
+        count: objekts.filter((obj) => obj.season === season).length,
       }))
       .toSorted((a, b) => b.count - a.count);
   }, [objekts]);
