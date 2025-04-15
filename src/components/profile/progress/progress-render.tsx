@@ -61,9 +61,14 @@ function Progress() {
     const ranks = members
       .map((member) => ({
         name: member,
-        count: grouped.filter(([objekt]) => objekt.member === member).length,
+        owned: grouped.filter(([objekt]) => objekt.member === member).length,
+        total: objekts.filter((a) => a.member === member).length,
       }))
-      .toSorted((a, b) => b.count - a.count);
+      .map((a) => ({
+        name: a.name,
+        progress: (a.owned / a.total) * 100,
+      }))
+      .toSorted((a, b) => b.progress - a.progress);
 
     if (ranks.length) {
       const { name } = ranks[0];
@@ -71,7 +76,7 @@ function Progress() {
         member: [name],
       });
     }
-  }, [ownedObjekts, setFilters, artists]);
+  }, [ownedObjekts, objekts, setFilters, artists]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (
