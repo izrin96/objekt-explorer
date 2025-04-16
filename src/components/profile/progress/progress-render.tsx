@@ -127,8 +127,8 @@ const ProgressCollapse = memo(function ProgressCollapse({
   );
 
   const owned = useMemo(
-    () => objekts.filter((a) => ownedSlugs.has(a.slug)),
-    [objekts, ownedSlugs]
+    () => filteredObjekts.filter((a) => ownedSlugs.has(a.slug)),
+    [filteredObjekts, ownedSlugs]
   );
 
   const percentage = useMemo(() => {
