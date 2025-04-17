@@ -24,6 +24,10 @@ export const overrideFonts: Record<string, string> = {
   "Atom01 HeeJin 324Z": "#FFFFFF",
   "Atom01 HeeJin 325Z": "#FFFFFF",
   "Ever01 SeoYeon 338Z": "#07328D",
+  "Atom01 YuBin 302Z": "#000000",
+  "Atom01 NaKyoung 302Z": "#000000",
+  "Atom01 YooYeon 302Z": "#000000",
+  "Atom01 HyeRin 302Z": "#000000",
 };
 
 export function getEdition(collectionNo: string) {
