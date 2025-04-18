@@ -88,6 +88,14 @@ export default function RootLayout({ children }: PropsWithChildren) {
         <ClientProviders>
           <ThemeTexture />
           <div className="relative flex flex-col">
+            <div className="flex items-center justify-center bg-primary px-4 py-2.5 text-primary-fg">
+              <p className="text-sm/6">
+                Cosmo has changed its blockchain network from Polygon to
+                Abstract. This requires some work on the indexer side. You won&apos;t
+                be able to see any updates on Objekt transfers until it&apos;s
+                completed.
+              </p>
+            </div>
             <Navbar />
             <main className="flex min-w-full flex-col items-center">
               {children}
