@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Shantell_Sans, Doto, Nunito_Sans } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Shantell_Sans,
+  Doto,
+  Nunito_Sans,
+} from "next/font/google";
 import { Toast } from "@/components/ui";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
@@ -74,7 +80,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     >
       <body
         className={cn(
-          "min-h-[101svh] antialiased touch-manipulation",
+          "min-h-svh antialiased touch-manipulation",
           process.env.NODE_ENV === "development" ? "debug-screens" : ""
         )}
       >
