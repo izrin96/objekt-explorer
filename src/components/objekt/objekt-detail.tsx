@@ -15,7 +15,7 @@ import {
 } from "@intentui/icons";
 import { ArchiveXIcon } from "lucide-react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { replaceUrlSize } from "@/lib/utils";
+import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
 import { useFilters } from "@/hooks/use-filters";
 
 type ObjektDetailProps = {
@@ -173,9 +173,7 @@ const OwnedListPanel = memo(function OwnedListPanel({
                 </Table.Cell>
                 <Table.Cell>
                   <Link
-                    href={`https://opensea.io/assets/matic/${
-                      getArtist(item.artist)?.contracts.Objekt
-                    }/${item.id}`}
+                    href={`https://abscan.org/nft/${OBJEKT_CONTRACT}/${item.id}`}
                     className="cursor-pointer inline-flex gap-2 items-center"
                     target="_blank"
                   >

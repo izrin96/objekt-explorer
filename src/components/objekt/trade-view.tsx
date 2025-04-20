@@ -21,8 +21,8 @@ import UserLink from "../user-link";
 import { ObjektSerial, ObjektTransferResponse } from "./common";
 import { cn } from "@/utils/classes";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { ValidObjekt } from "@/lib/universal/objekts";
+import { OBJEKT_CONTRACT } from "@/lib/utils";
 
 type TradeViewProps = {
   objekt: ValidObjekt;
@@ -142,8 +142,6 @@ function TradeTable({
   objekt: ValidObjekt;
   serial: number;
 }) {
-  const { getArtist } = useCosmoArtist();
-  const contract = getArtist(objekt.artist)?.contracts.Objekt;
   const { data, status, refetch } = useQuery({
     queryFn: async () =>
       await ofetch<ObjektTransferResponse>(
@@ -192,7 +190,7 @@ function TradeTable({
           <span className="font-semibold text-sm">Token ID</span>
           <span>
             <Link
-              href={`https://opensea.io/assets/matic/${contract}/${data.tokenId}`}
+              href={`https://abscan.org/nft/${OBJEKT_CONTRACT}/${data.tokenId}`}
               className="cursor-pointer inline-flex gap-2 items-center"
               target="_blank"
             >

@@ -8,6 +8,8 @@ export const GRID_COLUMNS_MOBILE = 3;
 export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
 export const SPIN_ADDRESS = "0xd3d5f29881ad87bb10c1100e2c709c9596de345f";
 
+export const OBJEKT_CONTRACT = "0x99bb83ae9bb0c0a6be865cacf67760947f91cb70";
+
 export const overrideAccents: Record<string, string> = {
   "Divine01 SeoYeon 117Z": "#B400FF",
   "Divine01 SeoYeon 118Z": "#B400FF",
