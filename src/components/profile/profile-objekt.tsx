@@ -101,7 +101,7 @@ function ProfileObjekt() {
       <div className="flex items-center gap-2">
         <span className="font-semibold">
           {count} total
-          {filters.grouped ? ` (${groupedCount} combined)` : undefined}
+          {filters.grouped ? ` (${groupedCount} types)` : undefined}
         </span>
       </div>
 
