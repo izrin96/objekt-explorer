@@ -90,7 +90,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
           <div className="relative flex flex-col">
             <div className="flex items-center justify-center bg-primary px-4 py-2.5 text-primary-fg">
               <p className="text-sm/6">
-                Cosmo&apos;s ID is currently being indexed.
+                Cosmo&apos;s ID is currently being indexed. Older objekt date received will be corrected later.
               </p>
             </div>
             <Navbar />
