@@ -10,7 +10,6 @@ import { getEdition } from "@/lib/utils";
 type PillProps = {
   label: string;
   value: string;
-  objekt?: ValidObjekt;
 };
 
 function Pill({ label, value }: PillProps) {
@@ -22,17 +21,21 @@ function Pill({ label, value }: PillProps) {
   );
 }
 
-function PillColor({ label, value, objekt }: PillProps) {
+function PillColor({
+  label,
+  value,
+  objekt,
+}: PillProps & { objekt: ValidObjekt }) {
   return (
     <Badge
       shape="square"
       style={
         {
-          "--objekt-accent-color": objekt?.accentColor,
-          "--objekt-text-color": objekt?.textColor,
+          "--objekt-bg-color": objekt.backgroundColor,
+          "--objekt-text-color": objekt.textColor,
         } as CSSProperties
       }
-      className="!bg-(--objekt-accent-color) !text-(--objekt-text-color)"
+      className="!bg-(--objekt-bg-color) !text-(--objekt-text-color)"
     >
       <span className="font-semibold">{label}</span>
       <span>{value}</span>
@@ -107,7 +110,7 @@ export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
       <Pill label="Collection No." value={objekt.collectionNo} />
       <PillColor
         label="Accent Color"
-        value={objekt.accentColor.toUpperCase()}
+        value={objekt.backgroundColor.toUpperCase()}
         objekt={objekt}
       />
       <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />

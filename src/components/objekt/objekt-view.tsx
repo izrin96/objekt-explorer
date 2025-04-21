@@ -34,7 +34,7 @@ export default memo(function ObjektView({
   const isOwned = "serial" in objekt;
 
   const css = {
-    "--objekt-accent-color": objekt.accentColor,
+    "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
   } as CSSProperties;
 

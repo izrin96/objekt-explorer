@@ -36,7 +36,7 @@ export default function ObjektDetail({
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
   const css = {
-    "--objekt-accent-color": objekt.accentColor,
+    "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
   } as CSSProperties;
 

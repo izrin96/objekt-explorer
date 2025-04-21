@@ -1,6 +1,6 @@
 import { ofetch } from "ofetch";
 import { OwnedObjekt } from "@/lib/universal/objekts";
-import { getBaseURL, overrideColor } from "@/lib/utils";
+import { getBaseURL } from "@/lib/utils";
 
 type OwnedObjektRequest = {
   address: string;
@@ -27,12 +27,7 @@ export async function fetchOwnedObjekts({ address }: OwnedObjektRequest) {
       },
     });
 
-    const processedObjekts = result.objekts.map((objekt) => ({
-      ...objekt,
-      ...overrideColor(objekt),
-    }));
-
-    allObjekts = [...allObjekts, ...processedObjekts];
+    allObjekts = [...allObjekts, ...result.objekts];
 
     hasNext = result.hasNext;
 

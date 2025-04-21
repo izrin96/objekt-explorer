@@ -1,6 +1,7 @@
 import { indexer } from "@/lib/server/db/indexer";
 import { objekts, collections } from "@/lib/server/db/indexer/schema";
 import { OwnedObjekt } from "@/lib/universal/objekts";
+import { overrideColor } from "@/lib/utils";
 import { eq, desc, asc } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest, props: Params) {
       (a) =>
         ({
           ...a.collections,
+          ...overrideColor(a.collections),
           id: a.objekts.id,
           serial: a.objekts.serial,
           receivedAt: a.objekts.receivedAt,
