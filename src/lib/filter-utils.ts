@@ -86,7 +86,7 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && "serial" in objekt) {
     const [start, end] = keyword.split("-").map(parseSerial);
-    if (!start) return false;
+    if (start === null) return false;
     return objekt.serial >= start && objekt.serial <= (end ?? start);
   }
 
