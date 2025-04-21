@@ -173,7 +173,7 @@ const OwnedListPanel = memo(function OwnedListPanel({
                 </Table.Cell>
                 <Table.Cell>
                   <Link
-                    href={`https://abscan.org/nft/${OBJEKT_CONTRACT}/${item.id}`}
+                    href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${item.id}`}
                     className="cursor-pointer inline-flex gap-2 items-center"
                     target="_blank"
                   >

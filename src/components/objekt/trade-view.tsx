@@ -190,7 +190,7 @@ function TradeTable({
           <span className="font-semibold text-sm">Token ID</span>
           <span>
             <Link
-              href={`https://abscan.org/nft/${OBJEKT_CONTRACT}/${data.tokenId}`}
+              href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
               className="cursor-pointer inline-flex gap-2 items-center"
               target="_blank"
             >
