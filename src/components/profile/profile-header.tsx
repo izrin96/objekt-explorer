@@ -20,7 +20,7 @@ export default function ProfileHeader({ user }: { user: CosmoPublicUser }) {
             intent: "secondary",
           })
         }
-        href={`https://apollo.cafe/@${user.nickname}`}
+        href={`https://apollo.cafe/@${user.address}`}
         target="_blank"
       >
         View in Apollo
