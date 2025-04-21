@@ -16,6 +16,13 @@ export type OwnedObjekt = Omit<IndexedObjekt, "id"> &
 
 // list taken from teamreflex/cosmo-web
 export const unobtainables = [
+  // artms burn release celebration
+  "cream01-heejin-333z",
+  "cream01-haseul-333z",
+  "cream01-choerry-333z",
+  "cream01-jinsoul-333z",
+  "cream01-kimlip-333z",
+  // savior
   "binary01-savior-322z",
   // test
   "atom01-artmstest-100u",
