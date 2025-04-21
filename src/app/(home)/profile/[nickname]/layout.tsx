@@ -1,3 +1,4 @@
+import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/hooks/use-profile";
 import { getUserByIdentifier } from "@/lib/client-fetching";
@@ -18,15 +19,13 @@ export default async function UserCollectionPage(props: Props) {
 
   return (
     <ProfileProvider profile={targetUser}>
-      <div className="text-xl font-semibold">{targetUser.nickname}</div>
-      <div className="overflow-auto text-xs text-muted-fg">
-        {targetUser.address}
-      </div>
-      <div className="py-2"></div>
+      <div className="flex flex-col gap-4 pb-8">
+        <ProfileHeader user={targetUser} />
 
-      <div className="flex flex-col gap-4">
-        <ProfileTabs nickname={params.nickname} />
-        {props.children}
+        <div className="flex flex-col gap-4">
+          <ProfileTabs nickname={params.nickname} />
+          {props.children}
+        </div>
       </div>
     </ProfileProvider>
   );

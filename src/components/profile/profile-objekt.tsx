@@ -96,7 +96,7 @@ function ProfileObjekt() {
     );
 
   return (
-    <div className="flex flex-col gap-2 mb-8">
+    <div className="flex flex-col gap-2">
       <FilterView isProfile artists={artists} />
       <div className="flex items-center gap-2">
         <span className="font-semibold">

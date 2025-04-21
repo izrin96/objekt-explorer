@@ -65,7 +65,7 @@ function IndexView() {
   }, [filters, objekts, artists]);
 
   return (
-    <div className="flex flex-col gap-2 mb-8">
+    <div className="flex flex-col gap-2">
       <FilterView artists={artists} />
       <span className="font-semibold">{count} total</span>
 

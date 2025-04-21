@@ -11,11 +11,10 @@ export default async function Home() {
   await queryClient.prefetchQuery(collectionOptions);
 
   return (
-    <>
-      <div className="py-1"></div>
+    <div className="flex flex-col pb-8 pt-2">
       <HydrationBoundary state={dehydrate(queryClient)}>
         <IndexView />
       </HydrationBoundary>
-    </>
+    </div>
   );
 }

@@ -87,7 +87,7 @@ function Progress() {
 
   return (
     <ObjektModalProvider initialTab="trades">
-      <div className="flex flex-col gap-8 mb-8">
+      <div className="flex flex-col gap-8">
         <ProgressFilter artists={artists} />
         {!filters.artist && !filters.member ? (
           <div className="flex justify-center text-sm text-muted-fg">
