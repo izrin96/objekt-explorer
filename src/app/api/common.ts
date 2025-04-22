@@ -1,7 +1,7 @@
 export function cacheHeaders(ttl?: number) {
   return {
-    "Cache-Control": "max-age=30",
-    "CDN-Cache-Control": "max-age=60",
-    "Vercel-CDN-Cache-Control": `max-age=${ttl ?? 60}, stale-while-revalidate=30`,
+    "Cache-Control": "max-age=15",
+    "CDN-Cache-Control": "max-age=30",
+    "Vercel-CDN-Cache-Control": `max-age=${ttl ?? 30}, stale-while-revalidate=15`,
   };
 }
