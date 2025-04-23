@@ -10,7 +10,6 @@
     "Monaco", "Consolas", '"Liberation Mono"', '"Courier New"', "monospace";
   --font-alt: var(--font-alt), var(--font-sans);
   --font-doto: var(--font-doto);
-  --font-drawing: var(--font-drawing);
 
   --color-border: var(--border);
   --color-input: var(--input);

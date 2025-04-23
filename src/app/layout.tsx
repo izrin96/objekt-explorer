@@ -31,12 +31,6 @@ const altFont = Nunito_Sans({
   subsets: ["latin"],
 });
 
-const drawingFont = Shantell_Sans({
-  variable: "--font-drawing",
-  weight: "400",
-  subsets: ["latin"],
-});
-
 const doto = Doto({
   variable: "--font-doto",
   subsets: ["latin"],
@@ -76,7 +70,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${doto.variable} ${altFont.variable} ${drawingFont.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${doto.variable} ${altFont.variable}`}
     >
       <body
         className={cn(
