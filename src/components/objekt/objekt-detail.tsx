@@ -1,7 +1,11 @@
 import { Badge, Button, Card, Link, NumberField, Table, Tabs } from "../ui";
 import { CSSProperties, memo, useState } from "react";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
-import { OwnedObjekt, ValidObjekt } from "@/lib/universal/objekts";
+import {
+  OwnedObjekt,
+  unobtainables,
+  ValidObjekt,
+} from "@/lib/universal/objekts";
 import ObjektSidebar from "./objekt-sidebar";
 import { AttributePanel } from "./objekt-attribute";
 import NextImage from "next/image";
@@ -88,7 +92,10 @@ export default function ObjektDetail({
         }}
       >
         <div className="px-2 font-semibold">{objekt.collectionId}</div>
-        <AttributePanel objekt={objekt} />
+        <AttributePanel
+          objekt={objekt}
+          unobtainable={unobtainables.includes(objekt.slug)}
+        />
         <Tabs
           aria-label="Objekt tab"
           selectedKey={currentTab}

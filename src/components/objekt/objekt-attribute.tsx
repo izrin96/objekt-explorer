@@ -93,7 +93,13 @@ const fetchMetadata = (slug: string) => ({
     ),
 });
 
-export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
+export function AttributePanel({
+  objekt,
+  unobtainable,
+}: {
+  objekt: ValidObjekt;
+  unobtainable: boolean;
+}) {
   const { getArtist } = useCosmoArtist();
   const edition = getEdition(objekt.collectionNo);
   return (
@@ -118,6 +124,11 @@ export function AttributePanel({ objekt }: { objekt: ValidObjekt }) {
         label="Created at"
         value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
       />
+      {unobtainable && (
+        <Badge intent="custom" shape="square" className="font-semibold">
+          Unobtainable
+        </Badge>
+      )}
       <PillCopies objekt={objekt} />
       <PillTradable objekt={objekt} />
     </div>
