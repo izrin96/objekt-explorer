@@ -1,8 +1,7 @@
 import { indexer } from "@/lib/server/db/indexer";
-import { and, asc, eq, not } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { cacheHeaders } from "@/app/api/common";
-import { SPIN_ADDRESS } from "@/lib/utils";
 
 type Params = {
   params: Promise<{
@@ -22,7 +21,7 @@ export async function GET(_: Request, props: Params) {
     .where(
       and(
         eq(collections.slug, params.collectionSlug),
-        not(eq(objekts.owner, SPIN_ADDRESS))
+        // not(eq(objekts.owner, SPIN_ADDRESS))
       )
     )
     .orderBy(asc(objekts.serial));
