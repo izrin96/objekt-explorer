@@ -11,7 +11,6 @@ export async function getAccessToken() {
       refreshToken: "",
     };
 
-  // not ideal, temporary
   if (!validateExpiry(result.accessToken)) {
     if (validateExpiry(result.refreshToken)) {
       const newTokens = await refresh(result.refreshToken);

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import {
   Geist,
   Geist_Mono,
-  Shantell_Sans,
   Doto,
   Nunito_Sans,
 } from "next/font/google";

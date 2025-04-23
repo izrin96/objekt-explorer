@@ -16,14 +16,12 @@ import {
   ValidEdition,
   validEdition,
 } from "@/lib/universal/cosmo/common";
-import { GRID_COLUMNS } from "@/lib/utils";
 import {
   parseAsArrayOf,
   parseAsString,
   parseAsStringEnum,
   useQueryStates,
   parseAsBoolean,
-  parseAsInteger,
 } from "nuqs";
 
 export function useFilters() {

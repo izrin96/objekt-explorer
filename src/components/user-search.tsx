@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Button, CommandMenu, Keyboard } from "./ui";
+import { Button, CommandMenu } from "./ui";
 import { useDebounceValue } from "usehooks-ts";
 import { useQuery } from "@tanstack/react-query";
 import { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";

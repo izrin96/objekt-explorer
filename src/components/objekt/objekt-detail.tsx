@@ -14,7 +14,6 @@ import {
   IconOpenLink,
 } from "@intentui/icons";
 import { ArchiveXIcon } from "lucide-react";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
 import { useFilters } from "@/hooks/use-filters";
 
@@ -139,7 +138,6 @@ const OwnedListPanel = memo(function OwnedListPanel({
   objekts: OwnedObjekt[];
 }) {
   const { openTrades } = useObjektModal();
-  const { getArtist } = useCosmoArtist();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
