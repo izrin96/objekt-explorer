@@ -77,12 +77,20 @@ export default function ObjektDetail({
             )}
           </div>
           <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">
-            <NextImage
-              fill
-              loading="eager"
-              src={objekt.backImage}
-              alt={objekt.collectionId}
-            />
+            {objekt.backImage ? (
+              <NextImage
+                fill
+                loading="eager"
+                src={objekt.backImage}
+                alt={objekt.collectionId}
+              />
+            ) : (
+              <div className="@container bg-(--objekt-bg-color) text-(--objekt-text-color) w-full h-full rounded-[1rem] flex items-center justify-center overflow-hidden">
+                <span className="[transform:rotate(-45deg)] text-[8cqw] font-semibold opacity-60 text-nowrap">
+                  Back image not available
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
