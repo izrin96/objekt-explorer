@@ -52,6 +52,7 @@ export const metadata: Metadata = {
     "cosmo",
     "objekt",
     "tripleS",
+    "idntt",
     "트리플에스",
     "artms",
     "artemis",

@@ -147,7 +147,7 @@
         "profileImageUrl": "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S2-5071B32D-7D1D-432D-A30E-373BD7282CF0.jpg",
         "order": 2,
         "createdAt": "2022-11-17T14:26:05.116Z",
-        "updatedAt": "2024-05-24T06:59:16.562Z",
+        "updatedAt": "2025-04-23T04:39:34.212Z",
         "mainObjektImageUrl": "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/811dd1ac-2534-48c7-7952-4a45180b7c00/2x",
         "artistId": "tripleS",
         "primaryColorHex": "#9200FF"
@@ -459,6 +459,48 @@
       "tiktok": {
         "name": "tiktok.com/@triplescosmos",
         "address": "https://www.tiktok.com/@triplescosmos"
+      }
+    }
+  },
+  {
+    "name": "idntt",
+    "id": "idntt",
+    "title": "idntt",
+    "logoImageUrl": "https://static.cosmo.fans/assets/idntt-logo.png",
+    "contracts": {
+      "Como": "0x0000000000000000000000000000000000000000",
+      "ComoMinter": "0x0000000000000000000000000000000000000000",
+      "CommunityPool": "0x0000000000000000000000000000000000000000",
+      "Objekt": "0x0000000000000000000000000000000000000000",
+      "ObjektMinter": "0x0000000000000000000000000000000000000000",
+      "Governor": "0x0000000000000000000000000000000000000000"
+    },
+    "fandomName": "idntt",
+    "primaryImageUrl": "https://static.cosmo.fans/assets/idntt.png",
+    "comoTokenId": 3,
+    "category": "B",
+    "wasReleased": false,
+    "artistMembers": [],
+    "snsLink": {
+      "discord": {
+        "name": "discord.gg/idntt-cosmo",
+        "address": "https://discord.gg/idntt-cosmo"
+      },
+      "instagram": {
+        "name": "@idntt_cosmo",
+        "address": "https://www.instagram.com/idntt_cosmo/"
+      },
+      "twitter": {
+        "name": "@idntt_cosmo",
+        "address": "https://x.com/idntt_cosmo"
+      },
+      "youtube": {
+        "name": "@idntt_cosmo",
+        "address": "https://www.youtube.com/@idntt_cosmo"
+      },
+      "tiktok": {
+        "name": "www.tiktok.com/@idntt_cosmo",
+        "address": "https://tiktok.com/@idntt_cosmo"
       }
     }
   }
