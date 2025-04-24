@@ -133,15 +133,19 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     );
   }
 
-  // Handle member search (e.g. naky, yy)
+  const seasonCode = objekt.season.charAt(0);
+  const seasonNumber = objekt.season.slice(-2);
+
   const memberKeys = [
     ...getMemberShortKeys(objekt.member),
     objekt.member,
     objekt.artist,
     objekt.class,
-    objekt.class.substring(0, 1) + "co",
+    objekt.class.charAt(0) + "co", // sco
     objekt.season,
-    objekt.season.replace(/\d+/, ""),
+    seasonCode + seasonNumber, // a01
+    seasonCode + parseInt(seasonNumber), // a1
+    objekt.season.slice(0, -2), // atom
   ];
   return memberKeys.some((value) => value.toLowerCase() === keyword);
 };

@@ -4,9 +4,8 @@ export type IndexedObjekt = Collection;
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
 export function getCollectionShortId(objekt: ValidObjekt) {
-  const seasonNumber = objekt.season.match(/\d+$/)?.[0] || "";
   return `${objekt.member} ${objekt.season.charAt(0)}${parseInt(
-    seasonNumber
+    objekt.season.slice(-2)
   )} ${objekt.collectionNo}`;
 }
 
