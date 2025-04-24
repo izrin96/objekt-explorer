@@ -60,12 +60,12 @@ export default memo(function ObjektView({
           src={resizedUrl}
           alt={objekt.collectionId}
         />
-
-        <ObjektSidebar
-          collection={objekt.collectionNo}
-          serial={isOwned && !filters.grouped ? objekt.serial : undefined}
-        />
-
+        {objekt.artist !== "idntt" && (
+          <ObjektSidebar
+            collection={objekt.collectionNo}
+            serial={isOwned && !filters.grouped ? objekt.serial : undefined}
+          />
+        )}
         {objekts.length > 1 && (
           <div className="flex absolute bottom-2 left-2 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
             {objekts.length}

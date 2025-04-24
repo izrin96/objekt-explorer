@@ -69,10 +69,12 @@ export default function ObjektDetail({
               src={objekt.frontImage}
               alt={objekt.collectionId}
             />
-            <ObjektSidebar
-              collection={objekt.collectionNo}
-              serial={isOwned && !filters.grouped ? objekt.serial : undefined}
-            />
+            {objekt.artist !== "idntt" && (
+              <ObjektSidebar
+                collection={objekt.collectionNo}
+                serial={isOwned && !filters.grouped ? objekt.serial : undefined}
+              />
+            )}
           </div>
           <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">
             <NextImage
