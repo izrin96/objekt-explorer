@@ -4,11 +4,10 @@ export type IndexedObjekt = Collection;
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
 export function getCollectionShortId(objekt: ValidObjekt) {
-  return `${objekt.member} ${getSeasonCollectionNo(objekt)}`;
-}
-
-export function getSeasonCollectionNo(objekt: ValidObjekt) {
-  return `${objekt.season.charAt(0)}${objekt.collectionNo}`;
+  const seasonNumber = objekt.season.match(/\d+$/)?.[0] || "";
+  return `${objekt.member} ${objekt.season.charAt(0)}${parseInt(
+    seasonNumber
+  )} ${objekt.collectionNo}`;
 }
 
 export type OwnedObjekt = Omit<IndexedObjekt, "id"> &
