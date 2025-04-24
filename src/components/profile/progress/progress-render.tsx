@@ -52,7 +52,6 @@ function Progress() {
   );
 
   useEffect(() => {
-    // find member with highest objekt count and auto set filter
     if (!ownedObjekts.length) return;
 
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
