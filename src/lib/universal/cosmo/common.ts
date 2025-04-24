@@ -33,6 +33,9 @@ export const validSeasons = [
   "Cream01",
   "Divine01",
   "Ever01",
+  "Atom02",
+  // for idntt
+  "Spring25",
 ] as const;
 export type ValidSeason = (typeof validSeasons)[number];
 
@@ -44,6 +47,11 @@ export const validClasses = [
   "Premier",
   "Welcome",
   "Zero",
+  // for idntt
+  "Basic",
+  "Event",
+  "Special",
+  "ETC",
 ] as const;
 export type ValidClass = (typeof validClasses)[number];
 
@@ -65,3 +73,9 @@ export type ValidGroupBy = (typeof validGroupBy)[number];
 // online types
 export const validOnlineTypes = ["online", "offline"] as const;
 export type ValidOnlineType = (typeof validOnlineTypes)[number];
+
+// artist valid classes
+export const artistValidClasses: Record<string, string[]> = {
+  default: [...validClasses],
+  idntt: ["Basic", "Event", "Special", "ETC"],
+} as const;
