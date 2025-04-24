@@ -26,6 +26,8 @@ export const seasonColors = [
   "#FF7477",
   "#B400FF",
   "#33ECFD",
+  "#FFDD00", // unknown for Atom02
+  "#25347C", // Spring25
 ];
 export const validSeasons = [
   "Atom01",
@@ -50,7 +52,6 @@ export const validClasses = [
   // for idntt
   "Basic",
   "Event",
-  "Special",
   "ETC",
 ] as const;
 export type ValidClass = (typeof validClasses)[number];
