@@ -62,7 +62,7 @@ function ProfileObjekt() {
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, groupedObjekts]) => [
-      <GroupLabelRender title={title} key={`label-${title}`} />,
+      !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
       ...ObjektsRender({
         objekts: groupedObjekts,
         columns,
