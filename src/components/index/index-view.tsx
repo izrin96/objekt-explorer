@@ -1,20 +1,12 @@
 "use client";
 
 import { IndexedObjekt } from "@/lib/universal/objekts";
-import {
-  CSSProperties,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
-import ObjektView from "../objekt/objekt-view";
 import { shapeIndexedObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { cn } from "@/utils/classes";
 import {
   QueryErrorResetBoundary,
   useSuspenseQuery,
@@ -24,6 +16,12 @@ import { collectionOptions } from "@/lib/query-options";
 import ErrorFallbackRender from "../error-fallback";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
+import { GroupLabelRender } from "../collection/label-render";
+import {
+  ObjektsRender,
+  ObjektsRenderRow,
+} from "../collection/collection-render";
+import ObjektView from "../objekt/objekt-view";
 
 export default function IndexRender() {
   return (
@@ -49,9 +47,31 @@ function IndexView() {
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([key, objekts]) => [
-      GroupLabelRender({ key }),
-      ...ObjektsRender({ objekts, columns, key }),
+    return deferredObjektsFiltered.flatMap(([title, objekts]) => [
+      <GroupLabelRender title={title} key={`label-${title}`} />,
+      ...ObjektsRender({
+        objekts: objekts.map((ob) => [ob]),
+        columns,
+        children: ({ objekts, rowIndex }) => (
+          <ObjektsRenderRow
+            key={`${title}-${rowIndex}`}
+            columns={columns}
+            rowIndex={rowIndex}
+            objekts={objekts}
+          >
+            {({ objekts, index }) => {
+              const [objekt] = objekts;
+              return (
+                <ObjektView
+                  key={objekt.id}
+                  objekts={objekts}
+                  priority={index < columns * 3}
+                />
+              );
+            }}
+          </ObjektsRenderRow>
+        ),
+      }),
     ]);
   }, [deferredObjektsFiltered, columns]);
 
@@ -72,70 +92,6 @@ function IndexView() {
       <ObjektModalProvider initialTab="trades">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
-    </div>
-  );
-}
-
-export function GroupLabelRender({ key }: { key: string }) {
-  return (
-    <div
-      key={key}
-      className={cn("font-semibold text-base pb-3 pt-3", !key && "hidden")}
-    >
-      {key}
-    </div>
-  );
-}
-
-function ObjektsRender({
-  key,
-  objekts,
-  columns,
-}: {
-  key: string;
-  objekts: IndexedObjekt[];
-  columns: number;
-}) {
-  return Array.from({
-    length: Math.ceil(objekts.length / columns),
-  }).map((_, i) => {
-    return (
-      <ObjektsRowRender
-        key={`${key}_${i}`}
-        rowIndex={i}
-        columns={columns}
-        objekts={objekts}
-      />
-    );
-  });
-}
-
-function ObjektsRowRender({
-  rowIndex,
-  objekts,
-  columns,
-}: {
-  rowIndex: number;
-  objekts: IndexedObjekt[];
-  columns: number;
-}) {
-  const start = rowIndex * columns;
-  const end = start + columns;
-  return (
-    <div
-      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-3 lg:gap-4 pb-4"
-      style={{ "--grid-columns": columns } as CSSProperties}
-    >
-      {objekts.slice(start, end).map((objekt, j) => {
-        const index = rowIndex * columns + j;
-        return (
-          <ObjektView
-            key={objekt.slug}
-            objekts={[objekt]}
-            priority={index < columns * 3}
-          />
-        );
-      })}
     </div>
   );
 }

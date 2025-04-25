@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  CSSProperties,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
-import ObjektView from "../objekt/objekt-view";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
@@ -18,11 +11,16 @@ import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-fallback";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ValidObjekt } from "@/lib/universal/objekts";
-import { GroupLabelRender } from "../index/index-view";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
+import { GroupLabelRender } from "../collection/label-render";
+import {
+  ObjektsRender,
+  ObjektsRenderRow,
+} from "../collection/collection-render";
+import ObjektView from "../objekt/objekt-view";
 
 export default function ProfileObjektRender() {
   return (
@@ -56,20 +54,43 @@ function ProfileObjekt() {
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
       const ownedSlugs = new Set(ownedObjekts.map((obj) => obj.slug));
-
       const missingObjekts = objekts.filter((obj) => !ownedSlugs.has(obj.slug));
-
       return [...ownedObjekts, ...missingObjekts];
     }
     return ownedObjekts;
   }, [ownedObjekts, filters.unowned, objekts]);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([key, groupedObjekts]) => [
-      GroupLabelRender({ key }),
-      ...ObjektsRender({ groupedObjekts, columns, key }),
+    return deferredObjektsFiltered.flatMap(([title, groupedObjekts]) => [
+      <GroupLabelRender title={title} key={`label-${title}`} />,
+      ...ObjektsRender({
+        objekts: groupedObjekts,
+        columns,
+        children: ({ objekts, rowIndex }) => (
+          <ObjektsRenderRow
+            key={`${title}-${rowIndex}`}
+            columns={columns}
+            rowIndex={rowIndex}
+            objekts={objekts}
+          >
+            {({ objekts, index }) => {
+              const [objekt] = objekts;
+              return (
+                <ObjektView
+                  key={objekt.id}
+                  objekts={objekts}
+                  isFade={!("serial" in objekt)}
+                  priority={index < columns * 3}
+                  showSerial={!filters.grouped}
+                  showCount
+                />
+              );
+            }}
+          </ObjektsRenderRow>
+        ),
+      }),
     ]);
-  }, [deferredObjektsFiltered, columns]);
+  }, [deferredObjektsFiltered, filters.grouped, columns]);
 
   const count = useMemo(
     () =>
@@ -108,64 +129,6 @@ function ProfileObjekt() {
       <ObjektModalProvider initialTab="owned" isProfile>
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </ObjektModalProvider>
-    </div>
-  );
-}
-
-function ObjektsRender({
-  key,
-  groupedObjekts,
-  columns,
-}: {
-  key: string;
-  groupedObjekts: ValidObjekt[][];
-  columns: number;
-}) {
-  return Array.from({
-    length: Math.ceil(groupedObjekts.length / columns),
-  }).map((_, i) => {
-    return (
-      <ObjektsRowRender
-        key={`${key}_${i}`}
-        rowIndex={i}
-        columns={columns}
-        groupedObjekts={groupedObjekts}
-      />
-    );
-  });
-}
-
-function ObjektsRowRender({
-  rowIndex,
-  groupedObjekts,
-  columns,
-}: {
-  rowIndex: number;
-  groupedObjekts: ValidObjekt[][];
-  columns: number;
-}) {
-  const [filters] = useFilters();
-  const start = rowIndex * columns;
-  const end = start + columns;
-  return (
-    <div
-      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-3 lg:gap-4 pb-4"
-      style={{ "--grid-columns": columns } as CSSProperties}
-    >
-      {groupedObjekts.slice(start, end).map((objekts, j) => {
-        const index = rowIndex * columns + j;
-        const [objekt] = objekts;
-        return (
-          <ObjektView
-            key={objekt.id}
-            objekts={objekts}
-            isFade={!("serial" in objekt)}
-            priority={index < columns * 3}
-            showSerial={!filters.grouped}
-            showCount
-          />
-        );
-      })}
     </div>
   );
 }
