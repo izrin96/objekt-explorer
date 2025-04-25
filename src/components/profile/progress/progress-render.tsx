@@ -11,11 +11,7 @@ import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-fallback";
 import { Loader, ProgressBar } from "@/components/ui";
-import {
-  IndexedObjekt,
-  OwnedObjekt,
-  unobtainables,
-} from "@/lib/universal/objekts";
+import { unobtainables, ValidObjekt } from "@/lib/universal/objekts";
 import { IconExpand45, IconMinimize45 } from "@intentui/icons";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
@@ -124,7 +120,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
   ownedSlugs,
 }: {
   title: string;
-  objekts: (IndexedObjekt | OwnedObjekt)[];
+  objekts: ValidObjekt[];
   ownedSlugs: Set<string>;
 }) {
   const [show, setShow] = useState(false);
