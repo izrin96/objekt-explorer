@@ -19,7 +19,6 @@ import {
 } from "@intentui/icons";
 import { ArchiveXIcon } from "lucide-react";
 import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
-import { useFilters } from "@/hooks/use-filters";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
@@ -30,7 +29,6 @@ export default function ObjektDetail({
   objekts,
   isProfile,
 }: ObjektDetailProps) {
-  const [filters] = useFilters();
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
   const [flipped, setFlipped] = useState(false);
@@ -72,7 +70,9 @@ export default function ObjektDetail({
             {objekt.artist !== "idntt" && (
               <ObjektSidebar
                 collection={objekt.collectionNo}
-                serial={isOwned && !filters.grouped ? objekt.serial : undefined}
+                serial={
+                  objekts.length < 2 && isOwned ? objekt.serial : undefined
+                }
               />
             )}
           </div>
