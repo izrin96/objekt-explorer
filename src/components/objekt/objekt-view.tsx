@@ -7,7 +7,6 @@ import {
 } from "@/lib/universal/objekts";
 import { Badge } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
-import { useFilters } from "@/hooks/use-filters";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
@@ -17,16 +16,19 @@ type Props = {
   isFade?: boolean;
   priority?: boolean;
   unobtainable?: boolean;
+  showCount?: boolean;
+  showSerial?: boolean;
 };
 
 export default memo(function ObjektView({
   priority = false,
   isFade = false,
   unobtainable = false,
+  showCount = false,
+  showSerial = false,
   ...props
 }: Props) {
   const { openObjekts } = useObjektModal();
-  const [filters] = useFilters();
   const objekts = props.objekts.toSorted(
     (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
   );
@@ -63,10 +65,10 @@ export default memo(function ObjektView({
         {objekt.artist !== "idntt" && (
           <ObjektSidebar
             collection={objekt.collectionNo}
-            serial={isOwned && !filters.grouped ? objekt.serial : undefined}
+            serial={showSerial && isOwned ? objekt.serial : undefined}
           />
         )}
-        {objekts.length > 1 && (
+        {showCount && objekts.length > 1 && (
           <div className="flex absolute bottom-2 left-2 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
             {objekts.length}
           </div>
@@ -80,7 +82,7 @@ export default memo(function ObjektView({
           onClick={onClick}
         >
           {getCollectionShortId(objekt)}
-          {isOwned && !filters.grouped && ` #${objekt.serial}`}
+          {showSerial && isOwned && ` #${objekt.serial}`}
         </Badge>
         {unobtainable && (
           <Badge

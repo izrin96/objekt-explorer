@@ -144,6 +144,7 @@ function ObjektsRowRender({
   groupedObjekts: ValidObjekt[][];
   columns: number;
 }) {
+  const [filters] = useFilters();
   const start = rowIndex * columns;
   const end = start + columns;
   return (
@@ -160,6 +161,8 @@ function ObjektsRowRender({
             objekts={objekts}
             isFade={!("serial" in objekt)}
             priority={index < columns * 3}
+            showSerial={!filters.grouped}
+            showCount
           />
         );
       })}
