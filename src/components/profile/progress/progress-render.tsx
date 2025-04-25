@@ -17,6 +17,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
 import { groupBy } from "es-toolkit";
 import { cn } from "@/utils/classes";
+import { useShowCount } from "./filter-showcount";
 
 export default function ProgressRender() {
   return (
@@ -124,6 +125,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
   ownedSlugs: Set<string>;
 }) {
   const [show, setShow] = useState(false);
+  const [showCount] = useShowCount();
 
   const groupObjekts = useMemo(
     () => Object.values(groupBy(objekts, (a) => a.collectionId)),
@@ -178,6 +180,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
                 objekts={objekts}
                 isFade={!ownedSlugs.has(objekt.slug)}
                 unobtainable={unobtainables.includes(objekt.slug)}
+                showCount={showCount ?? false}
               />
             );
           })}
