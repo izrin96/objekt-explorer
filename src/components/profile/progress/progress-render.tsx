@@ -11,7 +11,11 @@ import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-fallback";
 import { Loader, ProgressBar } from "@/components/ui";
-import { IndexedObjekt, unobtainables } from "@/lib/universal/objekts";
+import {
+  IndexedObjekt,
+  OwnedObjekt,
+  unobtainables,
+} from "@/lib/universal/objekts";
 import { IconExpand45, IconMinimize45 } from "@intentui/icons";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
@@ -41,14 +45,19 @@ function Progress() {
   const objekts = useMemo(() => objektsQuery.data ?? [], [objektsQuery.data]);
   const ownedObjekts = useMemo(() => ownedQuery.data ?? [], [ownedQuery.data]);
 
-  const shaped = useMemo(
-    () => shapeProgressCollections(artists, filters, objekts),
-    [artists, filters, objekts]
-  );
-
   const ownedSlugs = useMemo(
     () => new Set(ownedObjekts.map((obj) => obj.slug)),
     [ownedObjekts]
+  );
+
+  const joinedObjekts = useMemo(() => {
+    const missingObjekts = objekts.filter((obj) => !ownedSlugs.has(obj.slug));
+    return [...ownedObjekts, ...missingObjekts];
+  }, [ownedObjekts, objekts, ownedSlugs]);
+
+  const shaped = useMemo(
+    () => shapeProgressCollections(artists, filters, joinedObjekts),
+    [artists, filters, joinedObjekts]
   );
 
   useEffect(() => {
@@ -85,7 +94,7 @@ function Progress() {
     );
 
   return (
-    <ObjektModalProvider initialTab="trades">
+    <ObjektModalProvider initialTab="owned" isProfile>
       <div className="flex flex-col gap-8">
         <ProgressFilter artists={artists} />
         {!filters.artist && !filters.member ? (
@@ -115,10 +124,15 @@ const ProgressCollapse = memo(function ProgressCollapse({
   ownedSlugs,
 }: {
   title: string;
-  objekts: IndexedObjekt[];
+  objekts: (IndexedObjekt | OwnedObjekt)[];
   ownedSlugs: Set<string>;
 }) {
   const [show, setShow] = useState(false);
+
+  const groupObjekts = useMemo(
+    () => Object.values(groupBy(objekts, (a) => a.collectionId)),
+    [objekts]
+  );
 
   const filteredObjekts = useMemo(
     () => objekts.filter((a) => !unobtainables.includes(a.slug)),
@@ -160,14 +174,17 @@ const ProgressCollapse = memo(function ProgressCollapse({
       </div>
       {show && (
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3">
-          {objekts.map((objekt) => (
-            <ObjektView
-              key={objekt.slug}
-              objekts={[objekt]}
-              isFade={!ownedSlugs.has(objekt.slug)}
-              unobtainable={unobtainables.includes(objekt.slug)}
-            />
-          ))}
+          {groupObjekts.map((objekts) => {
+            const [objekt] = objekts;
+            return (
+              <ObjektView
+                key={objekt.slug}
+                objekts={objekts}
+                isFade={!ownedSlugs.has(objekt.slug)}
+                unobtainable={unobtainables.includes(objekt.slug)}
+              />
+            );
+          })}
         </div>
       )}
     </div>
