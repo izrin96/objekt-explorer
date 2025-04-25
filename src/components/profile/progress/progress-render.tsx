@@ -180,7 +180,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
                 objekts={objekts}
                 isFade={!ownedSlugs.has(objekt.slug)}
                 unobtainable={unobtainables.includes(objekt.slug)}
-                showCount={showCount ?? false}
+                showCount={showCount}
               />
             );
           })}

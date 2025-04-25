@@ -9,7 +9,7 @@
   --font-mono: var(--font-geist-mono), "ui-monospace", "SFMono-Regular", "Menlo",
     "Monaco", "Consolas", '"Liberation Mono"', '"Courier New"', "monospace";
   --font-alt: var(--font-alt), var(--font-sans);
-  --font-doto: var(--font-doto);
+  --font-dot: var(--font-dot);
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -56,6 +56,8 @@
   --color-chart-5: var(--chart-5);
 
   --aspect-photocard: 5.5 / 8.5;
+
+  --animate-highlight: highlight 0.5s ease-in-out;
 }
 
 @layer base {
@@ -233,5 +235,18 @@
   body {
     background-color: var(--bg);
     color: var(--fg);
+  }
+
+  @keyframes highlight {
+    from {
+      background-color: var(--color-sky-400);
+      transform: translateY(-15%);
+      opacity: 0%;
+    }
+    to {
+      background-color: transparent;
+      transform: translateY(0);
+      opacity: 100%;
+    }
   }
 }

@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
-import {
-  Geist,
-  Geist_Mono,
-  Doto,
-  Nunito_Sans,
-} from "next/font/google";
+import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Toast } from "@/components/ui";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
@@ -30,9 +26,9 @@ const altFont = Nunito_Sans({
   subsets: ["latin"],
 });
 
-const doto = Doto({
-  variable: "--font-doto",
-  subsets: ["latin"],
+const dotMatrix = localFont({
+  src: "./fonts/dotmat.ttf",
+  variable: "--font-dot",
 });
 
 export const metadata: Metadata = {
@@ -70,7 +66,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${doto.variable} ${altFont.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${altFont.variable}`}
     >
       <body
         className={cn(
