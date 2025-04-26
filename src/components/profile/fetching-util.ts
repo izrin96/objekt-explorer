@@ -7,7 +7,6 @@ type OwnedObjektRequest = {
 };
 
 type OwnedObjektsResult = {
-  hasNext: boolean;
   nextStartAfter?: number;
   objekts: OwnedObjekt[];
 };
@@ -29,9 +28,8 @@ export async function fetchOwnedObjekts({ address }: OwnedObjektRequest) {
 
     allObjekts = [...allObjekts, ...result.objekts];
 
-    hasNext = result.hasNext;
-
-    if (hasNext && result.nextStartAfter !== undefined) {
+    if (result.nextStartAfter !== undefined) {
+      hasNext = true;
       currentPage = result.nextStartAfter;
     } else {
       break;

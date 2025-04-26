@@ -8,7 +8,8 @@ import {
 } from "@/lib/server/db/indexer/schema";
 import { indexer } from "@/lib/server/db/indexer";
 import { z } from "zod";
-import { overrideColor } from "@/lib/utils";
+import { TransferResult } from "@/lib/universal/transfers";
+import { mapOwnedObjekt } from "@/lib/universal/objekts";
 
 const PER_PAGE = 30;
 
@@ -24,12 +25,8 @@ export async function GET(
   const results = await indexer
     .select({
       transfer: transfers,
-      objekt: {
-        ...collections,
-        serial: objekts.serial,
-        receivedAt: objekts.receivedAt,
-        transferable: objekts.transferable,
-      },
+      objekt: objekts,
+      collection: collections,
     })
     .from(transfers)
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
@@ -59,14 +56,10 @@ export async function GET(
   });
 
   return Response.json({
-    hasNext,
     nextStartAfter,
     results: slicedResults.map((row) => ({
-      ...row,
-      objekt: {
-        ...row.objekt,
-        ...overrideColor(row.objekt),
-      },
+      transfer: row.transfer,
+      objekt: mapOwnedObjekt(row.objekt, row.collection),
       fromNickname: knownAddresses.find(
         (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase()
       )?.nickname,
@@ -74,5 +67,5 @@ export async function GET(
         (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase()
       )?.nickname,
     })),
-  });
+  } satisfies TransferResult);
 }

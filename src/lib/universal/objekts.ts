@@ -1,4 +1,5 @@
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
+import { overrideColor } from "../utils";
 
 export type IndexedObjekt = Collection;
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
@@ -7,6 +8,18 @@ export function getCollectionShortId(objekt: ValidObjekt) {
   return `${objekt.member} ${objekt.season.charAt(0)}${parseInt(
     objekt.season.slice(-2)
   )} ${objekt.collectionNo}`;
+}
+
+export function mapOwnedObjekt(objekt: Objekt, collection: Collection) {
+  return {
+    ...collection,
+    ...overrideColor(collection),
+    id: objekt.id,
+    serial: objekt.serial,
+    receivedAt: objekt.receivedAt,
+    mintedAt: objekt.mintedAt,
+    transferable: objekt.transferable,
+  } satisfies OwnedObjekt;
 }
 
 export type OwnedObjekt = Omit<IndexedObjekt, "id"> &

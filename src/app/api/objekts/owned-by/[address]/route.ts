@@ -1,7 +1,6 @@
 import { indexer } from "@/lib/server/db/indexer";
 import { objekts, collections } from "@/lib/server/db/indexer/schema";
-import { OwnedObjekt } from "@/lib/universal/objekts";
-import { overrideColor } from "@/lib/utils";
+import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { eq, desc, asc } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -25,8 +24,8 @@ export async function GET(request: NextRequest, props: Params) {
 
   const results = await indexer
     .select({
-      objekts,
-      collections,
+      objekt: objekts,
+      collection: collections,
     })
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
@@ -39,19 +38,9 @@ export async function GET(request: NextRequest, props: Params) {
   const nextStartAfter = hasNext ? page + 1 : undefined;
 
   return Response.json({
-    hasNext,
     nextStartAfter,
-    objekts: results.slice(0, PER_PAGE).map(
-      (a) =>
-        ({
-          ...a.collections,
-          ...overrideColor(a.collections),
-          id: a.objekts.id,
-          serial: a.objekts.serial,
-          receivedAt: a.objekts.receivedAt,
-          mintedAt: a.objekts.mintedAt,
-          transferable: a.objekts.transferable,
-        } satisfies OwnedObjekt)
-    ),
+    objekts: results
+      .slice(0, PER_PAGE)
+      .map((a) => mapOwnedObjekt(a.objekt, a.collection)),
   });
 }
