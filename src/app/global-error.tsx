@@ -16,7 +16,7 @@ export default function GlobalError() {
         <title>Lunar</title>
       </head>
 
-      <body className="min-h-svh antialiased touch-manipulation">
+      <body className="min-h-svh antialiased">
         <div className="flex flex-col gap-3 items-center justify-center h-svh w-full">
           <IconBrokenHeart className="size-12" />
           <h2 className="font-semibold text-lg">Something went wrong!</h2>

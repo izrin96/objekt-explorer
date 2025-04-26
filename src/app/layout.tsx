@@ -70,7 +70,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     >
       <body
         className={cn(
-          "min-h-svh antialiased touch-manipulation",
+          "min-h-svh antialiased",
           process.env.NODE_ENV === "development" ? "debug-screens" : ""
         )}
       >
