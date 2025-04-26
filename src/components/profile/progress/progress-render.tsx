@@ -133,8 +133,11 @@ const ProgressCollapse = memo(function ProgressCollapse({
   );
 
   const filteredObjekts = useMemo(
-    () => objekts.filter((a) => !unobtainables.includes(a.slug)),
-    [objekts]
+    () =>
+      groupObjekts
+        .map(([objekt]) => objekt)
+        .filter((a) => !unobtainables.includes(a.slug)),
+    [groupObjekts]
   );
 
   const owned = useMemo(
