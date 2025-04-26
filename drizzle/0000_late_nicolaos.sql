@@ -1,3 +1,5 @@
+CREATE EXTENSION citext;
+
 CREATE TABLE "access_token" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"access_token" varchar NOT NULL,
