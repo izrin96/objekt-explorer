@@ -13,7 +13,7 @@ import React, { useMemo } from "react";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { ownedCollectionOptions } from "@/lib/query-options";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "@/components/error-fallback";
+import ErrorFallbackRender from "@/components/error-boundary";
 import { useProfile } from "@/hooks/use-profile";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { filterObjekts } from "@/lib/filter-utils";

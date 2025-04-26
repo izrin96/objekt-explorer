@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import { collectionOptions } from "@/lib/query-options";
-import ErrorFallbackRender from "../error-fallback";
+import ErrorFallbackRender from "../error-boundary";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { GroupLabelRender } from "../collection/label-render";

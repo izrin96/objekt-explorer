@@ -16,7 +16,7 @@ import {
 } from "@intentui/icons";
 import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "../error-fallback";
+import ErrorFallbackRender from "../error-boundary";
 import UserLink from "../user-link";
 import { ObjektSerial, ObjektTransferResponse } from "./common";
 import { cn } from "@/utils/classes";

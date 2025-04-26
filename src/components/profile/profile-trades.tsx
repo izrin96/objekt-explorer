@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-query";
 import React, { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "../error-fallback";
+import ErrorFallbackRender from "../error-boundary";
 import { ofetch } from "ofetch";
 import { TransferResult } from "@/lib/universal/transfers";
 import { InfiniteQueryNext } from "../infinite-query-pending";
@@ -60,20 +60,20 @@ function ProfileTrades() {
 
   return (
     <>
-      <Card className="overflow-x-auto py-0">
-        <div className="relative w-full overflow-auto">
-          <table className="table w-full min-w-full text-sm">
-            <thead data-slot="table-header" className="border-b">
-              <tr>
-                <Th label="Date" />
-                <Th label="Objekt" />
-                <Th label="Serial" />
-                <Th label="Action" />
-                <Th label="User" />
-              </tr>
-            </thead>
-            <tbody className="[&_.tr:last-child]:border-0">
-              <ObjektModalProvider initialTab="trades">
+      <ObjektModalProvider initialTab="trades">
+        <Card className="overflow-x-auto py-0">
+          <div className="relative w-full overflow-auto">
+            <table className="table w-full min-w-full text-sm">
+              <thead data-slot="table-header" className="border-b">
+                <tr>
+                  <Th label="Date" />
+                  <Th label="Objekt" />
+                  <Th label="Serial" />
+                  <Th label="Action" />
+                  <Th label="User" />
+                </tr>
+              </thead>
+              <tbody className="[&_.tr:last-child]:border-0">
                 {rows.map((row) => (
                   <ProfileTradeRow
                     key={row.transfer.id}
@@ -81,11 +81,11 @@ function ProfileTrades() {
                     address={address}
                   />
                 ))}
-              </ObjektModalProvider>
-            </tbody>
-          </table>
-        </div>
-      </Card>
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </ObjektModalProvider>
       <InfiniteQueryNext
         status={query.status}
         hasNextPage={query.hasNextPage}

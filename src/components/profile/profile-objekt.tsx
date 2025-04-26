@@ -8,7 +8,7 @@ import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "../error-fallback";
+import ErrorFallbackRender from "../error-boundary";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";

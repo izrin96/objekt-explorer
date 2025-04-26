@@ -9,7 +9,7 @@ import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import React, { memo, useEffect, useMemo, useState } from "react";
 import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "@/components/error-fallback";
+import ErrorFallbackRender from "@/components/error-boundary";
 import { Loader, ProgressBar } from "@/components/ui";
 import { unobtainables, ValidObjekt } from "@/lib/universal/objekts";
 import { IconExpand45, IconMinimize45 } from "@intentui/icons";
