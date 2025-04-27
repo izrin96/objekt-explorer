@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { asc, desc, or, eq } from "drizzle-orm";
+import { asc, desc, or, eq, and, inArray, ne } from "drizzle-orm";
 import { db } from "@/lib/server/db";
 import {
   collections,
@@ -7,9 +7,13 @@ import {
   objekts,
 } from "@/lib/server/db/indexer/schema";
 import { indexer } from "@/lib/server/db/indexer";
-import { z } from "zod";
-import { TransferResult } from "@/lib/universal/transfers";
+import {
+  TransferParams,
+  TransferResult,
+  transfersSchema,
+} from "@/lib/universal/transfers";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
+import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PER_PAGE = 30;
 
@@ -19,8 +23,7 @@ export async function GET(
 ) {
   const params = await props.params;
   const searchParams = request.nextUrl.searchParams;
-  const pageSchema = z.coerce.number().optional().default(0);
-  const page = pageSchema.parse(searchParams.get("page"));
+  const query = parseParams(searchParams);
 
   const results = await indexer
     .select({
@@ -32,17 +35,70 @@ export async function GET(
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .where(
-      or(
-        eq(transfers.from, params.address.toLowerCase()),
-        eq(transfers.to, params.address.toLowerCase())
+      and(
+        ...(query.type === "all"
+          ? [
+              or(
+                eq(transfers.from, params.address.toLowerCase()),
+                eq(transfers.to, params.address.toLowerCase())
+              ),
+            ]
+          : []),
+        ...(query.type === "mint"
+          ? [
+              and(
+                eq(transfers.from, NULL_ADDRESS),
+                eq(transfers.to, params.address.toLowerCase())
+              ),
+            ]
+          : []),
+        ...(query.type === "received"
+          ? [
+              and(
+                ne(transfers.from, NULL_ADDRESS),
+                eq(transfers.to, params.address.toLowerCase())
+              ),
+            ]
+          : []),
+        ...(query.type === "sent"
+          ? [
+              and(
+                eq(transfers.from, params.address.toLowerCase()),
+                ne(transfers.to, NULL_ADDRESS)
+              ),
+            ]
+          : []),
+        ...(query.type === "spin"
+          ? [
+              and(
+                eq(transfers.from, params.address.toLowerCase()),
+                eq(transfers.to, SPIN_ADDRESS)
+              ),
+            ]
+          : []),
+        ...(query.artist.length
+          ? [inArray(collections.artist, query.artist)]
+          : []),
+        ...(query.member.length
+          ? [inArray(collections.member, query.member)]
+          : []),
+        ...(query.season.length
+          ? [inArray(collections.season, query.season)]
+          : []),
+        ...(query.class.length
+          ? [inArray(collections.class, query.class)]
+          : []),
+        ...(query.on_offline.length
+          ? [inArray(collections.onOffline, query.on_offline)]
+          : [])
       )
     )
     .orderBy(desc(transfers.timestamp), asc(transfers.id))
     .limit(PER_PAGE + 1)
-    .offset(page * PER_PAGE);
+    .offset(query.page * PER_PAGE);
 
   const hasNext = results.length > PER_PAGE;
-  const nextStartAfter = hasNext ? page + 1 : undefined;
+  const nextStartAfter = hasNext ? query.page + 1 : undefined;
   const slicedResults = results.slice(0, PER_PAGE);
 
   const addresses = slicedResults.flatMap((r) => [
@@ -68,4 +124,28 @@ export async function GET(
       )?.nickname,
     })),
   } satisfies TransferResult);
+}
+
+function parseParams(params: URLSearchParams): TransferParams {
+  const result = transfersSchema.safeParse({
+    page: params.get("page"),
+    type: params.get("type"),
+    artist: params.getAll("artist"),
+    member: params.getAll("member"),
+    season: params.getAll("season"),
+    class: params.getAll("class"),
+    on_offline: params.getAll("on_offline"),
+  });
+
+  return result.success
+    ? result.data
+    : {
+        page: 0,
+        type: "all",
+        artist: [],
+        member: [],
+        season: [],
+        class: [],
+        on_offline: [],
+      };
 }

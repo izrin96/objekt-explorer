@@ -1,4 +1,4 @@
-import ProfileTradesRender from "@/components/profile/profile-trades";
+import ProfileTradesRender from "@/components/profile/trades/profile-trades";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { Metadata } from "next";
 
