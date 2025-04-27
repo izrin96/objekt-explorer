@@ -26,8 +26,5 @@ export function ProfileProvider({ children, profile }: ProviderProps) {
 }
 
 export function useProfile() {
-  const ctx = useContext(ProfileContext);
-  return {
-    ...ctx,
-  };
+  return useContext(ProfileContext);
 }

@@ -3,7 +3,14 @@
 import ObjektDetail from "@/components/objekt/objekt-detail";
 import { Modal } from "@/components/ui";
 import { ValidObjekt } from "@/lib/universal/objekts";
-import { PropsWithChildren, createContext, useContext, useState } from "react";
+import {
+  PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
 
 export type ValidTab = "owned" | "trades";
 
@@ -31,32 +38,33 @@ export function ObjektModalProvider({
   const [open, setOpen] = useState(false);
   const [objekts, setObjekts] = useState<ValidObjekt[]>([]);
   const [currentSerial, setCurrentSerial] = useState<number | undefined>();
-  function openObjekts(objekts: ValidObjekt[]) {
+
+  const openObjekts = useCallback((objekts: ValidObjekt[]) => {
     const [objekt] = objekts;
     setCurrentSerial("serial" in objekt ? objekt.serial : undefined);
     setObjekts(objekts);
     setOpen(true);
-  }
-  function openTrades(serial: number) {
+  }, []);
+
+  const openTrades = useCallback((serial: number) => {
     setCurrentSerial(serial);
     setCurrentTab("trades");
-  }
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({
+      currentTab,
+      currentSerial,
+      setCurrentTab,
+      openObjekts,
+      openTrades,
+    }),
+    [currentTab, currentSerial, openObjekts, openTrades]
+  );
 
   return (
-    <ObjektModalContext
-      value={{
-        currentTab,
-        currentSerial,
-        setCurrentTab,
-        openObjekts,
-        openTrades,
-      }}
-    >
-      <Modal.Content
-        isOpen={open}
-        onOpenChange={() => setOpen(false)}
-        size="5xl"
-      >
+    <ObjektModalContext value={contextValue}>
+      <Modal.Content isOpen={open} onOpenChange={setOpen} size="5xl">
         <Modal.Header className="hidden">
           <Modal.Title>Objekt display</Modal.Title>
         </Modal.Header>
@@ -73,8 +81,5 @@ export function ObjektModalProvider({
 }
 
 export function useObjektModal() {
-  const ctx = useContext(ObjektModalContext);
-  return {
-    ...ctx,
-  };
+  return useContext(ObjektModalContext);
 }

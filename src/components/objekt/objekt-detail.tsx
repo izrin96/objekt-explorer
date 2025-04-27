@@ -31,70 +31,11 @@ export default function ObjektDetail({
 }: ObjektDetailProps) {
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
-  const [flipped, setFlipped] = useState(false);
   const { currentTab, setCurrentTab } = useObjektModal();
-
-  const resizedUrl = replaceUrlSize(objekt.frontImage);
-
-  const css = {
-    "--objekt-bg-color": objekt.backgroundColor,
-    "--objekt-text-color": objekt.textColor,
-  } as CSSProperties;
 
   return (
     <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2 h-full sm:h-[33.5rem] sm:min-h-[33.5rem]">
-      <div
-        onClick={() => setFlipped((prev) => !prev)}
-        className="flex h-[21rem] sm:h-fit self-center select-none"
-        style={css}
-      >
-        <div
-          data-flipped={flipped}
-          className="relative w-full h-full aspect-photocard cursor-pointer touch-manipulation transition-transform transform-3d transform-gpu duration-300 data-[flipped=true]:rotate-y-180"
-        >
-          <div className="absolute inset-0 backface-hidden rotate-y-0 drop-shadow">
-            {/* smaller image */}
-            <NextImage
-              fill
-              loading="eager"
-              src={resizedUrl}
-              alt={objekt.collectionId}
-            />
-            {/* original image */}
-            <NextImage
-              fill
-              loading="eager"
-              src={objekt.frontImage}
-              alt={objekt.collectionId}
-            />
-            {objekt.artist !== "idntt" && (
-              <ObjektSidebar
-                collection={objekt.collectionNo}
-                serial={
-                  objekts.length < 2 && isOwned ? objekt.serial : undefined
-                }
-              />
-            )}
-          </div>
-          <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">
-            {objekt.backImage ? (
-              <NextImage
-                fill
-                loading="eager"
-                src={objekt.backImage}
-                alt={objekt.collectionId}
-              />
-            ) : (
-              <div className="@container bg-(--objekt-bg-color) text-(--objekt-text-color) w-full h-full rounded-[1rem] flex items-center justify-center overflow-hidden">
-                <span className="[transform:rotate(-45deg)] text-[8cqw] font-semibold opacity-60 text-nowrap">
-                  Back image not available
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
+      <ObjektCard objekts={objekts} />
       <div
         className="flex flex-col overflow-y-auto col-span-2 min-h-screen sm:min-h-full"
         style={{
@@ -149,11 +90,69 @@ export default function ObjektDetail({
   );
 }
 
-const OwnedListPanel = memo(function OwnedListPanel({
-  objekts,
-}: {
-  objekts: OwnedObjekt[];
-}) {
+function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
+  const [objekt] = objekts;
+  const isOwned = "serial" in objekt;
+  const [flipped, setFlipped] = useState(false);
+  const resizedUrl = replaceUrlSize(objekt.frontImage);
+  const css = {
+    "--objekt-bg-color": objekt.backgroundColor,
+    "--objekt-text-color": objekt.textColor,
+  } as CSSProperties;
+  return (
+    <div
+      onClick={() => setFlipped((prev) => !prev)}
+      className="flex h-[21rem] sm:h-fit self-center select-none"
+      style={css}
+    >
+      <div
+        data-flipped={flipped}
+        className="relative w-full h-full aspect-photocard cursor-pointer touch-manipulation transition-transform transform-3d transform-gpu duration-300 data-[flipped=true]:rotate-y-180"
+      >
+        <div className="absolute inset-0 backface-hidden rotate-y-0 drop-shadow">
+          {/* smaller image */}
+          <NextImage
+            fill
+            loading="eager"
+            src={resizedUrl}
+            alt={objekt.collectionId}
+          />
+          {/* original image */}
+          <NextImage
+            fill
+            loading="eager"
+            src={objekt.frontImage}
+            alt={objekt.collectionId}
+          />
+          {objekt.artist !== "idntt" && (
+            <ObjektSidebar
+              collection={objekt.collectionNo}
+              serial={objekts.length < 2 && isOwned ? objekt.serial : undefined}
+            />
+          )}
+        </div>
+        <div className="absolute inset-0 backface-hidden rotate-y-180 drop-shadow">
+          {objekt.backImage ? (
+            <NextImage
+              fill
+              loading="eager"
+              src={objekt.backImage}
+              alt={objekt.collectionId}
+            />
+          ) : (
+            <div className="@container bg-(--objekt-bg-color) text-(--objekt-text-color) w-full h-full rounded-[1rem] flex items-center justify-center overflow-hidden">
+              <span className="[transform:rotate(-45deg)] text-[8cqw] font-semibold opacity-60 text-nowrap">
+                Back image not available
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
   const { openTrades } = useObjektModal();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -245,4 +244,4 @@ const OwnedListPanel = memo(function OwnedListPanel({
       )}
     </div>
   );
-});
+}

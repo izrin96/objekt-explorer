@@ -49,5 +49,5 @@ export function useBreakpointColumn() {
       "useBreakpointColumn must be used within BreakpointColumnProvider"
     );
 
-  return { ...ctx };
+  return ctx;
 }
