@@ -64,7 +64,7 @@ export async function GET(
           ? [
               and(
                 eq(transfers.from, params.address.toLowerCase()),
-                ne(transfers.to, NULL_ADDRESS)
+                ne(transfers.to, SPIN_ADDRESS)
               ),
             ]
           : []),
