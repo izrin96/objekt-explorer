@@ -151,7 +151,7 @@ function TradeRow({
   );
 
   return (
-    <tr className="tr group relative cursor-default border-b text-muted-fg outline-hidden ring-primary focus:ring-0 focus-visible:ring-1">
+    <tr className="tr group relative cursor-default border-b text-fg outline-hidden ring-primary focus:ring-0 focus-visible:ring-1">
       <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
         {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </td>
