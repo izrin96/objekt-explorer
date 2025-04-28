@@ -22,16 +22,22 @@ import {
   ObjektsRenderRow,
 } from "../collection/collection-render";
 import ObjektView from "../objekt/objekt-view";
+import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 
 export default function IndexRender() {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <IndexView />
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ObjektTabProvider initialTab="trades">
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary
+            onReset={reset}
+            FallbackComponent={ErrorFallbackRender}
+          >
+            <IndexView />
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </ObjektTabProvider>
   );
 }
 
@@ -62,7 +68,7 @@ function IndexView() {
             {({ objekts, index }) => {
               const [objekt] = objekts;
               return (
-                <ObjektModalProvider key={objekt.id} initialTab="trades">
+                <ObjektModalProvider key={objekt.id} objekts={objekts}>
                   <ObjektView
                     objekts={objekts}
                     priority={index < columns * 3}

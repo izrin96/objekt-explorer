@@ -10,52 +10,48 @@ import {
   useContext,
   useState,
 } from "react";
-
-export type ValidTab = "owned" | "trades";
+import { useObjektTab } from "./use-objekt-tab";
 
 type ContextProps = {
-  currentTab?: ValidTab;
   currentSerial?: number;
-  setCurrentTab: (tab: ValidTab) => void;
-  openObjekts: (objekt: ValidObjekt[]) => void;
+  openObjekts: () => void;
   openTrades: (serial: number) => void;
 };
 
 const ObjektModalContext = createContext<ContextProps>({} as ContextProps);
 
 type ProviderProps = PropsWithChildren<{
-  initialTab: ValidTab;
   isProfile?: boolean;
+  objekts: ValidObjekt[];
 }>;
 
 export function ObjektModalProvider({
   children,
-  initialTab,
   isProfile,
+  objekts,
 }: ProviderProps) {
-  const [currentTab, setCurrentTab] = useState<ValidTab>(initialTab);
   const [open, setOpen] = useState(false);
-  const [objekts, setObjekts] = useState<ValidObjekt[]>([]);
   const [currentSerial, setCurrentSerial] = useState<number | undefined>();
+  const setCurrentTab = useObjektTab((a) => a.setCurrentTab);
 
-  const openObjekts = useCallback((objekts: ValidObjekt[]) => {
+  const openObjekts = useCallback(() => {
     const [objekt] = objekts;
     setCurrentSerial("serial" in objekt ? objekt.serial : undefined);
-    setObjekts(objekts);
     setOpen(true);
-  }, []);
+  }, [objekts]);
 
-  const openTrades = useCallback((serial: number) => {
-    setCurrentSerial(serial);
-    setCurrentTab("trades");
-  }, []);
+  const openTrades = useCallback(
+    (serial: number) => {
+      setCurrentSerial(serial);
+      setCurrentTab("trades");
+    },
+    [setCurrentTab]
+  );
 
   return (
     <ObjektModalContext
       value={{
-        currentTab,
         currentSerial,
-        setCurrentTab,
         openObjekts,
         openTrades,
       }}

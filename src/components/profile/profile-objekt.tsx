@@ -21,16 +21,22 @@ import {
   ObjektsRenderRow,
 } from "../collection/collection-render";
 import ObjektView from "../objekt/objekt-view";
+import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 
 export default function ProfileObjektRender() {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <ProfileObjekt />
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ObjektTabProvider initialTab="owned">
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary
+            onReset={reset}
+            FallbackComponent={ErrorFallbackRender}
+          >
+            <ProfileObjekt />
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </ObjektTabProvider>
   );
 }
 
@@ -76,11 +82,7 @@ function ProfileObjekt() {
             {({ objekts, index }) => {
               const [objekt] = objekts;
               return (
-                <ObjektModalProvider
-                  key={objekt.id}
-                  initialTab="owned"
-                  isProfile
-                >
+                <ObjektModalProvider key={objekt.id} objekts={objekts} isProfile>
                   <ObjektView
                     objekts={objekts}
                     isFade={!("serial" in objekt)}

@@ -22,11 +22,12 @@ import ErrorFallbackRender from "@/components/error-boundary";
 import TradesFilter from "./trades-filter";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useTypeFilter } from "./filter-type";
+import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 
 export default function ProfileTradesRender() {
   const { artists } = useCosmoArtist();
   return (
-    <>
+    <ObjektTabProvider initialTab="trades">
       <TradesFilter artists={artists} />
 
       <QueryErrorResetBoundary>
@@ -39,7 +40,7 @@ export default function ProfileTradesRender() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </>
+    </ObjektTabProvider>
   );
 }
 
@@ -105,7 +106,7 @@ function ProfileTrades() {
           </thead>
           <tbody className="[&_.tr:last-child]:border-0">
             {rows.map((row) => (
-              <ObjektModalProvider key={row.transfer.id} initialTab="trades">
+              <ObjektModalProvider key={row.transfer.id} objekts={[row.objekt]}>
                 <TradeRow row={row} address={address} />
               </ObjektModalProvider>
             ))}
@@ -157,7 +158,7 @@ function TradeRow({
       </td>
       <td
         className="group whitespace-nowrap px-3 py-3 outline-hidden cursor-pointer"
-        onClick={() => openObjekts([row.objekt])}
+        onClick={openObjekts}
       >
         <div className="inline-flex gap-2 items-center">
           {getCollectionShortId(row.objekt)}

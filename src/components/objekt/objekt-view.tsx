@@ -42,11 +42,6 @@ export default memo(function ObjektView({
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
-  const onClick = useCallback(
-    () => openObjekts(objekts),
-    [openObjekts, objekts]
-  );
-
   return (
     <div
       className={cn("flex flex-col gap-2", isFade && "opacity-35")}
@@ -54,7 +49,7 @@ export default memo(function ObjektView({
     >
       <div
         className="cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150"
-        onClick={onClick}
+        onClick={openObjekts}
       >
         <NextImage
           fill
@@ -79,7 +74,7 @@ export default memo(function ObjektView({
           intent="secondary"
           className="font-semibold cursor-pointer"
           shape="square"
-          onClick={onClick}
+          onClick={openObjekts}
         >
           {getCollectionShortId(objekt)}
           {showSerial && isOwned && ` #${objekt.serial}`}

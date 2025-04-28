@@ -1,6 +1,6 @@
 import { Badge, Button, Card, Link, NumberField, Table, Tabs } from "../ui";
-import { CSSProperties, memo, useState } from "react";
-import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
+import { CSSProperties, useState } from "react";
+import { useObjektModal } from "@/hooks/use-objekt-modal";
 import {
   OwnedObjekt,
   unobtainables,
@@ -19,6 +19,7 @@ import {
 } from "@intentui/icons";
 import { ArchiveXIcon } from "lucide-react";
 import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
+import { useObjektTab, ValidTab } from "@/hooks/use-objekt-tab";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
@@ -31,7 +32,8 @@ export default function ObjektDetail({
 }: ObjektDetailProps) {
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
-  const { currentTab, setCurrentTab } = useObjektModal();
+  const currentTab = useObjektTab((a) => a.currentTab);
+  const setCurrentTab = useObjektTab((a) => a.setCurrentTab);
 
   return (
     <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2 h-full sm:h-[33.5rem] sm:min-h-[33.5rem]">

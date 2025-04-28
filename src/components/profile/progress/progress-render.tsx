@@ -18,16 +18,22 @@ import { useProfile } from "@/hooks/use-profile";
 import { groupBy } from "es-toolkit";
 import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
+import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 
 export default function ProgressRender() {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <Progress />
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ObjektTabProvider initialTab="owned">
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary
+            onReset={reset}
+            FallbackComponent={ErrorFallbackRender}
+          >
+            <Progress />
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </ObjektTabProvider>
   );
 }
 
@@ -176,11 +182,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
           {groupObjekts.map((objekts) => {
             const [objekt] = objekts;
             return (
-              <ObjektModalProvider
-                key={objekt.slug}
-                initialTab="owned"
-                isProfile
-              >
+              <ObjektModalProvider key={objekt.slug} objekts={objekts} isProfile>
                 <ObjektView
                   objekts={objekts}
                   isFade={!ownedSlugs.has(objekt.slug)}
