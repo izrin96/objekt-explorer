@@ -116,7 +116,7 @@ function Trades({
           size="square-petite"
           intent="outline"
           className="flex-none"
-          onPress={() => updateSerial("prev")}
+          onClick={() => updateSerial("prev")}
         >
           <IconArrowLeft />
         </Button>
@@ -124,7 +124,7 @@ function Trades({
           size="square-petite"
           intent="outline"
           className="flex-none"
-          onPress={() => updateSerial("next")}
+          onClick={() => updateSerial("next")}
         >
           <IconArrowRight />
         </Button>

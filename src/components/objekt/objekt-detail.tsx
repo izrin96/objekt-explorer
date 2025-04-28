@@ -218,7 +218,7 @@ function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
             size="square-petite"
             intent="outline"
             isDisabled={currentPage <= 1}
-            onPress={() => setCurrentPage(currentPage - 1)}
+            onClick={() => setCurrentPage(currentPage - 1)}
           >
             <IconChevronLgLeft />
           </Button>
@@ -236,7 +236,7 @@ function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
             size="square-petite"
             intent="outline"
             isDisabled={currentPage >= totalPages}
-            onPress={() => setCurrentPage(currentPage + 1)}
+            onClick={() => setCurrentPage(currentPage + 1)}
           >
             <IconChevronLgRight />
           </Button>

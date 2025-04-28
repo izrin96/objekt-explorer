@@ -9,15 +9,14 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ofetch } from "ofetch";
 import { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
-import { Badge, Card, Link, Table, Loader } from "@/components/ui";
+import { Badge, Card, Loader } from "@/components/ui";
 import { ObjektModalProvider, useObjektModal } from "@/hooks/use-objekt-modal";
 import { useProfile } from "@/hooks/use-profile";
 import { format } from "date-fns";
-import { getCollectionShortId, ValidObjekt } from "@/lib/universal/objekts";
+import { getCollectionShortId } from "@/lib/universal/objekts";
 import { IconOpenLink } from "@intentui/icons";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import UserLink from "@/components/user-link";
-import { Key } from "react-aria";
 import { useFilters } from "@/hooks/use-filters";
 import ErrorFallbackRender from "@/components/error-boundary";
 import TradesFilter from "./trades-filter";
@@ -84,20 +83,34 @@ function ProfileTrades() {
   return (
     <>
       <Card className="overflow-x-auto py-0">
-        <Table aria-label="Trades">
-          <Table.Header>
-            <Table.Column isRowHeader>Date</Table.Column>
-            <Table.Column>Objekt</Table.Column>
-            <Table.Column>Serial</Table.Column>
-            <Table.Column>Action</Table.Column>
-            <Table.Column>User</Table.Column>
-          </Table.Header>
-          <Table.Body items={rows}>
-            {(row) => (
-              <TradeRow id={row.transfer.id} row={row} address={address} />
-            )}
-          </Table.Body>
-        </Table>
+        <table className="table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden">
+          <thead className="border-b">
+            <tr>
+              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                Date
+              </th>
+              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                Objekt
+              </th>
+              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                Serial
+              </th>
+              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                Action
+              </th>
+              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                User
+              </th>
+            </tr>
+          </thead>
+          <tbody className="[&_.tr:last-child]:border-0">
+            {rows.map((row) => (
+              <ObjektModalProvider key={row.transfer.id} initialTab="trades">
+                <TradeRow row={row} address={address} />
+              </ObjektModalProvider>
+            ))}
+          </tbody>
+        </table>
       </Card>
       <InfiniteQueryNext
         status={query.status}
@@ -110,14 +123,13 @@ function ProfileTrades() {
 }
 
 function TradeRow({
-  id,
   row,
   address,
 }: {
-  id: Key;
   row: AggregatedTransfer;
   address: string;
 }) {
+  const { openObjekts } = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const action = isReceiver ? (
@@ -139,31 +151,28 @@ function TradeRow({
   );
 
   return (
-    <Table.Row id={id}>
-      <Table.Cell>
+    <tr className="tr group relative cursor-default border-b text-muted-fg outline-hidden ring-primary focus:ring-0 focus-visible:ring-1">
+      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
         {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
-      </Table.Cell>
-      <Table.Cell>
-        <ObjektModalProvider initialTab="trades">
-          <TradeObjektLink objekt={row.objekt} />
-        </ObjektModalProvider>
-      </Table.Cell>
-      <Table.Cell>{row.objekt.serial}</Table.Cell>
-      <Table.Cell>{action}</Table.Cell>
-      <Table.Cell>{user}</Table.Cell>
-    </Table.Row>
-  );
-}
-
-function TradeObjektLink({ objekt }: { objekt: ValidObjekt }) {
-  const { openObjekts } = useObjektModal();
-  return (
-    <Link
-      onPress={() => openObjekts([objekt])}
-      className="cursor-pointer inline-flex gap-2 items-center"
-    >
-      {getCollectionShortId(objekt)}
-      <IconOpenLink />
-    </Link>
+      </td>
+      <td
+        className="group whitespace-nowrap px-3 py-3 outline-hidden cursor-pointer"
+        onClick={() => openObjekts([row.objekt])}
+      >
+        <div className="inline-flex gap-2 items-center">
+          {getCollectionShortId(row.objekt)}
+          <IconOpenLink />
+        </div>
+      </td>
+      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+        {row.objekt.serial}
+      </td>
+      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+        {action}
+      </td>
+      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+        {user}
+      </td>
+    </tr>
   );
 }
