@@ -83,35 +83,40 @@ function ProfileTrades() {
 
   return (
     <>
-      <Card className="overflow-x-auto py-0">
-        <table className="table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden">
-          <thead className="border-b">
-            <tr>
-              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
-                Date
-              </th>
-              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
-                Objekt
-              </th>
-              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
-                Serial
-              </th>
-              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
-                Action
-              </th>
-              <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
-                User
-              </th>
-            </tr>
-          </thead>
-          <tbody className="[&_.tr:last-child]:border-0">
-            {rows.map((row) => (
-              <ObjektModalProvider key={row.transfer.id} objekts={[row.objekt]}>
-                <TradeRow row={row} address={address} />
-              </ObjektModalProvider>
-            ))}
-          </tbody>
-        </table>
+      <Card className="py-0">
+        <div className="relative w-full overflow-auto">
+          <table className="table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden">
+            <thead className="border-b">
+              <tr>
+                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                  Date
+                </th>
+                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                  Objekt
+                </th>
+                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                  Serial
+                </th>
+                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                  Action
+                </th>
+                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                  User
+                </th>
+              </tr>
+            </thead>
+            <tbody className="[&_.tr:last-child]:border-0">
+              {rows.map((row) => (
+                <ObjektModalProvider
+                  key={row.transfer.id}
+                  objekts={[row.objekt]}
+                >
+                  <TradeRow row={row} address={address} />
+                </ObjektModalProvider>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
       <InfiniteQueryNext
         status={query.status}
