@@ -5,6 +5,7 @@ import { Button, Menu } from "../ui";
 import { useCallback, useMemo } from "react";
 import { useFilters } from "@/hooks/use-filters";
 import { validGroupBy, ValidGroupBy } from "@/lib/universal/cosmo/common";
+import { parseSelected } from "@/lib/utils";
 
 const map: Record<ValidGroupBy, string> = {
   artist: "Artist",
@@ -24,11 +25,10 @@ export default function GroupByFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as ValidGroupBy[];
-      const newValue = newFilters.length > 0 ? newFilters[0] : null;
+      const value = parseSelected<ValidGroupBy>(key);
       setFilters({
-        group_by: newValue,
-        group_dir: ["member", "class"].includes(newValue ?? "") ? "asc" : null,
+        group_by: value,
+        group_dir: ["member", "class"].includes(value ?? "") ? "asc" : null,
       });
     },
     [setFilters]

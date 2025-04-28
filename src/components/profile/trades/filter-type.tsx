@@ -5,6 +5,7 @@ import { Button, Menu } from "@/components/ui";
 import { useCallback, useMemo } from "react";
 import { ValidType, validType } from "@/lib/universal/transfers";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseSelected } from "@/lib/utils";
 
 const map: Record<ValidType, string> = {
   all: "All",
@@ -27,10 +28,8 @@ export default function TypeFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as string[];
-      const newValue =
-        newFilters.length > 0 ? (newFilters[0] as ValidType) : "all";
-      setType(newValue);
+      const value = parseSelected<ValidType>(key) ?? "all";
+      setType(value);
     },
     [setType]
   );

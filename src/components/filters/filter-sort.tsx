@@ -5,6 +5,7 @@ import { ValidSort, validSorts } from "@/lib/universal/cosmo/common";
 import { Button, Menu } from "../ui";
 import { useMemo } from "react";
 import { useFilters } from "@/hooks/use-filters";
+import { parseSelected } from "@/lib/utils";
 
 type Props = {
   isProfile?: boolean;
@@ -36,17 +37,15 @@ export default function SortFilter({ isProfile = false }: Props) {
   );
 
   function update(key: Selection) {
-    const newFilters = [...key] as string[];
-    const newValue =
-      newFilters.length > 0 ? (newFilters[0] as ValidSort) : "date";
+    const value = parseSelected<ValidSort>(key) ?? "date";
 
     setFilters((current) => ({
-      sort: newValue === "date" ? null : newValue,
-      sort_dir: ["serial", "member"].includes(newValue) ? "asc" : null,
+      sort: value === "date" ? null : value,
+      sort_dir: ["serial", "member"].includes(value) ? "asc" : null,
       grouped:
-        newValue === "duplicate"
+        value === "duplicate"
           ? true
-          : newValue === "serial"
+          : value === "serial"
           ? false
           : current.grouped,
     }));

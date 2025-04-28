@@ -8,6 +8,7 @@ import {
 import { useCallback, useMemo } from "react";
 import { Menu, Button } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
+import { parseSelected } from "@/lib/utils";
 
 const map: Record<ValidOnlineType, string> = {
   online: "Digital",
@@ -23,9 +24,9 @@ export default function OnlineFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as ValidOnlineType[];
+      const value = parseSelected<ValidOnlineType>(key, true);
       setFilters({
-        on_offline: newFilters.length > 0 ? newFilters : null,
+        on_offline: value,
       });
     },
     [setFilters]

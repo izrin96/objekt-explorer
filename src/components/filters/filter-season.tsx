@@ -5,6 +5,7 @@ import { ValidSeason, validSeasons } from "@/lib/universal/cosmo/common";
 import { useMemo, useCallback } from "react";
 import { Menu, Button } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
+import { parseSelected } from "@/lib/utils";
 
 export default function FilterSeason() {
   const [filters, setFilters] = useFilters();
@@ -12,9 +13,9 @@ export default function FilterSeason() {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as ValidSeason[];
+      const value = parseSelected<ValidSeason>(key, true);
       setFilters({
-        season: newFilters.length > 0 ? newFilters : null,
+        season: value,
       });
     },
     [setFilters]

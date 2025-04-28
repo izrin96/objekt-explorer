@@ -6,6 +6,7 @@ import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useCallback, useMemo } from "react";
 import { ValidArtist } from "@/lib/universal/cosmo/common";
 import { useFilters } from "@/hooks/use-filters";
+import { parseSelected } from "@/lib/utils";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -20,9 +21,9 @@ export default function ArtistFilter({ artists }: Props) {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as ValidArtist[];
+      const value = parseSelected<ValidArtist>(key, true);
       setFilters({
-        artist: newFilters.length > 0 ? newFilters : null,
+        artist: value,
         member: null,
       });
     },

@@ -5,6 +5,7 @@ import { ValidClass, validClasses } from "@/lib/universal/cosmo/common";
 import { useCallback, useMemo } from "react";
 import { Button, Menu } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
+import { parseSelected } from "@/lib/utils";
 
 type Props = {
   hideZeroWelcome?: boolean;
@@ -16,9 +17,9 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as ValidClass[];
+      const value = parseSelected<ValidClass>(key, true);
       setFilters({
-        class: newFilters.length > 0 ? newFilters : null,
+        class: value,
       });
     },
     [setFilters]

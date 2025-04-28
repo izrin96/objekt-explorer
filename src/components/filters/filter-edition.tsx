@@ -5,6 +5,7 @@ import { useCallback, useMemo } from "react";
 import { Button, Menu } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
 import { ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
+import { parseSelected } from "@/lib/utils";
 
 export default function EditionFilter() {
   const [filters, setFilters] = useFilters();
@@ -12,9 +13,9 @@ export default function EditionFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as ValidEdition[];
+      const value = parseSelected<ValidEdition>(key, true);
       setFilters({
-        edition: newFilters.length > 0 ? newFilters : null,
+        edition: value,
       });
     },
     [setFilters]

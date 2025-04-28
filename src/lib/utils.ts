@@ -1,4 +1,5 @@
 import { env } from "@/env";
+import type { Selection } from "react-aria-components";
 
 export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_TABLET = 5;
@@ -33,4 +34,12 @@ export function getBaseURL() {
 
 export function replaceUrlSize(url: string, size: "2x" | "thumbnail" = "2x") {
   return url.replace(/(4x|3x|original)$/i, size);
+}
+
+export function parseSelected<T>(keys: Selection, multiple?: false): T | null;
+export function parseSelected<T>(keys: Selection, multiple: true): T[] | null;
+export function parseSelected<T>(keys: Selection, multiple = false) {
+  const result = [...keys] as T[];
+  if (result.length === 0) return null;
+  return multiple ? result : result[0];
 }

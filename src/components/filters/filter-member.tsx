@@ -5,6 +5,7 @@ import { Button, Menu } from "../ui";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useCallback, useMemo } from "react";
 import { useFilters } from "@/hooks/use-filters";
+import { parseSelected } from "@/lib/utils";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -16,9 +17,9 @@ export default function MemberFilter({ artists }: Props) {
 
   const update = useCallback(
     (key: Selection) => {
-      const newFilters = [...key] as string[];
+      const value = parseSelected<string>(key, true);
       setFilters({
-        member: newFilters.length > 0 ? newFilters : null,
+        member: value,
         artist: null,
       });
     },
