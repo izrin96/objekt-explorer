@@ -76,14 +76,19 @@ function ProfileObjekt() {
             {({ objekts, index }) => {
               const [objekt] = objekts;
               return (
-                <ObjektView
+                <ObjektModalProvider
                   key={objekt.id}
-                  objekts={objekts}
-                  isFade={!("serial" in objekt)}
-                  priority={index < columns * 3}
-                  showSerial={!filters.grouped}
-                  showCount
-                />
+                  initialTab="owned"
+                  isProfile
+                >
+                  <ObjektView
+                    objekts={objekts}
+                    isFade={!("serial" in objekt)}
+                    priority={index < columns * 3}
+                    showSerial={!filters.grouped}
+                    showCount
+                  />
+                </ObjektModalProvider>
               );
             }}
           </ObjektsRenderRow>
@@ -126,9 +131,7 @@ function ProfileObjekt() {
         </span>
       </div>
 
-      <ObjektModalProvider initialTab="owned" isProfile>
-        <WindowVirtualizer>{virtualList}</WindowVirtualizer>
-      </ObjektModalProvider>
+      <WindowVirtualizer>{virtualList}</WindowVirtualizer>
     </div>
   );
 }

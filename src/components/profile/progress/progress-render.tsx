@@ -91,27 +91,25 @@ function Progress() {
     );
 
   return (
-    <ObjektModalProvider initialTab="owned" isProfile>
-      <div className="flex flex-col gap-8">
-        <ProgressFilter artists={artists} />
-        {!filters.artist && !filters.member ? (
-          <div className="flex justify-center text-sm text-muted-fg">
-            Select at least 1 artist or 1 member
-          </div>
-        ) : (
-          shaped.map(([key, objekts]) => {
-            return (
-              <ProgressCollapse
-                key={key}
-                title={key}
-                objekts={objekts}
-                ownedSlugs={ownedSlugs}
-              />
-            );
-          })
-        )}
-      </div>
-    </ObjektModalProvider>
+    <div className="flex flex-col gap-8">
+      <ProgressFilter artists={artists} />
+      {!filters.artist && !filters.member ? (
+        <div className="flex justify-center text-sm text-muted-fg">
+          Select at least 1 artist or 1 member
+        </div>
+      ) : (
+        shaped.map(([key, objekts]) => {
+          return (
+            <ProgressCollapse
+              key={key}
+              title={key}
+              objekts={objekts}
+              ownedSlugs={ownedSlugs}
+            />
+          );
+        })
+      )}
+    </div>
   );
 }
 
@@ -178,13 +176,18 @@ const ProgressCollapse = memo(function ProgressCollapse({
           {groupObjekts.map((objekts) => {
             const [objekt] = objekts;
             return (
-              <ObjektView
+              <ObjektModalProvider
                 key={objekt.slug}
-                objekts={objekts}
-                isFade={!ownedSlugs.has(objekt.slug)}
-                unobtainable={unobtainables.includes(objekt.slug)}
-                showCount={showCount}
-              />
+                initialTab="owned"
+                isProfile
+              >
+                <ObjektView
+                  objekts={objekts}
+                  isFade={!ownedSlugs.has(objekt.slug)}
+                  unobtainable={unobtainables.includes(objekt.slug)}
+                  showCount={showCount}
+                />
+              </ObjektModalProvider>
             );
           })}
         </div>

@@ -8,7 +8,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useMemo,
   useState,
 } from "react";
 
@@ -51,19 +50,16 @@ export function ObjektModalProvider({
     setCurrentTab("trades");
   }, []);
 
-  const contextValue = useMemo(
-    () => ({
-      currentTab,
-      currentSerial,
-      setCurrentTab,
-      openObjekts,
-      openTrades,
-    }),
-    [currentTab, currentSerial, openObjekts, openTrades]
-  );
-
   return (
-    <ObjektModalContext value={contextValue}>
+    <ObjektModalContext
+      value={{
+        currentTab,
+        currentSerial,
+        setCurrentTab,
+        openObjekts,
+        openTrades,
+      }}
+    >
       <Modal.Content isOpen={open} onOpenChange={setOpen} size="5xl">
         <Modal.Header className="hidden">
           <Modal.Title>Objekt display</Modal.Title>

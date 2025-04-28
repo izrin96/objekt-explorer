@@ -62,11 +62,12 @@ function IndexView() {
             {({ objekts, index }) => {
               const [objekt] = objekts;
               return (
-                <ObjektView
-                  key={objekt.id}
-                  objekts={objekts}
-                  priority={index < columns * 3}
-                />
+                <ObjektModalProvider key={objekt.id} initialTab="trades">
+                  <ObjektView
+                    objekts={objekts}
+                    priority={index < columns * 3}
+                  />
+                </ObjektModalProvider>
               );
             }}
           </ObjektsRenderRow>
@@ -89,9 +90,7 @@ function IndexView() {
       <FilterView artists={artists} />
       <span className="font-semibold">{count} total</span>
 
-      <ObjektModalProvider initialTab="trades">
-        <WindowVirtualizer>{virtualList}</WindowVirtualizer>
-      </ObjektModalProvider>
+      <WindowVirtualizer>{virtualList}</WindowVirtualizer>
     </div>
   );
 }

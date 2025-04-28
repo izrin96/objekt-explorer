@@ -27,7 +27,7 @@ import { useTypeFilter } from "./filter-type";
 export default function ProfileTradesRender() {
   const { artists } = useCosmoArtist();
   return (
-    <ObjektModalProvider initialTab="trades">
+    <>
       <TradesFilter artists={artists} />
 
       <QueryErrorResetBoundary>
@@ -40,12 +40,11 @@ export default function ProfileTradesRender() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </ObjektModalProvider>
+    </>
   );
 }
 
 function ProfileTrades() {
-  const { openObjekts } = useObjektModal();
   const { profile } = useProfile();
   const [filters] = useFilters();
   const [type] = useTypeFilter();
@@ -95,12 +94,7 @@ function ProfileTrades() {
           </Table.Header>
           <Table.Body items={rows}>
             {(row) => (
-              <TradeRow
-                id={row.transfer.id}
-                row={row}
-                address={address}
-                onOpen={openObjekts}
-              />
+              <TradeRow id={row.transfer.id} row={row} address={address} />
             )}
           </Table.Body>
         </Table>
@@ -119,12 +113,10 @@ function TradeRow({
   id,
   row,
   address,
-  onOpen,
 }: {
   id: Key;
   row: AggregatedTransfer;
   address: string;
-  onOpen: (objekt: ValidObjekt[]) => void;
 }) {
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
@@ -152,17 +144,26 @@ function TradeRow({
         {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </Table.Cell>
       <Table.Cell>
-        <Link
-          onPress={() => onOpen([row.objekt])}
-          className="cursor-pointer inline-flex gap-2 items-center"
-        >
-          {getCollectionShortId(row.objekt)}
-          <IconOpenLink />
-        </Link>
+        <ObjektModalProvider initialTab="trades">
+          <TradeObjektLink objekt={row.objekt} />
+        </ObjektModalProvider>
       </Table.Cell>
       <Table.Cell>{row.objekt.serial}</Table.Cell>
       <Table.Cell>{action}</Table.Cell>
       <Table.Cell>{user}</Table.Cell>
     </Table.Row>
+  );
+}
+
+function TradeObjektLink({ objekt }: { objekt: ValidObjekt }) {
+  const { openObjekts } = useObjektModal();
+  return (
+    <Link
+      onPress={() => openObjekts([objekt])}
+      className="cursor-pointer inline-flex gap-2 items-center"
+    >
+      {getCollectionShortId(objekt)}
+      <IconOpenLink />
+    </Link>
   );
 }
