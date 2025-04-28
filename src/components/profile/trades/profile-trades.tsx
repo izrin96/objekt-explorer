@@ -86,7 +86,7 @@ function ProfileTrades() {
       <Card className="py-0">
         <div className="relative w-full overflow-auto">
           <table className="table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden">
-            <thead className="border-b">
+            <thead data-slot="table-header" className="border-b">
               <tr>
                 <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
                   Date
