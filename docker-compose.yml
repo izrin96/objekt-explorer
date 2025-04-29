@@ -40,5 +40,17 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+  ws:
+    build:
+      context: .
+      dockerfile: ./docker/ws.Dockerfile
+    restart: always
+    environment:
+      - DB_PROXY_URL
+      - DB_PROXY_KEY
+      - INDEXER_PROXY_URL
+      - INDEXER_PROXY_KEY
+    ports:
+      - "8081:3000"
 volumes:
   db_data:
