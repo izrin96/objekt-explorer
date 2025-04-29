@@ -57,7 +57,10 @@
 
   --aspect-photocard: 5.5 / 8.5;
 
-  --animate-highlight: highlight 0.5s ease-in-out;
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+
+  --animate-live-animation-bg: live-animation-bg 2s var(--ease-out-cubic) 0s 1;
 }
 
 @layer base {
@@ -237,16 +240,12 @@
     color: var(--fg);
   }
 
-  @keyframes highlight {
-    from {
-      background-color: var(--color-sky-400);
-      transform: translateY(-15%);
-      opacity: 0%;
+  @keyframes live-animation-bg {
+    0% {
+      background-color: var(--color-secondary);
     }
     to {
-      background-color: transparent;
-      transform: translateY(0);
-      opacity: 100%;
+      background-color: initial;
     }
   }
 }
