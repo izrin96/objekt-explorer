@@ -33,15 +33,14 @@ const dotMatrix = localFont({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s · Lunar Cosmo",
-    default: "Lunar Cosmo",
-    absolute: "Lunar Cosmo",
+    template: "%s · Objektive",
+    default: "Objektive",
+    absolute: "Objektive",
   },
   description: "Cosmo objekt explorer",
   // keywords taken from teamreflex/cosmo-web
   keywords: [
-    "lunar",
-    "lunar cosmo",
+    "objektive",
     "kpop",
     "modhaus",
     "모드하우스",
