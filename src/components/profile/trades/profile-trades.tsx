@@ -13,7 +13,6 @@ import { Badge, Card, Loader } from "@/components/ui";
 import { ObjektModalProvider, useObjektModal } from "@/hooks/use-objekt-modal";
 import { useProfile } from "@/hooks/use-profile";
 import { format } from "date-fns";
-import { getCollectionShortId } from "@/lib/universal/objekts";
 import { IconOpenLink } from "@intentui/icons";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import UserLink from "@/components/user-link";
@@ -166,7 +165,7 @@ function TradeRow({
         onClick={openObjekts}
       >
         <div className="inline-flex gap-2 items-center">
-          {getCollectionShortId(row.objekt)}
+          {row.objekt.collectionId}
           <IconOpenLink />
         </div>
       </td>

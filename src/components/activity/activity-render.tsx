@@ -64,6 +64,9 @@ function Activity() {
                   Objekt
                 </th>
                 <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                  Serial
+                </th>
+                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
                   From
                 </th>
                 <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
@@ -150,6 +153,9 @@ function ActivityRow({ item }: { item: Data }) {
         onClick={openObjekts}
       >
         {item.collection.collectionId}
+      </td>
+      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+        {item.objekt.serial}
       </td>
       <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
         {from}
