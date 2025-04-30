@@ -5,7 +5,12 @@ import {
   uniqueIndex,
   varchar,
   customType,
+  integer,
+  text,
 } from "drizzle-orm/pg-core";
+import { user, session, account, verification } from "./auth-schema";
+
+export { user, session, account, verification };
 
 const citext = customType<{ data: string }>({
   dataType() {
@@ -33,5 +38,39 @@ export const userAddress = pgTable(
   ]
 );
 
+export const lists = pgTable(
+  "lists",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, {
+        onDelete: "cascade",
+      }),
+    slug: varchar("slug", { length: 12 }).notNull(),
+    name: text("name").notNull(),
+  },
+  (t) => [index("lists_slug_idx").on(t.slug)]
+);
+
+export const listEntries = pgTable(
+  "list_entries",
+  {
+    id: serial("id").primaryKey(),
+    listId: integer("list_id")
+      .notNull()
+      .references(() => lists.id, {
+        onDelete: "cascade",
+      }),
+    collectionId: varchar("collection_id", { length: 36 }).notNull(),
+  },
+  (t) => [index("list_entries_list_idx").on(t.listId)]
+);
+
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAdress = typeof userAddress.$inferSelect;
+
+export type User = typeof user.$inferSelect;
+export type Session = typeof session.$inferSelect;
+export type Account = typeof account.$inferSelect;
+export type Verification = typeof verification.$inferSelect;
