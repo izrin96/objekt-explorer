@@ -12,6 +12,7 @@ import { ObjektModalProvider, useObjektModal } from "@/hooks/use-objekt-modal";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 import { env } from "@/env";
+import ReconnectingWebSocket from 'reconnecting-websocket';
 
 export default function ActivityRender() {
   return (
@@ -38,7 +39,7 @@ function Activity() {
   const [transfers, setTransfers] = useState<Data[]>([]);
 
   useEffect(() => {
-    const ws = new WebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
+    const ws = new ReconnectingWebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
 
     ws.onmessage = (event) => {
       const { data } = JSON.parse(event.data) as EventData;
