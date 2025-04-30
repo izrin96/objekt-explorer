@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { Card } from "../ui";
 import { Leaf, Send, Disc3, RadioTowerIcon } from "lucide-react";
-import { io, Socket } from "socket.io-client";
 import { Collection, Objekt, Transfer } from "@/lib/server/db/indexer/schema";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { UserAdress } from "@/lib/server/db/schema";
@@ -33,18 +32,21 @@ type Data = Transfer & {
   collection: Collection;
   nicknames: UserAdress[];
 };
+type EventData = { type: string; data: Data };
 
 function Activity() {
   const [transfers, setTransfers] = useState<Data[]>([]);
 
   useEffect(() => {
-    const socket: Socket = io(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL);
-    socket.on("transfer", (payload: any) => {
-      const data = payload as Data;
+    const ws = new WebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
+
+    ws.onmessage = (event) => {
+      const { data } = JSON.parse(event.data) as EventData;
       setTransfers((prev) => [data, ...prev.slice(0, 99)]);
-    });
+    };
+
     return () => {
-      socket.disconnect();
+      ws.close();
     };
   }, []);
 
