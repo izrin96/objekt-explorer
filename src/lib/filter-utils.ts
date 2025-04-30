@@ -5,6 +5,7 @@ import {
   validClasses,
   validGroupBy,
   ValidSeason,
+  validSeasons,
 } from "@/lib/universal/cosmo/common";
 import { OwnedObjekt, ValidObjekt } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
@@ -327,7 +328,7 @@ export function shapeIndexedObjekts<T extends ValidObjekt>(
     }
 
     if (filters.group_by === "class") {
-      return compareClass(keyA, keyB, groupDir);
+      return compareByArray(validClasses, keyA, keyB, groupDir);
     }
 
     if (groupDir === "desc") return keyB.localeCompare(keyA);
@@ -373,15 +374,16 @@ function compareMember(
   return memberOrderA - memberOrderB;
 }
 
-function compareClass(
-  classA: string,
-  classB: string,
-  direction: "asc" | "desc"
+function compareByArray<T>(
+  valid: readonly T[],
+  a: T,
+  b: T,
+  dir: "asc" | "desc"
 ) {
-  const posA = validClasses.findIndex((a) => a === classA);
-  const posB = validClasses.findIndex((a) => a === classB);
+  const posA = valid.findIndex((p) => p === a);
+  const posB = valid.findIndex((p) => p === b);
 
-  if (direction == "desc") return posB - posA;
+  if (dir == "desc") return posB - posA;
   return posA - posB;
 }
 
@@ -408,12 +410,12 @@ export function shapeProgressCollections<T extends ValidObjekt>(
     .filter(([, objekts]) => objekts.length > 0)
     .toSorted(([, [objektA]], [, [objektB]]) =>
       groupBys.includes("class")
-        ? compareClass(objektA.class, objektB.class, "asc")
+        ? compareByArray(validClasses, objektA.class, objektB.class, "asc")
         : 0
     )
     .toSorted(([, [objektA]], [, [objektB]]) =>
       groupBys.includes("season")
-        ? objektB.season.localeCompare(objektA.season)
+        ? compareByArray(validSeasons, objektA.season, objektB.season, "desc")
         : 0
     )
     .toSorted(([, [objektA]], [, [objektB]]) =>
