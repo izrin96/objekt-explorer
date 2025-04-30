@@ -1,3 +1,4 @@
+import { IconMoonFill } from "@intentui/icons";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Container } from "./ui";
 import UserSearch from "./user-search";
@@ -10,8 +11,9 @@ export default function Navbar() {
         <div className="grow gap-4 flex items-center h-14">
           <Link href="/">
             <div className="flex gap-2 items-center">
+              <IconMoonFill className="size-5" />
               <span className="font-semibold text-xl select-none">
-                Objektive
+                Lunar
               </span>
             </div>
           </Link>

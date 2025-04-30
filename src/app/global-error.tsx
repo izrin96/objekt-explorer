@@ -13,7 +13,7 @@ export default function GlobalError() {
   return (
     <html className={`dark ${geistSans.variable}`}>
       <head>
-        <title>Objektive</title>
+        <title>Lunar</title>
       </head>
 
       <body className="min-h-svh antialiased">
