@@ -41,7 +41,9 @@ export async function GET(request: NextRequest) {
   const wheres = and(
     not(inArray(collections.slug, unobtainables)),
     not(inArray(collections.class, ["Welcome", "Zero"])),
-    ...(options.artist ? [eq(collections.artist, options.artist)] : []),
+    ...(options.artist
+      ? [eq(collections.artist, options.artist.toLowerCase())]
+      : []),
     ...(options.member ? [eq(collections.member, options.member)] : []),
     ...(options.season ? [eq(collections.season, options.season)] : []),
     ...(options.onlineType

@@ -77,7 +77,12 @@ export async function GET(
             ]
           : []),
         ...(query.artist.length
-          ? [inArray(collections.artist, query.artist)]
+          ? [
+              inArray(
+                collections.artist,
+                query.artist.map((a) => a.toLowerCase())
+              ),
+            ]
           : []),
         ...(query.member.length
           ? [inArray(collections.member, query.member)]

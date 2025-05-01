@@ -165,7 +165,7 @@ export function filterObjekts<T extends ValidObjekt>(
   }
   if (filters.artist) {
     objekts = objekts.filter((a) =>
-      filters.artist?.includes(a.artist as ValidArtist)
+      filters.artist?.map((b) => b.toLowerCase()).includes(a.artist)
     );
   }
   if (filters.class) {
