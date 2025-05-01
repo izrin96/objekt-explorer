@@ -1,17 +1,20 @@
 "use client";
 
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
+import {
+  CosmoArtistWithMembersBFF,
+  CosmoMemberBFF,
+} from "@/lib/universal/cosmo/artists";
 import {
   PropsWithChildren,
   createContext,
   useCallback,
   useContext,
-  useRef,
 } from "react";
 
 type ContextProps = {
-  artistMap: Map<string, CosmoArtistWithMembersBFF>;
   artists: CosmoArtistWithMembersBFF[];
+  artistMap: Map<string, CosmoArtistWithMembersBFF>;
+  memberMap: Map<string, CosmoMemberBFF>;
 };
 
 const CosmoArtistContext = createContext<ContextProps | null>(null);
@@ -20,15 +23,20 @@ type ProviderProps = PropsWithChildren<{
   artists: CosmoArtistWithMembersBFF[];
 }>;
 
+/*
+ * Code from teamreflex/cosmo-web repo
+ */
 export function CosmoArtistProvider({ children, artists }: ProviderProps) {
-  const artistsRef = useRef(artists);
-  const artistMap = useRef(
-    new Map(artists.map((artist) => [artist.id.toLowerCase(), artist]))
+  const artistMap = new Map(
+    artists.map((artist) => [artist.id.toLowerCase(), artist])
+  );
+  const memberMap = new Map(
+    artists.flatMap((artist) =>
+      artist.artistMembers.map((member) => [member.name.toLowerCase(), member])
+    )
   );
   return (
-    <CosmoArtistContext
-      value={{ artists: artistsRef.current, artistMap: artistMap.current }}
-    >
+    <CosmoArtistContext value={{ artists, artistMap, memberMap }}>
       {children}
     </CosmoArtistContext>
   );
@@ -44,8 +52,14 @@ export function useCosmoArtist() {
     [ctx.artistMap]
   );
 
+  const getMember = useCallback(
+    (memberName: string) => ctx.memberMap.get(memberName.toLowerCase()),
+    [ctx.memberMap]
+  );
+
   return {
-    getArtist,
     artists: ctx.artists,
+    getArtist,
+    getMember,
   };
 }
