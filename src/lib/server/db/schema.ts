@@ -9,6 +9,7 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 import { user, session, account, verification } from "./auth-schema";
+import { relations } from "drizzle-orm";
 
 export { user, session, account, verification };
 
@@ -53,6 +54,10 @@ export const lists = pgTable(
   (t) => [index("lists_slug_idx").on(t.slug)]
 );
 
+export const listsRelations = relations(lists, ({ many }) => ({
+  entries: many(listEntries),
+}));
+
 export const listEntries = pgTable(
   "list_entries",
   {
@@ -62,10 +67,14 @@ export const listEntries = pgTable(
       .references(() => lists.id, {
         onDelete: "cascade",
       }),
-    collectionId: varchar("collection_id", { length: 36 }).notNull(),
+    collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
   },
   (t) => [index("list_entries_list_idx").on(t.listId)]
 );
+
+export const listEntriesRelations = relations(listEntries, ({ one }) => ({
+  list: one(lists, { fields: [listEntries.listId], references: [lists.id] }),
+}));
 
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAdress = typeof userAddress.$inferSelect;
@@ -74,3 +83,5 @@ export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;
 export type Account = typeof account.$inferSelect;
 export type Verification = typeof verification.$inferSelect;
+export type List = typeof lists.$inferSelect;
+export type ListEntry = typeof listEntries.$inferSelect;

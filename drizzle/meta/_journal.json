@@ -15,6 +15,13 @@
       "when": 1746011867432,
       "tag": "0001_lively_trish_tilby",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746185355496,
+      "tag": "0002_fresh_purple_man",
+      "breakpoints": true
     }
   ]
 }
