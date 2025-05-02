@@ -1,12 +1,4 @@
 services:
-  redis-stack:
-    image: redis/redis-stack:latest
-    environment:
-      - REDIS_HOST_PASSWORD
-    command: /bin/sh -c "redis-server --requirepass $$REDIS_HOST_PASSWORD"
-    ports:
-      - "6379:6379"
-      - "8001:8001"
   postgres:
     restart: always
     image: postgres:latest

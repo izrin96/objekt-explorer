@@ -8,9 +8,6 @@ export const env = createEnv({
     DB_PROXY_KEY: z.string(),
     DB_PROXY_URL: z.string(),
     DATABASE_URL: z.string().optional(),
-    REDIS_URL: z.string().optional(),
-    UPSTASH_REDIS_REST_URL: z.string().optional(),
-    UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
