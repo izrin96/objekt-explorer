@@ -1,5 +1,5 @@
-import { IconMoonFill } from "@intentui/icons";
 import { ThemeSwitcher } from "./theme-switcher";
+import { Cube } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "./ui";
 import UserSearch from "./user-search";
 import Link from "next/link";
@@ -11,9 +11,9 @@ export default function Navbar() {
         <div className="grow gap-4 flex items-center h-14">
           <Link href="/">
             <div className="flex gap-2 items-center">
-              <IconMoonFill className="size-5" />
-              <span className="font-semibold text-xl select-none">
-                Lunar
+              <Cube size={24} weight="light" />
+              <span className="font-semibold text-lg select-none">
+                Objekt Tracker
               </span>
             </div>
           </Link>
