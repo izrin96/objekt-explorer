@@ -11,7 +11,7 @@ export default function Navbar() {
         <div className="grow gap-4 flex items-center h-14">
           <Link href="/">
             <div className="flex gap-2 items-center">
-              <Cube size={24} weight="light" />
+              <Cube size={24} weight="fill" />
               <span className="font-semibold text-lg select-none">
                 Objekt Tracker
               </span>
