@@ -3,6 +3,7 @@ import { Cube } from "@phosphor-icons/react/dist/ssr";
 import { Container } from "./ui";
 import UserSearch from "./user-search";
 import Link from "next/link";
+import UserNav from "./user-nav";
 
 export default function Navbar() {
   return (
@@ -19,6 +20,7 @@ export default function Navbar() {
           </Link>
         </div>
         <div className="flex items-center gap-2">
+          <UserNav />
           <ThemeSwitcher />
           <UserSearch />
         </div>

@@ -9,6 +9,7 @@ import { Analytics } from "@/components/analytics";
 import { PropsWithChildren } from "react";
 import { cn } from "@/utils/classes";
 import ThemeTexture from "@/components/theme-texture";
+import { TRPCReactProvider } from "@/lib/trpc/client";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -72,17 +73,19 @@ export default function RootLayout({ children }: PropsWithChildren) {
           process.env.NODE_ENV === "development" ? "debug-screens" : ""
         )}
       >
-        <Toast />
-        <ClientProviders>
-          <ThemeTexture />
-          <div className="relative flex flex-col">
-            <Navbar />
-            <main className="flex min-w-full flex-col items-center">
-              {children}
-            </main>
-          </div>
-          <Analytics />
-        </ClientProviders>
+        <TRPCReactProvider>
+          <Toast />
+          <ClientProviders>
+            <ThemeTexture />
+            <div className="relative flex flex-col">
+              <Navbar />
+              <main className="flex min-w-full flex-col items-center">
+                {children}
+              </main>
+            </div>
+            <Analytics />
+          </ClientProviders>
+        </TRPCReactProvider>
       </body>
     </html>
   );

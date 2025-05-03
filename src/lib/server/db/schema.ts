@@ -7,6 +7,7 @@ import {
   customType,
   integer,
   text,
+  timestamp,
 } from "drizzle-orm/pg-core";
 import { user, session, account, verification } from "./auth-schema";
 import { relations } from "drizzle-orm";
@@ -50,12 +51,16 @@ export const lists = pgTable(
       }),
     slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    }).notNull(),
   },
   (t) => [index("lists_slug_idx").on(t.slug)]
 );
 
-export const listsRelations = relations(lists, ({ many }) => ({
+export const listsRelations = relations(lists, ({ many, one }) => ({
   entries: many(listEntries),
+  user: one(user, { fields: [lists.userId], references: [user.id] }),
 }));
 
 export const listEntries = pgTable(
@@ -68,6 +73,9 @@ export const listEntries = pgTable(
         onDelete: "cascade",
       }),
     collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    }).notNull(),
   },
   (t) => [index("list_entries_list_idx").on(t.listId)]
 );

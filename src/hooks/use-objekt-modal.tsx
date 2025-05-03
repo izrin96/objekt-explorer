@@ -25,6 +25,7 @@ type ProviderProps = PropsWithChildren<{
   objekts: ValidObjekt[];
 }>;
 
+// todo: will not use context in future
 export function ObjektModalProvider({
   children,
   isProfile,

@@ -52,14 +52,7 @@ export async function GET(request: NextRequest) {
   );
 
   // get total collection
-  const total = (
-    await indexer
-      .select({
-        count: count(collections.id),
-      })
-      .from(collections)
-      .where(wheres)
-  )[0].count;
+  const total = await indexer.$count(collections, wheres);
 
   // get leaderboard
   const subquery = indexer
