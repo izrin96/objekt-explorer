@@ -6,6 +6,7 @@ import { userAddress } from "./db/schema";
 import { CosmoPublicUser } from "../universal/cosmo/auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { getBaseURL } from "../utils";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -17,6 +18,7 @@ export const auth = betterAuth({
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
     },
   },
+  baseURL: getBaseURL(),
 });
 
 export async function fetchUserByIdentifier(
