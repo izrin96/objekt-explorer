@@ -26,7 +26,7 @@ export const seasonColors = [
   "#FF7477",
   "#B400FF",
   "#33ECFD",
-  "#FFDD00", // unknown for Atom02
+  "#FFDD00",
   "#25347C", // Spring25
 ];
 export const validSeasons = [

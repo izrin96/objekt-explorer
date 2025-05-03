@@ -24,7 +24,6 @@ export default function ClientProviders({ children }: PropsWithChildren) {
   return (
     <RouterProvider navigate={router.push}>
       <ThemeProvider attribute="class" themes={["light", "dark", "matsu"]}>
-        {/* <NextTopLoader color="var(--primary)" height={2} showSpinner={false} /> */}
         <NuqsAdapter>
           <QueryClientProvider client={queryClient}>
             <BreakpointColumnProvider>{children}</BreakpointColumnProvider>

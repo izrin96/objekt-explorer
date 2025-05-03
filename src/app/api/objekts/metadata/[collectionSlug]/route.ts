@@ -20,12 +20,7 @@ export async function GET(_: Request, props: Params) {
     })
     .from(collections)
     .leftJoin(objekts, eq(collections.id, objekts.collectionId))
-    .where(
-      and(
-        eq(collections.slug, params.collectionSlug),
-        // not(eq(objekts.owner, SPIN_ADDRESS))
-      )
-    )
+    .where(and(eq(collections.slug, params.collectionSlug)))
     .groupBy(collections.id);
   const result = results[0];
 
