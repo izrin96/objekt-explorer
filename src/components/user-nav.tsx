@@ -1,20 +1,28 @@
-import { auth } from "@/lib/server/auth";
-import { headers } from "next/headers";
+"use client";
+
+import { authClient } from "@/lib/auth-client";
 import Link from "next/link";
 import React from "react";
 
-export default async function UserNav() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+export default function UserNav() {
+  const { data: session, isPending } = authClient.useSession();
 
-  if (!session) {
-    return (
-      <div>
-        <Link href="/sign-in">Sign-in</Link>
-      </div>
-    );
-  }
+  if (isPending) return;
 
-  return <div>{session.user.name}</div>;
+  return (
+    <div className="text-sm gap-2 inline-flex">
+      {session ? (
+        <>
+          <span>{session.user.name}</span>
+          <a href="#" onClick={() => authClient.signOut()}>
+            Logout
+          </a>
+        </>
+      ) : (
+        <>
+          <Link href="/sign-in">Login</Link>
+        </>
+      )}
+    </div>
+  );
 }
