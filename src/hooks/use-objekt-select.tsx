@@ -1,13 +1,15 @@
-import { IndexedObjekt } from "@/lib/universal/objekts";
+import { ValidObjekt } from "@/lib/universal/objekts";
 import { create } from "zustand";
 
+type Id = ValidObjekt["id"];
+
 type ObjektSelectedState = {
-  selected: IndexedObjekt[];
-  select: (objekt: IndexedObjekt) => void;
-  isSelected: (tokenId: string) => boolean;
-  hasSelected: (tokenIds: string[]) => boolean;
+  selected: ValidObjekt[];
+  select: (objekt: ValidObjekt) => void;
+  isSelected: (tokenId: Id) => boolean;
+  hasSelected: (tokenIds: Id[]) => boolean;
   reset: () => void;
-  remove: (tokenId: string) => void;
+  remove: (tokenId: Id) => void;
 };
 
 export const useObjektSelect = create<ObjektSelectedState>()((set, get) => ({
