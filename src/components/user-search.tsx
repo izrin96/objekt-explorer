@@ -54,7 +54,6 @@ export default function UserSearch() {
       <Button onPress={() => setIsOpen(true)} size="small" intent="primary">
         <IconSearch />
         <span className="sm:block hidden">Search user</span>
-        {/* <Keyboard className="-mr-1" keys="⌘K" /> */}
       </Button>
       <CommandMenu
         shortcut="k"

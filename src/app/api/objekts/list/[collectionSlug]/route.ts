@@ -18,12 +18,7 @@ export async function GET(_: Request, props: Params) {
     })
     .from(objekts)
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(
-      and(
-        eq(collections.slug, params.collectionSlug),
-        // not(eq(objekts.owner, SPIN_ADDRESS))
-      )
-    )
+    .where(and(eq(collections.slug, params.collectionSlug)))
     .orderBy(asc(objekts.serial));
 
   return Response.json(
