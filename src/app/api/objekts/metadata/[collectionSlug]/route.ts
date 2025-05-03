@@ -1,5 +1,5 @@
 import { indexer } from "@/lib/server/db/indexer";
-import { and, count, eq, sql } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { cacheHeaders } from "@/app/api/common";
 
@@ -20,9 +20,16 @@ export async function GET(_: Request, props: Params) {
     })
     .from(collections)
     .leftJoin(objekts, eq(collections.id, objekts.collectionId))
-    .where(and(eq(collections.slug, params.collectionSlug)))
+    .where(eq(collections.slug, params.collectionSlug))
     .groupBy(collections.id);
-  const result = results[0];
+
+  if (!results.length)
+    return {
+      total: 0,
+      transferable: false,
+    };
+
+  const [result] = results;
 
   return Response.json(result, {
     headers: cacheHeaders(),

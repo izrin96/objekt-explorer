@@ -38,18 +38,20 @@ export async function GET(_: Request, props: Params) {
     )
     .orderBy(asc(transfers.timestamp), asc(transfers.id));
 
-  const addresses = results.map((r) => r.to);
+  const addresses = Array.from(new Set(results.map((r) => r.to)));
 
   const knownAddresses = await db.query.userAddress.findMany({
     where: (userAddress, { inArray }) =>
       inArray(userAddress.address, addresses),
   });
 
+  const [result] = results;
+
   return Response.json(
     {
-      tokenId: results[0]?.tokenId ?? undefined,
-      owner: results[0]?.owner ?? undefined,
-      transferable: results[0]?.transferable ?? undefined,
+      tokenId: result?.tokenId ?? undefined,
+      owner: result?.owner ?? undefined,
+      transferable: result?.transferable ?? undefined,
       transfers: results.map((result) => ({
         id: result.id,
         to: result.to,

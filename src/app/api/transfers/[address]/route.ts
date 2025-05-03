@@ -111,9 +111,11 @@ export async function GET(
     r.transfer.to,
   ]);
 
+  const addressesUnique = Array.from(new Set(addresses));
+
   const knownAddresses = await db.query.userAddress.findMany({
     where: (userAddress, { inArray }) =>
-      inArray(userAddress.address, addresses),
+      inArray(userAddress.address, addressesUnique),
   });
 
   return Response.json({
