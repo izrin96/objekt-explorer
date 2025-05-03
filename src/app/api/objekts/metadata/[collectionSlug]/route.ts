@@ -24,10 +24,15 @@ export async function GET(_: Request, props: Params) {
     .groupBy(collections.id);
 
   if (!results.length)
-    return {
-      total: 0,
-      transferable: false,
-    };
+    return Response.json(
+      {
+        total: 0,
+        transferable: false,
+      },
+      {
+        headers: cacheHeaders(),
+      }
+    );
 
   const [result] = results;
 
