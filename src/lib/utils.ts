@@ -26,6 +26,9 @@ export function getEdition(collectionNo: string) {
 }
 
 export function getBaseURL() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
   if (env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
   }
