@@ -76,18 +76,13 @@ export async function GET(request: NextRequest) {
     .orderBy(desc(count(subquery.collectionId)))
     .limit(1000);
 
+  const addresses = Array.from(new Set(query.map((a) => a.owner)));
+
   // fetch known address
   const knownAddresses = await db
     .select()
     .from(userAddress)
-    .where(
-      and(
-        inArray(
-          userAddress.address,
-          query.map((a) => a.owner)
-        )
-      )
-    );
+    .where(inArray(userAddress.address, addresses));
 
   // map nickname from known address
   const results = query.map((q, i) => {
