@@ -21,7 +21,9 @@ import ObjektView from "../objekt/objekt-view";
 import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 import { api } from "@/lib/trpc/client";
 
-export default function ListRender() {
+type Props = { slug: string };
+
+export default function ListRender(props: Props) {
   return (
     <ObjektTabProvider initialTab="trades">
       <QueryErrorResetBoundary>
@@ -30,7 +32,7 @@ export default function ListRender() {
             onReset={reset}
             FallbackComponent={ErrorFallbackRender}
           >
-            <ListView />
+            <ListView {...props} />
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
@@ -38,12 +40,11 @@ export default function ListRender() {
   );
 }
 
-function ListView() {
+function ListView({ slug }: Props) {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
-  const [{ collections: objekts }] =
-    api.list.getEntries.useSuspenseQuery("nPMDjVgSfmAg");
+  const [{ collections: objekts }] = api.list.getEntries.useSuspenseQuery(slug);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, IndexedObjekt[]][]

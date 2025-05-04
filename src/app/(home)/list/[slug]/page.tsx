@@ -5,6 +5,7 @@ import { TRPCError } from "@trpc/server";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
+import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   params: Promise<{
@@ -53,12 +54,16 @@ export default async function Page(props: Props) {
         />
         <div className="flex flex-col">
           <div className="text-lg font-semibold">{name}</div>
-          <div className="text-sm text-muted-fg">by {user.name}</div>
+          <div className="text-sm text-muted-fg inline-flex items-center gap-1">
+            <span>by</span>
+            <span>{user.name}</span>
+            <DiscordLogo />
+          </div>
         </div>
       </div>
 
       <HydrateClient>
-        <ListRender />
+        <ListRender slug={params.slug} />
       </HydrateClient>
     </div>
   );
