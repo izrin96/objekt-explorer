@@ -54,7 +54,7 @@ export default function UserSearch() {
         <span className="sm:block hidden">Search user</span>
       </Button>
       <CommandMenu
-        key={pathname}
+        key={`${pathname}-${isOpen}`}
         shortcut="k"
         isPending={enable && isPending}
         onInputChange={setQuery}
