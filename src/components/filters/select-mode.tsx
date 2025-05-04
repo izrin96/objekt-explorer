@@ -1,7 +1,7 @@
 "use client";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { Button, Form, Modal, Select } from "../ui";
+import { Button, Form, Link, Modal, Note, Select } from "../ui";
 import { useCallback, useState } from "react";
 import { api } from "@/lib/trpc/client";
 import { Key } from "react-aria";
@@ -26,7 +26,10 @@ export function SelectMode({
   const handleAction = useCallback(
     (open: () => void) => {
       if (selected.length < 1) {
-        toast.error("Must select at least one objekt");
+        toast.error("Must select at least one objekt", {
+          position: "top-center",
+          duration: 1300,
+        });
       } else {
         open();
       }
@@ -71,7 +74,7 @@ export function SelectMode({
             <RemoveFromList slug={slug}>
               {({ open }) => (
                 <Button
-                  intent="danger"
+                  intent="outline"
                   size="extra-small"
                   onClick={() => handleAction(open)}
                 >
@@ -102,7 +105,10 @@ function AddToList({
       setOpen(false);
       reset();
       toggleMode();
-      toast.success("Objekt added to the list");
+      toast.success("Objekt added to the list", {
+        position: "top-center",
+        duration: 1300,
+      });
     },
   });
   return (
@@ -124,33 +130,39 @@ function AddToList({
         >
           <Modal.Header>
             <Modal.Title>Add to list</Modal.Title>
-            <Modal.Description>
-              <span className="text-muted-fg text-xs">
-                You must create a list before you can add an objekt.
-              </span>
-            </Modal.Description>
           </Modal.Header>
           <Modal.Body>
-            <Select
-              label="My List"
-              placeholder="Select a list"
-              selectedKey={slug}
-              onSelectionChange={setSlug}
-              isRequired
-            >
-              <Select.Trigger />
-              <Select.List items={list.data ?? []}>
-                {(item) => (
-                  <Select.Option id={item.slug} textValue={item.slug}>
-                    {item.name}
-                  </Select.Option>
-                )}
-              </Select.List>
-            </Select>
+            {(list.data ?? []).length > 0 ? (
+              <Select
+                label="My List"
+                placeholder="Select a list"
+                selectedKey={slug}
+                onSelectionChange={setSlug}
+                isRequired
+              >
+                <Select.Trigger />
+                <Select.List items={list.data ?? []}>
+                  {(item) => (
+                    <Select.Option id={item.slug} textValue={item.slug}>
+                      {item.name}
+                    </Select.Option>
+                  )}
+                </Select.List>
+              </Select>
+            ) : (
+              <Note intent="default">
+                You don&apos;t have any list yet.{" "}
+                <Link href="/list">Create one here</Link>.
+              </Note>
+            )}
           </Modal.Body>
           <Modal.Footer>
             <Modal.Close>Cancel</Modal.Close>
-            <Button type="submit" isPending={addToList.isPending}>
+            <Button
+              type="submit"
+              isPending={addToList.isPending}
+              isDisabled={!slug}
+            >
               Add
             </Button>
           </Modal.Footer>
@@ -178,7 +190,10 @@ function RemoveFromList({
       reset();
       toggleMode();
       utils.list.getEntries.invalidate(slug);
-      toast.success("Objekt removed from the list");
+      toast.success("Objekt removed from the list", {
+        position: "top-center",
+        duration: 1300,
+      });
     },
   });
   return (

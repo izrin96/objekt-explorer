@@ -1,4 +1,4 @@
-import MyList from "@/components/list/my-list";
+import MyListRender from "@/components/list/my-list";
 import { auth } from "@/lib/server/auth";
 import { api, HydrateClient } from "@/lib/trpc/server";
 import { Metadata } from "next";
@@ -24,8 +24,10 @@ export default async function Page() {
   await api.list.myList.prefetch();
 
   return (
-    <HydrateClient>
-      <MyList />
-    </HydrateClient>
+    <div className="flex flex-col pb-8 pt-2">
+      <HydrateClient>
+        <MyListRender />
+      </HydrateClient>
+    </div>
   );
 }

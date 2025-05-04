@@ -7,6 +7,8 @@ import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BreakpointColumnProvider } from "@/hooks/use-breakpoint-column";
+import { Toast } from "./ui";
+import ThemeTexture from "./theme-texture";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -22,6 +24,8 @@ export default function ClientProviders({ children }: PropsWithChildren) {
   return (
     <RouterProvider navigate={router.push}>
       <ThemeProvider attribute="class" themes={["light", "dark", "matsu"]}>
+        <Toast />
+        <ThemeTexture />
         <NuqsAdapter>
           <BreakpointColumnProvider>{children}</BreakpointColumnProvider>
           <ReactQueryDevtools />

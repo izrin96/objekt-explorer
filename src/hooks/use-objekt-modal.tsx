@@ -20,7 +20,6 @@ type ProviderProps = {
   children: ({ openObjekts }: { openObjekts: () => void }) => React.ReactNode;
 };
 
-// todo: will not use context in future
 export function ObjektModalProvider({
   children,
   isProfile,
