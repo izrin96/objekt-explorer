@@ -6,8 +6,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
 import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
-import { auth } from "@/lib/server/auth";
-import { headers } from "next/headers";
+import { cachedSession } from "@/lib/server/auth";
 
 type Props = {
   params: Promise<{
@@ -19,7 +18,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const { user, name } = await api.list.get(params.slug);
   return {
-    title: `${name} - ${user.name}'s List`,
+    title: `${name} · ${user.name}'s List`,
   };
 }
 
@@ -38,9 +37,7 @@ async function fetchData(params: Awaited<Props["params"]>) {
 
 export default async function Page(props: Props) {
   const params = await props.params;
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await cachedSession();
 
   const data = await fetchData(params);
   const { user, name } = data;

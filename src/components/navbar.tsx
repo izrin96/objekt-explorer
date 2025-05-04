@@ -3,8 +3,11 @@ import { Cube } from "@phosphor-icons/react/dist/ssr";
 import { Container, Link } from "./ui";
 import UserSearch from "./user-search";
 import UserNav from "./user-nav";
+import { cachedSession } from "@/lib/server/auth";
 
-export default function Navbar() {
+export default async function Navbar() {
+  const session = await cachedSession();
+
   return (
     <nav className="sticky left-0 right-0 top-0 h-14 z-30 bg-bg/80 backdrop-blur-lg">
       <Container className="flex justify-center">
@@ -20,7 +23,7 @@ export default function Navbar() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
-          <UserNav />
+          <UserNav user={session?.user} />
           <UserSearch />
         </div>
       </Container>

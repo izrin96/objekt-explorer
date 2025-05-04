@@ -1,4 +1,4 @@
-import { CSSProperties, memo, useCallback } from "react";
+import { CSSProperties, memo } from "react";
 import NextImage from "next/image";
 import {
   getCollectionShortId,
@@ -37,8 +37,6 @@ export default memo(function ObjektView({
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
 
-  const handleOpen = useCallback(() => open(), [open]);
-
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
@@ -56,7 +54,7 @@ export default memo(function ObjektView({
           "cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150 ring-transparent ring-5 rounded-xl",
           isSelected && "ring-fg bg-fg"
         )}
-        onClick={handleOpen}
+        onClick={open}
       >
         <NextImage
           fill
@@ -81,7 +79,7 @@ export default memo(function ObjektView({
           intent="secondary"
           className="font-semibold cursor-pointer"
           shape="square"
-          onClick={handleOpen}
+          onClick={open}
         >
           {getCollectionShortId(objekt)}
           {showSerial && isOwned && ` #${objekt.serial}`}

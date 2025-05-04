@@ -7,6 +7,8 @@ import { CosmoPublicUser } from "../universal/cosmo/auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getBaseURL } from "../utils";
+import { cache } from "react";
+import { headers } from "next/headers";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -23,6 +25,12 @@ export const auth = betterAuth({
   },
   baseURL: getBaseURL(),
 });
+
+export const cachedSession = cache(async () =>
+  auth.api.getSession({
+    headers: await headers(),
+  })
+);
 
 export async function fetchUserByIdentifier(
   identifier: string,
