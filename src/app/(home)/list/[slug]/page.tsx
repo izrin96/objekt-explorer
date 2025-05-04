@@ -6,6 +6,8 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
 import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
+import { auth } from "@/lib/server/auth";
+import { headers } from "next/headers";
 
 type Props = {
   params: Promise<{
@@ -36,9 +38,11 @@ async function fetchData(params: Awaited<Props["params"]>) {
 
 export default async function Page(props: Props) {
   const params = await props.params;
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
   const data = await fetchData(params);
-
   const { user, name } = data;
 
   api.list.getEntries.prefetch(params.slug);
@@ -55,7 +59,6 @@ export default async function Page(props: Props) {
         <div className="flex flex-col">
           <div className="text-lg font-semibold">{name}</div>
           <div className="text-sm text-muted-fg inline-flex items-center gap-1">
-            <span>by</span>
             <span>{user.name}</span>
             <DiscordLogo />
           </div>
@@ -63,7 +66,10 @@ export default async function Page(props: Props) {
       </div>
 
       <HydrateClient>
-        <ListRender slug={params.slug} />
+        <ListRender
+          slug={params.slug}
+          isOwned={(session && session.user.id === user.id) ?? false}
+        />
       </HydrateClient>
     </div>
   );

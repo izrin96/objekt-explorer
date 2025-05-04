@@ -26,7 +26,7 @@ import {
 import { SelectMode } from "../filters/select-mode";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 
-type Props = { slug: string };
+type Props = { slug: string; isOwned: boolean };
 
 export default function ListRender(props: Props) {
   return (
@@ -47,7 +47,7 @@ export default function ListRender(props: Props) {
   );
 }
 
-function ListView({ slug }: Props) {
+function ListView({ slug, isOwned }: Props) {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -114,7 +114,7 @@ function ListView({ slug }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4">
         <FilterView artists={artists} />
-        <SelectMode state="remove" slug={slug} />
+        {isOwned && <SelectMode state="remove" slug={slug} />}
       </div>
       <span className="font-semibold">{count} total</span>
 

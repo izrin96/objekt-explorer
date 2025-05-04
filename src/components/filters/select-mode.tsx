@@ -6,8 +6,6 @@ import { useCallback, useState } from "react";
 import { api } from "@/lib/trpc/client";
 import { Key } from "react-aria";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
-import { useIsSSR } from "react-aria";
 
 export function SelectMode({
   slug,
@@ -16,8 +14,6 @@ export function SelectMode({
   slug?: string;
   state: "add" | "remove";
 }) {
-  const isSsr = useIsSSR();
-  const { data: session } = authClient.useSession();
   const mode = useObjektSelect((a) => a.mode);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
@@ -36,10 +32,6 @@ export function SelectMode({
     },
     [selected]
   );
-
-  if (!isSsr && !session) {
-    return null;
-  }
 
   return (
     <div className="flex gap-2 items-center">

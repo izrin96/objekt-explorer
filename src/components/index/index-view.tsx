@@ -29,7 +29,9 @@ import {
 } from "@/hooks/use-objekt-select";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 
-export default function IndexRender() {
+type Props = { loggedIn: boolean };
+
+export default function IndexRender(props: Props) {
   return (
     <ObjektSelectProvider>
       <ObjektTabProvider initialTab="trades">
@@ -39,7 +41,7 @@ export default function IndexRender() {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <IndexView />
+              <IndexView {...props} />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -48,7 +50,7 @@ export default function IndexRender() {
   );
 }
 
-function IndexView() {
+function IndexView(props: Props) {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -115,7 +117,7 @@ function IndexView() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4">
         <FilterView artists={artists} />
-        <SelectMode state="add" />
+        {props.loggedIn && <SelectMode state="add" />}
       </div>
       <span className="font-semibold">{count} total</span>
 
