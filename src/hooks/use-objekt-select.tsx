@@ -25,6 +25,7 @@ const createObjektSelectStore = () =>
       set((state) => ({
         ...state,
         mode: !state.mode,
+        selected: [],
       })),
 
     selected: [],

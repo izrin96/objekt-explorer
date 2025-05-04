@@ -7,33 +7,21 @@ import ObjektView from "./objekt-view";
 export function ObjektViewSelectable({
   objekts,
   priority,
-  mode,
-  select,
+  getId,
   open,
 }: {
   objekts: ValidObjekt[];
   priority: boolean;
-  mode: boolean;
-  select: (id: string | number) => void;
+  getId: () => string | number;
   open: () => void;
 }) {
-  const [objekt] = objekts;
-  const isSelected = useObjektSelect((state) =>
-    state.isSelected(objekt.slug as string)
-  );
-
+  const isSelected = useObjektSelect((state) => state.isSelected(getId()));
   return (
     <ObjektView
       objekts={objekts}
       priority={priority}
       isSelected={isSelected}
-      open={() => {
-        if (mode) {
-          select(objekt.slug);
-        } else {
-          open();
-        }
-      }}
+      open={open}
     />
   );
 }

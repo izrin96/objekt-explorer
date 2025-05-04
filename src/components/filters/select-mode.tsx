@@ -9,7 +9,13 @@ import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { useIsSSR } from "react-aria";
 
-export function SelectMode() {
+export function SelectMode({
+  slug,
+  state,
+}: {
+  slug?: string;
+  state: "add" | "remove";
+}) {
   const isSsr = useIsSSR();
   const { data: session } = authClient.useSession();
   const mode = useObjektSelect((a) => a.mode);
@@ -17,7 +23,7 @@ export function SelectMode() {
   const reset = useObjektSelect((a) => a.reset);
   const selected = useObjektSelect((a) => a.selected);
 
-  const handleAddList = useCallback(
+  const handleAction = useCallback(
     (open: () => void) => {
       if (selected.length < 1) {
         toast.error("Must select at least one objekt");
@@ -48,17 +54,32 @@ export function SelectMode() {
           <Button intent="outline" size="extra-small" onClick={reset}>
             Reset
           </Button>
-          <AddToList>
-            {({ open }) => (
-              <Button
-                intent="outline"
-                size="extra-small"
-                onClick={() => handleAddList(open)}
-              >
-                Add to list
-              </Button>
-            )}
-          </AddToList>
+          {state === "add" && (
+            <AddToList>
+              {({ open }) => (
+                <Button
+                  intent="outline"
+                  size="extra-small"
+                  onClick={() => handleAction(open)}
+                >
+                  Add to list
+                </Button>
+              )}
+            </AddToList>
+          )}
+          {state === "remove" && slug && (
+            <RemoveFromList slug={slug}>
+              {({ open }) => (
+                <Button
+                  intent="danger"
+                  size="extra-small"
+                  onClick={() => handleAction(open)}
+                >
+                  Remove from list
+                </Button>
+              )}
+            </RemoveFromList>
+          )}
         </>
       )}
     </div>
@@ -131,6 +152,67 @@ function AddToList({
             <Modal.Close>Cancel</Modal.Close>
             <Button type="submit" isPending={addToList.isPending}>
               Add
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal.Content>
+    </>
+  );
+}
+
+function RemoveFromList({
+  slug,
+  children,
+}: {
+  slug: string;
+  children: ({ open }: { open: () => void }) => React.ReactNode;
+}) {
+  const selected = useObjektSelect((a) => a.selected);
+  const reset = useObjektSelect((a) => a.reset);
+  const toggleMode = useObjektSelect((a) => a.toggleMode);
+  const [open, setOpen] = useState(false);
+  const utils = api.useUtils();
+  const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
+    onSuccess: () => {
+      setOpen(false);
+      reset();
+      toggleMode();
+      utils.list.getEntries.invalidate(slug);
+      toast.success("Objekt removed from the list");
+    },
+  });
+  return (
+    <>
+      {children?.({
+        open: () => {
+          setOpen(true);
+        },
+      })}
+      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+        <Form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            removeObjektsFromList.mutate({
+              slug: slug.toString(),
+              ids: selected as number[],
+            });
+          }}
+        >
+          <Modal.Header>
+            <Modal.Title>Remove objekt</Modal.Title>
+            <Modal.Description>
+              This will permanently remove the selected objekt from the list.
+              Continue?
+            </Modal.Description>
+          </Modal.Header>
+          <Modal.Footer>
+            <Modal.Close>Cancel</Modal.Close>
+            <Button
+              intent="danger"
+              type="submit"
+              isPending={removeObjektsFromList.isPending}
+            >
+              Continue
             </Button>
           </Modal.Footer>
         </Form>

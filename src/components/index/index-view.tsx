@@ -79,17 +79,20 @@ function IndexView() {
               const [objekt] = objekts;
               return (
                 <ObjektModalProvider key={objekt.id} objekts={objekts}>
-                  {({ openObjekts }) => {
-                    return (
-                      <ObjektViewSelectable
-                        objekts={objekts}
-                        priority={index < columns * 3}
-                        open={openObjekts}
-                        mode={mode}
-                        select={select}
-                      />
-                    );
-                  }}
+                  {({ openObjekts }) => (
+                    <ObjektViewSelectable
+                      objekts={objekts}
+                      priority={index < columns * 3}
+                      getId={() => objekt.slug}
+                      open={() => {
+                        if (mode) {
+                          select(objekt.slug);
+                        } else {
+                          openObjekts();
+                        }
+                      }}
+                    />
+                  )}
                 </ObjektModalProvider>
               );
             }}
@@ -112,7 +115,7 @@ function IndexView() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4">
         <FilterView artists={artists} />
-        <SelectMode />
+        <SelectMode state="add" />
       </div>
       <span className="font-semibold">{count} total</span>
 

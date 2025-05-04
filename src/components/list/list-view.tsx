@@ -82,9 +82,14 @@ function ListView({ slug }: Props) {
                     <ObjektViewSelectable
                       objekts={objekts}
                       priority={index < columns * 3}
-                      open={openObjekts}
-                      mode={mode}
-                      select={select}
+                      getId={() => objekt.id}
+                      open={() => {
+                        if (mode) {
+                          select(objekt.id);
+                        } else {
+                          openObjekts();
+                        }
+                      }}
                     />
                   )}
                 </ObjektModalProvider>
@@ -109,7 +114,7 @@ function ListView({ slug }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4">
         <FilterView artists={artists} />
-        <SelectMode />
+        <SelectMode state="remove" slug={slug} />
       </div>
       <span className="font-semibold">{count} total</span>
 

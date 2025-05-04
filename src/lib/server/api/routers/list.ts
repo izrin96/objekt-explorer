@@ -128,7 +128,9 @@ export const listRouter = createTRPCRouter({
 
         await db
           .delete(listEntries)
-          .where(and(inArray(listEntries.id, ids), eq(lists.id, list.id)));
+          .where(
+            and(inArray(listEntries.id, ids), eq(listEntries.listId, list.id))
+          );
       }
     ),
 
