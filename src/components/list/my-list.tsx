@@ -15,17 +15,20 @@ export default function MyList() {
         {lists.map((list) => (
           <Card key={list.slug} className="bg-secondary/20">
             <Card.Header className="flex justify-between">
-              <Link href={`/list/${list.slug}`} className="font-semibold flex-1">
+              <Link
+                href={`/list/${list.slug}`}
+                className="font-semibold flex-1"
+              >
                 {list.name}
               </Link>
               <Menu>
-                <Menu.Trigger aria-label="Open Menu">
-                  <Button intent="outline" size="extra-small">
-                    <IconDotsVertical />
-                  </Button>
-                </Menu.Trigger>
+                <Button intent="outline" size="extra-small">
+                  <IconDotsVertical />
+                </Button>
                 <Menu.Content className="sm:min-w-56">
-                  <Menu.Item isDanger onAction={() => {}}>Delete</Menu.Item>
+                  <Menu.Item isDanger onAction={() => {}}>
+                    Delete
+                  </Menu.Item>
                 </Menu.Content>
               </Menu>
             </Card.Header>

@@ -3,9 +3,11 @@
 import { authClient } from "@/lib/auth-client";
 import React from "react";
 import { Avatar, buttonStyles, Menu, Link } from "./ui";
-import { redirect } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 
 export default function UserNav() {
+  // temporary fix for ui being stuck after navigate
+  const pathname = usePathname();
   const { data, isPending } = authClient.useSession();
 
   if (isPending) return;
@@ -13,7 +15,7 @@ export default function UserNav() {
   return (
     <div className="text-sm gap-2 inline-flex">
       {data ? (
-        <UserMenu />
+        <UserMenu key={pathname} />
       ) : (
         <>
           <Link
