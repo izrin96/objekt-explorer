@@ -3,6 +3,8 @@ import { api, HydrateClient } from "@/lib/trpc/server";
 import { Metadata } from "next";
 import React from "react";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `My List`,
