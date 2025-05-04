@@ -55,7 +55,7 @@ export const lists = pgTable(
       withTimezone: true,
     }).notNull(),
   },
-  (t) => [index("lists_slug_idx").on(t.slug)]
+  (t) => [uniqueIndex("lists_slug_idx").on(t.slug)]
 );
 
 export const listsRelations = relations(lists, ({ many, one }) => ({

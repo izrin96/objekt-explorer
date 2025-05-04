@@ -29,6 +29,13 @@
       "when": 1746265188920,
       "tag": "0003_black_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1746367680297,
+      "tag": "0004_red_caretaker",
+      "breakpoints": true
     }
   ]
 }
