@@ -1,54 +1,81 @@
+"use client";
+
+import { PropsWithChildren, createContext, useContext, useRef } from "react";
+import { createStore, useStore, type StoreApi } from "zustand";
 import { ValidObjekt } from "@/lib/universal/objekts";
-import { create } from "zustand";
 
 type Id = ValidObjekt["id"];
 
 type ObjektSelectedState = {
-  selected: ValidObjekt[];
-  select: (objekt: ValidObjekt) => void;
-  isSelected: (tokenId: Id) => boolean;
-  hasSelected: (tokenIds: Id[]) => boolean;
+  mode: boolean;
+  toggleMode: () => void;
+  selected: Id[];
+  select: (id: Id) => void;
+  isSelected: (id: Id) => boolean;
+  hasSelected: (ids: Id[]) => boolean;
   reset: () => void;
-  remove: (tokenId: Id) => void;
+  remove: (id: Id) => void;
 };
 
-export const useObjektSelect = create<ObjektSelectedState>()((set, get) => ({
-  selected: [],
+const createObjektSelectStore = () =>
+  createStore<ObjektSelectedState>()((set, get) => ({
+    mode: false,
 
-  select: (objekt) =>
-    set((state) => {
-      const existing = state.selected.find((a) => a.id === objekt.id);
+    toggleMode: () =>
+      set((state) => ({
+        ...state,
+        mode: !state.mode,
+      })),
 
-      if (existing) {
+    selected: [],
+
+    select: (id) =>
+      set((state) => {
+        const exists = state.selected.includes(id);
         return {
           ...state,
-          selected: state.selected.filter((a) => a.id !== objekt.id),
+          selected: exists
+            ? state.selected.filter((a) => a !== id)
+            : [...state.selected, id],
         };
-      }
+      }),
 
-      return {
+    isSelected: (id) => get().selected.includes(id),
+
+    hasSelected: (ids) => get().selected.some((id) => ids.includes(id)),
+
+    reset: () => set((state) => ({ ...state, selected: [] })),
+
+    remove: (id) =>
+      set((state) => ({
         ...state,
-        selected: [...state.selected, objekt],
-      };
-    }),
+        selected: state.selected.filter((a) => a !== id),
+      })),
+  }));
 
-  isSelected: (tokenId) => {
-    return get().selected.findIndex((a) => a.id === tokenId) !== -1;
-  },
+const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(
+  null
+);
 
-  hasSelected: (tokenIds) => {
-    return get().selected.some((a) => tokenIds.includes(a.id));
-  },
+export function ObjektSelectProvider({ children }: PropsWithChildren) {
+  const storeRef = useRef<StoreApi<ObjektSelectedState> | null>(null);
+  if (!storeRef.current) {
+    storeRef.current = createObjektSelectStore();
+  }
 
-  reset: () => set((state) => ({ ...state, selected: [] })),
+  return (
+    <ObjektSelectContext.Provider value={storeRef.current}>
+      {children}
+    </ObjektSelectContext.Provider>
+  );
+}
 
-  remove: (tokenId) =>
-    set((state) => {
-      const selected = state.selected.filter((a) => a.id !== tokenId);
-
-      return {
-        ...state,
-        selected,
-      };
-    }),
-}));
+export function useObjektSelect<SelectorOutput>(
+  selector: (state: ObjektSelectedState) => SelectorOutput
+) {
+  const store = useContext(ObjektSelectContext);
+  if (!store) {
+    throw new Error("useObjektSelect must be used within ObjektSelectProvider");
+  }
+  return useStore(store, selector);
+}

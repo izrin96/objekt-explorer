@@ -182,13 +182,20 @@ const ProgressCollapse = memo(function ProgressCollapse({
           {groupObjekts.map((objekts) => {
             const [objekt] = objekts;
             return (
-              <ObjektModalProvider key={objekt.slug} objekts={objekts} isProfile>
-                <ObjektView
-                  objekts={objekts}
-                  isFade={!ownedSlugs.has(objekt.slug)}
-                  unobtainable={unobtainables.includes(objekt.slug)}
-                  showCount={showCount}
-                />
+              <ObjektModalProvider
+                key={objekt.slug}
+                objekts={objekts}
+                isProfile
+              >
+                {({ openObjekts }) => (
+                  <ObjektView
+                    objekts={objekts}
+                    isFade={!ownedSlugs.has(objekt.slug)}
+                    unobtainable={unobtainables.includes(objekt.slug)}
+                    showCount={showCount}
+                    open={openObjekts}
+                  />
+                )}
               </ObjektModalProvider>
             );
           })}

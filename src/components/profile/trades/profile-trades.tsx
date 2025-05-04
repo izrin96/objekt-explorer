@@ -110,7 +110,9 @@ function ProfileTrades() {
                   key={row.transfer.id}
                   objekts={[row.objekt]}
                 >
-                  <TradeRow row={row} address={address} />
+                  {({ openObjekts }) => (
+                    <TradeRow row={row} address={address} open={openObjekts} />
+                  )}
                 </ObjektModalProvider>
               ))}
             </tbody>
@@ -130,11 +132,12 @@ function ProfileTrades() {
 function TradeRow({
   row,
   address,
+  open,
 }: {
   row: AggregatedTransfer;
   address: string;
+  open: () => void;
 }) {
-  const { openObjekts } = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const action = isReceiver ? (
@@ -162,7 +165,7 @@ function TradeRow({
       </td>
       <td
         className="group whitespace-nowrap px-3 py-3 outline-hidden cursor-pointer"
-        onClick={openObjekts}
+        onClick={open}
       >
         <div className="inline-flex gap-2 items-center">
           {row.objekt.collectionId}

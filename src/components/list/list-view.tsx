@@ -17,26 +17,33 @@ import {
   ObjektsRender,
   ObjektsRenderRow,
 } from "../collection/collection-render";
-import ObjektView from "../objekt/objekt-view";
 import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 import { api } from "@/lib/trpc/client";
+import {
+  ObjektSelectProvider,
+  useObjektSelect,
+} from "@/hooks/use-objekt-select";
+import { SelectMode } from "../filters/select-mode";
+import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 
 type Props = { slug: string };
 
 export default function ListRender(props: Props) {
   return (
-    <ObjektTabProvider initialTab="trades">
-      <QueryErrorResetBoundary>
-        {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            FallbackComponent={ErrorFallbackRender}
-          >
-            <ListView {...props} />
-          </ErrorBoundary>
-        )}
-      </QueryErrorResetBoundary>
-    </ObjektTabProvider>
+    <ObjektSelectProvider>
+      <ObjektTabProvider initialTab="trades">
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary
+              onReset={reset}
+              FallbackComponent={ErrorFallbackRender}
+            >
+              <ListView {...props} />
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </ObjektTabProvider>
+    </ObjektSelectProvider>
   );
 }
 
@@ -50,6 +57,9 @@ function ListView({ slug }: Props) {
     [string, IndexedObjekt[]][]
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
+
+  const mode = useObjektSelect((a) => a.mode);
+  const select = useObjektSelect((a) => a.select);
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, objekts]) => [
@@ -68,10 +78,15 @@ function ListView({ slug }: Props) {
               const [objekt] = objekts;
               return (
                 <ObjektModalProvider key={objekt.id} objekts={objekts}>
-                  <ObjektView
-                    objekts={objekts}
-                    priority={index < columns * 3}
-                  />
+                  {({ openObjekts }) => (
+                    <ObjektViewSelectable
+                      objekts={objekts}
+                      priority={index < columns * 3}
+                      open={openObjekts}
+                      mode={mode}
+                      select={select}
+                    />
+                  )}
                 </ObjektModalProvider>
               );
             }}
@@ -79,7 +94,7 @@ function ListView({ slug }: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns]);
+  }, [deferredObjektsFiltered, columns, mode, select]);
 
   const count = useMemo(
     () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
@@ -91,8 +106,11 @@ function ListView({ slug }: Props) {
   }, [filters, objekts, artists]);
 
   return (
-    <div className="flex flex-col gap-2">
-      <FilterView artists={artists} />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
+        <FilterView artists={artists} />
+        <SelectMode />
+      </div>
       <span className="font-semibold">{count} total</span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>

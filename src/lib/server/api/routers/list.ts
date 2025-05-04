@@ -136,7 +136,7 @@ export const listRouter = createTRPCRouter({
     .input(
       z.object({
         slug: z.string(),
-        name: z.string(),
+        name: z.string().min(1),
       })
     )
     .mutation(
@@ -179,7 +179,7 @@ export const listRouter = createTRPCRouter({
   create: authProcedure
     .input(
       z.object({
-        name: z.string(),
+        name: z.string().min(1),
       })
     )
     .mutation(
