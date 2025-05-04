@@ -1,6 +1,5 @@
-import { Tooltip } from "./ui";
+import { Tooltip, Link } from "./ui";
 import { InfoIcon } from "lucide-react";
-import Link from "next/link";
 
 export default function UserLink({
   address,
@@ -13,7 +12,7 @@ export default function UserLink({
     <div className="inline-flex gap-2">
       {address ? (
         <>
-          <Link href={`/@${nickname ?? address}`} prefetch={false}>
+          <Link href={`/@${nickname ?? address}`}>
             {nickname ?? address.substring(0, 6)}
           </Link>
           {!nickname && (

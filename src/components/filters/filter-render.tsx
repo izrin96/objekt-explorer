@@ -28,7 +28,7 @@ export default function FilterRender({ isProfile, artists }: Props) {
   const [filters] = useFilters();
 
   return (
-    <div className="flex gap-2 flex-wrap mb-2">
+    <div className="flex gap-2 flex-wrap">
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
       {isProfile && <FilterTransferable />}

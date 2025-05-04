@@ -33,9 +33,7 @@ export default function UserSearch() {
     (nickname: string) => {
       setIsOpen(false);
       setQuery("");
-      setTimeout(() => {
-        router.push(`/@${nickname}`);
-      }, 500);
+      router.push(`/@${nickname}`);
     },
     [router, setIsOpen]
   );
@@ -56,6 +54,7 @@ export default function UserSearch() {
         <span className="sm:block hidden">Search user</span>
       </Button>
       <CommandMenu
+        key={`${pathname}-${isOpen}`}
         shortcut="k"
         isPending={enable && isPending}
         onInputChange={setQuery}

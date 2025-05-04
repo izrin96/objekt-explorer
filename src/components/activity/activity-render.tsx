@@ -8,11 +8,11 @@ import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { UserAdress } from "@/lib/server/db/schema";
 import UserLink from "../user-link";
 import { format } from "date-fns";
-import { ObjektModalProvider, useObjektModal } from "@/hooks/use-objekt-modal";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 import { env } from "@/env";
-import ReconnectingWebSocket from 'reconnecting-websocket';
+import ReconnectingWebSocket from "reconnecting-websocket";
 
 export default function ActivityRender() {
   return (
@@ -39,7 +39,9 @@ function Activity() {
   const [transfers, setTransfers] = useState<Data[]>([]);
 
   useEffect(() => {
-    const ws = new ReconnectingWebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
+    const ws = new ReconnectingWebSocket(
+      env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!
+    );
 
     ws.onmessage = (event) => {
       const { data } = JSON.parse(event.data) as EventData;
@@ -84,7 +86,9 @@ function Activity() {
                   key={item.id}
                   objekts={[mapOwnedObjekt(item.objekt, item.collection)]}
                 >
-                  <ActivityRow item={item} />
+                  {({ openObjekts }) => (
+                    <ActivityRow item={item} open={openObjekts} />
+                  )}
                 </ObjektModalProvider>
               ))}
             </tbody>
@@ -100,8 +104,7 @@ function Activity() {
   );
 }
 
-function ActivityRow({ item }: { item: Data }) {
-  const { openObjekts } = useObjektModal();
+function ActivityRow({ item, open }: { item: Data; open: () => void }) {
   const fromNickname = item.nicknames.find(
     (a) => a.address.toLowerCase() === item.from
   )?.nickname;
@@ -151,7 +154,7 @@ function ActivityRow({ item }: { item: Data }) {
       </td>
       <td
         className="group whitespace-nowrap px-3 py-3 outline-hidden cursor-pointer"
-        onClick={openObjekts}
+        onClick={open}
       >
         {item.collection.collectionId}
       </td>

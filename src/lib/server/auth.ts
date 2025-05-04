@@ -4,6 +4,25 @@ import { notFound } from "next/navigation";
 import { db } from "./db";
 import { userAddress } from "./db/schema";
 import { CosmoPublicUser } from "../universal/cosmo/auth";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { getBaseURL } from "../utils";
+
+export const auth = betterAuth({
+  database: drizzleAdapter(db, {
+    provider: "pg",
+  }),
+  socialProviders: {
+    discord: {
+      clientId: process.env.DISCORD_CLIENT_ID!,
+      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
+      mapProfileToUser: (profile) => ({
+        name: profile.username,
+      }),
+    },
+  },
+  baseURL: getBaseURL(),
+});
 
 export async function fetchUserByIdentifier(
   identifier: string,

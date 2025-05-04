@@ -1,11 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // not yet in use
-  // cacheHandler:
-  //   process.env.NODE_ENV === "production"
-  //     ? require.resolve("./cache-handler.js")
-  //     : undefined,
   async rewrites() {
     return [
       {

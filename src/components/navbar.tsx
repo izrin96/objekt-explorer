@@ -1,8 +1,8 @@
 import { ThemeSwitcher } from "./theme-switcher";
 import { Cube } from "@phosphor-icons/react/dist/ssr";
-import { Container } from "./ui";
+import { Container, Link } from "./ui";
 import UserSearch from "./user-search";
-import Link from "next/link";
+import UserNav from "./user-nav";
 
 export default function Navbar() {
   return (
@@ -12,7 +12,7 @@ export default function Navbar() {
           <Link href="/">
             <div className="flex gap-2 items-center">
               <Cube size={24} weight="fill" />
-              <span className="font-semibold text-lg select-none">
+              <span className="font-semibold text-lg select-none truncate">
                 Objekt Tracker
               </span>
             </div>
@@ -20,6 +20,7 @@ export default function Navbar() {
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
+          <UserNav />
           <UserSearch />
         </div>
       </Container>

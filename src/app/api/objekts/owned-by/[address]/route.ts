@@ -1,5 +1,6 @@
 import { indexer } from "@/lib/server/db/indexer";
 import { objekts, collections } from "@/lib/server/db/indexer/schema";
+import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { eq, desc, asc } from "drizzle-orm";
 import { NextRequest } from "next/server";
@@ -25,7 +26,9 @@ export async function GET(request: NextRequest, props: Params) {
   const results = await indexer
     .select({
       objekt: objekts,
-      collection: collections,
+      collection: {
+        ...getCollectionColumns(),
+      },
     })
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))

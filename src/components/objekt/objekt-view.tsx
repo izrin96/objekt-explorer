@@ -7,7 +7,6 @@ import {
 } from "@/lib/universal/objekts";
 import { Badge } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
-import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
 
@@ -18,6 +17,8 @@ type Props = {
   unobtainable?: boolean;
   showCount?: boolean;
   showSerial?: boolean;
+  isSelected?: boolean;
+  open: () => void;
 };
 
 export default memo(function ObjektView({
@@ -26,14 +27,17 @@ export default memo(function ObjektView({
   unobtainable = false,
   showCount = false,
   showSerial = false,
+  isSelected = false,
+  open,
   ...props
 }: Props) {
-  const { openObjekts } = useObjektModal();
   const objekts = props.objekts.toSorted(
     (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
   );
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
+
+  const handleOpen = useCallback(() => open(), [open]);
 
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
@@ -48,8 +52,11 @@ export default memo(function ObjektView({
       style={css}
     >
       <div
-        className="cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150"
-        onClick={openObjekts}
+        className={cn(
+          "cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150 ring-transparent ring-5 rounded-xl",
+          isSelected && "ring-fg bg-fg"
+        )}
+        onClick={handleOpen}
       >
         <NextImage
           fill
@@ -74,7 +81,7 @@ export default memo(function ObjektView({
           intent="secondary"
           className="font-semibold cursor-pointer"
           shape="square"
-          onClick={openObjekts}
+          onClick={handleOpen}
         >
           {getCollectionShortId(objekt)}
           {showSerial && isOwned && ` #${objekt.serial}`}

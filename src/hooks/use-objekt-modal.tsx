@@ -3,13 +3,7 @@
 import ObjektDetail from "@/components/objekt/objekt-detail";
 import { Modal } from "@/components/ui";
 import { ValidObjekt } from "@/lib/universal/objekts";
-import {
-  PropsWithChildren,
-  createContext,
-  useCallback,
-  useContext,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { useObjektTab } from "./use-objekt-tab";
 
 type ContextProps = {
@@ -20,10 +14,11 @@ type ContextProps = {
 
 const ObjektModalContext = createContext<ContextProps>({} as ContextProps);
 
-type ProviderProps = PropsWithChildren<{
+type ProviderProps = {
   isProfile?: boolean;
   objekts: ValidObjekt[];
-}>;
+  children: ({ openObjekts }: { openObjekts: () => void }) => React.ReactNode;
+};
 
 export function ObjektModalProvider({
   children,
@@ -66,8 +61,7 @@ export function ObjektModalProvider({
           )}
         </Modal.Body>
       </Modal.Content>
-
-      {children}
+      {children?.({ openObjekts })}
     </ObjektModalContext>
   );
 }

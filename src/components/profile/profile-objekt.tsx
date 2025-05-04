@@ -82,14 +82,21 @@ function ProfileObjekt() {
             {({ objekts, index }) => {
               const [objekt] = objekts;
               return (
-                <ObjektModalProvider key={objekt.id} objekts={objekts} isProfile>
-                  <ObjektView
-                    objekts={objekts}
-                    isFade={!("serial" in objekt)}
-                    priority={index < columns * 3}
-                    showSerial={!filters.grouped}
-                    showCount
-                  />
+                <ObjektModalProvider
+                  key={objekt.id}
+                  objekts={objekts}
+                  isProfile
+                >
+                  {({ openObjekts }) => (
+                    <ObjektView
+                      objekts={objekts}
+                      isFade={!("serial" in objekt)}
+                      priority={index < columns * 3}
+                      showSerial={!filters.grouped}
+                      showCount
+                      open={openObjekts}
+                    />
+                  )}
                 </ObjektModalProvider>
               );
             }}
@@ -124,14 +131,14 @@ function ProfileObjekt() {
     );
 
   return (
-    <div className="flex flex-col gap-2">
-      <FilterView isProfile artists={artists} />
-      <div className="flex items-center gap-2">
-        <span className="font-semibold">
-          {count} total
-          {filters.grouped ? ` (${groupedCount} types)` : undefined}
-        </span>
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
+        <FilterView isProfile artists={artists} />
       </div>
+      <span className="font-semibold">
+        {count} total
+        {filters.grouped ? ` (${groupedCount} types)` : undefined}
+      </span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>
     </div>

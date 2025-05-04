@@ -1,6 +1,13 @@
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
 
-export type IndexedObjekt = Collection;
+export type IndexedObjekt = { id: string | number } & Omit<
+  Collection,
+  "id" | "contract" | "comoAmount" | "accentColor" | "thumbnailImage"
+>;
+
+export type OwnedObjekt = IndexedObjekt &
+  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable">;
+
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
 export function getCollectionShortId(objekt: ValidObjekt) {
@@ -9,7 +16,7 @@ export function getCollectionShortId(objekt: ValidObjekt) {
   )} ${objekt.collectionNo}`;
 }
 
-export function mapOwnedObjekt(objekt: Objekt, collection: Collection) {
+export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
   return {
     ...collection,
     ...overrideColor(collection),
@@ -21,9 +28,6 @@ export function mapOwnedObjekt(objekt: Objekt, collection: Collection) {
   } satisfies OwnedObjekt;
 }
 
-export type OwnedObjekt = Omit<IndexedObjekt, "id"> &
-  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "id" | "transferable">;
-
 // temporary fix accent color for some collection
 export function overrideColor(objekt: ValidObjekt) {
   const accentColor = overrideAccents[objekt.slug];
@@ -31,7 +35,6 @@ export function overrideColor(objekt: ValidObjekt) {
 
   return {
     backgroundColor: accentColor ?? objekt.backgroundColor,
-    accentColor: accentColor ?? objekt.accentColor,
     textColor: fontColor ?? objekt.textColor,
   };
 }

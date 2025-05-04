@@ -5,7 +5,14 @@ import {
   uniqueIndex,
   varchar,
   customType,
+  integer,
+  text,
+  timestamp,
 } from "drizzle-orm/pg-core";
+import { user, session, account, verification } from "./auth-schema";
+import { relations } from "drizzle-orm";
+
+export { user, session, account, verification };
 
 const citext = customType<{ data: string }>({
   dataType() {
@@ -33,5 +40,56 @@ export const userAddress = pgTable(
   ]
 );
 
+export const lists = pgTable(
+  "lists",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, {
+        onDelete: "cascade",
+      }),
+    slug: varchar("slug", { length: 12 }).notNull(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    }).notNull(),
+  },
+  (t) => [uniqueIndex("lists_slug_idx").on(t.slug)]
+);
+
+export const listsRelations = relations(lists, ({ many, one }) => ({
+  entries: many(listEntries),
+  user: one(user, { fields: [lists.userId], references: [user.id] }),
+}));
+
+export const listEntries = pgTable(
+  "list_entries",
+  {
+    id: serial("id").primaryKey(),
+    listId: integer("list_id")
+      .notNull()
+      .references(() => lists.id, {
+        onDelete: "cascade",
+      }),
+    collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    }).notNull(),
+  },
+  (t) => [index("list_entries_list_idx").on(t.listId)]
+);
+
+export const listEntriesRelations = relations(listEntries, ({ one }) => ({
+  list: one(lists, { fields: [listEntries.listId], references: [lists.id] }),
+}));
+
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAdress = typeof userAddress.$inferSelect;
+
+export type User = typeof user.$inferSelect;
+export type Session = typeof session.$inferSelect;
+export type Account = typeof account.$inferSelect;
+export type Verification = typeof verification.$inferSelect;
+export type List = typeof lists.$inferSelect;
+export type ListEntry = typeof listEntries.$inferSelect;

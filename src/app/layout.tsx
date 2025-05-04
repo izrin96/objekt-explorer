@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
-import { Toast } from "@/components/ui";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import { Analytics } from "@/components/analytics";
 import { PropsWithChildren } from "react";
 import { cn } from "@/utils/classes";
-import ThemeTexture from "@/components/theme-texture";
+import { TRPCReactProvider } from "@/lib/trpc/client";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -72,17 +71,17 @@ export default function RootLayout({ children }: PropsWithChildren) {
           process.env.NODE_ENV === "development" ? "debug-screens" : ""
         )}
       >
-        <Toast />
-        <ClientProviders>
-          <ThemeTexture />
-          <div className="relative flex flex-col">
-            <Navbar />
-            <main className="flex min-w-full flex-col items-center">
-              {children}
-            </main>
-          </div>
-          <Analytics />
-        </ClientProviders>
+        <TRPCReactProvider>
+          <ClientProviders>
+            <div className="relative flex flex-col">
+              <Navbar />
+              <main className="flex min-w-full flex-col items-center">
+                {children}
+              </main>
+            </div>
+            <Analytics />
+          </ClientProviders>
+        </TRPCReactProvider>
       </body>
     </html>
   );
