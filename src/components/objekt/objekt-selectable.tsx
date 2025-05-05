@@ -9,11 +9,13 @@ export function ObjektViewSelectable({
   priority,
   getId,
   open,
+  enableSelect,
 }: {
   objekts: ValidObjekt[];
   priority: boolean;
   getId: () => string | number;
   open: () => void;
+  enableSelect: boolean;
 }) {
   const mode = useObjektSelect((a) => a.mode);
   const select = useObjektSelect((a) => a.select);
@@ -24,13 +26,13 @@ export function ObjektViewSelectable({
       priority={priority}
       isSelected={isSelected}
       open={() => {
-        if (mode) {
+        if (mode && enableSelect) {
           select(getId());
         } else {
           open();
         }
       }}
-      select={() => select(getId())}
+      select={enableSelect ? () => select(getId()) : undefined}
     />
   );
 }

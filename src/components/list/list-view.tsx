@@ -78,6 +78,7 @@ function ListView({ slug, isOwned }: Props) {
                       priority={index < columns * 3}
                       getId={() => objekt.id}
                       open={openObjekts}
+                      enableSelect={isOwned}
                     />
                   )}
                 </ObjektModalProvider>
@@ -87,7 +88,7 @@ function ListView({ slug, isOwned }: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns]);
+  }, [deferredObjektsFiltered, columns, isOwned]);
 
   const count = useMemo(
     () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,

@@ -81,6 +81,7 @@ function IndexView(props: Props) {
                       priority={index < columns * 3}
                       getId={() => objekt.slug}
                       open={openObjekts}
+                      enableSelect={props.loggedIn}
                     />
                   )}
                 </ObjektModalProvider>
@@ -90,7 +91,7 @@ function IndexView(props: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns]);
+  }, [deferredObjektsFiltered, columns, props.loggedIn]);
 
   const count = useMemo(
     () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
