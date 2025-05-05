@@ -4,21 +4,15 @@ import {
   serial,
   uniqueIndex,
   varchar,
-  customType,
   integer,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
 import { user, session, account, verification } from "./auth-schema";
 import { relations } from "drizzle-orm";
+import { citext } from "./custom-type";
 
 export { user, session, account, verification };
-
-const citext = customType<{ data: string }>({
-  dataType() {
-    return "citext";
-  },
-});
 
 export const accessToken = pgTable("access_token", {
   id: serial("id").primaryKey(),

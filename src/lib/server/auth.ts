@@ -24,6 +24,16 @@ export const auth = betterAuth({
     },
   },
   baseURL: getBaseURL(),
+  user: {
+    additionalFields: {
+      username: {
+        type: "string",
+        required: false,
+        returned: true,
+        fieldName: "username",
+      },
+    },
+  },
 });
 
 export const cachedSession = cache(async () =>
