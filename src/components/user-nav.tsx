@@ -6,14 +6,17 @@ import { Avatar, buttonStyles, Menu, Link } from "./ui";
 import { redirect, usePathname } from "next/navigation";
 import { User } from "better-auth";
 
-export default function UserNav({ user }: { user?: User }) {
+export default function UserNav() {
   // temporary fix for ui being stuck after navigate
   const pathname = usePathname();
+  const { data, isPending } = authClient.useSession();
+
+  if (isPending) return;
 
   return (
     <div className="text-sm gap-2 inline-flex">
-      {user ? (
-        <UserMenu key={pathname} user={user} />
+      {data ? (
+        <UserMenu key={pathname} user={data.user} />
       ) : (
         <>
           <Link
