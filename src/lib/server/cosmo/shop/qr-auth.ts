@@ -1,8 +1,10 @@
+import "server-only";
+
 import { cosmoShop } from "./http";
 import { randomUUID } from "node:crypto";
 import { chromium } from "playwright";
 import chromiumLight from "@sparticuz/chromium";
-import { TicketAuth, TicketQuery } from "@/lib/universal/cosmo/shop/qr-auth";
+import { TicketAuth, TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 
 const headlessType = process.env.IS_LOCAL ? false : true;
 
@@ -58,8 +60,8 @@ export async function generateQrTicket(token: string) {
   );
 }
 
-export async function queryTicket(ticket: string) {
-  return await cosmoShop<TicketQuery>(
+export async function checkTicket(ticket: string) {
+  return await cosmoShop<TicketCheck>(
     `/bff/v1/users/auth/login/native/qr/ticket`,
     {
       query: {
@@ -81,8 +83,4 @@ export async function certifyTicket(otp: number, ticket: string) {
       tid: crypto.randomUUID(),
     },
   });
-}
-
-export function generateQrCode(ticket: string) {
-  return `cosmo://ticket-login?t=${ticket}`;
 }
