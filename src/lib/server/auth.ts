@@ -18,9 +18,10 @@ export const auth = betterAuth({
     discord: {
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-      // mapProfileToUser: (profile) => ({
-      //   name: profile.username,
-      // }),
+      // in future will move to Account or no longer store. not sure yet.
+      mapProfileToUser: (profile) => ({
+        username: profile.username,
+      }),
     },
   },
   baseURL: getBaseURL(),
