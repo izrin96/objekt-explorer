@@ -26,6 +26,7 @@ export const listRouter = createTRPCRouter({
             id: true,
             name: true,
             image: true,
+            username: true,
           },
         },
       },

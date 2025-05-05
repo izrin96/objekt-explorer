@@ -9,7 +9,7 @@ import { Badge, Button } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
-import { CheckSquare, Square } from "@phosphor-icons/react/dist/ssr";
+import { Check } from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   objekts: ValidObjekt[];
@@ -78,10 +78,7 @@ export default memo(function ObjektView({
         )}
         {select && (
           <div
-            className={cn(
-              "group-hover:block hidden absolute top-0 right-0",
-              isSelected && "block"
-            )}
+            className={cn("group-hover:block hidden absolute top-0 right-0")}
           >
             <Button
               size="extra-small"
@@ -89,14 +86,10 @@ export default memo(function ObjektView({
               className="bg-(--objekt-bg-color) hover:bg-(--objekt-bg-color) text-(--objekt-text-color) group/btn"
               onClick={select}
             >
-              {isSelected ? (
-                <CheckSquare size="16" weight="regular" />
-              ) : (
-                <Square size="16" weight="regular" />
-              )}
+              <Check size="16" weight="bold" />
               <span
                 className={cn(
-                  "hidden text-xs group-hover/btn:block text-nowrap"
+                  "hidden text-xs font-semibold group-hover/btn:block text-nowrap"
                 )}
               >
                 {isSelected ? "Unselect" : "Select"}

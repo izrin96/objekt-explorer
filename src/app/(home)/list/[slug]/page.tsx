@@ -56,8 +56,10 @@ export default async function Page(props: Props) {
         <div className="flex flex-col">
           <div className="text-lg font-semibold">{name}</div>
           <div className="text-sm text-muted-fg inline-flex items-center gap-1">
-            <span>{user.name}</span>
             <DiscordLogo />
+            <span>{user.name}</span>
+            <span>·</span>
+            <span>{user.username}</span>
           </div>
         </div>
       </div>
