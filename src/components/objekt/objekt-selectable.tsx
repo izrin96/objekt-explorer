@@ -15,13 +15,22 @@ export function ObjektViewSelectable({
   getId: () => string | number;
   open: () => void;
 }) {
+  const mode = useObjektSelect((a) => a.mode);
+  const select = useObjektSelect((a) => a.select);
   const isSelected = useObjektSelect((state) => state.isSelected(getId()));
   return (
     <ObjektView
       objekts={objekts}
       priority={priority}
       isSelected={isSelected}
-      open={open}
+      open={() => {
+        if (mode) {
+          select(getId());
+        } else {
+          open();
+        }
+      }}
+      select={() => select(getId())}
     />
   );
 }

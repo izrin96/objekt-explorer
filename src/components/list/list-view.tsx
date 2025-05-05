@@ -19,10 +19,7 @@ import {
 } from "../collection/collection-render";
 import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 import { api } from "@/lib/trpc/client";
-import {
-  ObjektSelectProvider,
-  useObjektSelect,
-} from "@/hooks/use-objekt-select";
+import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 
@@ -58,9 +55,6 @@ function ListView({ slug, isOwned }: Props) {
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
-  const mode = useObjektSelect((a) => a.mode);
-  const select = useObjektSelect((a) => a.select);
-
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, objekts]) => [
       !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
@@ -83,13 +77,7 @@ function ListView({ slug, isOwned }: Props) {
                       objekts={objekts}
                       priority={index < columns * 3}
                       getId={() => objekt.id}
-                      open={() => {
-                        if (mode) {
-                          select(objekt.id);
-                        } else {
-                          openObjekts();
-                        }
-                      }}
+                      open={openObjekts}
                     />
                   )}
                 </ObjektModalProvider>
@@ -99,7 +87,7 @@ function ListView({ slug, isOwned }: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, mode, select]);
+  }, [deferredObjektsFiltered, columns]);
 
   const count = useMemo(
     () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
@@ -112,7 +100,7 @@ function ListView({ slug, isOwned }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         <FilterView artists={artists} />
         {isOwned && <SelectMode state="remove" slug={slug} />}
       </div>

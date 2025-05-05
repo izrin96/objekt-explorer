@@ -5,10 +5,11 @@ import {
   OwnedObjekt,
   ValidObjekt,
 } from "@/lib/universal/objekts";
-import { Badge } from "../ui";
+import { Badge, Button } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
+import { CheckSquare, Square } from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   objekts: ValidObjekt[];
@@ -19,6 +20,7 @@ type Props = {
   showSerial?: boolean;
   isSelected?: boolean;
   open: () => void;
+  select?: () => void;
 };
 
 export default memo(function ObjektView({
@@ -29,6 +31,7 @@ export default memo(function ObjektView({
   showSerial = false,
   isSelected = false,
   open,
+  select,
   ...props
 }: Props) {
   const objekts = props.objekts.toSorted(
@@ -51,7 +54,7 @@ export default memo(function ObjektView({
     >
       <div
         className={cn(
-          "cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150 ring-transparent ring-5 rounded-xl",
+          "cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150 ring-transparent ring-5 rounded-xl group",
           isSelected && "ring-fg bg-fg"
         )}
         onClick={open}
@@ -71,6 +74,34 @@ export default memo(function ObjektView({
         {showCount && objekts.length > 1 && (
           <div className="flex absolute bottom-2 left-2 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
             {objekts.length}
+          </div>
+        )}
+        {select && (
+          <div
+            className={cn(
+              "group-hover:block hidden absolute top-0 right-0",
+              isSelected && "block"
+            )}
+          >
+            <Button
+              size="extra-small"
+              intent="plain"
+              className="bg-(--objekt-bg-color) hover:bg-(--objekt-bg-color) text-(--objekt-text-color) group/btn"
+              onClick={select}
+            >
+              {isSelected ? (
+                <CheckSquare size="16" weight="regular" />
+              ) : (
+                <Square size="16" weight="regular" />
+              )}
+              <span
+                className={cn(
+                  "hidden text-xs group-hover/btn:block text-nowrap"
+                )}
+              >
+                {isSelected ? "Unselect" : "Select"}
+              </span>
+            </Button>
           </div>
         )}
       </div>

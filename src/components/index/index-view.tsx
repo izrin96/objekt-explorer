@@ -23,10 +23,7 @@ import {
 } from "../collection/collection-render";
 import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 import { SelectMode } from "../filters/select-mode";
-import {
-  ObjektSelectProvider,
-  useObjektSelect,
-} from "@/hooks/use-objekt-select";
+import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 
 type Props = { loggedIn: boolean };
@@ -61,9 +58,6 @@ function IndexView(props: Props) {
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
-  const mode = useObjektSelect((a) => a.mode);
-  const select = useObjektSelect((a) => a.select);
-
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, objekts]) => [
       !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
@@ -86,13 +80,7 @@ function IndexView(props: Props) {
                       objekts={objekts}
                       priority={index < columns * 3}
                       getId={() => objekt.slug}
-                      open={() => {
-                        if (mode) {
-                          select(objekt.slug);
-                        } else {
-                          openObjekts();
-                        }
-                      }}
+                      open={openObjekts}
                     />
                   )}
                 </ObjektModalProvider>
@@ -102,7 +90,7 @@ function IndexView(props: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, mode, select]);
+  }, [deferredObjektsFiltered, columns]);
 
   const count = useMemo(
     () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
@@ -115,7 +103,7 @@ function IndexView(props: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         <FilterView artists={artists} />
         {props.loggedIn && <SelectMode state="add" />}
       </div>

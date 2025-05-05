@@ -45,37 +45,36 @@ export function SelectMode({
       </Button>
 
       {mode && (
-        <>
-          <Button intent="outline" size="extra-small" onClick={reset}>
-            Reset
-          </Button>
-          {state === "add" && (
-            <AddToList>
-              {({ open }) => (
-                <Button
-                  intent="outline"
-                  size="extra-small"
-                  onClick={() => handleAction(open)}
-                >
-                  Add to list
-                </Button>
-              )}
-            </AddToList>
+        <Button intent="outline" size="small" onClick={reset}>
+          Reset
+        </Button>
+      )}
+
+      {state === "add" && (
+        <AddToList>
+          {({ open }) => (
+            <Button
+              intent="outline"
+              size="small"
+              onClick={() => handleAction(open)}
+            >
+              Add to list
+            </Button>
           )}
-          {state === "remove" && slug && (
-            <RemoveFromList slug={slug}>
-              {({ open }) => (
-                <Button
-                  intent="outline"
-                  size="extra-small"
-                  onClick={() => handleAction(open)}
-                >
-                  Remove from list
-                </Button>
-              )}
-            </RemoveFromList>
+        </AddToList>
+      )}
+      {state === "remove" && slug && (
+        <RemoveFromList slug={slug}>
+          {({ open }) => (
+            <Button
+              intent="outline"
+              size="small"
+              onClick={() => handleAction(open)}
+            >
+              Remove from list
+            </Button>
           )}
-        </>
+        </RemoveFromList>
       )}
     </div>
   );
