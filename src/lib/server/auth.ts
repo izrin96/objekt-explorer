@@ -71,7 +71,7 @@ export async function fetchUserByIdentifier(
     };
   }
 
-  const user = await fetchByNickname(token, identifier);
+  const user = await fetchByNickname(identifier, token);
   if (!user) {
     notFound();
   }
