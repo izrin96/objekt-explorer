@@ -58,7 +58,9 @@ export const lists = pgTable(
     name: text("name").notNull(),
     createdAt: timestamp("created_at", {
       withTimezone: true,
-    }).notNull(),
+    })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [uniqueIndex("lists_slug_idx").on(t.slug)]
 );
@@ -80,7 +82,9 @@ export const listEntries = pgTable(
     collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
     createdAt: timestamp("created_at", {
       withTimezone: true,
-    }).notNull(),
+    })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [index("list_entries_list_idx").on(t.listId)]
 );
