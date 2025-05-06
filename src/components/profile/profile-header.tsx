@@ -38,7 +38,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             className="self-center"
             src={user.user.image}
             alt={user.user.name}
-            initials={user.user.name}
+            initials={user.user.name.charAt(0)}
           />
           <div className="flex flex-col min-w-0">
             <span className="font-semibold text-lg truncate inline-flex gap-1">

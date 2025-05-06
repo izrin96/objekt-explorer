@@ -41,7 +41,7 @@ function UserMenu({ user }: { user: User }) {
           <Menu.Trigger aria-label="Open Menu">
             <Avatar
               alt={user.name}
-              initials={user.name}
+              initials={user.name.charAt(0)}
               size="medium"
               shape="square"
               src={user.image}

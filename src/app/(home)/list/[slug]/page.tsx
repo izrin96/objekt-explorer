@@ -52,7 +52,7 @@ export default async function Page(props: Props) {
           className="self-center"
           src={user.image}
           alt={user.name}
-          initials={user.name}
+          initials={user.name.charAt(0)}
         />
         <div className="flex flex-col">
           <div className="text-lg font-semibold">{name}</div>
