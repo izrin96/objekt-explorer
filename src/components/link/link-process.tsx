@@ -22,7 +22,7 @@ export default function LinkRender() {
   const [step, setStep] = useState(0);
   return (
     <div className="flex flex-col justify-center items-center gap-5">
-      <Note className="max-w-xl" intent="info">
+      <Note className="max-w-xl" intent="default">
         Please note that this feature is still under testing.
       </Note>
 
@@ -103,7 +103,7 @@ function StepRender({
   if (!data || data.status === "wait_for_user_action")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>Scan this QR and click &quot;Continue&quot; in COSMO app.</span>
+        <span>Scan this QR and click &apos;Continue&apos; in COSMO app.</span>
         <span>
           Or{" "}
           <Link href={generateQrCode(ticketAuth.ticket)} intent="primary">
@@ -119,7 +119,7 @@ function StepRender({
     return (
       <div className="flex flex-col gap-2 items-center">
         <Person size={52} />
-        <span>Detected COSMO ID &quot;{data.user.nickname}&quot;</span>
+        <span>Detected COSMO ID &apos;{data.user.nickname}&apos;</span>
         <RenderOtp ticketAuth={ticketAuth} />
       </div>
     );
@@ -139,7 +139,7 @@ function StepRender({
     return (
       <div className="flex flex-col gap-2 items-center">
         <SealCheck size={52} />
-        <span>Success. Cosmo ID &quot;{data.user.nickname}&quot; linked.</span>
+        <span>Success. Cosmo ID &apos;{data.user.nickname}&apos; linked.</span>
         <div>
           <Link
             className={(renderProps) =>
