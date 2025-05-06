@@ -10,10 +10,40 @@ import { z } from "zod";
 import { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { fetchByNickname } from "../../cosmo/auth";
 
-export const cosmoClaimRouter = createTRPCRouter({
+export const cosmoLinkRouter = createTRPCRouter({
+  // get all linked
+  myList: authProcedure.query(async ({ ctx: { session } }) => {
+    const result = await db.query.userAddress.findMany({
+      columns: {
+        address: true,
+        nickname: true,
+        linkedAt: true,
+      },
+      where: (t, { eq }) => eq(t.userId, session.user.id),
+    });
+    return result;
+  }),
+
+  // remove link
+  removeLink: authProcedure
+    .input(z.string())
+    .mutation(async ({ input: address, ctx: { session } }) => {
+      await db
+        .update(userAddress)
+        .set({
+          userId: null,
+        })
+        .where(
+          and(
+            eq(userAddress.userId, session.user.id),
+            eq(userAddress.address, address)
+          )
+        );
+    }),
+
   // generate qr ticket
   getTicket: authProcedure.query(async () => {
     try {
@@ -63,11 +93,12 @@ export const cosmoClaimRouter = createTRPCRouter({
     .mutation(async ({ input: { otp, ticket }, ctx: { session } }) => {
       try {
         // send otp
-        await certifyTicket(otp, ticket);
+        const s = await certifyTicket(otp, ticket);
+        console.log(s);
       } catch {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Error submit otp",
+          message: "Wrong OTP code",
         });
       }
 
@@ -91,7 +122,8 @@ export const cosmoClaimRouter = createTRPCRouter({
           });
 
         // link cosmo id with user
-        db.update(userAddress)
+        await db
+          .update(userAddress)
           .set({
             linkedAt: sql`'now'`,
             userId: session.user.id,

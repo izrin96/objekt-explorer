@@ -52,14 +52,14 @@ export default async function Page(props: Props) {
           className="self-center"
           src={user.image}
           alt={user.name}
+          initials={user.name}
         />
         <div className="flex flex-col">
           <div className="text-lg font-semibold">{name}</div>
-          <div className="text-sm text-muted-fg inline-flex items-center gap-1">
-            <DiscordLogo />
-            <span>{user.name}</span>
-            <span>·</span>
-            <span>{user.username}</span>
+          <div className="inline-flex items-center gap-1">
+            <DiscordLogo size={14} weight="regular" />
+            <span className="text-fg text-sm">{user.name}</span>
+            <span className="text-muted-fg text-sm">{user.username}</span>
           </div>
         </div>
       </div>

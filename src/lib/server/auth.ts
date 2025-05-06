@@ -3,12 +3,12 @@ import { isAddress } from "viem";
 import { notFound } from "next/navigation";
 import { db } from "./db";
 import { userAddress } from "./db/schema";
-import { CosmoPublicUser } from "../universal/cosmo/auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getBaseURL } from "../utils";
 import { cache } from "react";
 import { headers } from "next/headers";
+import { PublicProfile } from "../universal/user";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -45,29 +45,40 @@ export const cachedSession = cache(async () =>
 
 export async function fetchUserByIdentifier(
   identifier: string,
-  token: string
-): Promise<CosmoPublicUser> {
-  const identifierIsAddress = isAddress(identifier);
-
-  if (identifierIsAddress) {
-    return {
-      address: identifier,
-      nickname: identifier.substring(0, 6),
-      profileImageUrl: "",
-      profile: [],
-    };
-  }
-
+  token?: string
+): Promise<PublicProfile> {
   const cachedUser = await db.query.userAddress.findFirst({
-    where: (t, { eq }) => eq(t.nickname, identifier),
+    columns: {
+      nickname: true,
+      address: true,
+    },
+    with: {
+      user: {
+        columns: {
+          name: true,
+          username: true,
+          image: true,
+        },
+      },
+    },
+    where: (t, { eq, or }) =>
+      or(eq(t.nickname, identifier), eq(t.address, identifier)),
   });
 
   if (cachedUser) {
     return {
       nickname: cachedUser.nickname,
       address: cachedUser.address,
-      profileImageUrl: "",
-      profile: [],
+      user: cachedUser.user,
+    };
+  }
+
+  const identifierIsAddress = isAddress(identifier);
+
+  if (identifierIsAddress) {
+    return {
+      address: identifier,
+      nickname: identifier.substring(0, 6),
     };
   }
 
@@ -89,5 +100,8 @@ export async function fetchUserByIdentifier(
       },
     });
 
-  return user;
+  return {
+    nickname: user.nickname,
+    address: user.address,
+  };
 }

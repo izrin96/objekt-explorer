@@ -5,6 +5,12 @@ import React, { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { api } from "@/lib/trpc/client";
 import { InputOTP } from "../ui/input-otp";
+import {
+  Ghost,
+  HeartBreak,
+  Person,
+  SealCheck,
+} from "@phosphor-icons/react/dist/ssr";
 import { Button, buttonStyles, Form, Link, Loader } from "../ui";
 
 function generateQrCode(ticket: string) {
@@ -12,26 +18,57 @@ function generateQrCode(ticket: string) {
 }
 
 export default function LinkRender() {
+  const utils = api.useUtils();
+  const [step, setStep] = useState(0);
   return (
     <div className="flex flex-col justify-center items-center">
-      <TicketRender />
+      {step === 0 && (
+        <div className="flex flex-col justify-center items-center max-w-xl gap-4">
+          <h2 className="text-lg font-semibold">How its work</h2>
+          <p>
+            You need to download the COSMO app and sign in with the COSMO ID you
+            want to link before proceeding. During this process, you will be
+            required to scan a QR code to verify with COSMO app.
+          </p>
+          <Button
+            intent="secondary"
+            onClick={() => {
+              utils.cosmoLink.getTicket.invalidate();
+              setStep(1);
+            }}
+          >
+            Proceed
+          </Button>
+        </div>
+      )}
+      {step === 1 && <TicketRender />}
     </div>
   );
 }
 
 function TicketRender() {
   const { data, status, refetch, isRefetching, isLoading } =
-    api.cosmoClaim.getTicket.useQuery(undefined, {
+    api.cosmoLink.getTicket.useQuery(undefined, {
       staleTime: Infinity,
+      retry: false,
     });
 
-  if (isRefetching || isLoading) return <Loader variant="ring" />;
+  if (isRefetching || isLoading)
+    return (
+      <div className="flex flex-col gap-2 items-center">
+        <span>Getting QR code from COSMO</span>
+        <Loader variant="ring" />
+      </div>
+    );
 
   if (status === "error")
     return (
-      <div className="flex flex-col gap-2">
-        <span>Error</span>
-        <Button onClick={() => refetch()}>Try again</Button>
+      <div className="flex flex-col gap-2 items-center">
+        <HeartBreak size={52} />
+        <span>Error getting QR ticket from COSMO</span>
+        <Button intent="secondary" onClick={() => refetch()}>
+          Try again
+        </Button>
       </div>
     );
 
@@ -47,7 +84,7 @@ function StepRender({
   refetch: () => void;
 }) {
   const [enabled, setEnable] = useState(true);
-  const { data } = api.cosmoClaim.checkTicket.useQuery(ticketAuth.ticket, {
+  const { data } = api.cosmoLink.checkTicket.useQuery(ticketAuth.ticket, {
     retry: false,
     refetchInterval: 2500,
     enabled: enabled,
@@ -61,62 +98,86 @@ function StepRender({
 
   if (!data || data.status === "wait_for_user_action")
     return (
-      <div className="flex flex-col gap-2">
-        <span>Scan QR</span>
+      <div className="flex flex-col gap-2 items-center">
+        <span>Scan this QR and click &quot;Continue&quot; in COSMO app</span>
         <QRCodeSVG size={256} value={generateQrCode(ticketAuth.ticket)} />
-      </div>
-    );
-
-  if (data.status === "expired")
-    return (
-      <div className="flex flex-col gap-2">
-        <span>Ticket expired</span>
-        <Button onClick={refetch}>Try again</Button>
       </div>
     );
 
   if (data.status === "wait_for_certify")
     return (
-      <div className="flex flex-col gap-2">
-        <span>Detected: {data.user.nickname}</span>
+      <div className="flex flex-col gap-2 items-center">
+        <Person size={52} />
+        <span>Detected COSMO ID &quot;{data.user.nickname}&quot;</span>
         <RenderOtp ticketAuth={ticketAuth} />
+      </div>
+    );
+
+  if (data.status === "expired")
+    return (
+      <div className="flex flex-col gap-2 items-center">
+        <Ghost size={52} />
+        <span>QR expired</span>
+        <Button intent="secondary" onClick={refetch}>
+          Regenerate
+        </Button>
       </div>
     );
 
   if (data.status === "certified")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>Success. Cosmo ID linked.</span>
+        <SealCheck size={52} />
+        <span>Success. Cosmo ID &quot;{data.user.nickname}&quot; linked.</span>
         <div>
           <Link
             className={(renderProps) =>
               buttonStyles({
                 ...renderProps,
-                size: "extra-small",
                 intent: "secondary",
               })
             }
             href={`/@${data.user.nickname}`}
           >
-            Go to profile
+            Visit your ID
           </Link>
         </div>
       </div>
     );
+
+  return (
+    <div className="flex flex-col gap-2 items-center">
+      <HeartBreak size={52} />
+      <span>Process failed</span>
+      <Button intent="secondary" onClick={refetch}>
+        Try again
+      </Button>
+    </div>
+  );
 }
 
 function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
   const [value, setValue] = useState("");
   const [wait, setWait] = useState(false);
 
-  const otpAndLink = api.cosmoClaim.otpAndLink.useMutation({
+  const otpAndLink = api.cosmoLink.otpAndLink.useMutation({
     onSuccess: () => {
       setWait(true);
     },
   });
 
+  if (otpAndLink.isError)
+    return (
+      <div className="flex flex-col gap-2 items-center">
+        <span>{otpAndLink.failureReason?.message}</span>
+        <Button intent="secondary" onClick={() => otpAndLink.reset()}>
+          Try again
+        </Button>
+      </div>
+    );
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 items-center">
       <Form
         onSubmit={(e) => {
           e.preventDefault();

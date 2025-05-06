@@ -41,6 +41,10 @@ export const userAddress = pgTable(
   ]
 );
 
+export const userAddressRelations = relations(userAddress, ({ one }) => ({
+  user: one(user, { fields: [userAddress.userId], references: [user.id] }),
+}));
+
 export const lists = pgTable(
   "lists",
   {
