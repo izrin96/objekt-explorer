@@ -1,7 +1,7 @@
 "use client";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { Button, Form, Link, Modal, Note, Select } from "../ui";
+import { Button, Checkbox, Form, Link, Modal, Note, Select } from "../ui";
 import { useCallback, useState } from "react";
 import { api } from "@/lib/trpc/client";
 import { Key } from "react-aria";
@@ -89,14 +89,15 @@ function AddToList({
   const reset = useObjektSelect((a) => a.reset);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const [slug, setSlug] = useState<Key>("");
+  const [skipDups, setSkipDups] = useState(false);
   const [open, setOpen] = useState(false);
   const list = api.list.myList.useQuery();
   const addToList = api.list.addObjektsToList.useMutation({
-    onSuccess: () => {
+    onSuccess: (rowCount) => {
       setOpen(false);
       reset();
       toggleMode();
-      toast.success("Objekt added to the list", {
+      toast.success(`${rowCount} objekt added to the list`, {
         position: "top-center",
         duration: 1300,
       });
@@ -115,6 +116,7 @@ function AddToList({
             e.preventDefault();
             addToList.mutate({
               slug: slug.toString(),
+              skipDups: skipDups,
               collectionSlugs: selected as string[],
             });
           }}
@@ -124,22 +126,30 @@ function AddToList({
           </Modal.Header>
           <Modal.Body>
             {(list.data ?? []).length > 0 ? (
-              <Select
-                label="My List"
-                placeholder="Select a list"
-                selectedKey={slug}
-                onSelectionChange={setSlug}
-                isRequired
-              >
-                <Select.Trigger />
-                <Select.List items={list.data ?? []}>
-                  {(item) => (
-                    <Select.Option id={item.slug} textValue={item.slug}>
-                      {item.name}
-                    </Select.Option>
-                  )}
-                </Select.List>
-              </Select>
+              <div className="flex flex-col gap-4">
+                <Select
+                  label="My List"
+                  placeholder="Select a list"
+                  selectedKey={slug}
+                  onSelectionChange={setSlug}
+                  isRequired
+                >
+                  <Select.Trigger />
+                  <Select.List items={list.data ?? []}>
+                    {(item) => (
+                      <Select.Option id={item.slug} textValue={item.slug}>
+                        {item.name}
+                      </Select.Option>
+                    )}
+                  </Select.List>
+                </Select>
+                <Checkbox
+                  isSelected={skipDups}
+                  onChange={setSkipDups}
+                  label="Prevent duplicate"
+                  description="Skip the same objekt when adding"
+                />
+              </div>
             ) : (
               <Note intent="default">
                 You don&apos;t have any list yet.{" "}

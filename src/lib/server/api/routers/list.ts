@@ -90,17 +90,46 @@ export const listRouter = createTRPCRouter({
     .input(
       z.object({
         slug: z.string(),
+        skipDups: z.boolean(),
         collectionSlugs: z.string().array(),
       })
     )
     .mutation(
       async ({
-        input: { slug, collectionSlugs },
+        input: { slug, skipDups, collectionSlugs },
         ctx: {
           session: { user },
         },
       }) => {
         const list = await findOwnedList(slug, user.id);
+
+        if (skipDups) {
+          // get all slug that already inserted
+          const entries = await db
+            .selectDistinct({
+              slug: listEntries.collectionSlug,
+            })
+            .from(listEntries)
+            .where(eq(listEntries.listId, list.id));
+
+          const existingSlugs = new Set(entries.map((a) => a.slug));
+          const filtered = collectionSlugs.filter(
+            (slug) => !existingSlugs.has(slug)
+          );
+
+          if (filtered.length < 1) return 0;
+
+          await db.insert(listEntries).values(
+            filtered.map((collectionSlug) => ({
+              listId: list.id,
+              collectionSlug: collectionSlug,
+            }))
+          );
+
+          return filtered.length;
+        }
+
+        if (collectionSlugs.length < 1) return 0;
 
         await db.insert(listEntries).values(
           collectionSlugs.map((collectionSlug) => ({
@@ -108,6 +137,8 @@ export const listRouter = createTRPCRouter({
             collectionSlug: collectionSlug,
           }))
         );
+
+        return collectionSlugs.length;
       }
     ),
 
