@@ -7,6 +7,7 @@ import { redirect, usePathname } from "next/navigation";
 import { User } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
+import { DiscordLogo, SignOut, User as UserIcon, ListHeart } from "@phosphor-icons/react/dist/ssr";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -56,9 +57,18 @@ function UserMenu({ user }: { user: User }) {
                 </span>
               </Menu.Header>
             </Menu.Section>
-            <Menu.Item href="/list">My List</Menu.Item>
-            <Menu.Item href="/link">My Cosmo ID</Menu.Item>
-            <Menu.Item onAction={openRefreshProfile}>Refresh Profile</Menu.Item>
+            <Menu.Item href="/list">
+              <ListHeart data-slot="icon" />
+              <Menu.Label>My List</Menu.Label>
+            </Menu.Item>
+            <Menu.Item href="/link">
+              <UserIcon data-slot="icon" />
+              <Menu.Label>My Cosmo</Menu.Label>
+            </Menu.Item>
+            <Menu.Item onAction={openRefreshProfile}>
+              <DiscordLogo data-slot="icon" size={16} />
+              <Menu.Label>Refresh Profile</Menu.Label>
+            </Menu.Item>
             <Menu.Separator />
             <Menu.Item
               onAction={async () => {
@@ -66,7 +76,8 @@ function UserMenu({ user }: { user: User }) {
                 redirect("/");
               }}
             >
-              Log out
+              <SignOut data-slot="icon" />
+              <Menu.Label>Log out</Menu.Label>
             </Menu.Item>
           </Menu.Content>
         </Menu>

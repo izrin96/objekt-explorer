@@ -105,7 +105,6 @@ export const listRouter = createTRPCRouter({
         await db.insert(listEntries).values(
           collectionSlugs.map((collectionSlug) => ({
             listId: list.id,
-            createdAt: sql`'now'`,
             collectionSlug: collectionSlug,
           }))
         );
@@ -197,7 +196,6 @@ export const listRouter = createTRPCRouter({
           name: name,
           userId: user.id,
           slug: nanoid(9),
-          createdAt: sql`'now'`,
         });
       }
     ),

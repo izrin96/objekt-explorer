@@ -34,7 +34,7 @@ function MyLink() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Note className="w-full" intent="warning">
+      <Note className="w-full" intent="info">
         After linking, your Discord information will be displayed in your COSMO
         ID. Currently, there are no privacy options available, but we&apos;re
         working on it.
@@ -56,13 +56,13 @@ function MyLink() {
       <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {links.map((link) => (
           <Card key={link.address} className="bg-secondary/20">
-            <Card.Header className="flex justify-between">
+            <Card.Content className="flex justify-between">
               <Link
                 href={`/@${link.nickname ?? link.address}`}
-                className="font-semibold text-base flex-1 flex flex-col gap-1"
+                className="font-semibold text-base flex-1 flex flex-col gap-1 min-w-0"
               >
-                <span className="text-lg">{link.nickname ?? link.address}</span>
-                <span className="text-muted-fg text-xs">{link.address}</span>
+                <span className="text-lg truncate">{link.nickname ?? link.address}</span>
+                <span className="text-muted-fg text-xs truncate">{link.address}</span>
               </Link>
               <RemoveLink address={link.address}>
                 {({ open: openUnlink }) => (
@@ -81,7 +81,7 @@ function MyLink() {
                   </Menu>
                 )}
               </RemoveLink>
-            </Card.Header>
+            </Card.Content>
           </Card>
         ))}
       </div>

@@ -14,7 +14,7 @@ export default async function Page() {
   return (
     <div className="flex flex-col pb-8 pt-2">
       <div className="flex flex-col gap-4">
-        <div className="text-xl font-semibold">My Cosmo ID Link</div>
+        <div className="text-xl font-semibold">My Cosmo</div>
         <HydrateClient>
           <MyLinkRender />
         </HydrateClient>

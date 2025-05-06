@@ -83,7 +83,7 @@ export default memo(function ObjektView({
             <Button
               size="extra-small"
               intent="plain"
-              className="bg-bg text-fg group/btn"
+              className="bg-bg/80 text-fg group/btn"
               onClick={select}
             >
               <Check size="16" weight="bold" />

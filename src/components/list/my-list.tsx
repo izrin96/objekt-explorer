@@ -50,7 +50,7 @@ export function MyList() {
           <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {lists.map((list) => (
               <Card key={list.slug} className="bg-secondary/20">
-                <Card.Header className="flex justify-between">
+                <Card.Content className="flex justify-between">
                   <Link
                     href={`/list/${list.slug}`}
                     className="font-semibold text-base flex-1"
@@ -79,7 +79,7 @@ export function MyList() {
                       </DeleteList>
                     )}
                   </EditList>
-                </Card.Header>
+                </Card.Content>
               </Card>
             ))}
           </div>
