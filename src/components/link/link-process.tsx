@@ -11,7 +11,7 @@ import {
   Person,
   SealCheck,
 } from "@phosphor-icons/react/dist/ssr";
-import { Button, buttonStyles, Form, Link, Loader } from "../ui";
+import { Button, buttonStyles, Form, Link, Loader, Note } from "../ui";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -21,7 +21,11 @@ export default function LinkRender() {
   const utils = api.useUtils();
   const [step, setStep] = useState(0);
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className="flex flex-col justify-center items-center gap-5">
+      <Note className="max-w-xl" intent="info">
+        Please note that this feature is still under testing.
+      </Note>
+
       {step === 0 && (
         <div className="flex flex-col justify-center items-center max-w-xl gap-4">
           <h2 className="text-lg font-semibold">How its work</h2>
@@ -99,7 +103,14 @@ function StepRender({
   if (!data || data.status === "wait_for_user_action")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>Scan this QR and click &quot;Continue&quot; in COSMO app</span>
+        <span>Scan this QR and click &quot;Continue&quot; in COSMO app.</span>
+        <span>
+          Or{" "}
+          <Link href={generateQrCode(ticketAuth.ticket)} intent="primary">
+            click here
+          </Link>{" "}
+          if you are on mobile.
+        </span>
         <QRCodeSVG size={256} value={generateQrCode(ticketAuth.ticket)} />
       </div>
     );
