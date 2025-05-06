@@ -126,6 +126,7 @@ const PopoverContent = ({
   const isSubmenuTrigger = popoverContext?.trigger === "SubmenuTrigger"
   const isMenu = isMenuTrigger || isSubmenuTrigger
   const isComboBoxTrigger = popoverContext?.trigger === "ComboBox"
+  const isPicker = isComboBoxTrigger || popoverContext?.trigger === "Select"
   const offset = showArrow ? 12 : 8
   const effectiveOffset = isSubmenuTrigger ? offset - 5 : offset
   return isMobile && respectScreen ? (
@@ -150,6 +151,7 @@ const PopoverContent = ({
       className={composeRenderProps(className, (className, renderProps) =>
         content({
           ...renderProps,
+          isPicker,
           className,
         }),
       )}

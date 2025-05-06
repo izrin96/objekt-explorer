@@ -89,13 +89,13 @@ const SelectList = <T extends object>({
     <PopoverContent
       showArrow={false}
       respectScreen={false}
-      className={composeTailwindRenderProps(popoverClassName, "sm:min-w-(--trigger-width)")}
+      className={popoverClassName}
       placement={props.placement}
     >
       <ListBox
         layout="stack"
         orientation="vertical"
-        className={composeTailwindRenderProps(className, "border-0 shadow-none")}
+        className={composeTailwindRenderProps(className, "max-h-[inherit] border-0 shadow-none")}
         items={items}
         {...props}
       >

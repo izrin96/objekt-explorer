@@ -70,11 +70,11 @@ const ComboBoxList = <T extends object>({
       showArrow={false}
       respectScreen={false}
       isNonModal
-      className={composeTailwindRenderProps(popoverClassName, "sm:min-w-(--trigger-width)")}
+      className={popoverClassName}
       placement={props.placement}
     >
       <ListBox
-        className={composeTailwindRenderProps(className, "border-0 shadow-none")}
+        className={composeTailwindRenderProps(className, "max-h-[inherit] border-0 shadow-none")}
         layout="stack"
         orientation="vertical"
         items={items}

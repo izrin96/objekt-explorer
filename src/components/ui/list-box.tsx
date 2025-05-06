@@ -11,9 +11,9 @@ import {
   composeRenderProps,
 } from "react-aria-components"
 
-import { composeTailwindRenderProps } from "@/components/ui/primitive"
 import { twMerge } from "tailwind-merge"
 import { DropdownItemDetails, DropdownLabel, DropdownSection, dropdownItemStyles } from "./dropdown"
+import { composeTailwindRenderProps } from "./primitive"
 
 const ListBox = <T extends object>({ className, ...props }: ListBoxProps<T>) => (
   <ListBoxPrimitive
