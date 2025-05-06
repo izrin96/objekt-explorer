@@ -27,8 +27,8 @@ export async function refresh(
 }
 
 export async function fetchByNickname(
-  token: string,
-  nickname: string
+  nickname: string,
+  token?: string
 ): Promise<CosmoPublicUser | undefined> {
   return await cosmo<{ profile: CosmoPublicUser }>(
     `/user/v1/by-nickname/${nickname}`,

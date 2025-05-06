@@ -212,7 +212,7 @@ async function findOwnedList(slug: string, userId: string) {
       and(eq(lists.slug, slug), eq(lists.userId, userId)),
   });
 
-  if (!list) throw new TRPCError({ code: "UNAUTHORIZED" });
+  if (!list) throw new TRPCError({ code: "NOT_FOUND" });
 
   return list;
 }

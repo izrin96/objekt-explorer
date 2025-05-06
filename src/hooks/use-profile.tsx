@@ -1,16 +1,16 @@
 "use client";
 
-import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
+import { PublicProfile } from "@/lib/universal/user";
 import { PropsWithChildren, createContext, useContext } from "react";
 
 type ContextProps = {
-  profile: CosmoPublicUser;
+  profile: PublicProfile;
 };
 
 const ProfileContext = createContext<ContextProps>({} as ContextProps);
 
 type ProviderProps = PropsWithChildren<{
-  profile: CosmoPublicUser;
+  profile: PublicProfile;
 }>;
 
 export function ProfileProvider({ children, profile }: ProviderProps) {

@@ -12,7 +12,7 @@ export default async function Navbar() {
           <Link href="/">
             <div className="flex gap-2 items-center">
               <Cube size={24} weight="fill" />
-              <span className="font-semibold text-lg select-none truncate">
+              <span className="font-semibold text-lg select-none truncate hidden sm:block">
                 Objekt Tracker
               </span>
             </div>

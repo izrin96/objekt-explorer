@@ -26,13 +26,24 @@ export const userAddress = pgTable(
     id: serial("id").primaryKey(),
     address: citext("address", { length: 42 }).notNull(),
     nickname: citext("nickname", { length: 24 }).notNull(),
+    userId: text("user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    linkedAt: timestamp("linked_at", {
+      withTimezone: true,
+    }),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),
     index("user_address_nickname_idx").on(t.nickname),
     uniqueIndex("user_address_address_nickname_idx").on(t.address, t.nickname),
+    index("user_address_user_id_idx").on(t.userId),
   ]
 );
+
+export const userAddressRelations = relations(userAddress, ({ one }) => ({
+  user: one(user, { fields: [userAddress.userId], references: [user.id] }),
+}));
 
 export const lists = pgTable(
   "lists",

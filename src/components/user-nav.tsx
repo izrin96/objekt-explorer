@@ -1,10 +1,11 @@
 "use client";
 
 import { authClient } from "@/lib/auth-client";
-import React from "react";
-import { Avatar, buttonStyles, Menu, Link } from "./ui";
+import React, { useState } from "react";
+import { Avatar, buttonStyles, Menu, Link, Modal, Form, Button } from "./ui";
 import { redirect, usePathname } from "next/navigation";
-import { User } from "better-auth";
+import { User } from "@/lib/server/db/schema";
+import { api } from "@/lib/trpc/client";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -16,7 +17,7 @@ export default function UserNav() {
   return (
     <div className="text-sm gap-2 inline-flex">
       {data ? (
-        <UserMenu key={pathname} user={data.user} />
+        <UserMenu key={pathname} user={data.user as User} />
       ) : (
         <>
           <Link
@@ -33,27 +34,92 @@ export default function UserNav() {
 
 function UserMenu({ user }: { user: User }) {
   return (
-    <Menu>
-      <Menu.Trigger aria-label="Open Menu">
-        <Avatar alt="cobain" size="medium" shape="square" src={user.image} />
-      </Menu.Trigger>
-      <Menu.Content placement="bottom right" className="sm:min-w-56">
-        <Menu.Section>
-          <Menu.Header separator>
-            <span className="block">{user.name}</span>
-          </Menu.Header>
-        </Menu.Section>
-        <Menu.Item href="/list">My List</Menu.Item>
-        <Menu.Separator />
-        <Menu.Item
-          onAction={async () => {
-            await authClient.signOut();
-            redirect("/");
+    <PullDiscordProfile>
+      {({ open: openRefreshProfile }) => (
+        <Menu>
+          <Menu.Trigger aria-label="Open Menu">
+            <Avatar
+              alt={user.name}
+              initials={user.name}
+              size="medium"
+              shape="square"
+              src={user.image}
+            />
+          </Menu.Trigger>
+          <Menu.Content placement="bottom right" className="sm:min-w-56">
+            <Menu.Section>
+              <Menu.Header separator>
+                <span className="block">{user.name}</span>
+                <span className="font-normal text-muted-fg">
+                  {user.username}
+                </span>
+              </Menu.Header>
+            </Menu.Section>
+            <Menu.Item href="/list">My List</Menu.Item>
+            <Menu.Item href="/link">My Cosmo ID</Menu.Item>
+            <Menu.Item onAction={openRefreshProfile}>Refresh Profile</Menu.Item>
+            <Menu.Separator />
+            <Menu.Item
+              onAction={async () => {
+                await authClient.signOut();
+                redirect("/");
+              }}
+            >
+              Log out
+            </Menu.Item>
+          </Menu.Content>
+        </Menu>
+      )}
+    </PullDiscordProfile>
+  );
+}
+
+function PullDiscordProfile({
+  children,
+}: {
+  children: ({ open }: { open: () => void }) => React.ReactNode;
+}) {
+  const session = authClient.useSession();
+  const [open, setOpen] = useState(false);
+  const refreshProfile = api.user.refreshProfile.useMutation({
+    onSuccess: () => {
+      session.refetch();
+      setOpen(false);
+    },
+  });
+  return (
+    <>
+      {children?.({
+        open: () => {
+          setOpen(true);
+        },
+      })}
+      <Modal.Content role="alertdialog" isOpen={open} onOpenChange={setOpen}>
+        <Form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            refreshProfile.mutate();
           }}
         >
-          Log out
-        </Menu.Item>
-      </Menu.Content>
-    </Menu>
+          <Modal.Header>
+            <Modal.Title>Update Profile from Discord</Modal.Title>
+            <Modal.Description>
+              This will fetch your latest profile information from Discord to
+              keep it in sync.
+            </Modal.Description>
+          </Modal.Header>
+          <Modal.Footer>
+            <Modal.Close>Cancel</Modal.Close>
+            <Button
+              intent="primary"
+              type="submit"
+              isPending={refreshProfile.isPending}
+            >
+              Continue
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal.Content>
+    </>
   );
 }
