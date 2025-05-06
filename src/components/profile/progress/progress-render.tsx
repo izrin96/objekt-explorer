@@ -64,7 +64,7 @@ function Progress() {
   );
 
   useEffect(() => {
-    if (!ownedObjekts.length) return;
+    if (filters.member || !ownedObjekts.length) return;
 
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
     const grouped = Object.values(groupBy(ownedObjekts, (a) => a.collectionId));
