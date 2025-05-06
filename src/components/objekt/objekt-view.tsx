@@ -49,13 +49,13 @@ export default memo(function ObjektView({
 
   return (
     <div
-      className={cn("flex flex-col gap-2", isFade && "opacity-35")}
+      className={cn("flex flex-col gap-2 @container", isFade && "opacity-35")}
       style={css}
     >
       <div
         className={cn(
-          "cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150 ring-transparent ring-5 rounded-xl group",
-          isSelected && "ring-fg bg-fg"
+          "cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150 group rounded-[4.5cqw]",
+          isSelected && "ring-[3cqw] bg-fg"
         )}
         onClick={open}
       >
