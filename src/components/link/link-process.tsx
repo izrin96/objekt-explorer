@@ -8,7 +8,7 @@ import { InputOTP } from "../ui/input-otp";
 import {
   Ghost,
   HeartBreak,
-  Person,
+  UserFocus,
   SealCheck,
 } from "@phosphor-icons/react/dist/ssr";
 import { Button, buttonStyles, Form, Link, Loader, Note } from "../ui";
@@ -60,7 +60,7 @@ function TicketRender() {
   if (isRefetching || isLoading)
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>Getting QR code from COSMO</span>
+        <span className="text-semibold">Getting QR code from COSMO</span>
         <Loader variant="ring" />
       </div>
     );
@@ -69,7 +69,9 @@ function TicketRender() {
     return (
       <div className="flex flex-col gap-2 items-center">
         <HeartBreak size={52} />
-        <span>Error getting QR ticket from COSMO</span>
+        <span className="text-semibold">
+          Error getting QR ticket from COSMO
+        </span>
         <Button intent="secondary" onClick={() => refetch()}>
           Try again
         </Button>
@@ -103,8 +105,10 @@ function StepRender({
   if (!data || data.status === "wait_for_user_action")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>Scan this QR and click &apos;Continue&apos; in COSMO app.</span>
-        <span>
+        <span className="text-semibold">
+          Scan this QR and click &apos;Continue&apos; in COSMO app.
+        </span>
+        <span className="text-semibold">
           Or{" "}
           <Link href={generateQrCode(ticketAuth.ticket)} intent="primary">
             click here
@@ -118,8 +122,11 @@ function StepRender({
   if (data.status === "wait_for_certify")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <Person size={52} />
-        <span>Detected COSMO ID &apos;{data.user.nickname}&apos;</span>
+        <UserFocus size={52} weight="thin" />
+        <span className="text-semibold">
+          Detected COSMO ID &apos;{data.user.nickname}&apos;
+        </span>
+        <span className="text-semibold">Enter the verification code</span>
         <RenderOtp ticketAuth={ticketAuth} />
       </div>
     );
@@ -127,8 +134,8 @@ function StepRender({
   if (data.status === "expired")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <Ghost size={52} />
-        <span>QR expired</span>
+        <Ghost size={52} weight="thin" />
+        <span className="text-semibold">QR expired</span>
         <Button intent="secondary" onClick={refetch}>
           Regenerate
         </Button>
@@ -138,8 +145,10 @@ function StepRender({
   if (data.status === "certified")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <SealCheck size={52} />
-        <span>Success. Cosmo ID &apos;{data.user.nickname}&apos; linked.</span>
+        <SealCheck size={52} weight="thin" />
+        <span className="text-semibold">
+          Success. Cosmo ID &apos;{data.user.nickname}&apos; linked.
+        </span>
         <div>
           <Link
             className={(renderProps) =>
@@ -158,8 +167,8 @@ function StepRender({
 
   return (
     <div className="flex flex-col gap-2 items-center">
-      <HeartBreak size={52} />
-      <span>Process failed</span>
+      <HeartBreak size={52} weight="thin" />
+      <span className="text-semibold">Process failed</span>
       <Button intent="secondary" onClick={refetch}>
         Try again
       </Button>
@@ -180,7 +189,9 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
   if (otpAndLink.isError)
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>{otpAndLink.failureReason?.message}</span>
+        <span className="text-semibold">
+          {otpAndLink.failureReason?.message}
+        </span>
         <Button intent="secondary" onClick={() => otpAndLink.reset()}>
           Try again
         </Button>
