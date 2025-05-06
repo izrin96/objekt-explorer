@@ -87,7 +87,7 @@ function Progress() {
         member: [name],
       });
     }
-  }, [ownedObjekts, objekts, setFilters, artists]);
+  }, [ownedObjekts, objekts, setFilters, artists, filters.member]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (
