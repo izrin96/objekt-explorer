@@ -2,25 +2,18 @@ import "server-only";
 
 import { cosmoShop } from "./http";
 import { randomUUID } from "node:crypto";
-import { chromium } from "playwright";
-import chromiumLight from "@sparticuz/chromium";
+import chromium from "puppeteer-core";
 import { TicketAuth, TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
-
-const headlessType = process.env.IS_LOCAL ? false : true;
 
 const RECAPTCHA_KEY = "6LeHzjYqAAAAAOR5Up9lFb_sC39YGo5aQFyVDrsK";
 
 export async function generateRecaptchaToken() {
-  const browser = await chromium.launch({
-    args: process.env.IS_LOCAL ? undefined : chromiumLight.args,
-    executablePath: process.env.IS_LOCAL
-      ? "/tmp/localChromium/chromium/mac_arm-1455391/chrome-mac/Chromium.app/Contents/MacOS/Chromium"
-      : await chromiumLight.executablePath(),
-    headless: headlessType,
+  const launchArgs = JSON.stringify({ headless: "shell" });
+  const browser = await chromium.connect({
+    browserWSEndpoint: `${process.env.BROWSER_CDP_URL!}&launch=${launchArgs}`,
   });
 
-  const context = await browser.newContext();
-  const page = await context.newPage();
+  const page = await browser.newPage();
   await page.goto("https://shop.cosmo.fans/404"); // go to 404 seem a bit faster
 
   const token = await page.evaluate((key) => {
@@ -37,7 +30,7 @@ export async function generateRecaptchaToken() {
     });
   }, RECAPTCHA_KEY);
 
-  await browser.close();
+  await page.close();
 
   return token;
 }

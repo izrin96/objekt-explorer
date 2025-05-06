@@ -44,5 +44,17 @@ services:
       - INDEXER_PROXY_KEY
     ports:
       - "8081:3000"
+  browserless:
+    image: ghcr.io/browserless/chromium
+    ports:
+      - "9222:3000"
+    environment:
+      - TOKEN=your-token-here
+  # chromium:
+  #   image: docker.io/chromedp/headless-shell:latest
+  #   ports:
+  #     - "9222:9222"
+  #   command:
+  #     - --remote-debugging-auth-token=your-token-here
 volumes:
   db_data:
