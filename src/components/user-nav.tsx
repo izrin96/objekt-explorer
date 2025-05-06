@@ -6,6 +6,7 @@ import { Avatar, buttonStyles, Menu, Link, Modal, Form, Button } from "./ui";
 import { redirect, usePathname } from "next/navigation";
 import { User } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
+import { toast } from "sonner";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -85,6 +86,10 @@ function PullDiscordProfile({
     onSuccess: () => {
       session.refetch();
       setOpen(false);
+      toast.success("Profile updated");
+    },
+    onError: () => {
+      toast.error("Error updating profile");
     },
   });
   return (
