@@ -25,10 +25,10 @@ import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
 import { SelectMode } from "../filters/select-mode";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
+import ObjektView from "../objekt/objekt-view";
+import { authClient } from "@/lib/auth-client";
 
-type Props = { loggedIn: boolean };
-
-export default function IndexRender(props: Props) {
+export default function IndexRender() {
   return (
     <ObjektSelectProvider>
       <ObjektTabProvider initialTab="trades">
@@ -38,7 +38,7 @@ export default function IndexRender(props: Props) {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <IndexView {...props} />
+              <IndexView />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -47,7 +47,8 @@ export default function IndexRender(props: Props) {
   );
 }
 
-function IndexView(props: Props) {
+function IndexView() {
+  const { data: session } = authClient.useSession();
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -77,12 +78,20 @@ function IndexView(props: Props) {
                 <ObjektModalProvider key={objekt.id} objekts={objekts}>
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
-                      objekts={objekts}
-                      priority={index < columns * 3}
                       getId={() => objekt.slug}
-                      open={openObjekts}
-                      enableSelect={props.loggedIn}
-                    />
+                      openObjekts={openObjekts}
+                      enableSelect={!!session}
+                    >
+                      {({ isSelected, open, select }) => (
+                        <ObjektView
+                          objekts={objekts}
+                          priority={index < columns * 3}
+                          isSelected={isSelected}
+                          open={open}
+                          select={select}
+                        />
+                      )}
+                    </ObjektViewSelectable>
                   )}
                 </ObjektModalProvider>
               );
@@ -91,7 +100,7 @@ function IndexView(props: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, props.loggedIn]);
+  }, [deferredObjektsFiltered, columns, session]);
 
   const count = useMemo(
     () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
@@ -106,7 +115,7 @@ function IndexView(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterView artists={artists} />
-        {props.loggedIn && <SelectMode state="add" />}
+        {session && <SelectMode state="add" />}
       </div>
       <span className="font-semibold">{count} total</span>
 

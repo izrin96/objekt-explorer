@@ -22,6 +22,7 @@ import { api } from "@/lib/trpc/client";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
+import ObjektView from "../objekt/objekt-view";
 
 type Props = { slug: string; isOwned: boolean };
 
@@ -74,12 +75,20 @@ function ListView({ slug, isOwned }: Props) {
                 <ObjektModalProvider key={objekt.id} objekts={objekts}>
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
-                      objekts={objekts}
-                      priority={index < columns * 3}
                       getId={() => objekt.id}
-                      open={openObjekts}
+                      openObjekts={openObjekts}
                       enableSelect={isOwned}
-                    />
+                    >
+                      {({ isSelected, open, select }) => (
+                        <ObjektView
+                          objekts={objekts}
+                          priority={index < columns * 3}
+                          isSelected={isSelected}
+                          open={open}
+                          select={select}
+                        />
+                      )}
+                    </ObjektViewSelectable>
                   )}
                 </ObjektModalProvider>
               );

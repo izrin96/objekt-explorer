@@ -1,38 +1,38 @@
 "use client";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { ValidObjekt } from "@/lib/universal/objekts";
-import ObjektView from "./objekt-view";
 
 export function ObjektViewSelectable({
-  objekts,
-  priority,
   getId,
-  open,
+  openObjekts,
   enableSelect,
+  children,
 }: {
-  objekts: ValidObjekt[];
-  priority: boolean;
   getId: () => string | number;
-  open: () => void;
+  openObjekts: () => void;
   enableSelect: boolean;
+  children: ({
+    isSelected,
+    open,
+  }: {
+    isSelected: boolean;
+    open: () => void;
+    select: (() => void) | undefined;
+  }) => React.ReactNode;
 }) {
   const mode = useObjektSelect((a) => a.mode);
-  const select = useObjektSelect((a) => a.select);
+  const objektSelect = useObjektSelect((a) => a.select);
   const isSelected = useObjektSelect((state) => state.isSelected(getId()));
-  return (
-    <ObjektView
-      objekts={objekts}
-      priority={priority}
-      isSelected={isSelected}
-      open={() => {
-        if (mode && enableSelect) {
-          select(getId());
-        } else {
-          open();
-        }
-      }}
-      select={enableSelect ? () => select(getId()) : undefined}
-    />
-  );
+
+  return children({
+    isSelected,
+    open: () => {
+      if (mode && enableSelect) {
+        objektSelect(getId());
+      } else {
+        openObjekts();
+      }
+    },
+    select: enableSelect ? () => objektSelect(getId()) : undefined,
+  });
 }

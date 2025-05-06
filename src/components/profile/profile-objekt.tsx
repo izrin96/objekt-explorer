@@ -22,25 +22,32 @@ import {
 } from "../collection/collection-render";
 import ObjektView from "../objekt/objekt-view";
 import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
+import { ObjektViewSelectable } from "../objekt/objekt-selectable";
+import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
+import { SelectMode } from "../filters/select-mode";
+import { authClient } from "@/lib/auth-client";
 
 export default function ProfileObjektRender() {
   return (
-    <ObjektTabProvider initialTab="owned">
-      <QueryErrorResetBoundary>
-        {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            FallbackComponent={ErrorFallbackRender}
-          >
-            <ProfileObjekt />
-          </ErrorBoundary>
-        )}
-      </QueryErrorResetBoundary>
-    </ObjektTabProvider>
+    <ObjektSelectProvider>
+      <ObjektTabProvider initialTab="owned">
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary
+              onReset={reset}
+              FallbackComponent={ErrorFallbackRender}
+            >
+              <ProfileObjekt />
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </ObjektTabProvider>
+    </ObjektSelectProvider>
   );
 }
 
 function ProfileObjekt() {
+  const { data: session } = authClient.useSession();
   const { profile } = useProfile();
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
@@ -88,14 +95,25 @@ function ProfileObjekt() {
                   isProfile
                 >
                   {({ openObjekts }) => (
-                    <ObjektView
-                      objekts={objekts}
-                      isFade={!("serial" in objekt)}
-                      priority={index < columns * 3}
-                      showSerial={!filters.grouped}
-                      showCount
-                      open={openObjekts}
-                    />
+                    <ObjektViewSelectable
+                      getId={() => objekt.slug}
+                      openObjekts={openObjekts}
+                      enableSelect={!!session}
+                    >
+                      {({ isSelected, open, select }) => (
+                        <ObjektView
+                          objekts={objekts}
+                          priority={index < columns * 3}
+                          isSelected={isSelected}
+                          open={open}
+                          select={select}
+                          // for profile
+                          showCount
+                          showSerial={!filters.grouped}
+                          isFade={!("serial" in objekt)}
+                        />
+                      )}
+                    </ObjektViewSelectable>
                   )}
                 </ObjektModalProvider>
               );
@@ -104,7 +122,7 @@ function ProfileObjekt() {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, filters.grouped, columns]);
+  }, [deferredObjektsFiltered, filters.grouped, columns, session]);
 
   const count = useMemo(
     () =>
@@ -134,6 +152,7 @@ function ProfileObjekt() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4">
         <FilterView isProfile artists={artists} />
+        {session && <SelectMode state="add" />}
       </div>
       <span className="font-semibold">
         {count} total
