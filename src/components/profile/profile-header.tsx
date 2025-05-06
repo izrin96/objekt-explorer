@@ -30,9 +30,6 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
 
       {user.user && (
         <div className="text-sm flex gap-2 items-center w-full sm:w-auto min-w-0">
-          {/* <div className="rounded-full bg-indigo-400 p-2 text-white">
-            <DiscordLogo size={24} weight="regular" />
-          </div> */}
           <Avatar
             size="extra-large"
             className="self-center"
@@ -42,10 +39,12 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           />
           <div className="flex flex-col min-w-0">
             <span className="font-semibold text-lg truncate inline-flex gap-1">
-              <DiscordLogo size={18} weight="regular" className="self-center" />
               {user.user.name}
             </span>
-            <span className="text-xs truncate">{user.user.username}</span>
+            <span className="text-sm truncate inline-flex gap-1">
+              <DiscordLogo size={16} weight="regular" className="self-center" />
+              <span>{user.user.username}</span>
+            </span>
           </div>
         </div>
       )}
