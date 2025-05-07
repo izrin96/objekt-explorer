@@ -17,6 +17,7 @@ services:
       timeout: 5s
       retries: 5
   proxy:
+    image: ghcr.io/izrin96/objekt-explorer-proxy:latest
     build:
       context: .
       dockerfile: ./docker/proxy.Dockerfile
@@ -28,11 +29,13 @@ services:
       - PROXY_PASS=postgres
       - PROXY_PORT=5432
       - PROXY_HTTP_PORT=8080
+      - PROXY_KEY=key
     ports:
       - "8080:8080"
     depends_on:
       - postgres
   ws:
+    image: ghcr.io/izrin96/objekt-explorer-websocket:latest
     build:
       context: .
       dockerfile: ./docker/ws.Dockerfile
@@ -56,5 +59,37 @@ services:
   #     - "9222:9222"
   #   command:
   #     - --remote-debugging-auth-token=your-token-here
+  web:
+    image: ghcr.io/izrin96/objekt-explorer-web:latest
+    build:
+      args:
+        INDEXER_PROXY_KEY: ${INDEXER_PROXY_KEY}
+        INDEXER_PROXY_URL: ${INDEXER_PROXY_URL}
+        DB_PROXY_KEY: ${DB_PROXY_KEY}
+        DB_PROXY_URL: ${DB_PROXY_URL}
+        NEXT_PUBLIC_UMAMI_SCRIPT_URL: ${NEXT_PUBLIC_UMAMI_SCRIPT_URL}
+        NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+        NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: ${NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL}
+        BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+        DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+        DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+        BROWSER_CDP_URL: ${BROWSER_CDP_URL}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    expose:
+      - 3000
+    environment:
+      - NODE_ENV=production
+      - INDEXER_PROXY_KEY
+      - INDEXER_PROXY_URL
+      - DB_PROXY_KEY
+      - DB_PROXY_URL
+      - NEXT_PUBLIC_UMAMI_SCRIPT_URL
+      - NEXT_PUBLIC_UMAMI_WEBSITE_ID
+      - NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
+      - BETTER_AUTH_SECRET
+      - DISCORD_CLIENT_ID
+      - DISCORD_CLIENT_SECRET
+      - BROWSER_CDP_URL
+      - NEXT_PUBLIC_SITE_URL
 volumes:
   db_data:
