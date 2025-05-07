@@ -3,20 +3,26 @@
 import {
   Button,
   Card,
+  Checkbox,
   Form,
   Link,
   Menu,
   Modal,
   Note,
+  Select,
   Tabs,
   TextField,
 } from "@/components/ui";
 import { api } from "@/lib/trpc/client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { IconDotsVertical } from "@intentui/icons";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-boundary";
+import { groupBy } from "es-toolkit";
+import { CollectionFormat } from "@/lib/server/api/routers/list";
+import { getBaseURL } from "@/lib/utils";
+import { Textarea } from "../ui/textarea";
 
 export default function MyListRender() {
   return (
@@ -43,8 +49,9 @@ export function MyList() {
           <Tabs.Tab id="b">Profile List</Tabs.Tab>
         </Tabs.List>
         <Tabs.Panel id="a" className="flex flex-col gap-4">
-          <div className="w-full">
+          <div className="w-full flex gap-2">
             <CreateList />
+            <GenerateDiscordFormat />
           </div>
 
           <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
@@ -92,9 +99,141 @@ export function MyList() {
   );
 }
 
+function GenerateDiscordFormat() {
+  const [open, setOpen] = useState(false);
+  const [formatText, setFormatText] = useState("");
+  const [showCount, setShowCount] = useState(false);
+  const [includeLink, setIncludeLink] = useState(false);
+
+  const generateDiscordFormat = api.list.generateDiscordFormat.useMutation();
+  const list = api.list.myList.useQuery();
+
+  useEffect(() => {
+    if (!generateDiscordFormat.data) return;
+
+    const { have, want, haveSlug, wantSlug } = generateDiscordFormat.data;
+    const haveMap = new Map(have);
+    const wantMap = new Map(want);
+
+    setFormatText(
+      [
+        "### Have:",
+        ...format(haveMap, showCount),
+        ...[
+          ...(includeLink
+            ? [
+                "",
+                `[View this list with picture](<${getBaseURL()}/list/${haveSlug}>)`,
+                "", // give a little bit of spacing
+              ]
+            : []),
+        ],
+        "### Want:",
+        ...format(wantMap, showCount),
+        ...[
+          ...(includeLink
+            ? [
+                "",
+                `[View this list with picture](<${getBaseURL()}/list/${wantSlug}>)`,
+              ]
+            : []),
+        ],
+      ].join("\n")
+    );
+  }, [generateDiscordFormat.data, includeLink, showCount]);
+
+  return (
+    <>
+      <Button intent="outline" onClick={() => setOpen(true)}>
+        Generate Discord Format
+      </Button>
+      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+        <Form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            generateDiscordFormat.mutate({
+              haveSlug: formData.get("haveSlug") as string,
+              wantSlug: formData.get("wantSlug") as string,
+            });
+          }}
+        >
+          <Modal.Header>
+            <Modal.Title>Generate Discord Format</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="flex flex-col gap-2">
+            <Select label="Have list" name="haveSlug" isRequired>
+              <Select.Trigger />
+              <Select.List items={list.data ?? []}>
+                {(item) => (
+                  <Select.Option id={item.slug} textValue={item.slug}>
+                    {item.name}
+                  </Select.Option>
+                )}
+              </Select.List>
+            </Select>
+            <Select label="Want list" name="wantSlug" isRequired>
+              <Select.Trigger />
+              <Select.List items={list.data ?? []}>
+                {(item) => (
+                  <Select.Option id={item.slug} textValue={item.slug}>
+                    {item.name}
+                  </Select.Option>
+                )}
+              </Select.List>
+            </Select>
+            <Checkbox
+              label="Show count"
+              isSelected={showCount}
+              onChange={setShowCount}
+            />
+            <Checkbox
+              label="Include link"
+              isSelected={includeLink}
+              onChange={setIncludeLink}
+            />
+            <Textarea label="Formatted discord text" value={formatText} />
+          </Modal.Body>
+          <Modal.Footer className="flex justify-end">
+            <Button type="submit" isPending={generateDiscordFormat.isPending}>
+              Generate
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal.Content>
+    </>
+  );
+}
+
+function format(
+  collectionMap: Map<string, CollectionFormat[]>,
+  showQuantity: boolean
+) {
+  return Array.from(collectionMap.entries()).map(([member, collections]) => {
+    const formatCollections = collections.map((collection) => {
+      const seasonType = collection.season.charAt(0);
+      const seasonNumber = parseInt(collection.season.slice(-2));
+      const seasonFormat = Array.from({ length: seasonNumber })
+        .map(() => seasonType)
+        .join("");
+
+      return `${seasonFormat}${collection.collectionNo}`;
+    });
+
+    const groupedFormat = groupBy(formatCollections, (a) => a);
+
+    const formattedWithQuantity = Object.entries(groupedFormat)
+      .map(([key, group]) =>
+        showQuantity && group.length > 1 ? `${key} (x${group.length})` : key
+      )
+      .sort();
+
+    return `${member} ${formattedWithQuantity.join(", ")}`;
+  });
+}
+
 function CreateList() {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
   const utils = api.useUtils();
   const createList = api.list.create.useMutation({
     onSuccess: () => {
@@ -109,8 +248,8 @@ function CreateList() {
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
-            if (!name.trim()) return;
-            createList.mutate({ name });
+            const formData = new FormData(e.currentTarget);
+            createList.mutate({ name: formData.get("name") as string });
           }}
         >
           <Modal.Header>
@@ -122,8 +261,7 @@ function CreateList() {
               autoFocus
               label="Name"
               placeholder="My list"
-              value={name}
-              onChange={setName}
+              name="name"
             />
           </Modal.Body>
           <Modal.Footer>
@@ -198,7 +336,6 @@ function EditList({
   list: { name: string };
   children: ({ open }: { open: () => void }) => React.ReactNode;
 }) {
-  const [name, setName] = useState(list.name);
   const [open, setOpen] = useState(false);
   const utils = api.useUtils();
   const editList = api.list.edit.useMutation({
@@ -218,7 +355,8 @@ function EditList({
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
-            editList.mutate({ slug, name });
+            const formData = new FormData(e.currentTarget);
+            editList.mutate({ slug, name: formData.get("name") as string });
           }}
         >
           <Modal.Header>
@@ -230,8 +368,8 @@ function EditList({
               autoFocus
               label="Name"
               placeholder="My list"
-              value={name}
-              onChange={setName}
+              name="name"
+              defaultValue={list.name}
             />
           </Modal.Body>
           <Modal.Footer>

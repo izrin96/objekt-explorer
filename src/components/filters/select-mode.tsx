@@ -4,7 +4,6 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { Button, Checkbox, Form, Link, Modal, Note, Select } from "../ui";
 import { useCallback, useState } from "react";
 import { api } from "@/lib/trpc/client";
-import { Key } from "react-aria";
 import { toast } from "sonner";
 
 export function SelectMode({
@@ -88,7 +87,6 @@ function AddToList({
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
-  const [slug, setSlug] = useState<Key>("");
   const [skipDups, setSkipDups] = useState(false);
   const [open, setOpen] = useState(false);
   const list = api.list.myList.useQuery();
@@ -114,8 +112,9 @@ function AddToList({
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
+            const formData = new FormData(e.currentTarget);
             addToList.mutate({
-              slug: slug.toString(),
+              slug: formData.get("slug") as string,
               skipDups: skipDups,
               collectionSlugs: selected as string[],
             });
@@ -130,8 +129,7 @@ function AddToList({
                 <Select
                   label="My List"
                   placeholder="Select a list"
-                  selectedKey={slug}
-                  onSelectionChange={setSlug}
+                  name="slug"
                   isRequired
                 >
                   <Select.Trigger />
@@ -159,11 +157,7 @@ function AddToList({
           </Modal.Body>
           <Modal.Footer>
             <Modal.Close>Cancel</Modal.Close>
-            <Button
-              type="submit"
-              isPending={addToList.isPending}
-              isDisabled={!slug}
-            >
+            <Button type="submit" isPending={addToList.isPending}>
               Add
             </Button>
           </Modal.Footer>

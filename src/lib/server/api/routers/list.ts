@@ -4,15 +4,17 @@ import {
   createTRPCRouter,
   publicProcedure,
 } from "@/lib/server/api/trpc";
-import { collections } from "../../db/indexer/schema";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { Collection, collections } from "../../db/indexer/schema";
+import { and, eq, inArray } from "drizzle-orm";
 import { overrideColor } from "@/lib/universal/objekts";
 import { indexer } from "../../db/indexer";
 import { db } from "../../db";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { TRPCError } from "@trpc/server";
-import { listEntries, lists } from "../../db/schema";
+import { listEntries, ListEntry, lists } from "../../db/schema";
 import { nanoid } from "nanoid";
+import { getArtistsWithMembers } from "@/lib/client-fetching";
+import { CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
 
 export const listRouter = createTRPCRouter({
   get: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
@@ -232,7 +234,100 @@ export const listRouter = createTRPCRouter({
         });
       }
     ),
+
+  generateDiscordFormat: authProcedure
+    .input(
+      z.object({
+        haveSlug: z.string(),
+        wantSlug: z.string(),
+      })
+    )
+    .mutation(async ({ input: { haveSlug, wantSlug } }) => {
+      // get both list
+      const lists = await db.query.lists.findMany({
+        where: (t, { inArray }) => inArray(t.slug, [haveSlug, wantSlug]),
+        with: {
+          entries: true,
+        },
+      });
+
+      const uniqueCollectionSlug = new Set([
+        ...lists.flatMap((a) => a.entries).map((a) => a.collectionSlug),
+      ]);
+
+      // get all collections based on both list
+      const collections = await indexer.query.collections.findMany({
+        where: (t, { inArray }) =>
+          inArray(t.slug, Array.from(uniqueCollectionSlug)),
+        columns: {
+          slug: true,
+          season: true,
+          collectionNo: true,
+          member: true,
+        },
+      });
+
+      const collectionsMap = new Map(collections.map((a) => [a.slug, a]));
+
+      const haveList = lists.find((a) => a.slug === haveSlug);
+      const wantList = lists.find((a) => a.slug === wantSlug);
+
+      // get artist and member info
+      const artists = await getArtistsWithMembers();
+      const artistMembers = artists.flatMap((a) => a.artistMembers);
+
+      const haveCollections = mapCollectionByMember(
+        collectionsMap,
+        haveList?.entries ?? [],
+        artistMembers
+      );
+      const wantCollections = mapCollectionByMember(
+        collectionsMap,
+        wantList?.entries ?? [],
+        artistMembers
+      );
+
+      return {
+        haveSlug,
+        wantSlug,
+        have: [...haveCollections],
+        want: [...wantCollections],
+      };
+    }),
 });
+
+export type CollectionFormat = Pick<
+  Collection,
+  "slug" | "member" | "season" | "collectionNo"
+>;
+
+function mapCollectionByMember(
+  collectionMap: Map<string, CollectionFormat>,
+  entries: ListEntry[],
+  artistMembers: CosmoMemberBFF[]
+): Map<string, CollectionFormat[]> {
+  // every entry, map its collection to member
+  const groupCollectionsByMember = new Map<string, CollectionFormat[]>();
+  for (const entry of entries) {
+    const collection = collectionMap.get(entry.collectionSlug);
+    if (collection) {
+      const collections = groupCollectionsByMember.get(collection.member) ?? [];
+      collections.push(collection);
+      groupCollectionsByMember.set(collection.member, collections);
+    }
+  }
+
+  // remap to reorder based on artistMembers
+  const orderedGroupCollectionByMember = new Map<string, CollectionFormat[]>();
+  for (const member of artistMembers) {
+    const collections = groupCollectionsByMember.get(member.name);
+    if (collections) {
+      orderedGroupCollectionByMember.set(member.name, collections);
+    }
+  }
+
+  return orderedGroupCollectionByMember;
+}
 
 async function findOwnedList(slug: string, userId: string) {
   const list = await db.query.lists.findFirst({
