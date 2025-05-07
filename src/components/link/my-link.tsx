@@ -123,7 +123,7 @@ function RemoveLink({
           }}
         >
           <Modal.Header>
-            <Modal.Title>Delete list</Modal.Title>
+            <Modal.Title>Unlink Cosmo ID</Modal.Title>
             <Modal.Description>
               This will unlink your COSMO ID from this account. You can link it
               again later. Continue?
