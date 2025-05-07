@@ -158,6 +158,8 @@ export const listRouter = createTRPCRouter({
       }) => {
         const list = await findOwnedList(slug, user.id);
 
+        if (ids.length < 1) return;
+
         await db
           .delete(listEntries)
           .where(

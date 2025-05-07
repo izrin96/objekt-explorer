@@ -61,8 +61,12 @@ function MyLink() {
                 href={`/@${link.nickname ?? link.address}`}
                 className="font-semibold text-base flex-1 flex flex-col gap-1 min-w-0"
               >
-                <span className="text-lg truncate">{link.nickname ?? link.address}</span>
-                <span className="text-muted-fg text-xs truncate">{link.address}</span>
+                <span className="text-lg truncate">
+                  {link.nickname ?? link.address}
+                </span>
+                <span className="text-muted-fg text-xs truncate">
+                  {link.address}
+                </span>
               </Link>
               <RemoveLink address={link.address}>
                 {({ open: openUnlink }) => (
@@ -121,8 +125,8 @@ function RemoveLink({
           <Modal.Header>
             <Modal.Title>Delete list</Modal.Title>
             <Modal.Description>
-              This will permanently unlink your COSMO ID from this account.
-              Continue?
+              This will unlink your COSMO ID from this account. You can link it
+              again later. Continue?
             </Modal.Description>
           </Modal.Header>
           <Modal.Footer>
