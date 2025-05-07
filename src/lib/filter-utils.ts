@@ -91,6 +91,7 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   }
 
   // Handle collection range search (e.g. 301z-302z)
+  // outdated, doesn't support for atom02
   if (!keyword.startsWith("#") && keyword.includes("-")) {
     const [start, end] = keyword.split("-").map(parseCollectionNo);
     if (!start || !end) return false;
@@ -120,29 +121,38 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   }
 
   // Handle collection number search
-  const keywordNoBreakdown = parseCollectionNo(keyword);
-  if (keywordNoBreakdown) {
-    const objektBreakdown = getObjektBreakdown(objekt);
-    return (
-      (!keywordNoBreakdown.collectionNo ||
-        objektBreakdown.collectionNo === keywordNoBreakdown.collectionNo) &&
-      (!keywordNoBreakdown.seasonCode ||
-        objektBreakdown.seasonCode === keywordNoBreakdown.seasonCode) &&
-      (!keywordNoBreakdown.type ||
-        objektBreakdown.type == keywordNoBreakdown.type)
-    );
-  }
+  // const keywordNoBreakdown = parseCollectionNo(keyword);
+  // if (keywordNoBreakdown) {
+  //   const objektBreakdown = getObjektBreakdown(objekt);
+  //   return (
+  //     (!keywordNoBreakdown.collectionNo ||
+  //       objektBreakdown.collectionNo === keywordNoBreakdown.collectionNo) &&
+  //     (!keywordNoBreakdown.seasonCode ||
+  //       objektBreakdown.seasonCode === keywordNoBreakdown.seasonCode) &&
+  //     (!keywordNoBreakdown.type ||
+  //       objektBreakdown.type == keywordNoBreakdown.type)
+  //   );
+  // }
 
   const seasonCode = objekt.season.charAt(0);
   const seasonNumber = objekt.season.slice(-2);
+  const collectionNoSliced = objekt.collectionNo.slice(0, -1);
+  const seasonCollectionNo = Array.from({ length: parseInt(seasonNumber) })
+    .map(() => seasonCode)
+    .join("");
 
+  // temporary, will improve with fuzzy search
   const memberKeys = [
     ...getMemberShortKeys(objekt.member),
+    `${seasonCollectionNo}${objekt.collectionNo}`, // a201z, aa201z
+    `${seasonCollectionNo}${collectionNoSliced}`, // a201, aa201
+    objekt.collectionNo, // 201z
+    collectionNoSliced, // 201
     objekt.member,
     objekt.artist,
-    objekt.class,
+    objekt.class, // special
     objekt.class.charAt(0) + "co", // sco
-    objekt.season,
+    objekt.season, // atom01
     seasonCode + seasonNumber, // a01
     seasonCode + parseInt(seasonNumber), // a1
     objekt.season.slice(0, -2), // atom

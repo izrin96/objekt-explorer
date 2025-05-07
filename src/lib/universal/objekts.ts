@@ -11,9 +11,14 @@ export type OwnedObjekt = IndexedObjekt &
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
 export function getCollectionShortId(objekt: ValidObjekt) {
-  return `${objekt.member} ${objekt.season.charAt(0)}${parseInt(
-    objekt.season.slice(-2)
-  )} ${objekt.collectionNo}`;
+  const seasonNumber = parseInt(objekt.season.slice(-2));
+
+  if (seasonNumber <= 1)
+    return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
+
+  return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${
+    objekt.collectionNo
+  }`;
 }
 
 export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {

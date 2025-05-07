@@ -119,25 +119,21 @@ function GenerateDiscordFormat() {
       [
         "### Have:",
         ...format(haveMap, showCount),
-        ...[
-          ...(includeLink
-            ? [
-                "",
-                `[View this list with picture](<${getBaseURL()}/list/${haveSlug}>)`,
-                "", // give a little bit of spacing
-              ]
-            : []),
-        ],
+        ...(includeLink
+          ? [
+              "",
+              `[View this list with picture](<${getBaseURL()}/list/${haveSlug}>)`,
+              "", // give a little bit of spacing
+            ]
+          : []),
         "### Want:",
         ...format(wantMap, showCount),
-        ...[
-          ...(includeLink
-            ? [
-                "",
-                `[View this list with picture](<${getBaseURL()}/list/${wantSlug}>)`,
-              ]
-            : []),
-        ],
+        ...(includeLink
+          ? [
+              "",
+              `[View this list with picture](<${getBaseURL()}/list/${wantSlug}>)`,
+            ]
+          : []),
       ].join("\n")
     );
   }, [generateDiscordFormat.data, includeLink, showCount]);
@@ -162,7 +158,12 @@ function GenerateDiscordFormat() {
             <Modal.Title>Generate Discord Format</Modal.Title>
           </Modal.Header>
           <Modal.Body className="flex flex-col gap-2">
-            <Select label="Have list" name="haveSlug" isRequired>
+            <Select
+              label="Have list"
+              name="haveSlug"
+              placeholder="Select a list"
+              isRequired
+            >
               <Select.Trigger />
               <Select.List items={list.data ?? []}>
                 {(item) => (
@@ -172,7 +173,12 @@ function GenerateDiscordFormat() {
                 )}
               </Select.List>
             </Select>
-            <Select label="Want list" name="wantSlug" isRequired>
+            <Select
+              label="Want list"
+              name="wantSlug"
+              placeholder="Select a list"
+              isRequired
+            >
               <Select.Trigger />
               <Select.List items={list.data ?? []}>
                 {(item) => (

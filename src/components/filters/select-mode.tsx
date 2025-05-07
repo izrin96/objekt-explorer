@@ -87,7 +87,7 @@ function AddToList({
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
-  const [skipDups, setSkipDups] = useState(false);
+  const [skipDups, setSkipDups] = useState(true);
   const [open, setOpen] = useState(false);
   const list = api.list.myList.useQuery();
   const addToList = api.list.addObjektsToList.useMutation({
