@@ -78,7 +78,10 @@ export default memo(function ObjektView({
         )}
         {select && (
           <div
-            className={cn("group-hover:block hidden absolute top-0 right-0")}
+            className={cn(
+              "group-hover:block hidden absolute top-0 right-0",
+              isSelected && "block"
+            )}
           >
             <Button
               size="extra-small"

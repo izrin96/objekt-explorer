@@ -57,6 +57,13 @@
       "when": 1746506115283,
       "tag": "0007_safe_shadowcat",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1746737161563,
+      "tag": "0008_demonic_multiple_man",
+      "breakpoints": true
     }
   ]
 }
