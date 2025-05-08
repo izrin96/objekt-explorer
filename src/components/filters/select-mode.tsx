@@ -86,7 +86,6 @@ function AddToList({
 }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const toggleMode = useObjektSelect((a) => a.toggleMode);
   const [skipDups, setSkipDups] = useState(true);
   const [open, setOpen] = useState(false);
   const list = api.list.myList.useQuery();
@@ -94,7 +93,6 @@ function AddToList({
     onSuccess: (rowCount) => {
       setOpen(false);
       reset();
-      toggleMode();
       toast.success(`${rowCount} objekt added to the list`, {
         position: "top-center",
         duration: 1300,
@@ -176,14 +174,12 @@ function RemoveFromList({
 }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const toggleMode = useObjektSelect((a) => a.toggleMode);
   const [open, setOpen] = useState(false);
   const utils = api.useUtils();
   const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
     onSuccess: () => {
       setOpen(false);
       reset();
-      toggleMode();
       utils.list.getEntries.invalidate(slug);
       toast.success("Objekt removed from the list", {
         position: "top-center",
