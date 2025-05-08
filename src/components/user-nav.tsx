@@ -2,12 +2,27 @@
 
 import { authClient } from "@/lib/auth-client";
 import React, { useState } from "react";
-import { Avatar, buttonStyles, Menu, Link, Modal, Form, Button } from "./ui";
+import {
+  Avatar,
+  buttonStyles,
+  Menu,
+  Link,
+  Modal,
+  Form,
+  Button,
+  Loader,
+} from "./ui";
 import { redirect, usePathname } from "next/navigation";
 import { User } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
-import { DiscordLogo, SignOut, User as UserIcon, ListHeart } from "@phosphor-icons/react/dist/ssr";
+import {
+  DiscordLogo,
+  SignOut,
+  User as UserIcon,
+  ListHeart,
+  GearSix,
+} from "@phosphor-icons/react/dist/ssr";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -57,14 +72,11 @@ function UserMenu({ user }: { user: User }) {
                 </span>
               </Menu.Header>
             </Menu.Section>
-            <Menu.Item href="/list">
-              <ListHeart data-slot="icon" />
-              <Menu.Label>My List</Menu.Label>
-            </Menu.Item>
-            <Menu.Item href="/link">
-              <UserIcon data-slot="icon" />
-              <Menu.Label>My Cosmo</Menu.Label>
-            </Menu.Item>
+
+            <MyListMenuItem />
+
+            <MyCosmoProfileMenuItem />
+
             <Menu.Item onAction={openRefreshProfile}>
               <DiscordLogo data-slot="icon" size={16} />
               <Menu.Label>Refresh Profile</Menu.Label>
@@ -83,6 +95,82 @@ function UserMenu({ user }: { user: User }) {
         </Menu>
       )}
     </PullDiscordProfile>
+  );
+}
+
+function MyListMenuItem() {
+  const { data, isLoading } = api.list.myList.useQuery();
+  const items = data ?? [];
+  return (
+    <Menu.Submenu>
+      <Menu.Item>
+        <ListHeart data-slot="icon" />
+        <Menu.Label>My List</Menu.Label>
+      </Menu.Item>
+      <Menu.Content placement="left top">
+        {isLoading && (
+          <Menu.Item isDisabled>
+            <Menu.Label>
+              <Loader variant="ring" />
+            </Menu.Label>
+          </Menu.Item>
+        )}
+        {!isLoading && items.length === 0 && (
+          <Menu.Item isDisabled>
+            <Menu.Label>
+              <span>No list found</span>
+            </Menu.Label>
+          </Menu.Item>
+        )}
+        {items.map((a) => (
+          <Menu.Item key={a.slug} href={`/list/${a.slug}`}>
+            <Menu.Label>{a.name}</Menu.Label>
+          </Menu.Item>
+        ))}
+        <Menu.Item href={`/list`}>
+          <GearSix data-slot="icon" />
+          <Menu.Label>Manage list</Menu.Label>
+        </Menu.Item>
+      </Menu.Content>
+    </Menu.Submenu>
+  );
+}
+
+function MyCosmoProfileMenuItem() {
+  const { data, isLoading } = api.cosmoLink.myLink.useQuery();
+  const items = data ?? [];
+  return (
+    <Menu.Submenu>
+      <Menu.Item>
+        <UserIcon data-slot="icon" />
+        <Menu.Label>My Cosmo Link</Menu.Label>
+      </Menu.Item>
+      <Menu.Content placement="left top">
+        {isLoading && (
+          <Menu.Item isDisabled>
+            <Menu.Label>
+              <Loader variant="ring" />
+            </Menu.Label>
+          </Menu.Item>
+        )}
+        {!isLoading && items.length === 0 && (
+          <Menu.Item isDisabled>
+            <Menu.Label>
+              <span>No Cosmo found</span>
+            </Menu.Label>
+          </Menu.Item>
+        )}
+        {items.map((a) => (
+          <Menu.Item key={a.address} href={`/@${a.nickname}`}>
+            <Menu.Label>{a.nickname}</Menu.Label>
+          </Menu.Item>
+        ))}
+        <Menu.Item href={`/link`}>
+          <GearSix data-slot="icon" />
+          <Menu.Label>Manage Cosmo link</Menu.Label>
+        </Menu.Item>
+      </Menu.Content>
+    </Menu.Submenu>
   );
 }
 

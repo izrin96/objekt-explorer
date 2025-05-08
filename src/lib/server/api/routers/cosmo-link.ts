@@ -15,7 +15,7 @@ import { fetchByNickname } from "../../cosmo/auth";
 
 export const cosmoLinkRouter = createTRPCRouter({
   // get all linked
-  myList: authProcedure.query(async ({ ctx: { session } }) => {
+  myLink: authProcedure.query(async ({ ctx: { session } }) => {
     const result = await db.query.userAddress.findMany({
       columns: {
         address: true,

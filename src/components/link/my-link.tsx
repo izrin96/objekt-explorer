@@ -30,7 +30,7 @@ export default function MyLinkRender() {
 }
 
 function MyLink() {
-  const [links] = api.cosmoLink.myList.useSuspenseQuery();
+  const [links] = api.cosmoLink.myLink.useSuspenseQuery();
 
   return (
     <div className="flex flex-col gap-4">
@@ -105,7 +105,7 @@ function RemoveLink({
   const removeLink = api.cosmoLink.removeLink.useMutation({
     onSuccess: () => {
       setOpen(false);
-      utils.cosmoLink.myList.invalidate();
+      utils.cosmoLink.myLink.invalidate();
     },
   });
   return (
