@@ -35,9 +35,9 @@ function MyLink() {
   return (
     <div className="flex flex-col gap-4">
       <Note className="w-full" intent="info">
-        After linking, your Discord information will be displayed in your COSMO
-        ID. Currently, there are no privacy options available, but we&apos;re
-        working on it.
+        After linking, your Discord info will be displayed in your Cosmo
+        profile. Currently, there are no privacy options available, but
+        we&apos;re working on it.
       </Note>
 
       <div className="w-full">
@@ -49,7 +49,7 @@ function MyLink() {
             })
           }
         >
-          Link COSMO ID
+          Link Cosmo
         </Link>
       </div>
 
@@ -123,9 +123,9 @@ function RemoveLink({
           }}
         >
           <Modal.Header>
-            <Modal.Title>Unlink Cosmo ID</Modal.Title>
+            <Modal.Title>Unlink Cosmo</Modal.Title>
             <Modal.Description>
-              This will unlink your COSMO ID from this account. You can link it
+              This will unlink your Cosmo from this account. You can link it
               again later. Continue?
             </Modal.Description>
           </Modal.Header>

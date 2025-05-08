@@ -23,6 +23,7 @@ import { groupBy } from "es-toolkit";
 import { CollectionFormat } from "@/lib/server/api/routers/list";
 import { getBaseURL } from "@/lib/utils";
 import { Textarea } from "../ui/textarea";
+import { CopyButton } from "../copy-button";
 
 export default function MyListRender() {
   return (
@@ -198,7 +199,14 @@ function GenerateDiscordFormat() {
               isSelected={includeLink}
               onChange={setIncludeLink}
             />
-            <Textarea label="Formatted discord text" value={formatText} />
+            <Textarea
+              label="Formatted discord text"
+              value={formatText}
+              onChange={setFormatText}
+            />
+            <div>
+              <CopyButton text={formatText} />
+            </div>
           </Modal.Body>
           <Modal.Footer className="flex justify-end">
             <Button type="submit" isPending={generateDiscordFormat.isPending}>

@@ -27,18 +27,17 @@ export default function LinkRender() {
         <div className="flex flex-col justify-center items-center max-w-xl gap-4">
           <h2 className="text-lg font-semibold">How its work</h2>
           <p>
-            You need to download the COSMO app and sign in with the COSMO ID you
-            want to link before proceeding. During this process, you will be
-            required to scan a QR code to verify with COSMO app.
+            You need to download the Cosmo app and sign in with the ID you want
+            to link before continue.
           </p>
           <Button
-            intent="secondary"
+            intent="primary"
             onClick={() => {
               utils.cosmoLink.getTicket.invalidate();
               setStep(1);
             }}
           >
-            Proceed
+            Continue
           </Button>
         </div>
       )}
@@ -57,7 +56,7 @@ function TicketRender() {
   if (isRefetching || isLoading)
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>Getting QR code from COSMO</span>
+        <span>Generating QR code</span>
         <Loader variant="ring" />
       </div>
     );
@@ -66,7 +65,7 @@ function TicketRender() {
     return (
       <div className="flex flex-col gap-2 items-center">
         <HeartBreak size={52} />
-        <span>Error getting QR ticket from COSMO</span>
+        <span>Error generating QR ticket</span>
         <Button intent="secondary" onClick={() => refetch()}>
           Try again
         </Button>
@@ -84,18 +83,19 @@ function StepRender({
   ticketAuth: TicketAuth;
   refetch: () => void;
 }) {
-  const [enabled, setEnable] = useState(true);
   const utils = api.useUtils();
   const { data } = api.cosmoLink.checkTicket.useQuery(ticketAuth.ticket, {
     retry: false,
     refetchInterval: 2000,
-    enabled: enabled,
+    enabled: (query) => {
+      return !(
+        query.state.data?.status === "expired" ||
+        query.state.data?.status === "certified"
+      );
+    },
   });
 
   useEffect(() => {
-    if (data?.status === "expired" || data?.status === "certified") {
-      setEnable(false);
-    }
     if (data?.status === "certified") {
       utils.cosmoLink.myLink.invalidate();
     }
@@ -104,7 +104,7 @@ function StepRender({
   if (!data || data.status === "wait_for_user_action")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>Scan this QR and click &apos;Continue&apos; in COSMO app.</span>
+        <span>Scan this QR and click &apos;Continue&apos; in Cosmo app.</span>
         <span>
           Or{" "}
           <Link href={generateQrCode(ticketAuth.ticket)} intent="primary">
@@ -127,7 +127,7 @@ function StepRender({
     return (
       <div className="flex flex-col gap-2 items-center">
         <UserFocus size={52} weight="thin" />
-        <span>Detected COSMO ID &apos;{data.user.nickname}&apos;</span>
+        <span>Detected Cosmo &apos;{data.user.nickname}&apos;</span>
         <span>Enter the verification code</span>
         <RenderOtp ticketAuth={ticketAuth} />
       </div>
@@ -148,7 +148,7 @@ function StepRender({
     return (
       <div className="flex flex-col gap-2 items-center">
         <SealCheck size={52} weight="thin" />
-        <span>Success. Cosmo ID &apos;{data.user.nickname}&apos; linked.</span>
+        <span>Success. Cosmo &apos;{data.user.nickname}&apos; linked.</span>
         <div>
           <Link
             className={(renderProps) =>
@@ -159,21 +159,11 @@ function StepRender({
             }
             href={`/@${data.user.nickname}`}
           >
-            Visit your ID
+            Go to your Cosmo
           </Link>
         </div>
       </div>
     );
-
-  return (
-    <div className="flex flex-col gap-2 items-center">
-      <HeartBreak size={52} weight="thin" />
-      <span>Process failed</span>
-      <Button intent="secondary" onClick={refetch}>
-        Try again
-      </Button>
-    </div>
-  );
 }
 
 function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
