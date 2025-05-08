@@ -12,6 +12,7 @@ import {
   SealCheck,
 } from "@phosphor-icons/react/dist/ssr";
 import { Button, buttonStyles, Form, Link, Loader } from "../ui";
+import { msToCountdown } from "@/lib/utils";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -84,6 +85,7 @@ function StepRender({
   refetch: () => void;
 }) {
   const [enabled, setEnable] = useState(true);
+  const utils = api.useUtils();
   const { data } = api.cosmoLink.checkTicket.useQuery(ticketAuth.ticket, {
     retry: false,
     refetchInterval: 2000,
@@ -94,7 +96,10 @@ function StepRender({
     if (data?.status === "expired" || data?.status === "certified") {
       setEnable(false);
     }
-  }, [data?.status]);
+    if (data?.status === "certified") {
+      utils.cosmoLink.myLink.invalidate();
+    }
+  }, [data?.status, utils.cosmoLink.myLink]);
 
   if (!data || data.status === "wait_for_user_action")
     return (
@@ -107,7 +112,14 @@ function StepRender({
           </Link>{" "}
           if you are on mobile.
         </span>
-        <QRCodeSVG size={256} value={generateQrCode(ticketAuth.ticket)} />
+        <div className="bg-white p-3">
+          <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
+        </div>
+        {data && (
+          <span className="text-sm">
+            Remaining {msToCountdown(data.ticketRemainingMs)}
+          </span>
+        )}
       </div>
     );
 

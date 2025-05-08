@@ -46,3 +46,12 @@ export function parseSelected<T>(keys: Selection, multiple = false) {
   if (result.length === 0) return null;
   return multiple ? result : result[0];
 }
+
+export function msToCountdown(ms: number) {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+    2,
+    "0"
+  )}`;
+}
