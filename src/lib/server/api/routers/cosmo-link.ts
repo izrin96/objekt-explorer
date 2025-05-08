@@ -4,6 +4,7 @@ import {
   checkTicket,
   generateQrTicket,
   generateRecaptchaToken,
+  getUser,
 } from "../../cosmo/shop/qr-auth";
 import { authProcedure, createTRPCRouter } from "../trpc";
 import { z } from "zod";
@@ -11,7 +12,6 @@ import { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
 import { and, eq, sql } from "drizzle-orm";
-import { fetchByNickname } from "../../cosmo/auth";
 
 export const cosmoLinkRouter = createTRPCRouter({
   // get all linked
@@ -93,8 +93,7 @@ export const cosmoLinkRouter = createTRPCRouter({
     .mutation(async ({ input: { otp, ticket }, ctx: { session } }) => {
       try {
         // send otp
-        const s = await certifyTicket(otp, ticket);
-        console.log(s);
+        var response = await certifyTicket(otp, ticket);
       } catch {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -102,34 +101,41 @@ export const cosmoLinkRouter = createTRPCRouter({
         });
       }
 
-      try {
-        // check for status certified
-        var result = await checkTicket(ticket);
-      } catch {
+      // extract session from cookie
+      const headers = response.headers.getSetCookie();
+      let userSession: string | null = null;
+      for (const header of headers) {
+        const parts = header.split(";");
+        for (const part of parts) {
+          const [name, value] = part.trim().split("=");
+          if (name === "user-session") {
+            userSession = value;
+            break;
+          }
+        }
+      }
+
+      if (!userSession)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Error getting ticket",
+          message: "Error getting user session",
         });
-      }
 
-      if (result.status === "certified") {
-        // get user wallet address by nickname
-        const address = await fetchByNickname(result.user.nickname);
-        if (address === undefined)
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Error fetching address",
-          });
+      const user = await getUser(userSession);
+      if (!user)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Error fetching address",
+        });
 
-        // link cosmo id with user
-        await db
-          .update(userAddress)
-          .set({
-            linkedAt: sql`'now'`,
-            userId: session.user.id,
-          })
-          .where(eq(userAddress.address, address.address));
-      }
+      // link cosmo id with user
+      await db
+        .update(userAddress)
+        .set({
+          linkedAt: sql`'now'`,
+          userId: session.user.id,
+        })
+        .where(eq(userAddress.address, user.address));
 
       return true;
     }),

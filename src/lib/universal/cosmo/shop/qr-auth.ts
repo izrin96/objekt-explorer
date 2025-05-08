@@ -20,3 +20,8 @@ export type TicketCheck =
   | {
       status: "expired";
     };
+
+export type CosmoShopUser = {
+  nickname: string;
+  address: string;
+};

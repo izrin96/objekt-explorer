@@ -3,7 +3,11 @@ import "server-only";
 import { cosmoShop } from "./http";
 import { randomUUID } from "node:crypto";
 import chromium from "puppeteer-core";
-import { TicketAuth, TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
+import {
+  CosmoShopUser,
+  TicketAuth,
+  TicketCheck,
+} from "@/lib/universal/cosmo/shop/qr-auth";
 
 const RECAPTCHA_KEY = "6LeHzjYqAAAAAOR5Up9lFb_sC39YGo5aQFyVDrsK";
 
@@ -66,11 +70,25 @@ export async function checkTicket(ticket: string) {
 }
 
 export async function certifyTicket(otp: number, ticket: string) {
-  return await cosmoShop(`/bff/v1/users/auth/login/native/qr/ticket/certify`, {
-    method: "post",
-    body: {
-      otp,
-      ticket,
+  return await cosmoShop.raw(
+    `/bff/v1/users/auth/login/native/qr/ticket/certify`,
+    {
+      method: "post",
+      body: {
+        otp,
+        ticket,
+      },
+      query: {
+        tid: crypto.randomUUID(),
+      },
+    }
+  );
+}
+
+export async function getUser(cookie: string) {
+  return await cosmoShop<CosmoShopUser>(`/bff/v1/users/me`, {
+    headers: {
+      Cookie: `user-session=${cookie}`,
     },
     query: {
       tid: crypto.randomUUID(),
