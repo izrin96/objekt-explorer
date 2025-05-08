@@ -1,6 +1,6 @@
 "use client";
 
-import { type Selection } from "@react-types/shared";
+import { type Selection } from "react-stately";
 import { ValidSeason, validSeasons } from "@/lib/universal/cosmo/common";
 import { useMemo, useCallback } from "react";
 import { Menu, Button } from "../ui";

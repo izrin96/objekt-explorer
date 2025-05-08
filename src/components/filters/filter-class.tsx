@@ -1,11 +1,11 @@
 "use client";
 
-import { type Selection } from "@react-types/shared";
 import { ValidClass, validClasses } from "@/lib/universal/cosmo/common";
 import { useCallback, useMemo } from "react";
 import { Button, Menu } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
 import { parseSelected } from "@/lib/utils";
+import { Selection } from "react-stately";
 
 type Props = {
   hideZeroWelcome?: boolean;

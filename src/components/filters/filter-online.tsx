@@ -1,6 +1,6 @@
 "use client";
 
-import { type Selection } from "@react-types/shared";
+import { type Selection } from "react-stately";
 import {
   ValidOnlineType,
   validOnlineTypes,
