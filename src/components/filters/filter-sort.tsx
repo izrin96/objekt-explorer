@@ -8,7 +8,8 @@ import { useFilters } from "@/hooks/use-filters";
 import { parseSelected } from "@/lib/utils";
 
 type Props = {
-  isProfile?: boolean;
+  allowDuplicateSort?: boolean;
+  allowSerialSort?: boolean;
 };
 
 const map: Record<ValidSort, string> = {
@@ -29,7 +30,10 @@ const mapDesc: Record<ValidSort, string> = {
   member: "Sort by Member order",
 };
 
-export default function SortFilter({ isProfile = false }: Props) {
+export default function SortFilter({
+  allowDuplicateSort = false,
+  allowSerialSort = false,
+}: Props) {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(
     () => new Set(filters.sort ? [filters.sort] : ["date"]),
@@ -51,9 +55,11 @@ export default function SortFilter({ isProfile = false }: Props) {
     }));
   }
 
-  const availableSorts = validSorts.filter((s) =>
-    isProfile ? true : !["serial", "duplicate"].includes(s)
-  );
+  const availableSorts = validSorts.filter((s) => {
+    if (s === "duplicate" && !allowDuplicateSort) return false;
+    if (s === "serial" && !allowSerialSort) return false;
+    return true;
+  });
 
   return (
     <Menu>

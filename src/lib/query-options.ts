@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { getBaseURL } from "./utils";
-import { IndexedObjekt } from "./universal/objekts";
+import { ValidObjekt } from "./universal/objekts";
 import { ofetch } from "ofetch";
 import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
 
@@ -10,7 +10,7 @@ export const collectionOptions = queryOptions({
   refetchOnWindowFocus: false,
   queryFn: async () => {
     const url = new URL(`/api/collection`, getBaseURL());
-    return await ofetch<{ collections: IndexedObjekt[] }>(url.toString()).then(
+    return await ofetch<{ collections: ValidObjekt[] }>(url.toString()).then(
       (a) => a.collections
     );
   },

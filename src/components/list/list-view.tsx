@@ -1,10 +1,9 @@
 "use client";
 
-import { IndexedObjekt } from "@/lib/universal/objekts";
+import { ValidObjekt } from "@/lib/universal/objekts";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
-import { shapeIndexedObjekts } from "@/lib/filter-utils";
+import { shapeProfileObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
@@ -23,6 +22,7 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
+import Filter from "./filter";
 
 type Props = { slug: string; isOwned: boolean };
 
@@ -52,7 +52,7 @@ function ListView({ slug, isOwned }: Props) {
   const [{ collections: objekts }] = api.list.getEntries.useSuspenseQuery(slug);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, IndexedObjekt[]][]
+    [string, ValidObjekt[][]][]
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
@@ -60,7 +60,7 @@ function ListView({ slug, isOwned }: Props) {
     return deferredObjektsFiltered.flatMap(([title, objekts]) => [
       !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
       ...ObjektsRender({
-        objekts: objekts.map((ob) => [ob]),
+        objekts,
         columns,
         children: ({ objekts, rowIndex }) => (
           <ObjektsRenderRow
@@ -86,6 +86,7 @@ function ListView({ slug, isOwned }: Props) {
                           isSelected={isSelected}
                           open={open}
                           select={select}
+                          showCount
                         />
                       )}
                     </ObjektViewSelectable>
@@ -105,13 +106,13 @@ function ListView({ slug, isOwned }: Props) {
   );
 
   useEffect(() => {
-    setObjektsFiltered(shapeIndexedObjekts(filters, objekts, artists));
+    setObjektsFiltered(shapeProfileObjekts(filters, objekts, artists));
   }, [filters, objekts, artists]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        <FilterView artists={artists} />
+        <Filter />
         {isOwned && <SelectMode state="remove" slug={slug} />}
       </div>
       <span className="font-semibold">{count} total</span>

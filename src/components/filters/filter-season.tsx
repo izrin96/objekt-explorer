@@ -7,7 +7,7 @@ import { Menu, Button } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
 import { parseSelected } from "@/lib/utils";
 
-export default function FilterSeason() {
+export default function SeasonFilter() {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.season), [filters.season]);
 

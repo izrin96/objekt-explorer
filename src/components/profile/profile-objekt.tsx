@@ -1,7 +1,6 @@
 "use client";
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { shapeProfileObjekts } from "@/lib/filter-utils";
@@ -26,6 +25,7 @@ import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
 import { authClient } from "@/lib/auth-client";
+import Filter from "./filter";
 
 export default function ProfileObjektRender() {
   return (
@@ -74,10 +74,10 @@ function ProfileObjekt() {
   }, [ownedObjekts, filters.unowned, objekts]);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([title, groupedObjekts]) => [
+    return deferredObjektsFiltered.flatMap(([title, objekts]) => [
       !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
       ...ObjektsRender({
-        objekts: groupedObjekts,
+        objekts,
         columns,
         children: ({ objekts, rowIndex }) => (
           <ObjektsRenderRow
@@ -151,7 +151,7 @@ function ProfileObjekt() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-4">
-        <FilterView isProfile artists={artists} />
+        <Filter />
         {session && <SelectMode state="add" />}
       </div>
       <span className="font-semibold">

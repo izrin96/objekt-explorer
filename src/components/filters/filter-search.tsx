@@ -6,7 +6,7 @@ import { useDebounceValue } from "usehooks-ts";
 import { IconCircleQuestionmark, IconX } from "@intentui/icons";
 import { useEffect, useState } from "react";
 
-export default function FilterSearch() {
+export default function SearchFilter() {
   const [filters, setFilters] = useFilters();
   const [query, setQuery] = useState(filters.search);
 
@@ -56,7 +56,10 @@ export default function FilterSearch() {
                       <li>Serial number ranges (example: #1-20)</li>
                     </ul>
                     <p>Grouping query using brackets is not supported</p>
-                    <p>Example: yy c201-204 !c202 #1-200, jw 201z, yb special divine</p>
+                    <p>
+                      Example: yy c201-204 !c202 #1-200, jw 201z, yb special
+                      divine
+                    </p>
                   </Popover.Description>
                 </Popover.Header>
               </Popover.Content>

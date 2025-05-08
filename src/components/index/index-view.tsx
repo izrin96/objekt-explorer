@@ -1,8 +1,6 @@
 "use client";
 
-import { IndexedObjekt } from "@/lib/universal/objekts";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import FilterView from "../filters/filter-render";
 import { useFilters } from "@/hooks/use-filters";
 import { shapeIndexedObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
@@ -27,6 +25,8 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import { authClient } from "@/lib/auth-client";
+import Filter from "./filter";
+import { ValidObjekt } from "@/lib/universal/objekts";
 
 export default function IndexRender() {
   return (
@@ -55,7 +55,7 @@ function IndexView() {
   const { data: objekts } = useSuspenseQuery(collectionOptions);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, IndexedObjekt[]][]
+    [string, ValidObjekt[]][]
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
@@ -114,7 +114,7 @@ function IndexView() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        <FilterView artists={artists} />
+        <Filter />
         {session && <SelectMode state="add" />}
       </div>
       <span className="font-semibold">{count} total</span>
