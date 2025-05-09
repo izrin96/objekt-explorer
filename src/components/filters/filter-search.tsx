@@ -22,10 +22,10 @@ export default function SearchFilter() {
         placeholder={`Quick search..`}
         onChange={setQuery}
         className="max-w-65 min-w-40"
-        value={query}
+        value={query ?? ""}
         aria-label="Search"
         suffix={
-          query.length > 0 ? (
+          (query ?? "").length > 0 ? (
             <Button intent="plain" onPress={() => setQuery("")}>
               <IconX />
             </Button>

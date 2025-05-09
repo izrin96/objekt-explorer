@@ -8,10 +8,10 @@ export default function UnownedFilter() {
   return (
     <Toggle
       className="data-selected:inset-ring-primary font-medium"
-      isSelected={filters.unowned}
+      isSelected={filters.unowned ?? false}
       onChange={(v) =>
         setFilters({
-          unowned: v,
+          unowned: v === false ? null : true,
         })
       }
     >

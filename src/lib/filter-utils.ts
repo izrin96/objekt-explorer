@@ -1,4 +1,4 @@
-import { Filters } from "@/hooks/use-filters";
+import { checkFiltering, Filters } from "@/hooks/use-filters";
 import {
   ValidClass,
   validClasses,
@@ -6,7 +6,7 @@ import {
   ValidSeason,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import { OwnedObjekt, ValidObjekt } from "./universal/objekts";
+import { ValidObjekt } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { getEdition } from "./utils";
@@ -47,6 +47,11 @@ const shortformMembers: Record<string, string> = {
   x: "Xinyu",
   m: "Mayu",
   l: "Lynn",
+};
+
+export type ObjektItem<T> = {
+  type: "pin" | "item";
+  item: T;
 };
 
 function getMemberShortKeys(value: string) {
@@ -91,7 +96,7 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   }
 
   // Handle collection range search (e.g. 301z-302z)
-  // outdated, doesn't support for atom02
+  // legacy, doesn't support for atom02
   if (!keyword.startsWith("#") && keyword.includes("-")) {
     const [start, end] = keyword.split("-").map(parseCollectionNo);
     if (!start || !end) return false;
@@ -120,28 +125,12 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     );
   }
 
-  // Handle collection number search
-  // const keywordNoBreakdown = parseCollectionNo(keyword);
-  // if (keywordNoBreakdown) {
-  //   const objektBreakdown = getObjektBreakdown(objekt);
-  //   return (
-  //     (!keywordNoBreakdown.collectionNo ||
-  //       objektBreakdown.collectionNo === keywordNoBreakdown.collectionNo) &&
-  //     (!keywordNoBreakdown.seasonCode ||
-  //       objektBreakdown.seasonCode === keywordNoBreakdown.seasonCode) &&
-  //     (!keywordNoBreakdown.type ||
-  //       objektBreakdown.type == keywordNoBreakdown.type)
-  //   );
-  // }
-
   const seasonCode = objekt.season.charAt(0);
   const seasonNumber = objekt.season.slice(-2);
   const collectionNoSliced = objekt.collectionNo.slice(0, -1);
-  const seasonCollectionNo = Array.from({ length: parseInt(seasonNumber) })
-    .map(() => seasonCode)
-    .join("");
+  const seasonCollectionNo = seasonCode.repeat(parseInt(seasonNumber));
 
-  // temporary, will improve with fuzzy search
+  // todo: temporary, will improve with fuzzy search
   const memberKeys = [
     ...getMemberShortKeys(objekt.member),
     `${seasonCollectionNo}${objekt.collectionNo}`, // a201z, aa201z
@@ -169,7 +158,7 @@ export function filterObjekts<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[]
 ): T[] {
-  const queries = filters.search
+  const queries = (filters.search ?? "")
     .toLowerCase()
     .split(",")
     .map((group) =>
@@ -248,8 +237,8 @@ function sortObjekts<T extends ValidObjekt>(
   // default sort and season sort
   objekts = defaultSortObjekts(objekts, artists);
 
-  const sort = filters.sort;
-  const sortDir = filters.sort_dir;
+  const sort = filters.sort ?? "date";
+  const sortDir = filters.sort_dir ?? "desc";
 
   if (sort === "date") {
     if (sortDir === "desc") {
@@ -277,12 +266,12 @@ function sortObjekts<T extends ValidObjekt>(
     }
   } else if (sort === "serial") {
     if (sortDir === "desc") {
-      objekts = objekts.toSorted(
-        (a, b) => (b as OwnedObjekt).serial - (a as OwnedObjekt).serial
+      objekts = objekts.toSorted((a, b) =>
+        "serial" in a && "serial" in b ? b.serial - a.serial : 0
       );
     } else {
-      objekts = objekts.toSorted(
-        (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
+      objekts = objekts.toSorted((a, b) =>
+        "serial" in a && "serial" in b ? a.serial - b.serial : 0
       );
     }
   } else if (sort === "member") {
@@ -298,8 +287,8 @@ function sortDuplicate<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[][]
 ) {
-  const sort = filters.sort;
-  const sortDir = filters.sort_dir;
+  const sort = filters.sort ?? "date";
+  const sortDir = filters.sort_dir ?? "desc";
 
   if (sort === "duplicate") {
     if (sortDir === "desc")
@@ -310,61 +299,102 @@ function sortDuplicate<T extends ValidObjekt>(
   return objekts;
 }
 
-export function shapeIndexedObjekts<T extends ValidObjekt>(
+export function shapeObjekts<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[],
-  artists: CosmoArtistWithMembersBFF[]
-): [string, T[]][] {
-  objekts = filterObjekts(filters, objekts);
-  objekts = sortObjekts(filters, objekts, artists);
+  artists: CosmoArtistWithMembersBFF[],
+  pins: T[] = []
+): [string, ObjektItem<T[]>[]][] {
+  // 1. filter all
+  // 2. group by key
+  // 3. sort the group
+  // 4. sort the items
+  // 5. sort pin objekt
+  // 6. group by duplicate
+  // 7. sort by duplicate
+  // 8. map to ObjektItem<T[]>
 
-  let results: Record<string, T[]>;
+  // filter objekts
+  objekts = filterObjekts(filters, objekts);
+
+  // group by key
+  let groupByKey: Record<string, T[]>;
   if (filters.group_by) {
-    results = groupBy(objekts, (a) =>
-      filters.group_by === "seasonCollectionNo"
-        ? `${a.season} ${a.collectionNo}`
-        : a[filters.group_by!]
-    );
+    groupByKey = groupBy(objekts, (objekt) => {
+      return filters.group_by === "seasonCollectionNo"
+        ? `${objekt.season} ${objekt.collectionNo}`
+        : objekt[filters.group_by!];
+    });
   } else {
-    results = groupBy(objekts, () => "");
+    groupByKey = groupBy(objekts, () => "");
   }
 
-  const groupDir = filters.group_dir;
-
-  return Object.entries(results).toSorted(([keyA], [keyB]) => {
-    if (filters.group_by === "member") {
-      return compareMember(keyA, keyB, groupDir, artists);
-    }
-
-    if (filters.group_by === "class") {
-      return classSort(keyA, keyB, groupDir);
-    }
-
-    if (filters.group_by === "season") {
-      return seasonSort(keyA, keyB, groupDir);
-    }
-
-    if (groupDir === "desc") return keyB.localeCompare(keyA);
-    return keyA.localeCompare(keyB);
-  });
-}
-
-export function shapeProfileObjekts<T extends ValidObjekt>(
-  filters: Filters,
-  objekts: T[],
-  artists: CosmoArtistWithMembersBFF[]
-): [string, T[][]][] {
-  return shapeIndexedObjekts(filters, objekts, artists).map(
-    ([key, objekts]) => {
-      let grouped: T[][];
-      if (filters.grouped) {
-        grouped = Object.values(groupBy(objekts, (a) => a.collectionId));
-      } else {
-        grouped = objekts.map((objekt) => [objekt]);
+  // sort the group
+  const groupDir = filters.group_dir ?? "desc";
+  const groupByKeySorted = Object.entries(groupByKey).toSorted(
+    ([keyA], [keyB]) => {
+      if (filters.group_by === "member") {
+        return compareMember(keyA, keyB, groupDir, artists);
       }
-      return [key, sortDuplicate(filters, grouped)];
+
+      if (filters.group_by === "class") {
+        return classSort(keyA, keyB, groupDir);
+      }
+
+      if (filters.group_by === "season") {
+        return seasonSort(keyA, keyB, groupDir);
+      }
+
+      if (groupDir === "desc") return keyB.localeCompare(keyA);
+      return keyA.localeCompare(keyB);
     }
   );
+
+  return groupByKeySorted.map(([key, objekts]) => {
+    // sort objekts
+    let sortedObjekts = sortObjekts(filters, objekts, artists);
+
+    // group by duplicate
+    let group: T[][];
+    if (filters.grouped) {
+      group = Object.values(groupBy(sortedObjekts, (a) => a.collectionId));
+    } else {
+      group = sortedObjekts.map((objekt) => [objekt]);
+    }
+
+    // sort duplicate objekts
+    const sortedDuplicateObjekts = sortDuplicate(filters, group);
+
+    // map T[] to ObjektItem<T[]>
+    let items: ObjektItem<T[]>[] = sortedDuplicateObjekts.map((objekts) => {
+      const [objekt] = objekts;
+      const isPinned = pins.findIndex((pin) => pin.id === objekt.id) !== -1;
+      return {
+        type: isPinned ? "pin" : "item",
+        item: objekts,
+      };
+    });
+
+    // if not filtering, pins should show first
+    // todo: unnecessary for index view, should skip entirely
+    const isFiltering = checkFiltering(filters);
+    if (!isFiltering && pins.length > 0) {
+      // show/hide pins, hide pins mean stop sorting pins at first
+      if (!filters.hidePin) {
+        items = [
+          ...items.filter((item) => {
+            return item.type === "pin";
+          }),
+          ...items.filter((item) => {
+            return item.type === "item";
+          }),
+        ];
+      }
+    }
+
+    // sort by duplicate
+    return [key, items];
+  });
 }
 
 function compareMember(
@@ -401,6 +431,7 @@ function compareByArray<T>(
 }
 
 function seasonSort(a: string, b: string, dir: "asc" | "desc") {
+  // todo: extract season number and sort by it instead
   return compareByArray(validSeasons, a, b, dir);
 }
 

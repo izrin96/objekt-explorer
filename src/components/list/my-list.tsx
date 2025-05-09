@@ -225,11 +225,9 @@ function format(
 ) {
   return Array.from(collectionMap.entries()).map(([member, collections]) => {
     const formatCollections = collections.map((collection) => {
-      const seasonType = collection.season.charAt(0);
-      const seasonNumber = parseInt(collection.season.slice(-2));
-      const seasonFormat = Array.from({ length: seasonNumber })
-        .map(() => seasonType)
-        .join("");
+      const seasonCode = collection.season.charAt(0);
+      const seasonNumber = collection.season.slice(-2);
+      const seasonFormat = seasonCode.repeat(parseInt(seasonNumber));
 
       return `${seasonFormat}${collection.collectionNo}`;
     });

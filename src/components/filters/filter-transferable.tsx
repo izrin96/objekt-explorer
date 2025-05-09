@@ -8,10 +8,10 @@ export default function TransferableFilter() {
   return (
     <Toggle
       className="data-selected:inset-ring-primary font-medium"
-      isSelected={filters.transferable}
+      isSelected={filters.transferable ?? false}
       onChange={(v) =>
         setFilters({
-          transferable: v,
+          transferable: v === false ? null : true,
         })
       }
     >

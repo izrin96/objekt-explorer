@@ -19,6 +19,7 @@ import UnownedFilter from "../filters/filter-unowned";
 import ResetFilter from "../filters/reset-filter";
 import { useFilters } from "@/hooks/use-filters";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import HidePinFilter from "../filters/filter-hide-pin";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
@@ -34,6 +35,7 @@ export default function Filter() {
       <OnlineFilter />
       <SortFilter allowDuplicateSort allowSerialSort />
       <SortDirectionFilter />
+      <HidePinFilter />
       <CombineDuplicateFilter />
       <SearchFilter />
       <GroupByFilter />

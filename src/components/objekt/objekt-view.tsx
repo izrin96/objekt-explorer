@@ -10,6 +10,7 @@ import ObjektSidebar from "./objekt-sidebar";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
 import { Check } from "@phosphor-icons/react/dist/ssr";
+import { PushPin } from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   objekts: ValidObjekt[];
@@ -21,6 +22,7 @@ type Props = {
   isSelected?: boolean;
   open: () => void;
   select?: () => void;
+  isPin?: boolean;
 };
 
 export default memo(function ObjektView({
@@ -30,6 +32,7 @@ export default memo(function ObjektView({
   showCount = false,
   showSerial = false,
   isSelected = false,
+  isPin = false,
   open,
   select,
   ...props
@@ -98,6 +101,11 @@ export default memo(function ObjektView({
                 {isSelected ? "Unselect" : "Select"}
               </span>
             </Button>
+          </div>
+        )}
+        {isPin && (
+          <div className="absolute bottom-1 left-1 bg-bg/50 text-fg p-1.5 rounded-lg">
+            <PushPin weight="regular" size={12} />
           </div>
         )}
       </div>

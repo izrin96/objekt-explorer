@@ -63,7 +63,12 @@ export default function SortFilter({
 
   return (
     <Menu>
-      <Button intent="outline">Sort by</Button>
+      <Button
+        intent="outline"
+        className={filters.sort ? "!inset-ring-primary" : ""}
+      >
+        Sort by
+      </Button>
       <Menu.Content
         selectionMode="single"
         selectedKeys={selected}

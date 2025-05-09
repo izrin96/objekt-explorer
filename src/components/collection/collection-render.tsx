@@ -1,51 +1,44 @@
-import { ValidObjekt } from "@/lib/universal/objekts";
 import { CSSProperties } from "react";
 
-export function ObjektsRender({
-  objekts,
+export function ObjektsRender<T>({
+  items,
   columns,
   children,
 }: {
-  objekts: ValidObjekt[][];
+  items: T[];
   columns: number;
-  children: (props: {
-    objekts: ValidObjekt[][];
-    rowIndex: number;
-  }) => React.ReactElement;
+  children: (props: { items: T[]; rowIndex: number }) => React.ReactElement;
 }) {
   return Array.from({
-    length: Math.ceil(objekts.length / columns),
+    length: Math.ceil(items.length / columns),
   }).map((_, rowIndex) => {
     const start = rowIndex * columns;
     const end = start + columns;
 
-    return children({ objekts: objekts.slice(start, end), rowIndex });
+    return children({ items: items.slice(start, end), rowIndex });
   });
 }
 
-export function ObjektsRenderRow({
-  objekts,
+export function ObjektsRenderRow<T>({
+  items,
   columns,
   rowIndex,
   children,
 }: {
-  objekts: ValidObjekt[][];
+  items: T[];
   columns: number;
   rowIndex: number;
-  children: (props: {
-    objekts: ValidObjekt[];
-    index: number;
-  }) => React.ReactElement;
+  children: (props: { item: T; index: number }) => React.ReactElement;
 }) {
   return (
     <div
       className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-3 lg:gap-4 pb-4"
       style={{ "--grid-columns": columns } as CSSProperties}
     >
-      {objekts.map((objekts, j) => {
+      {items.map((item, j) => {
         const index = rowIndex * columns + j;
         return children({
-          objekts,
+          item,
           index,
         });
       })}

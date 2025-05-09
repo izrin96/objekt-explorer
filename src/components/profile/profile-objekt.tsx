@@ -3,7 +3,7 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useFilters } from "@/hooks/use-filters";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
-import { shapeProfileObjekts } from "@/lib/filter-utils";
+import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
 import { ErrorBoundary } from "react-error-boundary";
@@ -54,7 +54,7 @@ function ProfileObjekt() {
   const { columns } = useBreakpointColumn();
 
   const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, ValidObjekt[][]][]
+    [string, ObjektItem<ValidObjekt[]>[]][]
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
@@ -74,24 +74,24 @@ function ProfileObjekt() {
   }, [ownedObjekts, filters.unowned, objekts]);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([title, objekts]) => [
+    return deferredObjektsFiltered.flatMap(([title, items]) => [
       !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
       ...ObjektsRender({
-        objekts,
+        items,
         columns,
-        children: ({ objekts, rowIndex }) => (
+        children: ({ items, rowIndex }) => (
           <ObjektsRenderRow
             key={`${title}-${rowIndex}`}
             columns={columns}
             rowIndex={rowIndex}
-            objekts={objekts}
+            items={items}
           >
-            {({ objekts, index }) => {
-              const [objekt] = objekts;
+            {({ item, index }) => {
+              const [objekt] = item.item;
               return (
                 <ObjektModalProvider
                   key={objekt.id}
-                  objekts={objekts}
+                  objekts={item.item}
                   isProfile
                 >
                   {({ openObjekts }) => (
@@ -102,7 +102,7 @@ function ProfileObjekt() {
                     >
                       {({ isSelected, open, select }) => (
                         <ObjektView
-                          objekts={objekts}
+                          objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
                           open={open}
@@ -111,6 +111,7 @@ function ProfileObjekt() {
                           showCount
                           showSerial={!filters.grouped}
                           isFade={!("serial" in objekt)}
+                          isPin={item.type === "pin"}
                         />
                       )}
                     </ObjektViewSelectable>
@@ -138,7 +139,7 @@ function ProfileObjekt() {
   );
 
   useEffect(() => {
-    setObjektsFiltered(shapeProfileObjekts(filters, joinedObjekts, artists));
+    setObjektsFiltered(shapeObjekts(filters, joinedObjekts, artists, []));
   }, [filters, joinedObjekts, artists]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)

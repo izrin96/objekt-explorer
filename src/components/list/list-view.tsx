@@ -3,7 +3,7 @@
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useFilters } from "@/hooks/use-filters";
-import { shapeProfileObjekts } from "@/lib/filter-utils";
+import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
@@ -52,27 +52,27 @@ function ListView({ slug, isOwned }: Props) {
   const [{ collections: objekts }] = api.list.getEntries.useSuspenseQuery(slug);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, ValidObjekt[][]][]
+    [string, ObjektItem<ValidObjekt[]>[]][]
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([title, objekts]) => [
+    return deferredObjektsFiltered.flatMap(([title, items]) => [
       !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
       ...ObjektsRender({
-        objekts,
+        items,
         columns,
-        children: ({ objekts, rowIndex }) => (
+        children: ({ items, rowIndex }) => (
           <ObjektsRenderRow
             key={`${title}-${rowIndex}`}
             columns={columns}
             rowIndex={rowIndex}
-            objekts={objekts}
+            items={items}
           >
-            {({ objekts, index }) => {
-              const [objekt] = objekts;
+            {({ item, index }) => {
+              const [objekt] = item.item;
               return (
-                <ObjektModalProvider key={objekt.id} objekts={objekts}>
+                <ObjektModalProvider key={objekt.id} objekts={item.item}>
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       getId={() => objekt.id}
@@ -81,7 +81,7 @@ function ListView({ slug, isOwned }: Props) {
                     >
                       {({ isSelected, open, select }) => (
                         <ObjektView
-                          objekts={objekts}
+                          objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
                           open={open}
@@ -106,7 +106,7 @@ function ListView({ slug, isOwned }: Props) {
   );
 
   useEffect(() => {
-    setObjektsFiltered(shapeProfileObjekts(filters, objekts, artists));
+    setObjektsFiltered(shapeObjekts(filters, objekts, artists));
   }, [filters, objekts, artists]);
 
   return (
