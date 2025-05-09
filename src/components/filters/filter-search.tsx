@@ -16,6 +16,13 @@ export default function SearchFilter() {
     setFilters({ search: debounced === "" ? null : debounced });
   }, [debounced, setFilters]);
 
+  useEffect(() => {
+    // clear the text if reset
+    if (!filters.search) {
+      setQuery("");
+    }
+  }, [filters.search]);
+
   return (
     <div>
       <TextField
