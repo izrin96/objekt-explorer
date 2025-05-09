@@ -17,10 +17,12 @@ import ColumnFilter from "../filters/filter-column";
 import ResetFilter from "../filters/reset-filter";
 import { useFilters } from "@/hooks/use-filters";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useResetFilters } from "@/hooks/use-reset-filters";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
+  const reset = useResetFilters();
   return (
     <div className="flex gap-2 flex-wrap">
       <ArtistFilter artists={artists} />
@@ -36,7 +38,7 @@ export default function Filter() {
       <GroupByFilter />
       {filters.group_by && <GroupDirectionFilter />}
       <ColumnFilter />
-      <ResetFilter />
+      <ResetFilter onReset={() => reset()} />
     </div>
   );
 }

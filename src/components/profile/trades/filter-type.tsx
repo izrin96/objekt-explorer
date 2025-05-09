@@ -36,7 +36,12 @@ export default function TypeFilter() {
 
   return (
     <Menu>
-      <Button intent="outline">Type</Button>
+      <Button
+        intent="outline"
+        className={type !== "all" ? "!inset-ring-primary" : ""}
+      >
+        Type
+      </Button>
       <Menu.Content
         selectionMode="single"
         selectedKeys={selected}

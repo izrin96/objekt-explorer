@@ -11,12 +11,14 @@ import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import React from "react";
 import EditionFilter from "@/components/filters/filter-edition";
 import ShowCountFilter from "./filter-showcount";
+import { useResetFilters } from "@/hooks/use-reset-filters";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
 };
 
 export default function ProgressFilter({ artists }: Props) {
+  const reset = useResetFilters();
   return (
     <div className="flex gap-2 items-center flex-wrap justify-center">
       <ArtistFilter artists={artists} />
@@ -27,7 +29,7 @@ export default function ProgressFilter({ artists }: Props) {
       <FilterOnline />
       <GroupBysFilter />
       <ShowCountFilter />
-      <ResetFilter />
+      <ResetFilter onReset={() => reset()} />
     </div>
   );
 }

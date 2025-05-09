@@ -20,10 +20,12 @@ import ResetFilter from "../filters/reset-filter";
 import { useFilters } from "@/hooks/use-filters";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import HidePinFilter from "../filters/filter-hide-pin";
+import { useResetFilters } from "@/hooks/use-reset-filters";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
+  const reset = useResetFilters();
   return (
     <div className="flex gap-2 flex-wrap">
       <ArtistFilter artists={artists} />
@@ -35,14 +37,14 @@ export default function Filter() {
       <OnlineFilter />
       <SortFilter allowDuplicateSort allowSerialSort />
       <SortDirectionFilter />
-      <HidePinFilter />
       <CombineDuplicateFilter />
       <SearchFilter />
       <GroupByFilter />
       {filters.group_by && <GroupDirectionFilter />}
       <ColumnFilter />
       <UnownedFilter />
-      <ResetFilter />
+      <HidePinFilter />
+      <ResetFilter onReset={() => reset()} />
     </div>
   );
 }
