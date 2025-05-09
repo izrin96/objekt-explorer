@@ -93,7 +93,10 @@ export const pins = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     order: integer("order"),
   },
-  (t) => [index("pins_address_idx").on(t.address)]
+  (t) => [
+    index("pins_address_idx").on(t.address),
+    index("pins_token_id_idx").on(t.tokenId),
+  ]
 );
 
 export const pinsRelations = relations(pins, ({ one }) => ({
