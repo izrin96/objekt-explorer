@@ -1,10 +1,20 @@
 "use client";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { Button, Checkbox, Form, Link, Modal, Note, Select } from "../ui";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Link,
+  Loader,
+  Modal,
+  Note,
+  Select,
+} from "../ui";
 import { useCallback, useState } from "react";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
+import { Error } from "../error-boundary";
 
 export function SelectMode({
   slug,
@@ -49,46 +59,18 @@ export function SelectMode({
         </Button>
       )}
 
-      {state === "add" && (
-        <AddToList>
-          {({ open }) => (
-            <Button
-              intent="outline"
-              size="small"
-              onClick={() => handleAction(open)}
-            >
-              Add to list
-            </Button>
-          )}
-        </AddToList>
-      )}
+      {state === "add" && <AddToList onClick={(open) => handleAction(open)} />}
       {state === "remove" && slug && (
-        <RemoveFromList slug={slug}>
-          {({ open }) => (
-            <Button
-              intent="outline"
-              size="small"
-              onClick={() => handleAction(open)}
-            >
-              Remove from list
-            </Button>
-          )}
-        </RemoveFromList>
+        <RemoveFromList slug={slug} onClick={(open) => handleAction(open)} />
       )}
     </div>
   );
 }
 
-function AddToList({
-  children,
-}: {
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
+function AddToList({ onClick }: { onClick: (open: () => void) => void }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const [skipDups, setSkipDups] = useState(true);
   const [open, setOpen] = useState(false);
-  const list = api.list.myList.useQuery();
   const addToList = api.list.addObjektsToList.useMutation({
     onSuccess: (rowCount) => {
       setOpen(false);
@@ -101,11 +83,13 @@ function AddToList({
   });
   return (
     <>
-      {children?.({
-        open: () => {
-          setOpen(true);
-        },
-      })}
+      <Button
+        intent="outline"
+        size="small"
+        onClick={() => onClick(() => setOpen(true))}
+      >
+        Add to list
+      </Button>
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
         <Form
           onSubmit={async (e) => {
@@ -113,7 +97,7 @@ function AddToList({
             const formData = new FormData(e.currentTarget);
             addToList.mutate({
               slug: formData.get("slug") as string,
-              skipDups: skipDups,
+              skipDups: formData.get("skipDups") === "on",
               collectionSlugs: selected as string[],
             });
           }}
@@ -122,36 +106,7 @@ function AddToList({
             <Modal.Title>Add to list</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            {(list.data ?? []).length > 0 ? (
-              <div className="flex flex-col gap-4">
-                <Select
-                  label="My List"
-                  placeholder="Select a list"
-                  name="slug"
-                  isRequired
-                >
-                  <Select.Trigger />
-                  <Select.List items={list.data ?? []}>
-                    {(item) => (
-                      <Select.Option id={item.slug} textValue={item.slug}>
-                        {item.name}
-                      </Select.Option>
-                    )}
-                  </Select.List>
-                </Select>
-                <Checkbox
-                  isSelected={skipDups}
-                  onChange={setSkipDups}
-                  label="Prevent duplicate"
-                  description="Skip the same objekt when adding"
-                />
-              </div>
-            ) : (
-              <Note intent="default">
-                You don&apos;t have any list yet.{" "}
-                <Link href="/list">Create one here</Link>.
-              </Note>
-            )}
+            <AddToListForm />
           </Modal.Body>
           <Modal.Footer>
             <Modal.Close>Cancel</Modal.Close>
@@ -165,12 +120,62 @@ function AddToList({
   );
 }
 
+function AddToListForm() {
+  const list = api.list.myList.useQuery();
+
+  if (list.isPending)
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+
+  if (list.isError)
+    return (
+      <Error onRetry={() => list.refetch()} message="Error fetching list" />
+    );
+
+  if (!list.data || list.data.length === 0)
+    return (
+      <Note intent="default">
+        You don&apos;t have any list yet.{" "}
+        <Link href="/list">Create one here</Link>.
+      </Note>
+    );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Select
+        label="My List"
+        placeholder="Select a list"
+        name="slug"
+        isRequired
+      >
+        <Select.Trigger />
+        <Select.List items={list.data ?? []}>
+          {(item) => (
+            <Select.Option id={item.slug} textValue={item.slug}>
+              {item.name}
+            </Select.Option>
+          )}
+        </Select.List>
+      </Select>
+      <Checkbox
+        defaultSelected={true}
+        name="skipDups"
+        label="Prevent duplicate"
+        description="Skip the same objekt when adding"
+      />
+    </div>
+  );
+}
+
 function RemoveFromList({
   slug,
-  children,
+  onClick,
 }: {
   slug: string;
-  children: ({ open }: { open: () => void }) => React.ReactNode;
+  onClick: (open: () => void) => void;
 }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
@@ -189,11 +194,13 @@ function RemoveFromList({
   });
   return (
     <>
-      {children?.({
-        open: () => {
-          setOpen(true);
-        },
-      })}
+      <Button
+        intent="outline"
+        size="small"
+        onClick={() => onClick(() => setOpen(true))}
+      >
+        Remove from list
+      </Button>
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
         <Form
           onSubmit={async (e) => {
