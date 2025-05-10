@@ -4,7 +4,7 @@ import { PushPin, PushPinSimple } from "@phosphor-icons/react/dist/ssr";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { PublicProfile } from "@/lib/universal/user";
-import { Button } from "../ui";
+import { Button, Loader } from "../ui";
 import { cn } from "@/utils/classes";
 
 export function ObjektOverlay({
@@ -79,9 +79,14 @@ export function TogglePin({
           });
         }
       }}
+      isPending={pin.isPending || unpin.isPending}
     >
       <span className="text-xs font-semibold text-nowrap">
-        <PushPinSimple size={16} />
+        {pin.isPending || unpin.isPending ? (
+          <Loader variant="ring" />
+        ) : (
+          <PushPinSimple size={16} />
+        )}
       </span>
     </Button>
   );
