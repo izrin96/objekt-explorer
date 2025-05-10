@@ -6,7 +6,7 @@ import {
   ValidSeason,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import { ValidObjekt } from "./universal/objekts";
+import { PinObjekt, ValidObjekt } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { getEdition } from "./utils";
@@ -52,6 +52,7 @@ const shortformMembers: Record<string, string> = {
 export type ObjektItem<T> = {
   type: "pin" | "item";
   item: T;
+  order: number | null;
 };
 
 function getMemberShortKeys(value: string) {
@@ -303,7 +304,7 @@ export function shapeObjekts<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[],
   artists: CosmoArtistWithMembersBFF[],
-  pins: T[] = []
+  pins: PinObjekt[] = []
 ): [string, ObjektItem<T[]>[]][] {
   // 1. filter all
   // 2. group by key
@@ -315,18 +316,18 @@ export function shapeObjekts<T extends ValidObjekt>(
   // 8. map to ObjektItem<T[]>
 
   // filter objekts
-  objekts = filterObjekts(filters, objekts);
+  const fliteredObjekts = filterObjekts(filters, objekts);
 
   // group by key
   let groupByKey: Record<string, T[]>;
   if (filters.group_by) {
-    groupByKey = groupBy(objekts, (objekt) => {
+    groupByKey = groupBy(fliteredObjekts, (objekt) => {
       return filters.group_by === "seasonCollectionNo"
         ? `${objekt.season} ${objekt.collectionNo}`
         : objekt[filters.group_by!];
     });
   } else {
-    groupByKey = groupBy(objekts, () => "");
+    groupByKey = groupBy(fliteredObjekts, () => "");
   }
 
   // sort the group
@@ -350,9 +351,9 @@ export function shapeObjekts<T extends ValidObjekt>(
     }
   );
 
-  return groupByKeySorted.map(([key, objekts]) => {
+  return groupByKeySorted.map(([key, keyObjekts]) => {
     // sort objekts
-    let sortedObjekts = sortObjekts(filters, objekts, artists);
+    const sortedObjekts = sortObjekts(filters, keyObjekts, artists);
 
     // group by duplicate
     let group: T[][];
@@ -368,31 +369,31 @@ export function shapeObjekts<T extends ValidObjekt>(
     // map T[] to ObjektItem<T[]>
     let items: ObjektItem<T[]>[] = sortedDuplicateObjekts.map((objekts) => {
       const [objekt] = objekts;
-      const isPinned = pins.findIndex((pin) => pin.id === objekt.id) !== -1;
+      const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
+      const isPinned = !!pinObjekt;
       return {
         type: isPinned ? "pin" : "item",
         item: objekts,
+        order: isPinned ? pinObjekt.order : null,
       };
     });
 
-    // if not filtering, pins should show first
-    // todo: unnecessary for index view, should skip entirely
-    const isFiltering = checkFiltering(filters);
-    if (!isFiltering && pins.length > 0) {
-      // show/hide pins, hide pins mean stop sorting pins at first
-      if (!filters.hidePin) {
-        items = [
-          ...items.filter((item) => {
-            return item.type === "pin";
-          }),
-          ...items.filter((item) => {
-            return item.type === "item";
-          }),
-        ];
+    if (pins.length > 0) {
+      // if not filtering, pins should show first
+      const isFiltering = checkFiltering(filters);
+      if (!isFiltering) {
+        // show/hide pins, hide pins mean stop sorting pins at first
+        if (!filters.hidePin) {
+          items = [
+            ...items
+              .filter((item) => item.type === "pin")
+              .toSorted((a, b) => (a.order && b.order ? b.order - a.order : 0)),
+            ...items.filter((item) => item.type === "item"),
+          ];
+        }
       }
     }
 
-    // sort by duplicate
     return [key, items];
   });
 }
@@ -431,7 +432,6 @@ function compareByArray<T>(
 }
 
 function seasonSort(a: string, b: string, dir: "asc" | "desc") {
-  // todo: extract season number and sort by it instead
   return compareByArray(validSeasons, a, b, dir);
 }
 

@@ -80,6 +80,9 @@ function AddToList({ onClick }: { onClick: (open: () => void) => void }) {
         duration: 1300,
       });
     },
+    onError: () => {
+      toast.error("Error adding objekt to list");
+    },
   });
   return (
     <>
@@ -191,6 +194,9 @@ function RemoveFromList({
         duration: 1300,
       });
     },
+    onError: () => {
+      toast.error("Error removing objekt from list");
+    },
   });
   return (
     <>
@@ -207,7 +213,7 @@ function RemoveFromList({
             e.preventDefault();
             removeObjektsFromList.mutate({
               slug: slug.toString(),
-              ids: selected as number[],
+              ids: selected.map((a) => Number(a)),
             });
           }}
         >

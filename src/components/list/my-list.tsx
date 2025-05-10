@@ -24,6 +24,7 @@ import { CollectionFormat } from "@/lib/server/api/routers/list";
 import { getBaseURL } from "@/lib/utils";
 import { Textarea } from "../ui/textarea";
 import { CopyButton } from "../copy-button";
+import { toast } from "sonner";
 
 export default function MyListRender() {
   return (
@@ -106,7 +107,11 @@ function GenerateDiscordFormat() {
   const [showCount, setShowCount] = useState(false);
   const [includeLink, setIncludeLink] = useState(false);
 
-  const generateDiscordFormat = api.list.generateDiscordFormat.useMutation();
+  const generateDiscordFormat = api.list.generateDiscordFormat.useMutation({
+    onError: () => {
+      toast.error("Error generating Discord format");
+    },
+  });
   const list = api.list.myList.useQuery();
 
   useEffect(() => {
@@ -252,6 +257,9 @@ function CreateList() {
       setOpen(false);
       utils.list.myList.invalidate();
     },
+    onError: () => {
+      toast.error("Error creating list");
+    },
   });
   return (
     <>
@@ -301,6 +309,9 @@ function DeleteList({
     onSuccess: () => {
       setOpen(false);
       utils.list.myList.invalidate();
+    },
+    onError: () => {
+      toast.error("Error deleting list");
     },
   });
   return (
@@ -354,6 +365,9 @@ function EditList({
     onSuccess: () => {
       setOpen(false);
       utils.list.myList.invalidate();
+    },
+    onError: () => {
+      toast.error("Error editing list");
     },
   });
   return (

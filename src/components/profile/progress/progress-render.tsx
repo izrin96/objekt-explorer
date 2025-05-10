@@ -39,11 +39,11 @@ export default function ProgressRender() {
 
 function Progress() {
   const { artists } = useCosmoArtist();
-  const { profile } = useProfile();
+  const profile = useProfile((a) => a.profile);
   const [filters, setFilters] = useFilters();
 
   const objektsQuery = useQuery(collectionOptions);
-  const ownedQuery = useQuery(ownedCollectionOptions(profile.address));
+  const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
 
   const objekts = useMemo(() => objektsQuery.data ?? [], [objektsQuery.data]);
   const ownedObjekts = useMemo(() => ownedQuery.data ?? [], [ownedQuery.data]);

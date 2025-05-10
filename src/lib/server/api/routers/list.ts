@@ -68,7 +68,7 @@ export const listRouter = createTRPCRouter({
         collections: result.entries.map(
           ({ collectionSlug, id, createdAt }) => ({
             ...collectionsMap.get(collectionSlug)!,
-            id,
+            id: id.toString(),
             createdAt,
           })
         ),

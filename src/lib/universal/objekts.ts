@@ -1,14 +1,19 @@
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
 
-export type IndexedObjekt = { id: string | number } & Omit<
+export type IndexedObjekt = Omit<
   Collection,
-  "id" | "contract" | "comoAmount" | "accentColor" | "thumbnailImage"
+  "contract" | "comoAmount" | "accentColor" | "thumbnailImage"
 >;
 
 export type OwnedObjekt = IndexedObjekt &
   Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable">;
 
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
+
+export type PinObjekt = {
+  tokenId: string;
+  order: number | null;
+};
 
 export function getCollectionShortId(objekt: ValidObjekt) {
   const seasonNumber = parseInt(objekt.season.slice(-2));
@@ -25,7 +30,7 @@ export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
   return {
     ...collection,
     ...overrideColor(collection),
-    id: objekt.id,
+    id: objekt.id.toString(),
     serial: objekt.serial,
     receivedAt: objekt.receivedAt,
     mintedAt: objekt.mintedAt,

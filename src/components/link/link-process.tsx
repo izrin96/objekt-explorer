@@ -13,6 +13,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { Button, buttonStyles, Form, Link, Loader } from "../ui";
 import { msToCountdown } from "@/lib/utils";
+import { toast } from "sonner";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -173,6 +174,9 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
   const otpAndLink = api.cosmoLink.otpAndLink.useMutation({
     onSuccess: () => {
       setWait(true);
+    },
+    onError: ({ message }) => {
+      toast.error(message || "Error sending OTP");
     },
   });
 

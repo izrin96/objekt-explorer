@@ -12,7 +12,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { useProfile } from "@/hooks/use-profile";
+import { useProfile, useProfileAuthed } from "@/hooks/use-profile";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { GroupLabelRender } from "../collection/label-render";
 import {
@@ -26,6 +26,8 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
 import { authClient } from "@/lib/auth-client";
 import Filter from "./filter";
+import { api } from "@/lib/trpc/client";
+import { ObjektOverlay } from "../objekt/objekt-action";
 
 export default function ProfileObjektRender() {
   return (
@@ -48,7 +50,8 @@ export default function ProfileObjektRender() {
 
 function ProfileObjekt() {
   const { data: session } = authClient.useSession();
-  const { profile } = useProfile();
+  const isProfileAuthed = useProfileAuthed();
+  const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -59,7 +62,12 @@ function ProfileObjekt() {
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const objektsQuery = useQuery(collectionOptions);
-  const ownedQuery = useQuery(ownedCollectionOptions(profile.address));
+  const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
+  // todo: store state into context
+  const pinsQuery = api.pins.get.useQuery(profile!.address, {
+    refetchOnWindowFocus: false,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const objekts = useMemo(() => objektsQuery.data ?? [], [objektsQuery.data]);
   const ownedObjekts = useMemo(() => ownedQuery.data ?? [], [ownedQuery.data]);
@@ -111,8 +119,14 @@ function ProfileObjekt() {
                           showCount
                           showSerial={!filters.grouped}
                           isFade={!("serial" in objekt)}
-                          isPin={item.type === "pin"}
-                        />
+                        >
+                          <ObjektOverlay
+                            isPin={item.type === "pin"}
+                            profile={profile!}
+                            tokenId={objekt.id}
+                            isOwned={isProfileAuthed}
+                          />
+                        </ObjektView>
                       )}
                     </ObjektViewSelectable>
                   )}
@@ -123,7 +137,14 @@ function ProfileObjekt() {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, filters.grouped, columns, session]);
+  }, [
+    deferredObjektsFiltered,
+    filters.grouped,
+    columns,
+    session,
+    isProfileAuthed,
+    profile,
+  ]);
 
   const count = useMemo(
     () =>
@@ -139,8 +160,10 @@ function ProfileObjekt() {
   );
 
   useEffect(() => {
-    setObjektsFiltered(shapeObjekts(filters, joinedObjekts, artists, []));
-  }, [filters, joinedObjekts, artists]);
+    setObjektsFiltered(
+      shapeObjekts(filters, joinedObjekts, artists, pinsQuery.data)
+    );
+  }, [filters, joinedObjekts, artists, pinsQuery.data]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (

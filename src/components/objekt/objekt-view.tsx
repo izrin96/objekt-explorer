@@ -1,4 +1,4 @@
-import { CSSProperties, memo } from "react";
+import { CSSProperties, memo, PropsWithChildren } from "react";
 import NextImage from "next/image";
 import {
   getCollectionShortId,
@@ -10,9 +10,8 @@ import ObjektSidebar from "./objekt-sidebar";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
 import { Check } from "@phosphor-icons/react/dist/ssr";
-import { PushPin } from "@phosphor-icons/react/dist/ssr";
 
-type Props = {
+type Props = PropsWithChildren<{
   objekts: ValidObjekt[];
   isFade?: boolean;
   priority?: boolean;
@@ -22,8 +21,7 @@ type Props = {
   isSelected?: boolean;
   open: () => void;
   select?: () => void;
-  isPin?: boolean;
-};
+}>;
 
 export default memo(function ObjektView({
   priority = false,
@@ -32,9 +30,9 @@ export default memo(function ObjektView({
   showCount = false,
   showSerial = false,
   isSelected = false,
-  isPin = false,
   open,
   select,
+  children,
   ...props
 }: Props) {
   const objekts = props.objekts.toSorted(
@@ -79,35 +77,25 @@ export default memo(function ObjektView({
             {objekts.length}
           </div>
         )}
+        {/* todo: move somewhere */}
         {select && (
-          <div
+          <Button
+            size="extra-small"
+            intent="plain"
             className={cn(
-              "group-hover:block hidden absolute top-0 right-0",
+              "group-hover:flex hidden absolute top-0 right-0 bg-bg/80 text-fg group/btn",
               isSelected && "block"
             )}
+            onClick={select}
           >
-            <Button
-              size="extra-small"
-              intent="plain"
-              className="bg-bg/80 text-fg group/btn"
-              onClick={select}
-            >
-              <Check size="16" weight="bold" />
-              <span
-                className={cn(
-                  "hidden text-xs font-semibold group-hover/btn:block text-nowrap"
-                )}
-              >
-                {isSelected ? "Unselect" : "Select"}
-              </span>
-            </Button>
-          </div>
+            <Check size="16" weight="bold" />
+            <span className="hidden text-xs font-semibold group-hover/btn:block text-nowrap">
+              {isSelected ? "Unselect" : "Select"}
+            </span>
+          </Button>
         )}
-        {isPin && (
-          <div className="absolute bottom-1 left-1 bg-bg/50 text-fg p-1.5 rounded-lg">
-            <PushPin weight="regular" size={12} />
-          </div>
-        )}
+
+        {children}
       </div>
       <div className="flex flex-col justify-center text-sm text-center items-center gap-1">
         <Badge

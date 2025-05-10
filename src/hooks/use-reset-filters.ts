@@ -19,6 +19,7 @@ export function useResetFilters() {
       group_dir: null,
       unowned: null,
       edition: null,
+      hidePin: null,
     });
   }
   return reset;

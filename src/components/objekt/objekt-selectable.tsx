@@ -8,7 +8,7 @@ export function ObjektViewSelectable({
   enableSelect,
   children,
 }: {
-  getId: () => string | number;
+  getId: () => string;
   openObjekts: () => void;
   enableSelect: boolean;
   children: ({

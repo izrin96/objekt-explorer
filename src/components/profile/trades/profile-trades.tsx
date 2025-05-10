@@ -10,7 +10,7 @@ import { ofetch } from "ofetch";
 import { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
 import { Badge, Card, Loader } from "@/components/ui";
-import { ObjektModalProvider, useObjektModal } from "@/hooks/use-objekt-modal";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProfile } from "@/hooks/use-profile";
 import { format } from "date-fns";
 import { IconOpenLink } from "@intentui/icons";
@@ -44,10 +44,10 @@ export default function ProfileTradesRender() {
 }
 
 function ProfileTrades() {
-  const { profile } = useProfile();
+  const profile = useProfile((a) => a.profile);
   const [filters] = useFilters();
   const [type] = useTypeFilter();
-  const address = profile.address;
+  const address = profile!.address;
   const query = useInfiniteQuery({
     queryKey: ["transfers", address, type, filters],
     queryFn: async ({ pageParam = 0 }: { pageParam?: string | number }) => {

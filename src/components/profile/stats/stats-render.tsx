@@ -35,11 +35,13 @@ export default function ProfileStatsRender() {
 }
 
 function ProfileStats() {
-  const { profile } = useProfile();
+  const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const { data, isLoading } = useQuery(ownedCollectionOptions(profile.address));
+  const { data, isLoading } = useQuery(
+    ownedCollectionOptions(profile!.address)
+  );
 
   const objekts = useMemo(
     () => filterObjekts(filters, data ?? []),

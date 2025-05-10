@@ -1,30 +1,68 @@
 "use client";
 
+import { PinObjekt } from "@/lib/universal/objekts";
 import { PublicProfile } from "@/lib/universal/user";
-import { PropsWithChildren, createContext, useContext } from "react";
+import { PropsWithChildren, createContext, useContext, useRef } from "react";
+import { createStore, StoreApi, useStore } from "zustand";
 
-type ContextProps = {
-  profile: PublicProfile;
+type ProfileProps = {
+  profile: PublicProfile | undefined;
+  pins: PinObjekt[];
+  userProfiles: PublicProfile[];
 };
 
-const ProfileContext = createContext<ContextProps>({} as ContextProps);
-
-type ProviderProps = PropsWithChildren<{
-  profile: PublicProfile;
-}>;
-
-export function ProfileProvider({ children, profile }: ProviderProps) {
-  return (
-    <ProfileContext
-      value={{
-        profile,
-      }}
-    >
-      {children}
-    </ProfileContext>
-  );
+interface ProfileState extends ProfileProps {
+  addPin: (pin: PinObjekt) => void;
+  removePin: (tokenId: string) => void;
 }
 
-export function useProfile() {
-  return useContext(ProfileContext);
+const ProfileContext = createContext<StoreApi<ProfileState> | null>(null);
+
+type ProviderProps = PropsWithChildren<Partial<ProfileProps>>;
+
+const createProfileStore = (initial: Partial<ProfileProps>) => {
+  const DEFAULT_PROPS: ProfileProps = {
+    profile: undefined,
+    pins: [],
+    userProfiles: [],
+  };
+
+  return createStore<ProfileState>()((set, get) => ({
+    ...DEFAULT_PROPS,
+    ...initial,
+    addPin: (pin: PinObjekt) =>
+      set((state) => ({
+        ...state,
+        pins: [pin, ...state.pins],
+      })),
+    removePin: (tokenId: string) =>
+      set((state) => ({
+        ...state,
+        pins: state.pins.filter((p) => p.tokenId !== tokenId),
+      })),
+  }));
+};
+
+export function ProfileProvider({ children, ...props }: ProviderProps) {
+  const storeRef = useRef<StoreApi<ProfileState> | null>(null);
+  if (!storeRef.current) {
+    storeRef.current = createProfileStore(props);
+  }
+  return <ProfileContext value={storeRef.current}>{children}</ProfileContext>;
+}
+
+export function useProfile<SelectorOutput>(
+  selector: (state: ProfileState) => SelectorOutput
+) {
+  const store = useContext(ProfileContext);
+  if (!store) {
+    throw new Error("useProfile must be used within an ProfileContext");
+  }
+  return useStore(store, selector);
+}
+
+export function useProfileAuthed() {
+  return useProfile((state) =>
+    state.userProfiles.some((a) => a.address === state.profile?.address)
+  );
 }

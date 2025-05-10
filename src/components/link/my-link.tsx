@@ -16,6 +16,7 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-boundary";
 import { IconDotsVertical } from "@intentui/icons";
+import { toast } from "sonner";
 
 export default function MyLinkRender() {
   return (
@@ -106,6 +107,9 @@ function RemoveLink({
     onSuccess: () => {
       setOpen(false);
       utils.cosmoLink.myLink.invalidate();
+    },
+    onError: () => {
+      toast.error("Error unlink cosmo");
     },
   });
   return (
