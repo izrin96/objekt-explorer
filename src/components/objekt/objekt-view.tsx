@@ -73,7 +73,7 @@ export default memo(function ObjektView({
           />
         )}
         {showCount && objekts.length > 1 && (
-          <div className="flex absolute bottom-2 left-2 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
+          <div className="flex absolute bottom-1 left-1 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
             {objekts.length}
           </div>
         )}
