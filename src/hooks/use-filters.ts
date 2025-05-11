@@ -61,27 +61,6 @@ export function useFilters() {
   });
 }
 
-export function withDefault(filters: Filters) {
-  return {
-    member: filters,
-    artist: filters.artist,
-    sort: filters.sort ?? "date",
-    class: filters.class,
-    season: filters.season,
-    on_offline: filters.on_offline,
-    transferable: filters.transferable ?? false,
-    search: filters.search ?? "",
-    grouped: filters.grouped ?? false,
-    group_by: filters.group_by,
-    group_bys: filters.group_bys,
-    sort_dir: filters.sort_dir ?? "desc",
-    group_dir: filters.group_dir ?? "desc",
-    unowned: filters.unowned ?? false,
-    edition: filters.edition,
-    hidePin: filters.hidePin ?? false,
-  };
-}
-
 export type Filters = ReturnType<typeof useFilters>[0];
 
 export function checkFiltering(filters: Filters) {

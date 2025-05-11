@@ -74,9 +74,3 @@ export type ValidGroupBy = (typeof validGroupBy)[number];
 // online types
 export const validOnlineTypes = ["online", "offline"] as const;
 export type ValidOnlineType = (typeof validOnlineTypes)[number];
-
-// artist valid classes
-export const artistValidClasses: Record<string, string[]> = {
-  default: [...validClasses],
-  idntt: ["Basic", "Event", "Special", "ETC"],
-} as const;

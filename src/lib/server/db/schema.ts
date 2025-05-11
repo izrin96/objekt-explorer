@@ -107,7 +107,7 @@ export const pinsRelations = relations(pins, ({ one }) => ({
 }));
 
 export type AccessToken = typeof accessToken.$inferSelect;
-export type UserAdress = typeof userAddress.$inferSelect;
+export type UserAddress = typeof userAddress.$inferSelect;
 export type Pin = typeof pins.$inferSelect;
 
 export type User = typeof user.$inferSelect;

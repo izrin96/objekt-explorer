@@ -36,7 +36,7 @@ export function ObjektOverlay({
   );
 }
 
-export function TogglePin({
+function TogglePin({
   profile,
   isPin,
   tokenId,

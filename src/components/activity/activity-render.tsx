@@ -5,7 +5,7 @@ import { Card } from "../ui";
 import { Leaf, Send, Disc3, RadioTowerIcon } from "lucide-react";
 import { Collection, Objekt, Transfer } from "@/lib/server/db/indexer/schema";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
-import { UserAdress } from "@/lib/server/db/schema";
+import { UserAddress } from "@/lib/server/db/schema";
 import UserLink from "../user-link";
 import { format } from "date-fns";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
@@ -31,7 +31,7 @@ export default function ActivityRender() {
 type Data = Transfer & {
   objekt: Objekt;
   collection: Collection;
-  nicknames: UserAdress[];
+  nicknames: UserAddress[];
 };
 type EventData = { type: string; data: Data };
 

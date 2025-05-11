@@ -38,7 +38,7 @@ export default function MyListRender() {
   );
 }
 
-export function MyList() {
+function MyList() {
   const [lists] = api.list.myList.useSuspenseQuery();
 
   return (

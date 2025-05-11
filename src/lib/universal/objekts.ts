@@ -49,7 +49,7 @@ export function overrideColor(objekt: ValidObjekt) {
   };
 }
 
-export const overrideAccents: Record<string, string> = {
+const overrideAccents: Record<string, string> = {
   "divine01-seoyeon-117z": "#B400FF",
   "divine01-seoyeon-118z": "#B400FF",
   "divine01-seoyeon-119z": "#B400FF",
@@ -63,7 +63,7 @@ export const overrideAccents: Record<string, string> = {
   "atom01-hyerin-302z": "#D300BB",
 };
 
-export const overrideFonts: Record<string, string> = {
+const overrideFonts: Record<string, string> = {
   "atom01-heejin-322z": "#FFFFFF",
   "atom01-heejin-323z": "#FFFFFF",
   "atom01-heejin-324z": "#FFFFFF",
