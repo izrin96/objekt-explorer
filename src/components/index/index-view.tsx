@@ -24,13 +24,15 @@ import { SelectMode } from "../filters/select-mode";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
-import { authClient } from "@/lib/auth-client";
 import Filter from "./filter";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { FilterSheet } from "../filters/filter-sheet";
 import { FilterContainer } from "../filters/filter-container";
+import { User } from "better-auth";
 
-export default function IndexRender() {
+type Props = { user?: User };
+
+export default function IndexRender(props: Props) {
   return (
     <ObjektSelectProvider>
       <ObjektTabProvider initialTab="trades">
@@ -40,7 +42,7 @@ export default function IndexRender() {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <IndexView />
+              <IndexView {...props} />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -49,8 +51,7 @@ export default function IndexRender() {
   );
 }
 
-function IndexView() {
-  const { data: session } = authClient.useSession();
+function IndexView(props: Props) {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -64,7 +65,9 @@ function IndexView() {
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, items]) => [
-      !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
+      ...(title
+        ? [<GroupLabelRender title={title} key={`label-${title}`} />]
+        : []),
       ...ObjektsRender({
         items,
         columns,
@@ -83,7 +86,7 @@ function IndexView() {
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={!!session}
+                      enableSelect={props.user !== undefined}
                     >
                       {({ isSelected, open, select }) => (
                         <ObjektView
@@ -103,7 +106,7 @@ function IndexView() {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, session]);
+  }, [deferredObjektsFiltered, columns, props.user]);
 
   useEffect(() => {
     const shaped = shapeObjekts(filters, objekts, artists);
@@ -116,10 +119,10 @@ function IndexView() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters session={!!session} />
+          <Filters {...props} />
         </FilterContainer>
         <FilterSheet>
-          <Filters session={!!session} />
+          <Filters {...props} />
         </FilterSheet>
       </div>
       <span className="font-semibold">{count} total</span>
@@ -129,11 +132,11 @@ function IndexView() {
   );
 }
 
-function Filters({ session }: { session: boolean }) {
+function Filters(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {session && <SelectMode state="add" />}
+      {props.user !== undefined && <SelectMode state="add" />}
     </div>
   );
 }

@@ -9,7 +9,6 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BreakpointColumnProvider } from "@/hooks/use-breakpoint-column";
 import { Toast } from "./ui";
 import ThemeTexture from "./theme-texture";
-import { authClient } from "@/lib/auth-client";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -34,14 +33,4 @@ export default function ClientProviders({ children }: PropsWithChildren) {
       </ThemeProvider>
     </RouterProvider>
   );
-}
-
-// lazy solution for temporary fix hydration
-// will find better solution
-export function WaitForAuth({ children }: { children: React.ReactNode }) {
-  const { isPending } = authClient.useSession();
-
-  if (isPending) return;
-
-  return children;
 }

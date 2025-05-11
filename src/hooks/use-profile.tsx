@@ -8,7 +8,6 @@ import { createStore, StoreApi, useStore } from "zustand";
 type ProfileProps = {
   profile: PublicProfile | undefined;
   pins: PinObjekt[];
-  userProfiles: PublicProfile[];
 };
 
 interface ProfileState extends ProfileProps {
@@ -24,7 +23,6 @@ const createProfileStore = (initial: Partial<ProfileProps>) => {
   const DEFAULT_PROPS: ProfileProps = {
     profile: undefined,
     pins: [],
-    userProfiles: [],
   };
 
   return createStore<ProfileState>()((set, get) => ({
@@ -59,10 +57,4 @@ export function useProfile<SelectorOutput>(
     throw new Error("useProfile must be used within an ProfileContext");
   }
   return useStore(store, selector);
-}
-
-export function useProfileAuthed() {
-  return useProfile((state) =>
-    state.userProfiles.some((a) => a.address === state.profile?.address)
-  );
 }

@@ -18,22 +18,7 @@ import { CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
 
 export const listRouter = createTRPCRouter({
   get: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
-    const result = await db.query.lists.findFirst({
-      columns: {
-        name: true,
-      },
-      with: {
-        user: {
-          columns: {
-            id: true,
-            name: true,
-            image: true,
-            username: true,
-          },
-        },
-      },
-      where: (lists, { eq }) => eq(lists.slug, slug),
-    });
+    const result = await fetchList(slug);
 
     if (!result) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -302,6 +287,26 @@ export type CollectionFormat = Pick<
   Collection,
   "slug" | "member" | "season" | "collectionNo"
 >;
+
+export async function fetchList(slug: string) {
+  const result = await db.query.lists.findFirst({
+    columns: {
+      name: true,
+    },
+    with: {
+      user: {
+        columns: {
+          id: true,
+          name: true,
+          image: true,
+          username: true,
+        },
+      },
+    },
+    where: (lists, { eq }) => eq(lists.slug, slug),
+  });
+  return result;
+}
 
 function mapCollectionByMember(
   collectionMap: Map<string, CollectionFormat>,

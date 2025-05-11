@@ -1,12 +1,12 @@
 import ListRender from "@/components/list/list-view";
 import { Avatar } from "@/components/ui";
 import { api, HydrateClient } from "@/lib/trpc/server";
-import { TRPCError } from "@trpc/server";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
 import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
 import { cachedSession } from "@/lib/server/auth";
+import { fetchList } from "@/lib/server/api/routers/list";
 
 type Props = {
   params: Promise<{
@@ -22,25 +22,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-async function fetchData(params: Awaited<Props["params"]>) {
-  try {
-    return await api.list.get(params.slug);
-  } catch (err) {
-    if (err instanceof TRPCError && err.code == "NOT_FOUND") {
-      // todo: maybe trpc not a good idea for rsc
-      // or back to classic /api route
-      notFound();
-    }
-    throw new Error();
-  }
-}
-
 export default async function Page(props: Props) {
   const params = await props.params;
-  const session = await cachedSession();
 
-  const data = await fetchData(params);
+  const data = await fetchList(params.slug);
+  if (!data) notFound();
+
   const { user, name } = data;
+  const session = await cachedSession();
 
   api.list.getEntries.prefetch(params.slug);
 
@@ -65,10 +54,7 @@ export default async function Page(props: Props) {
       </div>
 
       <HydrateClient>
-        <ListRender
-          slug={params.slug}
-          isOwned={(session && session.user.id === user.id) ?? false}
-        />
+        <ListRender slug={params.slug} isOwned={session?.user.id === user.id} />
       </HydrateClient>
     </div>
   );

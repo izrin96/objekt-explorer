@@ -62,7 +62,9 @@ function ListView({ slug, isOwned }: Props) {
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, items]) => [
-      !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
+      ...(title
+        ? [<GroupLabelRender title={title} key={`label-${title}`} />]
+        : []),
       ...ObjektsRender({
         items,
         columns,

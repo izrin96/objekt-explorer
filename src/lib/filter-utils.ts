@@ -370,7 +370,7 @@ export function shapeObjekts<T extends ValidObjekt>(
     let items: ObjektItem<T[]>[] = sortedDuplicateObjekts.map((objekts) => {
       const [objekt] = objekts;
       const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
-      const isPinned = !!pinObjekt;
+      const isPinned = pinObjekt !== undefined;
       return {
         type: isPinned ? "pin" : "item",
         item: objekts,

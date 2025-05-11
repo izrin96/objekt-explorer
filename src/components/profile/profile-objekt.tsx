@@ -12,7 +12,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { useProfile, useProfileAuthed } from "@/hooks/use-profile";
+import { useProfile } from "@/hooks/use-profile";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { GroupLabelRender } from "../collection/label-render";
 import {
@@ -30,6 +30,7 @@ import { api } from "@/lib/trpc/client";
 import { ObjektOverlay } from "../objekt/objekt-action";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
+import { useProfileAuthed } from "@/hooks/use-user";
 
 export default function ProfileObjektRender() {
   return (
@@ -51,7 +52,7 @@ export default function ProfileObjektRender() {
 }
 
 function ProfileObjekt() {
-  const { data: session } = authClient.useSession();
+  const session = authClient.useSession();
   const isProfileAuthed = useProfileAuthed();
   const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();
@@ -87,7 +88,9 @@ function ProfileObjekt() {
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, items]) => [
-      !!title && <GroupLabelRender title={title} key={`label-${title}`} />,
+      ...(title
+        ? [<GroupLabelRender title={title} key={`label-${title}`} />]
+        : []),
       ...ObjektsRender({
         items,
         columns,
@@ -110,7 +113,7 @@ function ProfileObjekt() {
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={!!session}
+                      enableSelect={session.data !== null}
                     >
                       {({ isSelected, open, select }) => (
                         <ObjektView
@@ -145,7 +148,7 @@ function ProfileObjekt() {
     deferredObjektsFiltered,
     filters.grouped,
     columns,
-    session,
+    session.data,
     isProfileAuthed,
     profile,
   ]);
@@ -175,10 +178,10 @@ function ProfileObjekt() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters session={!!session} />
+          <Filters />
         </FilterContainer>
         <FilterSheet>
-          <Filters session={!!session} />
+          <Filters />
         </FilterSheet>
       </div>
       <span className="font-semibold">
@@ -191,11 +194,12 @@ function ProfileObjekt() {
   );
 }
 
-function Filters({ session }: { session: boolean }) {
+function Filters() {
+  const session = authClient.useSession();
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {session && <SelectMode state="add" />}
+      {session.data && <SelectMode state="add" />}
     </div>
   );
 }

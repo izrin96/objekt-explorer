@@ -14,3 +14,14 @@ export async function fetchKnownAddresses(addresses: string[]) {
     );
   return result;
 }
+
+export async function fetchUserProfiles(id: string) {
+  const result = await db.query.userAddress.findMany({
+    columns: {
+      address: true,
+      nickname: true,
+    },
+    where: (t, { eq }) => eq(t.userId, id),
+  });
+  return result;
+}

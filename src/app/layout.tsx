@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
-import ClientProviders, { WaitForAuth } from "@/components/client-providers";
+import ClientProviders from "@/components/client-providers";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import { Analytics } from "@/components/analytics";
@@ -76,7 +76,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
             <div className="relative flex flex-col">
               <Navbar />
               <main className="flex min-w-full flex-col items-center">
-                <WaitForAuth>{children}</WaitForAuth>
+                {children}
               </main>
             </div>
             <Analytics />
