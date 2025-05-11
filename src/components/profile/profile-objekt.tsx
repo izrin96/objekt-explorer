@@ -55,6 +55,8 @@ function ProfileObjekt() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
+  const [count, setCount] = useState(0);
+  const [groupCount, setGroupCount] = useState(0);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, ObjektItem<ValidObjekt[]>[]][]
@@ -146,23 +148,18 @@ function ProfileObjekt() {
     profile,
   ]);
 
-  const count = useMemo(
-    () =>
-      deferredObjektsFiltered
-        .flatMap(([, objekts]) => objekts)
-        .flatMap((item) => item).length,
-    [deferredObjektsFiltered]
-  );
-
-  const groupedCount = useMemo(
-    () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
-    [deferredObjektsFiltered]
-  );
-
   useEffect(() => {
-    setObjektsFiltered(
-      shapeObjekts(filters, joinedObjekts, artists, pinsQuery.data)
+    const shaped = shapeObjekts(
+      filters,
+      joinedObjekts,
+      artists,
+      pinsQuery.data
     );
+    const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
+    const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
+    setGroupCount(allGroupedObjekts.length);
+    setCount(allObjekts.length);
+    setObjektsFiltered(shaped);
   }, [filters, joinedObjekts, artists, pinsQuery.data]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
@@ -180,7 +177,7 @@ function ProfileObjekt() {
       </div>
       <span className="font-semibold">
         {count} total
-        {filters.grouped ? ` (${groupedCount} types)` : undefined}
+        {filters.grouped ? ` (${groupCount} types)` : undefined}
       </span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>

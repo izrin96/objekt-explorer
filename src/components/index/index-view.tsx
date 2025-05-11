@@ -52,6 +52,7 @@ function IndexView() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
+  const [count, setCount] = useState(0);
   const { data: objekts } = useSuspenseQuery(collectionOptions);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
@@ -102,13 +103,11 @@ function IndexView() {
     ]);
   }, [deferredObjektsFiltered, columns, session]);
 
-  const count = useMemo(
-    () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
-    [deferredObjektsFiltered]
-  );
-
   useEffect(() => {
-    setObjektsFiltered(shapeObjekts(filters, objekts, artists));
+    const shaped = shapeObjekts(filters, objekts, artists);
+    const allObjekts = shaped.flatMap(([, objekts]) => objekts);
+    setCount(allObjekts.length);
+    setObjektsFiltered(shaped);
   }, [filters, objekts, artists]);
 
   return (

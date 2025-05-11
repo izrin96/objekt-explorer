@@ -49,6 +49,8 @@ function ListView({ slug, isOwned }: Props) {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
+  const [count, setCount] = useState(0);
+  const [groupCount, setGroupCount] = useState(0);
   const [{ collections: objekts }] = api.list.getEntries.useSuspenseQuery(slug);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
@@ -100,13 +102,13 @@ function ListView({ slug, isOwned }: Props) {
     ]);
   }, [deferredObjektsFiltered, columns, isOwned]);
 
-  const count = useMemo(
-    () => deferredObjektsFiltered.flatMap(([, objekts]) => objekts).length,
-    [deferredObjektsFiltered]
-  );
-
   useEffect(() => {
-    setObjektsFiltered(shapeObjekts(filters, objekts, artists));
+    const shaped = shapeObjekts(filters, objekts, artists);
+    const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
+    const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
+    setGroupCount(allGroupedObjekts.length);
+    setCount(allObjekts.length);
+    setObjektsFiltered(shaped);
   }, [filters, objekts, artists]);
 
   return (
@@ -115,7 +117,10 @@ function ListView({ slug, isOwned }: Props) {
         <Filter />
         {isOwned && <SelectMode state="remove" slug={slug} />}
       </div>
-      <span className="font-semibold">{count} total</span>
+      <span className="font-semibold">
+        {count} total
+        {filters.grouped ? ` (${groupCount} types)` : undefined}
+      </span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>
     </div>
