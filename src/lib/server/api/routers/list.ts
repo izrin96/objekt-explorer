@@ -106,6 +106,8 @@ export const listRouter = createTRPCRouter({
         const list = await findOwnedList(slug, user.id);
 
         if (skipDups) {
+          const uniqueCollectionSlugs = Array.from(new Set(collectionSlugs));
+
           // get all slug that already inserted
           const entries = await db
             .selectDistinct({
@@ -115,7 +117,7 @@ export const listRouter = createTRPCRouter({
             .where(eq(listEntries.listId, list.id));
 
           const existingSlugs = new Set(entries.map((a) => a.slug));
-          const filtered = collectionSlugs.filter(
+          const filtered = uniqueCollectionSlugs.filter(
             (slug) => !existingSlugs.has(slug)
           );
 

@@ -81,7 +81,7 @@ function IndexView() {
                 <ObjektModalProvider key={objekt.id} objekts={item.item}>
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
-                      getId={() => objekt.slug}
+                      objekt={objekt}
                       openObjekts={openObjekts}
                       enableSelect={!!session}
                     >

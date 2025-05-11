@@ -4,17 +4,14 @@ import { PropsWithChildren, createContext, useContext, useRef } from "react";
 import { createStore, useStore, type StoreApi } from "zustand";
 import { ValidObjekt } from "@/lib/universal/objekts";
 
-type Id = ValidObjekt["id"];
-
 type ObjektSelectedState = {
   mode: boolean;
   toggleMode: () => void;
-  selected: Id[];
-  select: (id: Id) => void;
-  isSelected: (id: Id) => boolean;
-  hasSelected: (ids: Id[]) => boolean;
+  selected: ValidObjekt[];
+  select: (selected: ValidObjekt) => void;
+  isSelected: (selected: ValidObjekt) => boolean;
   reset: () => void;
-  remove: (id: Id) => void;
+  remove: (selected: ValidObjekt) => void;
 };
 
 const createObjektSelectStore = () =>
@@ -29,27 +26,25 @@ const createObjektSelectStore = () =>
 
     selected: [],
 
-    select: (id) =>
+    select: (selected) =>
       set((state) => {
-        const exists = state.selected.includes(id);
+        const exists = state.selected.some((a) => a.id === selected.id);
         return {
           ...state,
           selected: exists
-            ? state.selected.filter((a) => a !== id)
-            : [...state.selected, id],
+            ? state.selected.filter((a) => a.id !== selected.id)
+            : [...state.selected, selected],
         };
       }),
 
-    isSelected: (id) => get().selected.includes(id),
-
-    hasSelected: (ids) => get().selected.some((id) => ids.includes(id)),
+    isSelected: (selected) => get().selected.some((a) => a.id === selected.id),
 
     reset: () => set((state) => ({ ...state, selected: [] })),
 
-    remove: (id) =>
+    remove: (selected) =>
       set((state) => ({
         ...state,
-        selected: state.selected.filter((a) => a !== id),
+        selected: state.selected.filter((a) => a.id !== selected.id),
       })),
   }));
 

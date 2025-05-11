@@ -96,7 +96,7 @@ function AddToList({ onClick }: { onClick: (open: () => void) => void }) {
             addToList.mutate({
               slug: formData.get("slug") as string,
               skipDups: formData.get("skipDups") === "on",
-              collectionSlugs: selected as string[],
+              collectionSlugs: selected.map((a) => a.slug),
             });
           }}
         >
@@ -204,7 +204,7 @@ function RemoveFromList({
             e.preventDefault();
             removeObjektsFromList.mutate({
               slug: slug.toString(),
-              ids: selected.map((a) => Number(a)),
+              ids: selected.map((a) => Number(a.id)),
             });
           }}
         >

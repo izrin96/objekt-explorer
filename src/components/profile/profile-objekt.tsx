@@ -108,7 +108,7 @@ function ProfileObjekt() {
                 >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
-                      getId={() => objekt.slug}
+                      objekt={objekt}
                       openObjekts={openObjekts}
                       enableSelect={!!session}
                     >

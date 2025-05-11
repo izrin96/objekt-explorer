@@ -1,14 +1,15 @@
 "use client";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { ValidObjekt } from "@/lib/universal/objekts";
 
 export function ObjektViewSelectable({
-  getId,
+  objekt,
   openObjekts,
   enableSelect,
   children,
 }: {
-  getId: () => string;
+  objekt: ValidObjekt;
   openObjekts: () => void;
   enableSelect: boolean;
   children: ({
@@ -22,17 +23,17 @@ export function ObjektViewSelectable({
 }) {
   const mode = useObjektSelect((a) => a.mode);
   const objektSelect = useObjektSelect((a) => a.select);
-  const isSelected = useObjektSelect((state) => state.isSelected(getId()));
+  const isSelected = useObjektSelect((state) => state.isSelected(objekt));
 
   return children({
     isSelected,
     open: () => {
       if (mode && enableSelect) {
-        objektSelect(getId());
+        objektSelect(objekt);
       } else {
         openObjekts();
       }
     },
-    select: enableSelect ? () => objektSelect(getId()) : undefined,
+    select: enableSelect ? () => objektSelect(objekt) : undefined,
   });
 }

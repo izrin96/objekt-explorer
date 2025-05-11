@@ -79,7 +79,7 @@ function ListView({ slug, isOwned }: Props) {
                 <ObjektModalProvider key={objekt.id} objekts={item.item}>
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
-                      getId={() => objekt.id}
+                      objekt={objekt}
                       openObjekts={openObjekts}
                       enableSelect={isOwned}
                     >
