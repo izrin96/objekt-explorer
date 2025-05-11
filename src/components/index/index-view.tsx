@@ -27,6 +27,8 @@ import ObjektView from "../objekt/objekt-view";
 import { authClient } from "@/lib/auth-client";
 import Filter from "./filter";
 import { ValidObjekt } from "@/lib/universal/objekts";
+import { FilterSheet } from "../filters/filter-sheet";
+import { FilterContainer } from "../filters/filter-container";
 
 export default function IndexRender() {
   return (
@@ -113,12 +115,25 @@ function IndexView() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        <Filter />
-        {session && <SelectMode state="add" />}
+        <FilterContainer>
+          <Filters session={!!session} />
+        </FilterContainer>
+        <FilterSheet>
+          <Filters session={!!session} />
+        </FilterSheet>
       </div>
       <span className="font-semibold">{count} total</span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>
+    </div>
+  );
+}
+
+function Filters({ session }: { session: boolean }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <Filter />
+      {session && <SelectMode state="add" />}
     </div>
   );
 }

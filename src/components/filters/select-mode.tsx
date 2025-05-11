@@ -43,9 +43,8 @@ export function SelectMode({
   );
 
   return (
-    <div className="flex gap-2 items-center">
+    <div className="flex flex-wrap gap-2 items-center">
       <Button
-        size="small"
         className={mode ? "!inset-ring-primary" : ""}
         intent="outline"
         onClick={toggleMode}
@@ -54,7 +53,7 @@ export function SelectMode({
       </Button>
 
       {mode && (
-        <Button intent="outline" size="small" onClick={reset}>
+        <Button intent="outline" onClick={reset}>
           Reset
         </Button>
       )}
@@ -86,11 +85,7 @@ function AddToList({ onClick }: { onClick: (open: () => void) => void }) {
   });
   return (
     <>
-      <Button
-        intent="outline"
-        size="small"
-        onClick={() => onClick(() => setOpen(true))}
-      >
+      <Button intent="outline" onClick={() => onClick(() => setOpen(true))}>
         Add to list
       </Button>
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
@@ -200,11 +195,7 @@ function RemoveFromList({
   });
   return (
     <>
-      <Button
-        intent="outline"
-        size="small"
-        onClick={() => onClick(() => setOpen(true))}
-      >
+      <Button intent="outline" onClick={() => onClick(() => setOpen(true))}>
         Remove from list
       </Button>
       <Modal.Content isOpen={open} onOpenChange={setOpen}>

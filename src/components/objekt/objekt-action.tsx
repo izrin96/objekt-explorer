@@ -1,6 +1,10 @@
 "use client";
 
-import { PushPin, PushPinSimple } from "@phosphor-icons/react/dist/ssr";
+import {
+  PushPin,
+  PushPinSimple,
+  PushPinSimpleSlash,
+} from "@phosphor-icons/react/dist/ssr";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { PublicProfile } from "@/lib/universal/user";
@@ -63,8 +67,7 @@ export function TogglePin({
       size="extra-small"
       intent="plain"
       className={cn(
-        "bg-bg/80 text-fg group group-hover:flex hidden absolute top-0 left-0",
-        isPin && "block"
+        "bg-bg/80 text-fg group group-hover:flex hidden absolute top-0 left-0"
       )}
       onClick={() => {
         if (isPin) {
@@ -84,6 +87,8 @@ export function TogglePin({
       <span className="text-xs font-semibold text-nowrap">
         {pin.isPending || unpin.isPending ? (
           <Loader variant="ring" />
+        ) : isPin ? (
+          <PushPinSimpleSlash size={16} />
         ) : (
           <PushPinSimple size={16} />
         )}

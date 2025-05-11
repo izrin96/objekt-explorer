@@ -28,6 +28,8 @@ import { authClient } from "@/lib/auth-client";
 import Filter from "./filter";
 import { api } from "@/lib/trpc/client";
 import { ObjektOverlay } from "../objekt/objekt-action";
+import { FilterContainer } from "../filters/filter-container";
+import { FilterSheet } from "../filters/filter-sheet";
 
 export default function ProfileObjektRender() {
   return (
@@ -171,9 +173,13 @@ function ProfileObjekt() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-4">
-        <Filter />
-        {session && <SelectMode state="add" />}
+      <div className="flex flex-col gap-6">
+        <FilterContainer>
+          <Filters session={!!session} />
+        </FilterContainer>
+        <FilterSheet>
+          <Filters session={!!session} />
+        </FilterSheet>
       </div>
       <span className="font-semibold">
         {count} total
@@ -181,6 +187,15 @@ function ProfileObjekt() {
       </span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>
+    </div>
+  );
+}
+
+function Filters({ session }: { session: boolean }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <Filter />
+      {session && <SelectMode state="add" />}
     </div>
   );
 }

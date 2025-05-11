@@ -23,6 +23,8 @@ import { SelectMode } from "../filters/select-mode";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
+import { FilterContainer } from "../filters/filter-container";
+import { FilterSheet } from "../filters/filter-sheet";
 
 type Props = { slug: string; isOwned: boolean };
 
@@ -114,8 +116,12 @@ function ListView({ slug, isOwned }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        <Filter />
-        {isOwned && <SelectMode state="remove" slug={slug} />}
+        <FilterContainer>
+          <Filters isOwned={isOwned} slug={slug} />
+        </FilterContainer>
+        <FilterSheet>
+          <Filters isOwned={isOwned} slug={slug} />
+        </FilterSheet>
       </div>
       <span className="font-semibold">
         {count} total
@@ -123,6 +129,15 @@ function ListView({ slug, isOwned }: Props) {
       </span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>
+    </div>
+  );
+}
+
+function Filters({ isOwned, slug }: { isOwned: boolean; slug: string }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <Filter />
+      {isOwned && <SelectMode state="remove" slug={slug} />}
     </div>
   );
 }
