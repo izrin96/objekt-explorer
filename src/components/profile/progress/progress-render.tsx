@@ -1,12 +1,12 @@
 "use client";
 
 import ObjektView from "@/components/objekt/objekt-view";
-import { useFilters } from "@/hooks/use-filters";
+import { checkFiltering, useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
-import React, { memo, useEffect, useMemo, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -41,6 +41,7 @@ function Progress() {
   const { artists } = useCosmoArtist();
   const profile = useProfile((a) => a.profile);
   const [filters, setFilters] = useFilters();
+  const first = useRef(false);
 
   const objektsQuery = useQuery(collectionOptions);
   const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
@@ -64,7 +65,12 @@ function Progress() {
   );
 
   useEffect(() => {
-    if (filters.member || !ownedObjekts.length) return;
+    if (first.current || !ownedObjekts.length) return;
+
+    first.current = true;
+
+    const isFiltering = checkFiltering(filters);
+    if (isFiltering) return;
 
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
     const grouped = Object.values(groupBy(ownedObjekts, (a) => a.collectionId));
