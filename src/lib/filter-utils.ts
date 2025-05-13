@@ -6,60 +6,20 @@ import {
   ValidSeason,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import { PinObjekt, ValidObjekt } from "./universal/objekts";
+import {
+  makeCollectionTags,
+  PinObjekt,
+  ValidObjekt,
+} from "./universal/objekts";
 import { groupBy } from "es-toolkit";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { getEdition } from "./utils";
-
-const shortformMembers: Record<string, string> = {
-  naky: "NaKyoung",
-  n: "Nien",
-  nk: "NaKyoung",
-  tone: "Kotone",
-  sulin: "Sullin",
-  s: "Sullin",
-  sh: "SoHyun",
-  c: "Choerry",
-  ch: "Choerry",
-  choery: "Choerry",
-  cw: "ChaeWon",
-  cy: "ChaeYeon",
-  sy: "SeoYeon",
-  sm: "SooMin",
-  so: "ShiOn",
-  sa: "SeoAh",
-  sl: "Sullin",
-  jw: "JiWoo",
-  jb: "JooBin",
-  jy: "JiYeon",
-  js: "JinSoul",
-  dh: "DaHyun",
-  kd: "Kaede",
-  kl: "KimLip",
-  k: "Kaede",
-  hr: "HyeRin",
-  hy: "HaYeon",
-  hj: "HeeJin",
-  hs: "HaSeul",
-  yb: "YuBin",
-  yj: "YeonJi",
-  yy: "YooYeon",
-  x: "Xinyu",
-  m: "Mayu",
-  l: "Lynn",
-};
 
 export type ObjektItem<T> = {
   type: "pin" | "item";
   item: T;
   order: number | null;
 };
-
-function getMemberShortKeys(value: string) {
-  return Object.keys(shortformMembers).filter(
-    (key) => shortformMembers[key] === value
-  );
-}
 
 function parseCollectionNo(value: string) {
   const expression = /^([a-zA-Z]?)(\d{3})([azAZ]?)$/;
@@ -126,28 +86,9 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     );
   }
 
-  const seasonCode = objekt.season.charAt(0);
-  const seasonNumber = objekt.season.slice(-2);
-  const collectionNoSliced = objekt.collectionNo.slice(0, -1);
-  const seasonCollectionNo = seasonCode.repeat(parseInt(seasonNumber));
-
-  // todo: temporary, will improve with fuzzy search
-  const memberKeys = [
-    ...getMemberShortKeys(objekt.member),
-    `${seasonCollectionNo}${objekt.collectionNo}`, // a201z, aa201z
-    `${seasonCollectionNo}${collectionNoSliced}`, // a201, aa201
-    objekt.collectionNo, // 201z
-    collectionNoSliced, // 201
-    objekt.member,
-    objekt.artist,
-    objekt.class, // special
-    objekt.class.charAt(0) + "co", // sco
-    objekt.season, // atom01
-    seasonCode + seasonNumber, // a01
-    seasonCode + parseInt(seasonNumber), // a1
-    objekt.season.slice(0, -2), // atom
-  ];
-  return memberKeys.some((value) => value.toLowerCase() === keyword);
+  return makeCollectionTags(objekt).some(
+    (value) => value.toLowerCase() === keyword
+  );
 };
 
 const getSortDate = <T extends ValidObjekt>(obj: T) =>
@@ -310,10 +251,10 @@ export function shapeObjekts<T extends ValidObjekt>(
   // 2. group by key
   // 3. sort the group
   // 4. sort the items
-  // 5. sort pin objekt
-  // 6. group by duplicate
-  // 7. sort by duplicate
-  // 8. map to ObjektItem<T[]>
+  // 5. group by duplicate
+  // 6. sort by duplicate
+  // 7. map to ObjektItem<T[]>
+  // 8. sort pin objekt
 
   // filter objekts
   const fliteredObjekts = filterObjekts(filters, objekts);

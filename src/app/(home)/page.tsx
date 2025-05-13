@@ -11,7 +11,7 @@ export default async function Home() {
 
   const session = await cachedSession();
 
-  await queryClient.prefetchQuery(collectionOptions);
+  queryClient.prefetchQuery(collectionOptions);
 
   return (
     <div className="flex flex-col pb-8 pt-2">

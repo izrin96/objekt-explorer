@@ -15,7 +15,7 @@ export default function HidePinFilter() {
         })
       }
     >
-      Hide Pins
+      Disable Pin
     </Toggle>
   );
 }

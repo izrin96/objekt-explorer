@@ -26,6 +26,30 @@ export function getCollectionShortId(objekt: ValidObjekt) {
   }`;
 }
 
+export function makeCollectionTags(objekt: IndexedObjekt) {
+  // todo: serial support
+  const seasonCode = objekt.season.charAt(0);
+  const seasonNumber = objekt.season.slice(-2);
+  const seasonCodeRepeated = seasonCode.repeat(parseInt(seasonNumber));
+  const collectionNoSliced = objekt.collectionNo.slice(0, -1);
+
+  return [
+    ...getMemberShortKeys(objekt.member),
+    objekt.artist,
+    objekt.collectionNo, // 201z
+    `${seasonCodeRepeated}${objekt.collectionNo}`, // a201z, aa201z
+    `${seasonCodeRepeated}${collectionNoSliced}`, // a201, aa201
+    collectionNoSliced, // 201
+    objekt.member,
+    objekt.class, // special
+    objekt.class.charAt(0) + "co", // sco
+    objekt.season, // atom01
+    objekt.season.slice(0, -2), // atom
+    seasonCode + seasonNumber, // a01
+    seasonCode + parseInt(seasonNumber), // a1
+  ].map((a) => a.toLowerCase());
+}
+
 export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
   return {
     ...collection,
@@ -146,3 +170,47 @@ export const unobtainables = [
   "divine01-seoah-312z",
   "divine01-jiyeon-312z",
 ];
+
+const shortformMembers: Record<string, string> = {
+  naky: "NaKyoung",
+  n: "Nien",
+  nk: "NaKyoung",
+  tone: "Kotone",
+  sulin: "Sullin",
+  s: "Sullin",
+  sh: "SoHyun",
+  c: "Choerry",
+  ch: "Choerry",
+  choery: "Choerry",
+  cw: "ChaeWon",
+  cy: "ChaeYeon",
+  sy: "SeoYeon",
+  sm: "SooMin",
+  so: "ShiOn",
+  sa: "SeoAh",
+  sl: "Sullin",
+  jw: "JiWoo",
+  jb: "JooBin",
+  jy: "JiYeon",
+  js: "JinSoul",
+  dh: "DaHyun",
+  kd: "Kaede",
+  kl: "KimLip",
+  k: "Kaede",
+  hr: "HyeRin",
+  hy: "HaYeon",
+  hj: "HeeJin",
+  hs: "HaSeul",
+  yb: "YuBin",
+  yj: "YeonJi",
+  yy: "YooYeon",
+  x: "Xinyu",
+  m: "Mayu",
+  l: "Lynn",
+};
+
+export function getMemberShortKeys(value: string) {
+  return Object.keys(shortformMembers).filter(
+    (key) => shortformMembers[key] === value
+  );
+}
