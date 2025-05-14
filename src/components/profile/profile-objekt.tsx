@@ -74,17 +74,18 @@ function ProfileObjekt() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const objekts = useMemo(() => objektsQuery.data ?? [], [objektsQuery.data]);
-  const ownedObjekts = useMemo(() => ownedQuery.data ?? [], [ownedQuery.data]);
-
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
-      const ownedSlugs = new Set(ownedObjekts.map((obj) => obj.slug));
-      const missingObjekts = objekts.filter((obj) => !ownedSlugs.has(obj.slug));
-      return [...ownedObjekts, ...missingObjekts];
+      const ownedSlugs = new Set(
+        (ownedQuery.data ?? []).map((obj) => obj.slug)
+      );
+      const missingObjekts = (objektsQuery.data ?? []).filter(
+        (obj) => !ownedSlugs.has(obj.slug)
+      );
+      return [...(ownedQuery.data ?? []), ...missingObjekts];
     }
-    return ownedObjekts;
-  }, [ownedObjekts, filters.unowned, objekts]);
+    return ownedQuery.data ?? [];
+  }, [ownedQuery.data, filters.unowned, objektsQuery.data]);
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, items]) => [

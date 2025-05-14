@@ -56,7 +56,7 @@ function IndexView(props: Props) {
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
-  const { data: objekts } = useSuspenseQuery(collectionOptions);
+  const query = useSuspenseQuery(collectionOptions);
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, ObjektItem<ValidObjekt[]>[]][]
@@ -109,11 +109,11 @@ function IndexView(props: Props) {
   }, [deferredObjektsFiltered, columns, props.user]);
 
   useEffect(() => {
-    const shaped = shapeObjekts(filters, objekts, artists);
+    const shaped = shapeObjekts(filters, query.data, artists);
     const allObjekts = shaped.flatMap(([, objekts]) => objekts);
     setCount(allObjekts.length);
     setObjektsFiltered(shaped);
-  }, [filters, objekts, artists]);
+  }, [filters, query.data, artists]);
 
   return (
     <div className="flex flex-col gap-4">

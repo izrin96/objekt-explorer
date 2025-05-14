@@ -1,6 +1,6 @@
 "use client";
 
-import { ValidObjekt } from "@/lib/universal/objekts";
+import { mapObjektWithTag, ValidObjekt } from "@/lib/universal/objekts";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
@@ -53,7 +53,9 @@ function ListView({ slug, isOwned }: Props) {
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
-  const [{ collections: objekts }] = api.list.getEntries.useSuspenseQuery(slug);
+  const [objekts] = api.list.getEntries.useSuspenseQuery(slug, {
+    select: (data) => data.collections.map(mapObjektWithTag),
+  });
 
   const [objektsFiltered, setObjektsFiltered] = useState<
     [string, ObjektItem<ValidObjekt[]>[]][]

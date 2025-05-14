@@ -46,18 +46,17 @@ function Progress() {
   const objektsQuery = useQuery(collectionOptions);
   const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
 
-  const objekts = useMemo(() => objektsQuery.data ?? [], [objektsQuery.data]);
-  const ownedObjekts = useMemo(() => ownedQuery.data ?? [], [ownedQuery.data]);
-
   const ownedSlugs = useMemo(
-    () => new Set(ownedObjekts.map((obj) => obj.slug)),
-    [ownedObjekts]
+    () => new Set((ownedQuery.data ?? []).map((obj) => obj.slug)),
+    [ownedQuery.data]
   );
 
   const joinedObjekts = useMemo(() => {
-    const missingObjekts = objekts.filter((obj) => !ownedSlugs.has(obj.slug));
-    return [...ownedObjekts, ...missingObjekts];
-  }, [ownedObjekts, objekts, ownedSlugs]);
+    const missingObjekts = (objektsQuery.data ?? []).filter(
+      (obj) => !ownedSlugs.has(obj.slug)
+    );
+    return [...(ownedQuery.data ?? []), ...missingObjekts];
+  }, [ownedQuery.data, objektsQuery.data, ownedSlugs]);
 
   const shaped = useMemo(
     () => shapeProgressCollections(artists, filters, joinedObjekts),
@@ -65,7 +64,7 @@ function Progress() {
   );
 
   useEffect(() => {
-    if (first.current || !ownedObjekts.length) return;
+    if (first.current || !(ownedQuery.data ?? []).length) return;
 
     first.current = true;
 
@@ -73,13 +72,16 @@ function Progress() {
     if (isFiltering) return;
 
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
-    const grouped = Object.values(groupBy(ownedObjekts, (a) => a.collectionId));
+    const grouped = Object.values(
+      groupBy(ownedQuery.data ?? [], (a) => a.collectionId)
+    );
 
     const ranks = members
       .map((member) => ({
         name: member,
         owned: grouped.filter(([objekt]) => objekt.member === member).length,
-        total: objekts.filter((a) => a.member === member).length,
+        total: (objektsQuery.data ?? []).filter((a) => a.member === member)
+          .length,
       }))
       .map((a) => ({
         name: a.name,
@@ -93,7 +95,7 @@ function Progress() {
         member: [name],
       });
     }
-  }, [ownedObjekts, objekts, setFilters, artists, filters.member]);
+  }, [ownedQuery.data, objektsQuery.data, setFilters, artists, filters.member]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (

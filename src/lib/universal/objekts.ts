@@ -10,6 +10,8 @@ export type OwnedObjekt = IndexedObjekt &
 
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
+export type ValidObjektWithTag = ValidObjekt & { tags: string[] };
+
 export type PinObjekt = {
   tokenId: string;
   order: number | null;
@@ -26,7 +28,7 @@ export function getCollectionShortId(objekt: ValidObjekt) {
   }`;
 }
 
-export function makeCollectionTags(objekt: IndexedObjekt) {
+function makeCollectionTags(objekt: ValidObjekt) {
   // todo: serial support
   const seasonCode = objekt.season.charAt(0);
   const seasonNumber = objekt.season.slice(-2);
@@ -60,6 +62,13 @@ export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
     mintedAt: objekt.mintedAt,
     transferable: objekt.transferable,
   } satisfies OwnedObjekt;
+}
+
+export function mapObjektWithTag(objekt: ValidObjekt) {
+  return {
+    ...objekt,
+    tags: makeCollectionTags(objekt),
+  } satisfies ValidObjektWithTag;
 }
 
 // temporary fix accent color for some collection

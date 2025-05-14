@@ -28,7 +28,6 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.43.1",
     "es-toolkit": "^1.37.2",
-    "flexsearch": "^0.8.164",
     "input-otp": "^1.4.2",
     "jose": "^6.0.11",
     "jotai": "^2.12.4",

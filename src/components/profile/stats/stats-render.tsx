@@ -39,16 +39,14 @@ function ProfileStats() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const { data, isLoading } = useQuery(
-    ownedCollectionOptions(profile!.address)
-  );
+  const query = useQuery(ownedCollectionOptions(profile!.address));
 
   const objekts = useMemo(
-    () => filterObjekts(filters, data ?? []),
-    [filters, data]
+    () => filterObjekts(filters, query.data ?? []),
+    [filters, query.data]
   );
 
-  if (isLoading)
+  if (query.isLoading)
     return (
       <div className="justify-center flex">
         <Loader variant="ring" />
