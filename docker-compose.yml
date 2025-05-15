@@ -16,24 +16,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  proxy:
-    image: ghcr.io/izrin96/objekt-explorer-proxy:latest
-    build:
-      context: .
-      dockerfile: ./docker/proxy.Dockerfile
-    restart: always
-    environment:
-      - PROXY_HOST=postgres
-      - PROXY_USER=postgres
-      - PROXY_NAME=main
-      - PROXY_PASS=postgres
-      - PROXY_PORT=5432
-      - PROXY_HTTP_PORT=8080
-      - PROXY_KEY=key
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
   ws:
     image: ghcr.io/izrin96/objekt-explorer-websocket:latest
     build:
@@ -53,12 +35,6 @@ services:
       - "9222:3000"
     environment:
       - TOKEN=your-token-here
-  # chromium:
-  #   image: docker.io/chromedp/headless-shell:latest
-  #   ports:
-  #     - "9222:9222"
-  #   command:
-  #     - --remote-debugging-auth-token=your-token-here
   web:
     image: ghcr.io/izrin96/objekt-explorer-web:latest
     build:
@@ -91,5 +67,6 @@ services:
       - DISCORD_CLIENT_SECRET
       - BROWSER_CDP_URL
       - NEXT_PUBLIC_SITE_URL
+      - DATABASE_URL
 volumes:
   db_data:
