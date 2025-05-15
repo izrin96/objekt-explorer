@@ -164,6 +164,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
 }
 
 function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
+  const [filters] = useFilters();
   const { artists } = useCosmoArtist();
   const query = useQuery(collectionOptions);
 
@@ -176,6 +177,8 @@ function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
       groupBy(objekts, (a: ValidObjekt) => a.collectionId)
     );
 
+    const filteredObjekts = filterObjekts(filters, query.data ?? []);
+
     return members
       .map((member) => {
         const owned = grouped.filter((group: ValidObjekt[]) => {
@@ -186,7 +189,7 @@ function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
             !["Welcome", "Zero"].includes(objekt.class)
           );
         }).length;
-        const total = (query.data ?? []).filter(
+        const total = filteredObjekts.filter(
           (a: ValidObjekt) =>
             a.member === member.name &&
             !unobtainables.includes(a.slug) &&
@@ -203,7 +206,7 @@ function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
         };
       })
       .toSorted((a, b) => b.percentage - a.percentage);
-  }, [artists, objekts, query.data]);
+  }, [artists, objekts, query.data, filters]);
 
   const chartConfig = {
     percentage: {
