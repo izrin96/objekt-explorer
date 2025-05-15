@@ -1,6 +1,14 @@
 "use client";
 
-import { Pie, PieChart } from "recharts";
+import {
+  Pie,
+  PieChart,
+  Bar,
+  BarChart,
+  Rectangle,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   Card,
   Chart,
@@ -11,16 +19,18 @@ import {
 } from "@/components/ui";
 import React, { useMemo } from "react";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
-import { ownedCollectionOptions } from "@/lib/query-options";
+import { ownedCollectionOptions, collectionOptions } from "@/lib/query-options";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { useProfile } from "@/hooks/use-profile";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { filterObjekts } from "@/lib/filter-utils";
 import { useFilters } from "@/hooks/use-filters";
-import { ValidObjekt } from "@/lib/universal/objekts";
+import { ValidObjekt, unobtainables } from "@/lib/universal/objekts";
 import StatsFilter from "./stats-filter";
 import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
+import { groupBy } from "es-toolkit";
+import { cn } from "@/utils/classes";
 
 export default function ProfileStatsRender() {
   return (
@@ -56,9 +66,10 @@ function ProfileStats() {
   return (
     <div className="flex flex-col gap-4">
       <StatsFilter artists={artists} />
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <BreakdownByMemberChart objekts={objekts} />
         <BreakdownBySeasonChart objekts={objekts} />
+        <MemberProgressChart objekts={objekts} />
       </div>
     </div>
   );
@@ -146,6 +157,139 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
               nameKey="name"
             />
           </PieChart>
+        </Chart>
+      </Card.Content>
+    </Card>
+  );
+}
+
+function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
+  const { artists } = useCosmoArtist();
+  const query = useQuery(collectionOptions);
+
+  const chartData = useMemo(() => {
+    const members = artists
+      .flatMap((a) => a.artistMembers)
+      .map((a) => ({ color: a.primaryColorHex, name: a.name }));
+
+    const grouped = Object.values(
+      groupBy(objekts, (a: ValidObjekt) => a.collectionId)
+    );
+
+    return members
+      .map((member) => {
+        const owned = grouped.filter((group: ValidObjekt[]) => {
+          const [objekt] = group;
+          return (
+            objekt.member === member.name &&
+            !unobtainables.includes(objekt.slug) &&
+            !["Welcome", "Zero"].includes(objekt.class)
+          );
+        }).length;
+        const total = (query.data ?? []).filter(
+          (a: ValidObjekt) =>
+            a.member === member.name &&
+            !unobtainables.includes(a.slug) &&
+            !["Welcome", "Zero"].includes(a.class)
+        ).length;
+        const percentage = total > 0 ? (owned / total) * 100 : 0;
+
+        return {
+          name: member.name,
+          count: owned,
+          total,
+          percentage: Number(percentage.toFixed(1)),
+          fill: member.color,
+        };
+      })
+      .toSorted((a, b) => b.percentage - a.percentage);
+  }, [artists, objekts, query.data]);
+
+  const chartConfig = {
+    percentage: {
+      label: "Percentage",
+      color: "var(--chart-1)",
+    },
+  } satisfies ChartConfig;
+
+  return (
+    <Card>
+      <Card.Header>
+        <Card.Title>Member Progress</Card.Title>
+        <Card.Description>Progress by member</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        <Chart config={chartConfig} className="h-[1300px] w-full">
+          <BarChart accessibilityLayer data={chartData} layout="vertical">
+            <YAxis
+              dataKey="name"
+              type="category"
+              tickLine={false}
+              axisLine={false}
+            />
+            <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
+            <Bar
+              dataKey="percentage"
+              layout="vertical"
+              radius={5}
+              shape={(props: any) => (
+                <>
+                  <Rectangle {...props} />
+                  {/* <text x={props.x + 10} y={props.y + 20} fill="var(--fg)">
+                    {props.name}
+                  </text> */}
+                  <text
+                    x={props.background.width + props.x - 20}
+                    y={props.y + 20}
+                    textAnchor="end"
+                    fill="var(--fg)"
+                  >
+                    {props.count}/{props.total} ({props.percentage}%)
+                  </text>
+                </>
+              )}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={
+                <ChartTooltipContent
+                  indicator="line"
+                  formatter={(value, name, item, index, payload) => (
+                    <>
+                      <div
+                        className={cn(
+                          "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                          "w-1"
+                        )}
+                        style={
+                          {
+                            "--color-bg": payload.fill,
+                            "--color-border": payload.fill,
+                          } as React.CSSProperties
+                        }
+                      />
+                      <div
+                        className={cn(
+                          "flex flex-1 justify-between leading-none",
+                          "items-center"
+                        )}
+                      >
+                        <div className="grid gap-1.5">
+                          {(payload as any).name}
+                          <span className="text-fg">
+                            {(payload as any).count}/{(payload as any).total}
+                          </span>
+                        </div>
+                        <span className="font-medium font-mono text-fg tabular-nums">
+                          {value.toLocaleString()}%
+                        </span>
+                      </div>
+                    </>
+                  )}
+                />
+              }
+            />
+          </BarChart>
         </Chart>
       </Card.Content>
     </Card>
