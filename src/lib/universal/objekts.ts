@@ -8,9 +8,7 @@ export type IndexedObjekt = Omit<
 export type OwnedObjekt = IndexedObjekt &
   Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable">;
 
-export type ValidObjekt = OwnedObjekt | IndexedObjekt;
-
-export type ValidObjektWithTag = ValidObjekt & { tags: string[] };
+export type ValidObjekt = (OwnedObjekt | IndexedObjekt) & { tags?: string[] };
 
 export type PinObjekt = {
   tokenId: string;
@@ -68,7 +66,7 @@ export function mapObjektWithTag(objekt: ValidObjekt) {
   return {
     ...objekt,
     tags: makeCollectionTags(objekt),
-  } satisfies ValidObjektWithTag;
+  };
 }
 
 // temporary fix accent color for some collection

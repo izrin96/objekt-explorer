@@ -34,19 +34,7 @@ export const pinsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input: { address, tokenId }, ctx: { session } }) => {
-      const count = await db.$count(
-        userAddress,
-        and(
-          eq(userAddress.address, address),
-          eq(userAddress.userId, session.user.id)
-        )
-      );
-
-      if (count < 1)
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "This Cosmo not linked with your account",
-        });
+      await checkAddressOwned(address, session.user.id);
 
       await db.insert(pins).values({
         address,
@@ -62,22 +50,23 @@ export const pinsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input: { address, tokenId }, ctx: { session } }) => {
-      const count = await db.$count(
-        userAddress,
-        and(
-          eq(userAddress.address, address),
-          eq(userAddress.userId, session.user.id)
-        )
-      );
-
-      if (count < 1)
-        throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "This Cosmo not linked with your account",
-        });
+      await checkAddressOwned(address, session.user.id);
 
       await db
         .delete(pins)
         .where(and(eq(pins.tokenId, tokenId), eq(pins.address, address)));
     }),
 });
+
+async function checkAddressOwned(address: string, userId: string) {
+  const count = await db.$count(
+    userAddress,
+    and(eq(userAddress.address, address), eq(userAddress.userId, userId))
+  );
+
+  if (count < 1)
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "This Cosmo not linked with your account",
+    });
+}

@@ -6,11 +6,7 @@ import {
   ValidSeason,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import {
-  PinObjekt,
-  ValidObjekt,
-  ValidObjektWithTag,
-} from "./universal/objekts";
+import { PinObjekt, ValidObjekt } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { getEdition } from "./utils";
@@ -48,7 +44,7 @@ function getObjektBreakdown(objekt: ValidObjekt) {
   };
 }
 
-const searchFilter = (keyword: string, objekt: ValidObjektWithTag) => {
+const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && "serial" in objekt) {
     const [start, end] = keyword.split("-").map(parseSerial);
@@ -86,7 +82,7 @@ const searchFilter = (keyword: string, objekt: ValidObjektWithTag) => {
     );
   }
 
-  return objekt.tags.some((value) => value.toLowerCase() === keyword);
+  return objekt.tags?.some((value) => value.toLowerCase() === keyword);
 };
 
 const getSortDate = <T extends ValidObjekt>(obj: T) =>
@@ -94,7 +90,7 @@ const getSortDate = <T extends ValidObjekt>(obj: T) =>
     ? new Date(obj.receivedAt).getTime()
     : new Date(obj.createdAt).getTime();
 
-export function filterObjekts<T extends ValidObjektWithTag>(
+export function filterObjekts<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[]
 ): T[] {
@@ -239,7 +235,7 @@ function sortDuplicate<T extends ValidObjekt>(
   return objekts;
 }
 
-export function shapeObjekts<T extends ValidObjektWithTag>(
+export function shapeObjekts<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[],
   artists: CosmoArtistWithMembersBFF[],
@@ -378,7 +374,7 @@ function classSort(a: string, b: string, dir: "asc" | "desc") {
   return compareByArray(validClasses, a, b, dir);
 }
 
-export function shapeProgressCollections<T extends ValidObjektWithTag>(
+export function shapeProgressCollections<T extends ValidObjekt>(
   artists: CosmoArtistWithMembersBFF[],
   filters: Filters,
   objekts: T[]
