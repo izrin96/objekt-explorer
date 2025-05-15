@@ -151,13 +151,9 @@ function TradeTable({
     retry: 1,
   });
 
-  const ownerNickname = useMemo(
-    () =>
-      data?.transfers?.find(
-        (a) => a.to.toLowerCase() === data.owner?.toLowerCase()
-      )?.nickname,
-    [data]
-  );
+  const ownerNickname = data?.transfers?.find(
+    (a) => a.to.toLowerCase() === data.owner?.toLowerCase()
+  )?.nickname;
 
   if (status === "pending")
     return (

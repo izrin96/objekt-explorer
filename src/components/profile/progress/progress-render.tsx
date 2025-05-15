@@ -6,7 +6,14 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
-import React, { memo, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -46,37 +53,23 @@ function Progress() {
   const objektsQuery = useQuery(collectionOptions);
   const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
 
-  const ownedSlugs = useMemo(
-    () => new Set((ownedQuery.data ?? []).map((obj) => obj.slug)),
-    [ownedQuery.data]
-  );
-
-  const joinedObjekts = useMemo(() => {
+  const { ownedSlugs, shaped } = useMemo(() => {
+    const ownedSlugs = new Set((ownedQuery.data ?? []).map((obj) => obj.slug));
     const missingObjekts = (objektsQuery.data ?? []).filter(
       (obj) => !ownedSlugs.has(obj.slug)
     );
-    return [...(ownedQuery.data ?? []), ...missingObjekts];
-  }, [ownedQuery.data, objektsQuery.data, ownedSlugs]);
+    const joinedObjekts = [...(ownedQuery.data ?? []), ...missingObjekts];
+    const shaped = shapeProgressCollections(artists, filters, joinedObjekts);
+    return { ownedSlugs, shaped };
+  }, [ownedQuery.data, objektsQuery.data, artists, filters]);
 
-  const shaped = useMemo(
-    () => shapeProgressCollections(artists, filters, joinedObjekts),
-    [artists, filters, joinedObjekts]
-  );
-
-  useEffect(() => {
-    if (first.current || !(ownedQuery.data ?? []).length) return;
-
-    first.current = true;
-
-    const isFiltering = checkFiltering(filters);
-    if (isFiltering) return;
-
+  const calculateMemberRanks = useCallback(() => {
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
     const grouped = Object.values(
       groupBy(ownedQuery.data ?? [], (a) => a.collectionId)
     );
 
-    const ranks = members
+    return members
       .map((member) => ({
         name: member,
         owned: grouped.filter(([objekt]) => objekt.member === member).length,
@@ -88,14 +81,23 @@ function Progress() {
         progress: (a.owned / a.total) * 100,
       }))
       .toSorted((a, b) => b.progress - a.progress);
+  }, [artists, ownedQuery.data, objektsQuery.data]);
 
+  useEffect(() => {
+    if (first.current || ownedQuery.isLoading || objektsQuery.isLoading) return;
+    first.current = true;
+
+    const isFiltering = checkFiltering(filters);
+    if (isFiltering) return;
+
+    const ranks = calculateMemberRanks();
     if (ranks.length) {
       const { name } = ranks[0];
       setFilters({
         member: [name],
       });
     }
-  }, [ownedQuery.data, objektsQuery.data, setFilters, artists, filters.member]);
+  }, [ownedQuery.data, calculateMemberRanks, filters, setFilters]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (
@@ -112,16 +114,14 @@ function Progress() {
           Select at least 1 artist or 1 member
         </div>
       ) : (
-        shaped.map(([key, objekts]) => {
-          return (
-            <ProgressCollapse
-              key={key}
-              title={key}
-              objekts={objekts}
-              ownedSlugs={ownedSlugs}
-            />
-          );
-        })
+        shaped.map(([key, objekts]) => (
+          <ProgressCollapse
+            key={key}
+            title={key}
+            objekts={objekts}
+            ownedSlugs={ownedSlugs}
+          />
+        ))
       )}
     </div>
   );
@@ -139,31 +139,19 @@ const ProgressCollapse = memo(function ProgressCollapse({
   const [show, setShow] = useState(false);
   const [showCount] = useShowCount();
 
-  const groupObjekts = useMemo(
-    () => Object.values(groupBy(objekts, (a) => a.collectionId)),
-    [objekts]
-  );
+  const { filteredObjekts, owned } = useMemo(() => {
+    const groupObjekts = Object.values(groupBy(objekts, (a) => a.collectionId));
+    const filtered = groupObjekts
+      .map(([objekt]) => objekt)
+      .filter((a) => !unobtainables.includes(a.slug));
+    const owned = filtered.filter((a) => ownedSlugs.has(a.slug));
+    return { filteredObjekts: filtered, owned };
+  }, [objekts, ownedSlugs]);
 
-  const filteredObjekts = useMemo(
-    () =>
-      groupObjekts
-        .map(([objekt]) => objekt)
-        .filter((a) => !unobtainables.includes(a.slug)),
-    [groupObjekts]
-  );
-
-  const owned = useMemo(
-    () => filteredObjekts.filter((a) => ownedSlugs.has(a.slug)),
-    [filteredObjekts, ownedSlugs]
-  );
-
-  const percentage = useMemo(() => {
-    if (filteredObjekts.length === 0) return 100;
-    const percentage = Math.floor(
-      (owned.length / filteredObjekts.length) * 100
-    );
-    return percentage;
-  }, [owned, filteredObjekts]);
+  const percentage =
+    filteredObjekts.length === 0
+      ? 100
+      : Math.floor((owned.length / filteredObjekts.length) * 100);
 
   return (
     <div className="flex flex-col gap-4">
@@ -187,26 +175,28 @@ const ProgressCollapse = memo(function ProgressCollapse({
       </div>
       {show && (
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3">
-          {groupObjekts.map((objekts) => {
-            const [objekt] = objekts;
-            return (
-              <ObjektModalProvider
-                key={objekt.slug}
-                objekts={objekts}
-                isProfile
-              >
-                {({ openObjekts }) => (
-                  <ObjektView
-                    objekts={objekts}
-                    isFade={!ownedSlugs.has(objekt.slug)}
-                    unobtainable={unobtainables.includes(objekt.slug)}
-                    showCount={showCount}
-                    open={openObjekts}
-                  />
-                )}
-              </ObjektModalProvider>
-            );
-          })}
+          {Object.values(groupBy(objekts, (a) => a.collectionId)).map(
+            (objekts) => {
+              const [objekt] = objekts;
+              return (
+                <ObjektModalProvider
+                  key={objekt.slug}
+                  objekts={objekts}
+                  isProfile
+                >
+                  {({ openObjekts }) => (
+                    <ObjektView
+                      objekts={objekts}
+                      isFade={!ownedSlugs.has(objekt.slug)}
+                      unobtainable={unobtainables.includes(objekt.slug)}
+                      showCount={showCount}
+                      open={openObjekts}
+                    />
+                  )}
+                </ObjektModalProvider>
+              );
+            }
+          )}
         </div>
       )}
     </div>
