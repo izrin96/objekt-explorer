@@ -87,6 +87,21 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "6432:6432"
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres
+      - DB_NAME=main
+      - POOL_MODE=transaction
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', 'localhost']
 volumes:
   db_data:
   minio_data:
