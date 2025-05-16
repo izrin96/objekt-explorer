@@ -9,7 +9,7 @@ export const env = createEnv({
     DB_PROXY_URL: z.string(),
     DATABASE_URL: z.string(),
     S3_ENDPOINT: z.string(),
-    S3_PORT: z.string(),
+    S3_PORT: z.coerce.number(),
     S3_ACCESS_KEY: z.string(),
     S3_SECRET_KEY: z.string(),
     S3_USE_SSL: z.coerce.boolean(),
