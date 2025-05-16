@@ -7,7 +7,7 @@ export const s3Client = new Minio.Client({
   port: env.S3_PORT ? Number(env.S3_PORT) : undefined,
   accessKey: env.S3_ACCESS_KEY,
   secretKey: env.S3_SECRET_KEY,
-  useSSL: true,
+  useSSL: env.S3_USE_SSL,
 });
 
 export async function createBucketIfNotExists(bucketName: string) {
