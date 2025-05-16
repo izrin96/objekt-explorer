@@ -12,14 +12,8 @@ import { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
 import { and, eq, sql } from "drizzle-orm";
-import { fetchUserProfiles } from "../../profile";
 
 export const cosmoLinkRouter = createTRPCRouter({
-  // get all linked
-  myLink: authProcedure.query(async ({ ctx: { session } }) => {
-    return await fetchUserProfiles(session.user.id);
-  }),
-
   // remove link
   removeLink: authProcedure
     .input(z.string())

@@ -73,11 +73,9 @@ export default function RootLayout({ children }: PropsWithChildren) {
       >
         <TRPCReactProvider>
           <ClientProviders>
-            <div className="relative flex flex-col">
+            <div className="relative">
               <Navbar />
-              <main className="flex min-w-full flex-col items-center">
-                {children}
-              </main>
+              <main className="mx-auto w-full">{children}</main>
             </div>
             <Analytics />
           </ClientProviders>

@@ -55,3 +55,31 @@ export function msToCountdown(ms: number) {
     "0"
   )}`;
 }
+
+export function getMimeTypeFromExtension(filename: string) {
+  const extension = filename.split(".").pop()?.toLowerCase() ?? "";
+  const mimeTypes = {
+    // Images
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    bmp: "image/bmp",
+    svg: "image/svg+xml",
+    ico: "image/x-icon",
+
+    // Videos
+    mp4: "video/mp4",
+    webm: "video/webm",
+    ogg: "video/ogg",
+    mov: "video/quicktime",
+    avi: "video/x-msvideo",
+    mkv: "video/x-matroska",
+    m4v: "video/x-m4v",
+  } as const;
+
+  return (
+    mimeTypes[extension as keyof typeof mimeTypes] || "application/octet-stream"
+  );
+}

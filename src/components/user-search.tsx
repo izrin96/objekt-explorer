@@ -49,7 +49,7 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button onPress={() => setIsOpen(true)} size="small" intent="primary">
+      <Button onPress={() => setIsOpen(true)} size="small" intent="outline">
         <IconSearch />
         <span className="sm:block hidden">Search user</span>
       </Button>

@@ -98,9 +98,9 @@ function StepRender({
 
   useEffect(() => {
     if (data?.status === "certified") {
-      utils.cosmoLink.myLink.invalidate();
+      utils.profile.getAll.invalidate();
     }
-  }, [data?.status, utils.cosmoLink.myLink]);
+  }, [data?.status, utils.profile.getAll]);
 
   if (!data || data.status === "wait_for_user_action")
     return (

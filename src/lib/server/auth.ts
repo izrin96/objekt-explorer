@@ -51,6 +51,8 @@ export async function fetchUserByIdentifier(
     columns: {
       nickname: true,
       address: true,
+      bannerImgUrl: true,
+      hideUser: true,
     },
     with: {
       user: {
@@ -67,9 +69,8 @@ export async function fetchUserByIdentifier(
 
   if (cachedUser) {
     return {
-      nickname: cachedUser.nickname,
-      address: cachedUser.address,
-      user: cachedUser.user,
+      ...cachedUser,
+      user: cachedUser.hideUser ? null : cachedUser.user,
     };
   }
 

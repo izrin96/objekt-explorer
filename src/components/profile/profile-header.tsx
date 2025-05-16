@@ -19,7 +19,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             ...renderProps,
             size: "extra-small",
             className: "w-full sm:w-auto flex-none",
-            intent: "secondary",
+            intent: "outline",
           })
         }
         href={`https://apollo.cafe/@${user.address}`}

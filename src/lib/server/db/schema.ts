@@ -7,6 +7,7 @@ import {
   integer,
   text,
   timestamp,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { user, session, account, verification } from "./auth-schema";
 import { relations } from "drizzle-orm";
@@ -30,6 +31,8 @@ export const userAddress = pgTable(
       onDelete: "set null",
     }),
     linkedAt: timestamp("linked_at"),
+    bannerImgUrl: text("banner_img_url"),
+    hideUser: boolean("hide_user"),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),

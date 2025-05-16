@@ -9,7 +9,7 @@ export default async function Page() {
 
   if (!session) redirect("/");
 
-  api.cosmoLink.myLink.prefetch();
+  api.profile.getAll.prefetch();
 
   return (
     <div className="flex flex-col pb-8 pt-2">

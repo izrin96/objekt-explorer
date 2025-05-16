@@ -71,6 +71,20 @@
       "when": 1746809175979,
       "tag": "0009_fluffy_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1747390462046,
+      "tag": "0010_lean_silk_fever",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1747396811248,
+      "tag": "0011_small_dracula",
+      "breakpoints": true
     }
   ]
 }

@@ -137,7 +137,7 @@ function MyListMenuItem() {
 }
 
 function MyCosmoProfileMenuItem() {
-  const { data, isLoading } = api.cosmoLink.myLink.useQuery();
+  const { data, isLoading } = api.profile.getAll.useQuery();
   const items = data ?? [];
   return (
     <Menu.Submenu>

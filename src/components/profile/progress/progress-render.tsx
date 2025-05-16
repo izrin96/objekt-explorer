@@ -97,7 +97,14 @@ function Progress() {
         member: [name],
       });
     }
-  }, [ownedQuery.data, calculateMemberRanks, filters, setFilters]);
+  }, [
+    ownedQuery.data,
+    calculateMemberRanks,
+    filters,
+    setFilters,
+    ownedQuery.isLoading,
+    objektsQuery.isLoading,
+  ]);
 
   if (objektsQuery.isLoading || ownedQuery.isLoading)
     return (
