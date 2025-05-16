@@ -50,6 +50,18 @@ ARG BROWSER_CDP_URL
 ENV BROWSER_CDP_URL=${BROWSER_CDP_URL}
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+ARG S3_ENDPOINT
+ENV S3_ENDPOINT=${S3_ENDPOINT}
+ARG S3_PORT
+ENV S3_PORT=${S3_PORT}
+ARG S3_ACCESS_KEY
+ENV S3_ACCESS_KEY=${S3_ACCESS_KEY}
+ARG S3_SECRET_KEY
+ENV S3_SECRET_KEY=${S3_SECRET_KEY}
+ARG S3_USE_SSL
+ENV S3_USE_SSL=${S3_USE_SSL}
 
 # Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line to disable telemetry at build time
