@@ -12,7 +12,7 @@ export const env = createEnv({
     S3_PORT: z.string(),
     S3_ACCESS_KEY: z.string(),
     S3_SECRET_KEY: z.string(),
-    S3_USE_SSL: z.boolean(),
+    S3_USE_SSL: z.coerce.boolean(),
   },
   client: {
     NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
