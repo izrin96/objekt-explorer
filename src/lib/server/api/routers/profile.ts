@@ -35,7 +35,7 @@ export const profileRouter = createTRPCRouter({
         const profile = await fetchOwnedProfile(address, session.user.id);
 
         // Delete previous banner if it exists and new banner is being set
-        if (profile.bannerImgUrl && bannerImgUrl) {
+        if (profile.bannerImgUrl && bannerImgUrl !== undefined) {
           const fileName = profile.bannerImgUrl.split("/").pop();
           if (fileName) {
             await deleteFileFromBucket({
