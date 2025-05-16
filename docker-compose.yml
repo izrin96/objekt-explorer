@@ -68,5 +68,14 @@ services:
       - BROWSER_CDP_URL
       - NEXT_PUBLIC_SITE_URL
       - DATABASE_URL
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
 volumes:
   db_data:
+  minio_data:
