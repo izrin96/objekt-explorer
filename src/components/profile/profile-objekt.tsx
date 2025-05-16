@@ -168,7 +168,7 @@ function ProfileObjekt() {
     setObjektsFiltered(shaped);
   }, [filters, joinedObjekts, artists, pinsQuery.data]);
 
-  if (objektsQuery.isLoading || ownedQuery.isLoading)
+  if (ownedQuery.isLoading)
     return (
       <div className="justify-center flex">
         <Loader variant="ring" />
