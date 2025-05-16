@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/lib/trpc/client";
-import React, { useState } from "react";
+import React, { useCallback, useState, useTransition } from "react";
 import {
   Button,
   buttonStyles,
@@ -13,13 +13,16 @@ import {
   Menu,
   Modal,
   Sheet,
-  TextField,
+  FileTrigger,
+  Label,
 } from "../ui";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-boundary";
 import { IconDotsVertical } from "@intentui/icons";
 import { toast } from "sonner";
+import { ofetch } from "ofetch";
+import { mimeTypes } from "@/lib/utils";
 
 export default function MyLinkRender() {
   return (
@@ -164,12 +167,17 @@ export function EditProfile({
   onComplete?: () => void;
   children: ({ open }: { open: () => void }) => React.ReactNode;
 }) {
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const [open, setOpen] = useState(false);
+  const [droppedImage, setDroppedImage] = useState<File | null>();
+  const [isUploading, startUploadTransition] = useTransition();
   const query = api.profile.get.useQuery(address);
   const utils = api.useUtils();
+
   const edit = api.profile.edit.useMutation({
     onSuccess: () => {
       setOpen(false);
+      setDroppedImage(null);
       utils.profile.get.invalidate(address);
       onComplete?.();
       toast.success("Cosmo profile updated");
@@ -178,6 +186,37 @@ export function EditProfile({
       toast.error(message || "Error edit Cosmo profile");
     },
   });
+
+  const getPresignedUrl = api.profile.getPresignedUrl.useMutation({
+    onError: () => {
+      toast.error("Failed to get upload URL");
+    },
+  });
+
+  const handleUpload = useCallback(
+    async (url: string) => {
+      try {
+        if (!droppedImage) return;
+
+        startUploadTransition(async () => {
+          const response = await ofetch.raw(url, {
+            method: "PUT",
+            body: droppedImage,
+            headers: {
+              "Content-Type": droppedImage.type,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to upload image");
+          }
+        });
+      } catch (error) {
+        toast.error("Failed to upload image");
+      }
+    },
+    [droppedImage, startUploadTransition]
+  );
 
   return (
     <>
@@ -191,11 +230,33 @@ export function EditProfile({
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
+            const hideUser = formData.get("hideUser") === "on";
+            const removeBanner = formData.get("removeBanner") === "on";
+
+            if (droppedImage && !removeBanner) {
+              getPresignedUrl.mutate(
+                { address, fileName: droppedImage.name },
+                {
+                  onSuccess: async (url) => {
+                    await handleUpload(url);
+
+                    // Get the file URL from the presigned URL
+                    const fileUrl = url.split("?")[0];
+                    edit.mutate({
+                      address: address,
+                      hideUser: hideUser,
+                      bannerImgUrl: fileUrl,
+                    });
+                  },
+                }
+              );
+              return;
+            }
 
             edit.mutate({
               address: address,
-              hideUser: formData.get("hideUser") === "on",
-              bannerImgUrl: (formData.get("bannerImgUrl") as string) || null,
+              hideUser: hideUser,
+              bannerImgUrl: removeBanner ? null : undefined,
             });
           }}
         >
@@ -213,23 +274,41 @@ export function EditProfile({
             ) : (
               <div className="flex flex-col gap-6">
                 <Checkbox
-                  label="Private profile"
+                  label="Hide Discord"
                   name="hideUser"
                   description="Hide your Discord from Cosmo profile"
                   defaultSelected={query.data?.hideUser ?? false}
                 />
-                <TextField
-                  description="Display a custom banner image, GIF, or video. The link must start with 'https://'. Upload functionality will be added in the future."
-                  label="Banner Image URL"
-                  placeholder="https://"
-                  name="bannerImgUrl"
-                  defaultValue={query.data?.bannerImgUrl ?? ""}
-                />
+                <div className="group flex flex-col gap-y-1">
+                  <Label>Banner Image</Label>
+                  <FileTrigger
+                    acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
+                    onSelect={(e) => {
+                      const files = Array.from(e ?? []);
+                      const item = files[0];
+                      if (!item) return;
+
+                      if (item.size > MAX_FILE_SIZE) {
+                        toast.error(`File "${item.name}" exceeds 10 MB limit.`);
+                        return;
+                      }
+
+                      setDroppedImage(item);
+                    }}
+                  />
+                </div>
+                <Checkbox label="Remove Banner" name="removeBanner" />
               </div>
             )}
           </Sheet.Body>
           <Sheet.Footer>
-            <Button intent="primary" type="submit" isPending={edit.isPending}>
+            <Button
+              intent="primary"
+              type="submit"
+              isPending={
+                edit.isPending || getPresignedUrl.isPending || isUploading
+              }
+            >
               Save
             </Button>
           </Sheet.Footer>

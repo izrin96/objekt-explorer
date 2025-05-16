@@ -5,9 +5,9 @@ import {
   publicProcedure,
 } from "@/lib/server/api/trpc";
 import { db } from "../../db";
-import { pins, userAddress } from "../../db/schema";
+import { pins } from "../../db/schema";
 import { and, eq } from "drizzle-orm";
-import { TRPCError } from "@trpc/server";
+import { checkAddressOwned } from "./profile";
 
 export const pinsRouter = createTRPCRouter({
   get: publicProcedure.input(z.string()).query(async ({ input: address }) => {
@@ -57,16 +57,3 @@ export const pinsRouter = createTRPCRouter({
         .where(and(eq(pins.tokenId, tokenId), eq(pins.address, address)));
     }),
 });
-
-async function checkAddressOwned(address: string, userId: string) {
-  const count = await db.$count(
-    userAddress,
-    and(eq(userAddress.address, address), eq(userAddress.userId, userId))
-  );
-
-  if (count < 1)
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "This Cosmo not linked with your account",
-    });
-}

@@ -7,7 +7,11 @@ export const env = createEnv({
     INDEXER_PROXY_URL: z.string(),
     DB_PROXY_KEY: z.string(),
     DB_PROXY_URL: z.string(),
-    DATABASE_URL: z.string().optional(),
+    DATABASE_URL: z.string(),
+    S3_ENDPOINT: z.string(),
+    S3_PORT: z.string(),
+    S3_ACCESS_KEY: z.string(),
+    S3_SECRET_KEY: z.string(),
   },
   client: {
     NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
