@@ -100,6 +100,7 @@ services:
       - DB_HOST=postgres
       - DB_NAME=main
       - POOL_MODE=transaction
+      - AUTH_TYPE=scram-sha-256
     healthcheck:
       test: ['CMD', 'pg_isready', '-h', 'localhost']
 volumes:
