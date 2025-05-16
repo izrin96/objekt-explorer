@@ -1,11 +1,16 @@
 "use client";
 
 import React from "react";
-import { Avatar, buttonStyles, Link } from "../ui";
+import { Avatar, Button, buttonStyles, Link } from "../ui";
 import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
 import { PublicProfile } from "@/lib/universal/user";
+import { useProfileAuthed } from "@/hooks/use-user";
+import { EditProfile } from "../link/my-link";
+import { useRouter } from "next/navigation";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
+  const isProfileAuthed = useProfileAuthed();
+  const router = useRouter();
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pb-2 sm:pb-0">
       <div className="flex flex-col w-full sm:w-auto">
@@ -17,7 +22,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         className={(renderProps) =>
           buttonStyles({
             ...renderProps,
-            size: "extra-small",
+            size: "small",
             className: "w-full sm:w-auto flex-none",
             intent: "outline",
           })
@@ -27,6 +32,27 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       >
         View in Apollo
       </Link>
+
+      {isProfileAuthed && (
+        <EditProfile
+          address={user.address}
+          nickname={user.nickname}
+          onComplete={() => {
+            router.refresh();
+          }}
+        >
+          {({ open }) => (
+            <Button
+              size="small"
+              intent="outline"
+              onClick={open}
+              className="w-full sm:w-auto flex-none"
+            >
+              Edit Profile
+            </Button>
+          )}
+        </EditProfile>
+      )}
 
       {user.user && (
         <div className="text-sm flex gap-2 items-center w-full sm:w-auto min-w-0">

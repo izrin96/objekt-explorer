@@ -153,13 +153,15 @@ function RemoveLink({
   );
 }
 
-function EditProfile({
+export function EditProfile({
   nickname,
   address,
+  onComplete,
   children,
 }: {
   nickname: string;
   address: string;
+  onComplete?: () => void;
   children: ({ open }: { open: () => void }) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -169,6 +171,7 @@ function EditProfile({
     onSuccess: () => {
       setOpen(false);
       utils.profile.get.invalidate(address);
+      onComplete?.();
       toast.success("Cosmo profile updated");
     },
     onError: ({ message }) => {

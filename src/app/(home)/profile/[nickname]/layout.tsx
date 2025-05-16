@@ -75,7 +75,8 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 src={profile.bannerImgUrl}
                 className="object-cover object-center size-full"
                 fill
-                alt=""
+                alt="Banner"
+                priority
               />
             )}
           </div>
@@ -96,7 +97,8 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
             src={profile.bannerImgUrl}
             className="object-cover object-center size-full"
             fill
-            alt=""
+            alt="Banner"
+            priority
           />
         )}
         <div className="absolute inset-0 backdrop-blur-xl"></div>
