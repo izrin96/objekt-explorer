@@ -12,8 +12,8 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();
   const router = useRouter();
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pb-2 sm:pb-0">
-      <div className="flex flex-col w-full sm:w-auto">
+    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 pb-2 md:pb-0 flex-wrap">
+      <div className="flex flex-col w-full md:w-auto">
         <div className="text-xl font-semibold">{user.nickname}</div>
         <div className="text-xs text-muted-fg truncate">{user.address}</div>
       </div>
@@ -23,7 +23,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           buttonStyles({
             ...renderProps,
             size: "small",
-            className: "w-full sm:w-auto flex-none",
+            className: "w-full md:w-auto flex-none",
             intent: "outline",
           })
         }
@@ -46,7 +46,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
               size="small"
               intent="outline"
               onClick={open}
-              className="w-full sm:w-auto flex-none"
+              className="w-full md:w-auto flex-none"
             >
               Edit Profile
             </Button>
@@ -55,7 +55,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       )}
 
       {user.user && (
-        <div className="text-sm flex gap-2 items-center w-full sm:w-auto min-w-0">
+        <div className="text-sm flex gap-2 items-center w-full md:w-auto min-w-0">
           <Avatar
             size="extra-large"
             className="self-center"
