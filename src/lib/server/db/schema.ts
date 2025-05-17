@@ -58,6 +58,7 @@ export const lists = pgTable(
       }),
     slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
+    private: boolean("private"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("lists_slug_idx").on(t.slug)]
