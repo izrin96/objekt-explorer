@@ -5,8 +5,8 @@ import { Avatar, Button, buttonStyles, Link } from "../ui";
 import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
 import { PublicProfile } from "@/lib/universal/user";
 import { useProfileAuthed } from "@/hooks/use-user";
-import { EditProfile } from "../link/my-link";
 import { useRouter } from "next/navigation";
+import { EditProfile } from "../link/modal/manage-link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();

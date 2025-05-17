@@ -28,8 +28,8 @@ export default async function UserCollectionLayout(props: Props) {
   ]);
 
   return (
-    <UserProvider profiles={profiles}>
-      <ProfileProvider profile={targetUser}>
+    <ProfileProvider profile={targetUser}>
+      <UserProvider profiles={profiles}>
         <ProfileBanner profile={targetUser} />
         <Container>
           {targetUser.bannerImgUrl && (
@@ -44,8 +44,8 @@ export default async function UserCollectionLayout(props: Props) {
             </div>
           </div>
         </Container>
-      </ProfileProvider>
-    </UserProvider>
+      </UserProvider>
+    </ProfileProvider>
   );
 }
 
