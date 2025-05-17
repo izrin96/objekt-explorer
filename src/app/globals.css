@@ -58,7 +58,7 @@
   --animate-live-animation-bg: live-animation-bg 2s var(--ease-out-cubic) 0s 1;
 
   /* extra tweakcn inline, anything missing from intentui inline */
-  --radius: 0.5rem;
+  /* --radius: 0.5rem; */
   --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
   --tracking-tight: calc(var(--tracking-normal) - 0.025em);
   --tracking-wide: calc(var(--tracking-normal) + 0.025em);
@@ -168,7 +168,7 @@
   --accent-foreground: oklch(0.33 0 0);
   --destructive: oklch(0.62 0.21 25.77);
   --destructive-foreground: oklch(1 0 0);
-  --radius: 0.625rem;
+  /* --radius: 0.625rem; */
   --sidebar-foreground: oklch(0.26 0 0);
   --sidebar-primary: oklch(0.33 0 0);
   --sidebar-primary-foreground: oklch(0.99 0 0);
@@ -263,7 +263,7 @@
   --accent-foreground: oklch(0.98 0 0);
   --destructive: oklch(0.4 0.13 25.72);
   --destructive-foreground: oklch(0.97 0.01 17.38);
-  --radius: 0.625rem;
+  /* --radius: 0.625rem; */
   --sidebar-foreground: oklch(0.97 0 286.38);
   --sidebar-primary: oklch(0.49 0.22 264.39);
   --sidebar-primary-foreground: oklch(1 0 0);
