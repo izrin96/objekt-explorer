@@ -7,7 +7,7 @@ const Toast = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
   return (
     <ToasterPrimitive
-      theme={theme as ToasterProps["theme"]}
+      theme={theme === "matsu" ? "light" : theme as ToasterProps["theme"]}
       className="toaster group"
       richColors
       toastOptions={{
