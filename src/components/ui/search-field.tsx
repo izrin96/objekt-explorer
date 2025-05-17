@@ -1,16 +1,17 @@
 "use client"
 
 import { IconSearch, IconX } from "@intentui/icons"
-import {
-  SearchField as SearchFieldPrimitive,
-  type SearchFieldProps as SearchFieldPrimitiveProps,
-  type ValidationResult,
+import { SearchField as SearchFieldPrimitive } from "react-aria-components"
+
+import type {
+  SearchFieldProps as SearchFieldPrimitiveProps,
+  ValidationResult,
 } from "react-aria-components"
 
-import { Button } from "./button"
-import { Description, FieldError, FieldGroup, Input, Label } from "./field"
-import { Loader } from "./loader"
-import { composeTailwindRenderProps } from "./primitive"
+import { Button } from "@/components/ui/button"
+import { Description, FieldError, FieldGroup, Input, Label } from "@/components/ui/field"
+import { Loader } from "@/components/ui/loader"
+import { composeTailwindRenderProps } from "@/lib/primitive"
 
 interface SearchFieldProps extends SearchFieldPrimitiveProps {
   label?: string

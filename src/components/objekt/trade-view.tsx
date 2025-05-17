@@ -6,7 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-import { Suspense, useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { Badge, Button, Card, Link, Loader, NumberField, Table } from "../ui";
 import {
   IconArrowLeft,
@@ -208,24 +208,26 @@ function TradeTable({
       </div>
 
       <Card className="py-0">
-        <Table aria-label="Trades">
-          <Table.Header>
-            <Table.Column isRowHeader>Owner</Table.Column>
-            <Table.Column minWidth={200}>Date</Table.Column>
-          </Table.Header>
-          <Table.Body items={data.transfers}>
-            {(item) => (
-              <Table.Row id={item.id}>
-                <Table.Cell>
-                  <UserLink address={item.to} nickname={item.nickname} />
-                </Table.Cell>
-                <Table.Cell>
-                  {format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
+        <Card.Content>
+          <Table aria-label="Trades">
+            <Table.Header>
+              <Table.Column isRowHeader>Owner</Table.Column>
+              <Table.Column minWidth={200}>Date</Table.Column>
+            </Table.Header>
+            <Table.Body items={data.transfers}>
+              {(item) => (
+                <Table.Row id={item.id}>
+                  <Table.Cell>
+                    <UserLink address={item.to} nickname={item.nickname} />
+                  </Table.Cell>
+                  <Table.Cell>
+                    {format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}
+                  </Table.Cell>
+                </Table.Row>
+              )}
+            </Table.Body>
+          </Table>
+        </Card.Content>
       </Card>
     </>
   );

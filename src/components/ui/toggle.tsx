@@ -105,13 +105,13 @@ const ToggleGroup = ({
 
 const toggleStyles = tv({
   base: [
-    "inset-ring inset-ring-border cursor-pointer items-center gap-x-2 rounded-lg outline-hidden sm:text-sm",
+    "inset-ring inset-ring-border cursor-default items-center gap-x-2 rounded-lg outline-hidden sm:text-sm",
     "forced-colors:[--button-icon:ButtonText] forced-colors:hover:[--button-icon:ButtonText]",
     "*:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:my-1 *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-current/60 pressed:*:data-[slot=icon]:text-current hover:*:data-[slot=icon]:text-current/90",
   ],
   variants: {
     isDisabled: {
-      true: "cursor-default opacity-50 forced-colors:border-[GrayText]",
+      true: "opacity-50 forced-colors:border-[GrayText]",
     },
     isFocusVisible: {
       true: "inset-ring-ring/70 z-20 ring-4 ring-ring/20",

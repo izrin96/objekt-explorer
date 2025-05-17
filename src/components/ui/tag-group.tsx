@@ -1,7 +1,10 @@
 "use client"
 
-import React from "react"
+import { createContext, use } from "react"
 
+import { badgeIntents, badgeShapes, badgeStyles } from "@/components/ui/badge"
+import { Description, Label } from "@/components/ui/field"
+import { composeTailwindRenderProps } from "@/lib/primitive"
 import { IconX } from "@intentui/icons"
 import type {
   TagGroupProps as TagGroupPrimitiveProps,
@@ -17,9 +20,6 @@ import {
 } from "react-aria-components"
 import { twJoin, twMerge } from "tailwind-merge"
 import { tv } from "tailwind-variants"
-import { badgeIntents, badgeShapes, badgeStyles } from "./badge"
-import { Description, Label } from "./field"
-import { composeTailwindRenderProps } from "./primitive"
 
 const intents = {
   primary: {
@@ -85,7 +85,7 @@ type TagGroupContextValue = {
   shape: Shape
 }
 
-const TagGroupContext = React.createContext<TagGroupContextValue>({
+const TagGroupContext = createContext<TagGroupContextValue>({
   intent: "primary",
   shape: "square",
 })
@@ -130,10 +130,11 @@ const TagList = <T extends object>({ className, ...props }: TagListProps<T>) => 
 }
 
 const tagStyles = tv({
-  base: [badgeStyles.base, "cursor-pointer outline-hidden"],
+  base: [badgeStyles.base, "outline-hidden"],
   variants: {
+    isLink: { true: "cursor-pointer", false: "cursor-default" },
     isFocusVisible: { true: "inset-ring inset-ring-current/10" },
-    isDisabled: { true: "cursor-default opacity-50" },
+    isDisabled: { true: "opacity-50" },
     allowsRemoving: { true: "pr-1" },
   },
 })
@@ -145,7 +146,7 @@ interface TagProps extends TagPrimitiveProps {
 
 const Tag = ({ className, intent, shape, ...props }: TagProps) => {
   const textValue = typeof props.children === "string" ? props.children : undefined
-  const groupContext = React.useContext(TagGroupContext)
+  const groupContext = use(TagGroupContext)
 
   return (
     <TagPrimitive
@@ -157,6 +158,7 @@ const Tag = ({ className, intent, shape, ...props }: TagProps) => {
 
         return tagStyles({
           ...renderProps,
+          isLink: "href" in props,
           className: twJoin([
             intents[finalIntent]?.base,
             badgeShapes[finalShape],

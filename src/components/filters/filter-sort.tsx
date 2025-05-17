@@ -78,10 +78,8 @@ export default function SortFilter({
       >
         {(item) => (
           <Menu.Item id={item.value} textValue={map[item.value]}>
-            <Menu.ItemDetails
-              label={map[item.value]}
-              description={mapDesc[item.value]}
-            />
+            <Menu.Label>{map[item.value]}</Menu.Label>
+            <Menu.Description>{mapDesc[item.value]}</Menu.Description>
           </Menu.Item>
         )}
       </Menu.Content>

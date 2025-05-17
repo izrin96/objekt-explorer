@@ -6,6 +6,7 @@ import { Form as FormPrimitive } from "react-aria-components"
 interface FormProps extends FormPrimitiveProps {
   ref?: React.RefObject<HTMLFormElement>
 }
+
 const Form = ({ ref, ...props }: FormProps) => {
   return <FormPrimitive ref={ref} {...props} />
 }

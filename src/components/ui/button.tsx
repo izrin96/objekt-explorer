@@ -19,22 +19,22 @@ const buttonStyles = tv({
   variants: {
     intent: {
       primary: [
-        "outline-primary [--btn-bg:theme(--color-primary/95%)] [--btn-fg:var(--color-primary-fg)] [--btn-overlay:var(--color-primary)]",
+        "outline-primary [--btn-bg:var(--color-primary)]/95 [--btn-fg:var(--color-primary-fg)] [--btn-overlay:var(--color-primary)]",
       ],
       secondary: [
-        "outline-primary [--btn-bg:theme(--color-secondary/90%)] [--btn-fg:var(--color-secondary-fg)] [--btn-overlay:var(--color-secondary)]",
+        "outline-primary [--btn-bg:var(--color-secondary)]/90 [--btn-fg:var(--color-secondary-fg)] [--btn-overlay:var(--color-secondary)]",
       ],
       warning: [
-        "outline-warning [--btn-bg:theme(--color-warning/95%)] [--btn-fg:var(--color-warning-fg)] [--btn-overlay:var(--color-warning)]",
+        "outline-warning [--btn-bg:var(--color-warning)]/95 [--btn-fg:var(--color-warning-fg)] [--btn-overlay:var(--color-warning)]",
       ],
       danger: [
-        "outline-danger [--btn-bg:theme(--color-danger/95%)] [--btn-fg:var(--color-danger-fg)] [--btn-overlay:var(--color-danger)]",
+        "outline-danger [--btn-bg:var(--color-danger)]/95 [--btn-fg:var(--color-danger-fg)] [--btn-overlay:var(--color-danger)]",
       ],
       outline: [
-        "shadow-none outline-primary [--btn-fg:var(--color-fg)] [--btn-overlay:theme(--color-secondary/90%)]",
+        "shadow-none outline-primary [--btn-fg:var(--color-fg)] [--btn-overlay:var(--color-secondary)]/90",
       ],
       plain: [
-        "inset-ring-transparent shadow-none outline-primary [--btn-fg:var(--color-fg)] [--btn-overlay:theme(--color-secondary/90%)] dark:inset-ring-transparent",
+        "inset-ring-transparent shadow-none outline-primary [--btn-fg:var(--color-fg)] [--btn-overlay:var(--color-secondary)]/90 dark:inset-ring-transparent",
       ],
     },
     size: {
@@ -51,11 +51,10 @@ const buttonStyles = tv({
       circle: "rounded-full",
     },
     isDisabled: {
-      false: "cursor-pointer",
-      true: "inset-ring-0 cursor-default opacity-50 forced-colors:text-[GrayText]",
+      true: "inset-ring-0 opacity-50 forced-colors:text-[GrayText]",
     },
     isPending: {
-      true: "cursor-default opacity-50",
+      true: "opacity-50",
     },
   },
   defaultVariants: {

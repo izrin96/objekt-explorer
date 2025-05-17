@@ -13,9 +13,9 @@ import {
 } from "react-aria-components"
 import { tv } from "tailwind-variants"
 
+import { Description, FieldError, Label } from "@/components/ui/field"
+import { composeTailwindRenderProps } from "@/lib/primitive"
 import { twMerge } from "tailwind-merge"
-import { Description, FieldError, Label } from "./field"
-import { composeTailwindRenderProps } from "./primitive"
 
 interface CheckboxGroupProps extends CheckboxGroupPrimitiveProps {
   label?: string
@@ -23,16 +23,20 @@ interface CheckboxGroupProps extends CheckboxGroupPrimitiveProps {
   errorMessage?: string | ((validation: ValidationResult) => string)
 }
 
-const CheckboxGroup = ({ className, ...props }: CheckboxGroupProps) => {
+const CheckboxGroup = ({ className, children, ...props }: CheckboxGroupProps) => {
   return (
     <CheckboxGroupPrimitive
       {...props}
       className={composeTailwindRenderProps(className, "flex flex-col gap-y-2")}
     >
-      {props.label && <Label>{props.label}</Label>}
-      {props.children as React.ReactNode}
-      {props.description && <Description className="block">{props.description}</Description>}
-      <FieldError>{props.errorMessage}</FieldError>
+      {(values) => (
+        <>
+          {props.label && <Label>{props.label}</Label>}
+          {typeof children === "function" ? children(values) : children}
+          {props.description && <Description className="block">{props.description}</Description>}
+          <FieldError>{props.errorMessage}</FieldError>
+        </>
+      )}
     </CheckboxGroupPrimitive>
   )
 }
@@ -52,13 +56,13 @@ const boxStyles = tv({
     isSelected: {
       false: "bg-muted",
       true: [
-        "border-primary bg-primary text-primary-fg",
-        "group-invalid:border-danger/70 group-invalid:bg-danger group-invalid:text-danger-fg",
+        "inset-ring-primary bg-primary text-primary-fg",
+        "group-invalid:inset-ring-danger/70 group-invalid:bg-danger group-invalid:text-danger-fg",
       ],
     },
     isFocused: {
       true: [
-        "border-primary ring-4 ring-primary/20",
+        "inset-ring-primary ring-4 ring-ring/20",
         "group-invalid:border-danger/70 group-invalid:text-danger-fg group-invalid:ring-danger/20",
       ],
     },
@@ -73,7 +77,7 @@ interface CheckboxProps extends CheckboxPrimitiveProps {
   label?: string
 }
 
-const Checkbox = ({ className, ...props }: CheckboxProps) => {
+const Checkbox = ({ className, children, description, label, ...props }: CheckboxProps) => {
   return (
     <CheckboxPrimitive
       {...props}
@@ -82,28 +86,28 @@ const Checkbox = ({ className, ...props }: CheckboxProps) => {
       )}
     >
       {({ isSelected, isIndeterminate, ...renderProps }) => (
-        <div
-          className={twMerge("flex gap-x-2", props.description ? "items-start" : "items-center")}
-        >
+        <div className={twMerge("flex gap-x-2", description ? "items-start" : "items-center")}>
           <div
             className={boxStyles({
               ...renderProps,
               isSelected: isSelected || isIndeterminate,
             })}
           >
-            {isIndeterminate ? <IconMinus /> : isSelected ? <IconCheck /> : null}
+            {isIndeterminate ? (
+              <IconMinus className="size-3.5" data-slot="checkbox-indicator" />
+            ) : isSelected ? (
+              <IconCheck className="size-3.5" data-slot="checkbox-indicator" />
+            ) : null}
           </div>
 
           <div className="flex flex-col gap-1">
             <>
-              {props.label ? (
-                <Label className={twMerge(props.description && "font-normal text-sm/4")}>
-                  {props.label}
-                </Label>
+              {label ? (
+                <Label className={twMerge(description && "font-normal text-sm/4")}>{label}</Label>
               ) : (
-                (props.children as React.ReactNode)
+                children
               )}
-              {props.description && <Description>{props.description}</Description>}
+              {description && <Description>{description}</Description>}
             </>
           </div>
         </div>
@@ -113,4 +117,4 @@ const Checkbox = ({ className, ...props }: CheckboxProps) => {
 }
 
 export type { CheckboxGroupProps, CheckboxProps }
-export { Checkbox, CheckboxGroup }
+export { CheckboxGroup, Checkbox }

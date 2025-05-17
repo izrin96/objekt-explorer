@@ -1,6 +1,6 @@
 "use client"
 
-import { composeTailwindRenderProps } from "@/components/ui/primitive"
+import { composeTailwindRenderProps } from "@/lib/primitive"
 import { Link as LinkPrimitive, type LinkProps as LinkPrimitiveProps } from "react-aria-components"
 import { twJoin } from "tailwind-merge"
 

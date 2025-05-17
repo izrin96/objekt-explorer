@@ -1,18 +1,27 @@
 "use client"
 
+import {
+  Dialog,
+  DialogBody,
+  DialogClose,
+  DialogCloseIcon,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components"
 import {
-  DialogTrigger,
+  DialogTrigger as DialogTriggerPrimitive,
   ModalOverlay,
   Modal as ModalPrimitive,
   composeRenderProps,
 } from "react-aria-components"
 import { type VariantProps, tv } from "tailwind-variants"
 
-import { Dialog } from "./dialog"
-
 const Modal = (props: DialogTriggerProps) => {
-  return <DialogTrigger {...props} />
+  return <DialogTriggerPrimitive {...props} />
 }
 
 const modalOverlayStyles = tv({
@@ -119,7 +128,7 @@ const ModalContent = ({
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}
-              {closeButton && <Dialog.CloseIndicator isDismissable={isDismissable} />}
+              {closeButton && <DialogCloseIcon isDismissable={isDismissable} />}
             </>
           )}
         </Dialog>
@@ -128,13 +137,13 @@ const ModalContent = ({
   )
 }
 
-const ModalTrigger = Dialog.Trigger
-const ModalHeader = Dialog.Header
-const ModalTitle = Dialog.Title
-const ModalDescription = Dialog.Description
-const ModalFooter = Dialog.Footer
-const ModalBody = Dialog.Body
-const ModalClose = Dialog.Close
+const ModalTrigger = DialogTrigger
+const ModalHeader = DialogHeader
+const ModalTitle = DialogTitle
+const ModalDescription = DialogDescription
+const ModalFooter = DialogFooter
+const ModalBody = DialogBody
+const ModalClose = DialogClose
 
 Modal.Trigger = ModalTrigger
 Modal.Header = ModalHeader

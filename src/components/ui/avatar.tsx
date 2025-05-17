@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-
 import { twMerge } from "tailwind-merge"
 
 interface AvatarProps {

@@ -1,5 +1,9 @@
 "use client"
 
+import { DropdownKeyboard } from "@/components/ui/dropdown"
+import { Loader } from "@/components/ui/loader"
+import { Menu, type MenuSectionProps } from "@/components/ui/menu"
+import { composeTailwindRenderProps } from "@/lib/primitive"
 import { IconSearch } from "@intentui/icons"
 import { createContext, use, useEffect } from "react"
 import type {
@@ -28,10 +32,6 @@ import {
   useFilter,
 } from "react-aria-components"
 import { twMerge } from "tailwind-merge"
-import { DropdownKeyboard } from "./dropdown"
-import { Loader } from "./loader"
-import { Menu, type MenuSectionProps } from "./menu"
-import { composeTailwindRenderProps } from "./primitive"
 
 interface CommandMenuProviderProps {
   isPending?: boolean
@@ -152,7 +152,7 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
       {escapeButton && (
         <Button
           onPress={() => state?.close()}
-          className="hidden cursor-pointer rounded border text-current/90 hover:bg-muted lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
+          className="hidden cursor-default rounded border text-current/90 hover:bg-muted lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
         >
           Esc
         </Button>

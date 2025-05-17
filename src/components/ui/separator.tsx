@@ -1,19 +1,15 @@
 "use client"
 
-import { Separator as Divider, type SeparatorProps as DividerProps } from "react-aria-components"
+import { Separator as Divider, type SeparatorProps } from "react-aria-components"
 import { twMerge } from "tailwind-merge"
 
-interface SeparatorProps extends DividerProps {
-  className?: string
-}
-
-const Separator = ({ className, ...props }: SeparatorProps) => {
+const Separator = ({ orientation = "horizontal", className, ...props }: SeparatorProps) => {
   return (
     <Divider
       {...props}
       className={twMerge(
         "shrink-0 bg-border forced-colors:bg-[ButtonBorder]",
-        props.orientation === "horizontal" ? "h-px w-full" : "w-px",
+        orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
         className,
       )}
     />

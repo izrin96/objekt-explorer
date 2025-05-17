@@ -4,7 +4,7 @@ const headingStyles = tv({
   base: "font-sans text-fg tracking-tight",
   variants: {
     level: {
-      1: "font-bold text-xl sm:text-2xl",
+      1: "font-semibold text-xl sm:text-2xl",
       2: "font-semibold text-lg sm:text-xl",
       3: "font-semibold text-base sm:text-lg",
       4: "font-semibold text-base",

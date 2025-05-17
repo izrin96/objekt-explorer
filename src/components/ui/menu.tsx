@@ -2,6 +2,16 @@
 
 import { createContext, use } from "react"
 
+import {
+  DropdownDescription,
+  DropdownKeyboard,
+  DropdownLabel,
+  DropdownSeparator,
+  dropdownItemStyles,
+  dropdownSectionStyles,
+} from "@/components/ui/dropdown"
+import { PopoverContent } from "@/components/ui/popover"
+import { composeTailwindRenderProps } from "@/lib/primitive"
 import { IconBulletFill, IconCheck, IconChevronLgRight } from "@intentui/icons"
 import type {
   ButtonProps,
@@ -24,16 +34,6 @@ import {
 } from "react-aria-components"
 import { twMerge } from "tailwind-merge"
 import type { VariantProps } from "tailwind-variants"
-import {
-  DropdownItemDetails,
-  DropdownKeyboard,
-  DropdownLabel,
-  DropdownSeparator,
-  dropdownItemStyles,
-  dropdownSectionStyles,
-} from "./dropdown"
-import { PopoverContent } from "./popover"
-import { composeTailwindRenderProps } from "./primitive"
 
 interface MenuContextProps {
   respectScreen: boolean
@@ -113,7 +113,7 @@ const MenuContent = <T extends object>({
       isOpen={props.isOpen}
       onOpenChange={props.onOpenChange}
       shouldFlip={props.shouldFlip}
-      respectScreen={respectScreen}
+      respectScreen={respectScreenInternal}
       showArrow={showArrow}
       offset={props.offset}
       placement={props.placement}
@@ -222,9 +222,9 @@ const MenuSection = <T extends object>({ className, ref, ...props }: MenuSection
 }
 
 const MenuSeparator = DropdownSeparator
-const MenuItemDetails = DropdownItemDetails
 const MenuKeyboard = DropdownKeyboard
 const MenuLabel = DropdownLabel
+const MenuDescription = DropdownDescription
 
 Menu.Keyboard = MenuKeyboard
 Menu.Content = MenuContent
@@ -232,8 +232,8 @@ Menu.Header = MenuHeader
 Menu.Item = MenuItem
 Menu.Section = MenuSection
 Menu.Separator = MenuSeparator
-Menu.ItemDetails = MenuItemDetails
 Menu.Label = MenuLabel
+Menu.Description = MenuDescription
 Menu.Trigger = MenuTrigger
 Menu.Submenu = MenuSubMenu
 

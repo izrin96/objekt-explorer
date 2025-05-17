@@ -1,4 +1,5 @@
 "use client"
+import { Keyboard } from "@/components/ui/keyboard"
 import { IconCheck } from "@intentui/icons"
 import type {
   ListBoxItemProps,
@@ -17,15 +18,14 @@ import {
 } from "react-aria-components"
 import { twMerge } from "tailwind-merge"
 import { tv } from "tailwind-variants"
-import { Keyboard } from "./keyboard"
 
 const dropdownItemStyles = tv({
   base: [
-    "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] not-has-data-[slot=dropdown-item-details]:items-center has-data-[slot=dropdown-item-details]:**:data-[slot=checked-icon]:mt-[1.5px] supports-[grid-template-columns:subgrid]:grid-cols-subgrid",
+    "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] not-has-[[slot=description]]:items-center has-data-[[slot=description]]:**:data-[slot=checked-icon]:mt-[1.5px] supports-[grid-template-columns:subgrid]:grid-cols-subgrid",
     "group relative cursor-default select-none rounded-[calc(var(--radius-lg)-1px)] px-[calc(var(--spacing)*2.3)] py-[calc(var(--spacing)*1.3)] forced-color:text-[Highlight] text-base text-fg outline-0 forced-color-adjust-none sm:text-sm/6 forced-colors:text-[LinkText]",
     "**:data-[slot=avatar]:*:mr-2 **:data-[slot=avatar]:*:size-6 **:data-[slot=avatar]:mr-2 **:data-[slot=avatar]:size-6 sm:**:data-[slot=avatar]:*:size-5 sm:**:data-[slot=avatar]:size-5",
     "data-danger:**:data-[slot=icon]:text-danger/60 **:data-[slot=icon]:size-4 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-muted-fg focus:data-danger:**:data-[slot=icon]:text-danger",
-    "data-[slot=menu-radio]:*:data-[slot=icon]:size-3 *:data-[slot=icon]:mr-2",
+    "*:data-[slot=icon]:mr-2",
     "forced-colors:**:data-[slot=icon]:text-[CanvasText] forced-colors:group-focus:**:data-[slot=icon]:text-[Canvas] ",
     "[&>[slot=label]+[data-slot=icon]]:absolute [&>[slot=label]+[data-slot=icon]]:right-0",
   ],
@@ -73,8 +73,7 @@ const DropdownSection = <T extends object>({ className, ...props }: DropdownSect
 type DropdownItemProps = ListBoxItemProps
 
 const DropdownItem = ({ className, ...props }: DropdownItemProps) => {
-  const textValue =
-    props.textValue || (typeof props.children === "string" ? props.children : undefined)
+  const textValue = typeof props.children === "string" ? props.children : undefined
   return (
     <ListBoxItemPrimitive
       textValue={textValue}
@@ -93,58 +92,25 @@ const DropdownItem = ({ className, ...props }: DropdownItemProps) => {
   )
 }
 
-interface DropdownItemDetailProps extends TextProps {
-  label?: TextProps["children"]
-  description?: TextProps["children"]
-  classNames?: {
-    label?: TextProps["className"]
-    description?: TextProps["className"]
-  }
-}
-
-const DropdownItemDetails = ({
-  label,
-  description,
-  classNames,
-  ...props
-}: DropdownItemDetailProps) => {
-  const { slot, children, title, ...restProps } = props
-
-  return (
-    <div
-      data-slot="dropdown-item-details"
-      className="col-start-2 flex flex-col gap-y-1"
-      {...restProps}
-    >
-      {label && (
-        <Text
-          slot={slot ?? "label"}
-          className={twMerge("font-medium sm:text-sm", classNames?.label)}
-          {...restProps}
-        >
-          {label}
-        </Text>
-      )}
-      {description && (
-        <Text
-          slot={slot ?? "description"}
-          className={twMerge("text-muted-fg text-xs", classNames?.description)}
-          {...restProps}
-        >
-          {description}
-        </Text>
-      )}
-      {!title && children}
-    </div>
-  )
-}
-
 interface DropdownLabelProps extends TextProps {
   ref?: React.Ref<HTMLDivElement>
 }
 
 const DropdownLabel = ({ className, ref, ...props }: DropdownLabelProps) => (
   <Text slot="label" ref={ref} className={twMerge("col-start-2", className)} {...props} />
+)
+
+interface DropdownDescriptionProps extends TextProps {
+  ref?: React.Ref<HTMLDivElement>
+}
+
+const DropdownDescription = ({ className, ref, ...props }: DropdownDescriptionProps) => (
+  <Text
+    slot="description"
+    ref={ref}
+    className={twMerge("col-start-2 text-muted-fg text-sm", className)}
+    {...props}
+  />
 )
 
 const DropdownSeparator = ({ className, ...props }: SeparatorProps) => (
@@ -173,14 +139,19 @@ const DropdownKeyboard = ({ className, ...props }: React.ComponentProps<typeof K
  * Note: This is not exposed component, but it's used in other components to render dropdowns.
  * @internal
  */
-export type { DropdownSectionProps, DropdownLabelProps, DropdownItemProps, DropdownItemDetailProps }
+export type {
+  DropdownSectionProps,
+  DropdownItemProps,
+  DropdownLabelProps,
+  DropdownDescriptionProps,
+}
 export {
   DropdownSeparator,
   DropdownItem,
   DropdownLabel,
+  DropdownDescription,
   DropdownKeyboard,
   dropdownItemStyles,
-  DropdownItemDetails,
   DropdownSection,
   dropdownSectionStyles,
 }

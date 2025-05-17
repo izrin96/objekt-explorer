@@ -167,52 +167,54 @@ function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
   return (
     <div className="flex flex-col gap-2">
       <Card className="py-0">
-        <Table aria-label="Trades">
-          <Table.Header>
-            <Table.Column isRowHeader maxWidth={110}>
-              Serial
-            </Table.Column>
-            <Table.Column>Token ID</Table.Column>
-            <Table.Column minWidth={200}>Received</Table.Column>
-            <Table.Column>Transferable</Table.Column>
-          </Table.Header>
-          <Table.Body items={currentItems}>
-            {(item) => (
-              <Table.Row id={item.id}>
-                <Table.Cell>
-                  <span
-                    onClick={() => openTrades(item.serial)}
-                    className="cursor-pointer"
-                  >
-                    {item.serial}
-                  </span>
-                </Table.Cell>
-                <Table.Cell>
-                  <Link
-                    href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${item.id}`}
-                    className="cursor-pointer inline-flex gap-2 items-center"
-                    target="_blank"
-                  >
-                    {item.id}
-                    <IconOpenLink />
-                  </Link>
-                </Table.Cell>
-                <Table.Cell>
-                  {format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}
-                </Table.Cell>
-                <Table.Cell>
-                  <Badge
-                    className={cn("text-xs")}
-                    intent={!item.transferable ? "custom" : "info"}
-                    shape="square"
-                  >
-                    {item.transferable ? "Yes" : "No"}
-                  </Badge>
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
+        <Card.Content>
+          <Table aria-label="Trades">
+            <Table.Header>
+              <Table.Column isRowHeader maxWidth={110}>
+                Serial
+              </Table.Column>
+              <Table.Column>Token ID</Table.Column>
+              <Table.Column minWidth={200}>Received</Table.Column>
+              <Table.Column>Transferable</Table.Column>
+            </Table.Header>
+            <Table.Body items={currentItems}>
+              {(item) => (
+                <Table.Row id={item.id}>
+                  <Table.Cell>
+                    <span
+                      onClick={() => openTrades(item.serial)}
+                      className="cursor-pointer"
+                    >
+                      {item.serial}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Link
+                      href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${item.id}`}
+                      className="cursor-pointer inline-flex gap-2 items-center"
+                      target="_blank"
+                    >
+                      {item.id}
+                      <IconOpenLink />
+                    </Link>
+                  </Table.Cell>
+                  <Table.Cell>
+                    {format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <Badge
+                      className={cn("text-xs")}
+                      intent={!item.transferable ? "custom" : "info"}
+                      shape="square"
+                    >
+                      {item.transferable ? "Yes" : "No"}
+                    </Badge>
+                  </Table.Cell>
+                </Table.Row>
+              )}
+            </Table.Body>
+          </Table>
+        </Card.Content>
       </Card>
       {totalPages > 1 && (
         <div className="flex gap-3 items-center justify-center">

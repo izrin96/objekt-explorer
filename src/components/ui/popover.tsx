@@ -7,7 +7,7 @@ import type {
   PopoverProps as PopoverPrimitiveProps,
 } from "react-aria-components"
 import {
-  DialogTrigger,
+  DialogTrigger as DialogTriggerPrimitive,
   Modal,
   ModalOverlay,
   OverlayArrow,
@@ -18,38 +18,47 @@ import {
 } from "react-aria-components"
 import { tv } from "tailwind-variants"
 
-import { useMediaQuery } from "@/utils/use-media-query"
-import { twMerge } from "tailwind-merge"
 import type {
   DialogBodyProps,
   DialogFooterProps,
   DialogHeaderProps,
   DialogTitleProps,
-} from "./dialog"
-import { Dialog } from "./dialog"
+} from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogBody,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { useMediaQuery } from "@/hooks/use-media-query"
+import { twMerge } from "tailwind-merge"
 
 type PopoverProps = DialogTriggerProps
 const Popover = (props: PopoverProps) => {
-  return <DialogTrigger {...props} />
+  return <DialogTriggerPrimitive {...props} />
 }
 
 const PopoverTitle = ({ level = 2, className, ...props }: DialogTitleProps) => (
-  <Dialog.Title
+  <DialogTitle
     className={twMerge("sm:leading-none", level === 2 && "sm:text-lg", className)}
     {...props}
   />
 )
 
 const PopoverHeader = ({ className, ...props }: DialogHeaderProps) => (
-  <Dialog.Header className={twMerge("sm:p-4", className)} {...props} />
+  <DialogHeader className={twMerge("sm:p-4", className)} {...props} />
 )
 
 const PopoverFooter = ({ className, ...props }: DialogFooterProps) => (
-  <Dialog.Footer className={twMerge("sm:p-4", className)} {...props} />
+  <DialogFooter className={twMerge("sm:p-4", className)} {...props} />
 )
 
 const PopoverBody = ({ className, ref, ...props }: DialogBodyProps) => (
-  <Dialog.Body ref={ref} className={twMerge("sm:px-4 sm:pt-0", className)} {...props} />
+  <DialogBody ref={ref} className={twMerge("sm:px-4 sm:pt-0", className)} {...props} />
 )
 
 const content = tv({
@@ -58,7 +67,7 @@ const content = tv({
   ],
   variants: {
     isPicker: {
-      true: "max-h-72 min-w-(--trigger-width) overflow-y-auto",
+      true: "min-w-(--trigger-width)",
       false: "min-w-80",
     },
     isMenu: {
@@ -180,9 +189,9 @@ const PopoverContent = ({
   )
 }
 
-const PopoverTrigger = Dialog.Trigger
-const PopoverClose = Dialog.Close
-const PopoverDescription = Dialog.Description
+const PopoverTrigger = DialogTrigger
+const PopoverClose = DialogClose
+const PopoverDescription = DialogDescription
 
 Popover.Trigger = PopoverTrigger
 Popover.Close = PopoverClose

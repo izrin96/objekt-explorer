@@ -2,21 +2,21 @@
 
 import { createContext, use, useCallback, useId, useMemo, useState } from "react"
 
-import { useMediaQuery } from "@/utils/use-media-query"
+import { Button, type ButtonProps } from "@/components/ui/button"
+import { Sheet } from "@/components/ui/sheet"
+import { useMediaQuery } from "@/hooks/use-media-query"
+import { composeTailwindRenderProps } from "@/lib/primitive"
 import { IconHamburger } from "@intentui/icons"
 import { LayoutGroup, motion } from "motion/react"
 import type { LinkProps } from "react-aria-components"
 import { Link } from "react-aria-components"
 import { twJoin, twMerge } from "tailwind-merge"
 import { tv } from "tailwind-variants"
-import { Button, type ButtonProps } from "./button"
-import { composeTailwindRenderProps } from "./primitive"
-import { Sheet } from "./sheet"
 
 type NavbarOptions = {
   side?: "left" | "right"
   isSticky?: boolean
-  intent?: "navbar" | "floating" | "inset"
+  intent?: "navbar" | "float" | "inset"
 }
 
 type NavbarContextProps = {
@@ -92,7 +92,7 @@ const Navbar = ({
         className={twMerge(
           "relative isolate flex w-full flex-col",
           intent === "navbar" && "",
-          intent === "floating" && "px-2.5 pt-2",
+          intent === "float" && "px-2.5 pt-2",
           intent === "inset" && "min-h-svh bg-navbar dark:bg-bg",
           className,
         )}
@@ -114,7 +114,7 @@ const navStyles = tv({
       true: "sticky top-0 z-40",
     },
     intent: {
-      floating:
+      float:
         "mx-auto w-full max-w-7xl rounded-xl border bg-navbar text-navbar-fg md:px-4 2xl:max-w-(--breakpoint-2xl)",
       navbar: "border-b bg-navbar text-navbar-fg md:px-6",
       inset: [
@@ -126,7 +126,7 @@ const navStyles = tv({
 })
 
 interface NavbarNavProps extends React.ComponentProps<"div"> {
-  intent?: "navbar" | "floating" | "inset"
+  intent?: "navbar" | "float" | "inset"
   isSticky?: boolean
   side?: "left" | "right"
   useDefaultResponsive?: boolean
@@ -145,7 +145,7 @@ const NavbarNav = ({ useDefaultResponsive = true, className, ref, ...props }: Na
           classNames={{
             content: "text-fg [&>button]:hidden",
           }}
-          isFloat={intent === "floating"}
+          isFloat={intent === "float"}
         >
           <Sheet.Body className="px-2 md:px-4">{props.children}</Sheet.Body>
         </Sheet.Content>
@@ -228,7 +228,7 @@ const NavbarItem = ({ className, isCurrent, ...props }: NavbarItemProps) => {
           "**:data-[slot=chevron]:size-4 **:data-[slot=chevron]:transition-transform",
           "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 pressed:**:data-[slot=chevron]:rotate-180",
           "disabled:cursor-default disabled:opacity-50 disabled:forced-colors:text-[GrayText]",
-          isCurrent && "cursor-default text-navbar-fg",
+          isCurrent && "text-navbar-fg",
         ),
       )}
       {...props}
@@ -237,7 +237,7 @@ const NavbarItem = ({ className, isCurrent, ...props }: NavbarItemProps) => {
         <>
           {typeof props.children === "function" ? props.children(values) : props.children}
 
-          {(isCurrent || values.isCurrent) && !isCompact && intent !== "floating" && (
+          {(isCurrent || values.isCurrent) && !isCompact && intent !== "float" && (
             <motion.span
               layoutId="current-indicator"
               data-slot="current-indicator"
@@ -277,8 +277,8 @@ const NavbarCompact = ({ className, ref, ...props }: NavbarCompactProps) => {
     <div
       ref={ref}
       className={twMerge(
-        "flex justify-between bg-navbar text-navbar-fg peer-has-[[data-navbar-intent=floating]]:border md:hidden",
-        intent === "floating" && "h-12 rounded-lg border px-3.5",
+        "flex justify-between bg-navbar text-navbar-fg peer-has-[[data-navbar-intent=float]]:border md:hidden",
+        intent === "float" && "h-12 rounded-lg border px-3.5",
         intent === "inset" && "h-14 border-b px-4",
         intent === "navbar" && "h-14 border-b px-4",
         className,
@@ -292,7 +292,7 @@ const insetStyles = tv({
   base: "grow",
   variants: {
     intent: {
-      floating: "",
+      float: "",
       inset:
         "bg-bg md:rounded-lg md:shadow-xs md:ring-1 md:ring-fg/15 dark:bg-navbar md:dark:ring-border",
       navbar: "",
