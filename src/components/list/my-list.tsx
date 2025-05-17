@@ -255,6 +255,7 @@ function CreateList() {
   const createList = api.list.create.useMutation({
     onSuccess: () => {
       setOpen(false);
+      toast.success("List created");
       utils.list.myList.invalidate();
     },
     onError: () => {
@@ -308,6 +309,7 @@ function DeleteList({
   const deleteList = api.list.delete.useMutation({
     onSuccess: () => {
       setOpen(false);
+      toast.success("List deleted");
       utils.list.myList.invalidate();
     },
     onError: () => {
@@ -364,6 +366,7 @@ function EditList({
   const editList = api.list.edit.useMutation({
     onSuccess: () => {
       setOpen(false);
+      toast.success("List updated");
       utils.list.myList.invalidate();
     },
     onError: () => {

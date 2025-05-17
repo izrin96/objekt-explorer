@@ -113,6 +113,7 @@ function RemoveLink({
   const removeLink = api.cosmoLink.removeLink.useMutation({
     onSuccess: () => {
       setOpen(false);
+      toast.success("Cosmo unlinked");
       utils.profile.getAll.invalidate();
     },
     onError: () => {
@@ -189,7 +190,7 @@ export function EditProfile({
 
   const getPresignedUrl = api.profile.getPresignedUrl.useMutation({
     onError: () => {
-      toast.error("Failed to get upload URL");
+      toast.error("Failed to upload image");
     },
   });
 
