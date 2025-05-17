@@ -14,7 +14,7 @@ export function FilterSheet({ children }: Props) {
     <>
       <Button
         className="fixed bottom-4 right-4 z-50"
-        intent="outline"
+        intent="secondary"
         onPress={() => setIsOpen(true)}
       >
         <IconFilter />
