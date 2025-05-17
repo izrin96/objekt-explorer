@@ -264,7 +264,7 @@ export function EditProfile({
           <Sheet.Header>
             <Sheet.Title>Edit Profile</Sheet.Title>
             <Sheet.Description>
-              Currently edit Cosmo profile: {nickname}
+              Currently editing <span className="text-fg">{nickname}</span> Cosmo profile
             </Sheet.Description>
           </Sheet.Header>
           <Sheet.Body>
@@ -282,6 +282,7 @@ export function EditProfile({
                 />
                 <div className="group flex flex-col gap-y-1">
                   <Label>Banner Image</Label>
+                  {droppedImage && <span className="text-sm text-muted-fg">Selected file: {droppedImage.name}</span>}
                   <FileTrigger
                     acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
                     onSelect={(e) => {
