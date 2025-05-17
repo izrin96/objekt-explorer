@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const altFont = Nunito_Sans({
-  variable: "--font-alt",
+const nunitoFont = Nunito_Sans({
+  variable: "--font-nunito",
   weight: "700",
   subsets: ["latin"],
 });
@@ -63,7 +63,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${altFont.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${nunitoFont.variable}`}
     >
       <body
         className={cn(
