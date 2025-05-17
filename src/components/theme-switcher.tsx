@@ -8,7 +8,6 @@ import { Button } from "./ui"
 export function ThemeSwitcher({
   shape = "square",
   intent = "outline",
-  className,
   ...props
 }: React.ComponentProps<typeof Button>) {
   const { theme, setTheme } = useTheme()

@@ -28,10 +28,10 @@ export default function SignIn() {
                   provider: "discord",
                 },
                 {
-                  onRequest: (ctx) => {
+                  onRequest: () => {
                     setLoading(true);
                   },
-                  onResponse: (ctx) => {
+                  onResponse: () => {
                     setLoading(false);
                   },
                 }

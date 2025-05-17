@@ -1,4 +1,4 @@
-export function cacheHeaders(ttl?: number) {
+export function cacheHeaders(_?: number) {
   return {
     "Cache-Control": "max-age=15",
   };

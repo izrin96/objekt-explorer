@@ -211,7 +211,7 @@ export function EditProfile({
             throw new Error("Failed to upload image");
           }
         });
-      } catch (error) {
+      } catch {
         toast.error("Failed to upload image");
       }
     },
