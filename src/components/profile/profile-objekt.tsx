@@ -199,6 +199,7 @@ function ProfileObjekt() {
 
 function Filters({ address }: { address: string }) {
   const session = authClient.useSession();
+  const isProfileAuthed = useProfileAuthed();
   return (
     <div className="flex flex-col gap-6">
       <Filter />
@@ -207,8 +208,12 @@ function Filters({ address }: { address: string }) {
           {({ handleAction }) => (
             <>
               <AddToList handleAction={handleAction} />
-              <PinObjekt address={address} handleAction={handleAction} />
-              <UnpinObjekt address={address} handleAction={handleAction} />
+              {isProfileAuthed && (
+                <>
+                  <PinObjekt address={address} handleAction={handleAction} />
+                  <UnpinObjekt address={address} handleAction={handleAction} />
+                </>
+              )}
             </>
           )}
         </SelectMode>
