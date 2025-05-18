@@ -48,6 +48,7 @@ const Avatar = ({
             dominantBaseline="middle"
             textAnchor="middle"
             dy=".125em"
+            suppressHydrationWarning
           >
             {initials}
           </text>

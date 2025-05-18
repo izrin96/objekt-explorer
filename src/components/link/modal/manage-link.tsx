@@ -222,7 +222,7 @@ function EditProfileForm({
             <div className="group flex flex-col gap-y-1">
               <Label>Banner Image</Label>
               {droppedImage && (
-                <span className="text-sm text-muted-fg">
+                <span className="text-sm text-muted-fg truncate">
                   Selected file: {droppedImage.name}
                 </span>
               )}
