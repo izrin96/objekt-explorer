@@ -5,15 +5,17 @@ import React, { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { api } from "@/lib/trpc/client";
 import { InputOTP } from "../ui/input-otp";
-import {
-  Ghost,
-  HeartBreak,
-  UserFocus,
-  SealCheck,
-} from "@phosphor-icons/react/dist/ssr";
 import { Button, buttonStyles, Form, Link, Loader } from "../ui";
 import { msToCountdown } from "@/lib/utils";
 import { toast } from "sonner";
+import WelcomeIcon from "@/assets/icon-welcome.png";
+import CatIcon from "@/assets/icon-cat.png";
+import TrashIcon from "@/assets/icon-trash.png";
+import CarpenterIcon from "@/assets/icon-carpenter.png";
+import SmartphoneIcon from "@/assets/icon-smartphone.png";
+import MugIcon from "@/assets/icon-mug.png";
+import Image from "next/image";
+import ReactDOM from "react-dom";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -22,11 +24,28 @@ function generateQrCode(ticket: string) {
 export default function LinkRender() {
   const utils = api.useUtils();
   const [step, setStep] = useState(0);
+
+  // preload image icons
+  ReactDOM.preload(WelcomeIcon.src, { as: "image" });
+  ReactDOM.preload(CatIcon.src, { as: "image" });
+  ReactDOM.preload(TrashIcon.src, { as: "image" });
+  ReactDOM.preload(CarpenterIcon.src, { as: "image" });
+  ReactDOM.preload(SmartphoneIcon.src, { as: "image" });
+  ReactDOM.preload(MugIcon.src, { as: "image" });
+
   return (
     <div className="flex flex-col justify-center items-center gap-5">
       {step === 0 && (
         <div className="flex flex-col justify-center items-center max-w-xl gap-4">
           <h2 className="text-lg font-semibold">How its work</h2>
+          <Image
+            priority
+            src={SmartphoneIcon.src}
+            alt="Smartphone"
+            width={220}
+            height={220}
+            className="animate-in fade-in zoom-in duration-200"
+          />
           <p>
             You need to download the Cosmo app and sign in with the ID you want
             to link before continue.
@@ -57,6 +76,14 @@ function TicketRender() {
   if (isRefetching || isLoading)
     return (
       <div className="flex flex-col gap-2 items-center">
+        <Image
+          priority
+          src={MugIcon.src}
+          alt="Mug"
+          width={220}
+          height={220}
+          className="animate-in fade-in zoom-in duration-200"
+        />
         <span>Generating QR code</span>
         <Loader variant="ring" />
       </div>
@@ -65,7 +92,14 @@ function TicketRender() {
   if (status === "error")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <HeartBreak size={52} />
+        <Image
+          priority
+          src={CarpenterIcon.src}
+          alt="Carpenter"
+          width={220}
+          height={220}
+          className="animate-in fade-in zoom-in duration-200"
+        />
         <span>Error generating QR ticket</span>
         <Button intent="secondary" onClick={() => refetch()}>
           Try again
@@ -127,7 +161,14 @@ function StepRender({
   if (data.status === "wait_for_certify")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <UserFocus size={52} weight="thin" />
+        <Image
+          priority
+          src={CatIcon.src}
+          alt="Cat"
+          width={220}
+          height={220}
+          className="animate-in fade-in zoom-in duration-200"
+        />
         <span>Detected Cosmo &apos;{data.user.nickname}&apos;</span>
         <span>Enter the verification code</span>
         <RenderOtp ticketAuth={ticketAuth} />
@@ -137,7 +178,14 @@ function StepRender({
   if (data.status === "expired")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <Ghost size={52} weight="thin" />
+        <Image
+          priority
+          src={TrashIcon.src}
+          alt="Trash"
+          width={220}
+          height={220}
+          className="animate-in fade-in zoom-in duration-200"
+        />
         <span>QR expired</span>
         <Button intent="secondary" onClick={refetch}>
           Regenerate
@@ -148,7 +196,14 @@ function StepRender({
   if (data.status === "certified")
     return (
       <div className="flex flex-col gap-2 items-center">
-        <SealCheck size={52} weight="thin" />
+        <Image
+          priority
+          src={WelcomeIcon.src}
+          width={220}
+          height={220}
+          alt="Welcome"
+          className="animate-in fade-in zoom-in duration-200"
+        />
         <span>Success. Cosmo &apos;{data.user.nickname}&apos; linked.</span>
         <div>
           <Link
