@@ -29,6 +29,7 @@ import { ValidObjekt } from "@/lib/universal/objekts";
 import { FilterSheet } from "../filters/filter-sheet";
 import { FilterContainer } from "../filters/filter-container";
 import { User } from "better-auth";
+import { AddToList } from "../list/modal/manage-objekt";
 
 type Props = { user?: User };
 
@@ -136,7 +137,11 @@ function Filters(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {props.user !== undefined && <SelectMode state="add" />}
+      {props.user !== undefined && (
+        <SelectMode>
+          {({ handleAction }) => <AddToList handleAction={handleAction} />}
+        </SelectMode>
+      )}
     </div>
   );
 }

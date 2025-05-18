@@ -17,9 +17,9 @@ import {
 import { Error } from "../../error-boundary";
 
 export function AddToList({
-  onClick,
+  handleAction,
 }: {
-  onClick: (open: () => void) => void;
+  handleAction: (open: () => void) => void;
 }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
@@ -39,7 +39,10 @@ export function AddToList({
   });
   return (
     <>
-      <Button intent="outline" onClick={() => onClick(() => setOpen(true))}>
+      <Button
+        intent="outline"
+        onClick={() => handleAction(() => setOpen(true))}
+      >
         Add to list
       </Button>
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
@@ -124,10 +127,10 @@ function AddToListForm() {
 
 export function RemoveFromList({
   slug,
-  onClick,
+  handleAction,
 }: {
   slug: string;
-  onClick: (open: () => void) => void;
+  handleAction: (open: () => void) => void;
 }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
@@ -149,7 +152,10 @@ export function RemoveFromList({
   });
   return (
     <>
-      <Button intent="outline" onClick={() => onClick(() => setOpen(true))}>
+      <Button
+        intent="outline"
+        onClick={() => handleAction(() => setOpen(true))}
+      >
         Remove from list
       </Button>
       <Modal.Content isOpen={open} onOpenChange={setOpen}>

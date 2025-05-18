@@ -25,6 +25,7 @@ import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
+import { RemoveFromList } from "./modal/manage-objekt";
 
 type Props = { slug: string; isOwned: boolean };
 
@@ -141,7 +142,13 @@ function Filters({ isOwned, slug }: { isOwned: boolean; slug: string }) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {isOwned && <SelectMode state="remove" slug={slug} />}
+      {isOwned && (
+        <SelectMode>
+          {({ handleAction }) => (
+            <RemoveFromList slug={slug} handleAction={handleAction} />
+          )}
+        </SelectMode>
+      )}
     </div>
   );
 }

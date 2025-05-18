@@ -2,16 +2,17 @@
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { Button } from "../ui";
-import { useCallback } from "react";
+import { useCallback, ReactNode } from "react";
 import { toast } from "sonner";
-import { AddToList, RemoveFromList } from "../list/modal/manage-objekt";
 
 export function SelectMode({
-  slug,
-  state,
+  children,
 }: {
-  slug?: string;
-  state: "add" | "remove";
+  children?: ({
+    handleAction,
+  }: {
+    handleAction: (open: () => void) => void;
+  }) => ReactNode;
 }) {
   const mode = useObjektSelect((a) => a.mode);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
@@ -41,17 +42,12 @@ export function SelectMode({
       >
         Select mode
       </Button>
-
       {mode && (
         <Button intent="outline" onClick={reset}>
           Reset
         </Button>
       )}
-
-      {state === "add" && <AddToList onClick={(open) => handleAction(open)} />}
-      {state === "remove" && slug && (
-        <RemoveFromList slug={slug} onClick={(open) => handleAction(open)} />
-      )}
+      {children?.({ handleAction })}
     </div>
   );
 }

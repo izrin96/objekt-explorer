@@ -6,7 +6,7 @@ import {
 } from "@/lib/server/api/trpc";
 import { db } from "../../db";
 import { pins } from "../../db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { checkAddressOwned } from "./profile";
 
 export const pinsRouter = createTRPCRouter({
@@ -55,5 +55,38 @@ export const pinsRouter = createTRPCRouter({
       await db
         .delete(pins)
         .where(and(eq(pins.tokenId, tokenId), eq(pins.address, address)));
+    }),
+
+  batchPin: authProcedure
+    .input(
+      z.object({
+        address: z.string(),
+        tokenIds: z.number().array(),
+      })
+    )
+    .mutation(async ({ input: { address, tokenIds }, ctx: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
+
+      await db.insert(pins).values(
+        tokenIds.map((tokenId) => ({
+          address,
+          tokenId,
+        }))
+      );
+    }),
+
+  batchUnpin: authProcedure
+    .input(
+      z.object({
+        address: z.string(),
+        tokenIds: z.number().array(),
+      })
+    )
+    .mutation(async ({ input: { address, tokenIds }, ctx: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
+
+      await db
+        .delete(pins)
+        .where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
     }),
 });

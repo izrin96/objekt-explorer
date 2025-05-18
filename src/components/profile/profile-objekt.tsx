@@ -31,6 +31,8 @@ import { ObjektOverlay } from "../objekt/objekt-action";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
 import { useProfileAuthed } from "@/hooks/use-user";
+import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
+import { AddToList } from "../list/modal/manage-objekt";
 
 export default function ProfileObjektRender() {
   return (
@@ -179,10 +181,10 @@ function ProfileObjekt() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters />
+          <Filters address={profile!.address} />
         </FilterContainer>
         <FilterSheet>
-          <Filters />
+          <Filters address={profile!.address} />
         </FilterSheet>
       </div>
       <span className="font-semibold">
@@ -195,12 +197,22 @@ function ProfileObjekt() {
   );
 }
 
-function Filters() {
+function Filters({ address }: { address: string }) {
   const session = authClient.useSession();
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {session.data && <SelectMode state="add" />}
+      {session.data && (
+        <SelectMode>
+          {({ handleAction }) => (
+            <>
+              <AddToList handleAction={handleAction} />
+              <PinObjekt address={address} handleAction={handleAction} />
+              <UnpinObjekt address={address} handleAction={handleAction} />
+            </>
+          )}
+        </SelectMode>
+      )}
     </div>
   );
 }
