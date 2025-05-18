@@ -51,8 +51,8 @@ function TogglePin({
       utils.pins.get.invalidate(profile.address);
       toast.success("Objekt pinned");
     },
-    onError: ({ message }) => {
-      toast.error(message || "Error pin objekt");
+    onError: () => {
+      toast.error("Error pin objekt");
     },
   });
   const unpin = api.pins.unpin.useMutation({
@@ -60,8 +60,8 @@ function TogglePin({
       utils.pins.get.invalidate(profile.address);
       toast.success("Objekt unpinned");
     },
-    onError: ({ message }) => {
-      toast.error(message || "Error unpin objekt");
+    onError: () => {
+      toast.error("Error unpin objekt");
     },
   });
   return (

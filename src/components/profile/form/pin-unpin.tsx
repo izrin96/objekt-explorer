@@ -20,8 +20,8 @@ export function PinObjekt({ address, handleAction }: Props) {
       toast.success("Objekt pinned");
       reset();
     },
-    onError: ({ message }) => {
-      toast.error(message || "Error pin objekt");
+    onError: () => {
+      toast.error("Error pin objekt");
     },
   });
   return (
@@ -31,7 +31,7 @@ export function PinObjekt({ address, handleAction }: Props) {
         handleAction(() => {
           batchPin.mutate({
             address: address,
-            tokenIds: selected.map((a) => Number(a.id)),
+            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
           });
         })
       }
@@ -52,8 +52,8 @@ export function UnpinObjekt({ address, handleAction }: Props) {
       toast.success("Objekt unpinned");
       reset();
     },
-    onError: ({ message }) => {
-      toast.error(message || "Error unpin objekt");
+    onError: () => {
+      toast.error("Error unpin objekt");
     },
   });
   return (
@@ -63,7 +63,7 @@ export function UnpinObjekt({ address, handleAction }: Props) {
         handleAction(() => {
           batchUnpin.mutate({
             address: address,
-            tokenIds: selected.map((a) => Number(a.id)),
+            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
           });
         });
       }}

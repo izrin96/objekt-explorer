@@ -129,8 +129,8 @@ function EditProfileForm({
       onComplete?.();
       toast.success("Cosmo profile updated");
     },
-    onError: ({ message }) => {
-      toast.error(message || "Error edit Cosmo profile");
+    onError: () => {
+      toast.error("Error edit Cosmo profile");
     },
   });
 
