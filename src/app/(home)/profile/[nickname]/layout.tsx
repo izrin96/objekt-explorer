@@ -10,12 +10,16 @@ import { PublicProfile } from "@/lib/universal/user";
 import Image from "next/image";
 import { PropsWithChildren } from "react";
 import { getMimeTypeFromExtension } from "@/lib/utils";
+import { cn } from "@/utils/classes";
 
 type Props = PropsWithChildren<{
   params: Promise<{
     nickname: string;
   }>;
 }>;
+
+const BANNER_BREAKPOINT =
+  "h-[280px] sm:h-[320px] md:h-[380px] lg:h-[440px] xl:h-[500px] 2xl:h-[560px]";
 
 export default async function UserCollectionLayout(props: Props) {
   const params = await props.params;
@@ -33,7 +37,7 @@ export default async function UserCollectionLayout(props: Props) {
         <ProfileBanner profile={targetUser} />
         <Container>
           {targetUser.bannerImgUrl && (
-            <div className="h-[250px] md:h-[350px] xl:h-[450px] -mt-16"></div>
+            <div className={cn("-mt-20", BANNER_BREAKPOINT)}></div>
           )}
           <div className="flex flex-col gap-4 pb-8">
             <ProfileHeader user={targetUser} />
@@ -59,8 +63,13 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
   return (
     <>
       <div className="absolute top-0 inset-0 -z-5">
-        <Container>
-          <div className="h-[250px] md:h-[350px] xl:h-[450px] relative mask-b-from-75% mask-x-from-90%">
+        <div className="mx-auto w-full max-w-7xl lg:max-w-(--breakpoint-xl) 2xl:max-w-(--breakpoint-2xl)">
+          <div
+            className={cn(
+              "relative mask-b-from-75% mask-x-from-100% xl:mask-x-from-90%",
+              BANNER_BREAKPOINT
+            )}
+          >
             {isVideo ? (
               <video
                 src={profile.bannerImgUrl}
@@ -80,9 +89,14 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
               />
             )}
           </div>
-        </Container>
+        </div>
       </div>
-      <div className="absolute top-0 inset-0 -z-10 h-[250px] md:h-[350px] xl:h-[450px] mask-b-from-75%">
+      <div
+        className={cn(
+          "absolute top-0 inset-0 -z-10 mask-b-from-75%",
+          BANNER_BREAKPOINT
+        )}
+      >
         {isVideo ? (
           <video
             src={profile.bannerImgUrl}
