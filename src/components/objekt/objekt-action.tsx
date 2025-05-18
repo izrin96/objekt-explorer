@@ -25,7 +25,7 @@ export function ObjektOverlay({
   return (
     <>
       {isPin && (
-        <div className="absolute top-0.5 left-0.5 bg-bg/30 text-fg p-1.5 rounded-md">
+        <div className="absolute bg-bg text-fg p-1 rounded-md">
           <PushPin weight="bold" size={12} />
         </div>
       )}
