@@ -36,6 +36,11 @@ export const pinsRouter = createTRPCRouter({
     .mutation(async ({ input: { address, tokenId }, ctx: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
+      // unpin existing first then pin again
+      await db
+        .delete(pins)
+        .where(and(eq(pins.tokenId, tokenId), eq(pins.address, address)));
+
       await db.insert(pins).values({
         address,
         tokenId,
@@ -66,6 +71,11 @@ export const pinsRouter = createTRPCRouter({
     )
     .mutation(async ({ input: { address, tokenIds }, ctx: { session } }) => {
       await checkAddressOwned(address, session.user.id);
+
+      // unpin existing first then pin again
+      await db
+        .delete(pins)
+        .where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
 
       await db.insert(pins).values(
         tokenIds.map((tokenId) => ({
