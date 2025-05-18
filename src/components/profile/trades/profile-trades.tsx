@@ -87,19 +87,19 @@ function ProfileTrades() {
           <table className="table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden">
             <thead data-slot="table-header" className="border-b">
               <tr>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Date
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Objekt
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Serial
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Action
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   User
                 </th>
               </tr>
@@ -160,11 +160,11 @@ function TradeRow({
 
   return (
     <tr className="tr group relative cursor-default border-b text-fg outline-hidden ring-primary focus:ring-0 focus-visible:ring-1">
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </td>
       <td
-        className="group whitespace-nowrap px-3 py-3 outline-hidden cursor-pointer"
+        className="group whitespace-nowrap px-3 py-2.5 outline-hidden cursor-pointer"
         onClick={open}
       >
         <div className="inline-flex gap-2 items-center">
@@ -172,13 +172,13 @@ function TradeRow({
           <IconOpenLink />
         </div>
       </td>
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {row.objekt.serial}
       </td>
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {action}
       </td>
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {user}
       </td>
     </tr>

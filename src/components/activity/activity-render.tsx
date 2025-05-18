@@ -60,22 +60,22 @@ function Activity() {
           <table className="table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden">
             <thead data-slot="table-header" className="border-b">
               <tr>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Event
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Objekt
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Serial
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   From
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   To
                 </th>
-                <th className="relative whitespace-nowrap px-3 py-3 text-left font-medium outline-hidden">
+                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
                   Time
                 </th>
               </tr>
@@ -132,7 +132,7 @@ function ActivityRow({ item, open }: { item: Data; open: () => void }) {
       key={item.id}
       className="tr group relative cursor-default border-b text-fg outline-hidden ring-primary focus:ring-0 focus-visible:ring-1 duration-200 ease-out-quint animate-in slide-in-from-top *:animate-live-animation-bg"
     >
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         <div className="flex items-center gap-2 font-semibold">
           {item.from === NULL_ADDRESS ? (
             <>
@@ -153,19 +153,19 @@ function ActivityRow({ item, open }: { item: Data; open: () => void }) {
         </div>
       </td>
       <td
-        className="group whitespace-nowrap px-3 py-3 outline-hidden cursor-pointer"
+        className="group whitespace-nowrap px-3 py-2.5 outline-hidden cursor-pointer"
         onClick={open}
       >
         {item.collection.collectionId}
       </td>
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {item.objekt.serial}
       </td>
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {from}
       </td>
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">{to}</td>
-      <td className="group whitespace-nowrap px-3 py-3 outline-hidden">
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">{to}</td>
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </td>
     </tr>
