@@ -7,7 +7,7 @@ import {
   getUser,
 } from "../../cosmo/shop/qr-auth";
 import { authProcedure, createTRPCRouter } from "../trpc";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";

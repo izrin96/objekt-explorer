@@ -1,5 +1,5 @@
 import { initTRPC, TRPCError } from "@trpc/server";
-import { ZodError } from "zod";
+import { ZodError } from "zod/v4";
 import { auth } from "../auth";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {

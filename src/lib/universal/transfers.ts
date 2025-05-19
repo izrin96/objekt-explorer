@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import type { Transfer } from "../server/db/indexer/schema";
 import type { OwnedObjekt } from "./objekts";
 import {

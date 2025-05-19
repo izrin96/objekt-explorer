@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 import { authProcedure, createTRPCRouter } from "@/lib/server/api/trpc";
 import { db } from "../../db";
 import { TRPCError } from "@trpc/server";

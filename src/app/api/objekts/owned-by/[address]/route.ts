@@ -4,7 +4,7 @@ import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { eq, desc, asc } from "drizzle-orm";
 import { NextRequest } from "next/server";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 type Params = {
   params: Promise<{

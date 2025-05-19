@@ -1,7 +1,7 @@
 import { indexer } from "@/lib/server/db/indexer";
 import { and, count, eq, desc, not, inArray, ne } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
-import { z } from "zod";
+import { z } from "zod/v4";
 import {
   validArtists,
   validOnlineTypes,
