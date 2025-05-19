@@ -18,13 +18,22 @@ import { CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
 import { PublicUser } from "@/lib/universal/user";
 
 export const listRouter = createTRPCRouter({
-  get: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
-    const result = await fetchList(slug);
+  get: authProcedure
+    .input(z.string())
+    .query(async ({ input: slug, ctx: { session } }) => {
+      const result = await db.query.lists.findFirst({
+        columns: {
+          name: true,
+          hideUser: true,
+        },
+        where: (lists, { eq, and }) =>
+          and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
+      });
 
-    if (!result) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!result) throw new TRPCError({ code: "NOT_FOUND" });
 
-    return result;
-  }),
+      return result;
+    }),
 
   getEntries: publicProcedure
     .input(z.string())
