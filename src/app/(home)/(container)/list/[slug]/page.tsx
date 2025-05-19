@@ -16,9 +16,10 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const { user, name } = await api.list.get(params.slug);
+  const data = await fetchList(params.slug);
+  if (!data) notFound();
   return {
-    title: `${name}${user ? ` · ${user.name}'s` : ""} List`,
+    title: `${data.name}${data.user ? ` · ${data.user.name}'s` : ""} List`,
   };
 }
 

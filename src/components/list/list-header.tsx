@@ -11,25 +11,24 @@ import { useRouter } from "next/navigation";
 export default function ListHeader({ list }: { list: PublicList }) {
   const isListAuthed = useListAuthed(list.slug);
   const router = useRouter();
-  const { user, name } = list;
   return (
     <div className="flex gap-3 items-center">
-      {user && (
+      {list.user && (
         <Avatar
           size="extra-large"
           className="self-center"
-          src={user.image}
-          alt={user.name}
-          initials={user.name.charAt(0)}
+          src={list.user.image}
+          alt={list.user.name}
+          initials={list.user.name.charAt(0)}
         />
       )}
       <div className="flex flex-col">
-        <div className="text-lg font-semibold">{name}</div>
-        {user && (
+        <div className="text-lg font-semibold">{list.name}</div>
+        {list.user && (
           <div className="inline-flex items-center gap-1">
             <DiscordLogo size={16} weight="regular" />
-            <span className="text-fg text-sm">{user.name}</span>
-            <span className="text-muted-fg text-sm">{user.username}</span>
+            <span className="text-fg text-sm">{list.user.name}</span>
+            <span className="text-muted-fg text-sm">{list.user.username}</span>
           </div>
         )}
       </div>
