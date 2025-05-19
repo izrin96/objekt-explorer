@@ -1,5 +1,5 @@
 import { indexer } from "@/lib/server/db/indexer";
-import { and, count, eq, desc, not, inArray } from "drizzle-orm";
+import { and, count, eq, desc, not, inArray, ne } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { z } from "zod";
 import {
@@ -12,6 +12,7 @@ import { db } from "@/lib/server/db";
 import { userAddress } from "@/lib/server/db/schema";
 import { cacheHeaders } from "../common";
 import { unobtainables } from "@/lib/universal/objekts";
+import { SPIN_ADDRESS } from "@/lib/utils";
 
 const schema = z.object({
   artist: z.enum(validArtists).nullable().optional(),
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
 
   const options = parsedParams.data;
 
-  const wheres = and(
+  const wheres = [
     not(inArray(collections.slug, unobtainables)),
     not(inArray(collections.class, ["Welcome", "Zero"])),
     ...(options.artist
@@ -48,11 +49,11 @@ export async function GET(request: NextRequest) {
     ...(options.season ? [eq(collections.season, options.season)] : []),
     ...(options.onlineType
       ? [eq(collections.onOffline, options.onlineType)]
-      : [])
-  );
+      : []),
+  ];
 
   // get total collection
-  const total = await indexer.$count(collections, wheres);
+  const total = await indexer.$count(collections, and(...wheres));
 
   // get leaderboard
   const subquery = indexer
@@ -62,8 +63,7 @@ export async function GET(request: NextRequest) {
     })
     .from(objekts)
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(wheres)
-    // not(eq(objekts.owner, SPIN_ADDRESS))
+    .where(and(...wheres, ne(objekts.owner, SPIN_ADDRESS)))
     .as("subquery");
 
   const query = await indexer
