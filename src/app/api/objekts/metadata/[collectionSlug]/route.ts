@@ -17,16 +17,13 @@ export async function GET(_: Request, props: Params) {
     .select({
       total: count(),
       transferable:
-        sql`count(case when transferable = true then 1 end)`.mapWith(Number),
+        sql`count(case when transferable = true and ${objekts.owner}!=${SPIN_ADDRESS} then 1 end)`.mapWith(
+          Number
+        ),
     })
     .from(collections)
     .leftJoin(objekts, eq(collections.id, objekts.collectionId))
-    .where(
-      and(
-        eq(collections.slug, params.collectionSlug),
-        ne(objekts.owner, SPIN_ADDRESS)
-      )
-    )
+    .where(eq(collections.slug, params.collectionSlug))
     .groupBy(collections.id);
 
   if (!results.length)
