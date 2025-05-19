@@ -12,25 +12,29 @@ export default function ListHeader({ list }: { list: PublicList }) {
   const isListAuthed = useListAuthed(list.slug);
   const router = useRouter();
   return (
-    <div className="flex gap-3 items-center flex-wrap">
-      {list.user && (
-        <Avatar
-          size="extra-large"
-          className="self-center"
-          src={list.user.image}
-          alt={list.user.name}
-          initials={list.user.name.charAt(0)}
-        />
-      )}
-      <div className="flex flex-col">
-        <div className="text-lg font-semibold">{list.name}</div>
+    <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center flex-wrap">
+      <div className="flex gap-3 items-center">
         {list.user && (
-          <div className="inline-flex items-center gap-1">
-            <DiscordLogo size={16} weight="regular" />
-            <span className="text-fg text-sm">{list.user.name}</span>
-            <span className="text-muted-fg text-sm">{list.user.username}</span>
-          </div>
+          <Avatar
+            size="extra-large"
+            className="self-center"
+            src={list.user.image}
+            alt={list.user.name}
+            initials={list.user.name.charAt(0)}
+          />
         )}
+        <div className="flex flex-col">
+          <div className="text-lg font-semibold">{list.name}</div>
+          {list.user && (
+            <div className="inline-flex items-center gap-1">
+              <DiscordLogo size={16} weight="regular" />
+              <span className="text-fg text-sm">{list.user.name}</span>
+              <span className="text-muted-fg text-sm">
+                {list.user.username}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {isListAuthed && (
@@ -41,7 +45,12 @@ export default function ListHeader({ list }: { list: PublicList }) {
           }}
         >
           {({ open }) => (
-            <Button size="small" intent="outline" onClick={open}>
+            <Button
+              size="small"
+              intent="outline"
+              onClick={open}
+              className="w-full sm:w-auto flex-none"
+            >
               Edit List
             </Button>
           )}
