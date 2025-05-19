@@ -12,7 +12,7 @@ import {
   Button,
   Loader,
 } from "./ui";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { User } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
@@ -50,6 +50,7 @@ export default function UserNav() {
 }
 
 function UserMenu({ user }: { user: User }) {
+  const router = useRouter();
   return (
     <PullDiscordProfile>
       {({ open: openRefreshProfile }) => (
@@ -83,9 +84,14 @@ function UserMenu({ user }: { user: User }) {
             </Menu.Item>
             <Menu.Separator />
             <Menu.Item
-              onAction={async () => {
-                await authClient.signOut();
-                redirect("/");
+              onAction={() => {
+                authClient.signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      router.refresh();
+                    },
+                  },
+                });
               }}
             >
               <SignOut data-slot="icon" />
