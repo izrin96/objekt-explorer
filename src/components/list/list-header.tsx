@@ -12,7 +12,7 @@ export default function ListHeader({ list }: { list: PublicList }) {
   const isListAuthed = useListAuthed(list.slug);
   const router = useRouter();
   return (
-    <div className="flex gap-3 items-center">
+    <div className="flex gap-3 items-center flex-wrap">
       {list.user && (
         <Avatar
           size="extra-large"
@@ -41,12 +41,7 @@ export default function ListHeader({ list }: { list: PublicList }) {
           }}
         >
           {({ open }) => (
-            <Button
-              size="small"
-              intent="outline"
-              onClick={open}
-              className="w-full md:w-auto flex-none"
-            >
+            <Button size="small" intent="outline" onClick={open}>
               Edit List
             </Button>
           )}
