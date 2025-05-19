@@ -7,6 +7,7 @@ import {
   FileTrigger,
   Form,
   Label,
+  Link,
   Loader,
   Modal,
   Sheet,
@@ -271,6 +272,13 @@ function EditProfileForm({
         />
       </div>
       <Checkbox label="Remove Banner" name="removeBanner" />
+      <span className="text-muted-fg text-sm">
+        To unlink this Cosmo profile from your account, visit{" "}
+        <Link href="/link" className="underline">
+          Manage Cosmo link
+        </Link>{" "}
+        page.
+      </span>
     </div>
   );
 }

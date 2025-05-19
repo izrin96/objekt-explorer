@@ -5,6 +5,7 @@ import {
   Button,
   Checkbox,
   Form,
+  Link,
   Loader,
   Modal,
   Sheet,
@@ -214,6 +215,13 @@ function EditListForm({ slug }: { slug: string }) {
         description="Hide your Discord from list"
         defaultSelected={data.hideUser ?? false}
       />
+      <span className="text-muted-fg text-sm">
+        To delete this list, visit{" "}
+        <Link href="/list" className="underline">
+          Manage list
+        </Link>{" "}
+        page.
+      </span>
     </div>
   );
 }
