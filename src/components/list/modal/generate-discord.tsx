@@ -13,7 +13,6 @@ import {
 } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { CollectionFormat } from "@/lib/server/api/routers/list";
-import { ListEntry } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
 import { getBaseURL } from "@/lib/utils";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
@@ -243,7 +242,7 @@ function format(
 
 function mapCollectionByMember(
   collectionMap: Map<string, CollectionFormat>,
-  entries: ListEntry["collectionSlug"][],
+  entries: string[],
   members: string[]
 ): Map<string, CollectionFormat[]> {
   const output = new Map<string, CollectionFormat[]>();
