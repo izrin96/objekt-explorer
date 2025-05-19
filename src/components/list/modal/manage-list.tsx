@@ -38,20 +38,31 @@ export function CreateList() {
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
-            createList.mutate({ name: formData.get("name") as string });
+            createList.mutate({
+              name: formData.get("name") as string,
+              hideUser: formData.get("hideUser") === "on",
+            });
           }}
         >
           <Modal.Header>
             <Modal.Title>Create list</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <TextField
-              isRequired
-              autoFocus
-              label="Name"
-              placeholder="My list"
-              name="name"
-            />
+            <div className="flex flex-col gap-6">
+              <TextField
+                isRequired
+                autoFocus
+                label="Name"
+                placeholder="My list"
+                name="name"
+              />
+              <Checkbox
+                label="Hide Discord"
+                name="hideUser"
+                description="Hide your Discord from this list"
+                defaultSelected={false}
+              />
+            </div>
           </Modal.Body>
           <Modal.Footer>
             <Modal.Close>Cancel</Modal.Close>
@@ -212,7 +223,7 @@ function EditListForm({ slug }: { slug: string }) {
       <Checkbox
         label="Hide Discord"
         name="hideUser"
-        description="Hide your Discord from list"
+        description="Hide your Discord from this list"
         defaultSelected={data.hideUser ?? false}
       />
       <span className="text-muted-fg text-sm">

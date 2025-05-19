@@ -208,11 +208,12 @@ export const listRouter = createTRPCRouter({
     .input(
       z.object({
         name: z.string().min(1),
+        hideUser: z.boolean(),
       })
     )
     .mutation(
       async ({
-        input: { name },
+        input: { name, hideUser },
         ctx: {
           session: { user },
         },
@@ -221,6 +222,7 @@ export const listRouter = createTRPCRouter({
           name: name,
           userId: user.id,
           slug: nanoid(9),
+          hideUser: hideUser,
         });
       }
     ),
