@@ -11,12 +11,14 @@ import {
   Textarea,
   Loader,
 } from "@/components/ui";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { CollectionFormat } from "@/lib/server/api/routers/list";
+import { ListEntry } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
 import { getBaseURL } from "@/lib/utils";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
@@ -57,6 +59,7 @@ function Content() {
   const [formatText, setFormatText] = useState("");
   const [showCount, setShowCount] = useState(false);
   const [includeLink, setIncludeLink] = useState(false);
+  const { artists } = useCosmoArtist();
 
   const generateDiscordFormat = api.list.generateDiscordFormat.useMutation({
     onError: () => {
@@ -64,45 +67,88 @@ function Content() {
     },
   });
 
-  useEffect(() => {
-    if (!generateDiscordFormat.data) return;
-
-    const { have, want, haveSlug, wantSlug } = generateDiscordFormat.data;
-    const haveMap = new Map(have);
-    const wantMap = new Map(want);
-
-    setFormatText(
-      [
-        "### Have:",
-        ...format(haveMap, showCount),
-        ...(includeLink
-          ? [
-              "",
-              `[View this list with picture](<${getBaseURL()}/list/${haveSlug}>)`,
-              "", // give a little bit of spacing
-            ]
-          : []),
-        "### Want:",
-        ...format(wantMap, showCount),
-        ...(includeLink
-          ? [
-              "",
-              `[View this list with picture](<${getBaseURL()}/list/${wantSlug}>)`,
-            ]
-          : []),
-      ].join("\n")
-    );
-  }, [generateDiscordFormat.data, includeLink, showCount]);
-
   return (
     <Form
       onSubmit={async (e) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        generateDiscordFormat.mutate({
-          haveSlug: formData.get("haveSlug") as string,
-          wantSlug: formData.get("wantSlug") as string,
-        });
+        const haveSlug = formData.get("haveSlug") as string;
+        const wantSlug = formData.get("wantSlug") as string;
+
+        generateDiscordFormat.mutate(
+          {
+            haveSlug,
+            wantSlug,
+          },
+          {
+            onSuccess: async (data) => {
+              const { have, want, collections } = data;
+              const artistsMembers = artists.flatMap((a) => a.artistMembers);
+
+              // collections map for faster search
+              const collectionsMap = new Map(
+                collections.map((a) => [a.slug, a])
+              );
+
+              // get ordered member list from collection
+              const members = Object.values(
+                groupBy(collections, (a) => `${a.artist}-${a.member}`)
+              )
+                .toSorted(([a], [b]) => {
+                  // order by member
+                  const posA = artistsMembers.findIndex(
+                    (p) => p.name === a.member
+                  );
+                  const posB = artistsMembers.findIndex(
+                    (p) => p.name === b.member
+                  );
+
+                  return posA - posB;
+                })
+                .toSorted(([a], [b]) => {
+                  // order by artist
+                  const posA = artists.findIndex((p) => p.name === a.artist);
+                  const posB = artists.findIndex((p) => p.name === b.artist);
+
+                  return posA - posB;
+                })
+                .map(([a]) => a.member);
+
+              const haveCollections = mapCollectionByMember(
+                collectionsMap,
+                have,
+                members
+              );
+              const wantCollections = mapCollectionByMember(
+                collectionsMap,
+                want,
+                members
+              );
+
+              setFormatText(
+                [
+                  "### Have:",
+                  ...format(haveCollections, showCount),
+                  ...(includeLink
+                    ? [
+                        "",
+                        `[View this list with picture](<${getBaseURL()}/list/${haveSlug}>)`,
+                        "", // give a little bit of spacing
+                      ]
+                    : []),
+                  "### Want:",
+                  ...format(wantCollections, showCount),
+                  ...(includeLink
+                    ? [
+                        "",
+                        `[View this list with picture](<${getBaseURL()}/list/${wantSlug}>)`,
+                      ]
+                    : []),
+                ].join("\n")
+              );
+            },
+          }
+        );
       }}
     >
       <Modal.Header>
@@ -173,6 +219,9 @@ function format(
 ) {
   return Array.from(collectionMap.entries()).map(([member, collections]) => {
     const formatCollections = collections.map((collection) => {
+      if (collection.artist === "idntt") {
+        return `${collection.season} ${collection.collectionNo}`;
+      }
       const seasonCode = collection.season.charAt(0);
       const seasonNumber = collection.season.slice(-2);
       const seasonFormat = seasonCode.repeat(parseInt(seasonNumber));
@@ -190,4 +239,24 @@ function format(
 
     return `${member} ${formattedWithQuantity.join(", ")}`;
   });
+}
+
+function mapCollectionByMember(
+  collectionMap: Map<string, CollectionFormat>,
+  entries: ListEntry["collectionSlug"][],
+  members: string[]
+): Map<string, CollectionFormat[]> {
+  const output = new Map<string, CollectionFormat[]>();
+  const collectionEntries = entries
+    .map((slug) => collectionMap.get(slug))
+    .filter((a) => a !== undefined);
+  for (const member of members) {
+    for (const collectionEntry of collectionEntries.filter(
+      (a) => a.member === member
+    )) {
+      output.set(member, [...(output.get(member) ?? []), collectionEntry]);
+    }
+  }
+
+  return output;
 }

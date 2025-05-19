@@ -11,10 +11,8 @@ import { indexer } from "../../db/indexer";
 import { db } from "../../db";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { TRPCError } from "@trpc/server";
-import { List, listEntries, ListEntry, lists } from "../../db/schema";
+import { List, listEntries, lists } from "../../db/schema";
 import { nanoid } from "nanoid";
-import { getArtistsWithMembers } from "@/lib/client-fetching";
-import { CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
 import { PublicUser } from "@/lib/universal/user";
 
 export const listRouter = createTRPCRouter({
@@ -239,13 +237,17 @@ export const listRouter = createTRPCRouter({
       const lists = await db.query.lists.findMany({
         where: (t, { inArray }) => inArray(t.slug, [haveSlug, wantSlug]),
         with: {
-          entries: true,
+          entries: {
+            columns: {
+              collectionSlug: true,
+            },
+          },
         },
       });
 
-      const uniqueCollectionSlug = new Set([
-        ...lists.flatMap((a) => a.entries).map((a) => a.collectionSlug),
-      ]);
+      const uniqueCollectionSlug = new Set(
+        lists.flatMap((a) => a.entries).map((a) => a.collectionSlug)
+      );
 
       // get all collections based on both list
       const collections = await indexer.query.collections.findMany({
@@ -256,41 +258,25 @@ export const listRouter = createTRPCRouter({
           season: true,
           collectionNo: true,
           member: true,
+          artist: true,
         },
       });
 
-      const collectionsMap = new Map(collections.map((a) => [a.slug, a]));
-
+      // entry for both list
       const haveList = lists.find((a) => a.slug === haveSlug);
       const wantList = lists.find((a) => a.slug === wantSlug);
 
-      // get artist and member info
-      const artists = await getArtistsWithMembers();
-      const artistMembers = artists.flatMap((a) => a.artistMembers);
-
-      const haveCollections = mapCollectionByMember(
-        collectionsMap,
-        haveList?.entries ?? [],
-        artistMembers
-      );
-      const wantCollections = mapCollectionByMember(
-        collectionsMap,
-        wantList?.entries ?? [],
-        artistMembers
-      );
-
       return {
-        haveSlug,
-        wantSlug,
-        have: [...haveCollections],
-        want: [...wantCollections],
+        collections,
+        have: haveList?.entries.map((a) => a.collectionSlug) ?? [],
+        want: wantList?.entries.map((a) => a.collectionSlug) ?? [],
       };
     }),
 });
 
 export type CollectionFormat = Pick<
   Collection,
-  "slug" | "member" | "season" | "collectionNo"
+  "slug" | "member" | "season" | "collectionNo" | "artist"
 >;
 
 export type PublicList = Pick<List, "slug" | "name"> & {
@@ -334,34 +320,6 @@ export async function fetchOwnedLists(userId: string) {
     orderBy: (lists, { desc }) => [desc(lists.id)],
   });
   return result;
-}
-
-function mapCollectionByMember(
-  collectionMap: Map<string, CollectionFormat>,
-  entries: ListEntry[],
-  artistMembers: CosmoMemberBFF[]
-): Map<string, CollectionFormat[]> {
-  // every entry, map its collection to member
-  const groupCollectionsByMember = new Map<string, CollectionFormat[]>();
-  for (const entry of entries) {
-    const collection = collectionMap.get(entry.collectionSlug);
-    if (collection) {
-      const collections = groupCollectionsByMember.get(collection.member) ?? [];
-      collections.push(collection);
-      groupCollectionsByMember.set(collection.member, collections);
-    }
-  }
-
-  // remap to reorder based on artistMembers
-  const orderedGroupCollectionByMember = new Map<string, CollectionFormat[]>();
-  for (const member of artistMembers) {
-    const collections = groupCollectionsByMember.get(member.name);
-    if (collections) {
-      orderedGroupCollectionByMember.set(member.name, collections);
-    }
-  }
-
-  return orderedGroupCollectionByMember;
 }
 
 async function findOwnedList(slug: string, userId: string) {
