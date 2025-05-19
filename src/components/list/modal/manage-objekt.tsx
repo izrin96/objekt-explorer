@@ -2,7 +2,7 @@
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { api } from "@/lib/trpc/client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import {
   Button,
@@ -14,7 +14,9 @@ import {
   Note,
   Select,
 } from "../../ui";
-import { Error } from "../../error-boundary";
+import ErrorFallbackRender from "../../error-boundary";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ErrorBoundary } from "react-error-boundary";
 
 export function AddToList({
   handleAction,
@@ -61,7 +63,24 @@ export function AddToList({
             <Modal.Title>Add to list</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <AddToListForm />
+            <QueryErrorResetBoundary>
+              {({ reset }) => (
+                <ErrorBoundary
+                  onReset={reset}
+                  FallbackComponent={ErrorFallbackRender}
+                >
+                  <Suspense
+                    fallback={
+                      <div className="flex justify-center">
+                        <Loader variant="ring" />
+                      </div>
+                    }
+                  >
+                    <AddToListForm />
+                  </Suspense>
+                </ErrorBoundary>
+              )}
+            </QueryErrorResetBoundary>
           </Modal.Body>
           <Modal.Footer>
             <Modal.Close>Cancel</Modal.Close>
@@ -76,21 +95,9 @@ export function AddToList({
 }
 
 function AddToListForm() {
-  const list = api.list.myList.useQuery();
+  const [data] = api.list.myList.useSuspenseQuery();
 
-  if (list.isPending)
-    return (
-      <div className="flex justify-center">
-        <Loader variant="ring" />
-      </div>
-    );
-
-  if (list.isError)
-    return (
-      <Error onRetry={() => list.refetch()} message="Error fetching list" />
-    );
-
-  if (!list.data || list.data.length === 0)
+  if (data.length === 0)
     return (
       <Note intent="default">
         You don&apos;t have any list yet.{" "}
@@ -107,7 +114,7 @@ function AddToListForm() {
         isRequired
       >
         <Select.Trigger />
-        <Select.List items={list.data ?? []}>
+        <Select.List items={data}>
           {(item) => (
             <Select.Option id={item.slug} textValue={item.slug}>
               {item.name}

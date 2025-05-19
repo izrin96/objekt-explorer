@@ -1,8 +1,19 @@
 "use client";
 
-import { Button, Form, Modal, TextField } from "@/components/ui";
+import ErrorFallbackRender from "@/components/error-boundary";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Loader,
+  Modal,
+  Sheet,
+  TextField,
+} from "@/components/ui";
 import { api } from "@/lib/trpc/client";
-import { useState } from "react";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { Suspense, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
 export function CreateList() {
@@ -110,11 +121,11 @@ export function DeleteList({
 
 export function EditList({
   slug,
-  list,
+  onComplete,
   children,
 }: {
   slug: string;
-  list: { name: string };
+  onComplete?: () => void;
   children: ({ open }: { open: () => void }) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -124,6 +135,8 @@ export function EditList({
       setOpen(false);
       toast.success("List updated");
       utils.list.myList.invalidate();
+      utils.list.get.invalidate(slug);
+      onComplete?.();
     },
     onError: () => {
       toast.error("Error editing list");
@@ -136,35 +149,71 @@ export function EditList({
           setOpen(true);
         },
       })}
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Sheet.Content isOpen={open} onOpenChange={setOpen}>
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
-            editList.mutate({ slug, name: formData.get("name") as string });
+            editList.mutate({
+              slug,
+              name: formData.get("name") as string,
+              hideUser: formData.get("hideUser") === "on",
+            });
           }}
         >
-          <Modal.Header>
-            <Modal.Title>Edit list</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <TextField
-              isRequired
-              autoFocus
-              label="Name"
-              placeholder="My list"
-              name="name"
-              defaultValue={list.name}
-            />
-          </Modal.Body>
-          <Modal.Footer>
-            <Modal.Close>Cancel</Modal.Close>
+          <Sheet.Header>
+            <Sheet.Title>Edit list</Sheet.Title>
+          </Sheet.Header>
+          <Sheet.Body>
+            <QueryErrorResetBoundary>
+              {({ reset }) => (
+                <ErrorBoundary
+                  onReset={reset}
+                  FallbackComponent={ErrorFallbackRender}
+                >
+                  <Suspense
+                    fallback={
+                      <div className="flex justify-center">
+                        <Loader variant="ring" />
+                      </div>
+                    }
+                  >
+                    <EditListForm slug={slug} />
+                  </Suspense>
+                </ErrorBoundary>
+              )}
+            </QueryErrorResetBoundary>
+          </Sheet.Body>
+          <Sheet.Footer>
+            <Sheet.Close>Cancel</Sheet.Close>
             <Button type="submit" isPending={editList.isPending}>
               Save
             </Button>
-          </Modal.Footer>
+          </Sheet.Footer>
         </Form>
-      </Modal.Content>
+      </Sheet.Content>
     </>
+  );
+}
+
+function EditListForm({ slug }: { slug: string }) {
+  const [data] = api.list.get.useSuspenseQuery(slug);
+  return (
+    <div className="flex flex-col gap-6">
+      <TextField
+        isRequired
+        autoFocus
+        label="Name"
+        placeholder="My list"
+        name="name"
+        defaultValue={data.name}
+      />
+      <Checkbox
+        label="Hide Discord"
+        name="hideUser"
+        description="Hide your Discord from list"
+        defaultSelected={data.hideUser ?? false}
+      />
+    </div>
   );
 }

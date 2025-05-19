@@ -50,7 +50,7 @@ function MyList() {
                   >
                     {list.name}
                   </Link>
-                  <EditList slug={list.slug} list={list}>
+                  <EditList slug={list.slug}>
                     {({ open: openEdit }) => (
                       <DeleteList slug={list.slug}>
                         {({ open: openDelete }) => (

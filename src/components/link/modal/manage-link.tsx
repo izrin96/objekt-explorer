@@ -1,5 +1,6 @@
 "use client";
 
+import ErrorFallbackRender from "@/components/error-boundary";
 import {
   Button,
   Checkbox,
@@ -12,8 +13,10 @@ import {
 } from "@/components/ui";
 import { api } from "@/lib/trpc/client";
 import { mimeTypes } from "@/lib/utils";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-import { useCallback, useState, useTransition } from "react";
+import { Suspense, useCallback, useState, useTransition } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -86,44 +89,13 @@ export function EditProfile({
   children: ({ open }: { open: () => void }) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      {children?.({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Sheet.Content isOpen={open} onOpenChange={setOpen}>
-        <EditProfileForm
-          address={address}
-          nickname={nickname}
-          onClose={() => setOpen(false)}
-          onComplete={onComplete}
-        />
-      </Sheet.Content>
-    </>
-  );
-}
-
-function EditProfileForm({
-  address,
-  nickname,
-  onClose,
-  onComplete,
-}: {
-  address: string;
-  nickname: string;
-  onClose: () => void;
-  onComplete?: () => void;
-}) {
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
-  const query = api.profile.get.useQuery(address);
+
   const utils = api.useUtils();
   const edit = api.profile.edit.useMutation({
     onSuccess: () => {
-      onClose();
+      setOpen(false);
       setDroppedImage(null);
       utils.profile.get.invalidate(address);
       onComplete?.();
@@ -163,103 +135,142 @@ function EditProfileForm({
     [droppedImage]
   );
 
+  const handleSelectImage = useCallback((e: FileList | null) => {
+    const files = Array.from(e ?? []);
+    const item = files[0];
+    if (!item) return;
+
+    if (item.size > MAX_FILE_SIZE) {
+      toast.error(`File "${item.name}" exceeds 10 MB limit.`);
+      return;
+    }
+
+    setDroppedImage(item);
+  }, []);
+
   return (
-    <Form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const hideUser = formData.get("hideUser") === "on";
-        const removeBanner = formData.get("removeBanner") === "on";
+    <>
+      {children?.({
+        open: () => {
+          setOpen(true);
+        },
+      })}
+      <Sheet.Content isOpen={open} onOpenChange={setOpen}>
+        <Form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const hideUser = formData.get("hideUser") === "on";
+            const removeBanner = formData.get("removeBanner") === "on";
 
-        if (droppedImage && !removeBanner) {
-          getPresignedUrl.mutate(
-            { address, fileName: droppedImage.name },
-            {
-              onSuccess: async (url) => {
-                startUploadTransition(async () => {
-                  await handleUpload(url);
+            if (droppedImage && !removeBanner) {
+              getPresignedUrl.mutate(
+                { address, fileName: droppedImage.name },
+                {
+                  onSuccess: async (url) => {
+                    startUploadTransition(async () => {
+                      await handleUpload(url);
 
-                  const fileUrl = url.split("?")[0];
-                  edit.mutate({
-                    address: address,
-                    hideUser: hideUser,
-                    bannerImgUrl: fileUrl,
-                  });
-                });
-              },
+                      const fileUrl = url.split("?")[0];
+                      edit.mutate({
+                        address: address,
+                        hideUser: hideUser,
+                        bannerImgUrl: fileUrl,
+                      });
+                    });
+                  },
+                }
+              );
+              return;
             }
-          );
-          return;
-        }
 
-        edit.mutate({
-          address: address,
-          hideUser: hideUser,
-          bannerImgUrl: removeBanner ? null : undefined,
-        });
-      }}
-    >
-      <Sheet.Header>
-        <Sheet.Title>Edit Profile</Sheet.Title>
-        <Sheet.Description>
-          Currently editing <span className="text-fg">{nickname}</span> Cosmo
-          profile
-        </Sheet.Description>
-      </Sheet.Header>
-      <Sheet.Body>
-        {query.isLoading ? (
-          <div className="flex justify-center">
-            <Loader variant="ring" />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            <Checkbox
-              label="Hide Discord"
-              name="hideUser"
-              description="Hide your Discord from Cosmo profile"
-              defaultSelected={query.data?.hideUser ?? false}
-            />
-            <div className="group flex flex-col gap-y-1">
-              <Label>Banner Image</Label>
-              {droppedImage && (
-                <span className="text-sm text-muted-fg truncate">
-                  Selected file: {droppedImage.name}
-                </span>
-              )}
-              <FileTrigger
-                acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
-                onSelect={(e) => {
-                  const files = Array.from(e ?? []);
-                  const item = files[0];
-                  if (!item) return;
-
-                  if (item.size > MAX_FILE_SIZE) {
-                    toast.error(`File "${item.name}" exceeds 10 MB limit.`);
-                    return;
-                  }
-
-                  setDroppedImage(item);
-                }}
-              />
-            </div>
-            <Checkbox label="Remove Banner" name="removeBanner" />
-          </div>
-        )}
-      </Sheet.Body>
-      <Sheet.Footer>
-        <Button
-          intent="primary"
-          type="submit"
-          isPending={
-            query.isPending ||
-            edit.isPending ||
-            getPresignedUrl.isPending ||
-            isUploading
-          }
+            edit.mutate({
+              address: address,
+              hideUser: hideUser,
+              bannerImgUrl: removeBanner ? null : undefined,
+            });
+          }}
         >
-          Save
-        </Button>
-      </Sheet.Footer>
-    </Form>
+          <Sheet.Header>
+            <Sheet.Title>Edit Profile</Sheet.Title>
+            <Sheet.Description>
+              Currently editing <span className="text-fg">{nickname}</span>{" "}
+              Cosmo profile
+            </Sheet.Description>
+          </Sheet.Header>
+          <Sheet.Body>
+            <QueryErrorResetBoundary>
+              {({ reset }) => (
+                <ErrorBoundary
+                  onReset={reset}
+                  FallbackComponent={ErrorFallbackRender}
+                >
+                  <Suspense
+                    fallback={
+                      <div className="flex justify-center">
+                        <Loader variant="ring" />
+                      </div>
+                    }
+                  >
+                    <EditProfileForm
+                      address={address}
+                      droppedImage={droppedImage}
+                      handleSelectImage={handleSelectImage}
+                    />
+                  </Suspense>
+                </ErrorBoundary>
+              )}
+            </QueryErrorResetBoundary>
+          </Sheet.Body>
+          <Sheet.Footer>
+            <Sheet.Close>Cancel</Sheet.Close>
+            <Button
+              intent="primary"
+              type="submit"
+              isPending={
+                edit.isPending || getPresignedUrl.isPending || isUploading
+              }
+            >
+              Save
+            </Button>
+          </Sheet.Footer>
+        </Form>
+      </Sheet.Content>
+    </>
+  );
+}
+
+function EditProfileForm({
+  address,
+  droppedImage,
+  handleSelectImage,
+}: {
+  address: string;
+  droppedImage: File | null;
+  handleSelectImage: (files: FileList | null) => void;
+}) {
+  const [data] = api.profile.get.useSuspenseQuery(address);
+  return (
+    <div className="flex flex-col gap-6">
+      <Checkbox
+        label="Hide Discord"
+        name="hideUser"
+        description="Hide your Discord from Cosmo profile"
+        defaultSelected={data.hideUser ?? false}
+      />
+      <div className="group flex flex-col gap-y-1">
+        <Label>Banner Image</Label>
+        {droppedImage && (
+          <span className="text-sm text-muted-fg truncate">
+            Selected file: {droppedImage.name}
+          </span>
+        )}
+        <FileTrigger
+          acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
+          onSelect={handleSelectImage}
+        />
+      </div>
+      <Checkbox label="Remove Banner" name="removeBanner" />
+    </div>
   );
 }

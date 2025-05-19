@@ -26,8 +26,9 @@ import Filter from "./filter";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
 import { RemoveFromList } from "./modal/manage-objekt";
+import { useListAuthed } from "@/hooks/use-user";
 
-type Props = { slug: string; isOwned: boolean };
+type Props = { slug: string };
 
 export default function ListRender(props: Props) {
   return (
@@ -48,7 +49,8 @@ export default function ListRender(props: Props) {
   );
 }
 
-function ListView({ slug, isOwned }: Props) {
+function ListView({ slug }: Props) {
+  const isOwned = useListAuthed(slug);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();

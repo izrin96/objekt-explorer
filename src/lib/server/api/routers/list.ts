@@ -11,10 +11,11 @@ import { indexer } from "../../db/indexer";
 import { db } from "../../db";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { TRPCError } from "@trpc/server";
-import { listEntries, ListEntry, lists } from "../../db/schema";
+import { List, listEntries, ListEntry, lists } from "../../db/schema";
 import { nanoid } from "nanoid";
 import { getArtistsWithMembers } from "@/lib/client-fetching";
 import { CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
+import { PublicUser } from "@/lib/universal/user";
 
 export const listRouter = createTRPCRouter({
   get: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
@@ -62,14 +63,7 @@ export const listRouter = createTRPCRouter({
 
   myList: authProcedure.query(async ({ ctx: { session } }) => {
     const { user } = session;
-    const result = await db.query.lists.findMany({
-      columns: {
-        name: true,
-        slug: true,
-      },
-      where: (lists, { eq }) => eq(lists.userId, user.id),
-      orderBy: (lists, { desc }) => [desc(lists.id)],
-    });
+    const result = await fetchOwnedLists(user.id);
     return result;
   }),
 
@@ -162,11 +156,12 @@ export const listRouter = createTRPCRouter({
       z.object({
         slug: z.string(),
         name: z.string().min(1),
+        hideUser: z.boolean(),
       })
     )
     .mutation(
       async ({
-        input: { slug, name },
+        input: { slug, name, hideUser },
         ctx: {
           session: { user },
         },
@@ -177,6 +172,7 @@ export const listRouter = createTRPCRouter({
           .update(lists)
           .set({
             name: name,
+            hideUser: hideUser,
           })
           .where(eq(lists.id, list.id));
       }
@@ -288,15 +284,20 @@ export type CollectionFormat = Pick<
   "slug" | "member" | "season" | "collectionNo"
 >;
 
+export type PublicList = Pick<List, "slug" | "name"> & {
+  user?: PublicUser | null;
+};
+
 export async function fetchList(slug: string) {
   const result = await db.query.lists.findFirst({
     columns: {
+      slug: true,
       name: true,
+      hideUser: true,
     },
     with: {
       user: {
         columns: {
-          id: true,
           name: true,
           image: true,
           username: true,
@@ -304,6 +305,24 @@ export async function fetchList(slug: string) {
       },
     },
     where: (lists, { eq }) => eq(lists.slug, slug),
+  });
+
+  if (!result) return null;
+
+  return {
+    ...result,
+    user: result?.hideUser ? null : result?.user,
+  };
+}
+
+export async function fetchOwnedLists(userId: string) {
+  const result = await db.query.lists.findMany({
+    columns: {
+      name: true,
+      slug: true,
+    },
+    where: (lists, { eq }) => eq(lists.userId, userId),
+    orderBy: (lists, { desc }) => [desc(lists.id)],
   });
   return result;
 }
