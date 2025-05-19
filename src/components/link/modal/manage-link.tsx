@@ -117,7 +117,7 @@ function EditProfileForm({
   onClose: () => void;
   onComplete?: () => void;
 }) {
-  const [droppedImage, setDroppedImage] = useState<File | null>();
+  const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
   const query = api.profile.get.useQuery(address);
   const utils = api.useUtils();
@@ -142,28 +142,27 @@ function EditProfileForm({
 
   const handleUpload = useCallback(
     async (url: string) => {
+      if (!droppedImage) return;
+
       try {
-        if (!droppedImage) return;
-
-        startUploadTransition(async () => {
-          const response = await ofetch.raw(url, {
-            method: "PUT",
-            body: droppedImage,
-            headers: {
-              "Content-Type": droppedImage.type,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to upload image");
-          }
+        const response = await ofetch.raw(url, {
+          method: "PUT",
+          body: droppedImage,
+          headers: {
+            "Content-Type": droppedImage.type,
+          },
         });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload image");
+        }
       } catch {
         toast.error("Failed to upload image");
       }
     },
-    [droppedImage, startUploadTransition]
+    [droppedImage]
   );
+
   return (
     <Form
       onSubmit={async (e) => {
@@ -177,14 +176,15 @@ function EditProfileForm({
             { address, fileName: droppedImage.name },
             {
               onSuccess: async (url) => {
-                await handleUpload(url);
+                startUploadTransition(async () => {
+                  await handleUpload(url);
 
-                // Get the file URL from the presigned URL
-                const fileUrl = url.split("?")[0];
-                edit.mutate({
-                  address: address,
-                  hideUser: hideUser,
-                  bannerImgUrl: fileUrl,
+                  const fileUrl = url.split("?")[0];
+                  edit.mutate({
+                    address: address,
+                    hideUser: hideUser,
+                    bannerImgUrl: fileUrl,
+                  });
                 });
               },
             }
