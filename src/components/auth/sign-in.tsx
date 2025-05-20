@@ -12,42 +12,35 @@ export default function SignIn() {
   return (
     <div className="flex flex-col py-6 gap-6">
       <Note intent="default">
-        We're currently working on adding more login options, including email
-        and password. In the meantime, logging in with Discord is completely
-        safe. We only request basic information like your email address and
-        never ask for anything beyond what's necessary.
+        We&apos;re currently working on adding more login options, including
+        email and password. In the meantime, logging in with Discord is
+        completely safe. We only request basic information like your email
+        address and never ask for anything beyond what's necessary.
       </Note>
       <div className="grid gap-4 max-w-xl w-full self-center">
-        <div
-          className={cn(
-            "w-full gap-2 flex items-center",
-            "justify-between flex-col"
-          )}
-        >
-          <Button
-            intent="primary"
-            className={cn("w-full gap-2")}
-            isDisabled={loading}
-            onClick={async () => {
-              await authClient.signIn.social(
-                {
-                  provider: "discord",
+        <Button
+          intent="primary"
+          className="gap-2"
+          isDisabled={loading}
+          onClick={async () => {
+            await authClient.signIn.social(
+              {
+                provider: "discord",
+              },
+              {
+                onRequest: () => {
+                  setLoading(true);
                 },
-                {
-                  onRequest: () => {
-                    setLoading(true);
-                  },
-                  onResponse: () => {
-                    setLoading(false);
-                  },
-                }
-              );
-            }}
-          >
-            <IconBrandDiscord />
-            Sign in with Discord
-          </Button>
-        </div>
+                onResponse: () => {
+                  setLoading(false);
+                },
+              }
+            );
+          }}
+        >
+          <IconBrandDiscord />
+          Sign in with Discord
+        </Button>
       </div>
     </div>
   );
