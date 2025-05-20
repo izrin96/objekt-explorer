@@ -8,12 +8,7 @@ import {
 
 const ThemeProvider = ({ children, ...props }: ThemeProviderProps) => {
   return (
-    <NextThemesProvider
-      disableTransitionOnChange
-      enableSystem
-      storageKey="justd-theme"
-      {...props}
-    >
+    <NextThemesProvider disableTransitionOnChange enableSystem {...props}>
       {children}
     </NextThemesProvider>
   );
