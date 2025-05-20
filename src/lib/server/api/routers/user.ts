@@ -45,7 +45,7 @@ export const userRouter = createTRPCRouter({
         headers,
         body: {
           name: info.user.name,
-          username: info.data.username,
+          discord: info.data.username,
           image: info.user.image,
         },
       });

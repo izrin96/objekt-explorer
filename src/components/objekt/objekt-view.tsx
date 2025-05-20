@@ -9,7 +9,7 @@ import { Badge, Button } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
-import { Check } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
 
 type Props = PropsWithChildren<{
   objekts: ValidObjekt[];
@@ -88,7 +88,7 @@ export default memo(function ObjektView({
             )}
             onClick={select}
           >
-            <Check size="16" weight="bold" />
+            <CheckIcon size="16" weight="bold" />
             <span className="hidden text-xs font-semibold group-hover/btn:block text-nowrap">
               {isSelected ? "Unselect" : "Select"}
             </span>

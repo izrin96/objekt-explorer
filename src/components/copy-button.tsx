@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import { useCopyToClipboard } from "usehooks-ts";
 import { Button } from "./ui";
-import { Copy } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
 
 export function CopyButton({ text }: { text: string }) {
   const [, copy] = useCopyToClipboard();
@@ -18,7 +18,7 @@ export function CopyButton({ text }: { text: string }) {
       }}
       size="extra-small"
     >
-      <Copy data-slot="icon" />
+      <CopyIcon data-slot="icon" />
       {copied ? "Copied!" : "Copy"}
     </Button>
   );

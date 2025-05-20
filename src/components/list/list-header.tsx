@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Avatar, Button } from "../ui";
-import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
+import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useListAuthed } from "@/hooks/use-user";
 import { EditList } from "./modal/manage-list";
 import { PublicList } from "@/lib/server/api/routers/list";
@@ -27,11 +27,9 @@ export default function ListHeader({ list }: { list: PublicList }) {
           <div className="text-lg font-semibold">{list.name}</div>
           {list.user && (
             <div className="inline-flex items-center gap-1">
-              <DiscordLogo size={16} weight="regular" />
+              <DiscordLogoIcon size={16} weight="regular" />
               <span className="text-fg text-sm">{list.user.name}</span>
-              <span className="text-muted-fg text-sm">
-                {list.user.username}
-              </span>
+              <span className="text-muted-fg text-sm">{list.user.discord}</span>
             </div>
           )}
         </div>

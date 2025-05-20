@@ -17,11 +17,11 @@ import { User } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import {
-  DiscordLogo,
-  SignOut,
-  User as UserIcon,
-  ListHeart,
-  GearSix,
+  DiscordLogoIcon,
+  SignOutIcon,
+  UserIcon,
+  ListHeartIcon,
+  GearSixIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
 export default function UserNav() {
@@ -69,7 +69,7 @@ function UserMenu({ user }: { user: User }) {
               <Menu.Header separator>
                 <span className="block">{user.name}</span>
                 <span className="font-normal text-muted-fg">
-                  {user.username}
+                  {user.discord}
                 </span>
               </Menu.Header>
             </Menu.Section>
@@ -79,7 +79,7 @@ function UserMenu({ user }: { user: User }) {
             <MyCosmoProfileMenuItem />
 
             <Menu.Item onAction={openRefreshProfile}>
-              <DiscordLogo data-slot="icon" size={16} />
+              <DiscordLogoIcon data-slot="icon" size={16} />
               <Menu.Label>Refresh Profile</Menu.Label>
             </Menu.Item>
             <Menu.Separator />
@@ -94,7 +94,7 @@ function UserMenu({ user }: { user: User }) {
                 });
               }}
             >
-              <SignOut data-slot="icon" />
+              <SignOutIcon data-slot="icon" />
               <Menu.Label>Log out</Menu.Label>
             </Menu.Item>
           </Menu.Content>
@@ -110,7 +110,7 @@ function MyListMenuItem() {
   return (
     <Menu.Submenu>
       <Menu.Item>
-        <ListHeart data-slot="icon" />
+        <ListHeartIcon data-slot="icon" />
         <Menu.Label>My List</Menu.Label>
       </Menu.Item>
       <Menu.Content placement="left top">
@@ -134,7 +134,7 @@ function MyListMenuItem() {
           </Menu.Item>
         ))}
         <Menu.Item href={`/list`}>
-          <GearSix data-slot="icon" />
+          <GearSixIcon data-slot="icon" />
           <Menu.Label>Manage list</Menu.Label>
         </Menu.Item>
       </Menu.Content>
@@ -172,7 +172,7 @@ function MyCosmoProfileMenuItem() {
           </Menu.Item>
         ))}
         <Menu.Item href={`/link`}>
-          <GearSix data-slot="icon" />
+          <GearSixIcon data-slot="icon" />
           <Menu.Label>Manage Cosmo link</Menu.Label>
         </Menu.Item>
       </Menu.Content>

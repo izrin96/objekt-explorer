@@ -9,30 +9,38 @@ import { getBaseURL } from "../utils";
 import { cache } from "react";
 import { headers } from "next/headers";
 import { PublicProfile } from "../universal/user";
+import { username } from "better-auth/plugins/username";
+import * as authSchema from "./db/auth-schema";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
+    schema: authSchema,
   }),
+  plugins: [username()],
   socialProviders: {
     discord: {
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-      // in future will move to Account or no longer store. not sure yet.
       mapProfileToUser: (profile) => ({
-        username: profile.username,
+        discord: profile.username,
       }),
     },
   },
   baseURL: getBaseURL(),
   user: {
     additionalFields: {
-      username: {
+      discord: {
         type: "string",
         required: false,
         returned: true,
-        fieldName: "username",
+        fieldName: "discord",
       },
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
     },
   },
 });
@@ -60,6 +68,8 @@ export async function fetchUserByIdentifier(
           name: true,
           username: true,
           image: true,
+          discord: true,
+          displayUsername: true,
         },
       },
     },

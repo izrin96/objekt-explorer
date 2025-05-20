@@ -1,9 +1,4 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
 import { citext } from "./custom-type";
 
 export const user = pgTable("user", {
@@ -15,7 +10,9 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
   // custom
-  username: citext("username"),
+  username: citext("username").unique(),
+  displayUsername: citext("display_username"),
+  discord: citext("discord"),
 });
 
 export const session = pgTable("session", {

@@ -298,6 +298,8 @@ export async function fetchList(slug: string) {
           name: true,
           image: true,
           username: true,
+          discord: true,
+          displayUsername: true,
         },
       },
     },

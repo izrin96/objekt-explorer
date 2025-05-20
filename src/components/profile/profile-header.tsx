@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Avatar, Button, buttonStyles, Link } from "../ui";
-import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
+import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { PublicProfile } from "@/lib/universal/user";
 import { useProfileAuthed } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
@@ -68,8 +68,12 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
               {user.user.name}
             </span>
             <span className="text-sm truncate inline-flex gap-1">
-              <DiscordLogo size={16} weight="regular" className="self-center" />
-              <span>{user.user.username}</span>
+              <DiscordLogoIcon
+                size={16}
+                weight="regular"
+                className="self-center"
+              />
+              <span>{user.user.discord}</span>
             </span>
           </div>
         </div>

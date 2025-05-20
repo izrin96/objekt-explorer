@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  PushPin,
-  PushPinSimple,
-  PushPinSimpleSlash,
+  PushPinIcon,
+  PushPinSimpleIcon,
+  PushPinSimpleSlashIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ export function ObjektOverlay({
     <>
       {isPin && (
         <div className="absolute bg-bg text-fg p-1 rounded-md">
-          <PushPin weight="bold" size={12} />
+          <PushPinIcon weight="bold" size={12} />
         </div>
       )}
       {isOwned && (
@@ -90,9 +90,9 @@ function TogglePin({
         {pin.isPending || unpin.isPending ? (
           <Loader variant="ring" />
         ) : isPin ? (
-          <PushPinSimpleSlash size={16} />
+          <PushPinSimpleSlashIcon size={16} />
         ) : (
-          <PushPinSimple size={16} />
+          <PushPinSimpleIcon size={16} />
         )}
       </span>
     </Button>

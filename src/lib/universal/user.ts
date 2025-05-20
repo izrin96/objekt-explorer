@@ -1,11 +1,11 @@
 import { User, UserAddress } from "../server/db/schema";
 
-export type PublicProfile = Pick<
-  UserAddress,
-  "nickname" | "address"
-> & {
+export type PublicProfile = Pick<UserAddress, "nickname" | "address"> & {
   bannerImgUrl?: string | null;
   user?: PublicUser | null;
 };
 
-export type PublicUser = Pick<User, "name" | "image" | "username">;
+export type PublicUser = Pick<
+  User,
+  "name" | "image" | "username" | "discord" | "displayUsername"
+>;
