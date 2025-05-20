@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button, Note } from "../ui";
-import { cn } from "@/utils/classes";
 import { authClient } from "@/lib/auth-client";
 import { IconBrandDiscord } from "@intentui/icons";
 
@@ -15,7 +14,7 @@ export default function SignIn() {
         We&apos;re currently working on adding more login options, including
         email and password. In the meantime, logging in with Discord is
         completely safe. We only request basic information like your email
-        address and never ask for anything beyond what's necessary.
+        address and never ask for anything beyond what&apos;s necessary.
       </Note>
       <div className="grid gap-4 max-w-xl w-full self-center">
         <Button
