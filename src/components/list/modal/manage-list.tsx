@@ -60,7 +60,7 @@ export function CreateList() {
                 label="Hide Discord"
                 name="hideUser"
                 description="Hide your Discord from this list"
-                defaultSelected={false}
+                defaultSelected={true}
               />
             </div>
           </Modal.Body>
