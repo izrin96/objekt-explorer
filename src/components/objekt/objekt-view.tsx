@@ -5,11 +5,10 @@ import {
   OwnedObjekt,
   ValidObjekt,
 } from "@/lib/universal/objekts";
-import { Badge, Button } from "../ui";
+import { Badge } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
 import { cn } from "@/utils/classes";
 import { replaceUrlSize } from "@/lib/utils";
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
 
 type Props = PropsWithChildren<{
   objekts: ValidObjekt[];
@@ -20,7 +19,6 @@ type Props = PropsWithChildren<{
   showSerial?: boolean;
   isSelected?: boolean;
   open: () => void;
-  select?: () => void;
 }>;
 
 export default memo(function ObjektView({
@@ -31,7 +29,6 @@ export default memo(function ObjektView({
   showSerial = false,
   isSelected = false,
   open,
-  select,
   children,
   ...props
 }: Props) {
@@ -76,23 +73,6 @@ export default memo(function ObjektView({
           <div className="flex absolute bottom-1 left-1 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
             {objekts.length}
           </div>
-        )}
-        {/* todo: move somewhere */}
-        {select && (
-          <Button
-            size="extra-small"
-            intent="plain"
-            className={cn(
-              "group-hover:flex hidden absolute top-0 right-0 bg-bg/80 text-fg group/btn",
-              isSelected && "block"
-            )}
-            onClick={select}
-          >
-            <CheckIcon size="16" weight="bold" />
-            <span className="hidden text-xs font-semibold group-hover/btn:block text-nowrap">
-              {isSelected ? "Unselect" : "Select"}
-            </span>
-          </Button>
         )}
 
         {children}

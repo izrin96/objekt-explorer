@@ -26,7 +26,12 @@ import { SelectMode } from "../filters/select-mode";
 import { authClient } from "@/lib/auth-client";
 import Filter from "./filter";
 import { api } from "@/lib/trpc/client";
-import { ObjektOverlay } from "../objekt/objekt-action";
+import {
+  ObjektHoverMenu,
+  ObjektOverlay,
+  ObjektSelect,
+  ObjektTogglePin,
+} from "../objekt/objekt-action";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
 import { useProfileAuthed } from "@/hooks/use-user";
@@ -117,35 +122,45 @@ function ProfileObjekt() {
                   objekts={item.item}
                   isProfile
                   menu={
-                    <ObjektMenu>
-                      <AddToListMenu objekt={objekt} />
-                    </ObjektMenu>
+                    authenticated && (
+                      <ObjektMenu>
+                        <AddToListMenu objekt={objekt} />
+                      </ObjektMenu>
+                    )
                   }
                 >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={authenticated}
                     >
-                      {({ isSelected, open, select }) => (
+                      {({ isSelected, open }) => (
                         <ObjektView
                           objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
                           open={open}
-                          select={select}
                           // for profile
                           showCount
                           showSerial={!filters.grouped}
                           isFade={!("serial" in objekt)}
                         >
-                          <ObjektOverlay
-                            isPin={item.type === "pin"}
-                            profile={profile!}
-                            tokenId={objekt.id}
-                            isOwned={isProfileAuthed}
-                          />
+                          {authenticated && (
+                            <div className="absolute top-0 right-0 flex">
+                              <ObjektSelect objekt={objekt} />
+                              <ObjektHoverMenu>
+                                <AddToListMenu objekt={objekt} />
+                              </ObjektHoverMenu>
+                            </div>
+                          )}
+                          <ObjektOverlay isPin={item.type === "pin"} />
+                          {isProfileAuthed && (
+                            <ObjektTogglePin
+                              isPin={item.type === "pin"}
+                              profile={profile!}
+                              tokenId={objekt.id}
+                            />
+                          )}
                         </ObjektView>
                       )}
                     </ObjektViewSelectable>

@@ -107,15 +107,7 @@ function ProfileTrades() {
             </thead>
             <tbody className="[&_.tr:last-child]:border-0">
               {rows.map((row) => (
-                <ObjektModal
-                  key={row.transfer.id}
-                  objekts={[row.objekt]}
-                  menu={
-                    <ObjektMenu>
-                      <AddToListMenu objekt={row.objekt} />
-                    </ObjektMenu>
-                  }
-                >
+                <ObjektModal key={row.transfer.id} objekts={[row.objekt]}>
                   {({ openObjekts }) => (
                     <TradeRow row={row} address={address} open={openObjekts} />
                   )}

@@ -31,6 +31,7 @@ import { AddToList } from "../list/modal/manage-objekt";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
 import { AddToListMenu, ObjektMenu } from "../objekt/objekt-menu";
+import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 
 type Props = { authenticated: boolean };
 
@@ -87,25 +88,34 @@ function IndexView(props: Props) {
                   key={objekt.id}
                   objekts={item.item}
                   menu={
-                    <ObjektMenu>
-                      <AddToListMenu objekt={objekt} />
-                    </ObjektMenu>
+                    props.authenticated && (
+                      <ObjektMenu>
+                        <AddToListMenu objekt={objekt} />
+                      </ObjektMenu>
+                    )
                   }
                 >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={props.authenticated}
                     >
-                      {({ isSelected, open, select }) => (
+                      {({ isSelected, open }) => (
                         <ObjektView
                           objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
                           open={open}
-                          select={select}
-                        />
+                        >
+                          {props.authenticated && (
+                            <div className="absolute top-0 right-0 flex">
+                              <ObjektSelect objekt={objekt} />
+                              <ObjektHoverMenu>
+                                <AddToListMenu objekt={objekt} />
+                              </ObjektHoverMenu>
+                            </div>
+                          )}
+                        </ObjektView>
                       )}
                     </ObjektViewSelectable>
                   )}

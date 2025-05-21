@@ -6,13 +6,8 @@ import { DotsThreeVerticalIcon } from "@phosphor-icons/react/dist/ssr";
 import { PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/trpc/client";
-import { authClient } from "@/lib/auth-client";
 
 export function ObjektMenu({ children }: PropsWithChildren) {
-  const session = authClient.useSession();
-
-  if (!session.data) return;
-
   return (
     <Menu>
       <Button

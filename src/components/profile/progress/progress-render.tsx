@@ -187,16 +187,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
             (objekts) => {
               const [objekt] = objekts;
               return (
-                <ObjektModal
-                  key={objekt.slug}
-                  objekts={objekts}
-                  isProfile
-                  menu={
-                    <ObjektMenu>
-                      <AddToListMenu objekt={objekt} />
-                    </ObjektMenu>
-                  }
-                >
+                <ObjektModal key={objekt.slug} objekts={objekts} isProfile>
                   {({ openObjekts }) => (
                     <ObjektView
                       objekts={objekts}

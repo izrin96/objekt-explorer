@@ -29,6 +29,7 @@ import { useListAuthed } from "@/hooks/use-user";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektMenu, RemoveFromListMenu } from "../objekt/objekt-menu";
+import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 
 type Props = { slug: string };
 
@@ -89,26 +90,38 @@ function ListView({ slug }: Props) {
                   key={objekt.id}
                   objekts={item.item}
                   menu={
-                    <ObjektMenu>
-                      <RemoveFromListMenu slug={slug} objekt={objekt} />
-                    </ObjektMenu>
+                    isOwned && (
+                      <ObjektMenu>
+                        <RemoveFromListMenu slug={slug} objekt={objekt} />
+                      </ObjektMenu>
+                    )
                   }
                 >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={isOwned}
                     >
-                      {({ isSelected, open, select }) => (
+                      {({ isSelected, open }) => (
                         <ObjektView
                           objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
                           open={open}
-                          select={select}
                           showCount
-                        />
+                        >
+                          {isOwned && (
+                            <div className="absolute top-0 right-0 flex">
+                              <ObjektSelect objekt={objekt} />
+                              <ObjektHoverMenu>
+                                <RemoveFromListMenu
+                                  slug={slug}
+                                  objekt={objekt}
+                                />
+                              </ObjektHoverMenu>
+                            </div>
+                          )}
+                        </ObjektView>
                       )}
                     </ObjektViewSelectable>
                   )}

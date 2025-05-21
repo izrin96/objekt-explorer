@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  CheckIcon,
+  DotsThreeVerticalIcon,
   PushPinIcon,
   PushPinSimpleIcon,
   PushPinSimpleSlashIcon,
@@ -8,20 +10,32 @@ import {
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
 import { PublicProfile } from "@/lib/universal/user";
-import { Button, Loader } from "../ui";
+import { Button, Loader, Menu } from "../ui";
 import { cn } from "@/utils/classes";
+import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { ValidObjekt } from "@/lib/universal/objekts";
+import { PropsWithChildren } from "react";
+import { authClient } from "@/lib/auth-client";
 
-export function ObjektOverlay({
-  isPin,
-  profile,
-  tokenId,
-  isOwned,
-}: {
-  isPin: boolean;
-  profile: PublicProfile;
-  tokenId: string;
-  isOwned: boolean;
-}) {
+export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
+  const isSelected = useObjektSelect((state) => state.isSelected(objekt));
+  const objektSelect = useObjektSelect((a) => a.select);
+  return (
+    <Button
+      size="extra-small"
+      intent="plain"
+      className={cn(
+        "group-hover:block hidden bg-bg/80 text-fg px-2",
+        isSelected && "block"
+      )}
+      onClick={() => objektSelect(objekt)}
+    >
+      <CheckIcon size="16" weight="bold" />
+    </Button>
+  );
+}
+
+export function ObjektOverlay({ isPin }: { isPin: boolean }) {
   return (
     <>
       {isPin && (
@@ -29,14 +43,11 @@ export function ObjektOverlay({
           <PushPinIcon weight="bold" size={12} />
         </div>
       )}
-      {isOwned && (
-        <TogglePin isPin={isPin} profile={profile} tokenId={tokenId} />
-      )}
     </>
   );
 }
 
-function TogglePin({
+export function ObjektTogglePin({
   profile,
   isPin,
   tokenId,
@@ -96,5 +107,26 @@ function TogglePin({
         )}
       </span>
     </Button>
+  );
+}
+
+export function ObjektHoverMenu({ children }: PropsWithChildren) {
+  const session = authClient.useSession();
+
+  if (!session.data) return;
+
+  return (
+    <Menu>
+      <Button
+        size="extra-small"
+        intent="plain"
+        className="hidden group-hover:block data-pressed:block bg-bg/80 text-fg px-2"
+      >
+        <DotsThreeVerticalIcon size={16} />
+      </Button>
+      <Menu.Content respectScreen={false} placement="bottom right">
+        {children}
+      </Menu.Content>
+    </Menu>
   );
 }
