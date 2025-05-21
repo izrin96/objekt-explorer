@@ -30,7 +30,7 @@ import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../list/modal/manage-objekt";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
-import { AddToListMenu, ObjektMenu } from "../objekt/objekt-menu";
+import { AddToListMenu, ObjektStaticMenu } from "../objekt/objekt-menu";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 
 type Props = { authenticated: boolean };
@@ -89,9 +89,9 @@ function IndexView(props: Props) {
                   objekts={item.item}
                   menu={
                     props.authenticated && (
-                      <ObjektMenu>
+                      <ObjektStaticMenu>
                         <AddToListMenu objekt={objekt} />
-                      </ObjektMenu>
+                      </ObjektStaticMenu>
                     )
                   }
                 >

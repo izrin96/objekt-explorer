@@ -38,7 +38,11 @@ import { useProfileAuthed } from "@/hooks/use-user";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 import { AddToList } from "../list/modal/manage-objekt";
 import ObjektModal from "../objekt/objekt-modal";
-import { AddToListMenu, ObjektMenu } from "../objekt/objekt-menu";
+import {
+  AddToListMenu,
+  ObjektStaticMenu,
+  TogglePinMenuItem,
+} from "../objekt/objekt-menu";
 
 export default function ProfileObjektRender() {
   return (
@@ -123,9 +127,16 @@ function ProfileObjekt() {
                   isProfile
                   menu={
                     authenticated && (
-                      <ObjektMenu>
+                      <ObjektStaticMenu>
+                        {isProfileAuthed && (
+                          <TogglePinMenuItem
+                            isPin={item.type === "pin"}
+                            profile={profile!}
+                            tokenId={objekt.id}
+                          />
+                        )}
                         <AddToListMenu objekt={objekt} />
-                      </ObjektMenu>
+                      </ObjektStaticMenu>
                     )
                   }
                 >
@@ -149,6 +160,13 @@ function ProfileObjekt() {
                             <div className="absolute top-0 right-0 flex">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
+                                {isProfileAuthed && (
+                                  <TogglePinMenuItem
+                                    isPin={item.type === "pin"}
+                                    profile={profile!}
+                                    tokenId={objekt.id}
+                                  />
+                                )}
                                 <AddToListMenu objekt={objekt} />
                               </ObjektHoverMenu>
                             </div>

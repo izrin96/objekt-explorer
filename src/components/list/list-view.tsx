@@ -28,7 +28,7 @@ import { RemoveFromList } from "./modal/manage-objekt";
 import { useListAuthed } from "@/hooks/use-user";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
-import { ObjektMenu, RemoveFromListMenu } from "../objekt/objekt-menu";
+import { ObjektStaticMenu, RemoveFromListMenu } from "../objekt/objekt-menu";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 
 type Props = { slug: string };
@@ -91,9 +91,9 @@ function ListView({ slug }: Props) {
                   objekts={item.item}
                   menu={
                     isOwned && (
-                      <ObjektMenu>
+                      <ObjektStaticMenu>
                         <RemoveFromListMenu slug={slug} objekt={objekt} />
-                      </ObjektMenu>
+                      </ObjektStaticMenu>
                     )
                   }
                 >

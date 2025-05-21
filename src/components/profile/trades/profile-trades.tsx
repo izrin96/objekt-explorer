@@ -22,7 +22,6 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useTypeFilter } from "./filter-type";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
-import { AddToListMenu, ObjektMenu } from "@/components/objekt/objekt-menu";
 
 export default function ProfileTradesRender() {
   const { artists } = useCosmoArtist();

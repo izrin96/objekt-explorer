@@ -26,7 +26,6 @@ import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
-import { AddToListMenu, ObjektMenu } from "@/components/objekt/objekt-menu";
 
 export default function ProgressRender() {
   return (

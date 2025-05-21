@@ -6,8 +6,9 @@ import { DotsThreeVerticalIcon } from "@phosphor-icons/react/dist/ssr";
 import { PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/trpc/client";
+import { PublicProfile } from "@/lib/universal/user";
 
-export function ObjektMenu({ children }: PropsWithChildren) {
+export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
     <Menu>
       <Button
@@ -15,7 +16,7 @@ export function ObjektMenu({ children }: PropsWithChildren) {
         size="extra-small"
         intent="outline"
       >
-        <DotsThreeVerticalIcon size={14} />
+        <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
       <Menu.Content respectScreen={false} placement="bottom right">
         {children}
@@ -106,6 +107,55 @@ export function RemoveFromListMenu({
       }
     >
       Remove from list
+    </Menu.Item>
+  );
+}
+
+export function TogglePinMenuItem({
+  profile,
+  isPin,
+  tokenId,
+}: {
+  profile: PublicProfile;
+  isPin: boolean;
+  tokenId: string;
+}) {
+  const utils = api.useUtils();
+  const pin = api.pins.pin.useMutation({
+    onSuccess: () => {
+      utils.pins.get.invalidate(profile.address);
+      toast.success("Objekt pinned");
+    },
+    onError: () => {
+      toast.error("Error pin objekt");
+    },
+  });
+  const unpin = api.pins.unpin.useMutation({
+    onSuccess: () => {
+      utils.pins.get.invalidate(profile.address);
+      toast.success("Objekt unpinned");
+    },
+    onError: () => {
+      toast.error("Error unpin objekt");
+    },
+  });
+  return (
+    <Menu.Item
+      onAction={() => {
+        if (isPin) {
+          unpin.mutate({
+            address: profile.address,
+            tokenId: Number(tokenId),
+          });
+        } else {
+          pin.mutate({
+            address: profile.address,
+            tokenId: Number(tokenId),
+          });
+        }
+      }}
+    >
+      {isPin ? "Unpin" : "Pin"}
     </Menu.Item>
   );
 }

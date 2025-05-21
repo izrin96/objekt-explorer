@@ -15,7 +15,6 @@ import { cn } from "@/utils/classes";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { PropsWithChildren } from "react";
-import { authClient } from "@/lib/auth-client";
 
 export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
@@ -111,10 +110,6 @@ export function ObjektTogglePin({
 }
 
 export function ObjektHoverMenu({ children }: PropsWithChildren) {
-  const session = authClient.useSession();
-
-  if (!session.data) return;
-
   return (
     <Menu>
       <Button
@@ -122,7 +117,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
         intent="plain"
         className="hidden group-hover:block data-pressed:block bg-bg/80 text-fg px-2"
       >
-        <DotsThreeVerticalIcon size={16} />
+        <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
       <Menu.Content respectScreen={false} placement="bottom right">
         {children}
