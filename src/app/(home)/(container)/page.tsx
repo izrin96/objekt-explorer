@@ -8,10 +8,8 @@ export const revalidate = 0;
 
 export default async function Home() {
   const queryClient = getQueryClient();
-
-  const session = await cachedSession();
-
   queryClient.prefetchQuery(collectionOptions);
+  const session = await cachedSession();
 
   return (
     <div className="flex flex-col pb-8 pt-2">
