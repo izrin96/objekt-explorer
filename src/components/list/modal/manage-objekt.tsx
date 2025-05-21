@@ -17,6 +17,7 @@ import {
 import ErrorFallbackRender from "../../error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
+import { CreateList } from "./manage-list";
 
 export function AddToList({
   handleAction,
@@ -99,10 +100,17 @@ function AddToListForm() {
 
   if (data.length === 0)
     return (
-      <Note intent="default">
-        You don&apos;t have any list yet.{" "}
-        <Link href="/list">Create one here</Link>.
-      </Note>
+      <CreateList>
+        {({ open }) => (
+          <Note intent="default">
+            You don&apos;t have any list yet.{" "}
+            <span className="underline cursor-pointer" onClick={open}>
+              Create one
+            </span>
+            .
+          </Note>
+        )}
+      </CreateList>
     );
 
   return (

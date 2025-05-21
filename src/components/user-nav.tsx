@@ -22,8 +22,10 @@ import {
   UserIcon,
   ListHeartIcon,
   GearSixIcon,
+  PlusIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { GenerateDiscordFormat } from "./list/modal/generate-discord";
+import { CreateList } from "./list/modal/manage-list";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -57,56 +59,63 @@ function UserMenu({ user }: { user: User }) {
       {({ open: openRefreshProfile }) => (
         <GenerateDiscordFormat>
           {({ open: openDiscordFormat }) => (
-            <Menu>
-              <Menu.Trigger aria-label="Open Menu">
-                <Avatar
-                  alt={user.name}
-                  initials={user.name.charAt(0)}
-                  size="medium"
-                  shape="square"
-                  src={user.image}
-                />
-              </Menu.Trigger>
-              <Menu.Content placement="bottom right" className="sm:min-w-56">
-                <Menu.Section>
-                  <Menu.Header separator>
-                    <span className="block">{user.name}</span>
-                    <span className="font-normal text-muted-fg">
-                      {user.discord}
-                    </span>
-                  </Menu.Header>
-                </Menu.Section>
+            <CreateList>
+              {({ open: openCreateList }) => (
+                <Menu>
+                  <Menu.Trigger aria-label="Open Menu">
+                    <Avatar
+                      alt={user.name}
+                      initials={user.name.charAt(0)}
+                      size="medium"
+                      shape="square"
+                      src={user.image}
+                    />
+                  </Menu.Trigger>
+                  <Menu.Content
+                    placement="bottom right"
+                    className="sm:min-w-56"
+                  >
+                    <Menu.Section>
+                      <Menu.Header separator>
+                        <span className="block">{user.name}</span>
+                        <span className="font-normal text-muted-fg">
+                          {user.discord}
+                        </span>
+                      </Menu.Header>
+                    </Menu.Section>
 
-                <MyListMenuItem />
+                    <MyListMenuItem openCreateList={openCreateList} />
 
-                <Menu.Item onAction={openDiscordFormat}>
-                  <DiscordLogoIcon data-slot="icon" />
-                  <Menu.Label>Discord List Format</Menu.Label>
-                </Menu.Item>
+                    <Menu.Item onAction={openDiscordFormat}>
+                      <DiscordLogoIcon data-slot="icon" />
+                      <Menu.Label>Discord List Format</Menu.Label>
+                    </Menu.Item>
 
-                <MyCosmoProfileMenuItem />
+                    <MyCosmoProfileMenuItem />
 
-                <Menu.Item onAction={openRefreshProfile}>
-                  <DiscordLogoIcon data-slot="icon" size={16} />
-                  <Menu.Label>Refresh Profile</Menu.Label>
-                </Menu.Item>
-                <Menu.Separator />
-                <Menu.Item
-                  onAction={() => {
-                    authClient.signOut({
-                      fetchOptions: {
-                        onSuccess: () => {
-                          router.refresh();
-                        },
-                      },
-                    });
-                  }}
-                >
-                  <SignOutIcon data-slot="icon" />
-                  <Menu.Label>Log out</Menu.Label>
-                </Menu.Item>
-              </Menu.Content>
-            </Menu>
+                    <Menu.Item onAction={openRefreshProfile}>
+                      <DiscordLogoIcon data-slot="icon" size={16} />
+                      <Menu.Label>Refresh Profile</Menu.Label>
+                    </Menu.Item>
+                    <Menu.Separator />
+                    <Menu.Item
+                      onAction={() => {
+                        authClient.signOut({
+                          fetchOptions: {
+                            onSuccess: () => {
+                              router.refresh();
+                            },
+                          },
+                        });
+                      }}
+                    >
+                      <SignOutIcon data-slot="icon" />
+                      <Menu.Label>Log out</Menu.Label>
+                    </Menu.Item>
+                  </Menu.Content>
+                </Menu>
+              )}
+            </CreateList>
           )}
         </GenerateDiscordFormat>
       )}
@@ -114,7 +123,7 @@ function UserMenu({ user }: { user: User }) {
   );
 }
 
-function MyListMenuItem() {
+function MyListMenuItem({ openCreateList }: { openCreateList: () => void }) {
   const { data, isLoading } = api.list.myList.useQuery();
   const items = data ?? [];
   return (
@@ -143,6 +152,10 @@ function MyListMenuItem() {
             <Menu.Label>{a.name}</Menu.Label>
           </Menu.Item>
         ))}
+        <Menu.Item onAction={openCreateList}>
+          <PlusIcon data-slot="icon" />
+          <Menu.Label>Create list</Menu.Label>
+        </Menu.Item>
         <Menu.Item href={`/list`}>
           <GearSixIcon data-slot="icon" />
           <Menu.Label>Manage list</Menu.Label>

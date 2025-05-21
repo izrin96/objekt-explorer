@@ -17,7 +17,11 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
-export function CreateList() {
+export function CreateList({
+  children,
+}: {
+  children: ({ open }: { open: () => void }) => React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
   const utils = api.useUtils();
   const createList = api.list.create.useMutation({
@@ -32,7 +36,11 @@ export function CreateList() {
   });
   return (
     <>
-      <Button onClick={() => setOpen(true)}>Create list</Button>
+      {children({
+        open: () => {
+          setOpen(true);
+        },
+      })}
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
         <Form
           onSubmit={async (e) => {
