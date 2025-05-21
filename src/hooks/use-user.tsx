@@ -35,7 +35,7 @@ export function useProfileAuthed() {
   return profiles?.some((a) => a.address === target?.address) ?? false;
 }
 
-export function useListAuthed(slug: string) {
+export function useListAuthed(slug: string | undefined) {
   const { lists } = useUser();
   return lists?.some((a) => a.slug === slug) ?? false;
 }

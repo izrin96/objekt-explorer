@@ -8,16 +8,16 @@ import { useObjektModal } from "@/hooks/use-objekt-modal";
 
 type Props = {
   isProfile?: boolean;
-  listSlug?: string;
   objekts: ValidObjekt[];
   children: ({ openObjekts }: { openObjekts: () => void }) => React.ReactNode;
+  menu?: React.ReactNode;
 };
 
 export default function ObjektModal({
   children,
   isProfile,
-  listSlug,
   objekts,
+  menu,
 }: Props) {
   const [open, setOpen] = useState(false);
   const setCurrentSerial = useObjektModal((a) => a.setCurrentSerial);
@@ -35,12 +35,9 @@ export default function ObjektModal({
           <Modal.Title>Objekt display</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0 sm:p-0">
+          {menu}
           {objekts.length > 0 && (
-            <ObjektDetail
-              objekts={objekts}
-              isProfile={isProfile}
-              listSlug={listSlug}
-            />
+            <ObjektDetail objekts={objekts} isProfile={isProfile} />
           )}
         </Modal.Body>
       </Modal.Content>

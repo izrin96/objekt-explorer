@@ -28,6 +28,7 @@ import { RemoveFromList } from "./modal/manage-objekt";
 import { useListAuthed } from "@/hooks/use-user";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
+import { ObjektMenu } from "../objekt/objekt-menu";
 
 type Props = { slug: string };
 
@@ -87,7 +88,7 @@ function ListView({ slug }: Props) {
                 <ObjektModal
                   key={objekt.id}
                   objekts={item.item}
-                  listSlug={slug}
+                  menu={<ObjektMenu objekt={objekt} />}
                 >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable

@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Badge,
-  Button,
-  Card,
-  Link,
-  Loader,
-  Menu,
-  NumberField,
-  Table,
-  Tabs,
-} from "../ui";
+import { Badge, Button, Card, Link, NumberField, Table, Tabs } from "../ui";
 import { CSSProperties, useCallback, useState } from "react";
 import {
   OwnedObjekt,
@@ -31,21 +21,15 @@ import {
 import { ArchiveXIcon } from "lucide-react";
 import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
 import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
-import { DotsThreeVerticalIcon } from "@phosphor-icons/react/dist/ssr";
-import { api } from "@/lib/trpc/client";
-import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
   isProfile?: boolean;
-  listSlug?: string;
 };
 
 export default function ObjektDetail({
   objekts,
   isProfile,
-  listSlug,
 }: ObjektDetailProps) {
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
@@ -53,180 +37,59 @@ export default function ObjektDetail({
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
 
   return (
-    <>
-      <ObjektMenu objekt={objekt} listSlug={listSlug} />
-      <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2 h-full sm:h-[33.5rem] sm:min-h-[33.5rem]">
-        <ObjektCard objekts={objekts} />
-        <div
-          className="relative flex flex-col overflow-y-auto col-span-2 min-h-screen sm:min-h-full"
-          style={{
-            scrollbarGutter: "stable",
-          }}
-        >
-          <div className="px-2 font-semibold">{objekt.collectionId}</div>
-          <AttributePanel
-            objekt={objekt}
-            unobtainable={unobtainables.includes(objekt.slug)}
-          />
-          <Tabs
-            aria-label="Objekt tab"
-            selectedKey={currentTab}
-            onSelectionChange={(key) =>
-              setCurrentTab(key.toString() as ValidTab)
-            }
-            className="p-2"
-          >
-            <Tabs.List>
-              {isProfile && (
-                <Tabs.Tab id="owned">
-                  Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}
-                </Tabs.Tab>
-              )}
-              <Tabs.Tab id="trades">Trades</Tabs.Tab>
-              <Tabs.Tab
-                id="apollo"
-                href={`https://apollo.cafe/objekts?id=${objekt.slug}`}
-                target="_blank"
-              >
-                <IconOpenLink />
-                View in Apollo
-              </Tabs.Tab>
-            </Tabs.List>
-            {isProfile && (
-              <Tabs.Panel id="owned">
-                {isOwned ? (
-                  <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
-                ) : (
-                  <div className="flex flex-col justify-center gap-3 items-center">
-                    <ArchiveXIcon strokeWidth="1.2" size="64" />
-                    <p>Not owned</p>
-                  </div>
-                )}
-              </Tabs.Panel>
-            )}
-            <Tabs.Panel id="trades">
-              <TradeView objekt={objekt} />
-            </Tabs.Panel>
-          </Tabs>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function ObjektMenu({
-  objekt,
-  listSlug,
-}: {
-  objekt: ValidObjekt;
-  listSlug?: string;
-}) {
-  const session = authClient.useSession();
-  if (!session.data) return;
-
-  return (
-    <Menu>
-      <Button
-        className="absolute top-1 sm:top-1.5 p-2 right-10 z-50"
-        size="extra-small"
-        intent="outline"
+    <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2 h-full sm:h-[33.5rem] sm:min-h-[33.5rem]">
+      <ObjektCard objekts={objekts} />
+      <div
+        className="relative flex flex-col overflow-y-auto col-span-2 min-h-screen sm:min-h-full"
+        style={{
+          scrollbarGutter: "stable",
+        }}
       >
-        <DotsThreeVerticalIcon size={14} />
-      </Button>
-      <Menu.Content respectScreen={false} placement="bottom right">
-        {listSlug ? (
-          <RemoveFromListMenu slug={listSlug} objekt={objekt} />
-        ) : (
-          <AddToListMenu objekt={objekt} />
-        )}
-      </Menu.Content>
-    </Menu>
-  );
-}
-
-function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
-  const { data, isLoading } = api.list.myList.useQuery();
-  const addToList = api.list.addObjektsToList.useMutation({
-    onSuccess: (rowCount) => {
-      toast.success(`${rowCount} objekt added to the list`, {
-        duration: 1300,
-      });
-    },
-    onError: () => {
-      toast.error("Error adding objekt to list");
-    },
-  });
-  const items = data ?? [];
-
-  const handleAction = useCallback(
-    (slug: string) => {
-      addToList.mutate({
-        slug: slug,
-        skipDups: false,
-        collectionSlugs: [objekt.slug],
-      });
-    },
-    [objekt, addToList]
-  );
-  return (
-    <Menu.Submenu>
-      <Menu.Item>Add to list</Menu.Item>
-      <Menu.Content respectScreen={false} placement="bottom right">
-        {isLoading && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
-              <Loader variant="ring" />
-            </Menu.Label>
-          </Menu.Item>
-        )}
-        {!isLoading && items.length === 0 && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
-              <span>No list found</span>
-            </Menu.Label>
-          </Menu.Item>
-        )}
-        {items.map((a) => (
-          <Menu.Item key={a.slug} onAction={() => handleAction(a.slug)}>
-            <Menu.Label>{a.name}</Menu.Label>
-          </Menu.Item>
-        ))}
-      </Menu.Content>
-    </Menu.Submenu>
-  );
-}
-
-function RemoveFromListMenu({
-  slug,
-  objekt,
-}: {
-  slug: string;
-  objekt: ValidObjekt;
-}) {
-  const utils = api.useUtils();
-  const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
-    onSuccess: () => {
-      utils.list.getEntries.invalidate(slug);
-      toast.success("Objekt removed from the list", {
-        duration: 1300,
-      });
-    },
-    onError: () => {
-      toast.error("Error removing objekt from list");
-    },
-  });
-
-  return (
-    <Menu.Item
-      onAction={() =>
-        removeObjektsFromList.mutate({
-          slug: slug,
-          ids: [Number(objekt.id)],
-        })
-      }
-    >
-      Remove from list
-    </Menu.Item>
+        <div className="px-2 font-semibold">{objekt.collectionId}</div>
+        <AttributePanel
+          objekt={objekt}
+          unobtainable={unobtainables.includes(objekt.slug)}
+        />
+        <Tabs
+          aria-label="Objekt tab"
+          selectedKey={currentTab}
+          onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
+          className="p-2"
+        >
+          <Tabs.List>
+            {isProfile && (
+              <Tabs.Tab id="owned">
+                Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}
+              </Tabs.Tab>
+            )}
+            <Tabs.Tab id="trades">Trades</Tabs.Tab>
+            <Tabs.Tab
+              id="apollo"
+              href={`https://apollo.cafe/objekts?id=${objekt.slug}`}
+              target="_blank"
+            >
+              <IconOpenLink />
+              View in Apollo
+            </Tabs.Tab>
+          </Tabs.List>
+          {isProfile && (
+            <Tabs.Panel id="owned">
+              {isOwned ? (
+                <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
+              ) : (
+                <div className="flex flex-col justify-center gap-3 items-center">
+                  <ArchiveXIcon strokeWidth="1.2" size="64" />
+                  <p>Not owned</p>
+                </div>
+              )}
+            </Tabs.Panel>
+          )}
+          <Tabs.Panel id="trades">
+            <TradeView objekt={objekt} />
+          </Tabs.Panel>
+        </Tabs>
+      </div>
+    </div>
   );
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { PublicList } from "@/lib/server/api/routers/list";
 import { PinObjekt } from "@/lib/universal/objekts";
 import { PublicProfile } from "@/lib/universal/user";
 import { PropsWithChildren, createContext, useContext, useRef } from "react";
@@ -7,6 +8,7 @@ import { createStore, StoreApi, useStore } from "zustand";
 
 type ProfileProps = {
   profile: PublicProfile | undefined;
+  list: PublicList | undefined;
   pins: PinObjekt[];
 };
 
@@ -22,6 +24,7 @@ type ProviderProps = PropsWithChildren<Partial<ProfileProps>>;
 const createProfileStore = (initial: Partial<ProfileProps>) => {
   const DEFAULT_PROPS: ProfileProps = {
     profile: undefined,
+    list: undefined,
     pins: [],
   };
 

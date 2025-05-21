@@ -7,6 +7,7 @@ import { cachedSession } from "@/lib/server/auth";
 import { fetchList, fetchOwnedLists } from "@/lib/server/api/routers/list";
 import { UserProvider } from "@/hooks/use-user";
 import ListHeader from "@/components/list/list-header";
+import { ProfileProvider } from "@/hooks/use-profile";
 
 type Props = {
   params: Promise<{
@@ -26,8 +27,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 export default async function Page(props: Props) {
   const params = await props.params;
 
-  const data = await fetchList(params.slug);
-  if (!data) notFound();
+  const list = await fetchList(params.slug);
+  if (!list) notFound();
 
   const session = await cachedSession();
 
@@ -38,14 +39,16 @@ export default async function Page(props: Props) {
   api.list.getEntries.prefetch(params.slug);
 
   return (
-    <UserProvider lists={lists}>
-      <div className="flex flex-col pb-8 pt-2 gap-4">
-        <ListHeader list={data} />
+    <ProfileProvider list={list}>
+      <UserProvider lists={lists}>
+        <div className="flex flex-col pb-8 pt-2 gap-4">
+          <ListHeader list={list} />
 
-        <HydrateClient>
-          <ListRender slug={params.slug} />
-        </HydrateClient>
-      </div>
-    </UserProvider>
+          <HydrateClient>
+            <ListRender slug={params.slug} />
+          </HydrateClient>
+        </div>
+      </UserProvider>
+    </ProfileProvider>
   );
 }
