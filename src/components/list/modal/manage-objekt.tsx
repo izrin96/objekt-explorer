@@ -23,7 +23,6 @@ export function AddToList({
       setOpen(false);
       reset();
       toast.success(`${rowCount} objekt added to the list`, {
-        position: "top-center",
         duration: 1300,
       });
     },
@@ -147,7 +146,6 @@ export function RemoveFromList({
       reset();
       utils.list.getEntries.invalidate(slug);
       toast.success("Objekt removed from the list", {
-        position: "top-center",
         duration: 1300,
       });
     },

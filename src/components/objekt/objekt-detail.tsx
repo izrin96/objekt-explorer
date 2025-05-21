@@ -145,7 +145,6 @@ function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   const addToList = api.list.addObjektsToList.useMutation({
     onSuccess: (rowCount) => {
       toast.success(`${rowCount} objekt added to the list`, {
-        position: "top-center",
         duration: 1300,
       });
     },
@@ -205,7 +204,6 @@ function RemoveFromListMenu({
     onSuccess: () => {
       utils.list.getEntries.invalidate(slug);
       toast.success("Objekt removed from the list", {
-        position: "top-center",
         duration: 1300,
       });
     },

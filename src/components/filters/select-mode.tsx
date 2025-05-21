@@ -23,7 +23,6 @@ export function SelectMode({
     (open: () => void) => {
       if (selected.length < 1) {
         toast.error("Must select at least one objekt", {
-          position: "top-center",
           duration: 1300,
         });
       } else {
