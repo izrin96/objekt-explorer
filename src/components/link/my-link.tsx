@@ -62,7 +62,10 @@ function MyLink() {
                         <Button intent="outline" size="extra-small">
                           <IconDotsVertical />
                         </Button>
-                        <Menu.Content className="sm:min-w-56">
+                        <Menu.Content
+                          respectScreen={false}
+                          className="sm:min-w-56"
+                        >
                           <Menu.Item
                             href={`/@${link.nickname ?? link.address}`}
                           >

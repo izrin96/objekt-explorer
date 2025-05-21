@@ -2,7 +2,6 @@
 
 import ObjektView from "@/components/objekt/objekt-view";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
@@ -25,11 +24,12 @@ import { useProfile } from "@/hooks/use-profile";
 import { groupBy } from "es-toolkit";
 import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
-import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import ObjektModal from "@/components/objekt/objekt-modal";
 
 export default function ProgressRender() {
   return (
-    <ObjektTabProvider initialTab="owned">
+    <ObjektModalProvider initialTab="owned">
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary
@@ -40,7 +40,7 @@ export default function ProgressRender() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </ObjektTabProvider>
+    </ObjektModalProvider>
   );
 }
 
@@ -186,11 +186,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
             (objekts) => {
               const [objekt] = objekts;
               return (
-                <ObjektModalProvider
-                  key={objekt.slug}
-                  objekts={objekts}
-                  isProfile
-                >
+                <ObjektModal key={objekt.slug} objekts={objekts} isProfile>
                   {({ openObjekts }) => (
                     <ObjektView
                       objekts={objekts}
@@ -200,7 +196,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
                       open={openObjekts}
                     />
                   )}
-                </ObjektModalProvider>
+                </ObjektModal>
               );
             }
           )}

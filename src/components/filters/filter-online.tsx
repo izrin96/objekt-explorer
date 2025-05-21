@@ -41,6 +41,7 @@ export default function OnlineFilter() {
         Physical
       </Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}

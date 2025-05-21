@@ -4,11 +4,10 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useFilters } from "@/hooks/use-filters";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { Loader } from "../ui";
+import { Button, Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-boundary";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
@@ -20,7 +19,7 @@ import {
   ObjektsRenderRow,
 } from "../collection/collection-render";
 import ObjektView from "../objekt/objekt-view";
-import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
@@ -33,11 +32,12 @@ import { FilterSheet } from "../filters/filter-sheet";
 import { useProfileAuthed } from "@/hooks/use-user";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 import { AddToList } from "../list/modal/manage-objekt";
+import ObjektModal from "../objekt/objekt-modal";
 
 export default function ProfileObjektRender() {
   return (
     <ObjektSelectProvider>
-      <ObjektTabProvider initialTab="owned">
+      <ObjektModalProvider initialTab="owned">
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary
@@ -48,7 +48,7 @@ export default function ProfileObjektRender() {
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
-      </ObjektTabProvider>
+      </ObjektModalProvider>
     </ObjektSelectProvider>
   );
 }
@@ -110,11 +110,7 @@ function ProfileObjekt() {
             {({ item, index }) => {
               const [objekt] = item.item;
               return (
-                <ObjektModalProvider
-                  key={objekt.id}
-                  objekts={item.item}
-                  isProfile
-                >
+                <ObjektModal key={objekt.id} objekts={item.item} isProfile>
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}
@@ -143,7 +139,7 @@ function ProfileObjekt() {
                       )}
                     </ObjektViewSelectable>
                   )}
-                </ObjektModalProvider>
+                </ObjektModal>
               );
             }}
           </ObjektsRenderRow>
@@ -210,7 +206,13 @@ function Filters({ address }: { address: string }) {
         <SelectMode>
           {({ handleAction }) => (
             <>
-              <AddToList handleAction={handleAction} />
+              <AddToList>
+                {({ open }) => (
+                  <Button intent="outline" onClick={() => handleAction(open)}>
+                    Add to list
+                  </Button>
+                )}
+              </AddToList>
               {isProfileAuthed && (
                 <>
                   <PinObjekt address={address} handleAction={handleAction} />

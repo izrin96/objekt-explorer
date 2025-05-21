@@ -25,7 +25,7 @@ const createProfileStore = (initial: Partial<ProfileProps>) => {
     pins: [],
   };
 
-  return createStore<ProfileState>()((set, get) => ({
+  return createStore<ProfileState>()((set) => ({
     ...DEFAULT_PROPS,
     ...initial,
     addPin: (pin: PinObjekt) =>

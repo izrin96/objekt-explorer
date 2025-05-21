@@ -35,6 +35,7 @@ export default function GroupBysFilter() {
     <Menu>
       <Button intent="outline">Group By</Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}

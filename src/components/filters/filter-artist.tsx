@@ -39,6 +39,7 @@ export default function ArtistFilter({ artists }: Props) {
         Artist
       </Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}

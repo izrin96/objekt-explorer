@@ -30,6 +30,7 @@ export default function EditionFilter() {
         Edition
       </Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}

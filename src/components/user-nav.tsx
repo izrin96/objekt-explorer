@@ -72,6 +72,7 @@ function UserMenu({ user }: { user: User }) {
                     />
                   </Menu.Trigger>
                   <Menu.Content
+                    respectScreen={false}
                     placement="bottom right"
                     className="sm:min-w-56"
                   >

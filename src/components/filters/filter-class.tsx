@@ -38,6 +38,7 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
         Class
       </Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}

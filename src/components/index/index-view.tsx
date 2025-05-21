@@ -4,7 +4,6 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import {
   QueryErrorResetBoundary,
   useSuspenseQuery,
@@ -19,7 +18,7 @@ import {
   ObjektsRender,
   ObjektsRenderRow,
 } from "../collection/collection-render";
-import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { SelectMode } from "../filters/select-mode";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
@@ -30,13 +29,15 @@ import { FilterSheet } from "../filters/filter-sheet";
 import { FilterContainer } from "../filters/filter-container";
 import { User } from "better-auth";
 import { AddToList } from "../list/modal/manage-objekt";
+import { Button } from "../ui";
+import ObjektModal from "../objekt/objekt-modal";
 
 type Props = { user?: User };
 
 export default function IndexRender(props: Props) {
   return (
     <ObjektSelectProvider>
-      <ObjektTabProvider initialTab="trades">
+      <ObjektModalProvider initialTab="trades">
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary
@@ -47,7 +48,7 @@ export default function IndexRender(props: Props) {
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
-      </ObjektTabProvider>
+      </ObjektModalProvider>
     </ObjektSelectProvider>
   );
 }
@@ -82,7 +83,7 @@ function IndexView(props: Props) {
             {({ item, index }) => {
               const [objekt] = item.item;
               return (
-                <ObjektModalProvider key={objekt.id} objekts={item.item}>
+                <ObjektModal key={objekt.id} objekts={item.item}>
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}
@@ -100,7 +101,7 @@ function IndexView(props: Props) {
                       )}
                     </ObjektViewSelectable>
                   )}
-                </ObjektModalProvider>
+                </ObjektModal>
               );
             }}
           </ObjektsRenderRow>
@@ -139,7 +140,15 @@ function Filters(props: Props) {
       <Filter />
       {props.user !== undefined && (
         <SelectMode>
-          {({ handleAction }) => <AddToList handleAction={handleAction} />}
+          {({ handleAction }) => (
+            <AddToList>
+              {({ open }) => (
+                <Button intent="outline" onClick={() => handleAction(open)}>
+                  Add to list
+                </Button>
+              )}
+            </AddToList>
+          )}
         </SelectMode>
       )}
     </div>

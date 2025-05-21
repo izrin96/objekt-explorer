@@ -8,11 +8,11 @@ import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { UserAddress } from "@/lib/server/db/schema";
 import UserLink from "../user-link";
 import { format } from "date-fns";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
-import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { env } from "@/env";
 import ReconnectingWebSocket from "reconnecting-websocket";
+import ObjektModal from "../objekt/objekt-modal";
 
 export default function ActivityRender() {
   return (
@@ -21,9 +21,9 @@ export default function ActivityRender() {
         <h2 className="text-xl font-semibold">Activity</h2>
         <p className="text-muted-fg text-sm">Latest activity in realtime</p>
       </div>
-      <ObjektTabProvider initialTab="trades">
+      <ObjektModalProvider initialTab="trades">
         <Activity />
-      </ObjektTabProvider>
+      </ObjektModalProvider>
     </div>
   );
 }
@@ -82,14 +82,14 @@ function Activity() {
             </thead>
             <tbody className="[&_.tr:last-child]:border-0">
               {transfers.map((item) => (
-                <ObjektModalProvider
+                <ObjektModal
                   key={item.id}
                   objekts={[mapOwnedObjekt(item.objekt, item.collection)]}
                 >
                   {({ openObjekts }) => (
                     <ActivityRow item={item} open={openObjekts} />
                   )}
-                </ObjektModalProvider>
+                </ObjektModal>
               ))}
             </tbody>
           </table>
@@ -164,7 +164,9 @@ function ActivityRow({ item, open }: { item: Data; open: () => void }) {
       <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {from}
       </td>
-      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">{to}</td>
+      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
+        {to}
+      </td>
       <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </td>

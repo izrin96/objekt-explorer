@@ -5,7 +5,6 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-boundary";
@@ -16,7 +15,7 @@ import {
   ObjektsRender,
   ObjektsRenderRow,
 } from "../collection/collection-render";
-import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { api } from "@/lib/trpc/client";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
@@ -27,13 +26,15 @@ import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
 import { RemoveFromList } from "./modal/manage-objekt";
 import { useListAuthed } from "@/hooks/use-user";
+import { Button } from "../ui";
+import ObjektModal from "../objekt/objekt-modal";
 
 type Props = { slug: string };
 
 export default function ListRender(props: Props) {
   return (
     <ObjektSelectProvider>
-      <ObjektTabProvider initialTab="trades">
+      <ObjektModalProvider initialTab="trades">
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary
@@ -44,7 +45,7 @@ export default function ListRender(props: Props) {
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
-      </ObjektTabProvider>
+      </ObjektModalProvider>
     </ObjektSelectProvider>
   );
 }
@@ -83,7 +84,11 @@ function ListView({ slug }: Props) {
             {({ item, index }) => {
               const [objekt] = item.item;
               return (
-                <ObjektModalProvider key={objekt.id} objekts={item.item}>
+                <ObjektModal
+                  key={objekt.id}
+                  objekts={item.item}
+                  listSlug={slug}
+                >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}
@@ -102,7 +107,7 @@ function ListView({ slug }: Props) {
                       )}
                     </ObjektViewSelectable>
                   )}
-                </ObjektModalProvider>
+                </ObjektModal>
               );
             }}
           </ObjektsRenderRow>
@@ -147,7 +152,13 @@ function Filters({ isOwned, slug }: { isOwned: boolean; slug: string }) {
       {isOwned && (
         <SelectMode>
           {({ handleAction }) => (
-            <RemoveFromList slug={slug} handleAction={handleAction} />
+            <RemoveFromList slug={slug}>
+              {({ open }) => (
+                <Button intent="outline" onClick={() => handleAction(open)}>
+                  Remove from list
+                </Button>
+              )}
+            </RemoveFromList>
           )}
         </SelectMode>
       )}

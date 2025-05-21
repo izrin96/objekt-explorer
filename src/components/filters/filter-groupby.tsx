@@ -43,6 +43,7 @@ export default function GroupByFilter() {
         Group By
       </Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}

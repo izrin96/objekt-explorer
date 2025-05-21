@@ -10,7 +10,6 @@ import { ofetch } from "ofetch";
 import { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
 import { Badge, Card, Loader } from "@/components/ui";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProfile } from "@/hooks/use-profile";
 import { format } from "date-fns";
 import { IconOpenLink } from "@intentui/icons";
@@ -21,12 +20,13 @@ import ErrorFallbackRender from "@/components/error-boundary";
 import TradesFilter from "./trades-filter";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useTypeFilter } from "./filter-type";
-import { ObjektTabProvider } from "@/hooks/use-objekt-tab";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import ObjektModal from "@/components/objekt/objekt-modal";
 
 export default function ProfileTradesRender() {
   const { artists } = useCosmoArtist();
   return (
-    <ObjektTabProvider initialTab="trades">
+    <ObjektModalProvider initialTab="trades">
       <TradesFilter artists={artists} />
 
       <QueryErrorResetBoundary>
@@ -39,7 +39,7 @@ export default function ProfileTradesRender() {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </ObjektTabProvider>
+    </ObjektModalProvider>
   );
 }
 
@@ -106,14 +106,11 @@ function ProfileTrades() {
             </thead>
             <tbody className="[&_.tr:last-child]:border-0">
               {rows.map((row) => (
-                <ObjektModalProvider
-                  key={row.transfer.id}
-                  objekts={[row.objekt]}
-                >
+                <ObjektModal key={row.transfer.id} objekts={[row.objekt]}>
                   {({ openObjekts }) => (
                     <TradeRow row={row} address={address} open={openObjekts} />
                   )}
-                </ObjektModalProvider>
+                </ObjektModal>
               ))}
             </tbody>
           </table>

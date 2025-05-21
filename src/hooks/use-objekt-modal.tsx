@@ -1,71 +1,55 @@
 "use client";
 
-import ObjektDetail from "@/components/objekt/objekt-detail";
-import { Modal } from "@/components/ui";
-import { ValidObjekt } from "@/lib/universal/objekts";
-import { createContext, useCallback, useContext, useState } from "react";
-import { useObjektTab } from "./use-objekt-tab";
+import { PropsWithChildren, createContext, useContext, useRef } from "react";
+import { createStore, useStore, type StoreApi } from "zustand";
 
-type ContextProps = {
-  currentSerial?: number;
-  openObjekts: () => void;
-  openTrades: (serial: number) => void;
+export type ValidTab = "owned" | "trades";
+
+type ObjektModalProps = {
+  initialTab: ValidTab;
 };
 
-const ObjektModalContext = createContext<ContextProps>({} as ContextProps);
+const ObjektModalContext = createContext<StoreApi<ObjektModalState> | null>(
+  null
+);
 
-type ProviderProps = {
-  isProfile?: boolean;
-  objekts: ValidObjekt[];
-  children: ({ openObjekts }: { openObjekts: () => void }) => React.ReactNode;
+type ProviderProps = PropsWithChildren<ObjektModalProps>;
+
+interface ObjektModalState {
+  currentTab: ValidTab;
+  setCurrentTab: (tab: ValidTab) => void;
+  currentSerial: number | undefined;
+  setCurrentSerial: (serial: number | undefined) => void;
+}
+
+const createObjektModalStore = (initial: ObjektModalProps) => {
+  return createStore<ObjektModalState>()((set) => ({
+    currentTab: initial.initialTab,
+    setCurrentTab: (tab) => set(() => ({ currentTab: tab })),
+    currentSerial: 0,
+    setCurrentSerial: (serial) => set(() => ({ currentSerial: serial })),
+  }));
 };
 
-export function ObjektModalProvider({
-  children,
-  isProfile,
-  objekts,
-}: ProviderProps) {
-  const [open, setOpen] = useState(false);
-  const [currentSerial, setCurrentSerial] = useState<number | undefined>();
-  const setCurrentTab = useObjektTab((a) => a.setCurrentTab);
-
-  const openObjekts = useCallback(() => {
-    const [objekt] = objekts;
-    setCurrentSerial("serial" in objekt ? objekt.serial : undefined);
-    setOpen(true);
-  }, [objekts]);
-
-  const openTrades = useCallback(
-    (serial: number) => {
-      setCurrentSerial(serial);
-      setCurrentTab("trades");
-    },
-    [setCurrentTab]
-  );
+export function ObjektModalProvider({ children, ...props }: ProviderProps) {
+  const storeRef = useRef<StoreApi<ObjektModalState> | null>(null);
+  if (!storeRef.current) {
+    storeRef.current = createObjektModalStore(props);
+  }
 
   return (
-    <ObjektModalContext
-      value={{
-        currentSerial,
-        openObjekts,
-        openTrades,
-      }}
-    >
-      <Modal.Content isOpen={open} onOpenChange={setOpen} size="5xl">
-        <Modal.Header className="hidden">
-          <Modal.Title>Objekt display</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0 sm:p-0">
-          {objekts.length > 0 && (
-            <ObjektDetail objekts={objekts} isProfile={isProfile} />
-          )}
-        </Modal.Body>
-      </Modal.Content>
-      {children({ openObjekts })}
-    </ObjektModalContext>
+    <ObjektModalContext value={storeRef.current}>{children}</ObjektModalContext>
   );
 }
 
-export function useObjektModal() {
-  return useContext(ObjektModalContext);
+export function useObjektModal<SelectorOutput>(
+  selector: (state: ObjektModalState) => SelectorOutput
+) {
+  const store = useContext(ObjektModalContext);
+  if (!store) {
+    throw new Error(
+      "useObjektModal must be used within an ObjektModalProvider"
+    );
+  }
+  return useStore(store, selector);
 }

@@ -20,9 +20,9 @@ import ErrorFallbackRender from "../error-boundary";
 import UserLink from "../user-link";
 import { ObjektSerial, ObjektTransferResponse } from "./common";
 import { cn } from "@/utils/classes";
-import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
+import { useObjektModal } from "@/hooks/use-objekt-modal";
 
 type TradeViewProps = {
   objekt: ValidObjekt;
@@ -57,7 +57,7 @@ export default function TradeView({ ...props }: TradeViewProps) {
 }
 
 function TradeViewRender({ objekt }: TradeViewProps) {
-  const { currentSerial } = useObjektModal();
+  const currentSerial = useObjektModal((a) => a.currentSerial);
   const { data } = useSuspenseQuery(fetchObjektsQuery(objekt.slug));
 
   return (

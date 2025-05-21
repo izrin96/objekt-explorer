@@ -70,6 +70,7 @@ export default function SortFilter({
         Sort by
       </Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}

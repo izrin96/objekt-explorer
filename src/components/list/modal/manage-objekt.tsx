@@ -4,25 +4,16 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { api } from "@/lib/trpc/client";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
-import {
-  Button,
-  Checkbox,
-  Form,
-  Link,
-  Loader,
-  Modal,
-  Note,
-  Select,
-} from "../../ui";
+import { Button, Checkbox, Form, Loader, Modal, Note, Select } from "../../ui";
 import ErrorFallbackRender from "../../error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
 import { CreateList } from "./manage-list";
 
 export function AddToList({
-  handleAction,
+  children,
 }: {
-  handleAction: (open: () => void) => void;
+  children: ({ open }: { open: () => void }) => React.ReactNode;
 }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
@@ -42,12 +33,11 @@ export function AddToList({
   });
   return (
     <>
-      <Button
-        intent="outline"
-        onClick={() => handleAction(() => setOpen(true))}
-      >
-        Add to list
-      </Button>
+      {children({
+        open: () => {
+          setOpen(true);
+        },
+      })}
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
         <Form
           onSubmit={async (e) => {
@@ -142,10 +132,10 @@ function AddToListForm() {
 
 export function RemoveFromList({
   slug,
-  handleAction,
+  children,
 }: {
   slug: string;
-  handleAction: (open: () => void) => void;
+  children: ({ open }: { open: () => void }) => React.ReactNode;
 }) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
@@ -167,12 +157,11 @@ export function RemoveFromList({
   });
   return (
     <>
-      <Button
-        intent="outline"
-        onClick={() => handleAction(() => setOpen(true))}
-      >
-        Remove from list
-      </Button>
+      {children({
+        open: () => {
+          setOpen(true);
+        },
+      })}
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
         <Form
           onSubmit={async (e) => {

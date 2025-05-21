@@ -66,7 +66,10 @@ function MyList() {
                             <Button intent="outline" size="extra-small">
                               <IconDotsVertical />
                             </Button>
-                            <Menu.Content className="sm:min-w-56">
+                            <Menu.Content
+                              respectScreen={false}
+                              className="sm:min-w-56"
+                            >
                               <Menu.Item href={`/list/${list.slug}`}>
                                 Open
                               </Menu.Item>

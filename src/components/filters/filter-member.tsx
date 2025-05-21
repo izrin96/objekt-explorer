@@ -35,6 +35,7 @@ export default function MemberFilter({ artists }: Props) {
         Member
       </Button>
       <Menu.Content
+        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
