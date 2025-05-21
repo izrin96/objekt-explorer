@@ -30,9 +30,10 @@ import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../list/modal/manage-objekt";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
-import { authClient } from "@/lib/auth-client";
 
-export default function IndexRender() {
+type Props = { authenticated: boolean };
+
+export default function IndexRender(props: Props) {
   return (
     <ObjektSelectProvider>
       <ObjektModalProvider initialTab="trades">
@@ -42,7 +43,7 @@ export default function IndexRender() {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <IndexView />
+              <IndexView {...props} />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -51,9 +52,7 @@ export default function IndexRender() {
   );
 }
 
-function IndexView() {
-  const session = authClient.useSession();
-  const authenticated = session.data !== null;
+function IndexView(props: Props) {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -88,7 +87,7 @@ function IndexView() {
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={authenticated}
+                      enableSelect={props.authenticated}
                     >
                       {({ isSelected, open, select }) => (
                         <ObjektView
@@ -108,7 +107,7 @@ function IndexView() {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, authenticated]);
+  }, [deferredObjektsFiltered, columns, props.authenticated]);
 
   useEffect(() => {
     const shaped = shapeObjekts(filters, query.data, artists);
@@ -121,10 +120,10 @@ function IndexView() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters authenticated={authenticated} />
+          <Filters {...props} />
         </FilterContainer>
         <FilterSheet>
-          <Filters authenticated={authenticated} />
+          <Filters {...props} />
         </FilterSheet>
       </div>
       <span className="font-semibold">{count} total</span>
@@ -134,11 +133,11 @@ function IndexView() {
   );
 }
 
-function Filters({ authenticated }: { authenticated: boolean }) {
+function Filters(props: Props) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {authenticated && (
+      {props.authenticated && (
         <SelectMode>
           {({ handleAction }) => (
             <AddToList>
