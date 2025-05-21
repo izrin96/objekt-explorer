@@ -1,19 +1,17 @@
 "use client";
 
-import { useProfile } from "@/hooks/use-profile";
-import { useListAuthed } from "@/hooks/use-user";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { Button, Loader, Menu } from "../ui";
 import { DotsThreeVerticalIcon } from "@phosphor-icons/react/dist/ssr";
-import { useCallback } from "react";
+import { PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/trpc/client";
+import { authClient } from "@/lib/auth-client";
 
-export function ObjektMenu({ objekt }: { objekt: ValidObjekt }) {
-  const list = useProfile((a) => a.list);
-  const isOwned = useListAuthed(list?.slug);
+export function ObjektMenu({ children }: PropsWithChildren) {
+  const session = authClient.useSession();
 
-  if (!isOwned) return;
+  if (!session) return;
 
   return (
     <Menu>
@@ -25,17 +23,13 @@ export function ObjektMenu({ objekt }: { objekt: ValidObjekt }) {
         <DotsThreeVerticalIcon size={14} />
       </Button>
       <Menu.Content respectScreen={false} placement="bottom right">
-        {list ? (
-          <RemoveFromListMenu slug={list.slug} objekt={objekt} />
-        ) : (
-          <AddToListMenu objekt={objekt} />
-        )}
+        {children}
       </Menu.Content>
     </Menu>
   );
 }
 
-function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
+export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   const { data, isLoading } = api.list.myList.useQuery();
   const addToList = api.list.addObjektsToList.useMutation({
     onSuccess: (rowCount) => {
@@ -87,7 +81,7 @@ function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   );
 }
 
-function RemoveFromListMenu({
+export function RemoveFromListMenu({
   slug,
   objekt,
 }: {

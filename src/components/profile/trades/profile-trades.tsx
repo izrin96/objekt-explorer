@@ -22,6 +22,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useTypeFilter } from "./filter-type";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
+import { AddToListMenu, ObjektMenu } from "@/components/objekt/objekt-menu";
 
 export default function ProfileTradesRender() {
   const { artists } = useCosmoArtist();
@@ -106,7 +107,15 @@ function ProfileTrades() {
             </thead>
             <tbody className="[&_.tr:last-child]:border-0">
               {rows.map((row) => (
-                <ObjektModal key={row.transfer.id} objekts={[row.objekt]}>
+                <ObjektModal
+                  key={row.transfer.id}
+                  objekts={[row.objekt]}
+                  menu={
+                    <ObjektMenu>
+                      <AddToListMenu objekt={row.objekt} />
+                    </ObjektMenu>
+                  }
+                >
                   {({ openObjekts }) => (
                     <TradeRow row={row} address={address} open={openObjekts} />
                   )}

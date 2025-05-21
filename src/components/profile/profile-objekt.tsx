@@ -33,6 +33,7 @@ import { useProfileAuthed } from "@/hooks/use-user";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 import { AddToList } from "../list/modal/manage-objekt";
 import ObjektModal from "../objekt/objekt-modal";
+import { AddToListMenu, ObjektMenu } from "../objekt/objekt-menu";
 
 export default function ProfileObjektRender() {
   return (
@@ -111,7 +112,16 @@ function ProfileObjekt() {
             {({ item, index }) => {
               const [objekt] = item.item;
               return (
-                <ObjektModal key={objekt.id} objekts={item.item} isProfile>
+                <ObjektModal
+                  key={objekt.id}
+                  objekts={item.item}
+                  isProfile
+                  menu={
+                    <ObjektMenu>
+                      <AddToListMenu objekt={objekt} />
+                    </ObjektMenu>
+                  }
+                >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}

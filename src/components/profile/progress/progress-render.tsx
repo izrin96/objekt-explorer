@@ -26,6 +26,7 @@ import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
+import { AddToListMenu, ObjektMenu } from "@/components/objekt/objekt-menu";
 
 export default function ProgressRender() {
   return (
@@ -186,7 +187,16 @@ const ProgressCollapse = memo(function ProgressCollapse({
             (objekts) => {
               const [objekt] = objekts;
               return (
-                <ObjektModal key={objekt.slug} objekts={objekts} isProfile>
+                <ObjektModal
+                  key={objekt.slug}
+                  objekts={objekts}
+                  isProfile
+                  menu={
+                    <ObjektMenu>
+                      <AddToListMenu objekt={objekt} />
+                    </ObjektMenu>
+                  }
+                >
                   {({ openObjekts }) => (
                     <ObjektView
                       objekts={objekts}

@@ -30,6 +30,7 @@ import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../list/modal/manage-objekt";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
+import { AddToListMenu, ObjektMenu } from "../objekt/objekt-menu";
 
 type Props = { authenticated: boolean };
 
@@ -82,7 +83,15 @@ function IndexView(props: Props) {
             {({ item, index }) => {
               const [objekt] = item.item;
               return (
-                <ObjektModal key={objekt.id} objekts={item.item}>
+                <ObjektModal
+                  key={objekt.id}
+                  objekts={item.item}
+                  menu={
+                    <ObjektMenu>
+                      <AddToListMenu objekt={objekt} />
+                    </ObjektMenu>
+                  }
+                >
                   {({ openObjekts }) => (
                     <ObjektViewSelectable
                       objekt={objekt}
