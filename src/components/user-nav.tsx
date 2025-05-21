@@ -228,7 +228,7 @@ function PullDiscordProfile({
           setOpen(true);
         },
       })}
-      <Modal.Content role="alertdialog" isOpen={open} onOpenChange={setOpen}>
+      <Modal.Content isOpen={open} onOpenChange={setOpen}>
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
