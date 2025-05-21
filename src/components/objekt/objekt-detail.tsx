@@ -34,6 +34,7 @@ import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
 import { DotsThreeVerticalIcon } from "@phosphor-icons/react/dist/ssr";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
@@ -120,6 +121,9 @@ function ObjektMenu({
   objekt: ValidObjekt;
   listSlug?: string;
 }) {
+  const session = authClient.useSession();
+  if (!session.data) return;
+
   return (
     <Menu>
       <Button

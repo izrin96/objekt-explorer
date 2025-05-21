@@ -27,14 +27,12 @@ import Filter from "./filter";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { FilterSheet } from "../filters/filter-sheet";
 import { FilterContainer } from "../filters/filter-container";
-import { User } from "better-auth";
 import { AddToList } from "../list/modal/manage-objekt";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
+import { authClient } from "@/lib/auth-client";
 
-type Props = { user?: User };
-
-export default function IndexRender(props: Props) {
+export default function IndexRender() {
   return (
     <ObjektSelectProvider>
       <ObjektModalProvider initialTab="trades">
@@ -44,7 +42,7 @@ export default function IndexRender(props: Props) {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <IndexView {...props} />
+              <IndexView />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -53,7 +51,9 @@ export default function IndexRender(props: Props) {
   );
 }
 
-function IndexView(props: Props) {
+function IndexView() {
+  const session = authClient.useSession();
+  const authenticated = session.data !== null;
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -88,7 +88,7 @@ function IndexView(props: Props) {
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={props.user !== undefined}
+                      enableSelect={authenticated}
                     >
                       {({ isSelected, open, select }) => (
                         <ObjektView
@@ -108,7 +108,7 @@ function IndexView(props: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, props.user]);
+  }, [deferredObjektsFiltered, columns, authenticated]);
 
   useEffect(() => {
     const shaped = shapeObjekts(filters, query.data, artists);
@@ -121,10 +121,10 @@ function IndexView(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters {...props} />
+          <Filters authenticated={authenticated} />
         </FilterContainer>
         <FilterSheet>
-          <Filters {...props} />
+          <Filters authenticated={authenticated} />
         </FilterSheet>
       </div>
       <span className="font-semibold">{count} total</span>
@@ -134,11 +134,11 @@ function IndexView(props: Props) {
   );
 }
 
-function Filters(props: Props) {
+function Filters({ authenticated }: { authenticated: boolean }) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {props.user !== undefined && (
+      {authenticated && (
         <SelectMode>
           {({ handleAction }) => (
             <AddToList>

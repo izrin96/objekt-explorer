@@ -55,6 +55,7 @@ export default function ProfileObjektRender() {
 
 function ProfileObjekt() {
   const session = authClient.useSession();
+  const authenticated = session.data !== null;
   const isProfileAuthed = useProfileAuthed();
   const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();
@@ -115,7 +116,7 @@ function ProfileObjekt() {
                     <ObjektViewSelectable
                       objekt={objekt}
                       openObjekts={openObjekts}
-                      enableSelect={session.data !== null}
+                      enableSelect={authenticated}
                     >
                       {({ isSelected, open, select }) => (
                         <ObjektView
@@ -150,7 +151,7 @@ function ProfileObjekt() {
     deferredObjektsFiltered,
     filters.grouped,
     columns,
-    session.data,
+    authenticated,
     isProfileAuthed,
     profile,
   ]);
@@ -180,10 +181,18 @@ function ProfileObjekt() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters address={profile!.address} />
+          <Filters
+            address={profile!.address}
+            authenticated={authenticated}
+            isOwned={isProfileAuthed}
+          />
         </FilterContainer>
         <FilterSheet>
-          <Filters address={profile!.address} />
+          <Filters
+            address={profile!.address}
+            authenticated={authenticated}
+            isOwned={isProfileAuthed}
+          />
         </FilterSheet>
       </div>
       <span className="font-semibold">
@@ -196,13 +205,19 @@ function ProfileObjekt() {
   );
 }
 
-function Filters({ address }: { address: string }) {
-  const session = authClient.useSession();
-  const isProfileAuthed = useProfileAuthed();
+function Filters({
+  address,
+  authenticated,
+  isOwned,
+}: {
+  address: string;
+  authenticated: boolean;
+  isOwned: boolean;
+}) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {session.data && (
+      {authenticated && (
         <SelectMode>
           {({ handleAction }) => (
             <>
@@ -213,7 +228,7 @@ function Filters({ address }: { address: string }) {
                   </Button>
                 )}
               </AddToList>
-              {isProfileAuthed && (
+              {isOwned && (
                 <>
                   <PinObjekt address={address} handleAction={handleAction} />
                   <UnpinObjekt address={address} handleAction={handleAction} />
