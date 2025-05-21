@@ -68,7 +68,10 @@ function ProfileObjekt() {
   >([]);
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
-  const objektsQuery = useQuery(collectionOptions);
+  const objektsQuery = useQuery({
+    ...collectionOptions,
+    enabled: filters.unowned ?? false,
+  });
   const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
   // todo: store state into context
   const pinsQuery = api.pins.get.useQuery(profile!.address, {
