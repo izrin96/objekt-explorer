@@ -16,6 +16,7 @@ export type AggregatedTransfer = {
 };
 
 export type TransferResult = {
+  hide?: boolean | undefined;
   results: AggregatedTransfer[];
   nextStartAfter?: number;
 };

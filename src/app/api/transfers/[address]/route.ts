@@ -40,6 +40,7 @@ export async function GET(
 
   if (!session && isPrivate)
     return Response.json({
+      hide: true,
       results: [],
     } satisfies TransferResult);
 
@@ -52,6 +53,7 @@ export async function GET(
 
     if (!isProfileAuthed)
       return Response.json({
+        hide: true,
         results: [],
       } satisfies TransferResult);
   }
