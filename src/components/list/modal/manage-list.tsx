@@ -97,7 +97,7 @@ export function DeleteList({
   });
   return (
     <>
-      {children?.({
+      {children({
         open: () => {
           setOpen(true);
         },
@@ -156,7 +156,7 @@ export function EditList({
   });
   return (
     <>
-      {children?.({
+      {children({
         open: () => {
           setOpen(true);
         },

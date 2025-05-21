@@ -61,7 +61,7 @@ export function ObjektModalProvider({
           )}
         </Modal.Body>
       </Modal.Content>
-      {children?.({ openObjekts })}
+      {children({ openObjekts })}
     </ObjektModalContext>
   );
 }

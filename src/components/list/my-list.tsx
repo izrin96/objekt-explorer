@@ -37,7 +37,13 @@ function MyList() {
         <Tabs.Panel id="a" className="flex flex-col gap-4">
           <div className="w-full flex gap-2">
             <CreateList />
-            <GenerateDiscordFormat />
+            <GenerateDiscordFormat>
+              {({ open }) => (
+                <Button intent="outline" onClick={open}>
+                  Generate Discord Format
+                </Button>
+              )}
+            </GenerateDiscordFormat>
           </div>
 
           <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

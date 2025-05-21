@@ -21,14 +21,16 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
-export function GenerateDiscordFormat() {
+export function GenerateDiscordFormat({
+  children,
+}: {
+  children: ({ open }: { open: () => void }) => React.ReactNode;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button intent="outline" onClick={() => setOpen(true)}>
-        Generate Discord Format
-      </Button>
+      {children({ open: () => setOpen(true) })}
       <Modal.Content isOpen={open} onOpenChange={setOpen}>
         <QueryErrorResetBoundary>
           {({ reset }) => (
@@ -38,7 +40,7 @@ export function GenerateDiscordFormat() {
             >
               <Suspense
                 fallback={
-                  <div className="flex justify-center">
+                  <div className="flex justify-center py-2">
                     <Loader variant="ring" />
                   </div>
                 }

@@ -23,6 +23,7 @@ import {
   ListHeartIcon,
   GearSixIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { GenerateDiscordFormat } from "./list/modal/generate-discord";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -54,51 +55,60 @@ function UserMenu({ user }: { user: User }) {
   return (
     <PullDiscordProfile>
       {({ open: openRefreshProfile }) => (
-        <Menu>
-          <Menu.Trigger aria-label="Open Menu">
-            <Avatar
-              alt={user.name}
-              initials={user.name.charAt(0)}
-              size="medium"
-              shape="square"
-              src={user.image}
-            />
-          </Menu.Trigger>
-          <Menu.Content placement="bottom right" className="sm:min-w-56">
-            <Menu.Section>
-              <Menu.Header separator>
-                <span className="block">{user.name}</span>
-                <span className="font-normal text-muted-fg">
-                  {user.discord}
-                </span>
-              </Menu.Header>
-            </Menu.Section>
+        <GenerateDiscordFormat>
+          {({ open: openDiscordFormat }) => (
+            <Menu>
+              <Menu.Trigger aria-label="Open Menu">
+                <Avatar
+                  alt={user.name}
+                  initials={user.name.charAt(0)}
+                  size="medium"
+                  shape="square"
+                  src={user.image}
+                />
+              </Menu.Trigger>
+              <Menu.Content placement="bottom right" className="sm:min-w-56">
+                <Menu.Section>
+                  <Menu.Header separator>
+                    <span className="block">{user.name}</span>
+                    <span className="font-normal text-muted-fg">
+                      {user.discord}
+                    </span>
+                  </Menu.Header>
+                </Menu.Section>
 
-            <MyListMenuItem />
+                <MyListMenuItem />
 
-            <MyCosmoProfileMenuItem />
+                <Menu.Item onAction={openDiscordFormat}>
+                  <DiscordLogoIcon data-slot="icon" />
+                  <Menu.Label>Discord List Format</Menu.Label>
+                </Menu.Item>
 
-            <Menu.Item onAction={openRefreshProfile}>
-              <DiscordLogoIcon data-slot="icon" size={16} />
-              <Menu.Label>Refresh Profile</Menu.Label>
-            </Menu.Item>
-            <Menu.Separator />
-            <Menu.Item
-              onAction={() => {
-                authClient.signOut({
-                  fetchOptions: {
-                    onSuccess: () => {
-                      router.refresh();
-                    },
-                  },
-                });
-              }}
-            >
-              <SignOutIcon data-slot="icon" />
-              <Menu.Label>Log out</Menu.Label>
-            </Menu.Item>
-          </Menu.Content>
-        </Menu>
+                <MyCosmoProfileMenuItem />
+
+                <Menu.Item onAction={openRefreshProfile}>
+                  <DiscordLogoIcon data-slot="icon" size={16} />
+                  <Menu.Label>Refresh Profile</Menu.Label>
+                </Menu.Item>
+                <Menu.Separator />
+                <Menu.Item
+                  onAction={() => {
+                    authClient.signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          router.refresh();
+                        },
+                      },
+                    });
+                  }}
+                >
+                  <SignOutIcon data-slot="icon" />
+                  <Menu.Label>Log out</Menu.Label>
+                </Menu.Item>
+              </Menu.Content>
+            </Menu>
+          )}
+        </GenerateDiscordFormat>
       )}
     </PullDiscordProfile>
   );
@@ -199,7 +209,7 @@ function PullDiscordProfile({
   });
   return (
     <>
-      {children?.({
+      {children({
         open: () => {
           setOpen(true);
         },

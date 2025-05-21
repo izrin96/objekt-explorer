@@ -43,7 +43,7 @@ export function RemoveLink({
   });
   return (
     <>
-      {children?.({
+      {children({
         open: () => {
           setOpen(true);
         },
@@ -151,7 +151,7 @@ export function EditProfile({
 
   return (
     <>
-      {children?.({
+      {children({
         open: () => {
           setOpen(true);
         },

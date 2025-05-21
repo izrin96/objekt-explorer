@@ -8,6 +8,8 @@ import { Analytics } from "@/components/analytics";
 import { PropsWithChildren } from "react";
 import { cn } from "@/utils/classes";
 import { TRPCReactProvider } from "@/lib/trpc/client";
+import { artists } from "@/lib/server/cosmo/artists";
+import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -73,11 +75,13 @@ export default function RootLayout({ children }: PropsWithChildren) {
       >
         <TRPCReactProvider>
           <ClientProviders>
-            <div className="relative">
-              <Navbar />
-              <main className="mx-auto w-full">{children}</main>
-            </div>
-            <Analytics />
+            <CosmoArtistProvider artists={artists}>
+              <div className="relative">
+                <Navbar />
+                <main className="mx-auto w-full">{children}</main>
+              </div>
+              <Analytics />
+            </CosmoArtistProvider>
           </ClientProviders>
         </TRPCReactProvider>
       </body>
