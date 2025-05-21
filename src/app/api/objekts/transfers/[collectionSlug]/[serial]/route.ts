@@ -1,4 +1,5 @@
 import { cacheHeaders } from "@/app/api/common";
+import { cachedSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import {
@@ -6,6 +7,7 @@ import {
   transfers,
   collections,
 } from "@/lib/server/db/indexer/schema";
+import { fetchUserProfiles } from "@/lib/server/profile";
 import { and, eq, asc } from "drizzle-orm";
 
 type Params = {
@@ -38,6 +40,59 @@ export async function GET(_: Request, props: Params) {
     )
     .orderBy(asc(transfers.timestamp), asc(transfers.id));
 
+  const [result] = results;
+
+  if (!result)
+    return Response.json(
+      {
+        transfers: [],
+      },
+      {
+        headers: cacheHeaders(),
+      }
+    );
+
+  const session = await cachedSession();
+
+  const owner = await db.query.userAddress.findFirst({
+    where: (q, { eq }) => eq(q.address, result.owner!),
+    columns: {
+      privateSerial: true,
+    },
+  });
+
+  const isPrivate = owner?.privateSerial ?? false;
+
+  if (!session && isPrivate)
+    return Response.json(
+      {
+        hide: true,
+        transfers: [],
+      },
+      {
+        headers: cacheHeaders(),
+      }
+    );
+
+  if (session && isPrivate) {
+    const profiles = await fetchUserProfiles(session.user.id);
+
+    const isProfileAuthed = profiles.some(
+      (a) => a.address.toLowerCase() === result.owner!.toLowerCase()
+    );
+
+    if (!isProfileAuthed)
+      return Response.json(
+        {
+          hide: true,
+          transfers: [],
+        },
+        {
+          headers: cacheHeaders(),
+        }
+      );
+  }
+
   const addresses = Array.from(new Set(results.map((r) => r.to)));
 
   const knownAddresses = await db.query.userAddress.findMany({
@@ -45,13 +100,11 @@ export async function GET(_: Request, props: Params) {
       inArray(userAddress.address, addresses),
   });
 
-  const [result] = results;
-
   return Response.json(
     {
-      tokenId: result?.tokenId ?? undefined,
-      owner: result?.owner ?? undefined,
-      transferable: result?.transferable ?? undefined,
+      tokenId: result.tokenId ?? undefined,
+      owner: result.owner ?? undefined,
+      transferable: result.transferable ?? undefined,
       transfers: results.map((result) => ({
         id: result.id,
         to: result.to,

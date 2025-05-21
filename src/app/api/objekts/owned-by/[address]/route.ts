@@ -1,6 +1,9 @@
+import { cachedSession } from "@/lib/server/auth";
+import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { objekts, collections } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
+import { fetchUserProfiles } from "@/lib/server/profile";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { eq, desc, asc } from "drizzle-orm";
 import { NextRequest } from "next/server";
@@ -14,14 +17,41 @@ type Params = {
 
 const PER_PAGE = 10000;
 
+const pageSchema = z.coerce.number().optional().default(0);
+
 export async function GET(request: NextRequest, props: Params) {
   const params = await props.params;
-
   const searchParams = request.nextUrl.searchParams;
-
-  const pageSchema = z.coerce.number().optional().default(0);
-
   const page = pageSchema.parse(searchParams.get("page"));
+
+  const session = await cachedSession();
+
+  const owner = await db.query.userAddress.findFirst({
+    where: (q, { eq }) => eq(q.address, params.address),
+    columns: {
+      privateProfile: true,
+    },
+  });
+
+  const isPrivate = owner?.privateProfile ?? false;
+
+  if (!session && isPrivate)
+    return Response.json({
+      objekts: [],
+    });
+
+  if (session && isPrivate) {
+    const profiles = await fetchUserProfiles(session.user.id);
+
+    const isProfileAuthed = profiles.some(
+      (a) => a.address.toLowerCase() === params.address.toLowerCase()
+    );
+
+    if (!isProfileAuthed)
+      return Response.json({
+        objekts: [],
+      });
+  }
 
   const results = await indexer
     .select({

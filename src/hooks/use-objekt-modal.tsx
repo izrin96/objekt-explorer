@@ -18,15 +18,15 @@ type ProviderProps = PropsWithChildren<ObjektModalProps>;
 interface ObjektModalState {
   currentTab: ValidTab;
   setCurrentTab: (tab: ValidTab) => void;
-  currentSerial: number | undefined;
-  setCurrentSerial: (serial: number | undefined) => void;
+  currentSerial: number | null;
+  setCurrentSerial: (serial: number | null) => void;
 }
 
 const createObjektModalStore = (initial: ObjektModalProps) => {
   return createStore<ObjektModalState>()((set) => ({
     currentTab: initial.initialTab,
     setCurrentTab: (tab) => set(() => ({ currentTab: tab })),
-    currentSerial: 0,
+    currentSerial: null,
     setCurrentSerial: (serial) => set(() => ({ currentSerial: serial })),
   }));
 };

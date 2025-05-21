@@ -23,6 +23,7 @@ import { cn } from "@/utils/classes";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
+import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 
 type TradeViewProps = {
   objekt: ValidObjekt;
@@ -164,6 +165,14 @@ function TradeTable({
 
   if (status === "error")
     return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
+
+  if (data.hide)
+    return (
+      <div className="flex flex-col justify-center gap-3 items-center py-3">
+        <LockIcon size={64} weight="light" />
+        <p>Objekt Private</p>
+      </div>
+    );
 
   if (!data.owner)
     return (

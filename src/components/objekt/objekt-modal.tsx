@@ -24,7 +24,7 @@ export default function ObjektModal({
 
   const openObjekts = useCallback(() => {
     const [objekt] = objekts;
-    setCurrentSerial("serial" in objekt ? objekt.serial : undefined);
+    setCurrentSerial("serial" in objekt ? objekt.serial : null);
     setOpen(true);
   }, [objekts, setCurrentSerial]);
 

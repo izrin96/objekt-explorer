@@ -14,6 +14,8 @@ import {
 } from "@/lib/universal/transfers";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import { cachedSession } from "@/lib/server/auth";
+import { fetchUserProfiles } from "@/lib/server/profile";
 
 const PER_PAGE = 30;
 
@@ -24,6 +26,35 @@ export async function GET(
   const params = await props.params;
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
+
+  const session = await cachedSession();
+
+  const owner = await db.query.userAddress.findFirst({
+    where: (q, { eq }) => eq(q.address, params.address),
+    columns: {
+      privateProfile: true,
+    },
+  });
+
+  const isPrivate = owner?.privateProfile ?? false;
+
+  if (!session && isPrivate)
+    return Response.json({
+      results: [],
+    } satisfies TransferResult);
+
+  if (session && isPrivate) {
+    const profiles = await fetchUserProfiles(session.user.id);
+
+    const isProfileAuthed = profiles.some(
+      (a) => a.address.toLowerCase() === params.address.toLowerCase()
+    );
+
+    if (!isProfileAuthed)
+      return Response.json({
+        results: [],
+      } satisfies TransferResult);
+  }
 
   const results = await indexer
     .select({

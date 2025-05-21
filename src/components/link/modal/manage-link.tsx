@@ -163,10 +163,15 @@ export function EditProfile({
             const formData = new FormData(e.currentTarget);
             const hideUser = formData.get("hideUser") === "on";
             const removeBanner = formData.get("removeBanner") === "on";
+            const privateSerial = formData.get("privateSerial") === "on";
+            const privateProfile = formData.get("privateProfile") === "on";
 
             if (droppedImage && !removeBanner) {
               getPresignedUrl.mutate(
-                { address, fileName: droppedImage.name },
+                {
+                  address,
+                  fileName: droppedImage.name,
+                },
                 {
                   onSuccess: async (url) => {
                     startUploadTransition(async () => {
@@ -175,8 +180,10 @@ export function EditProfile({
                       const fileUrl = url.split("?")[0];
                       edit.mutate({
                         address: address,
-                        hideUser: hideUser,
+                        hideUser,
                         bannerImgUrl: fileUrl,
+                        privateSerial,
+                        privateProfile,
                       });
                     });
                   },
@@ -187,8 +194,10 @@ export function EditProfile({
 
             edit.mutate({
               address: address,
-              hideUser: hideUser,
+              hideUser,
               bannerImgUrl: removeBanner ? null : undefined,
+              privateSerial,
+              privateProfile,
             });
           }}
         >
@@ -258,6 +267,18 @@ function EditProfileForm({
         name="hideUser"
         description="Hide your Discord from Cosmo profile"
         defaultSelected={data.hideUser ?? false}
+      />
+      <Checkbox
+        label="Hide from Serial Lookup"
+        name="privateSerial"
+        description="Prevent others from finding your objekt via its serial number. You will still be able to see it."
+        defaultSelected={data.privateSerial ?? false}
+      />
+      <Checkbox
+        label="Private Profile"
+        name="privateProfile"
+        description="Make your Cosmo profile private. Only you will be able to view it."
+        defaultSelected={data.privateProfile ?? false}
       />
       <div className="group flex flex-col gap-y-1">
         <Label>Banner Image</Label>

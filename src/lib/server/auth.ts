@@ -62,6 +62,7 @@ export async function fetchUserByIdentifier(
       address: true,
       bannerImgUrl: true,
       hideUser: true,
+      privateProfile: true,
     },
     with: {
       user: {

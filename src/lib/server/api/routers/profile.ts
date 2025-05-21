@@ -23,42 +23,38 @@ export const profileRouter = createTRPCRouter({
     .input(
       z.object({
         address: z.string(),
-        hideUser: z.boolean(),
+        hideUser: z.boolean().optional(),
         bannerImgUrl: z.string().optional().nullable(),
+        privateSerial: z.boolean().optional(),
+        privateProfile: z.boolean().optional(),
       })
     )
-    .mutation(
-      async ({
-        input: { address, hideUser, bannerImgUrl },
-        ctx: { session },
-      }) => {
-        const profile = await fetchOwnedProfile(address, session.user.id);
+    .mutation(async ({ input: { address, ...rest }, ctx: { session } }) => {
+      const profile = await fetchOwnedProfile(address, session.user.id);
 
-        // Delete previous banner if it exists and new banner is being set
-        if (profile.bannerImgUrl && bannerImgUrl !== undefined) {
-          const fileName = profile.bannerImgUrl.split("/").pop();
-          if (fileName) {
-            await deleteFileFromBucket({
-              bucketName: "profile-banner",
-              fileName,
-            });
-          }
+      // Delete previous banner if it exists and new banner is being set
+      if (profile.bannerImgUrl && rest.bannerImgUrl !== undefined) {
+        const fileName = profile.bannerImgUrl.split("/").pop();
+        if (fileName) {
+          await deleteFileFromBucket({
+            bucketName: "profile-banner",
+            fileName,
+          });
         }
-
-        await db
-          .update(userAddress)
-          .set({
-            hideUser: hideUser,
-            bannerImgUrl: bannerImgUrl,
-          })
-          .where(
-            and(
-              eq(userAddress.address, address),
-              eq(userAddress.userId, session.user.id)
-            )
-          );
       }
-    ),
+
+      await db
+        .update(userAddress)
+        .set({
+          ...rest,
+        })
+        .where(
+          and(
+            eq(userAddress.address, address),
+            eq(userAddress.userId, session.user.id)
+          )
+        );
+    }),
 
   getPresignedUrl: authProcedure
     .input(
@@ -100,6 +96,8 @@ async function fetchOwnedProfile(address: string, userId: string) {
       address: true,
       hideUser: true,
       bannerImgUrl: true,
+      privateSerial: true,
+      privateProfile: true,
     },
     where: (q, { eq, and }) =>
       and(eq(q.address, address), eq(q.userId, userId)),

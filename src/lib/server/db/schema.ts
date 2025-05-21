@@ -33,6 +33,8 @@ export const userAddress = pgTable(
     linkedAt: timestamp("linked_at"),
     bannerImgUrl: text("banner_img_url"),
     hideUser: boolean("hide_user"),
+    privateProfile: boolean("private_profile"),
+    privateSerial: boolean("private_serial"),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),

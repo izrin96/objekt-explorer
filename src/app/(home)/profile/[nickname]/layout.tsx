@@ -11,6 +11,7 @@ import Image from "next/image";
 import { PropsWithChildren } from "react";
 import { getMimeTypeFromExtension } from "@/lib/utils";
 import { cn } from "@/utils/classes";
+import ProfilePrivacyWrapper from "@/components/profile/profile-private";
 
 type Props = PropsWithChildren<{
   params: Promise<{
@@ -34,20 +35,20 @@ export default async function UserCollectionLayout(props: Props) {
   return (
     <ProfileProvider profile={targetUser}>
       <UserProvider profiles={profiles}>
-        <ProfileBanner profile={targetUser} />
-        <Container>
-          {targetUser.bannerImgUrl && (
-            <div className={cn("-mt-20", BANNER_BREAKPOINT)}></div>
-          )}
-          <div className="flex flex-col gap-4 pb-8">
-            <ProfileHeader user={targetUser} />
+        <ProfilePrivacyWrapper>
+          <ProfileBanner profile={targetUser} />
+          <Container>
+            {targetUser.bannerImgUrl && (
+              <div className={cn("-mt-20", BANNER_BREAKPOINT)}></div>
+            )}
+            <div className="flex flex-col gap-4 pb-8">
+              <ProfileHeader user={targetUser} />
 
-            <div className="flex flex-col gap-4">
               <ProfileTabs nickname={params.nickname} />
               {props.children}
             </div>
-          </div>
-        </Container>
+          </Container>
+        </ProfilePrivacyWrapper>
       </UserProvider>
     </ProfileProvider>
   );
@@ -92,12 +93,7 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
           </div>
         </div>
       </div>
-      <div
-        className={cn(
-          "absolute top-0 inset-0 -z-10",
-          BANNER_BREAKPOINT
-        )}
-      >
+      <div className={cn("absolute top-0 inset-0 -z-10", BANNER_BREAKPOINT)}>
         {isVideo ? (
           <video
             src={profile.bannerImgUrl}
