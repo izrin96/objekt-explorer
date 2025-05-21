@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button, Note } from "../ui";
 import { authClient } from "@/lib/auth-client";
-import { IconBrandDiscord } from "@intentui/icons";
+import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function SignIn() {
   const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ export default function SignIn() {
             );
           }}
         >
-          <IconBrandDiscord />
+          <DiscordLogoIcon size={24} weight="light" />
           Sign in with Discord
         </Button>
       </div>

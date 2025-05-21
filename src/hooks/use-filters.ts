@@ -79,6 +79,7 @@ export function checkFiltering(filters: Filters) {
     filters.sort_dir !== null ||
     filters.group_dir !== null ||
     filters.unowned !== null ||
-    filters.edition !== null
+    filters.edition !== null ||
+    filters.hidePin !== null
   );
 }

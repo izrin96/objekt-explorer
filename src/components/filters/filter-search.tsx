@@ -3,8 +3,11 @@
 import { useFilters } from "@/hooks/use-filters";
 import { Button, Popover, TextField } from "../ui";
 import { useDebounceValue } from "usehooks-ts";
-import { IconCircleQuestionmark, IconX } from "@intentui/icons";
 import { useEffect, useState } from "react";
+import {
+  QuestionMarkIcon,
+  TrashSimpleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 
 export default function SearchFilter() {
   const [filters, setFilters] = useFilters();
@@ -28,18 +31,18 @@ export default function SearchFilter() {
       <TextField
         placeholder={`Quick search..`}
         onChange={setQuery}
-        className="max-w-65 min-w-40"
+        className="max-w-72 min-w-50"
         value={query ?? ""}
         aria-label="Search"
         suffix={
           (query ?? "").length > 0 ? (
             <Button intent="plain" onPress={() => setQuery("")}>
-              <IconX />
+              <TrashSimpleIcon data-slot="icon" />
             </Button>
           ) : (
             <Popover>
               <Button intent="plain">
-                <IconCircleQuestionmark />
+                <QuestionMarkIcon data-slot="icon" />
               </Button>
               <Popover.Content className="sm:max-w-96">
                 <Popover.Header>

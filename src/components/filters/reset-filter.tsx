@@ -2,12 +2,12 @@
 
 import React from "react";
 import { Button } from "../ui";
-import { IconX } from "@intentui/icons";
+import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function ResetFilter({ onReset }: { onReset: () => void }) {
   return (
     <Button intent="outline" onClick={onReset}>
-      <IconX />
+      <TrashSimpleIcon data-slot="icon" />
       Reset filter
     </Button>
   );

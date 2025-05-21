@@ -7,8 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 import { ofetch } from "ofetch";
 import { useRouter } from "nextjs-toploader/app";
-import { IconSearch } from "@intentui/icons";
 import { usePathname } from "next/navigation";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function UserSearch() {
   const pathname = usePathname();
@@ -50,7 +50,7 @@ export default function UserSearch() {
   return (
     <>
       <Button onPress={() => setIsOpen(true)} size="small" intent="outline">
-        <IconSearch />
+        <MagnifyingGlassIcon data-slot="icon" />
         <span className="sm:block hidden">Search user</span>
       </Button>
       <CommandMenu

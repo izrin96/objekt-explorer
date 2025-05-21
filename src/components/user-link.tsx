@@ -1,5 +1,5 @@
 import { Tooltip, Link } from "./ui";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function UserLink({
   address,
@@ -18,7 +18,7 @@ export default function UserLink({
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
               <Tooltip.Trigger aria-label="Preview">
-                <InfoIcon className="size-3.5" />
+                <InfoIcon size={16} />
               </Tooltip.Trigger>
               <Tooltip.Content>
                 Displayed as a wallet address. Nickname not yet available.

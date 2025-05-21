@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui";
-import { IconBrokenHeart } from "@intentui/icons";
+import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { Geist } from "next/font/google";
 
 const geistSans = Geist({
@@ -18,8 +18,8 @@ export default function GlobalError() {
 
       <body className="min-h-svh antialiased">
         <div className="flex flex-col gap-3 items-center justify-center h-svh w-full">
-          <IconBrokenHeart className="size-12" />
-          <h2 className="font-semibold text-lg">Something went wrong!</h2>
+          <HeartBreakIcon size={64} weight="light" />
+          <h2 className="text-lg">Something went wrong!</h2>
           <Button intent="secondary" onPress={() => window.location.reload()}>
             Retry
           </Button>

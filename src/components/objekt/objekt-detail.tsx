@@ -78,7 +78,7 @@ export default function ObjektDetail({
                 <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
               ) : (
                 <div className="flex flex-col justify-center gap-3 items-center">
-                  <ArchiveXIcon strokeWidth="1.2" size="64" />
+                  <ArchiveXIcon strokeWidth={1} size={64} />
                   <p>Not owned</p>
                 </div>
               )}
