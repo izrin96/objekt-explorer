@@ -11,7 +11,7 @@ import { authClient } from "@/lib/auth-client";
 export function ObjektMenu({ children }: PropsWithChildren) {
   const session = authClient.useSession();
 
-  if (!session) return;
+  if (!session.data) return;
 
   return (
     <Menu>
