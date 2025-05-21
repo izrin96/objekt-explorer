@@ -41,11 +41,9 @@ export function SelectMode({
       >
         Select mode
       </Button>
-      {mode && (
-        <Button intent="outline" onClick={reset}>
-          Reset
-        </Button>
-      )}
+      <Button intent="outline" onClick={reset}>
+        Reset
+      </Button>
       {children?.({ handleAction })}
     </div>
   );
