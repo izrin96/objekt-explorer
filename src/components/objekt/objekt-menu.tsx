@@ -2,7 +2,11 @@
 
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { Button, Loader, Menu } from "../ui";
-import { DotsThreeVerticalIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  DotsThreeVerticalIcon,
+  PlusIcon,
+  TrashSimpleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/trpc/client";
@@ -51,7 +55,10 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   );
   return (
     <Menu.Submenu>
-      <Menu.Item>Add to list</Menu.Item>
+      <Menu.Item>
+        <PlusIcon data-slot="icon" />
+        <Menu.Label>Add to list</Menu.Label>
+      </Menu.Item>
       <Menu.Content respectScreen={false} placement="bottom right">
         {isLoading && (
           <Menu.Item isDisabled>
@@ -105,8 +112,10 @@ export function RemoveFromListMenu({
           ids: [Number(objekt.id)],
         })
       }
+      isDanger
     >
-      Remove from list
+      <TrashSimpleIcon data-slot="icon" />
+      <Menu.Label>Remove from list</Menu.Label>
     </Menu.Item>
   );
 }
