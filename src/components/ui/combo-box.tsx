@@ -79,7 +79,10 @@ const ComboBoxList = <T extends object>({
       placement={props.placement}
     >
       <ListBox
-        className={composeTailwindRenderProps(className, "min-w-[inherit] max-h-[inherit] border-0 shadow-none")}
+        className={composeTailwindRenderProps(
+          className,
+          "max-h-[inherit] min-w-[inherit] border-0 shadow-none",
+        )}
         layout="stack"
         orientation="vertical"
         items={items}

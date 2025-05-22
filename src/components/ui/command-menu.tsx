@@ -259,6 +259,19 @@ const CommandMenuSeparator = ({
   <Menu.Separator className={twMerge("-mx-2", className)} {...props} />
 )
 
+const CommandMenuFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
+  return (
+    <div
+      className={twMerge(
+        "col-span-full border-t px-2.5 py-2 text-muted-fg text-sm",
+        "*:[kbd]:inset-ring *:[kbd]:inset-ring-fg/10 *:[kbd]:mx-1 *:[kbd]:inline-grid *:[kbd]:h-4 *:[kbd]:min-w-4 *:[kbd]:place-content-center *:[kbd]:rounded-xs *:[kbd]:bg-secondary ",
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
 const CommandMenuLabel = Menu.Label
 const CommandMenuKeyboard = DropdownKeyboard
 CommandMenu.Search = CommandMenuSearch
@@ -269,6 +282,7 @@ CommandMenu.Section = CommandMenuSection
 CommandMenu.Description = CommandMenuDescription
 CommandMenu.Keyboard = CommandMenuKeyboard
 CommandMenu.Separator = CommandMenuSeparator
+CommandMenu.Footer = CommandMenuFooter
 
 export type { CommandMenuProps, CommandMenuSearchProps, CommandMenuDescriptionProps }
 export { CommandMenu }
