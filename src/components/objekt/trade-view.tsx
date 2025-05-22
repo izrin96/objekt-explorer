@@ -8,12 +8,7 @@ import {
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useState } from "react";
 import { Badge, Button, Card, Link, Loader, NumberField, Table } from "../ui";
-import {
-  IconArrowLeft,
-  IconArrowRight,
-  IconCircleQuestionmark,
-  IconOpenLink,
-} from "@intentui/icons";
+import { IconArrowLeft, IconArrowRight, IconOpenLink } from "@intentui/icons";
 import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-boundary";
@@ -23,7 +18,7 @@ import { cn } from "@/utils/classes";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { useObjektModal } from "@/hooks/use-objekt-modal";
-import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import { LockIcon, QuestionMarkIcon } from "@phosphor-icons/react/dist/ssr";
 
 type TradeViewProps = {
   objekt: ValidObjekt;
@@ -177,7 +172,7 @@ function TradeTable({
   if (!data.owner)
     return (
       <div className="flex flex-col justify-center gap-3 items-center py-3">
-        <IconCircleQuestionmark className="size-16" />
+        <QuestionMarkIcon size={64} weight="light" />
         <p>Not found</p>
       </div>
     );
