@@ -104,6 +104,7 @@ function UserMenu({ user }: { user: User }) {
                         authClient.signOut({
                           fetchOptions: {
                             onSuccess: () => {
+                              toast.success("Logout successful");
                               router.refresh();
                             },
                           },

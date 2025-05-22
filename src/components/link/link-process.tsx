@@ -228,6 +228,7 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
 
   const otpAndLink = api.cosmoLink.otpAndLink.useMutation({
     onSuccess: () => {
+      toast.success("Successfully linked your Cosmo profile");
       setWait(true);
     },
     onError: ({ message }) => {
