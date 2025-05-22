@@ -4,7 +4,10 @@ import ObjektView from "@/components/objekt/objekt-view";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
 import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import React, {
   memo,
   useEffect,
@@ -12,6 +15,7 @@ import React, {
   useRef,
   useState,
   useCallback,
+  Suspense,
 } from "react";
 import ProgressFilter from "./progress-filter";
 import { ErrorBoundary } from "react-error-boundary";
@@ -42,7 +46,15 @@ export default function ProgressRender() {
             onReset={reset}
             FallbackComponent={ErrorFallbackRender}
           >
-            <Progress />
+            <Suspense
+              fallback={
+                <div className="flex justify-center">
+                  <Loader variant="ring" />
+                </div>
+              }
+            >
+              <Progress />
+            </Suspense>
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
@@ -57,15 +69,15 @@ function Progress() {
   const [filters, setFilters] = useFilters();
   const first = useRef(false);
 
-  const objektsQuery = useQuery(collectionOptions);
-  const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
+  const objektsQuery = useSuspenseQuery(collectionOptions);
+  const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));
 
   const { ownedSlugs, shaped } = useMemo(() => {
-    const ownedSlugs = new Set((ownedQuery.data ?? []).map((obj) => obj.slug));
-    const missingObjekts = (objektsQuery.data ?? []).filter(
+    const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
+    const missingObjekts = objektsQuery.data.filter(
       (obj) => !ownedSlugs.has(obj.slug)
     );
-    const joinedObjekts = [...(ownedQuery.data ?? []), ...missingObjekts];
+    const joinedObjekts = [...ownedQuery.data, ...missingObjekts];
     const shaped = shapeProgressCollections(artists, filters, joinedObjekts);
     return { ownedSlugs, shaped };
   }, [ownedQuery.data, objektsQuery.data, artists, filters]);
@@ -73,15 +85,14 @@ function Progress() {
   const calculateMemberRanks = useCallback(() => {
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
     const grouped = Object.values(
-      groupBy(ownedQuery.data ?? [], (a) => a.collectionId)
+      groupBy(ownedQuery.data, (a) => a.collectionId)
     );
 
     return members
       .map((member) => ({
         name: member,
         owned: grouped.filter(([objekt]) => objekt.member === member).length,
-        total: (objektsQuery.data ?? []).filter((a) => a.member === member)
-          .length,
+        total: objektsQuery.data.filter((a) => a.member === member).length,
       }))
       .map((a) => ({
         name: a.name,
@@ -112,13 +123,6 @@ function Progress() {
     ownedQuery.isLoading,
     objektsQuery.isLoading,
   ]);
-
-  if (objektsQuery.isLoading || ownedQuery.isLoading)
-    return (
-      <div className="justify-center flex">
-        <Loader variant="ring" />
-      </div>
-    );
 
   return (
     <div className="flex flex-col gap-8">

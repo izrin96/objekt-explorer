@@ -2,16 +2,12 @@ import { ofetch } from "ofetch";
 import { OwnedObjekt } from "@/lib/universal/objekts";
 import { getBaseURL } from "@/lib/utils";
 
-type OwnedObjektRequest = {
-  address: string;
-};
-
 type OwnedObjektsResult = {
   nextStartAfter?: number;
   objekts: OwnedObjekt[];
 };
 
-export async function fetchOwnedObjekts({ address }: OwnedObjektRequest) {
+export async function fetchOwnedObjekts(address: string) {
   const url = new URL(`/api/objekts/owned-by/${address}`, getBaseURL());
 
   let allObjekts: OwnedObjekt[] = [];

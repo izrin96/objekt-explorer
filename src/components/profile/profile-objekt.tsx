@@ -1,8 +1,18 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useFilters } from "@/hooks/use-filters";
-import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { Button, Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
@@ -53,7 +63,15 @@ export default function ProfileObjektRender() {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <ProfileObjekt />
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <ProfileObjekt />
+              </Suspense>
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -81,8 +99,8 @@ function ProfileObjekt() {
     ...collectionOptions,
     enabled: filters.unowned ?? false,
   });
-  const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
-  // todo: store state into context
+  const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));
+
   const pinsQuery = api.pins.get.useQuery(profile!.address, {
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
@@ -90,15 +108,13 @@ function ProfileObjekt() {
 
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
-      const ownedSlugs = new Set(
-        (ownedQuery.data ?? []).map((obj) => obj.slug)
-      );
+      const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
       const missingObjekts = (objektsQuery.data ?? []).filter(
         (obj) => !ownedSlugs.has(obj.slug)
       );
-      return [...(ownedQuery.data ?? []), ...missingObjekts];
+      return [...ownedQuery.data, ...missingObjekts];
     }
-    return ownedQuery.data ?? [];
+    return ownedQuery.data;
   }, [ownedQuery.data, filters.unowned, objektsQuery.data]);
 
   const virtualList = useMemo(() => {
@@ -210,13 +226,6 @@ function ProfileObjekt() {
     setCount(allObjekts.length);
     setObjektsFiltered(shaped);
   }, [filters, joinedObjekts, artists, pinsQuery.data]);
-
-  if (ownedQuery.isLoading)
-    return (
-      <div className="justify-center flex">
-        <Loader variant="ring" />
-      </div>
-    );
 
   return (
     <div className="flex flex-col gap-4">

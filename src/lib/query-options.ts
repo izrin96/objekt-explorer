@@ -19,10 +19,8 @@ export const collectionOptions = queryOptions({
 export const ownedCollectionOptions = (address: string) =>
   queryOptions({
     queryKey: ["owned-collections", address],
-    queryFn: async () =>
-      fetchOwnedObjekts({
-        address: address,
-      }).then((a) => a.objekts.map(mapObjektWithTag)),
+    queryFn: () =>
+      fetchOwnedObjekts(address).then((a) => a.objekts.map(mapObjektWithTag)),
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
   });

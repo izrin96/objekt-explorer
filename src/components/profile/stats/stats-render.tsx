@@ -17,8 +17,12 @@ import {
   ChartTooltipContent,
   Loader,
 } from "@/components/ui";
-import React, { useMemo } from "react";
-import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
+import React, { Suspense, useMemo } from "react";
+import {
+  QueryErrorResetBoundary,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { ownedCollectionOptions, collectionOptions } from "@/lib/query-options";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -37,7 +41,15 @@ export default function ProfileStatsRender() {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <ProfileStats />
+          <Suspense
+            fallback={
+              <div className="flex justify-center">
+                <Loader variant="ring" />
+              </div>
+            }
+          >
+            <ProfileStats />
+          </Suspense>
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
@@ -49,19 +61,12 @@ function ProfileStats() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const query = useQuery(ownedCollectionOptions(profile!.address));
+  const query = useSuspenseQuery(ownedCollectionOptions(profile!.address));
 
   const objekts = useMemo(
-    () => filterObjekts(filters, query.data ?? []),
+    () => filterObjekts(filters, query.data),
     [filters, query.data]
   );
-
-  if (query.isLoading)
-    return (
-      <div className="justify-center flex">
-        <Loader variant="ring" />
-      </div>
-    );
 
   return (
     <div className="flex flex-col gap-4">

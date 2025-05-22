@@ -39,9 +39,9 @@ export default async function UserCollectionLayout(props: Props) {
           <ProfileBanner profile={targetUser} />
           <Container>
             {targetUser.bannerImgUrl && (
-              <div className={cn("-mt-20", BANNER_BREAKPOINT)}></div>
+              <div className={cn("-mt-22", BANNER_BREAKPOINT)}></div>
             )}
-            <div className="flex flex-col gap-4 pb-8">
+            <div className="flex flex-col gap-4 pb-8 pt-2">
               <ProfileHeader user={targetUser} />
 
               <ProfileTabs nickname={params.nickname} />
