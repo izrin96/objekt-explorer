@@ -65,6 +65,57 @@ export default function Changelog() {
                       video and image. User must link with their Cosmo profile
                       first.
                     </li>
+                    <li>Update site theme.</li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
+            <Disclosure id={"4"}>
+              <DisclosureTrigger>2025-05-15</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>
+                      Added new Progress by Member statistic chart to Cosmo
+                      profile.
+                    </li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
+            <Disclosure id={"5"}>
+              <DisclosureTrigger>2025-05-11</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>
+                      User can now pin objekt. User must link with their Cosmo
+                      profile first.
+                    </li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
+            <Disclosure id={"6"}>
+              <DisclosureTrigger>Unknown</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>Added Generate Discord Format List feature.</li>
+                    <li>
+                      Added Refresh Profile button to pull latest Discord info.
+                    </li>
+                    <li>New domain, move out from Vercel hosting.</li>
+                    <li>
+                      Added support to search by double season number like
+                      AA201.
+                    </li>
+                    <li>
+                      Allow user to link their Cosmo profile with their account.
+                      Support multiple Cosmo profile.
+                    </li>
+                    <li>Added List feature.</li>
+                    <li>Added Sign in with Discord.</li>
                   </ul>
                 </div>
               </DisclosurePanel>
