@@ -7,6 +7,7 @@ import {
   DisclosureGroup,
   DisclosurePanel,
   DisclosureTrigger,
+  Link,
   Modal,
 } from "./ui";
 import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr";
@@ -20,6 +21,17 @@ export default function Changelog() {
       <Modal.Content>
         <Modal.Header>
           <Modal.Title>Changelog</Modal.Title>
+          <Modal.Description>
+            Objekt Tracker is open source. Github link{" "}
+            <Link
+              className="underline"
+              target="_blank"
+              href="https://github.com/izrin96/objekt-explorer"
+            >
+              available here
+            </Link>
+            .
+          </Modal.Description>
         </Modal.Header>
         <Modal.Body>
           <DisclosureGroup defaultExpandedKeys={"1"}>
