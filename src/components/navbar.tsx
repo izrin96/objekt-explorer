@@ -3,6 +3,7 @@ import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { Container, Link } from "./ui";
 import UserSearch from "./user-search";
 import UserNav from "./user-nav";
+import Changelog from "./changelog";
 
 export default async function Navbar() {
   return (
@@ -18,6 +19,7 @@ export default async function Navbar() {
               </span>
             </div>
           </Link>
+          <Changelog />
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
