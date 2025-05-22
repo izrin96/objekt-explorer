@@ -145,7 +145,7 @@ function ListView({ slug }: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, isOwned, slug]);
+  }, [deferredObjektsFiltered, columns, isOwned, slug, authenticated]);
 
   useEffect(() => {
     const shaped = shapeObjekts(filters, objekts, artists);
