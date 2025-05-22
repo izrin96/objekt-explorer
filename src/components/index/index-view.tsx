@@ -32,10 +32,9 @@ import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
 import { AddToListMenu, ObjektStaticMenu } from "../objekt/objekt-menu";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
+import { useUser } from "@/hooks/use-user";
 
-type Props = { authenticated: boolean };
-
-export default function IndexRender(props: Props) {
+export default function IndexRender() {
   return (
     <ObjektSelectProvider>
       <ObjektModalProvider initialTab="trades">
@@ -45,7 +44,7 @@ export default function IndexRender(props: Props) {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <IndexView {...props} />
+              <IndexView />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -54,7 +53,8 @@ export default function IndexRender(props: Props) {
   );
 }
 
-function IndexView(props: Props) {
+function IndexView() {
+  const { authenticated } = useUser();
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const { columns } = useBreakpointColumn();
@@ -88,7 +88,7 @@ function IndexView(props: Props) {
                   key={objekt.id}
                   objekts={item.item}
                   menu={
-                    props.authenticated && (
+                    authenticated && (
                       <ObjektStaticMenu>
                         <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
@@ -107,7 +107,7 @@ function IndexView(props: Props) {
                           isSelected={isSelected}
                           open={open}
                         >
-                          {props.authenticated && (
+                          {authenticated && (
                             <div className="absolute top-0 right-0 flex">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
@@ -126,7 +126,7 @@ function IndexView(props: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, props.authenticated]);
+  }, [deferredObjektsFiltered, columns, authenticated]);
 
   useEffect(() => {
     const shaped = shapeObjekts(filters, query.data, artists);
@@ -139,10 +139,10 @@ function IndexView(props: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters {...props} />
+          <Filters authenticated={authenticated} />
         </FilterContainer>
         <FilterSheet>
-          <Filters {...props} />
+          <Filters authenticated={authenticated} />
         </FilterSheet>
       </div>
       <span className="font-semibold">{count} total</span>
@@ -152,11 +152,11 @@ function IndexView(props: Props) {
   );
 }
 
-function Filters(props: Props) {
+function Filters({ authenticated }: { authenticated: boolean }) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {props.authenticated && (
+      {authenticated && (
         <SelectMode>
           {({ handleAction }) => (
             <AddToList>

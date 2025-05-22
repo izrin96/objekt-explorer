@@ -3,7 +3,7 @@ import { api, HydrateClient } from "@/lib/trpc/server";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
-import { cachedSession } from "@/lib/server/auth";
+import { cachedSession, toPublicUser } from "@/lib/server/auth";
 import { fetchList, fetchOwnedLists } from "@/lib/server/api/routers/list";
 import { UserProvider } from "@/hooks/use-user";
 import ListHeader from "@/components/list/list-header";
@@ -40,7 +40,7 @@ export default async function Page(props: Props) {
 
   return (
     <ProfileProvider list={list}>
-      <UserProvider lists={lists}>
+      <UserProvider lists={lists} user={toPublicUser(session)}>
         <div className="flex flex-col pb-8 pt-2 gap-4">
           <ListHeader list={list} />
 

@@ -23,7 +23,6 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { SelectMode } from "../filters/select-mode";
-import { authClient } from "@/lib/auth-client";
 import Filter from "./filter";
 import { api } from "@/lib/trpc/client";
 import {
@@ -34,7 +33,7 @@ import {
 } from "../objekt/objekt-action";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
-import { useProfileAuthed } from "@/hooks/use-user";
+import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 import { AddToList } from "../list/modal/manage-objekt";
 import ObjektModal from "../objekt/objekt-modal";
@@ -64,8 +63,7 @@ export default function ProfileObjektRender() {
 }
 
 function ProfileObjekt() {
-  const session = authClient.useSession();
-  const authenticated = session.data !== null;
+  const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
   const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();

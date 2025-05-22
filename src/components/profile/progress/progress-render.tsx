@@ -26,6 +26,12 @@ import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
+import {
+  AddToListMenu,
+  ObjektStaticMenu,
+} from "@/components/objekt/objekt-menu";
+import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
+import { useUser } from "@/hooks/use-user";
 
 export default function ProgressRender() {
   return (
@@ -45,6 +51,7 @@ export default function ProgressRender() {
 }
 
 function Progress() {
+  const { authenticated } = useUser();
   const { artists } = useCosmoArtist();
   const profile = useProfile((a) => a.profile);
   const [filters, setFilters] = useFilters();
@@ -127,6 +134,7 @@ function Progress() {
             title={key}
             objekts={objekts}
             ownedSlugs={ownedSlugs}
+            authenticated={authenticated}
           />
         ))
       )}
@@ -138,10 +146,12 @@ const ProgressCollapse = memo(function ProgressCollapse({
   title,
   objekts,
   ownedSlugs,
+  authenticated,
 }: {
   title: string;
   objekts: ValidObjekt[];
   ownedSlugs: Set<string>;
+  authenticated: boolean;
 }) {
   const [show, setShow] = useState(false);
   const [showCount] = useShowCount();
@@ -186,7 +196,18 @@ const ProgressCollapse = memo(function ProgressCollapse({
             (objekts) => {
               const [objekt] = objekts;
               return (
-                <ObjektModal key={objekt.slug} objekts={objekts} isProfile>
+                <ObjektModal
+                  key={objekt.slug}
+                  objekts={objekts}
+                  isProfile
+                  menu={
+                    authenticated && (
+                      <ObjektStaticMenu>
+                        <AddToListMenu objekt={objekt} />
+                      </ObjektStaticMenu>
+                    )
+                  }
+                >
                   {({ openObjekts }) => (
                     <ObjektView
                       objekts={objekts}
@@ -194,7 +215,15 @@ const ProgressCollapse = memo(function ProgressCollapse({
                       unobtainable={unobtainables.includes(objekt.slug)}
                       showCount={showCount}
                       open={openObjekts}
-                    />
+                    >
+                      {authenticated && (
+                        <div className="absolute top-0 right-0 flex">
+                          <ObjektHoverMenu>
+                            <AddToListMenu objekt={objekt} />
+                          </ObjektHoverMenu>
+                        </div>
+                      )}
+                    </ObjektView>
                   )}
                 </ObjektModal>
               );

@@ -24,11 +24,15 @@ import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
-import { RemoveFromList } from "./modal/manage-objekt";
-import { useListAuthed } from "@/hooks/use-user";
+import { AddToList, RemoveFromList } from "./modal/manage-objekt";
+import { useListAuthed, useUser } from "@/hooks/use-user";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
-import { ObjektStaticMenu, RemoveFromListMenu } from "../objekt/objekt-menu";
+import {
+  AddToListMenu,
+  ObjektStaticMenu,
+  RemoveFromListMenu,
+} from "../objekt/objekt-menu";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 
 type Props = { slug: string };
@@ -53,6 +57,7 @@ export default function ListRender(props: Props) {
 }
 
 function ListView({ slug }: Props) {
+  const { authenticated } = useUser();
   const isOwned = useListAuthed(slug);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
@@ -90,9 +95,13 @@ function ListView({ slug }: Props) {
                   key={objekt.id}
                   objekts={item.item}
                   menu={
-                    isOwned && (
+                    authenticated && (
                       <ObjektStaticMenu>
-                        <RemoveFromListMenu slug={slug} objekt={objekt} />
+                        {isOwned ? (
+                          <RemoveFromListMenu slug={slug} objekt={objekt} />
+                        ) : (
+                          <AddToListMenu objekt={objekt} />
+                        )}
                       </ObjektStaticMenu>
                     )
                   }
@@ -110,14 +119,18 @@ function ListView({ slug }: Props) {
                           open={open}
                           showCount
                         >
-                          {isOwned && (
+                          {authenticated && (
                             <div className="absolute top-0 right-0 flex">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
-                                <RemoveFromListMenu
-                                  slug={slug}
-                                  objekt={objekt}
-                                />
+                                {isOwned ? (
+                                  <RemoveFromListMenu
+                                    slug={slug}
+                                    objekt={objekt}
+                                  />
+                                ) : (
+                                  <AddToListMenu objekt={objekt} />
+                                )}
                               </ObjektHoverMenu>
                             </div>
                           )}
@@ -147,10 +160,18 @@ function ListView({ slug }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         <FilterContainer>
-          <Filters isOwned={isOwned} slug={slug} />
+          <Filters
+            authenticated={authenticated}
+            isOwned={isOwned}
+            slug={slug}
+          />
         </FilterContainer>
         <FilterSheet>
-          <Filters isOwned={isOwned} slug={slug} />
+          <Filters
+            authenticated={authenticated}
+            isOwned={isOwned}
+            slug={slug}
+          />
         </FilterSheet>
       </div>
       <span className="font-semibold">
@@ -163,21 +184,39 @@ function ListView({ slug }: Props) {
   );
 }
 
-function Filters({ isOwned, slug }: { isOwned: boolean; slug: string }) {
+function Filters({
+  authenticated,
+  isOwned,
+  slug,
+}: {
+  authenticated: boolean;
+  isOwned: boolean;
+  slug: string;
+}) {
   return (
     <div className="flex flex-col gap-6">
       <Filter />
-      {isOwned && (
+      {authenticated && (
         <SelectMode>
-          {({ handleAction }) => (
-            <RemoveFromList slug={slug}>
-              {({ open }) => (
-                <Button intent="outline" onClick={() => handleAction(open)}>
-                  Remove from list
-                </Button>
-              )}
-            </RemoveFromList>
-          )}
+          {({ handleAction }) =>
+            isOwned ? (
+              <RemoveFromList slug={slug}>
+                {({ open }) => (
+                  <Button intent="outline" onClick={() => handleAction(open)}>
+                    Remove from list
+                  </Button>
+                )}
+              </RemoveFromList>
+            ) : (
+              <AddToList>
+                {({ open }) => (
+                  <Button intent="outline" onClick={() => handleAction(open)}>
+                    Add to list
+                  </Button>
+                )}
+              </AddToList>
+            )
+          }
         </SelectMode>
       )}
     </div>

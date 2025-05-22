@@ -8,7 +8,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getBaseURL } from "../utils";
 import { cache } from "react";
 import { headers } from "next/headers";
-import { PublicProfile } from "../universal/user";
+import { PublicProfile, PublicUser } from "../universal/user";
 import { username } from "better-auth/plugins/username";
 import * as authSchema from "./db/auth-schema";
 
@@ -116,5 +116,19 @@ export async function fetchUserByIdentifier(
   return {
     nickname: user.nickname,
     address: user.address,
+  };
+}
+
+export type Session = typeof auth.$Infer.Session;
+
+export function toPublicUser(session: Session | null): PublicUser | undefined {
+  if (!session) return undefined;
+
+  return {
+    discord: session.user.discord,
+    displayUsername: session.user.displayUsername,
+    image: session.user.image,
+    name: session.user.name,
+    username: session.user.username,
   };
 }

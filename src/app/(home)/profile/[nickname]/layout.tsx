@@ -4,7 +4,7 @@ import { Container } from "@/components/ui";
 import { ProfileProvider } from "@/hooks/use-profile";
 import { UserProvider } from "@/hooks/use-user";
 import { getUserByIdentifier } from "@/lib/client-fetching";
-import { cachedSession } from "@/lib/server/auth";
+import { cachedSession, toPublicUser } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { PublicProfile } from "@/lib/universal/user";
 import Image from "next/image";
@@ -34,7 +34,7 @@ export default async function UserCollectionLayout(props: Props) {
 
   return (
     <ProfileProvider profile={targetUser}>
-      <UserProvider profiles={profiles}>
+      <UserProvider profiles={profiles} user={toPublicUser(session)}>
         <ProfilePrivacyWrapper>
           <ProfileBanner profile={targetUser} />
           <Container>

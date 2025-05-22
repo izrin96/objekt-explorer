@@ -1,4 +1,5 @@
-import { User, UserAddress } from "../server/db/schema";
+import { Session } from "../server/auth";
+import { UserAddress } from "../server/db/schema";
 
 export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
   Partial<Pick<UserAddress, "bannerImgUrl" | "privateProfile">> & {
@@ -6,6 +7,6 @@ export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
   };
 
 export type PublicUser = Pick<
-  User,
+  Session["user"],
   "name" | "image" | "username" | "discord" | "displayUsername"
 >;
