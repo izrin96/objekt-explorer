@@ -20,10 +20,13 @@ export default function SignIn() {
   return (
     <div className="flex flex-col py-6 gap-6">
       <div className="flex flex-col gap-6 max-w-xl w-full self-center">
-        <Note intent="default">
+        {/* <Note intent="default">
           If you previously signed in with Discord, you can still sign in with
           email and password, but you&apos;ll need to set your password using
           Forgot Password option.
+        </Note> */}
+        <Note intent="default">
+          Sign in with email and password coming soon.
         </Note>
         {state === "sign-in" && <SignInForm setState={setState} />}
         {state === "sign-up" && <SignUpForm setState={setState} />}
@@ -66,7 +69,7 @@ function SignInForm({
 
   return (
     <>
-      <Form
+      {/* <Form
         onSubmit={(e) => {
           e.preventDefault();
           const formData = new FormData(e.currentTarget);
@@ -93,9 +96,9 @@ function SignInForm({
         <Button type="submit" isDisabled={mutation.isPending}>
           Sign in with Email
         </Button>
-      </Form>
+      </Form> */}
 
-      <div className="flex flex-col gap-2">
+      {/* <div className="flex flex-col gap-2">
         <Button
           intent="secondary"
           className="gap-2"
@@ -112,11 +115,11 @@ function SignInForm({
           <UserPlusIcon size={24} weight="light" />
           Create new account
         </Button>
-      </div>
+      </div> */}
 
-      <div className="my-2 flex justify-center text-sm">
+      {/* <div className="my-2 flex justify-center text-sm">
         <span>Or continue with</span>
-      </div>
+      </div> */}
 
       <Button
         intent="primary"

@@ -44,11 +44,12 @@ export default function Changelog() {
                       Cosmo profile will hide user info by default after
                       successful link.
                     </li>
-                    <li>Added sign in with email option.</li>
                     <li>
-                      Added show social in manage account. All users are set to
-                      hide by default. Please update if you want to show it.
+                      Added show social option in manage account. All users are
+                      set to hide by default. Please update if you want to show
+                      it.
                     </li>
+                    {/* <li>Added sign in with email option.</li> */}
                   </ul>
                 </div>
               </DisclosurePanel>
