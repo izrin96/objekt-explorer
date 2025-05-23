@@ -4,8 +4,7 @@ import {
   CheckIcon,
   DotsThreeVerticalIcon,
   PushPinIcon,
-  PushPinSimpleIcon,
-  PushPinSimpleSlashIcon,
+  PushPinSlashIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { api } from "@/lib/trpc/client";
 import { toast } from "sonner";
@@ -100,9 +99,9 @@ export function ObjektTogglePin({
         {pin.isPending || unpin.isPending ? (
           <Loader variant="ring" />
         ) : isPin ? (
-          <PushPinSimpleSlashIcon size={16} />
+          <PushPinSlashIcon size={16} />
         ) : (
-          <PushPinSimpleIcon size={16} />
+          <PushPinIcon size={16} />
         )}
       </span>
     </Button>

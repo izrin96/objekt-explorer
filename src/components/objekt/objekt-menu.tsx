@@ -5,6 +5,8 @@ import { Button, Loader, Menu } from "../ui";
 import {
   DotsThreeVerticalIcon,
   PlusIcon,
+  PushPinIcon,
+  PushPinSlashIcon,
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { PropsWithChildren, useCallback } from "react";
@@ -164,7 +166,12 @@ export function TogglePinMenuItem({
         }
       }}
     >
-      {isPin ? "Unpin" : "Pin"}
+      {isPin ? (
+        <PushPinSlashIcon data-slot="icon" />
+      ) : (
+        <PushPinIcon data-slot="icon" />
+      )}
+      <Menu.Label>{isPin ? "Unpin" : "Pin"}</Menu.Label>
     </Menu.Item>
   );
 }
