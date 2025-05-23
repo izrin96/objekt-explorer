@@ -16,6 +16,7 @@ import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { cachedSession } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
+import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 
 const PER_PAGE = 30;
 
@@ -62,7 +63,9 @@ export async function GET(
     .select({
       transfer: transfers,
       objekt: objekts,
-      collection: collections,
+      collection: {
+        ...getCollectionColumns(),
+      },
     })
     .from(transfers)
     .innerJoin(collections, eq(transfers.collectionId, collections.id))

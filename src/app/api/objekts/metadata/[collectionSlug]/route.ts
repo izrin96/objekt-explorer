@@ -1,5 +1,5 @@
 import { indexer } from "@/lib/server/db/indexer";
-import { and, count, eq, ne, sql } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { cacheHeaders } from "@/app/api/common";
 import { SPIN_ADDRESS } from "@/lib/utils";
