@@ -16,19 +16,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  ws:
-    image: ghcr.io/izrin96/objekt-explorer-websocket:latest
-    build:
-      context: .
-      dockerfile: ./docker/ws.Dockerfile
-    restart: always
-    environment:
-      - DB_PROXY_URL
-      - DB_PROXY_KEY
-      - INDEXER_PROXY_URL
-      - INDEXER_PROXY_KEY
-    ports:
-      - "8081:3000"
   browserless:
     image: ghcr.io/browserless/chromium
     ports:
