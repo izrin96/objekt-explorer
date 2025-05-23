@@ -90,6 +90,54 @@ export const listEntriesRelations = relations(listEntries, ({ one }) => ({
   list: one(lists, { fields: [listEntries.listId], references: [lists.id] }),
 }));
 
+export const profileLists = pgTable(
+  "profile_list",
+  {
+    id: serial("id").primaryKey(),
+    address: text("address").notNull(),
+    slug: varchar("slug", { length: 12 }).notNull(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("profile_list_slug_idx").on(t.slug)]
+);
+
+export const profileListRelations = relations(
+  profileLists,
+  ({ many, one }) => ({
+    entries: many(profileListEntries),
+    user: one(userAddress, {
+      fields: [profileLists.address],
+      references: [userAddress.address],
+    }),
+  })
+);
+
+export const profileListEntries = pgTable(
+  "profile_list_entries",
+  {
+    id: serial("id").primaryKey(),
+    listId: integer("list_id")
+      .notNull()
+      .references(() => profileLists.id, {
+        onDelete: "cascade",
+      }),
+    tokenId: integer("token_id").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("profile_list_entries_list_idx").on(t.listId)]
+);
+
+export const profileListEntriesRelations = relations(
+  profileListEntries,
+  ({ one }) => ({
+    list: one(profileLists, {
+      fields: [profileListEntries.listId],
+      references: [profileLists.id],
+    }),
+  })
+);
+
 export const pins = pgTable(
   "pins",
   {
