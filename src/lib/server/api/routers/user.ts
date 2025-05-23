@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { auth } from "../../auth";
 import { db } from "../../db";
 import { authProcedure, createTRPCRouter } from "../trpc";
@@ -21,7 +22,11 @@ export const userRouter = createTRPCRouter({
           and(eq(t.userId, user.id), eq(t.providerId, "discord")),
       });
 
-      if (!account) return false;
+      if (!account)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "User not link with Discord",
+        });
 
       const authContext = await auth.$context;
 
@@ -29,19 +34,21 @@ export const userRouter = createTRPCRouter({
         (p) => p.id === "discord"
       );
 
-      if (!provider) return false;
-
       // fetch from discord
-      const info = await provider.getUserInfo({
+      const info = await provider!.getUserInfo({
         idToken: account.idToken ?? undefined,
         accessToken: account.accessToken ?? undefined,
         refreshToken: account.refreshToken ?? undefined,
       });
 
-      if (!info) return false;
+      if (!info)
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to get info from Discord",
+        });
 
       // update user
-      const result = await auth.api.updateUser({
+      await auth.api.updateUser({
         headers,
         body: {
           name: info.user.name,
@@ -49,8 +56,6 @@ export const userRouter = createTRPCRouter({
           image: info.user.image,
         },
       });
-
-      return result.status;
     }
   ),
 });

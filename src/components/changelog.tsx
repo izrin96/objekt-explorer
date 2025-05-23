@@ -41,8 +41,13 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>
-                      Cosmo profile will hide Discord info by default after
+                      Cosmo profile will hide user info by default after
                       successful link.
+                    </li>
+                    <li>Added sign in with email option.</li>
+                    <li>
+                      Added show social in manage account. All users are set to
+                      hide by default. Please update if you want to show it.
                     </li>
                   </ul>
                 </div>
@@ -72,9 +77,8 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>
-                      Allow user to hide Discord info from list and Cosmo
-                      profile. Option are available in Edit List and Edit
-                      Profile.
+                      Allow user to hide user info from list and Cosmo profile.
+                      Option are available in both Edit List and Edit Profile.
                     </li>
                   </ul>
                 </div>

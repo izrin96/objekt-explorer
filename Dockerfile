@@ -62,6 +62,14 @@ ARG S3_SECRET_KEY
 ENV S3_SECRET_KEY=${S3_SECRET_KEY}
 ARG S3_USE_SSL
 ENV S3_USE_SSL=${S3_USE_SSL}
+ARG SES_REGION
+ENV SES_REGION=${SES_REGION}
+ARG SES_ACCESS_KEY
+ENV SES_ACCESS_KEY=${SES_ACCESS_KEY}
+ARG SES_SECRET_KEY
+ENV SES_SECRET_KEY=${SES_SECRET_KEY}
+ARG SES_MAIL_FROM
+ENV SES_MAIL_FROM=${SES_MAIL_FROM}
 
 # Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line to disable telemetry at build time

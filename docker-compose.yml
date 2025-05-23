@@ -57,6 +57,10 @@ services:
         S3_ACCESS_KEY: ${S3_ACCESS_KEY}
         S3_SECRET_KEY: ${S3_SECRET_KEY}
         S3_USE_SSL: ${S3_USE_SSL}
+        SES_REGION: ${SES_REGION}
+        SES_ACCESS_KEY: ${SES_ACCESS_KEY}
+        SES_SECRET_KEY: ${SES_SECRET_KEY}
+        SES_MAIL_FROM: ${SES_MAIL_FROM}
     expose:
       - 3000
     environment:
@@ -79,6 +83,10 @@ services:
       - S3_ACCESS_KEY
       - S3_SECRET_KEY
       - S3_USE_SSL
+      - SES_REGION
+      - SES_ACCESS_KEY
+      - SES_SECRET_KEY
+      - SES_MAIL_FROM
   minio:
     image: minio/minio:latest
     environment:
@@ -102,7 +110,7 @@ services:
       - POOL_MODE=transaction
       - AUTH_TYPE=scram-sha-256
     healthcheck:
-      test: ['CMD', 'pg_isready', '-h', 'localhost']
+      test: ["CMD", "pg_isready", "-h", "localhost"]
 volumes:
   db_data:
   minio_data:

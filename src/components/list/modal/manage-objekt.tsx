@@ -4,7 +4,16 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { api } from "@/lib/trpc/client";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
-import { Button, Checkbox, Form, Loader, Modal, Note, Select } from "../../ui";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Link,
+  Loader,
+  Modal,
+  Note,
+  Select,
+} from "../../ui";
 import ErrorFallbackRender from "../../error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
@@ -89,17 +98,13 @@ function AddToListForm() {
 
   if (data.length === 0)
     return (
-      <CreateList>
-        {({ open }) => (
-          <Note intent="default">
-            You don&apos;t have any list yet.{" "}
-            <span className="underline cursor-pointer" onClick={open}>
-              Create one
-            </span>
-            .
-          </Note>
-        )}
-      </CreateList>
+      <Note intent="default">
+        You don&apos;t have any list yet.{" "}
+        <Link className="underline" href="/list">
+          Create one here
+        </Link>
+        .
+      </Note>
     );
 
   return (

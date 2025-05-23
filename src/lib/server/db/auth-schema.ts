@@ -13,6 +13,7 @@ export const user = pgTable("user", {
   username: citext("username").unique(),
   displayUsername: citext("display_username"),
   discord: citext("discord"),
+  showSocial: boolean("show_social").default(false),
 });
 
 export const session = pgTable("session", {

@@ -27,9 +27,15 @@ export default function ListHeader({ list }: { list: PublicList }) {
           <div className="text-lg font-semibold">{list.name}</div>
           {list.user && (
             <div className="inline-flex items-center gap-1">
-              <DiscordLogoIcon size={16} weight="regular" />
               <span className="text-fg text-sm">{list.user.name}</span>
-              <span className="text-muted-fg text-sm">{list.user.discord}</span>
+              {list.user.showSocial && (
+                <>
+                  <span className="text-muted-fg text-sm">
+                    {list.user.discord}
+                  </span>
+                  <DiscordLogoIcon size={16} weight="regular" />
+                </>
+              )}
             </div>
           )}
         </div>

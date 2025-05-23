@@ -15,6 +15,7 @@
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.812.0",
     "@intentui/icons": "^1.11.0",
     "@phosphor-icons/react": "^2.1.8",
     "@t3-oss/env-nextjs": "^0.13.4",

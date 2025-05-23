@@ -13,6 +13,10 @@ export const env = createEnv({
     S3_ACCESS_KEY: z.string(),
     S3_SECRET_KEY: z.string(),
     S3_USE_SSL: z.coerce.boolean(),
+    SES_REGION: z.string(),
+    SES_ACCESS_KEY: z.string(),
+    SES_SECRET_KEY: z.string(),
+    SES_MAIL_FROM: z.string(),
   },
   client: {
     NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),

@@ -263,9 +263,9 @@ function EditProfileForm({
   return (
     <div className="flex flex-col gap-6">
       <Checkbox
-        label="Hide Discord"
+        label="Hide User"
         name="hideUser"
-        description="Hide your Discord from Cosmo profile"
+        description="Hide Objekt Tracker account from Cosmo profile"
         defaultSelected={data.hideUser ?? false}
       />
       <Checkbox

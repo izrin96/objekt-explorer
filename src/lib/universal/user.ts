@@ -8,5 +8,5 @@ export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
 
 export type PublicUser = Pick<
   Session["user"],
-  "name" | "image" | "username" | "discord" | "displayUsername"
+  "name" | "image" | "username" | "discord" | "displayUsername" | "showSocial"
 >;

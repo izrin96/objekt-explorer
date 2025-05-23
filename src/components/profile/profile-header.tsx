@@ -67,14 +67,16 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             <span className="font-semibold text-lg truncate inline-flex gap-1">
               {user.user.name}
             </span>
-            <span className="text-sm truncate inline-flex gap-1">
-              <DiscordLogoIcon
-                size={16}
-                weight="regular"
-                className="self-center"
-              />
-              <span>{user.user.discord}</span>
-            </span>
+            {user.user.showSocial && (
+              <span className="text-sm truncate inline-flex gap-1">
+                <DiscordLogoIcon
+                  size={16}
+                  weight="regular"
+                  className="self-center"
+                />
+                <span>{user.user.discord}</span>
+              </span>
+            )}
           </div>
         </div>
       )}

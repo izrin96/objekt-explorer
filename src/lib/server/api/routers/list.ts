@@ -14,6 +14,7 @@ import { TRPCError } from "@trpc/server";
 import { List, listEntries, lists } from "../../db/schema";
 import { nanoid } from "nanoid";
 import { PublicUser } from "@/lib/universal/user";
+import { mapPublicUser } from "../../auth";
 
 export const listRouter = createTRPCRouter({
   get: authProcedure
@@ -296,10 +297,11 @@ export async function fetchList(slug: string) {
       user: {
         columns: {
           name: true,
-          image: true,
           username: true,
+          image: true,
           discord: true,
           displayUsername: true,
+          showSocial: true,
         },
       },
     },
@@ -310,7 +312,7 @@ export async function fetchList(slug: string) {
 
   return {
     ...result,
-    user: result?.hideUser ? null : result?.user,
+    user: result.hideUser ? null : mapPublicUser(result.user),
   };
 }
 

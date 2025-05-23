@@ -32,9 +32,9 @@ export const userAddress = pgTable(
     }),
     linkedAt: timestamp("linked_at"),
     bannerImgUrl: text("banner_img_url"),
-    hideUser: boolean("hide_user"),
-    privateProfile: boolean("private_profile"),
-    privateSerial: boolean("private_serial"),
+    hideUser: boolean("hide_user").default(true),
+    privateProfile: boolean("private_profile").default(false),
+    privateSerial: boolean("private_serial").default(false),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),
@@ -60,7 +60,7 @@ export const lists = pgTable(
       }),
     slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
-    hideUser: boolean("hide_user"),
+    hideUser: boolean("hide_user").default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("lists_slug_idx").on(t.slug)]

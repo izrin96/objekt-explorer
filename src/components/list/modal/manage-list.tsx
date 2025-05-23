@@ -65,9 +65,9 @@ export function CreateList({
                 name="name"
               />
               <Checkbox
-                label="Hide Discord"
+                label="Hide User"
                 name="hideUser"
-                description="Hide your Discord from this list"
+                description="Hide Objekt Tracker account from this list"
                 defaultSelected={true}
               />
             </div>
@@ -183,6 +183,7 @@ export function EditList({
         >
           <Sheet.Header>
             <Sheet.Title>Edit list</Sheet.Title>
+            <Sheet.Description>Manage your list</Sheet.Description>
           </Sheet.Header>
           <Sheet.Body>
             <QueryErrorResetBoundary>
@@ -229,9 +230,9 @@ function EditListForm({ slug }: { slug: string }) {
         defaultValue={data.name}
       />
       <Checkbox
-        label="Hide Discord"
+        label="Hide User"
         name="hideUser"
-        description="Hide your Discord from this list"
+        description="Hide Objekt Tracker account from this list"
         defaultSelected={data.hideUser ?? false}
       />
       <span className="text-muted-fg text-sm">

@@ -11,6 +11,7 @@ import { headers } from "next/headers";
 import { PublicProfile, PublicUser } from "../universal/user";
 import { username } from "better-auth/plugins/username";
 import * as authSchema from "./db/auth-schema";
+import { sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -18,6 +19,21 @@ export const auth = betterAuth({
     schema: authSchema,
   }),
   plugins: [username()],
+  emailAndPassword: {
+    enabled: true,
+    autoSignIn: true,
+    requireEmailVerification: true,
+    sendResetPassword: async ({ user, url }) => {
+      await sendResetPassword(user.email, url);
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendVerificationEmail(user.email, url);
+    },
+  },
   socialProviders: {
     discord: {
       overrideUserInfoOnSignIn: true,
@@ -35,7 +51,12 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         returned: true,
-        fieldName: "discord",
+      },
+      showSocial: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        returned: true,
       },
     },
   },
@@ -72,6 +93,7 @@ export async function fetchUserByIdentifier(
           image: true,
           discord: true,
           displayUsername: true,
+          showSocial: true,
         },
       },
     },
@@ -82,7 +104,11 @@ export async function fetchUserByIdentifier(
   if (cachedUser) {
     return {
       ...cachedUser,
-      user: cachedUser.hideUser ? null : cachedUser.user,
+      user: cachedUser.hideUser
+        ? null
+        : cachedUser.user
+        ? mapPublicUser(cachedUser.user)
+        : null,
     };
   }
 
@@ -125,10 +151,18 @@ export function toPublicUser(session: Session | null): PublicUser | undefined {
   if (!session) return undefined;
 
   return {
-    discord: session.user.discord,
+    discord: session.user.showSocial ? session.user.discord : null,
     displayUsername: session.user.displayUsername,
     image: session.user.image,
     name: session.user.name,
     username: session.user.username,
+    showSocial: session.user.showSocial,
+  };
+}
+
+export function mapPublicUser(user: PublicUser): PublicUser {
+  return {
+    ...user,
+    discord: user.showSocial ? user.discord : null,
   };
 }
