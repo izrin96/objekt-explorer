@@ -51,7 +51,6 @@ export const userRouter = createTRPCRouter({
       await auth.api.updateUser({
         headers,
         body: {
-          name: info.user.name,
           discord: info.data.username,
           image: info.user.image,
         },

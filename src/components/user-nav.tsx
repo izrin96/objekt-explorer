@@ -261,8 +261,8 @@ function PullDiscordProfile({
           <Modal.Header>
             <Modal.Title>Update Profile from Discord</Modal.Title>
             <Modal.Description>
-              This will fetch your latest profile information from Discord to
-              keep it in sync. Only works if your account linked with Discord.
+              This will update your username and profile picture from Discord.
+              Only works if your account linked with Discord.
             </Modal.Description>
           </Modal.Header>
           <Modal.Footer>

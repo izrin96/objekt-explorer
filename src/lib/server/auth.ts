@@ -36,7 +36,6 @@ export const auth = betterAuth({
   },
   socialProviders: {
     discord: {
-      overrideUserInfoOnSignIn: true,
       clientId: process.env.DISCORD_CLIENT_ID!,
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
       mapProfileToUser: (profile) => ({
