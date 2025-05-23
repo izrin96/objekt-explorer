@@ -121,6 +121,7 @@ export const cosmoLinkRouter = createTRPCRouter({
         .set({
           linkedAt: sql`'now'`,
           userId: session.user.id,
+          hideUser: true,
         })
         .where(eq(userAddress.address, user.address));
 

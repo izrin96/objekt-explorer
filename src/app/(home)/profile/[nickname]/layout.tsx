@@ -11,7 +11,7 @@ import Image from "next/image";
 import { PropsWithChildren } from "react";
 import { getMimeTypeFromExtension } from "@/lib/utils";
 import { cn } from "@/utils/classes";
-import ProfilePrivacyWrapper from "@/components/profile/profile-private";
+import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 
 type Props = PropsWithChildren<{
   params: Promise<{
@@ -32,23 +32,32 @@ export default async function UserCollectionLayout(props: Props) {
     session ? fetchUserProfiles(session.user.id) : undefined,
   ]);
 
+  if (
+    targetUser.privateProfile &&
+    !(profiles?.some((a) => a.address === targetUser.address) ?? false)
+  )
+    return (
+      <div className="flex flex-col justify-center items-center w-full gap-2 py-12 font-semibold">
+        <LockIcon size={72} weight="thin" />
+        Profile Private
+      </div>
+    );
+
   return (
     <ProfileProvider profile={targetUser}>
       <UserProvider profiles={profiles} user={toPublicUser(session)}>
-        <ProfilePrivacyWrapper>
-          <ProfileBanner profile={targetUser} />
-          <Container>
-            {targetUser.bannerImgUrl && (
-              <div className={cn("-mt-22", BANNER_BREAKPOINT)}></div>
-            )}
-            <div className="flex flex-col gap-4 pb-8 pt-2">
-              <ProfileHeader user={targetUser} />
+        <ProfileBanner profile={targetUser} />
+        <Container>
+          {targetUser.bannerImgUrl && (
+            <div className={cn("-mt-22", BANNER_BREAKPOINT)}></div>
+          )}
+          <div className="flex flex-col gap-4 pb-8 pt-2">
+            <ProfileHeader user={targetUser} />
 
-              <ProfileTabs nickname={params.nickname} />
-              {props.children}
-            </div>
-          </Container>
-        </ProfilePrivacyWrapper>
+            <ProfileTabs nickname={params.nickname} />
+            {props.children}
+          </div>
+        </Container>
       </UserProvider>
     </ProfileProvider>
   );

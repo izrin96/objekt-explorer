@@ -34,7 +34,20 @@ export default function Changelog() {
           </Modal.Description>
         </Modal.Header>
         <Modal.Body>
-          <DisclosureGroup defaultExpandedKeys={"1"}>
+          <DisclosureGroup defaultExpandedKeys={"7"}>
+            <Disclosure id={"7"}>
+              <DisclosureTrigger>2025-05-23</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>
+                      Cosmo profile will hide Discord info by default after
+                      successful link.
+                    </li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
             <Disclosure id={"1"}>
               <DisclosureTrigger>2025-05-22</DisclosureTrigger>
               <DisclosurePanel>
