@@ -37,7 +37,7 @@ export default function LinkRender() {
     <div className="flex flex-col justify-center items-center gap-5">
       {step === 0 && (
         <div className="flex flex-col justify-center items-center max-w-xl gap-4">
-          <h2 className="text-lg font-semibold">How its work</h2>
+          <h2 className="text-lg font-semibold">Link your Cosmo profile</h2>
           <Image
             priority
             src={SmartphoneIcon.src}
@@ -47,8 +47,10 @@ export default function LinkRender() {
             className="animate-in fade-in zoom-in duration-200"
           />
           <p>
-            You need to download the Cosmo app and sign in with the ID you want
-            to link before continue.
+            You need to download the Cosmo app and sign in with the Cosmo ID you
+            want to link before continuing. This linking process will{" "}
+            <span className="font-semibold">not</span> allow Objekt Tracker to
+            access your Cosmo, but only to verify ownership of it.
           </p>
           <Button
             intent="primary"
