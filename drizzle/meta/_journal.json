@@ -127,6 +127,13 @@
       "when": 1747994916461,
       "tag": "0017_thankful_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1748013814331,
+      "tag": "0018_yielding_viper",
+      "breakpoints": true
     }
   ]
 }

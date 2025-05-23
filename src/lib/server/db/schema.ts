@@ -123,6 +123,7 @@ export const profileListEntries = pgTable(
         onDelete: "cascade",
       }),
     tokenId: integer("token_id").notNull(),
+    receivedAt: timestamp("received_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [index("profile_list_entries_list_idx").on(t.listId)]
