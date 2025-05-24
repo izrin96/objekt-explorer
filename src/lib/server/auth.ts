@@ -14,6 +14,7 @@ import * as authSchema from "./db/auth-schema";
 import { sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({
+  appName: "Objekt Tracker",
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: authSchema,
@@ -40,6 +41,13 @@ export const auth = betterAuth({
       clientSecret: process.env.DISCORD_CLIENT_SECRET!,
       mapProfileToUser: (profile) => ({
         discord: profile.username,
+      }),
+    },
+    twitter: {
+      clientId: process.env.TWITTER_CLIENT_ID!,
+      clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+      mapProfileToUser: (profile) => ({
+        twitter: profile.username,
       }),
     },
   },

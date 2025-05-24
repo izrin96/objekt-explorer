@@ -7,6 +7,7 @@ import {
   DiscordLogoIcon,
   EnvelopeSimpleIcon,
   UserPlusIcon,
+  XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -25,9 +26,6 @@ export default function SignIn() {
           email and password, but you&apos;ll need to set your password using
           Forgot Password option.
         </Note> */}
-        <Note intent="default">
-          Sign in with email and password coming soon.
-        </Note>
         {state === "sign-in" && <SignInForm setState={setState} />}
         {state === "sign-up" && <SignUpForm setState={setState} />}
         {state === "forgot-password" && <ForgotPassword setState={setState} />}
@@ -42,7 +40,6 @@ function SignInForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const mutation = useMutation({
     mutationFn: async ({
       email,
@@ -121,22 +118,51 @@ function SignInForm({
         <span>Or continue with</span>
       </div> */}
 
-      <Button
-        intent="primary"
-        className="gap-2"
-        isDisabled={isPending}
-        onClick={() => {
-          startTransition(async () => {
-            await authClient.signIn.social({
-              provider: "discord",
-            });
-          });
-        }}
-      >
-        <DiscordLogoIcon size={24} weight="light" />
-        Sign in with Discord
-      </Button>
+      <SignInWithDiscord />
+      <SignInWithTwitter />
     </>
+  );
+}
+
+function SignInWithDiscord() {
+  const [isPending, startTransition] = useTransition();
+  return (
+    <Button
+      intent="primary"
+      className="gap-2"
+      isDisabled={isPending}
+      onClick={() => {
+        startTransition(async () => {
+          await authClient.signIn.social({
+            provider: "discord",
+          });
+        });
+      }}
+    >
+      <DiscordLogoIcon size={24} weight="light" />
+      Sign in with Discord
+    </Button>
+  );
+}
+
+function SignInWithTwitter() {
+  const [isPending, startTransition] = useTransition();
+  return (
+    <Button
+      intent="primary"
+      className="gap-2"
+      isDisabled={isPending}
+      onClick={() => {
+        startTransition(async () => {
+          await authClient.signIn.social({
+            provider: "twitter",
+          });
+        });
+      }}
+    >
+      <XLogoIcon size={24} weight="light" />
+      Sign in with Twitter (X)
+    </Button>
   );
 }
 
