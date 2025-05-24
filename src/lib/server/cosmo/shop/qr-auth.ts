@@ -8,13 +8,14 @@ import {
   TicketAuth,
   TicketCheck,
 } from "@/lib/universal/cosmo/shop/qr-auth";
+import { env } from "@/env";
 
 const RECAPTCHA_KEY = "6LeHzjYqAAAAAOR5Up9lFb_sC39YGo5aQFyVDrsK";
 
 export async function generateRecaptchaToken() {
   const launchArgs = JSON.stringify({ headless: "shell" });
   const browser = await chromium.connect({
-    browserWSEndpoint: `${process.env.BROWSER_CDP_URL!}&launch=${launchArgs}`,
+    browserWSEndpoint: `${env.BROWSER_CDP_URL!}&launch=${launchArgs}`,
   });
 
   const page = await browser.newPage();
