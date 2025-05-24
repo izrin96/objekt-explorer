@@ -2,17 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { Card } from "../ui";
-import { Leaf, Send, Disc3, RadioTowerIcon } from "lucide-react";
-import { Collection, Objekt, Transfer } from "@/lib/server/db/indexer/schema";
+import { Transfer } from "@/lib/server/db/indexer/schema";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { UserAddress } from "@/lib/server/db/schema";
 import UserLink from "../user-link";
 import { format } from "date-fns";
-import { mapOwnedObjekt } from "@/lib/universal/objekts";
+import { OwnedObjekt } from "@/lib/universal/objekts";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { env } from "@/env";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import ObjektModal from "../objekt/objekt-modal";
+import {
+  ArrowsClockwiseIcon,
+  BroadcastIcon,
+  LeafIcon,
+  PaperPlaneTiltIcon,
+} from "@phosphor-icons/react/dist/ssr";
 
 export default function ActivityRender() {
   return (
@@ -28,10 +33,10 @@ export default function ActivityRender() {
   );
 }
 
-type Data = Transfer & {
-  objekt: Objekt;
-  collection: Collection;
-  nicknames: UserAddress[];
+type Data = {
+  transfer: Transfer;
+  objekt: OwnedObjekt;
+  nicknames: Pick<UserAddress, "address" | "nickname">[];
 };
 type EventData = { type: string; data: Data };
 
@@ -82,10 +87,7 @@ function Activity() {
             </thead>
             <tbody className="[&_.tr:last-child]:border-0">
               {transfers.map((item) => (
-                <ObjektModal
-                  key={item.id}
-                  objekts={[mapOwnedObjekt(item.objekt, item.collection)]}
-                >
+                <ObjektModal key={item.transfer.id} objekts={[item.objekt]}>
                   {({ openObjekts }) => (
                     <ActivityRow item={item} open={openObjekts} />
                   )}
@@ -96,7 +98,7 @@ function Activity() {
         </div>
       ) : (
         <div className="flex flex-col justify-center gap-3 items-center h-64">
-          <RadioTowerIcon className="size-12" strokeWidth={1.5} />
+          <BroadcastIcon size={64} weight="light" />
           <p>Waiting for realtime update</p>
         </div>
       )}
@@ -106,47 +108,47 @@ function Activity() {
 
 function ActivityRow({ item, open }: { item: Data; open: () => void }) {
   const fromNickname = item.nicknames.find(
-    (a) => a.address.toLowerCase() === item.from
+    (a) => a.address.toLowerCase() === item.transfer.from
   )?.nickname;
 
   const toNickname = item.nicknames.find(
-    (a) => a.address.toLowerCase() === item.to
+    (a) => a.address.toLowerCase() === item.transfer.to
   )?.nickname;
 
   const from =
-    item.from === NULL_ADDRESS ? (
+    item.transfer.from === NULL_ADDRESS ? (
       <span>COSMO</span>
     ) : (
-      <UserLink address={item.from} nickname={fromNickname} />
+      <UserLink address={item.transfer.from} nickname={fromNickname} />
     );
 
   const to =
-    item.to === SPIN_ADDRESS ? (
+    item.transfer.to === SPIN_ADDRESS ? (
       <span>COSMO Spin</span>
     ) : (
-      <UserLink address={item.to} nickname={toNickname} />
+      <UserLink address={item.transfer.to} nickname={toNickname} />
     );
 
   return (
     <tr
-      key={item.id}
+      key={item.transfer.id}
       className="tr group relative cursor-default border-b text-fg outline-hidden ring-primary focus:ring-0 focus-visible:ring-1 duration-200 ease-out-quint animate-in slide-in-from-top *:animate-live-animation-bg"
     >
       <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         <div className="flex items-center gap-2 font-semibold">
-          {item.from === NULL_ADDRESS ? (
+          {item.transfer.from === NULL_ADDRESS ? (
             <>
-              <Leaf className="h-5" />
+              <LeafIcon size={18} weight="light" />
               <span>Mint</span>
             </>
-          ) : item.to === SPIN_ADDRESS ? (
+          ) : item.transfer.to === SPIN_ADDRESS ? (
             <>
-              <Disc3 className="h-5" />
+              <ArrowsClockwiseIcon size={18} weight="light" />
               <span>Spin</span>
             </>
           ) : (
             <>
-              <Send className="h-5" />
+              <PaperPlaneTiltIcon size={18} weight="light" />
               <span>Transfer</span>
             </>
           )}
@@ -156,7 +158,7 @@ function ActivityRow({ item, open }: { item: Data; open: () => void }) {
         className="group whitespace-nowrap px-3 py-2.5 outline-hidden cursor-pointer"
         onClick={open}
       >
-        {item.collection.collectionId}
+        {item.objekt.collectionId}
       </td>
       <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
         {item.objekt.serial}
@@ -168,7 +170,7 @@ function ActivityRow({ item, open }: { item: Data; open: () => void }) {
         {to}
       </td>
       <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
-        {format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}
+        {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </td>
     </tr>
   );
