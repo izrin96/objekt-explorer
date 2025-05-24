@@ -25,9 +25,9 @@ import {
   PlusIcon,
   DeviceMobileIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { GenerateDiscordFormat } from "./list/modal/generate-discord";
-import { CreateList } from "./list/modal/manage-list";
-import UserAccount from "./user-account";
+import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
+import { CreateListModal } from "./list/modal/manage-list";
+import UserAccountModal from "./user-account";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -55,95 +55,90 @@ export default function UserNav() {
 }
 
 function UserMenu({ user }: { user: User }) {
+  const [genOpen, setGenOpen] = useState(false);
+  const [pullOpen, setPullOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+  const [createListOpen, setCreateListOpen] = useState(false);
   const router = useRouter();
   return (
-    <UserAccount>
-      {({ open: openAccount }) => (
-        <PullDiscordProfile>
-          {({ open: openRefreshProfile }) => (
-            <GenerateDiscordFormat>
-              {({ open: openDiscordFormat }) => (
-                <CreateList>
-                  {({ open: openCreateList }) => (
-                    <Menu>
-                      <Menu.Trigger aria-label="Open Menu">
-                        <Avatar
-                          alt={user.name}
-                          initials={user.name.charAt(0)}
-                          size="medium"
-                          shape="square"
-                          src={user.image}
-                        />
-                      </Menu.Trigger>
-                      <Menu.Content
-                        respectScreen={false}
-                        placement="bottom right"
-                        className="sm:min-w-56"
-                      >
-                        <Menu.Section>
-                          <Menu.Header separator>
-                            <div className="flex flex-col">
-                              <span>{user.name}</span>
-                              {user.discord && (
-                                <span className="font-normal text-muted-fg inline-flex gap-1">
-                                  {user.discord}
-                                  <DiscordLogoIcon
-                                    size={16}
-                                    weight="regular"
-                                    className="self-center"
-                                  />
-                                </span>
-                              )}
-                            </div>
-                          </Menu.Header>
-                        </Menu.Section>
+    <>
+      <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
+      <UserAccountModal open={accountOpen} setOpen={setAccountOpen} />
+      <PullDiscordProfileModal open={pullOpen} setOpen={setPullOpen} />
+      <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
 
-                        <MyListMenuItem openCreateList={openCreateList} />
+      <Menu>
+        <Menu.Trigger aria-label="Open Menu">
+          <Avatar
+            alt={user.name}
+            initials={user.name.charAt(0)}
+            size="medium"
+            shape="square"
+            src={user.image}
+          />
+        </Menu.Trigger>
+        <Menu.Content
+          respectScreen={false}
+          placement="bottom right"
+          className="sm:min-w-56"
+        >
+          <Menu.Section>
+            <Menu.Header separator>
+              <div className="flex flex-col">
+                <span>{user.name}</span>
+                {user.discord && (
+                  <span className="font-normal text-muted-fg inline-flex gap-1">
+                    {user.discord}
+                    <DiscordLogoIcon
+                      size={16}
+                      weight="regular"
+                      className="self-center"
+                    />
+                  </span>
+                )}
+              </div>
+            </Menu.Header>
+          </Menu.Section>
 
-                        <Menu.Item onAction={openDiscordFormat}>
-                          <DiscordLogoIcon data-slot="icon" />
-                          <Menu.Label>Discord List Format</Menu.Label>
-                        </Menu.Item>
+          <MyListMenuItem openCreateList={() => setCreateListOpen(true)} />
 
-                        <MyCosmoProfileMenuItem />
+          <Menu.Item onAction={() => setGenOpen(true)}>
+            <DiscordLogoIcon data-slot="icon" />
+            <Menu.Label>Discord List Format</Menu.Label>
+          </Menu.Item>
 
-                        <Menu.Item onAction={openAccount}>
-                          <UserIcon data-slot="icon" />
-                          <Menu.Label>Account</Menu.Label>
-                        </Menu.Item>
+          <MyCosmoProfileMenuItem />
 
-                        <Menu.Item onAction={openRefreshProfile}>
-                          <DiscordLogoIcon data-slot="icon" size={16} />
-                          <Menu.Label>Refresh Profile</Menu.Label>
-                        </Menu.Item>
+          <Menu.Item onAction={() => setAccountOpen(true)}>
+            <UserIcon data-slot="icon" />
+            <Menu.Label>Account</Menu.Label>
+          </Menu.Item>
 
-                        <Menu.Separator />
+          <Menu.Item onAction={() => setPullOpen(true)}>
+            <DiscordLogoIcon data-slot="icon" size={16} />
+            <Menu.Label>Refresh Profile</Menu.Label>
+          </Menu.Item>
 
-                        <Menu.Item
-                          onAction={() => {
-                            authClient.signOut({
-                              fetchOptions: {
-                                onSuccess: () => {
-                                  toast.success("Sign out successful");
-                                  router.refresh();
-                                },
-                              },
-                            });
-                          }}
-                        >
-                          <SignOutIcon data-slot="icon" />
-                          <Menu.Label>Sign out</Menu.Label>
-                        </Menu.Item>
-                      </Menu.Content>
-                    </Menu>
-                  )}
-                </CreateList>
-              )}
-            </GenerateDiscordFormat>
-          )}
-        </PullDiscordProfile>
-      )}
-    </UserAccount>
+          <Menu.Separator />
+
+          <Menu.Item
+            onAction={() => {
+              authClient.signOut({
+                fetchOptions: {
+                  onSuccess: () => {
+                    toast.success("Sign out successful");
+                    router.refresh();
+                  },
+                },
+              });
+            }}
+          >
+            <SignOutIcon data-slot="icon" />
+            <Menu.Label>Sign out</Menu.Label>
+          </Menu.Item>
+        </Menu.Content>
+      </Menu>
+    </>
   );
 }
 
@@ -227,13 +222,13 @@ function MyCosmoProfileMenuItem() {
   );
 }
 
-function PullDiscordProfile({
-  children,
-}: {
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
+type PullDiscordModalProps = {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+function PullDiscordProfileModal({ open, setOpen }: PullDiscordModalProps) {
   const session = authClient.useSession();
-  const [open, setOpen] = useState(false);
   const refreshProfile = api.user.refreshProfile.useMutation({
     onSuccess: () => {
       session.refetch();
@@ -245,38 +240,31 @@ function PullDiscordProfile({
     },
   });
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Modal.Header>
+        <Modal.Title>Update Profile from Discord</Modal.Title>
+        <Modal.Description>
+          This will update your username and profile picture from Discord. Only
+          works if your account linked with Discord.
+        </Modal.Description>
+      </Modal.Header>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
             refreshProfile.mutate();
           }}
         >
-          <Modal.Header>
-            <Modal.Title>Update Profile from Discord</Modal.Title>
-            <Modal.Description>
-              This will update your username and profile picture from Discord.
-              Only works if your account linked with Discord.
-            </Modal.Description>
-          </Modal.Header>
-          <Modal.Footer>
-            <Modal.Close>Cancel</Modal.Close>
-            <Button
-              intent="primary"
-              type="submit"
-              isPending={refreshProfile.isPending}
-            >
-              Continue
-            </Button>
-          </Modal.Footer>
+          <Button
+            intent="primary"
+            type="submit"
+            isPending={refreshProfile.isPending}
+          >
+            Continue
+          </Button>
         </Form>
-      </Modal.Content>
-    </>
+      </Modal.Footer>
+    </Modal.Content>
   );
 }

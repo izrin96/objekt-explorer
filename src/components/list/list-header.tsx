@@ -1,16 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, Button } from "../ui";
 import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useListAuthed } from "@/hooks/use-user";
-import { EditList } from "./modal/manage-list";
+import { EditListModal } from "./modal/manage-list";
 import { PublicList } from "@/lib/server/api/routers/list";
 import { useRouter } from "next/navigation";
 
 export default function ListHeader({ list }: { list: PublicList }) {
   const isListAuthed = useListAuthed(list.slug);
-  const router = useRouter();
   return (
     <div className="flex gap-4 flex-col sm:flex-row items-start sm:items-center flex-wrap">
       <div className="flex gap-3 items-center">
@@ -41,25 +40,32 @@ export default function ListHeader({ list }: { list: PublicList }) {
         </div>
       </div>
 
-      {isListAuthed && (
-        <EditList
-          slug={list.slug}
-          onComplete={() => {
-            router.refresh();
-          }}
-        >
-          {({ open }) => (
-            <Button
-              size="small"
-              intent="outline"
-              onClick={open}
-              className="w-full sm:w-auto flex-none"
-            >
-              Edit List
-            </Button>
-          )}
-        </EditList>
-      )}
+      {isListAuthed && <EditList slug={list.slug} />}
     </div>
+  );
+}
+
+function EditList({ slug }: { slug: string }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <EditListModal
+        slug={slug}
+        onComplete={() => {
+          router.refresh();
+        }}
+        open={open}
+        setOpen={setOpen}
+      />
+      <Button
+        size="small"
+        intent="outline"
+        onClick={() => setOpen(true)}
+        className="w-full sm:w-auto flex-none"
+      >
+        Edit List
+      </Button>
+    </>
   );
 }

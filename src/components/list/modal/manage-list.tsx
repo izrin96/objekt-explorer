@@ -13,16 +13,17 @@ import {
 } from "@/components/ui";
 import { api } from "@/lib/trpc/client";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { Suspense, useState } from "react";
+import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
-export function CreateList({
-  children,
-}: {
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+type CreateListModalProps = {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export function CreateListModal({ open, setOpen }: CreateListModalProps) {
+  const formRef = useRef<HTMLFormElement>(null!);
   const utils = api.useUtils();
   const createList = api.list.create.useMutation({
     onSuccess: () => {
@@ -35,14 +36,13 @@ export function CreateList({
     },
   });
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Modal.Header>
+        <Modal.Title>Create list</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
         <Form
+          ref={formRef}
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
@@ -52,46 +52,44 @@ export function CreateList({
             });
           }}
         >
-          <Modal.Header>
-            <Modal.Title>Create list</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <div className="flex flex-col gap-6">
-              <TextField
-                isRequired
-                autoFocus
-                label="Name"
-                placeholder="My list"
-                name="name"
-              />
-              <Checkbox
-                label="Hide User"
-                name="hideUser"
-                description="Hide Objekt Tracker account from this list"
-                defaultSelected={true}
-              />
-            </div>
-          </Modal.Body>
-          <Modal.Footer>
-            <Modal.Close>Cancel</Modal.Close>
-            <Button type="submit" isPending={createList.isPending}>
-              Create
-            </Button>
-          </Modal.Footer>
+          <div className="flex flex-col gap-6">
+            <TextField
+              isRequired
+              autoFocus
+              label="Name"
+              placeholder="My list"
+              name="name"
+            />
+            <Checkbox
+              label="Hide User"
+              name="hideUser"
+              description="Hide Objekt Tracker account from this list"
+              defaultSelected={true}
+            />
+          </div>
         </Form>
-      </Modal.Content>
-    </>
+      </Modal.Body>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
+        <Button
+          type="submit"
+          isPending={createList.isPending}
+          onClick={() => formRef.current.requestSubmit()}
+        >
+          Create
+        </Button>
+      </Modal.Footer>
+    </Modal.Content>
   );
 }
 
-export function DeleteList({
-  slug,
-  children,
-}: {
+type DeleteListModalProps = {
   slug: string;
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
   const utils = api.useUtils();
   const deleteList = api.list.delete.useMutation({
     onSuccess: () => {
@@ -104,51 +102,48 @@ export function DeleteList({
     },
   });
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Modal.Header>
+        <Modal.Title>Delete list</Modal.Title>
+        <Modal.Description>
+          This will permanently delete the selected list. Continue?
+        </Modal.Description>
+      </Modal.Header>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
             deleteList.mutate({ slug });
           }}
         >
-          <Modal.Header>
-            <Modal.Title>Delete list</Modal.Title>
-            <Modal.Description>
-              This will permanently delete the selected list. Continue?
-            </Modal.Description>
-          </Modal.Header>
-          <Modal.Footer>
-            <Modal.Close>Cancel</Modal.Close>
-            <Button
-              intent="danger"
-              type="submit"
-              isPending={deleteList.isPending}
-            >
-              Continue
-            </Button>
-          </Modal.Footer>
+          <Button
+            intent="danger"
+            type="submit"
+            isPending={deleteList.isPending}
+          >
+            Continue
+          </Button>
         </Form>
-      </Modal.Content>
-    </>
+      </Modal.Footer>
+    </Modal.Content>
   );
 }
 
-export function EditList({
-  slug,
-  onComplete,
-  children,
-}: {
+type EditListModalProps = {
   slug: string;
   onComplete?: () => void;
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export function EditListModal({
+  slug,
+  onComplete,
+  open,
+  setOpen,
+}: EditListModalProps) {
+  const formRef = useRef<HTMLFormElement>(null!);
   const utils = api.useUtils();
   const editList = api.list.edit.useMutation({
     onSuccess: () => {
@@ -163,14 +158,14 @@ export function EditList({
     },
   });
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Sheet.Content isOpen={open} onOpenChange={setOpen}>
+    <Sheet.Content isOpen={open} onOpenChange={setOpen}>
+      <Sheet.Header>
+        <Sheet.Title>Edit list</Sheet.Title>
+        <Sheet.Description>Manage your list</Sheet.Description>
+      </Sheet.Header>
+      <Sheet.Body>
         <Form
+          ref={formRef}
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
@@ -181,39 +176,37 @@ export function EditList({
             });
           }}
         >
-          <Sheet.Header>
-            <Sheet.Title>Edit list</Sheet.Title>
-            <Sheet.Description>Manage your list</Sheet.Description>
-          </Sheet.Header>
-          <Sheet.Body>
-            <QueryErrorResetBoundary>
-              {({ reset }) => (
-                <ErrorBoundary
-                  onReset={reset}
-                  FallbackComponent={ErrorFallbackRender}
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary
+                onReset={reset}
+                FallbackComponent={ErrorFallbackRender}
+              >
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
+                  }
                 >
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center">
-                        <Loader variant="ring" />
-                      </div>
-                    }
-                  >
-                    <EditListForm slug={slug} />
-                  </Suspense>
-                </ErrorBoundary>
-              )}
-            </QueryErrorResetBoundary>
-          </Sheet.Body>
-          <Sheet.Footer>
-            <Sheet.Close>Cancel</Sheet.Close>
-            <Button type="submit" isPending={editList.isPending}>
-              Save
-            </Button>
-          </Sheet.Footer>
+                  <EditListForm slug={slug} />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
         </Form>
-      </Sheet.Content>
-    </>
+      </Sheet.Body>
+      <Sheet.Footer>
+        <Sheet.Close>Cancel</Sheet.Close>
+        <Button
+          onClick={() => formRef.current.requestSubmit()}
+          type="submit"
+          isPending={editList.isPending}
+        >
+          Save
+        </Button>
+      </Sheet.Footer>
+    </Sheet.Content>
   );
 }
 

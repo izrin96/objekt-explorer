@@ -1,14 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, Button, buttonStyles, Link } from "../ui";
 import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { PublicProfile } from "@/lib/universal/user";
 import { useProfileAuthed } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
-import { EditProfile } from "../link/modal/manage-link";
+import { EditProfileModal } from "../link/modal/manage-link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
+  const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const router = useRouter();
   return (
@@ -34,24 +35,25 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       </Link>
 
       {isProfileAuthed && (
-        <EditProfile
-          address={user.address}
-          nickname={user.nickname}
-          onComplete={() => {
-            router.refresh();
-          }}
-        >
-          {({ open }) => (
-            <Button
-              size="small"
-              intent="outline"
-              onClick={open}
-              className="w-full md:w-auto flex-none"
-            >
-              Edit Profile
-            </Button>
-          )}
-        </EditProfile>
+        <>
+          <EditProfileModal
+            address={user.address}
+            nickname={user.nickname}
+            onComplete={() => {
+              router.refresh();
+            }}
+            open={editOpen}
+            setOpen={setEditOpen}
+          />
+          <Button
+            size="small"
+            intent="outline"
+            onClick={() => setEditOpen(true)}
+            className="w-full md:w-auto flex-none"
+          >
+            Edit Profile
+          </Button>
+        </>
       )}
 
       {user.user && (

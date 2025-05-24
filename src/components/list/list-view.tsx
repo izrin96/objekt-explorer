@@ -24,7 +24,7 @@ import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
-import { AddToList, RemoveFromList } from "./modal/manage-objekt";
+import { AddToListModal, RemoveFromListModal } from "./modal/manage-objekt";
 import { useListAuthed, useUser } from "@/hooks/use-user";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
@@ -200,25 +200,52 @@ function Filters({
         <SelectMode>
           {({ handleAction }) =>
             isOwned ? (
-              <RemoveFromList slug={slug}>
-                {({ open }) => (
-                  <Button intent="outline" onClick={() => handleAction(open)}>
-                    Remove from list
-                  </Button>
-                )}
-              </RemoveFromList>
+              <RemoveFromList slug={slug} handleAction={handleAction} />
             ) : (
-              <AddToList>
-                {({ open }) => (
-                  <Button intent="outline" onClick={() => handleAction(open)}>
-                    Add to list
-                  </Button>
-                )}
-              </AddToList>
+              <AddToList handleAction={handleAction} />
             )
           }
         </SelectMode>
       )}
     </div>
+  );
+}
+
+type RemoveProps = {
+  slug: string;
+  handleAction: (open: () => void) => void;
+};
+
+function RemoveFromList({ slug, handleAction }: RemoveProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <RemoveFromListModal slug={slug} open={open} setOpen={setOpen} />
+      <Button
+        intent="outline"
+        onClick={() => handleAction(() => setOpen(true))}
+      >
+        Remove from list
+      </Button>
+    </>
+  );
+}
+
+type AddProps = {
+  handleAction: (open: () => void) => void;
+};
+
+function AddToList({ handleAction }: AddProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <AddToListModal open={open} setOpen={setOpen} />
+      <Button
+        intent="outline"
+        onClick={() => handleAction(() => setOpen(true))}
+      >
+        Add to list
+      </Button>
+    </>
   );
 }

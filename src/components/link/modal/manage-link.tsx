@@ -16,20 +16,23 @@ import { api } from "@/lib/trpc/client";
 import { mimeTypes } from "@/lib/utils";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-import { Suspense, useCallback, useState, useTransition } from "react";
+import { Suspense, useCallback, useRef, useState, useTransition } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-export function RemoveLink({
-  address,
-  children,
-}: {
+type RemoveLinkModalProps = {
   address: string;
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export function RemoveLinkModal({
+  address,
+  open,
+  setOpen,
+}: RemoveLinkModalProps) {
   const utils = api.useUtils();
   const removeLink = api.cosmoLink.removeLink.useMutation({
     onSuccess: () => {
@@ -42,54 +45,51 @@ export function RemoveLink({
     },
   });
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Modal.Header>
+        <Modal.Title>Unlink Cosmo</Modal.Title>
+        <Modal.Description>
+          This will unlink your Cosmo from this account. You can link it again
+          later. Continue?
+        </Modal.Description>
+      </Modal.Header>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
             removeLink.mutate(address);
           }}
         >
-          <Modal.Header>
-            <Modal.Title>Unlink Cosmo</Modal.Title>
-            <Modal.Description>
-              This will unlink your Cosmo from this account. You can link it
-              again later. Continue?
-            </Modal.Description>
-          </Modal.Header>
-          <Modal.Footer>
-            <Modal.Close>Cancel</Modal.Close>
-            <Button
-              intent="danger"
-              type="submit"
-              isPending={removeLink.isPending}
-            >
-              Continue
-            </Button>
-          </Modal.Footer>
+          <Button
+            intent="danger"
+            type="submit"
+            isPending={removeLink.isPending}
+          >
+            Continue
+          </Button>
         </Form>
-      </Modal.Content>
-    </>
+      </Modal.Footer>
+    </Modal.Content>
   );
 }
 
-export function EditProfile({
-  nickname,
-  address,
-  onComplete,
-  children,
-}: {
+type EditProfileModalProps = {
   nickname: string;
   address: string;
   onComplete?: () => void;
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export function EditProfileModal({
+  nickname,
+  address,
+  onComplete,
+  open,
+  setOpen,
+}: EditProfileModalProps) {
+  const formRef = useRef<HTMLFormElement>(null!);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
 
@@ -150,14 +150,17 @@ export function EditProfile({
   }, []);
 
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Sheet.Content isOpen={open} onOpenChange={setOpen}>
+    <Sheet.Content isOpen={open} onOpenChange={setOpen}>
+      <Sheet.Header>
+        <Sheet.Title>Edit Profile</Sheet.Title>
+        <Sheet.Description>
+          Currently editing <span className="text-fg">{nickname}</span> Cosmo
+          profile
+        </Sheet.Description>
+      </Sheet.Header>
+      <Sheet.Body>
         <Form
+          ref={formRef}
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
@@ -201,64 +204,56 @@ export function EditProfile({
             });
           }}
         >
-          <Sheet.Header>
-            <Sheet.Title>Edit Profile</Sheet.Title>
-            <Sheet.Description>
-              Currently editing <span className="text-fg">{nickname}</span>{" "}
-              Cosmo profile
-            </Sheet.Description>
-          </Sheet.Header>
-          <Sheet.Body>
-            <QueryErrorResetBoundary>
-              {({ reset }) => (
-                <ErrorBoundary
-                  onReset={reset}
-                  FallbackComponent={ErrorFallbackRender}
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary
+                onReset={reset}
+                FallbackComponent={ErrorFallbackRender}
+              >
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
+                  }
                 >
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center">
-                        <Loader variant="ring" />
-                      </div>
-                    }
-                  >
-                    <EditProfileForm
-                      address={address}
-                      droppedImage={droppedImage}
-                      handleSelectImage={handleSelectImage}
-                    />
-                  </Suspense>
-                </ErrorBoundary>
-              )}
-            </QueryErrorResetBoundary>
-          </Sheet.Body>
-          <Sheet.Footer>
-            <Sheet.Close>Cancel</Sheet.Close>
-            <Button
-              intent="primary"
-              type="submit"
-              isPending={
-                edit.isPending || getPresignedUrl.isPending || isUploading
-              }
-            >
-              Save
-            </Button>
-          </Sheet.Footer>
+                  <EditProfileForm
+                    address={address}
+                    droppedImage={droppedImage}
+                    handleSelectImage={handleSelectImage}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
         </Form>
-      </Sheet.Content>
-    </>
+      </Sheet.Body>
+      <Sheet.Footer>
+        <Sheet.Close>Cancel</Sheet.Close>
+        <Button
+          onClick={() => formRef.current.requestSubmit()}
+          intent="primary"
+          type="submit"
+          isPending={edit.isPending || getPresignedUrl.isPending || isUploading}
+        >
+          Save
+        </Button>
+      </Sheet.Footer>
+    </Sheet.Content>
   );
 }
+
+type EditProfileProps = {
+  address: string;
+  droppedImage: File | null;
+  handleSelectImage: (files: FileList | null) => void;
+};
 
 function EditProfileForm({
   address,
   droppedImage,
   handleSelectImage,
-}: {
-  address: string;
-  droppedImage: File | null;
-  handleSelectImage: (files: FileList | null) => void;
-}) {
+}: EditProfileProps) {
   const [data] = api.profile.get.useSuspenseQuery(address);
   return (
     <div className="flex flex-col gap-6">

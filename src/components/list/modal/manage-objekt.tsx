@@ -2,7 +2,7 @@
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { api } from "@/lib/trpc/client";
-import { Suspense, useState } from "react";
+import { Suspense, useRef } from "react";
 import { toast } from "sonner";
 import {
   Button,
@@ -17,16 +17,16 @@ import {
 import ErrorFallbackRender from "../../error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
-import { CreateList } from "./manage-list";
 
-export function AddToList({
-  children,
-}: {
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
+type AddToListModalProps = {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export function AddToListModal({ open, setOpen }: AddToListModalProps) {
+  const formRef = useRef<HTMLFormElement>(null!);
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const [open, setOpen] = useState(false);
   const addToList = api.list.addObjektsToList.useMutation({
     onSuccess: (rowCount) => {
       setOpen(false);
@@ -40,14 +40,13 @@ export function AddToList({
     },
   });
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Modal.Header>
+        <Modal.Title>Add to list</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
         <Form
+          ref={formRef}
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
@@ -58,38 +57,37 @@ export function AddToList({
             });
           }}
         >
-          <Modal.Header>
-            <Modal.Title>Add to list</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <QueryErrorResetBoundary>
-              {({ reset }) => (
-                <ErrorBoundary
-                  onReset={reset}
-                  FallbackComponent={ErrorFallbackRender}
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary
+                onReset={reset}
+                FallbackComponent={ErrorFallbackRender}
+              >
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
+                  }
                 >
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center">
-                        <Loader variant="ring" />
-                      </div>
-                    }
-                  >
-                    <AddToListForm />
-                  </Suspense>
-                </ErrorBoundary>
-              )}
-            </QueryErrorResetBoundary>
-          </Modal.Body>
-          <Modal.Footer>
-            <Modal.Close>Cancel</Modal.Close>
-            <Button type="submit" isPending={addToList.isPending}>
-              Add
-            </Button>
-          </Modal.Footer>
+                  <AddToListForm />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
         </Form>
-      </Modal.Content>
-    </>
+      </Modal.Body>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
+        <Button
+          type="submit"
+          isPending={addToList.isPending}
+          onClick={() => formRef.current.requestSubmit()}
+        >
+          Add
+        </Button>
+      </Modal.Footer>
+    </Modal.Content>
   );
 }
 
@@ -134,16 +132,19 @@ function AddToListForm() {
   );
 }
 
-export function RemoveFromList({
-  slug,
-  children,
-}: {
+type RemoveFromListModalProps = {
   slug: string;
-  children: ({ open }: { open: () => void }) => React.ReactNode;
-}) {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export function RemoveFromListModal({
+  slug,
+  open,
+  setOpen,
+}: RemoveFromListModalProps) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const [open, setOpen] = useState(false);
   const utils = api.useUtils();
   const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
     onSuccess: () => {
@@ -159,13 +160,16 @@ export function RemoveFromList({
     },
   });
   return (
-    <>
-      {children({
-        open: () => {
-          setOpen(true);
-        },
-      })}
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Modal.Header>
+        <Modal.Title>Remove objekt</Modal.Title>
+        <Modal.Description>
+          This will permanently remove the selected objekt from the list.
+          Continue?
+        </Modal.Description>
+      </Modal.Header>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
         <Form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -175,25 +179,15 @@ export function RemoveFromList({
             });
           }}
         >
-          <Modal.Header>
-            <Modal.Title>Remove objekt</Modal.Title>
-            <Modal.Description>
-              This will permanently remove the selected objekt from the list.
-              Continue?
-            </Modal.Description>
-          </Modal.Header>
-          <Modal.Footer>
-            <Modal.Close>Cancel</Modal.Close>
-            <Button
-              intent="danger"
-              type="submit"
-              isPending={removeObjektsFromList.isPending}
-            >
-              Continue
-            </Button>
-          </Modal.Footer>
+          <Button
+            intent="danger"
+            type="submit"
+            isPending={removeObjektsFromList.isPending}
+          >
+            Continue
+          </Button>
         </Form>
-      </Modal.Content>
-    </>
+      </Modal.Footer>
+    </Modal.Content>
   );
 }

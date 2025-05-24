@@ -27,7 +27,7 @@ import Filter from "./filter";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { FilterSheet } from "../filters/filter-sheet";
 import { FilterContainer } from "../filters/filter-container";
-import { AddToList } from "../list/modal/manage-objekt";
+import { AddToListModal } from "../list/modal/manage-objekt";
 import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
 import { AddToListMenu, ObjektStaticMenu } from "../objekt/objekt-menu";
@@ -153,19 +153,22 @@ function IndexView() {
 }
 
 function Filters({ authenticated }: { authenticated: boolean }) {
+  const [addOpen, setAddOpen] = useState(false);
   return (
     <div className="flex flex-col gap-6">
       <Filter />
       {authenticated && (
         <SelectMode>
           {({ handleAction }) => (
-            <AddToList>
-              {({ open }) => (
-                <Button intent="outline" onClick={() => handleAction(open)}>
-                  Add to list
-                </Button>
-              )}
-            </AddToList>
+            <>
+              <AddToListModal open={addOpen} setOpen={setAddOpen} />
+              <Button
+                intent="outline"
+                onClick={() => handleAction(() => setAddOpen(true))}
+              >
+                Add to list
+              </Button>
+            </>
           )}
         </SelectMode>
       )}

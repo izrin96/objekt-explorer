@@ -45,7 +45,7 @@ import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
-import { AddToList } from "../list/modal/manage-objekt";
+import { AddToListModal } from "../list/modal/manage-objekt";
 import ObjektModal from "../objekt/objekt-modal";
 import {
   AddToListMenu,
@@ -264,6 +264,7 @@ function Filters({
   authenticated: boolean;
   isOwned: boolean;
 }) {
+  const [addOpen, setAddOpen] = useState(false);
   return (
     <div className="flex flex-col gap-6">
       <Filter />
@@ -271,13 +272,13 @@ function Filters({
         <SelectMode>
           {({ handleAction }) => (
             <>
-              <AddToList>
-                {({ open }) => (
-                  <Button intent="outline" onClick={() => handleAction(open)}>
-                    Add to list
-                  </Button>
-                )}
-              </AddToList>
+              <AddToListModal open={addOpen} setOpen={setAddOpen} />
+              <Button
+                intent="outline"
+                onClick={() => handleAction(() => setAddOpen(true))}
+              >
+                Add to list
+              </Button>
               {isOwned && (
                 <>
                   <PinObjekt address={address} handleAction={handleAction} />
