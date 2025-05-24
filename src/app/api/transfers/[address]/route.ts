@@ -61,7 +61,12 @@ export async function GET(
 
   const results = await indexer
     .select({
-      transfer: transfers,
+      transfer: {
+        id: transfers.id,
+        from: transfers.from,
+        to: transfers.to,
+        timestamp: transfers.timestamp,
+      },
       objekt: objekts,
       collection: {
         ...getCollectionColumns(),

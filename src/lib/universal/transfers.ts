@@ -9,7 +9,7 @@ import {
 } from "./cosmo/common";
 
 export type AggregatedTransfer = {
-  transfer: Transfer;
+  transfer: Pick<Transfer, "id" | "from" | "to" | "timestamp">;
   objekt: OwnedObjekt;
   fromNickname?: string;
   toNickname?: string;
