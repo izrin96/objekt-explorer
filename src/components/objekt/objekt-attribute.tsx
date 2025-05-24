@@ -120,10 +120,12 @@ export function AttributePanel({
         objekt={objekt}
       />
       <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />
-      <Pill
-        label="Created at"
-        value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
-      />
+      {objekt.createdAt && (
+        <Pill
+          label="Created at"
+          value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
+        />
+      )}
       {unobtainable && (
         <Badge intent="custom" shape="square" className="font-semibold">
           Unobtainable
