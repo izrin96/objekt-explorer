@@ -12,7 +12,8 @@ export const user = pgTable("user", {
   // custom
   username: citext("username").unique(),
   displayUsername: citext("display_username"),
-  discord: citext("discord"),
+  discord: text("discord"),
+  twitter: text("twitter"),
   showSocial: boolean("show_social").default(false),
 });
 

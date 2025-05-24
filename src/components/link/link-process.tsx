@@ -49,7 +49,7 @@ export default function LinkRender() {
           <p>
             You need to download the Cosmo app and sign in with the Cosmo ID you
             want to link before continuing. This linking process will{" "}
-            <span className="font-semibold">not</span> allow Objekt Tracker to
+            <span className="font-bold">not</span> allow Objekt Tracker to
             access your Cosmo, but only to verify ownership of it.
           </p>
           <Button

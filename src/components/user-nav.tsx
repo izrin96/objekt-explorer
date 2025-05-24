@@ -24,6 +24,7 @@ import {
   GearSixIcon,
   PlusIcon,
   DeviceMobileIcon,
+  XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
@@ -86,16 +87,28 @@ function UserMenu({ user }: { user: User }) {
             <Menu.Header separator>
               <div className="flex flex-col">
                 <span>{user.name}</span>
-                {user.discord && (
-                  <span className="font-normal text-muted-fg inline-flex gap-1">
-                    {user.discord}
-                    <DiscordLogoIcon
-                      size={16}
-                      weight="regular"
-                      className="self-center"
-                    />
-                  </span>
-                )}
+                <div className="flex gap-2">
+                  {user.discord && (
+                    <span className="font-normal text-muted-fg inline-flex gap-1">
+                      {user.discord}
+                      <DiscordLogoIcon
+                        size={16}
+                        weight="regular"
+                        className="self-center"
+                      />
+                    </span>
+                  )}
+                  {user.twitter && (
+                    <span className="font-normal text-muted-fg inline-flex gap-1">
+                      {user.twitter}
+                      <XLogoIcon
+                        size={16}
+                        weight="regular"
+                        className="self-center"
+                      />
+                    </span>
+                  )}
+                </div>
               </div>
             </Menu.Header>
           </Menu.Section>

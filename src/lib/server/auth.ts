@@ -60,6 +60,11 @@ export const auth = betterAuth({
         required: false,
         returned: true,
       },
+      twitter: {
+        type: "string",
+        required: false,
+        returned: true,
+      },
       showSocial: {
         type: "boolean",
         required: false,
@@ -100,6 +105,7 @@ export async function fetchUserByIdentifier(
           username: true,
           image: true,
           discord: true,
+          twitter: true,
           displayUsername: true,
           showSocial: true,
         },
@@ -160,6 +166,7 @@ export function toPublicUser(session: Session | null): PublicUser | undefined {
 
   return {
     discord: session.user.showSocial ? session.user.discord : null,
+    twitter: session.user.showSocial ? session.user.twitter : null,
     displayUsername: session.user.displayUsername,
     image: session.user.image,
     name: session.user.name,
@@ -172,5 +179,6 @@ export function mapPublicUser(user: PublicUser): PublicUser {
   return {
     ...user,
     discord: user.showSocial ? user.discord : null,
+    twitter: user.showSocial ? user.twitter : null,
   };
 }
