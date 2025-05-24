@@ -9,8 +9,11 @@ import { ofetch } from "ofetch";
 import { useRouter } from "nextjs-toploader/app";
 import { usePathname } from "next/navigation";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
+import { useUserSearchStore } from "@/hooks/use-user-search-store";
 
 export default function UserSearch() {
+  const recentUsers = useUserSearchStore((a) => a.users);
+  const addRecent = useUserSearchStore((a) => a.add);
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -29,20 +32,24 @@ export default function UserSearch() {
     enabled: enable,
   });
 
-  const onAction = useCallback(
-    (nickname: string) => {
+  const selectUser = useCallback(
+    (user: CosmoPublicUser) => {
       setIsOpen(false);
       setQuery("");
-      router.push(`/@${nickname}`);
+      setResult([]);
+      addRecent(user);
+      router.push(`/@${user.nickname}`);
     },
     [router, setIsOpen]
   );
 
+  // set result after getting data
   useEffect(() => {
     if (isPending) return;
     setResult(data ?? []);
   }, [isPending, data]);
 
+  // force close if pathname change
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
@@ -63,14 +70,23 @@ export default function UserSearch() {
         onOpenChange={setIsOpen}
       >
         <CommandMenu.Search placeholder="Search user..." />
-        <CommandMenu.List
-          autoFocus="first"
-          shouldFocusWrap
-          onAction={(key) => onAction(key.toString())}
-        >
+        <CommandMenu.List autoFocus="first" shouldFocusWrap>
           <CommandMenu.Section title="Results">
             {result.map((user) => (
               <CommandMenu.Item
+                onAction={() => selectUser(user)}
+                key={user.nickname}
+                id={user.nickname}
+                textValue={user.nickname}
+              >
+                {user.nickname}
+              </CommandMenu.Item>
+            ))}
+          </CommandMenu.Section>
+          <CommandMenu.Section title="Recents">
+            {recentUsers.map((user) => (
+              <CommandMenu.Item
+                onAction={() => selectUser(user)}
                 key={user.nickname}
                 id={user.nickname}
                 textValue={user.nickname}
