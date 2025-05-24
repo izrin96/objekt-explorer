@@ -56,7 +56,7 @@ function Activity() {
       if (message.type === "history") {
         setTransfers(message.data);
       } else {
-        setTransfers((prev) => [message.data, ...prev.slice(0, 99)]);
+        setTransfers((prev) => [message.data, ...prev]);
       }
     };
 
