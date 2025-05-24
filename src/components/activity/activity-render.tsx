@@ -19,6 +19,17 @@ import {
   PaperPlaneTiltIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
+const MAX_HISTORY = 500;
+
+type Data = {
+  transfer: Transfer;
+  objekt: OwnedObjekt;
+  nicknames: Pick<UserAddress, "address" | "nickname">[];
+};
+type WebSocketMessage =
+  | { type: "transfer"; data: Data }
+  | { type: "history"; data: Data[] };
+
 export default function ActivityRender() {
   return (
     <div className="flex flex-col gap-6 pt-2 pb-8">
@@ -32,15 +43,6 @@ export default function ActivityRender() {
     </div>
   );
 }
-
-type Data = {
-  transfer: Transfer;
-  objekt: OwnedObjekt;
-  nicknames: Pick<UserAddress, "address" | "nickname">[];
-};
-type WebSocketMessage =
-  | { type: "transfer"; data: Data }
-  | { type: "history"; data: Data[] };
 
 function Activity() {
   const [transfers, setTransfers] = useState<Data[]>([]);
@@ -56,7 +58,10 @@ function Activity() {
       if (message.type === "history") {
         setTransfers(message.data);
       } else {
-        setTransfers((prev) => [message.data, ...prev]);
+        setTransfers((prev) => [
+          message.data,
+          ...prev.slice(0, MAX_HISTORY - 1),
+        ]);
       }
     };
 
