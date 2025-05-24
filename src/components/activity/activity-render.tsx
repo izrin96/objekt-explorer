@@ -38,7 +38,9 @@ type Data = {
   objekt: OwnedObjekt;
   nicknames: Pick<UserAddress, "address" | "nickname">[];
 };
-type EventData = { type: string; data: Data };
+type WebSocketMessage =
+  | { type: "transfer"; data: Data }
+  | { type: "history"; data: Data[] };
 
 function Activity() {
   const [transfers, setTransfers] = useState<Data[]>([]);
@@ -49,8 +51,13 @@ function Activity() {
     );
 
     ws.onmessage = (event) => {
-      const { data } = JSON.parse(event.data) as EventData;
-      setTransfers((prev) => [data, ...prev.slice(0, 99)]);
+      const message = JSON.parse(event.data) as WebSocketMessage;
+
+      if (message.type === "history") {
+        setTransfers(message.data);
+      } else {
+        setTransfers((prev) => [message.data, ...prev.slice(0, 99)]);
+      }
     };
 
     return () => {
