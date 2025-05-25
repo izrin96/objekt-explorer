@@ -109,14 +109,14 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
           This will permanently delete the selected list. Continue?
         </Modal.Description>
       </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
-        <Form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            deleteList.mutate({ slug });
-          }}
-        >
+      <Form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          deleteList.mutate({ slug });
+        }}
+      >
+        <Modal.Footer>
+          <Modal.Close>Cancel</Modal.Close>
           <Button
             intent="danger"
             type="submit"
@@ -124,8 +124,8 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
           >
             Continue
           </Button>
-        </Form>
-      </Modal.Footer>
+        </Modal.Footer>
+      </Form>
     </Modal.Content>
   );
 }
