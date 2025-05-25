@@ -109,23 +109,17 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
           This will permanently delete the selected list. Continue?
         </Modal.Description>
       </Modal.Header>
-      <Form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          deleteList.mutate({ slug });
-        }}
-      >
-        <Modal.Footer>
-          <Modal.Close>Cancel</Modal.Close>
-          <Button
-            intent="danger"
-            type="submit"
-            isPending={deleteList.isPending}
-          >
-            Continue
-          </Button>
-        </Modal.Footer>
-      </Form>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
+        <Button
+          intent="danger"
+          type="submit"
+          isPending={deleteList.isPending}
+          onClick={() => deleteList.mutate({ slug })}
+        >
+          Continue
+        </Button>
+      </Modal.Footer>
     </Modal.Content>
   );
 }

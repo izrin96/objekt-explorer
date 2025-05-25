@@ -2,16 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 import React, { useState } from "react";
-import {
-  Avatar,
-  buttonStyles,
-  Menu,
-  Link,
-  Modal,
-  Form,
-  Button,
-  Loader,
-} from "./ui";
+import { Avatar, buttonStyles, Menu, Link, Modal, Button, Loader } from "./ui";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
@@ -261,23 +252,17 @@ function PullDiscordProfileModal({ open, setOpen }: PullDiscordModalProps) {
           works if your account linked with Discord.
         </Modal.Description>
       </Modal.Header>
-      <Form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          refreshProfile.mutate();
-        }}
-      >
-        <Modal.Footer>
-          <Modal.Close>Cancel</Modal.Close>
-          <Button
-            intent="primary"
-            type="submit"
-            isPending={refreshProfile.isPending}
-          >
-            Continue
-          </Button>
-        </Modal.Footer>
-      </Form>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
+        <Button
+          intent="primary"
+          type="submit"
+          isPending={refreshProfile.isPending}
+          onClick={() => refreshProfile.mutate()}
+        >
+          Continue
+        </Button>
+      </Modal.Footer>
     </Modal.Content>
   );
 }

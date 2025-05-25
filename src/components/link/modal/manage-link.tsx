@@ -53,23 +53,17 @@ export function RemoveLinkModal({
           later. Continue?
         </Modal.Description>
       </Modal.Header>
-      <Form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          removeLink.mutate(address);
-        }}
-      >
-        <Modal.Footer>
-          <Modal.Close>Cancel</Modal.Close>
-          <Button
-            intent="danger"
-            type="submit"
-            isPending={removeLink.isPending}
-          >
-            Continue
-          </Button>
-        </Modal.Footer>
-      </Form>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
+        <Button
+          intent="danger"
+          type="submit"
+          isPending={removeLink.isPending}
+          onClick={() => removeLink.mutate(address)}
+        >
+          Continue
+        </Button>
+      </Modal.Footer>
     </Modal.Content>
   );
 }

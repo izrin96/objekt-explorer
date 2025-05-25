@@ -209,27 +209,23 @@ export function RemoveFromListModal({
           Continue?
         </Modal.Description>
       </Modal.Header>
-      <Form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          removeObjektsFromList.mutate({
-            slug: slug.toString(),
-            ids: selected.map((a) => Number(a.id)),
-          });
-        }}
-      >
-        <Modal.Footer>
-          <Modal.Close>Cancel</Modal.Close>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
 
-          <Button
-            intent="danger"
-            type="submit"
-            isPending={removeObjektsFromList.isPending}
-          >
-            Continue
-          </Button>
-        </Modal.Footer>
-      </Form>
+        <Button
+          intent="danger"
+          type="submit"
+          isPending={removeObjektsFromList.isPending}
+          onClick={() => {
+            removeObjektsFromList.mutate({
+              slug: slug.toString(),
+              ids: selected.map((a) => Number(a.id)),
+            });
+          }}
+        >
+          Continue
+        </Button>
+      </Modal.Footer>
     </Modal.Content>
   );
 }
