@@ -1,6 +1,4 @@
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { ValidArtist } from "@/lib/universal/cosmo/common";
-import { cosmo } from "../http";
 
 export const artists = [
   {
