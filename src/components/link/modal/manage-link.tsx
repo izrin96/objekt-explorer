@@ -53,14 +53,14 @@ export function RemoveLinkModal({
           later. Continue?
         </Modal.Description>
       </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
-        <Form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            removeLink.mutate(address);
-          }}
-        >
+      <Form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          removeLink.mutate(address);
+        }}
+      >
+        <Modal.Footer>
+          <Modal.Close>Cancel</Modal.Close>
           <Button
             intent="danger"
             type="submit"
@@ -68,8 +68,8 @@ export function RemoveLinkModal({
           >
             Continue
           </Button>
-        </Form>
-      </Modal.Footer>
+        </Modal.Footer>
+      </Form>
     </Modal.Content>
   );
 }

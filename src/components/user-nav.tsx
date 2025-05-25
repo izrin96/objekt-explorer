@@ -261,14 +261,14 @@ function PullDiscordProfileModal({ open, setOpen }: PullDiscordModalProps) {
           works if your account linked with Discord.
         </Modal.Description>
       </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
-        <Form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            refreshProfile.mutate();
-          }}
-        >
+      <Form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          refreshProfile.mutate();
+        }}
+      >
+        <Modal.Footer>
+          <Modal.Close>Cancel</Modal.Close>
           <Button
             intent="primary"
             type="submit"
@@ -276,8 +276,8 @@ function PullDiscordProfileModal({ open, setOpen }: PullDiscordModalProps) {
           >
             Continue
           </Button>
-        </Form>
-      </Modal.Footer>
+        </Modal.Footer>
+      </Form>
     </Modal.Content>
   );
 }

@@ -207,17 +207,18 @@ export function RemoveFromListModal({
           Continue?
         </Modal.Description>
       </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
-        <Form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            removeObjektsFromList.mutate({
-              slug: slug.toString(),
-              ids: selected.map((a) => Number(a.id)),
-            });
-          }}
-        >
+      <Form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          removeObjektsFromList.mutate({
+            slug: slug.toString(),
+            ids: selected.map((a) => Number(a.id)),
+          });
+        }}
+      >
+        <Modal.Footer>
+          <Modal.Close>Cancel</Modal.Close>
+
           <Button
             intent="danger"
             type="submit"
@@ -225,8 +226,8 @@ export function RemoveFromListModal({
           >
             Continue
           </Button>
-        </Form>
-      </Modal.Footer>
+        </Modal.Footer>
+      </Form>
     </Modal.Content>
   );
 }
