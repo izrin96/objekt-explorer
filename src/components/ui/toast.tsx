@@ -10,6 +10,8 @@ const Toast = ({ ...props }: ToasterProps) => {
       theme={theme === "matsu" ? "light" : theme as ToasterProps["theme"]}
       className="toaster group"
       richColors
+      duration={2000}
+      position="bottom-center"
       toastOptions={{
         classNames: {
           toast: "toast border-0! inset-ring! inset-ring-fg/10!",
