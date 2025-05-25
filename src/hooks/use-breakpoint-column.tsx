@@ -5,49 +5,62 @@ import {
   GRID_COLUMNS_MOBILE,
   GRID_COLUMNS_TABLET,
 } from "@/lib/utils";
-import {
-  PropsWithChildren,
-  useContext,
-  useEffect,
-  createContext,
-  useState,
-} from "react";
+import { useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-type ContextProps = {
+type BreakpointColumnState = {
   columns: number;
+  initial: boolean;
   setColumns: (value: number) => void;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
 };
 
-const BreakpointColumnContext = createContext<ContextProps | null>(null);
+export const useBreakpointColumnStore = create<BreakpointColumnState>()(
+  persist(
+    (set) => ({
+      columns: GRID_COLUMNS,
+      initial: true,
+      setColumns: (value) => set({ columns: value, initial: false }),
+      _hasHydrated: false,
+      setHasHydrated: (state) => {
+        set({
+          _hasHydrated: state,
+        });
+      },
+    }),
+    {
+      name: "columns",
+      onRehydrateStorage: (state) => {
+        return () => state.setHasHydrated(true);
+      },
+    }
+  )
+);
 
-export function BreakpointColumnProvider({ children }: PropsWithChildren) {
-  const [columns, setColumns] = useState(GRID_COLUMNS);
-
+export function useBreakpointColumn() {
+  const columns = useBreakpointColumnStore((a) => a.columns);
+  const hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
+  const setColumns = useBreakpointColumnStore((a) => a.setColumns);
+  const initial = useBreakpointColumnStore((a) => a.initial);
   const isTablet = useMediaQuery("(min-width: 640px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
+
   useEffect(() => {
-    const columns = isDesktop
+    if (!hasHydrated || !initial) return;
+
+    const newColumns = isDesktop
       ? GRID_COLUMNS
       : isTablet
       ? GRID_COLUMNS_TABLET
       : GRID_COLUMNS_MOBILE;
+    setColumns(newColumns);
+  }, [isDesktop, isTablet, setColumns, hasHydrated, initial]);
 
-    setColumns(columns);
-  }, [isDesktop, isTablet]);
-
-  return (
-    <BreakpointColumnContext value={{ columns, setColumns }}>
-      {children}
-    </BreakpointColumnContext>
-  );
-}
-export function useBreakpointColumn() {
-  const ctx = useContext(BreakpointColumnContext);
-  if (!ctx)
-    throw new Error(
-      "useBreakpointColumn must be used within BreakpointColumnProvider"
-    );
-
-  return ctx;
+  return {
+    columns,
+    setColumns,
+  };
 }

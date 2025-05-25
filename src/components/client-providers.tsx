@@ -6,7 +6,6 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { BreakpointColumnProvider } from "@/hooks/use-breakpoint-column";
 import { Toast } from "./ui";
 
 declare module "react-aria-components" {
@@ -26,7 +25,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
         <Toast />
         <div className="texture"></div>
         <NuqsAdapter>
-          <BreakpointColumnProvider>{children}</BreakpointColumnProvider>
+          {children}
           <ReactQueryDevtools />
         </NuqsAdapter>
       </ThemeProvider>
