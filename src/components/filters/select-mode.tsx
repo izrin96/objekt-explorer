@@ -1,12 +1,16 @@
 "use client";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { Button } from "../ui";
+import { Button, Tooltip } from "../ui";
 import { useCallback, ReactNode } from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
-import { CheckCircleIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  CheckCircleIcon,
+  ChecksIcon,
+  XIcon,
+} from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   children?: ({
@@ -42,9 +46,11 @@ export function SelectMode({ children }: Props) {
         intent="outline"
         onClick={toggleMode}
       >
+        <ChecksIcon weight="regular" data-slot="icon" />
         Select mode
       </Button>
       <Button intent="outline" onClick={reset}>
+        <XIcon weight="regular" data-slot="icon" />
         Clear
       </Button>
       {children?.({ handleAction })}
@@ -81,12 +87,18 @@ export function FloatingSelectMode({ children }: Props) {
           exit={{ opacity: 0, y: 10 }}
         >
           <div className="flex gap-2 items-center flex-wrap justify-center">
-            <Button intent="danger" onClick={reset}>
-              <XIcon size={18} weight="regular" />
-            </Button>
-            <Button intent="outline" onClick={toggleMode}>
-              <CheckCircleIcon size={18} weight={mode ? "fill" : "regular"} />
-            </Button>
+            <Tooltip delay={0} closeDelay={0}>
+              <Button intent="outline" onClick={reset}>
+                <XIcon size={18} weight="regular" />
+              </Button>
+              <Tooltip.Content>Clear selection</Tooltip.Content>
+            </Tooltip>
+            <Tooltip delay={0} closeDelay={0}>
+              <Button intent="outline" onClick={toggleMode}>
+                <CheckCircleIcon size={18} weight={mode ? "fill" : "regular"} />
+              </Button>
+              <Tooltip.Content>Toggle select mode</Tooltip.Content>
+            </Tooltip>
             {children?.({ handleAction })}
             <span className="font-semibold text-sm py-2 px-1">
               {selected.length} selected

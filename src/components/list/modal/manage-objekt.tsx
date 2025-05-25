@@ -17,6 +17,7 @@ import {
 import ErrorFallbackRender from "../../error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 
 type AddProps = {
   handleAction: (open: () => void) => void;
@@ -31,6 +32,7 @@ export function AddToList({ handleAction }: AddProps) {
         intent="outline"
         onClick={() => handleAction(() => setAddOpen(true))}
       >
+        <PlusIcon weight="regular" data-slot="icon" />
         Add to list
       </Button>
     </>
