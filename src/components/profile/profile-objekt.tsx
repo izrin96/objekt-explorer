@@ -14,7 +14,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { Button, Loader } from "../ui";
+import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "../error-boundary";
@@ -32,7 +32,7 @@ import ObjektView from "../objekt/objekt-view";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
-import { SelectMode } from "../filters/select-mode";
+import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import Filter from "./filter";
 import { api } from "@/lib/trpc/client";
 import {
@@ -45,11 +45,12 @@ import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
-import { AddToListModal } from "../list/modal/manage-objekt";
+import { AddToList } from "../list/modal/manage-objekt";
 import ObjektModal from "../objekt/objekt-modal";
 import {
   AddToListMenu,
   ObjektStaticMenu,
+  SelectMenuItem,
   TogglePinMenuItem,
 } from "../objekt/objekt-menu";
 
@@ -142,6 +143,7 @@ function ProfileObjekt() {
                   menu={
                     authenticated && (
                       <ObjektStaticMenu>
+                        <SelectMenuItem objekt={objekt} />
                         {isProfileAuthed && (
                           <TogglePinMenuItem
                             isPin={item.type === "pin"}
@@ -230,6 +232,25 @@ function ProfileObjekt() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
+        <FloatingSelectMode>
+          {({ handleAction }) => (
+            <>
+              <AddToList handleAction={handleAction} />
+              {isProfileAuthed && (
+                <>
+                  <PinObjekt
+                    address={profile!.address}
+                    handleAction={handleAction}
+                  />
+                  <UnpinObjekt
+                    address={profile!.address}
+                    handleAction={handleAction}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </FloatingSelectMode>
         <FilterContainer>
           <Filters
             address={profile!.address}
@@ -264,7 +285,6 @@ function Filters({
   authenticated: boolean;
   isOwned: boolean;
 }) {
-  const [addOpen, setAddOpen] = useState(false);
   return (
     <div className="flex flex-col gap-6">
       <Filter />
@@ -272,13 +292,7 @@ function Filters({
         <SelectMode>
           {({ handleAction }) => (
             <>
-              <AddToListModal open={addOpen} setOpen={setAddOpen} />
-              <Button
-                intent="outline"
-                onClick={() => handleAction(() => setAddOpen(true))}
-              >
-                Add to list
-              </Button>
+              <AddToList handleAction={handleAction} />
               {isOwned && (
                 <>
                   <PinObjekt address={address} handleAction={handleAction} />

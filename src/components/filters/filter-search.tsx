@@ -4,10 +4,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { Button, Popover, TextField } from "../ui";
 import { useDebounceValue } from "usehooks-ts";
 import { useEffect, useState } from "react";
-import {
-  QuestionMarkIcon,
-  TrashSimpleIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { QuestionMarkIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function SearchFilter() {
   const [filters, setFilters] = useFilters();
@@ -37,7 +34,7 @@ export default function SearchFilter() {
         suffix={
           (query ?? "").length > 0 ? (
             <Button intent="plain" onPress={() => setQuery("")}>
-              <TrashSimpleIcon data-slot="icon" />
+              <XIcon data-slot="icon" />
             </Button>
           ) : (
             <Popover>

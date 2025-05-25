@@ -19,7 +19,7 @@ import {
   ObjektsRenderRow,
 } from "../collection/collection-render";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { SelectMode } from "../filters/select-mode";
+import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
@@ -27,10 +27,13 @@ import Filter from "./filter";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { FilterSheet } from "../filters/filter-sheet";
 import { FilterContainer } from "../filters/filter-container";
-import { AddToListModal } from "../list/modal/manage-objekt";
-import { Button } from "../ui";
+import { AddToList } from "../list/modal/manage-objekt";
 import ObjektModal from "../objekt/objekt-modal";
-import { AddToListMenu, ObjektStaticMenu } from "../objekt/objekt-menu";
+import {
+  AddToListMenu,
+  ObjektStaticMenu,
+  SelectMenuItem,
+} from "../objekt/objekt-menu";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 import { useUser } from "@/hooks/use-user";
 
@@ -90,6 +93,7 @@ function IndexView() {
                   menu={
                     authenticated && (
                       <ObjektStaticMenu>
+                        <SelectMenuItem objekt={objekt} />
                         <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
                     )
@@ -138,6 +142,9 @@ function IndexView() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
+        <FloatingSelectMode>
+          {({ handleAction }) => <AddToList handleAction={handleAction} />}
+        </FloatingSelectMode>
         <FilterContainer>
           <Filters authenticated={authenticated} />
         </FilterContainer>
@@ -153,23 +160,12 @@ function IndexView() {
 }
 
 function Filters({ authenticated }: { authenticated: boolean }) {
-  const [addOpen, setAddOpen] = useState(false);
   return (
     <div className="flex flex-col gap-6">
       <Filter />
       {authenticated && (
         <SelectMode>
-          {({ handleAction }) => (
-            <>
-              <AddToListModal open={addOpen} setOpen={setAddOpen} />
-              <Button
-                intent="outline"
-                onClick={() => handleAction(() => setAddOpen(true))}
-              >
-                Add to list
-              </Button>
-            </>
-          )}
+          {({ handleAction }) => <AddToList handleAction={handleAction} />}
         </SelectMode>
       )}
     </div>

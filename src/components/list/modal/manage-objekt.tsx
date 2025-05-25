@@ -2,7 +2,7 @@
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { api } from "@/lib/trpc/client";
-import { Suspense, useRef } from "react";
+import { Suspense, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Button,
@@ -17,6 +17,25 @@ import {
 import ErrorFallbackRender from "../../error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
+
+type AddProps = {
+  handleAction: (open: () => void) => void;
+};
+
+export function AddToList({ handleAction }: AddProps) {
+  const [addOpen, setAddOpen] = useState(false);
+  return (
+    <>
+      <AddToListModal open={addOpen} setOpen={setAddOpen} />
+      <Button
+        intent="outline"
+        onClick={() => handleAction(() => setAddOpen(true))}
+      >
+        Add to list
+      </Button>
+    </>
+  );
+}
 
 type AddToListModalProps = {
   open: boolean;
@@ -129,6 +148,26 @@ function AddToListForm() {
         description="Skip the same objekt when adding"
       />
     </div>
+  );
+}
+
+type RemoveProps = {
+  slug: string;
+  handleAction: (open: () => void) => void;
+};
+
+export function RemoveFromList({ slug, handleAction }: RemoveProps) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <RemoveFromListModal slug={slug} open={open} setOpen={setOpen} />
+      <Button
+        intent="outline"
+        onClick={() => handleAction(() => setOpen(true))}
+      >
+        Remove from list
+      </Button>
+    </>
   );
 }
 

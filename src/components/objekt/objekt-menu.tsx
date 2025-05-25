@@ -3,6 +3,7 @@
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { Button, Loader, Menu } from "../ui";
 import {
+  CheckIcon,
   DotsThreeVerticalIcon,
   PlusIcon,
   PushPinIcon,
@@ -13,6 +14,7 @@ import { PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/trpc/client";
 import { PublicProfile } from "@/lib/universal/user";
+import { useObjektSelect } from "@/hooks/use-objekt-select";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
@@ -172,6 +174,17 @@ export function TogglePinMenuItem({
         <PushPinIcon data-slot="icon" />
       )}
       <Menu.Label>{isPin ? "Unpin" : "Pin"}</Menu.Label>
+    </Menu.Item>
+  );
+}
+
+export function SelectMenuItem({ objekt }: { objekt: ValidObjekt }) {
+  const objektSelect = useObjektSelect((a) => a.select);
+  const isSelected = useObjektSelect((state) => state.isSelected(objekt));
+  return (
+    <Menu.Item onAction={() => objektSelect(objekt)}>
+      <CheckIcon data-slot="icon" />
+      <Menu.Label>{isSelected ? "Unselect" : "Select"}</Menu.Label>
     </Menu.Item>
   );
 }

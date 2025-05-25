@@ -18,20 +18,20 @@ import {
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { api } from "@/lib/trpc/client";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
-import { SelectMode } from "../filters/select-mode";
+import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
 import { FilterContainer } from "../filters/filter-container";
 import { FilterSheet } from "../filters/filter-sheet";
-import { AddToListModal, RemoveFromListModal } from "./modal/manage-objekt";
+import { AddToList, RemoveFromList } from "./modal/manage-objekt";
 import { useListAuthed, useUser } from "@/hooks/use-user";
-import { Button } from "../ui";
 import ObjektModal from "../objekt/objekt-modal";
 import {
   AddToListMenu,
   ObjektStaticMenu,
   RemoveFromListMenu,
+  SelectMenuItem,
 } from "../objekt/objekt-menu";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 
@@ -97,6 +97,7 @@ function ListView({ slug }: Props) {
                   menu={
                     authenticated && (
                       <ObjektStaticMenu>
+                        <SelectMenuItem objekt={objekt} />
                         {isOwned ? (
                           <RemoveFromListMenu slug={slug} objekt={objekt} />
                         ) : (
@@ -159,6 +160,15 @@ function ListView({ slug }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
+        <FloatingSelectMode>
+          {({ handleAction }) =>
+            isOwned ? (
+              <RemoveFromList slug={slug} handleAction={handleAction} />
+            ) : (
+              <AddToList handleAction={handleAction} />
+            )
+          }
+        </FloatingSelectMode>
         <FilterContainer>
           <Filters
             authenticated={authenticated}
@@ -208,44 +218,5 @@ function Filters({
         </SelectMode>
       )}
     </div>
-  );
-}
-
-type RemoveProps = {
-  slug: string;
-  handleAction: (open: () => void) => void;
-};
-
-function RemoveFromList({ slug, handleAction }: RemoveProps) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <RemoveFromListModal slug={slug} open={open} setOpen={setOpen} />
-      <Button
-        intent="outline"
-        onClick={() => handleAction(() => setOpen(true))}
-      >
-        Remove from list
-      </Button>
-    </>
-  );
-}
-
-type AddProps = {
-  handleAction: (open: () => void) => void;
-};
-
-function AddToList({ handleAction }: AddProps) {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <AddToListModal open={open} setOpen={setOpen} />
-      <Button
-        intent="outline"
-        onClick={() => handleAction(() => setOpen(true))}
-      >
-        Add to list
-      </Button>
-    </>
   );
 }
