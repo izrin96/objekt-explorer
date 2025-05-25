@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { api } from "@/lib/trpc/client";
+import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
 
 type Props = {
@@ -37,6 +38,7 @@ export function PinObjekt({ address, handleAction }: Props) {
       }
       isPending={batchPin.isPending}
     >
+      <PushPinIcon data-slot="icon" />
       Pin
     </Button>
   );
@@ -69,6 +71,7 @@ export function UnpinObjekt({ address, handleAction }: Props) {
       }}
       isPending={batchUnpin.isPending}
     >
+      <PushPinSlashIcon data-slot="icon" />
       Unpin
     </Button>
   );

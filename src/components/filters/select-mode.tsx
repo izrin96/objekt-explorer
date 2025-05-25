@@ -6,11 +6,7 @@ import { useCallback, ReactNode } from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
-import {
-  CheckCircleIcon,
-  ChecksIcon,
-  XIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { ChecksIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   children?: ({
@@ -94,8 +90,12 @@ export function FloatingSelectMode({ children }: Props) {
               <Tooltip.Content>Clear selection</Tooltip.Content>
             </Tooltip>
             <Tooltip delay={0} closeDelay={0}>
-              <Button intent="outline" onClick={toggleMode}>
-                <CheckCircleIcon size={18} weight={mode ? "fill" : "regular"} />
+              <Button
+                intent="outline"
+                onClick={toggleMode}
+                className={mode ? "!inset-ring-primary" : ""}
+              >
+                <ChecksIcon weight="regular" size={18} />
               </Button>
               <Tooltip.Content>Toggle select mode</Tooltip.Content>
             </Tooltip>
