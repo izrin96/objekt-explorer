@@ -40,7 +40,7 @@ export default function UserSearch() {
       addRecent(user);
       router.push(`/@${user.nickname}`);
     },
-    [router, setIsOpen]
+    [router, setIsOpen, addRecent]
   );
 
   // set result after getting data

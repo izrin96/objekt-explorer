@@ -6,7 +6,7 @@ import { useCallback, ReactNode } from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
 import React from "react";
-import { HandPointingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   children?: ({
@@ -75,20 +75,20 @@ export function FloatingSelectMode({ children }: Props) {
     <AnimatePresence>
       {selected.length > 0 && (
         <motion.div
-          className="fixed inset-x-0 bottom-2 w-fit mx-auto z-1 bg-bg/80 backdrop-blur px-3 py-2 rounded shadow border"
+          className="fixed inset-x-0 bottom-2 w-fit mx-auto z-10 bg-bg/80 backdrop-blur px-3 py-2 rounded shadow border"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
         >
           <div className="flex gap-2 items-center flex-wrap justify-center">
             <Button intent="danger" onClick={reset}>
-              <XIcon size={18} weight="bold" />
+              <XIcon size={18} weight="regular" />
             </Button>
             <Button intent="outline" onClick={toggleMode}>
-              <HandPointingIcon size={18} weight={mode ? "fill" : "regular"} />
+              <CheckCircleIcon size={18} weight={mode ? "fill" : "regular"} />
             </Button>
             {children?.({ handleAction })}
-            <span className="font-semibold text-sm py-2">
+            <span className="font-semibold text-sm py-2 px-1">
               {selected.length} selected
             </span>
           </div>

@@ -13,7 +13,7 @@ export function FilterSheet({ children }: Props) {
   return (
     <>
       <Button
-        className="fixed bottom-4 right-4 z-50"
+        className="fixed bottom-32 right-2 z-1"
         intent="secondary"
         onPress={() => setIsOpen(true)}
       >
