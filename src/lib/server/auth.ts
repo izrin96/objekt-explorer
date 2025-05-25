@@ -48,7 +48,7 @@ export const auth = betterAuth({
       clientId: env.TWITTER_CLIENT_ID!,
       clientSecret: env.TWITTER_CLIENT_SECRET!,
       mapProfileToUser: (profile) => ({
-        twitter: profile.username,
+        twitter: profile.data.username,
       }),
     },
   },
