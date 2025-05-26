@@ -73,6 +73,7 @@
     "@types/react-dom": "^19.1.5",
     "drizzle-kit": "^0.31.1",
     "eslint": "^9.27.0",
+    "eslint-config-next": "15.4.0-canary.51",
     "postcss": "^8.5.3",
     "tailwindcss": "^4.1.7",
     "tailwindcss-debug-screens": "^3.0.1",
