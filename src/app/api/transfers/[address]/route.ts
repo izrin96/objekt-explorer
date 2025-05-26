@@ -72,7 +72,7 @@ export async function GET(
       } satisfies TransferResult);
   }
 
-  let baseQuery = indexer
+  const results = await indexer
     .select({
       transfer: {
         id: transfers.id,
@@ -163,8 +163,6 @@ export async function GET(
     )
     .orderBy(desc(transfers.timestamp), asc(transfers.id))
     .limit(PER_PAGE + 1);
-
-  const results = await baseQuery;
 
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
