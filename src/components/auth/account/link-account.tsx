@@ -3,6 +3,7 @@
 import { Button, Label } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { getQueryClient } from "@/lib/query-client";
+import { api } from "@/lib/trpc/client";
 import { LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -67,6 +68,12 @@ type LinkedAccountProps = {
 };
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
+  const session = authClient.useSession();
+  const postUnlink = api.user.postUnlink.useMutation({
+    onSuccess: () => {
+      session.refetch();
+    },
+  });
   const unlinkAccount = useMutation({
     mutationFn: async () => {
       const result = await authClient.unlinkAccount({
@@ -80,6 +87,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
     },
     onSuccess: () => {
       toast.success(`${provider.label} unlinked`);
+      postUnlink.mutate(provider.id);
       getQueryClient().invalidateQueries({
         queryKey: ["accounts"],
       });

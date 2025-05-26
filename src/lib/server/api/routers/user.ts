@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { auth } from "../../auth";
 import { db } from "../../db";
 import { authProcedure, createTRPCRouter } from "../trpc";
+import { z } from "zod/v4";
 
 export const userRouter = createTRPCRouter({
   refreshProfile: authProcedure.mutation(
@@ -57,4 +58,15 @@ export const userRouter = createTRPCRouter({
       });
     }
   ),
+
+  postUnlink: authProcedure
+    .input(z.enum(["discord", "twitter"]))
+    .mutation(async ({ input: provider, ctx: { headers } }) => {
+      await auth.api.updateUser({
+        headers,
+        body: {
+          [provider]: null,
+        },
+      });
+    }),
 });

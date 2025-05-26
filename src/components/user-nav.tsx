@@ -11,7 +11,7 @@ import {
   DiscordLogoIcon,
   SignOutIcon,
   UserIcon,
-  ListHeartIcon,
+  HeartIcon,
   GearSixIcon,
   PlusIcon,
   DeviceMobileIcon,
@@ -152,7 +152,7 @@ function MyListMenuItem({ openCreateList }: { openCreateList: () => void }) {
   return (
     <Menu.Submenu>
       <Menu.Item>
-        <ListHeartIcon data-slot="icon" />
+        <HeartIcon data-slot="icon" />
         <Menu.Label>My List</Menu.Label>
       </Menu.Item>
       <Menu.Content placement="left top">
