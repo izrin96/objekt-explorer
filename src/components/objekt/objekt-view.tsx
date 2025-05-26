@@ -1,6 +1,4 @@
-"use client";
-
-import { CSSProperties, memo, PropsWithChildren, useState } from "react";
+import { CSSProperties, memo, PropsWithChildren } from "react";
 import NextImage from "next/image";
 import {
   getCollectionShortId,
@@ -34,7 +32,6 @@ export default memo(function ObjektView({
   children,
   ...props
 }: Props) {
-  const [load, setLoad] = useState(false);
   const objekts = props.objekts.toSorted(
     (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
   );
@@ -62,11 +59,8 @@ export default memo(function ObjektView({
       >
         <NextImage
           fill
-          className={cn("transition-opacity", !load && "opacity-0")}
-          decoding="async"
           priority={priority}
           src={resizedUrl}
-          onLoad={() => setLoad(true)}
           alt={objekt.collectionId}
         />
         {objekt.artist !== "idntt" && (
