@@ -87,7 +87,7 @@ export default function UserAccountModal({ open, setOpen }: Props) {
                 >
                   <div className="flex flex-col gap-6 h-full">
                     <UserAccountForm />
-                    <ListAccounts />
+                    {/* <ListAccounts /> */}
                     <div>
                       {/* <DeleteAccount /> */}
                     </div>
