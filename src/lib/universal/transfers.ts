@@ -18,14 +18,16 @@ export type AggregatedTransfer = {
 export type TransferResult = {
   hide?: boolean | undefined;
   results: AggregatedTransfer[];
-  nextStartAfter?: number;
+  nextCursor?: {
+    timestamp: string;
+    id: string;
+  };
 };
 
 export const validType = ["all", "mint", "received", "sent", "spin"] as const;
 export type ValidType = (typeof validType)[number];
 
 export const transfersSchema = z.object({
-  page: z.coerce.number().default(0),
   type: z.enum(validType).default("all"),
   artist: z.enum(validArtists).array(),
   member: z.string().array(),

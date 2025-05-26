@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { asc, desc, or, eq, and, inArray, ne } from "drizzle-orm";
+import { asc, desc, or, eq, and, inArray, ne, lt, gt } from "drizzle-orm";
 import { db } from "@/lib/server/db";
 import {
   collections,
@@ -17,8 +17,16 @@ import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { cachedSession } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
+import { z } from "zod";
 
 const PER_PAGE = 30;
+
+const cursorSchema = z
+  .object({
+    timestamp: z.string(),
+    id: z.string(),
+  })
+  .optional();
 
 export async function GET(
   request: NextRequest,
@@ -27,6 +35,11 @@ export async function GET(
   const params = await props.params;
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
+  const cursor = cursorSchema.parse(
+    searchParams.get("cursor")
+      ? JSON.parse(searchParams.get("cursor")!)
+      : undefined
+  );
 
   const session = await cachedSession();
 
@@ -59,7 +72,7 @@ export async function GET(
       } satisfies TransferResult);
   }
 
-  const results = await indexer
+  let baseQuery = indexer
     .select({
       transfer: {
         id: transfers.id,
@@ -136,15 +149,30 @@ export async function GET(
           : []),
         ...(query.on_offline.length
           ? [inArray(collections.onOffline, query.on_offline)]
-          : [])
+          : []),
+        cursor
+          ? or(
+              lt(transfers.timestamp, cursor.timestamp),
+              and(
+                eq(transfers.timestamp, cursor.timestamp),
+                gt(transfers.id, cursor.id)
+              )
+            )
+          : undefined
       )
     )
     .orderBy(desc(transfers.timestamp), asc(transfers.id))
-    .limit(PER_PAGE + 1)
-    .offset(query.page * PER_PAGE);
+    .limit(PER_PAGE + 1);
+
+  const results = await baseQuery;
 
   const hasNext = results.length > PER_PAGE;
-  const nextStartAfter = hasNext ? query.page + 1 : undefined;
+  const nextCursor = hasNext
+    ? {
+        timestamp: results[PER_PAGE - 1].transfer.timestamp,
+        id: results[PER_PAGE - 1].transfer.id,
+      }
+    : undefined;
   const slicedResults = results.slice(0, PER_PAGE);
 
   const addresses = slicedResults.flatMap((r) => [
@@ -160,7 +188,7 @@ export async function GET(
   });
 
   return Response.json({
-    nextStartAfter,
+    nextCursor,
     results: slicedResults.map((row) => ({
       transfer: row.transfer,
       objekt: mapOwnedObjekt(row.objekt, row.collection),
@@ -176,7 +204,6 @@ export async function GET(
 
 function parseParams(params: URLSearchParams): TransferParams {
   const result = transfersSchema.safeParse({
-    page: params.get("page"),
     type: params.get("type"),
     artist: params.getAll("artist"),
     member: params.getAll("member"),
@@ -188,7 +215,6 @@ function parseParams(params: URLSearchParams): TransferParams {
   return result.success
     ? result.data
     : {
-        page: 0,
         type: "all",
         artist: [],
         member: [],

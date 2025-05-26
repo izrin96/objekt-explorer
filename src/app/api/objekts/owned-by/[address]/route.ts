@@ -5,7 +5,7 @@ import { objekts, collections } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, and, lt, gt, or } from "drizzle-orm";
 import { NextRequest } from "next/server";
 import { z } from "zod/v4";
 
@@ -17,12 +17,21 @@ type Params = {
 
 const PER_PAGE = 10000;
 
-const pageSchema = z.coerce.number().optional().default(0);
+const cursorSchema = z
+  .object({
+    receivedAt: z.string(),
+    id: z.number(),
+  })
+  .optional();
 
 export async function GET(request: NextRequest, props: Params) {
   const params = await props.params;
   const searchParams = request.nextUrl.searchParams;
-  const page = pageSchema.parse(searchParams.get("page"));
+  const cursor = cursorSchema.parse(
+    searchParams.get("cursor")
+      ? JSON.parse(searchParams.get("cursor")!)
+      : undefined
+  );
 
   const session = await cachedSession();
 
@@ -62,16 +71,33 @@ export async function GET(request: NextRequest, props: Params) {
     })
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(eq(objekts.owner, params.address.toLowerCase()))
+    .where(
+      and(
+        eq(objekts.owner, params.address.toLowerCase()),
+        cursor
+          ? or(
+              lt(objekts.receivedAt, cursor.receivedAt),
+              and(
+                eq(objekts.receivedAt, cursor.receivedAt),
+                gt(objekts.id, cursor.id)
+              )
+            )
+          : undefined
+      )
+    )
     .orderBy(desc(objekts.receivedAt), asc(objekts.id))
-    .limit(PER_PAGE + 1)
-    .offset(page * PER_PAGE);
+    .limit(PER_PAGE + 1);
 
   const hasNext = results.length > PER_PAGE;
-  const nextStartAfter = hasNext ? page + 1 : undefined;
+  const nextCursor = hasNext
+    ? {
+        receivedAt: results[PER_PAGE - 1].objekt.receivedAt,
+        id: Number(results[PER_PAGE - 1].objekt.id),
+      }
+    : undefined;
 
   return Response.json({
-    nextStartAfter,
+    nextCursor,
     objekts: results
       .slice(0, PER_PAGE)
       .map((a) => mapOwnedObjekt(a.objekt, a.collection)),

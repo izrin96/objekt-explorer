@@ -50,11 +50,15 @@ function ProfileTrades() {
   const address = profile!.address;
   const query = useInfiniteQuery({
     queryKey: ["transfers", address, type, filters],
-    queryFn: async ({ pageParam = 0 }: { pageParam?: string | number }) => {
+    queryFn: async ({
+      pageParam,
+    }: {
+      pageParam?: { timestamp: string; id: string };
+    }) => {
       const url = new URL(`/api/transfers/${address}`, getBaseURL());
       return await ofetch<TransferResult>(url.toString(), {
         query: {
-          page: pageParam.toString(),
+          cursor: pageParam ? JSON.stringify(pageParam) : undefined,
           type: type,
           artist: filters.artist ?? [],
           member: filters.member ?? [],
@@ -64,8 +68,8 @@ function ProfileTrades() {
         },
       });
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => lastPage.nextStartAfter,
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60,
     retry: false,

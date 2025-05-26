@@ -3,38 +3,46 @@ import { OwnedObjekt } from "@/lib/universal/objekts";
 import { getBaseURL } from "@/lib/utils";
 
 type OwnedObjektsResult = {
-  nextStartAfter?: number;
+  nextCursor?: {
+    receivedAt: string;
+    id: number;
+  };
   objekts: OwnedObjekt[];
 };
 
-export async function fetchOwnedObjekts(address: string) {
+export async function fetchOwnedObjektsByCursor(
+  address: string,
+  cursor?: { receivedAt: string; id: number }
+) {
   const url = new URL(`/api/objekts/owned-by/${address}`, getBaseURL());
+  const result = await ofetch<OwnedObjektsResult>(url.toString(), {
+    query: cursor
+      ? {
+          cursor: JSON.stringify(cursor),
+        }
+      : undefined,
+  });
+  return result;
+}
 
+export async function fetchOwnedObjekts(address: string) {
   let allObjekts: OwnedObjekt[] = [];
-  let hasNext = true;
-  let currentPage = 0;
+  let cursor: { receivedAt: string; id: number } | undefined = undefined;
 
   // Loop until there are no more pages
-  while (hasNext) {
-    const result = await ofetch<OwnedObjektsResult>(url.toString(), {
-      query: {
-        page: currentPage,
-      },
-    });
+  while (true) {
+    const result = await fetchOwnedObjektsByCursor(address, cursor);
 
     allObjekts = [...allObjekts, ...result.objekts];
 
-    if (result.nextStartAfter !== undefined) {
-      hasNext = true;
-      currentPage = result.nextStartAfter;
+    if (result.nextCursor) {
+      cursor = result.nextCursor;
     } else {
       break;
     }
   }
 
   return {
-    hasNext: false,
-    nextStartAfter: undefined,
     objekts: allObjekts,
   };
 }
