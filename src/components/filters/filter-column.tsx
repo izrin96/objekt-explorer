@@ -3,7 +3,7 @@
 import { Select } from "../ui";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 
-const cols = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+const cols = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export default function ColumnFilter() {
   const { columns, setColumns } = useBreakpointColumn();
