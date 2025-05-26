@@ -92,7 +92,7 @@ function SignInForm({
           isRevealable
           placeholder="•••••••"
         />
-        <Button type="submit" intent="outline" isDisabled={mutation.isPending}>
+        <Button type="submit" intent="primary" isDisabled={mutation.isPending}>
           Sign in with Email
         </Button>
       </Form>
@@ -238,7 +238,7 @@ function SignUpForm({
         <Button type="submit" isDisabled={mutation.isPending}>
           Create Account
         </Button>
-        <Button intent="secondary" onClick={() => setState("sign-in")}>
+        <Button intent="outline" onClick={() => setState("sign-in")}>
           Back to Sign In
         </Button>
       </div>
@@ -291,7 +291,7 @@ function ForgotPassword({
         <Button type="submit" isDisabled={mutation.isPending}>
           Send reset password email
         </Button>
-        <Button intent="secondary" onClick={() => setState("sign-in")}>
+        <Button intent="outline" onClick={() => setState("sign-in")}>
           Back to Sign In
         </Button>
       </div>
