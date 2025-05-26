@@ -12,6 +12,8 @@ import { PropsWithChildren } from "react";
 import { getMimeTypeFromExtension } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import { artists } from "@/lib/server/cosmo/artists";
 
 type Props = PropsWithChildren<{
   params: Promise<{
@@ -44,22 +46,26 @@ export default async function UserCollectionLayout(props: Props) {
     );
 
   return (
-    <ProfileProvider profile={targetUser}>
-      <UserProvider profiles={profiles} user={toPublicUser(session)}>
-        <ProfileBanner profile={targetUser} />
-        <Container>
-          {targetUser.bannerImgUrl && (
-            <div className={cn("-mt-22", BANNER_BREAKPOINT)}></div>
-          )}
-          <div className="flex flex-col gap-4 pb-8 pt-2">
-            <ProfileHeader user={targetUser} />
+    <>
+      <ProfileBanner profile={targetUser} />
 
-            <ProfileTabs nickname={params.nickname} />
-            {props.children}
-          </div>
-        </Container>
-      </UserProvider>
-    </ProfileProvider>
+      <Container>
+        {targetUser.bannerImgUrl && (
+          <div className={cn("-mt-22", BANNER_BREAKPOINT)}></div>
+        )}
+        <div className="flex flex-col gap-4 pb-8 pt-2">
+          <ProfileProvider profile={targetUser}>
+            <UserProvider profiles={profiles} user={toPublicUser(session)}>
+              <CosmoArtistProvider artists={artists}>
+                <ProfileHeader user={targetUser} />
+                <ProfileTabs nickname={params.nickname} />
+                {props.children}
+              </CosmoArtistProvider>
+            </UserProvider>
+          </ProfileProvider>
+        </div>
+      </Container>
+    </>
   );
 }
 
