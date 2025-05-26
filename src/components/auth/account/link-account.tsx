@@ -69,31 +69,16 @@ type LinkedAccountProps = {
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
   const session = authClient.useSession();
-  const postUnlink = api.user.postUnlink.useMutation({
-    onSuccess: () => {
-      session.refetch();
-    },
-  });
-  const unlinkAccount = useMutation({
-    mutationFn: async () => {
-      const result = await authClient.unlinkAccount({
-        providerId: provider.id,
-        accountId: accountId,
-      });
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-      return result.data;
-    },
+  const unlinkAccount = api.user.unlinkAccount.useMutation({
     onSuccess: () => {
       toast.success(`${provider.label} unlinked`);
-      postUnlink.mutate(provider.id);
       getQueryClient().invalidateQueries({
         queryKey: ["accounts"],
       });
+      session.refetch();
     },
-    onError: ({ message }) => {
-      toast.error(`Error unlink from ${provider.label}. ${message}`);
+    onError: () => {
+      toast.error(`Error unlink from ${provider.label}`);
     },
   });
 
@@ -106,7 +91,12 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
       <Button
         intent="danger"
         size="extra-small"
-        onClick={() => unlinkAccount.mutate()}
+        onClick={() =>
+          unlinkAccount.mutate({
+            providerId: provider.id,
+            accountId: accountId,
+          })
+        }
       >
         <LinkBreakIcon data-slot="icon" />
         Unlink

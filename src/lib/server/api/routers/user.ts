@@ -59,14 +59,36 @@ export const userRouter = createTRPCRouter({
     }
   ),
 
-  postUnlink: authProcedure
-    .input(z.enum(["discord", "twitter"]))
-    .mutation(async ({ input: provider, ctx: { headers } }) => {
-      await auth.api.updateUser({
-        headers,
-        body: {
-          [provider]: null,
-        },
-      });
-    }),
+  unlinkAccount: authProcedure
+    .input(
+      z.object({
+        providerId: z.string(),
+        accountId: z.string(),
+      })
+    )
+    .mutation(
+      async ({ input: { providerId, accountId }, ctx: { headers } }) => {
+        // unlink using auth api
+        const result = await auth.api.unlinkAccount({
+          headers: headers,
+          body: {
+            providerId: providerId,
+            accountId: accountId,
+          },
+        });
+
+        if (!result.status)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+          });
+
+        // remove username
+        await auth.api.updateUser({
+          headers,
+          body: {
+            [providerId]: null,
+          },
+        });
+      }
+    ),
 });

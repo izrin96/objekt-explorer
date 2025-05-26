@@ -122,7 +122,7 @@ export const auth = betterAuth({
               [account.providerId]:
                 account.providerId === "discord"
                   ? info?.data?.username
-                  : info?.data?.data?.username ?? info?.data?.username,
+                  : info?.data?.data?.username,
             })
             .where(eq(authSchema.user.id, account.userId));
         },
