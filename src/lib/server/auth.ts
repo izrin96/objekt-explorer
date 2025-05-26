@@ -11,8 +11,13 @@ import { headers } from "next/headers";
 import { PublicProfile, PublicUser } from "../universal/user";
 import { username } from "better-auth/plugins/username";
 import * as authSchema from "./db/auth-schema";
-import { sendResetPassword, sendVerificationEmail } from "./mail";
+import {
+  sendDeleteAccountVerification,
+  sendResetPassword,
+  sendVerificationEmail,
+} from "./mail";
 import { env } from "@/env";
+import { eq } from "drizzle-orm";
 
 export const auth = betterAuth({
   appName: "Objekt Tracker",
@@ -72,11 +77,29 @@ export const auth = betterAuth({
         returned: true,
       },
     },
+    deleteUser: {
+      enabled: true,
+      sendDeleteAccountVerification: async ({ user, url }) => {
+        await sendDeleteAccountVerification(user.email, url);
+      },
+      afterDelete: async (user) => {
+        await db
+          .update(userAddress)
+          .set({
+            userId: null,
+          })
+          .where(eq(userAddress.userId, user.id));
+      },
+    },
   },
   account: {
     accountLinking: {
       enabled: true,
+      allowDifferentEmails: true,
     },
+  },
+  session: {
+    freshAge: 0,
   },
 });
 

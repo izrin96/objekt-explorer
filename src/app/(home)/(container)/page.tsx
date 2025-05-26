@@ -9,16 +9,16 @@ export const revalidate = 0;
 
 export default async function Home() {
   const queryClient = getQueryClient();
-  queryClient.prefetchQuery(collectionOptions);
   const session = await cachedSession();
+  queryClient.prefetchQuery(collectionOptions);
 
   return (
     <div className="flex flex-col pb-8 pt-2">
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <UserProvider user={toPublicUser(session)}>
+      <UserProvider user={toPublicUser(session)}>
+        <HydrationBoundary state={dehydrate(queryClient)}>
           <IndexView />
-        </UserProvider>
-      </HydrationBoundary>
+        </HydrationBoundary>
+      </UserProvider>
     </div>
   );
 }

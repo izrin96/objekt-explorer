@@ -144,7 +144,11 @@ export function EditProfileModal({
   }, []);
 
   return (
-    <Sheet.Content isOpen={open} onOpenChange={setOpen}>
+    <Sheet.Content
+      classNames={{ content: "max-w-sm" }}
+      isOpen={open}
+      onOpenChange={setOpen}
+    >
       <Sheet.Header>
         <Sheet.Title>Edit Profile</Sheet.Title>
         <Sheet.Description>

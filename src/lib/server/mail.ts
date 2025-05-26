@@ -30,7 +30,7 @@ export async function sendVerificationEmail(to: string, url: string) {
       },
       Subject: {
         Charset: "UTF-8",
-        Data: `Verify your email`,
+        Data: "[Objekt Tracker] Verify your email",
       },
     },
   });
@@ -57,7 +57,34 @@ export async function sendResetPassword(to: string, url: string) {
       },
       Subject: {
         Charset: "UTF-8",
-        Data: "Reset your password",
+        Data: "[Objekt Tracker] Reset your password",
+      },
+    },
+  });
+}
+
+export async function sendDeleteAccountVerification(to: string, url: string) {
+  await ses.sendEmail({
+    Source: env.SES_MAIL_FROM,
+    Destination: {
+      ToAddresses: [to],
+    },
+    Message: {
+      Body: {
+        Html: {
+          Charset: "UTF-8",
+          Data: `
+<html>
+  <body>
+  <p>Click the link below to delete your account.</p>
+  <a href="${url}">${url}</a>
+  </body>
+</html>`,
+        },
+      },
+      Subject: {
+        Charset: "UTF-8",
+        Data: "[Objekt Tracker] Delete your account",
       },
     },
   });

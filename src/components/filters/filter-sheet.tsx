@@ -19,7 +19,11 @@ export function FilterSheet({ children }: Props) {
       >
         <IconFilter />
       </Button>
-      <Sheet.Content isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Sheet.Content
+        classNames={{ content: "max-w-sm" }}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+      >
         <Sheet.Header>
           <Sheet.Title>Filter</Sheet.Title>
         </Sheet.Header>

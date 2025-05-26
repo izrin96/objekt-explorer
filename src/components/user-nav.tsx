@@ -19,7 +19,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
-import UserAccountModal from "./user-account";
+import UserAccountModal from "@/components/auth/account/user-account";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
