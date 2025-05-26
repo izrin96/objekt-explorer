@@ -89,7 +89,7 @@ export default function UserAccountModal({ open, setOpen }: Props) {
                     <UserAccountForm />
                     <ListAccounts />
                     <div>
-                      <DeleteAccount />
+                      {/* <DeleteAccount /> */}
                     </div>
                   </div>
                 </Suspense>

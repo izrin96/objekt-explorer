@@ -22,7 +22,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { Loader, ProgressBar } from "@/components/ui";
 import { unobtainables, ValidObjekt } from "@/lib/universal/objekts";
-import { IconExpand45, IconMinimize45 } from "@intentui/icons";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useProfile } from "@/hooks/use-profile";
 import { groupBy } from "es-toolkit";
@@ -36,6 +35,7 @@ import {
 } from "@/components/objekt/objekt-menu";
 import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
 import { useUser } from "@/hooks/use-user";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function ProgressRender() {
   return (
@@ -175,7 +175,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
       : Math.floor((owned.length / filteredObjekts.length) * 100);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       <div
         className={cn(
           "flex gap-4 py-4 flex-wrap cursor-pointer select-none items-center transition rounded-lg p-4 inset-ring inset-ring-fg/10 bg-secondary/30 hover:bg-secondary/60",
@@ -185,7 +185,6 @@ const ProgressCollapse = memo(function ProgressCollapse({
       >
         <div className="font-semibold text-base inline-flex gap-2 items-center min-w-72">
           {title}
-          {show ? <IconMinimize45 /> : <IconExpand45 />}
         </div>
         <ProgressBar
           aria-label="Progress Bar"
@@ -194,47 +193,84 @@ const ProgressCollapse = memo(function ProgressCollapse({
           value={percentage}
         />
       </div>
-      {show && (
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3">
-          {Object.values(groupBy(objekts, (a) => a.collectionId)).map(
-            (objekts) => {
-              const [objekt] = objekts;
-              return (
-                <ObjektModal
-                  key={objekt.slug}
-                  objekts={objekts}
-                  isProfile
-                  menu={
-                    authenticated && (
-                      <ObjektStaticMenu>
-                        <AddToListMenu objekt={objekt} />
-                      </ObjektStaticMenu>
-                    )
-                  }
-                >
-                  {({ openObjekts }) => (
-                    <ObjektView
-                      objekts={objekts}
-                      isFade={!ownedSlugs.has(objekt.slug)}
-                      unobtainable={unobtainables.includes(objekt.slug)}
-                      showCount={showCount}
-                      open={openObjekts}
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
+            <motion.div
+              className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3 mt-4"
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              variants={{
+                visible: {
+                  transition: {
+                    staggerChildren: 0.02,
+                    delayChildren: 0.05,
+                  },
+                },
+                hidden: {
+                  transition: {
+                    staggerChildren: 0.02,
+                    staggerDirection: -1,
+                  },
+                },
+              }}
+            >
+              {Object.values(groupBy(objekts, (a) => a.collectionId)).map(
+                (objekts) => {
+                  const [objekt] = objekts;
+                  return (
+                    <motion.div
+                      key={objekt.slug}
+                      variants={{
+                        hidden: { opacity: 0, y: 20 },
+                        visible: { opacity: 1, y: 0 },
+                      }}
+                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
                     >
-                      {authenticated && (
-                        <div className="absolute top-0 right-0 flex">
-                          <ObjektHoverMenu>
-                            <AddToListMenu objekt={objekt} />
-                          </ObjektHoverMenu>
-                        </div>
-                      )}
-                    </ObjektView>
-                  )}
-                </ObjektModal>
-              );
-            }
-          )}
-        </div>
-      )}
+                      <ObjektModal
+                        objekts={objekts}
+                        isProfile
+                        menu={
+                          authenticated && (
+                            <ObjektStaticMenu>
+                              <AddToListMenu objekt={objekt} />
+                            </ObjektStaticMenu>
+                          )
+                        }
+                      >
+                        {({ openObjekts }) => (
+                          <ObjektView
+                            objekts={objekts}
+                            isFade={!ownedSlugs.has(objekt.slug)}
+                            unobtainable={unobtainables.includes(objekt.slug)}
+                            showCount={showCount}
+                            open={openObjekts}
+                          >
+                            {authenticated && (
+                              <div className="absolute top-0 right-0 flex">
+                                <ObjektHoverMenu>
+                                  <AddToListMenu objekt={objekt} />
+                                </ObjektHoverMenu>
+                              </div>
+                            )}
+                          </ObjektView>
+                        )}
+                      </ObjektModal>
+                    </motion.div>
+                  );
+                }
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 });
