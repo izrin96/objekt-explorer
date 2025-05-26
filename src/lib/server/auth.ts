@@ -101,6 +101,34 @@ export const auth = betterAuth({
   session: {
     freshAge: 0,
   },
+  databaseHooks: {
+    account: {
+      create: {
+        after: async (account) => {
+          // custom db hook to store social provider username when linking
+          if (account.providerId === "credential") return;
+
+          const authContext = await auth.$context;
+          const provider = authContext.socialProviders.find(
+            (p) => p.id === account.providerId
+          );
+          const info = await provider!.getUserInfo({
+            accessToken: account.accessToken ?? undefined,
+          });
+
+          await db
+            .update(authSchema.user)
+            .set({
+              [account.providerId]:
+                account.providerId === "discord"
+                  ? info?.data?.username
+                  : info?.data?.data?.username ?? info?.data?.username,
+            })
+            .where(eq(authSchema.user.id, account.userId));
+        },
+      },
+    },
+  },
 });
 
 export const cachedSession = cache(async () =>
