@@ -7,6 +7,8 @@ import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toast } from "./ui";
+import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import { artists } from "@/lib/server/cosmo/artists";
 
 declare module "react-aria-components" {
   interface RouterConfig {
@@ -25,7 +27,9 @@ export default function ClientProviders({ children }: PropsWithChildren) {
         <Toast />
         <div className="texture"></div>
         <NuqsAdapter>
-          {children}
+          <CosmoArtistProvider artists={artists}>
+            {children}
+          </CosmoArtistProvider>
           <ReactQueryDevtools />
         </NuqsAdapter>
       </ThemeProvider>
