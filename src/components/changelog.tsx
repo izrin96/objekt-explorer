@@ -34,7 +34,17 @@ export default function Changelog() {
           </Modal.Description>
         </Modal.Header>
         <Modal.Body>
-          <DisclosureGroup defaultExpandedKeys={"7"}>
+          <DisclosureGroup defaultExpandedKeys={"8"}>
+            <Disclosure id={"8"}>
+              <DisclosureTrigger>2025-05-27</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>Added sign in with twitter and email option.</li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
             <Disclosure id={"7"}>
               <DisclosureTrigger>2025-05-23</DisclosureTrigger>
               <DisclosurePanel>
@@ -49,7 +59,6 @@ export default function Changelog() {
                       set to hide by default. Please update if you want to show
                       it.
                     </li>
-                    {/* <li>Added sign in with email option.</li> */}
                   </ul>
                 </div>
               </DisclosurePanel>

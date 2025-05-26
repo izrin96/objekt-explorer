@@ -20,12 +20,7 @@ export default function SignIn() {
 
   return (
     <div className="flex flex-col py-6 gap-6">
-      <div className="flex flex-col gap-6 max-w-xl w-full self-center">
-        {/* <Note intent="default">
-          If you previously signed in with Discord, you can still sign in with
-          email and password, but you&apos;ll need to set your password using
-          Forgot Password option.
-        </Note> */}
+      <div className="flex flex-col gap-6 max-w-md w-full self-center">
         {state === "sign-in" && <SignInForm setState={setState} />}
         {state === "sign-up" && <SignUpForm setState={setState} />}
         {state === "forgot-password" && <ForgotPassword setState={setState} />}
@@ -66,6 +61,12 @@ function SignInForm({
 
   return (
     <>
+      <div className="flex flex-col">
+        <h2 className="font-semibold text-lg/8">Sign In</h2>
+        <span className="text-muted-fg text-sm">
+          Please enter your credentials to access your account.
+        </span>
+      </div>
       <Form
         onSubmit={(e) => {
           e.preventDefault();
@@ -89,37 +90,43 @@ function SignInForm({
           name="password"
           isRequired
           isRevealable
+          placeholder="•••••••"
         />
-        <Button type="submit" isDisabled={mutation.isPending}>
+        <Button type="submit" intent="outline" isDisabled={mutation.isPending}>
           Sign in with Email
         </Button>
       </Form>
 
       <div className="flex flex-col gap-2">
         <Button
-          intent="secondary"
+          intent="outline"
           className="gap-2"
           onClick={() => setState("forgot-password")}
         >
-          <EnvelopeSimpleIcon size={24} weight="light" />
+          <EnvelopeSimpleIcon size={18} weight="light" />
           Forgot password
         </Button>
         <Button
-          intent="secondary"
+          intent="outline"
           className="gap-2"
           onClick={() => setState("sign-up")}
         >
-          <UserPlusIcon size={24} weight="light" />
+          <UserPlusIcon size={18} weight="light" />
           Create new account
         </Button>
       </div>
 
-      <div className="my-2 flex justify-center text-sm">
-        <span>Or continue with</span>
+      <div className="my-2 flex items-center justify-center text-sm relative">
+        <div className="absolute inset-0 flex items-center">
+          <div className="shrink-0 bg-border h-px w-full"></div>
+        </div>
+        <span className="relative bg-bg px-3">Or continue with</span>
       </div>
 
-      <SignInWithDiscord />
-      <SignInWithTwitter />
+      <div className="flex flex-col gap-2">
+        <SignInWithDiscord />
+        <SignInWithTwitter />
+      </div>
     </>
   );
 }
@@ -128,7 +135,7 @@ function SignInWithDiscord() {
   const [isPending, startTransition] = useTransition();
   return (
     <Button
-      intent="primary"
+      intent="outline"
       className="gap-2"
       isDisabled={isPending}
       onClick={() => {
@@ -139,7 +146,7 @@ function SignInWithDiscord() {
         });
       }}
     >
-      <DiscordLogoIcon size={24} weight="light" />
+      <DiscordLogoIcon size={18} weight="light" />
       Sign in with Discord
     </Button>
   );
@@ -149,7 +156,7 @@ function SignInWithTwitter() {
   const [isPending, startTransition] = useTransition();
   return (
     <Button
-      intent="primary"
+      intent="outline"
       className="gap-2"
       isDisabled={isPending}
       onClick={() => {
@@ -160,7 +167,7 @@ function SignInWithTwitter() {
         });
       }}
     >
-      <XLogoIcon size={24} weight="light" />
+      <XLogoIcon size={18} weight="light" />
       Sign in with Twitter (X)
     </Button>
   );
