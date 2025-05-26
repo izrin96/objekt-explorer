@@ -196,78 +196,50 @@ const ProgressCollapse = memo(function ProgressCollapse({
       <AnimatePresence>
         {show && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
           >
-            <motion.div
-              className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3 mt-4"
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.02,
-                    delayChildren: 0.05,
-                  },
-                },
-                hidden: {
-                  transition: {
-                    staggerChildren: 0.02,
-                    staggerDirection: -1,
-                  },
-                },
-              }}
-            >
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3 mt-4">
               {Object.values(groupBy(objekts, (a) => a.collectionId)).map(
                 (objekts) => {
                   const [objekt] = objekts;
                   return (
-                    <motion.div
-                      key={objekt.slug}
-                      variants={{
-                        hidden: { opacity: 0, y: 20 },
-                        visible: { opacity: 1, y: 0 },
-                      }}
-                      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                    <ObjektModal
+                      key={objekt.id}
+                      objekts={objekts}
+                      isProfile
+                      menu={
+                        authenticated && (
+                          <ObjektStaticMenu>
+                            <AddToListMenu objekt={objekt} />
+                          </ObjektStaticMenu>
+                        )
+                      }
                     >
-                      <ObjektModal
-                        objekts={objekts}
-                        isProfile
-                        menu={
-                          authenticated && (
-                            <ObjektStaticMenu>
-                              <AddToListMenu objekt={objekt} />
-                            </ObjektStaticMenu>
-                          )
-                        }
-                      >
-                        {({ openObjekts }) => (
-                          <ObjektView
-                            objekts={objekts}
-                            isFade={!ownedSlugs.has(objekt.slug)}
-                            unobtainable={unobtainables.includes(objekt.slug)}
-                            showCount={showCount}
-                            open={openObjekts}
-                          >
-                            {authenticated && (
-                              <div className="absolute top-0 right-0 flex">
-                                <ObjektHoverMenu>
-                                  <AddToListMenu objekt={objekt} />
-                                </ObjektHoverMenu>
-                              </div>
-                            )}
-                          </ObjektView>
-                        )}
-                      </ObjektModal>
-                    </motion.div>
+                      {({ openObjekts }) => (
+                        <ObjektView
+                          objekts={objekts}
+                          isFade={!ownedSlugs.has(objekt.slug)}
+                          unobtainable={unobtainables.includes(objekt.slug)}
+                          showCount={showCount}
+                          open={openObjekts}
+                        >
+                          {authenticated && (
+                            <div className="absolute top-0 right-0 flex">
+                              <ObjektHoverMenu>
+                                <AddToListMenu objekt={objekt} />
+                              </ObjektHoverMenu>
+                            </div>
+                          )}
+                        </ObjektView>
+                      )}
+                    </ObjektModal>
                   );
                 }
               )}
-            </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
