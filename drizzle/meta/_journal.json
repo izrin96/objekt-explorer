@@ -141,6 +141,13 @@
       "when": 1748125870733,
       "tag": "0019_old_cardiac",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1748320987226,
+      "tag": "0020_smart_yellow_claw",
+      "breakpoints": true
     }
   ]
 }
