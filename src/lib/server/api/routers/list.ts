@@ -300,6 +300,7 @@ export async function fetchList(slug: string) {
           username: true,
           image: true,
           discord: true,
+          twitter: true,
           displayUsername: true,
           showSocial: true,
         },
