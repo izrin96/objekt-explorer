@@ -2,6 +2,7 @@
 
 import {
   QueryErrorResetBoundary,
+  useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
@@ -124,24 +125,7 @@ function Trades({
         </Button>
       </div>
 
-      <QueryErrorResetBoundary>
-        {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            FallbackComponent={ErrorFallbackRender}
-          >
-            <Suspense
-              fallback={
-                <div className="flex justify-center">
-                  <Loader variant="ring" />
-                </div>
-              }
-            >
-              <TradeTable objekt={objekt} serial={serial} />
-            </Suspense>
-          </ErrorBoundary>
-        )}
-      </QueryErrorResetBoundary>
+      <TradeTable objekt={objekt} serial={serial} />
     </div>
   );
 }
@@ -153,7 +137,7 @@ function TradeTable({
   objekt: ValidObjekt;
   serial: number;
 }) {
-  const { data } = useSuspenseQuery({
+  const { data, status, refetch } = useQuery({
     queryFn: async () =>
       await ofetch<ObjektTransferResponse>(
         `/api/objekts/transfers/${objekt.slug}/${serial}`
@@ -161,6 +145,16 @@ function TradeTable({
     queryKey: ["objekts", "transfer", objekt.slug, serial],
     retry: 1,
   });
+
+  if (status === "pending")
+    return (
+      <div className="self-center">
+        <Loader variant="ring" />
+      </div>
+    );
+
+  if (status === "error")
+    return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
 
   const ownerNickname = data.transfers.find(
     (a) => a.to.toLowerCase() === data.owner?.toLowerCase()
