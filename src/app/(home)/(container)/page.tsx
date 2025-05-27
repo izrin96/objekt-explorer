@@ -13,7 +13,7 @@ export default async function Home() {
   queryClient.prefetchQuery(collectionOptions);
 
   return (
-    <div className="flex flex-col pb-8 pt-2">
+    <div className="flex flex-col pb-36 pt-2">
       <UserProvider user={toPublicUser(session)}>
         <HydrationBoundary state={dehydrate(queryClient)}>
           <IndexView />

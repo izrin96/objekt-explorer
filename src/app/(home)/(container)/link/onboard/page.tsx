@@ -9,7 +9,7 @@ export default async function Page() {
   if (!session) redirect("/");
 
   return (
-    <div className="flex flex-col pb-8 pt-2">
+    <div className="flex flex-col pb-36 pt-2">
       <LinkRender />
     </div>
   );

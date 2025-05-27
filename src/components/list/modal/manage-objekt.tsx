@@ -17,7 +17,7 @@ import {
 import ErrorFallbackRender from "../../error-boundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ErrorBoundary } from "react-error-boundary";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 
 type AddProps = {
   handleAction: (open: () => void) => void;
@@ -167,6 +167,7 @@ export function RemoveFromList({ slug, handleAction }: RemoveProps) {
         intent="outline"
         onClick={() => handleAction(() => setOpen(true))}
       >
+        <TrashSimpleIcon weight="regular" data-slot="icon" />
         Remove from list
       </Button>
     </>

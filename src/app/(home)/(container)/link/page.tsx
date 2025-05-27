@@ -12,7 +12,7 @@ export default async function Page() {
   api.profile.getAll.prefetch();
 
   return (
-    <div className="flex flex-col pb-8 pt-2">
+    <div className="flex flex-col pb-36 pt-2">
       <div className="flex flex-col gap-4">
         <div className="text-xl font-semibold">My Cosmo</div>
         <HydrateClient>

@@ -21,7 +21,7 @@ export default async function Page() {
   api.list.myList.prefetch();
 
   return (
-    <div className="flex flex-col pb-8 pt-2">
+    <div className="flex flex-col pb-36 pt-2">
       <HydrateClient>
         <MyListRender />
       </HydrateClient>

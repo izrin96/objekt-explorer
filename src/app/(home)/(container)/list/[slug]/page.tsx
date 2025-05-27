@@ -41,7 +41,7 @@ export default async function Page(props: Props) {
   return (
     <ProfileProvider list={list}>
       <UserProvider lists={lists} user={toPublicUser(session)}>
-        <div className="flex flex-col pb-8 pt-2 gap-4">
+        <div className="flex flex-col pb-36 pt-2 gap-4">
           <ListHeader list={list} />
 
           <HydrateClient>

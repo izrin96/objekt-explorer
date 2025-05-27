@@ -32,7 +32,7 @@ type WebSocketMessage =
 
 export default function ActivityRender() {
   return (
-    <div className="flex flex-col gap-6 pt-2 pb-8">
+    <div className="flex flex-col gap-6 pt-2 pb-36">
       <div className="flex flex-col gap-1">
         <h2 className="text-xl font-semibold">Activity</h2>
         <p className="text-muted-fg text-sm">Latest activity in realtime</p>

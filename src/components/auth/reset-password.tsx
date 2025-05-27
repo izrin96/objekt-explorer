@@ -34,7 +34,7 @@ export default function ResetPassword({ token }: { token: string }) {
   });
 
   return (
-    <div className="flex flex-col pb-8 pt-2">
+    <div className="flex flex-col pb-36 pt-2">
       <div className="gap-4 max-w-xl w-full self-center flex flex-col">
         <div className="text-xl font-semibold">Reset Password</div>
         <Form
