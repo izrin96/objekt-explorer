@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useRef, useState } from "react";
+import React, { Suspense, useState } from "react";
 import {
   QueryErrorResetBoundary,
   useMutation,
@@ -21,6 +21,8 @@ import {
 import ErrorFallbackRender from "@/components/error-boundary";
 import { ListAccounts } from "./link-account";
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import type { Session } from "@/lib/server/auth";
+import { getQueryClient } from "@/lib/query-client";
 
 type Props = {
   open: boolean;
@@ -28,25 +30,6 @@ type Props = {
 };
 
 export default function UserAccountModal({ open, setOpen }: Props) {
-  const formRef = useRef<HTMLFormElement>(null!);
-  const session = authClient.useSession();
-
-  const mutation = useMutation({
-    mutationFn: async (data: { showSocial: boolean; name: string }) => {
-      const result = await authClient.updateUser(data);
-      if (result.error) throw new Error(result.error.message);
-      return result.data;
-    },
-    onSuccess: () => {
-      setOpen(false);
-      session.refetch();
-      toast.success("Account updated");
-    },
-    onError: () => {
-      toast.error("Error edit account");
-    },
-  });
-
   return (
     <Sheet.Content
       classNames={{ content: "max-w-md" }}
@@ -58,62 +41,36 @@ export default function UserAccountModal({ open, setOpen }: Props) {
         <Sheet.Description>Manage your account</Sheet.Description>
       </Sheet.Header>
       <Sheet.Body>
-        <Form
-          ref={formRef}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const name = formData.get("name") as string;
-            const showSocial = formData.get("showSocial") === "on";
-
-            mutation.mutate({
-              name,
-              showSocial,
-            });
-          }}
-        >
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary
-                onReset={reset}
-                FallbackComponent={ErrorFallbackRender}
-              >
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center py-2">
-                      <Loader variant="ring" />
-                    </div>
-                  }
-                >
-                  <div className="flex flex-col gap-6 h-full">
-                    <UserAccountForm />
-                    <ListAccounts />
-                    <div>
-                      <DeleteAccount />
-                    </div>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary
+              onReset={reset}
+              FallbackComponent={ErrorFallbackRender}
+            >
+              <Suspense
+                fallback={
+                  <div className="flex justify-center py-2">
+                    <Loader variant="ring" />
                   </div>
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
-        </Form>
+                }
+              >
+                <div className="flex flex-col gap-9">
+                  <UserAccount setOpen={setOpen} />
+                  <ListAccounts />
+                  <div className="flex">
+                    <DeleteAccount />
+                  </div>
+                </div>
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </Sheet.Body>
-      <Sheet.Footer>
-        <Sheet.Close>Cancel</Sheet.Close>
-        <Button
-          intent="primary"
-          type="submit"
-          isPending={mutation.isPending}
-          onClick={() => formRef.current.requestSubmit()}
-        >
-          Save
-        </Button>
-      </Sheet.Footer>
     </Sheet.Content>
   );
 }
 
-function UserAccountForm() {
+function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
   const session = useSuspenseQuery({
     queryKey: ["session"],
     queryFn: async () => {
@@ -126,21 +83,131 @@ function UserAccountForm() {
   });
 
   return (
-    <div className="flex flex-col gap-6">
-      <TextField
-        isRequired
-        label="Name"
-        placeholder="Your name"
-        name="name"
-        defaultValue={session.data.user.name}
-      />
-      <Checkbox
-        label="Show Social"
-        name="showSocial"
-        description="Display your social account such as Discord username in List and Cosmo profile"
-        defaultSelected={session.data.user.showSocial ?? false}
-      />
+    <div className="flex flex-col gap-9">
+      <UserAccountForm user={session.data.user} setOpen={setOpen} />
+      <ChangeEmail email={session.data.user.email} />
     </div>
+  );
+}
+
+function UserAccountForm({
+  user,
+  setOpen,
+}: {
+  user: Session["user"];
+  setOpen: (val: boolean) => void;
+}) {
+  const session = authClient.useSession();
+
+  const mutation = useMutation({
+    mutationFn: async (data: { showSocial: boolean; name: string }) => {
+      const result = await authClient.updateUser(data);
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      session.refetch();
+      getQueryClient().invalidateQueries({
+        queryKey: ["session"],
+      });
+      setOpen(false);
+      toast.success("Account updated");
+    },
+    onError: () => {
+      toast.error("Error edit account");
+    },
+  });
+
+  return (
+    <Form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const name = formData.get("name") as string;
+        const showSocial = formData.get("showSocial") === "on";
+
+        mutation.mutate({
+          name,
+          showSocial,
+        });
+      }}
+    >
+      <div className="flex flex-col gap-6">
+        <TextField
+          isRequired
+          label="Name"
+          placeholder="Your name"
+          name="name"
+          defaultValue={user.name}
+        />
+
+        <Checkbox
+          label="Show Social"
+          name="showSocial"
+          description="Display your social account such as Discord username in List and Cosmo profile"
+          defaultSelected={user.showSocial ?? false}
+        />
+
+        <div className="flex">
+          <Button size="medium" intent="outline" type="submit">
+            Save
+          </Button>
+        </div>
+      </div>
+    </Form>
+  );
+}
+
+function ChangeEmail({ email }: { email: string }) {
+  const mutation = useMutation({
+    mutationFn: async (data: { newEmail: string }) => {
+      const result = await authClient.changeEmail(data);
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      toast.success("Email verification has been sent");
+    },
+    onError: ({ message }) => {
+      toast.error(`Error sending email verification. ${message}`);
+    },
+  });
+
+  return (
+    <Form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const email = formData.get("email") as string;
+        mutation.mutate({
+          newEmail: email,
+        });
+      }}
+    >
+      <div className="flex flex-col gap-3">
+        <TextField
+          className="w-full"
+          isRequired
+          label="Email"
+          placeholder="Your email"
+          name="email"
+          type="email"
+          description="Verification email will be sent to verify your new email address"
+          defaultValue={email}
+        />
+        <div className="flex">
+          <Button
+            isDisabled={mutation.isPending}
+            size="medium"
+            intent="outline"
+            className="flex-none"
+            type="submit"
+          >
+            Save Email
+          </Button>
+        </div>
+      </div>
+    </Form>
   );
 }
 
