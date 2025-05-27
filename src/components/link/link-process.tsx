@@ -241,7 +241,7 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
   if (otpAndLink.isError)
     return (
       <div className="flex flex-col gap-2 items-center">
-        <span>{otpAndLink.failureReason?.message}</span>
+        <span>{otpAndLink.error.message}</span>
         <Button intent="secondary" onClick={() => otpAndLink.reset()}>
           Try again
         </Button>
@@ -260,7 +260,13 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
         }}
         className="flex flex-col gap-2 items-center"
       >
-        <InputOTP maxLength={2} value={value} onChange={setValue}>
+        <InputOTP
+          minLength={2}
+          maxLength={2}
+          required
+          value={value}
+          onChange={setValue}
+        >
           <InputOTP.Group>
             {[...Array(2)].map((_, index) => (
               <InputOTP.Slot key={index} index={index} />
