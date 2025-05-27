@@ -2,7 +2,6 @@
 
 import {
   QueryErrorResetBoundary,
-  useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
@@ -17,11 +16,11 @@ import { ObjektSerial, ObjektTransferResponse } from "./common";
 import { cn } from "@/utils/classes";
 import { ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
-import { useObjektModal } from "@/hooks/use-objekt-modal";
 import { LockIcon, QuestionMarkIcon } from "@phosphor-icons/react/dist/ssr";
 
 type TradeViewProps = {
   objekt: ValidObjekt;
+  serial: number | null;
 };
 
 const fetchObjektsQuery = (slug: string) => ({
@@ -52,8 +51,7 @@ export default function TradeView({ ...props }: TradeViewProps) {
   );
 }
 
-function TradeViewRender({ objekt }: TradeViewProps) {
-  const currentSerial = useObjektModal((a) => a.currentSerial);
+function TradeViewRender({ objekt, serial }: TradeViewProps) {
   const { data } = useSuspenseQuery(fetchObjektsQuery(objekt.slug));
 
   return (
@@ -61,7 +59,7 @@ function TradeViewRender({ objekt }: TradeViewProps) {
       {data.length > 0 && (
         <Trades
           serials={data}
-          initialSerial={currentSerial ?? data[0]}
+          initialSerial={serial ?? data[0]}
           objekt={objekt}
         />
       )}
@@ -126,7 +124,24 @@ function Trades({
         </Button>
       </div>
 
-      <TradeTable objekt={objekt} serial={serial} />
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary
+            onReset={reset}
+            FallbackComponent={ErrorFallbackRender}
+          >
+            <Suspense
+              fallback={
+                <div className="flex justify-center">
+                  <Loader variant="ring" />
+                </div>
+              }
+            >
+              <TradeTable objekt={objekt} serial={serial} />
+            </Suspense>
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
     </div>
   );
 }
@@ -138,7 +153,7 @@ function TradeTable({
   objekt: ValidObjekt;
   serial: number;
 }) {
-  const { data, status, refetch } = useQuery({
+  const { data } = useSuspenseQuery({
     queryFn: async () =>
       await ofetch<ObjektTransferResponse>(
         `/api/objekts/transfers/${objekt.slug}/${serial}`
@@ -147,19 +162,9 @@ function TradeTable({
     retry: 1,
   });
 
-  const ownerNickname = data?.transfers?.find(
+  const ownerNickname = data.transfers.find(
     (a) => a.to.toLowerCase() === data.owner?.toLowerCase()
   )?.nickname;
-
-  if (status === "pending")
-    return (
-      <div className="self-center">
-        <Loader variant="ring" />
-      </div>
-    );
-
-  if (status === "error")
-    return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
 
   if (data.hide)
     return (

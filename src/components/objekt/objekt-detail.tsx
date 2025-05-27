@@ -35,6 +35,9 @@ export default function ObjektDetail({
   const isOwned = "serial" in objekt;
   const currentTab = useObjektModal((a) => a.currentTab);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
+  const [serial, setSerial] = useState(
+    "serial" in objekt ? objekt.serial : null
+  );
 
   return (
     <div className="flex flex-col sm:grid sm:grid-cols-3 p-2 sm:p-3 gap-2 h-full sm:h-[33.5rem] sm:min-h-[33.5rem]">
@@ -75,7 +78,10 @@ export default function ObjektDetail({
           {isProfile && (
             <Tabs.Panel id="owned">
               {isOwned ? (
-                <OwnedListPanel objekts={objekts as OwnedObjekt[]} />
+                <OwnedListPanel
+                  setSerial={setSerial}
+                  objekts={objekts as OwnedObjekt[]}
+                />
               ) : (
                 <div className="flex flex-col justify-center gap-3 items-center">
                   <ArchiveXIcon strokeWidth={1} size={64} />
@@ -85,7 +91,7 @@ export default function ObjektDetail({
             </Tabs.Panel>
           )}
           <Tabs.Panel id="trades">
-            <TradeView objekt={objekt} />
+            <TradeView objekt={objekt} serial={serial} />
           </Tabs.Panel>
         </Tabs>
       </div>
@@ -155,15 +161,20 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
   );
 }
 
-function OwnedListPanel({ objekts }: { objekts: OwnedObjekt[] }) {
+function OwnedListPanel({
+  objekts,
+  setSerial,
+}: {
+  objekts: OwnedObjekt[];
+  setSerial: (serial: number) => void;
+}) {
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
-  const setCurrentSerial = useObjektModal((a) => a.setCurrentSerial);
   const openTrades = useCallback(
     (serial: number) => {
-      setCurrentSerial(serial);
+      setSerial(serial);
       setCurrentTab("trades");
     },
-    [setCurrentTab, setCurrentSerial]
+    [setCurrentTab, setSerial]
   );
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
