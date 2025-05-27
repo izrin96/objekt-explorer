@@ -91,6 +91,12 @@ export const auth = betterAuth({
           .where(eq(userAddress.userId, user.id));
       },
     },
+    changeEmail: {
+      enabled: true,
+      sendChangeEmailVerification: async ({ user, url }) => {
+        await sendVerificationEmail(user.email, url);
+      },
+    },
   },
   account: {
     accountLinking: {

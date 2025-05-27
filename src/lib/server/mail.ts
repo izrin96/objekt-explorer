@@ -9,9 +9,11 @@ const ses = new SES({
   },
 });
 
+const MAIL_FROM = `Objekt Tracker <${env.SES_MAIL_FROM}>`;
+
 export async function sendVerificationEmail(to: string, url: string) {
   await ses.sendEmail({
-    Source: env.SES_MAIL_FROM,
+    Source: MAIL_FROM,
     Destination: {
       ToAddresses: [to],
     },
@@ -30,7 +32,7 @@ export async function sendVerificationEmail(to: string, url: string) {
       },
       Subject: {
         Charset: "UTF-8",
-        Data: "[Objekt Tracker] Verify your email",
+        Data: "Verify your email",
       },
     },
   });
@@ -38,7 +40,7 @@ export async function sendVerificationEmail(to: string, url: string) {
 
 export async function sendResetPassword(to: string, url: string) {
   await ses.sendEmail({
-    Source: env.SES_MAIL_FROM,
+    Source: MAIL_FROM,
     Destination: {
       ToAddresses: [to],
     },
@@ -57,7 +59,7 @@ export async function sendResetPassword(to: string, url: string) {
       },
       Subject: {
         Charset: "UTF-8",
-        Data: "[Objekt Tracker] Reset your password",
+        Data: "Reset your password",
       },
     },
   });
@@ -65,7 +67,7 @@ export async function sendResetPassword(to: string, url: string) {
 
 export async function sendDeleteAccountVerification(to: string, url: string) {
   await ses.sendEmail({
-    Source: env.SES_MAIL_FROM,
+    Source: MAIL_FROM,
     Destination: {
       ToAddresses: [to],
     },
@@ -84,7 +86,7 @@ export async function sendDeleteAccountVerification(to: string, url: string) {
       },
       Subject: {
         Charset: "UTF-8",
-        Data: "[Objekt Tracker] Delete your account",
+        Data: "Delete your account",
       },
     },
   });
