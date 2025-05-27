@@ -102,12 +102,10 @@ function UserMenu({ user }: { user: User }) {
             </Menu.Header>
           </Menu.Section>
 
-          <MyListMenuItem openCreateList={() => setCreateListOpen(true)} />
-
-          <Menu.Item onAction={() => setGenOpen(true)}>
-            <DiscordLogoIcon data-slot="icon" />
-            <Menu.Label>Discord List Format</Menu.Label>
-          </Menu.Item>
+          <MyListMenuItem
+            openCreateList={() => setCreateListOpen(true)}
+            openDiscordFormat={() => setGenOpen(true)}
+          />
 
           <MyCosmoProfileMenuItem />
 
@@ -139,7 +137,13 @@ function UserMenu({ user }: { user: User }) {
   );
 }
 
-function MyListMenuItem({ openCreateList }: { openCreateList: () => void }) {
+function MyListMenuItem({
+  openCreateList,
+  openDiscordFormat,
+}: {
+  openCreateList: () => void;
+  openDiscordFormat: () => void;
+}) {
   const { data, isLoading } = api.list.myList.useQuery();
   const items = data ?? [];
   return (
@@ -171,6 +175,10 @@ function MyListMenuItem({ openCreateList }: { openCreateList: () => void }) {
         <Menu.Item onAction={openCreateList}>
           <PlusIcon data-slot="icon" />
           <Menu.Label>Create list</Menu.Label>
+        </Menu.Item>
+        <Menu.Item onAction={openDiscordFormat}>
+          <DiscordLogoIcon data-slot="icon" />
+          <Menu.Label>Discord Format</Menu.Label>
         </Menu.Item>
         <Menu.Item href={`/list`}>
           <GearSixIcon data-slot="icon" />
