@@ -2,7 +2,7 @@
 
 import { authClient } from "@/lib/auth-client";
 import React, { useState } from "react";
-import { Avatar, buttonStyles, Menu, Link, Modal, Button, Loader } from "./ui";
+import { Avatar, buttonStyles, Menu, Link, Loader } from "./ui";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "@/lib/server/db/schema";
 import { api } from "@/lib/trpc/client";
@@ -48,7 +48,6 @@ export default function UserNav() {
 
 function UserMenu({ user }: { user: User }) {
   const [genOpen, setGenOpen] = useState(false);
-  const [pullOpen, setPullOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
   const router = useRouter();
@@ -56,7 +55,6 @@ function UserMenu({ user }: { user: User }) {
     <>
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
       <UserAccountModal open={accountOpen} setOpen={setAccountOpen} />
-      <PullDiscordProfileModal open={pullOpen} setOpen={setPullOpen} />
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
 
       <Menu>
@@ -116,11 +114,6 @@ function UserMenu({ user }: { user: User }) {
           <Menu.Item onAction={() => setAccountOpen(true)}>
             <UserIcon data-slot="icon" />
             <Menu.Label>Account</Menu.Label>
-          </Menu.Item>
-
-          <Menu.Item onAction={() => setPullOpen(true)}>
-            <DiscordLogoIcon data-slot="icon" size={16} />
-            <Menu.Label>Refresh Profile</Menu.Label>
           </Menu.Item>
 
           <Menu.Separator />
@@ -223,46 +216,5 @@ function MyCosmoProfileMenuItem() {
         </Menu.Item>
       </Menu.Content>
     </Menu.Submenu>
-  );
-}
-
-type PullDiscordModalProps = {
-  open: boolean;
-  setOpen: (val: boolean) => void;
-};
-
-function PullDiscordProfileModal({ open, setOpen }: PullDiscordModalProps) {
-  const session = authClient.useSession();
-  const refreshProfile = api.user.refreshProfile.useMutation({
-    onSuccess: () => {
-      session.refetch();
-      setOpen(false);
-      toast.success("Profile updated");
-    },
-    onError: ({ message }) => {
-      toast.error(`Error updating profile. ${message}`);
-    },
-  });
-  return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
-      <Modal.Header>
-        <Modal.Title>Update Profile from Discord</Modal.Title>
-        <Modal.Description>
-          This will update your username and profile picture from Discord. Only
-          works if your account linked with Discord.
-        </Modal.Description>
-      </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
-        <Button
-          intent="primary"
-          type="submit"
-          isPending={refreshProfile.isPending}
-          onClick={() => refreshProfile.mutate()}
-        >
-          Continue
-        </Button>
-      </Modal.Footer>
-    </Modal.Content>
   );
 }

@@ -49,7 +49,7 @@ export default function UserAccountModal({ open, setOpen }: Props) {
 
   return (
     <Sheet.Content
-      classNames={{ content: "max-w-sm" }}
+      classNames={{ content: "max-w-md" }}
       isOpen={open}
       onOpenChange={setOpen}
     >

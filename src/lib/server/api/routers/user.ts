@@ -5,8 +5,9 @@ import { authProcedure, createTRPCRouter } from "../trpc";
 import { z } from "zod/v4";
 
 export const userRouter = createTRPCRouter({
-  refreshProfile: authProcedure.mutation(
+  refreshProfile: authProcedure.input(z.string()).mutation(
     async ({
+      input: providerId,
       ctx: {
         session: { user },
         headers,
@@ -20,22 +21,22 @@ export const userRouter = createTRPCRouter({
           refreshToken: true,
         },
         where: (t, { eq, and }) =>
-          and(eq(t.userId, user.id), eq(t.providerId, "discord")),
+          and(eq(t.userId, user.id), eq(t.providerId, providerId)),
       });
 
       if (!account)
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "User not link with Discord",
+          message: "User not link with provider",
         });
 
       const authContext = await auth.$context;
 
       const provider = authContext.socialProviders.find(
-        (p) => p.id === "discord"
+        (p) => p.id === providerId
       );
 
-      // fetch from discord
+      // fetch from provider
       const info = await provider!.getUserInfo({
         idToken: account.idToken ?? undefined,
         accessToken: account.accessToken ?? undefined,
@@ -45,14 +46,17 @@ export const userRouter = createTRPCRouter({
       if (!info)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to get info from Discord",
+          message: "Failed to get info from provider",
         });
 
       // update user
       await auth.api.updateUser({
         headers,
         body: {
-          discord: info.data.username,
+          [providerId]:
+            providerId === "discord"
+              ? info.data.username
+              : info.data.data?.username,
           image: info.user.image,
         },
       });

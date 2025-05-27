@@ -1,11 +1,12 @@
 "use client";
 
-import { Button, Label } from "@/components/ui";
+import { Button, Label, Modal } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { getQueryClient } from "@/lib/query-client";
 import { api } from "@/lib/trpc/client";
-import { LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
+import { LinkBreakIcon, LinkIcon, ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
 
 type ProviderId = "twitter" | "discord";
@@ -68,6 +69,7 @@ type LinkedAccountProps = {
 };
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
+  const [pullOpen, setPullOpen] = useState(false);
   const session = authClient.useSession();
   const unlinkAccount = api.user.unlinkAccount.useMutation({
     onSuccess: () => {
@@ -83,11 +85,24 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
   });
 
   return (
-    <div className="flex justify-between items-center">
-      <div className="flex gap-2 text-sm items-center">
+    <div className="flex items-center gap-2">
+      <div className="flex gap-2 text-sm items-center flex-1">
         <span>{provider.label}</span>
         <span className="text-muted-fg text-xs">{accountId}</span>
       </div>
+      <PullProfileModal
+        provider={provider}
+        open={pullOpen}
+        setOpen={setPullOpen}
+      />
+      <Button
+        intent="outline"
+        size="extra-small"
+        onClick={() => setPullOpen(true)}
+      >
+        <ArrowsClockwiseIcon data-slot="icon" />
+        Refresh
+      </Button>
       <Button
         intent="danger"
         size="extra-small"
@@ -126,7 +141,7 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
     <div className="flex justify-between items-center">
       <span className="text-sm">{provider.label}</span>
       <Button
-        intent="secondary"
+        intent="outline"
         size="extra-small"
         onClick={() => linkAccount.mutate()}
       >
@@ -134,5 +149,47 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
         Link
       </Button>
     </div>
+  );
+}
+
+type PullProfileProps = {
+  provider: Provider;
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
+  const session = authClient.useSession();
+  const refreshProfile = api.user.refreshProfile.useMutation({
+    onSuccess: () => {
+      session.refetch();
+      setOpen(false);
+      toast.success("Profile updated");
+    },
+    onError: ({ message }) => {
+      toast.error(`Error updating profile. ${message}`);
+    },
+  });
+  return (
+    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+      <Modal.Header>
+        <Modal.Title>Update Profile from {provider.label}</Modal.Title>
+        <Modal.Description>
+          This will update your {provider.label} username and profile picture.
+          Continue?
+        </Modal.Description>
+      </Modal.Header>
+      <Modal.Footer>
+        <Modal.Close>Cancel</Modal.Close>
+        <Button
+          intent="primary"
+          type="submit"
+          isPending={refreshProfile.isPending}
+          onClick={() => refreshProfile.mutate(provider.id)}
+        >
+          Continue
+        </Button>
+      </Modal.Footer>
+    </Modal.Content>
   );
 }
