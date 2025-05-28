@@ -27,11 +27,12 @@ export default function ColorFilter() {
     <>
       <div style={{ "--ring-color": color } as CSSProperties}>
         <ColorPicker
+          eyeDropper
           className={cn(
-            "inset-ring inset-ring-fg/20 rounded",
+            "inset-ring inset-ring-fg/15 rounded",
             color && "inset-ring-(--ring-color)"
           )}
-          label="Color Picker"
+          label="Color"
           value={color ? parseColor(color) : "#000"}
           onChange={(color) => setColor(color.toString("rgb"))}
         />

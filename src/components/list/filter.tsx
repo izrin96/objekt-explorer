@@ -22,25 +22,28 @@ import ColorFilter from "../filters/filter-color";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
-  const [filters] = useFilters();
   const reset = useResetFilters();
   return (
-    <div className="flex gap-2 flex-wrap">
-      <ArtistFilter artists={artists} />
-      <MemberFilter artists={artists} />
-      <SeasonFilter />
-      <ClassFilter />
-      <EditionFilter />
-      <OnlineFilter />
-      <SortFilter allowDuplicateSort />
-      <SortDirectionFilter />
-      <CombineDuplicateFilter />
-      <SearchFilter />
-      <GroupByFilter />
-      {filters.group_by && <GroupDirectionFilter />}
-      <ColumnFilter />
-      <ColorFilter />
-      <ResetFilter onReset={() => reset()} />
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-2 flex-wrap">
+        <ArtistFilter artists={artists} />
+        <MemberFilter artists={artists} />
+        <SeasonFilter />
+        <ClassFilter />
+        <EditionFilter />
+        <OnlineFilter />
+        <ColorFilter />
+        <SortFilter allowDuplicateSort />
+        <SortDirectionFilter />
+        <CombineDuplicateFilter />
+        <GroupByFilter />
+        <GroupDirectionFilter />
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        <ColumnFilter />
+        <SearchFilter />
+        <ResetFilter onReset={() => reset()} />
+      </div>
     </div>
   );
 }

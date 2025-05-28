@@ -9,6 +9,7 @@ import {
 
 export default function GroupDirectionFilter() {
   const [filters, setFilters] = useFilters();
+  if (!filters.group_by) return;
   return (
     <Toggle
       className="w-[125px] font-medium"
