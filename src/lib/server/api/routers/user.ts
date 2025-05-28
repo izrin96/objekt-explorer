@@ -5,7 +5,7 @@ import { authProcedure, createTRPCRouter } from "../trpc";
 import { z } from "zod/v4";
 
 export const userRouter = createTRPCRouter({
-  refreshProfile: authProcedure.input(z.string()).mutation(
+  refreshProfile: authProcedure.input(z.enum(["discord", "twitter"])).mutation(
     async ({
       input: providerId,
       ctx: {
@@ -66,7 +66,7 @@ export const userRouter = createTRPCRouter({
   unlinkAccount: authProcedure
     .input(
       z.object({
-        providerId: z.string(),
+        providerId: z.enum(["discord", "twitter"]),
         accountId: z.string(),
       })
     )
