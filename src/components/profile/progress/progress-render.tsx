@@ -209,7 +209,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
                     <ObjektModal
                       key={objekt.id}
                       objekts={objekts}
-                      isProfile
+                      showOwned
                       menu={
                         authenticated && (
                           <ObjektStaticMenu>

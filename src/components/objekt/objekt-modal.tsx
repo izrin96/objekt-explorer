@@ -6,7 +6,7 @@ import ObjektDetail from "./objekt-detail";
 import { ValidObjekt } from "@/lib/universal/objekts";
 
 type Props = {
-  isProfile?: boolean;
+  showOwned?: boolean;
   objekts: ValidObjekt[];
   children: ({ openObjekts }: { openObjekts: () => void }) => React.ReactNode;
   menu?: React.ReactNode;
@@ -14,7 +14,7 @@ type Props = {
 
 export default function ObjektModal({
   children,
-  isProfile,
+  showOwned,
   objekts,
   menu,
 }: Props) {
@@ -27,7 +27,7 @@ export default function ObjektModal({
         </Modal.Header>
         <Modal.Body className="p-0 sm:p-0">
           {menu}
-          <ObjektDetail objekts={objekts} isProfile={isProfile} />
+          <ObjektDetail objekts={objekts} showOwned={showOwned} />
         </Modal.Body>
       </Modal.Content>
       {children({ openObjekts: () => setOpen(true) })}

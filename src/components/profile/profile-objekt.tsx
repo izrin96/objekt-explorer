@@ -129,7 +129,7 @@ function ProfileObjekt() {
                 <ObjektModal
                   key={objekt.id}
                   objekts={item.item}
-                  isProfile
+                  showOwned
                   menu={
                     authenticated && (
                       <ObjektStaticMenu>

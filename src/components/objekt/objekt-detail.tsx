@@ -24,12 +24,12 @@ import { useObjektModal, ValidTab } from "@/hooks/use-objekt-modal";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
-  isProfile?: boolean;
+  showOwned?: boolean;
 };
 
 export default function ObjektDetail({
   objekts,
-  isProfile,
+  showOwned,
 }: ObjektDetailProps) {
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
@@ -60,7 +60,7 @@ export default function ObjektDetail({
           className="p-2"
         >
           <Tabs.List>
-            {isProfile && (
+            {showOwned && (
               <Tabs.Tab id="owned">
                 Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}
               </Tabs.Tab>
@@ -75,7 +75,7 @@ export default function ObjektDetail({
               View in Apollo
             </Tabs.Tab>
           </Tabs.List>
-          {isProfile && (
+          {showOwned && (
             <Tabs.Panel id="owned">
               {isOwned ? (
                 <OwnedListPanel

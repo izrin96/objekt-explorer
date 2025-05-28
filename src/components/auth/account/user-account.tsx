@@ -113,8 +113,8 @@ function UserAccountForm({
       setOpen(false);
       toast.success("Account updated");
     },
-    onError: () => {
-      toast.error("Error edit account");
+    onError: ({ message }) => {
+      toast.error(`Error edit account. ${message}`);
     },
   });
 
