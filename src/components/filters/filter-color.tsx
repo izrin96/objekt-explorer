@@ -33,7 +33,7 @@ export default function ColorFilter() {
           )}
           label="Color Picker"
           value={color ? parseColor(color) : "#000"}
-          onChange={(color) => setColor(color.toString("hsl"))}
+          onChange={(color) => setColor(color.toString("rgb"))}
         />
       </div>
       {color && (
