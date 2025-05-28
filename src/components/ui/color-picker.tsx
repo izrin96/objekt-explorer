@@ -94,7 +94,8 @@ const EyeDropper = () => {
   const state = use(ColorPickerStateContext)!
 
   if (!window.EyeDropper) {
-    return "EyeDropper is not supported in your browser."
+    return;
+    // return "EyeDropper is not supported in your browser."
   }
 
   return (
