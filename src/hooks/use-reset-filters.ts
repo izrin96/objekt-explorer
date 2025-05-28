@@ -21,6 +21,7 @@ export function useResetFilters() {
       edition: null,
       hidePin: null,
       color: null,
+      colorSensitivity: null,
     });
   }
   return reset;

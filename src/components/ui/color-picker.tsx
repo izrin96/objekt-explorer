@@ -62,6 +62,7 @@ const ColorPicker = ({
             className="overflow-auto **:data-[slot=color-area]:w-full **:data-[slot=color-slider]:w-full sm:min-w-min sm:max-w-56 sm:**:data-[slot=color-area]:size-56 *:[[role=dialog]]:p-4 sm:*:[[role=dialog]]:p-3"
             showArrow={showArrow}
             placement={placement}
+            respectScreen={false}
           >
             <div className="flex flex-col gap-y-1.5">
               {children || (

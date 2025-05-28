@@ -163,7 +163,7 @@ export function filterObjekts<T extends ValidObjekt>(
     if (targetColor) {
       const color = chroma(a.backgroundColor);
       const deltaE = chroma.deltaE(targetColor, color);
-      if (deltaE > 7) return false;
+      if (deltaE > (filters.colorSensitivity ?? 7)) return false;
     }
 
     return true;

@@ -7,6 +7,7 @@ import { Button, ColorPicker } from "../ui";
 import { useDebounceValue } from "usehooks-ts";
 import { cn } from "@/utils/classes";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {
   const [filters, setFilters] = useFilters();
@@ -38,10 +39,13 @@ export default function ColorFilter() {
         />
       </div>
       {color && (
-        <Button intent="outline" onClick={() => setColor(null)}>
-          <XIcon data-slot="icon" />
-          Clear color
-        </Button>
+        <>
+          <ColorSensitivityFilter />
+          <Button intent="outline" onClick={() => setColor(null)}>
+            <XIcon data-slot="icon" />
+            Clear color
+          </Button>
+        </>
       )}
     </>
   );

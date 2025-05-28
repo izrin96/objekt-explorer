@@ -22,6 +22,7 @@ import {
   parseAsStringEnum,
   useQueryStates,
   parseAsBoolean,
+  parseAsFloat,
 } from "nuqs";
 
 export function useFilters() {
@@ -59,6 +60,7 @@ export function useFilters() {
     ),
     hidePin: parseAsBoolean,
     color: parseAsString,
+    colorSensitivity: parseAsFloat,
   });
 }
 
@@ -82,6 +84,7 @@ export function checkFiltering(filters: Filters) {
     filters.unowned !== null ||
     filters.edition !== null ||
     filters.hidePin !== null ||
-    filters.color !== null
+    filters.color !== null ||
+    filters.colorSensitivity !== null
   );
 }
