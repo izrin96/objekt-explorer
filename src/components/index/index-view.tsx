@@ -148,9 +148,9 @@ function IndexView() {
         <FilterContainer>
           <Filters authenticated={authenticated} />
         </FilterContainer>
-        <FilterSheet>
+        {/* <FilterSheet>
           <Filters authenticated={authenticated} />
-        </FilterSheet>
+        </FilterSheet> */}
       </div>
       <span className="font-semibold">{count} total</span>
 

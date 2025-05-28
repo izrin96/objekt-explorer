@@ -176,13 +176,13 @@ function ListView({ slug }: Props) {
             slug={slug}
           />
         </FilterContainer>
-        <FilterSheet>
+        {/* <FilterSheet>
           <Filters
             authenticated={authenticated}
             isOwned={isOwned}
             slug={slug}
           />
-        </FilterSheet>
+        </FilterSheet> */}
       </div>
       <span className="font-semibold">
         {count} total

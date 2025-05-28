@@ -255,13 +255,13 @@ function ProfileObjekt() {
             isOwned={isProfileAuthed}
           />
         </FilterContainer>
-        <FilterSheet>
+        {/* <FilterSheet>
           <Filters
             address={profile!.address}
             authenticated={authenticated}
             isOwned={isProfileAuthed}
           />
-        </FilterSheet>
+        </FilterSheet> */}
       </div>
       <span className="font-semibold">
         {count} total
