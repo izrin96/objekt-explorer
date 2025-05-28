@@ -20,6 +20,7 @@ export function useResetFilters() {
       unowned: null,
       edition: null,
       hidePin: null,
+      color: null,
     });
   }
   return reset;

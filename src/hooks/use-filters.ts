@@ -58,6 +58,7 @@ export function useFilters() {
       parseAsStringEnum<ValidEdition>(Object.values(validEdition))
     ),
     hidePin: parseAsBoolean,
+    color: parseAsString,
   });
 }
 
@@ -80,6 +81,7 @@ export function checkFiltering(filters: Filters) {
     filters.group_dir !== null ||
     filters.unowned !== null ||
     filters.edition !== null ||
-    filters.hidePin !== null
+    filters.hidePin !== null ||
+    filters.color !== null
   );
 }

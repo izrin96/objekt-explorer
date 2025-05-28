@@ -10,6 +10,7 @@ import { PinObjekt, ValidObjekt } from "./universal/objekts";
 import { groupBy } from "es-toolkit";
 import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import { getEdition } from "./utils";
+import chroma from "chroma-js";
 
 export type ObjektItem<T> = {
   type: "pin" | "item";
@@ -106,6 +107,16 @@ export function filterObjekts<T extends ValidObjekt>(
     )
     .filter((group) => group.length > 0);
 
+  // Parse target color once outside the filter loop
+  let targetColor: chroma.Color | null = null;
+  if (filters.color) {
+    try {
+      targetColor = chroma(filters.color);
+    } catch (e) {
+      console.error("Invalid color format:", e);
+    }
+  }
+
   return objekts.filter((a) => {
     if (filters.member && !filters.member.includes(a.member)) return false;
 
@@ -147,6 +158,12 @@ export function filterObjekts<T extends ValidObjekt>(
         )
       );
       if (!matchesQuery) return false;
+    }
+
+    if (targetColor) {
+      const color = chroma(a.backgroundColor);
+      const deltaE = chroma.deltaE(targetColor, color);
+      if (deltaE > 7) return false;
     }
 
     return true;

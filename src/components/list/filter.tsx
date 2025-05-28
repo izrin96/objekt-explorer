@@ -18,6 +18,7 @@ import ResetFilter from "../filters/reset-filter";
 import { useFilters } from "@/hooks/use-filters";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+import ColorFilter from "../filters/filter-color";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
@@ -38,6 +39,7 @@ export default function Filter() {
       <GroupByFilter />
       {filters.group_by && <GroupDirectionFilter />}
       <ColumnFilter />
+      <ColorFilter />
       <ResetFilter onReset={() => reset()} />
     </div>
   );

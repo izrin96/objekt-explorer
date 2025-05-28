@@ -21,6 +21,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import HidePinFilter from "../filters/filter-hide-pin";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+import ColorFilter from "../filters/filter-color";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
@@ -42,6 +43,7 @@ export default function Filter() {
       <GroupByFilter />
       {filters.group_by && <GroupDirectionFilter />}
       <ColumnFilter />
+      <ColorFilter />
       <UnownedFilter />
       <HidePinFilter />
       <ResetFilter onReset={() => reset()} />
