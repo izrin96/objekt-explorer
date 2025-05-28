@@ -31,7 +31,7 @@ export default function ColorSensitivityFilter() {
             label="Color sensitivity"
             className="pb-2"
             minValue={0}
-            maxValue={25}
+            maxValue={30}
             value={sensitivity ?? 7}
             onChange={(v) => setSensitivity(v as number)}
             step={0.1}

@@ -14,7 +14,6 @@ import GroupByFilter from "../filters/filter-groupby";
 import GroupDirectionFilter from "../filters/filter-group-direction";
 import ColumnFilter from "../filters/filter-column";
 import ResetFilter from "../filters/reset-filter";
-import { useFilters } from "@/hooks/use-filters";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import ColorFilter from "../filters/filter-color";

@@ -17,7 +17,6 @@ import GroupDirectionFilter from "../filters/filter-group-direction";
 import ColumnFilter from "../filters/filter-column";
 import UnownedFilter from "../filters/filter-unowned";
 import ResetFilter from "../filters/reset-filter";
-import { useFilters } from "@/hooks/use-filters";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import HidePinFilter from "../filters/filter-hide-pin";
 import { useResetFilters } from "@/hooks/use-reset-filters";

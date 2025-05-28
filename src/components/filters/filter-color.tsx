@@ -35,13 +35,21 @@ export default function ColorFilter() {
           )}
           label="Color"
           value={color ? parseColor(color) : "#000"}
-          onChange={(color) => setColor(color.toString("rgb"))}
+          onChange={(color) => setColor(color.toString("hsl"))}
         />
       </div>
       {color && (
         <>
           <ColorSensitivityFilter />
-          <Button intent="outline" onClick={() => setColor(null)}>
+          <Button
+            intent="outline"
+            onClick={() =>
+              setFilters({
+                color: null,
+                colorSensitivity: null,
+              })
+            }
+          >
             <XIcon data-slot="icon" />
             Clear color
           </Button>
