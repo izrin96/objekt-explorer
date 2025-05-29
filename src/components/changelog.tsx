@@ -34,7 +34,19 @@ export default function Changelog() {
           </Modal.Description>
         </Modal.Header>
         <Modal.Body>
-          <DisclosureGroup defaultExpandedKeys={"8"}>
+          <DisclosureGroup defaultExpandedKeys={"9"}>
+            <Disclosure id={"9"}>
+              <DisclosureTrigger>2025-05-30</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>Added Live Activity page.</li>
+                    <li>Added option to hide from Activity in Edit Profile. User must link with Cosmo profile first.</li>
+                    <li>Added filter by objekt color.</li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
             <Disclosure id={"8"}>
               <DisclosureTrigger>2025-05-27</DisclosureTrigger>
               <DisclosurePanel>

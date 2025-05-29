@@ -88,19 +88,20 @@ export async function GET(request: NextRequest) {
         (a) => a.address.toLowerCase() === t.transfer.to.toLowerCase()
       );
 
+      if (from?.hideActivity === true || to?.hideActivity === true) return null;
+
       return {
         user: {
-          from: from !== undefined && !from.hideActivity ? from : undefined,
-          to: to !== undefined && !to.hideActivity ? to : undefined,
+          from: from
+            ? { address: from.address, nickname: from.nickname }
+            : undefined,
+          to: to ? { address: to.address, nickname: to.nickname } : undefined,
         },
         transfer: t.transfer,
         objekt: mapOwnedObjekt(t.objekt, t.collection),
       };
     })
-    .filter(
-      (t) =>
-        Object.values(t.user).some((a) => a?.hideActivity === true) === false
-    );
+    .filter((t) => t !== null);
 
   const hasNextPage = transferResults.length > PAGE_SIZE;
   const nextCursor = hasNextPage
