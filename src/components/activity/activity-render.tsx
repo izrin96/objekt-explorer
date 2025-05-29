@@ -33,15 +33,6 @@ type Data = {
 
 type WebSocketMessage = { type: "transfer"; data: Data };
 
-const COLUMN_WIDTHS = {
-  event: "120px",
-  objekt: "250px",
-  serial: "100px",
-  from: "200px",
-  to: "200px",
-  time: "280px",
-} as const;
-
 export default function ActivityRender() {
   return (
     <div className="flex flex-col gap-6 pt-2">
@@ -87,7 +78,7 @@ function Activity() {
 
   const rowVirtualizer = useWindowVirtualizer({
     count: allTransfers.length,
-    estimateSize: () => 40,
+    estimateSize: () => 41,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
@@ -141,85 +132,71 @@ function Activity() {
   }, [newTransferIds]);
 
   return (
-    <Card className="py-0">
-      <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-bg border-b w-fit min-w-full flex">
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.event }}
-          >
-            Event
-          </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.objekt }}
-          >
-            Objekt
-          </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.serial }}
-          >
-            Serial
-          </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.from }}
-          >
-            From
-          </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.to }}
-          >
-            To
-          </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.time }}
-          >
-            Time
-          </div>
-        </div>
-
-        {/* Virtualized Rows */}
+    <>
+      <Card className="py-0">
         <div
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-          }}
-          className="relative w-full"
+          className="relative w-full overflow-x-auto text-sm"
+          ref={parentRef}
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-            const item = allTransfers[virtualRow.index];
-            const isNew = newTransferIds.has(item.transfer.id);
-            return (
-              <ObjektModal key={item.transfer.id} objekts={[item.objekt]}>
-                {({ openObjekts }) => (
-                  <ActivityRow
-                    item={item}
-                    open={openObjekts}
-                    isNew={isNew}
-                    style={{
-                      transform: `translateY(${
-                        virtualRow.start - rowVirtualizer.options.scrollMargin
-                      }px)`,
-                    }}
-                  />
-                )}
-              </ObjektModal>
-            );
-          })}
-        </div>
+          {/* Header */}
+          <div className="bg-bg border-b min-w-fit flex">
+            <div className="px-3 py-2.5 min-w-[120px] flex-1">
+              Event
+            </div>
+            <div className="px-3 py-2.5 min-w-[250px] flex-1">
+              Objekt
+            </div>
+            <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
+              Serial
+            </div>
+            <div className="px-3 py-2.5 min-w-[200px] flex-1">
+              From
+            </div>
+            <div className="px-3 py-2.5 min-w-[200px] flex-1">
+              To
+            </div>
+            <div className="px-3 py-2.5 min-w-[280px] flex-1">
+              Time
+            </div>
+          </div>
 
-        <InfiniteQueryNext
-          status={status}
-          hasNextPage={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          fetchNextPage={fetchNextPage}
-        />
-      </div>
-    </Card>
+          {/* Virtualized Rows */}
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+            }}
+            className="relative w-full"
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const item = allTransfers[virtualRow.index];
+              const isNew = newTransferIds.has(item.transfer.id);
+              return (
+                <ObjektModal key={item.transfer.id} objekts={[item.objekt]}>
+                  {({ openObjekts }) => (
+                    <ActivityRow
+                      item={item}
+                      open={openObjekts}
+                      isNew={isNew}
+                      style={{
+                        transform: `translateY(${
+                          virtualRow.start - rowVirtualizer.options.scrollMargin
+                        }px)`,
+                      }}
+                    />
+                  )}
+                </ObjektModal>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+      <InfiniteQueryNext
+        status={status}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        fetchNextPage={fetchNextPage}
+      />
+    </>
   );
 }
 
@@ -267,11 +244,8 @@ const ActivityRow = memo(function ActivityRow({
             : ""
         }`}
       >
-        <div className="flex items-center border-b min-w-full">
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.event }}
-          >
+        <div className="flex items-center border-b w-full">
+          <div className="px-3 py-2.5 min-w-[120px] flex-1">
             <div className="flex items-center gap-2 font-semibold">
               {event === "mint" ? (
                 <>
@@ -292,34 +266,21 @@ const ActivityRow = memo(function ActivityRow({
             </div>
           </div>
           <div
-            className="px-3 py-2.5 cursor-pointer flex-shrink-0"
+            className="px-3 py-2.5 cursor-pointer min-w-[250px] flex-1"
             onClick={open}
-            style={{ width: COLUMN_WIDTHS.objekt }}
           >
             {item.objekt.collectionId}
           </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.serial }}
-          >
+          <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
             {item.objekt.serial}
           </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.from }}
-          >
+          <div className="px-3 py-2.5 min-w-[200px] flex-1">
             {from}
           </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.to }}
-          >
+          <div className="px-3 py-2.5 min-w-[200px] flex-1">
             {to}
           </div>
-          <div
-            className="px-3 py-2.5 flex-shrink-0"
-            style={{ width: COLUMN_WIDTHS.time }}
-          >
+          <div className="px-3 py-2.5 min-w-[280px] flex-1">
             {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
           </div>
         </div>

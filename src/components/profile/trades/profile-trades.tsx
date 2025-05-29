@@ -4,7 +4,7 @@ import {
   QueryErrorResetBoundary,
   useInfiniteQuery,
 } from "@tanstack/react-query";
-import React from "react";
+import React, { useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ofetch } from "ofetch";
 import { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
@@ -22,6 +22,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useTypeFilter } from "./filter-type";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 
 export default function ProfileTradesRender() {
   const { artists } = useCosmoArtist();
@@ -48,6 +49,8 @@ function ProfileTrades() {
   const [filters] = useFilters();
   const [type] = useTypeFilter();
   const address = profile!.address;
+  const parentRef = useRef<HTMLDivElement>(null);
+
   const query = useInfiniteQuery({
     queryKey: ["transfers", address, type, filters],
     queryFn: async ({
@@ -75,6 +78,15 @@ function ProfileTrades() {
     retry: false,
   });
 
+  const rows = query.data?.pages.flatMap((p) => p.results) ?? [];
+
+  const rowVirtualizer = useWindowVirtualizer({
+    count: rows.length,
+    estimateSize: () => 42,
+    overscan: 5,
+    scrollMargin: parentRef.current?.offsetTop ?? 0,
+  });
+
   if (query.isLoading)
     return (
       <div className="justify-center flex">
@@ -82,42 +94,46 @@ function ProfileTrades() {
       </div>
     );
 
-  const rows = query.data?.pages.flatMap((p) => p.results) ?? [];
-
   return (
     <>
       <Card className="py-0">
-        <div className="relative w-full overflow-auto">
-          <table className="table w-full min-w-full caption-bottom border-spacing-0 text-sm outline-hidden">
-            <thead data-slot="table-header" className="border-b">
-              <tr>
-                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
-                  Date
-                </th>
-                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
-                  Objekt
-                </th>
-                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
-                  Serial
-                </th>
-                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
-                  Action
-                </th>
-                <th className="relative whitespace-nowrap px-3 py-2.5 text-left font-medium outline-hidden">
-                  User
-                </th>
-              </tr>
-            </thead>
-            <tbody className="[&_.tr:last-child]:border-0">
-              {rows.map((row) => (
+        <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
+          {/* Header */}
+          <div className="bg-bg border-b min-w-fit flex">
+            <div className="px-3 py-2.5 min-w-[210px] flex-1">Date</div>
+            <div className="px-3 py-2.5 min-w-[240px] flex-1">Objekt</div>
+            <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">Serial</div>
+            <div className="px-3 py-2.5 min-w-[130px] flex-1">Action</div>
+            <div className="px-3 py-2.5 min-w-[200px] flex-1">User</div>
+          </div>
+
+          {/* Virtualized Rows */}
+          <div
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+            }}
+            className="w-full relative"
+          >
+            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              const row = rows[virtualRow.index];
+              return (
                 <ObjektModal key={row.transfer.id} objekts={[row.objekt]}>
                   {({ openObjekts }) => (
-                    <TradeRow row={row} address={address} open={openObjekts} />
+                    <TradeRow
+                      row={row}
+                      address={address}
+                      open={openObjekts}
+                      style={{
+                        transform: `translateY(${
+                          virtualRow.start - rowVirtualizer.options.scrollMargin
+                        }px)`,
+                      }}
+                    />
                   )}
                 </ObjektModal>
-              ))}
-            </tbody>
-          </table>
+              );
+            })}
+          </div>
         </div>
       </Card>
       <InfiniteQueryNext
@@ -134,17 +150,23 @@ function TradeRow({
   row,
   address,
   open,
+  style,
 }: {
   row: AggregatedTransfer;
   address: string;
   open: () => void;
+  style?: React.CSSProperties;
 }) {
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const action = isReceiver ? (
-    <Badge intent="info">Received From</Badge>
+    <Badge className="text-xs" intent="info">
+      Received From
+    </Badge>
   ) : (
-    <Badge intent="custom">Sent To</Badge>
+    <Badge className="text-xs" intent="custom">
+      Sent To
+    </Badge>
   );
 
   const user = isReceiver ? (
@@ -160,28 +182,26 @@ function TradeRow({
   );
 
   return (
-    <tr className="tr group relative cursor-default border-b text-fg outline-hidden ring-primary focus:ring-0 focus-visible:ring-1">
-      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
-        {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
-      </td>
-      <td
-        className="group whitespace-nowrap px-3 py-2.5 outline-hidden cursor-pointer"
-        onClick={open}
-      >
-        <div className="inline-flex gap-2 items-center">
-          {row.objekt.collectionId}
-          <IconOpenLink />
+    <div className="absolute left-0 top-0 w-full" style={style}>
+      <div className="items-center border-b min-w-full inline-flex">
+        <div className="px-3 py-2.5 min-w-[210px] flex-1">
+          {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
         </div>
-      </td>
-      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
-        {row.objekt.serial}
-      </td>
-      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
-        {action}
-      </td>
-      <td className="group whitespace-nowrap px-3 py-2.5 outline-hidden">
-        {user}
-      </td>
-    </tr>
+        <div
+          className="px-3 py-2.5 cursor-pointer min-w-[240px] flex-1"
+          onClick={open}
+        >
+          <div className="inline-flex gap-2 items-center">
+            {row.objekt.collectionId}
+            <IconOpenLink />
+          </div>
+        </div>
+        <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
+          {row.objekt.serial}
+        </div>
+        <div className="px-3 py-2.5 min-w-[130px] flex-1">{action}</div>
+        <div className="px-3 py-2.5 min-w-[200px] flex-1">{user}</div>
+      </div>
+    </div>
   );
 }
