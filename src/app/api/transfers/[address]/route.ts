@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { asc, desc, or, eq, and, inArray, ne, lt, gt } from "drizzle-orm";
+import { desc, or, eq, and, inArray, ne, lt } from "drizzle-orm";
 import { db } from "@/lib/server/db";
 import {
   collections,
@@ -155,13 +155,13 @@ export async function GET(
               lt(transfers.timestamp, cursor.timestamp),
               and(
                 eq(transfers.timestamp, cursor.timestamp),
-                gt(transfers.id, cursor.id)
+                lt(transfers.id, cursor.id)
               )
             )
           : undefined
       )
     )
-    .orderBy(desc(transfers.timestamp), asc(transfers.id))
+    .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PER_PAGE + 1);
 
   const hasNext = results.length > PER_PAGE;
