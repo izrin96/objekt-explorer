@@ -268,6 +268,12 @@ function EditProfileForm({
         defaultSelected={data.privateSerial ?? false}
       />
       <Checkbox
+        label="Hide from Activity"
+        name="hideActivity"
+        description="Hide from activity realtime transfer. This include all spin, mint, sent and received event."
+        defaultSelected={data.hideActivity ?? false}
+      />
+      <Checkbox
         label="Private Profile"
         name="privateProfile"
         description="Make your Cosmo profile private. Only you will be able to view it."

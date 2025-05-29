@@ -4,27 +4,15 @@ import { Button, Label, Modal } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { getQueryClient } from "@/lib/query-client";
 import { api } from "@/lib/trpc/client";
-import { LinkBreakIcon, LinkIcon, ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { Provider, ProviderId, providersMap } from "@/lib/universal/user";
+import {
+  LinkBreakIcon,
+  LinkIcon,
+  ArrowsClockwiseIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-
-type ProviderId = "twitter" | "discord";
-type Provider = {
-  id: ProviderId;
-  label: string;
-};
-
-const providersMap: Record<ProviderId, Provider> = {
-  twitter: {
-    id: "twitter",
-    label: "Twitter (X)",
-  },
-  discord: {
-    id: "discord",
-    label: "Discord",
-  },
-};
 
 const providers = Object.values(providersMap);
 

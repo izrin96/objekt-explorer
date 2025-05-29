@@ -3,6 +3,7 @@ import { auth } from "../../auth";
 import { db } from "../../db";
 import { authProcedure, createTRPCRouter } from "../trpc";
 import { z } from "zod/v4";
+import { providersMap } from "@/lib/universal/user";
 
 export const userRouter = createTRPCRouter({
   refreshProfile: authProcedure.input(z.enum(["discord", "twitter"])).mutation(
@@ -46,7 +47,7 @@ export const userRouter = createTRPCRouter({
       if (!info)
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to get info from provider",
+          message: `Failed to get info. Please sign in with ${providersMap[providerId].label} and try again.`,
         });
 
       // update user

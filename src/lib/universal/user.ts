@@ -16,3 +16,20 @@ export type PublicUser = Pick<
   | "displayUsername"
   | "showSocial"
 >;
+
+export type ProviderId = "twitter" | "discord";
+export type Provider = {
+  id: ProviderId;
+  label: string;
+};
+
+export const providersMap: Record<ProviderId, Provider> = {
+  twitter: {
+    id: "twitter",
+    label: "Twitter (X)",
+  },
+  discord: {
+    id: "discord",
+    label: "Discord",
+  },
+};

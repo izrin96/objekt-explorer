@@ -27,6 +27,7 @@ export const profileRouter = createTRPCRouter({
         bannerImgUrl: z.string().optional().nullable(),
         privateSerial: z.boolean().optional(),
         privateProfile: z.boolean().optional(),
+        hideActivity: z.boolean().optional(),
       })
     )
     .mutation(async ({ input: { address, ...rest }, ctx: { session } }) => {
@@ -98,6 +99,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
       bannerImgUrl: true,
       privateSerial: true,
       privateProfile: true,
+      hideActivity: true,
     },
     where: (q, { eq, and }) =>
       and(eq(q.address, address), eq(q.userId, userId)),
