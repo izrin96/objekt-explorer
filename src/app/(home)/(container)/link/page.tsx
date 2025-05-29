@@ -1,8 +1,15 @@
 import MyLinkRender from "@/components/link/my-link";
 import { cachedSession } from "@/lib/server/auth";
 import { api, HydrateClient } from "@/lib/trpc/server";
+import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import React from "react";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "My Cosmo Link",
+  };
+}
 
 export default async function Page() {
   const session = await cachedSession();

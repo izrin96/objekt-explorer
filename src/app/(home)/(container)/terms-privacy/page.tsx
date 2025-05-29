@@ -1,5 +1,12 @@
 import { Link } from "@/components/ui";
+import { Metadata } from "next";
 import React from "react";
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Terms and Privacy",
+  };
+}
 
 export default function TermsPrivacy() {
   return (
