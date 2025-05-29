@@ -11,8 +11,10 @@ import {
 export type AggregatedTransfer = {
   transfer: Pick<Transfer, "id" | "from" | "to" | "timestamp">;
   objekt: OwnedObjekt;
-  fromNickname?: string;
-  toNickname?: string;
+  nickname: {
+    from: string | undefined;
+    to: string | undefined;
+  };
 };
 
 export type TransferResult = {

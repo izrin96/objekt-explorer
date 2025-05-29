@@ -151,12 +151,12 @@ function TradeRow({
     row.transfer.from === NULL_ADDRESS ? (
       <span>COSMO</span>
     ) : (
-      <UserLink address={row.transfer.from} nickname={row.fromNickname} />
+      <UserLink address={row.transfer.from} nickname={row.nickname.from} />
     )
   ) : row.transfer.to === SPIN_ADDRESS ? (
     <span>COSMO Spin</span>
   ) : (
-    <UserLink address={row.transfer.to} nickname={row.toNickname} />
+    <UserLink address={row.transfer.to} nickname={row.nickname.to} />
   );
 
   return (

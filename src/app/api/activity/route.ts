@@ -75,18 +75,32 @@ export async function GET(request: NextRequest) {
     columns: {
       address: true,
       nickname: true,
+      hideActivity: true,
     },
   });
 
-  const items = slicedResults.map((t) => ({
-    nicknames: knownAddresses.filter(
-      (a) =>
-        a.address.toLowerCase() === t.transfer.from.toLowerCase() ||
-        a.address.toLowerCase() === t.transfer.to.toLowerCase()
-    ),
-    transfer: t.transfer,
-    objekt: mapOwnedObjekt(t.objekt, t.collection),
-  }));
+  const items = slicedResults
+    .map((t) => {
+      const from = knownAddresses.find(
+        (a) => a.address.toLowerCase() === t.transfer.from.toLowerCase()
+      );
+      const to = knownAddresses.find(
+        (a) => a.address.toLowerCase() === t.transfer.to.toLowerCase()
+      );
+
+      return {
+        user: {
+          from: from !== undefined && !from.hideActivity ? from : undefined,
+          to: to !== undefined && !to.hideActivity ? to : undefined,
+        },
+        transfer: t.transfer,
+        objekt: mapOwnedObjekt(t.objekt, t.collection),
+      };
+    })
+    .filter(
+      (t) =>
+        Object.values(t.user).some((a) => a?.hideActivity === true) === false
+    );
 
   const hasNextPage = transferResults.length > PAGE_SIZE;
   const nextCursor = hasNextPage

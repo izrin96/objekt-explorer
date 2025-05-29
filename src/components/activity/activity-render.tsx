@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
 import { Card } from "../ui";
 import { Transfer } from "@/lib/server/db/indexer/schema";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
@@ -25,7 +25,10 @@ import { InfiniteQueryNext } from "../infinite-query-pending";
 type Data = {
   transfer: Transfer;
   objekt: OwnedObjekt;
-  nicknames: Pick<UserAddress, "address" | "nickname">[];
+  user: {
+    from: Pick<UserAddress, "address" | "nickname"> | undefined;
+    to: Pick<UserAddress, "address" | "nickname"> | undefined;
+  };
 };
 
 type WebSocketMessage = { type: "transfer"; data: Data };
@@ -56,8 +59,8 @@ export default function ActivityRender() {
 function Activity() {
   const [realtimeTransfers, setRealtimeTransfers] = useState<Data[]>([]);
   const [newTransferIds, setNewTransferIds] = useState<Set<string>>(new Set());
-  const parentRef = React.useRef<HTMLDivElement>(null);
-  const scrollOffsetRef = React.useRef(0);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const scrollOffsetRef = useRef(0);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
@@ -220,107 +223,107 @@ function Activity() {
   );
 }
 
-const ActivityRow = React.memo(
-  ({
-    item,
-    open,
-    style,
-    isNew = false,
-  }: {
-    item: Data;
-    open: () => void;
-    style?: React.CSSProperties;
-    isNew?: boolean;
-  }) => {
-    const fromNickname = item.nicknames?.find(
-      (a) => a.address.toLowerCase() === item.transfer.from
-    )?.nickname;
+const ActivityRow = memo(function ActivityRow({
+  item,
+  open,
+  style,
+  isNew = false,
+}: {
+  item: Data;
+  open: () => void;
+  style?: React.CSSProperties;
+  isNew?: boolean;
+}) {
+  const event =
+    item.transfer.from === NULL_ADDRESS
+      ? "mint"
+      : item.transfer.to === SPIN_ADDRESS
+      ? "spin"
+      : "transfer";
 
-    const toNickname = item.nicknames?.find(
-      (a) => a.address.toLowerCase() === item.transfer.to
-    )?.nickname;
+  const from =
+    event === "mint" ? (
+      <span>COSMO</span>
+    ) : (
+      <UserLink
+        address={item.transfer.from}
+        nickname={item.user.from?.nickname}
+      />
+    );
 
-    const from =
-      item.transfer.from === NULL_ADDRESS ? (
-        <span>COSMO</span>
-      ) : (
-        <UserLink address={item.transfer.from} nickname={fromNickname} />
-      );
+  const to =
+    event === "spin" ? (
+      <span>COSMO Spin</span>
+    ) : (
+      <UserLink address={item.transfer.to} nickname={item.user.to?.nickname} />
+    );
 
-    const to =
-      item.transfer.to === SPIN_ADDRESS ? (
-        <span>COSMO Spin</span>
-      ) : (
-        <UserLink address={item.transfer.to} nickname={toNickname} />
-      );
-
-    return (
-      <div className="absolute left-0 top-0 w-full grid" style={style}>
-        <div
-          className={`${
-            isNew
-              ? "duration-200 ease-out-quint animate-in slide-in-from-top *:animate-live-animation-bg"
-              : ""
-          }`}
-        >
-          <div className="flex items-center border-b min-w-full">
-            <div
-              className="px-3 py-2.5 flex-shrink-0"
-              style={{ width: COLUMN_WIDTHS.event }}
-            >
-              <div className="flex items-center gap-2 font-semibold">
-                {item.transfer.from === NULL_ADDRESS ? (
-                  <>
-                    <LeafIcon size={18} weight="light" />
-                    <span>Mint</span>
-                  </>
-                ) : item.transfer.to === SPIN_ADDRESS ? (
-                  <>
-                    <ArrowsClockwiseIcon size={18} weight="light" />
-                    <span>Spin</span>
-                  </>
-                ) : (
-                  <>
-                    <PaperPlaneTiltIcon size={18} weight="light" />
-                    <span>Transfer</span>
-                  </>
-                )}
-              </div>
+  return (
+    <div className="absolute left-0 top-0 w-full grid" style={style}>
+      <div
+        className={`${
+          isNew
+            ? "duration-200 ease-out-quint animate-in slide-in-from-top *:animate-live-animation-bg"
+            : ""
+        }`}
+      >
+        <div className="flex items-center border-b min-w-full">
+          <div
+            className="px-3 py-2.5 flex-shrink-0"
+            style={{ width: COLUMN_WIDTHS.event }}
+          >
+            <div className="flex items-center gap-2 font-semibold">
+              {event === "mint" ? (
+                <>
+                  <LeafIcon size={18} weight="light" />
+                  <span>Mint</span>
+                </>
+              ) : event === "spin" ? (
+                <>
+                  <ArrowsClockwiseIcon size={18} weight="light" />
+                  <span>Spin</span>
+                </>
+              ) : (
+                <>
+                  <PaperPlaneTiltIcon size={18} weight="light" />
+                  <span>Transfer</span>
+                </>
+              )}
             </div>
-            <div
-              className="px-3 py-2.5 cursor-pointer flex-shrink-0"
-              onClick={open}
-              style={{ width: COLUMN_WIDTHS.objekt }}
-            >
-              {item.objekt.collectionId}
-            </div>
-            <div
-              className="px-3 py-2.5 flex-shrink-0"
-              style={{ width: COLUMN_WIDTHS.serial }}
-            >
-              {item.objekt.serial}
-            </div>
-            <div
-              className="px-3 py-2.5 flex-shrink-0"
-              style={{ width: COLUMN_WIDTHS.from }}
-            >
-              {from}
-            </div>
-            <div
-              className="px-3 py-2.5 flex-shrink-0"
-              style={{ width: COLUMN_WIDTHS.to }}
-            >
-              {to}
-            </div>
-            <div
-              className="px-3 py-2.5 flex-shrink-0"
-              style={{ width: COLUMN_WIDTHS.time }}
-            >
-              {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
-            </div>
+          </div>
+          <div
+            className="px-3 py-2.5 cursor-pointer flex-shrink-0"
+            onClick={open}
+            style={{ width: COLUMN_WIDTHS.objekt }}
+          >
+            {item.objekt.collectionId}
+          </div>
+          <div
+            className="px-3 py-2.5 flex-shrink-0"
+            style={{ width: COLUMN_WIDTHS.serial }}
+          >
+            {item.objekt.serial}
+          </div>
+          <div
+            className="px-3 py-2.5 flex-shrink-0"
+            style={{ width: COLUMN_WIDTHS.from }}
+          >
+            {from}
+          </div>
+          <div
+            className="px-3 py-2.5 flex-shrink-0"
+            style={{ width: COLUMN_WIDTHS.to }}
+          >
+            {to}
+          </div>
+          <div
+            className="px-3 py-2.5 flex-shrink-0"
+            style={{ width: COLUMN_WIDTHS.time }}
+          >
+            {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
           </div>
         </div>
       </div>
-    );
-  }
-);
+    </div>
+  );
+});

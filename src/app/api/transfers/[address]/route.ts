@@ -190,12 +190,14 @@ export async function GET(
     results: slicedResults.map((row) => ({
       transfer: row.transfer,
       objekt: mapOwnedObjekt(row.objekt, row.collection),
-      fromNickname: knownAddresses.find(
-        (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase()
-      )?.nickname,
-      toNickname: knownAddresses.find(
-        (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase()
-      )?.nickname,
+      nickname: {
+        from: knownAddresses.find(
+          (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase()
+        )?.nickname,
+        to: knownAddresses.find(
+          (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase()
+        )?.nickname,
+      },
     })),
   } satisfies TransferResult);
 }
