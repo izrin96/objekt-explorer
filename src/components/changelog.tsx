@@ -41,7 +41,12 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>Added Live Activity page.</li>
-                    <li>Added option to hide from Activity in Edit Profile. User must link with Cosmo profile first.</li>
+                    <li>
+                      Added option to hide from Activity in Edit Profile.
+                      Existing Cosmo profiles with either &apos;Hide
+                      Serial&apos; or &apos;Private Profile&apos; enabled have
+                      been updated to hide activity by default.
+                    </li>
                     <li>Added filter by objekt color.</li>
                   </ul>
                 </div>
