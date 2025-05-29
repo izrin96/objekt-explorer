@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
-import { Card } from "../ui";
+import { Badge, Card } from "../ui";
 import { Transfer } from "@/lib/server/db/indexer/schema";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { UserAddress } from "@/lib/server/db/schema";
@@ -33,11 +33,16 @@ type Data = {
 
 type WebSocketMessage = { type: "transfer"; data: Data };
 
+const ROW_HEIGHT = 41;
+
 export default function ActivityRender() {
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
-        <h2 className="text-xl font-semibold">Activity</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">Activity</h2>
+          <Badge intent="primary">Beta</Badge>
+        </div>
         <p className="text-muted-fg text-sm">Latest activity in realtime</p>
       </div>
       <ObjektModalProvider initialTab="trades">
@@ -78,7 +83,7 @@ function Activity() {
 
   const rowVirtualizer = useWindowVirtualizer({
     count: allTransfers.length,
-    estimateSize: () => 41,
+    estimateSize: () => ROW_HEIGHT,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
@@ -100,7 +105,7 @@ function Activity() {
     requestAnimationFrame(() => {
       if (scrollOffsetRef.current > 0) {
         window.scrollTo({
-          top: scrollOffsetRef.current + 40, // Add height of one row
+          top: scrollOffsetRef.current + ROW_HEIGHT, // Add height of one row
           behavior: "instant",
         });
       }
@@ -140,24 +145,14 @@ function Activity() {
         >
           {/* Header */}
           <div className="bg-bg border-b min-w-fit flex">
-            <div className="px-3 py-2.5 min-w-[120px] flex-1">
-              Event
-            </div>
-            <div className="px-3 py-2.5 min-w-[250px] flex-1">
-              Objekt
-            </div>
+            <div className="px-3 py-2.5 min-w-[120px] flex-1">Event</div>
+            <div className="px-3 py-2.5 min-w-[250px] flex-1">Objekt</div>
             <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
               Serial
             </div>
-            <div className="px-3 py-2.5 min-w-[200px] flex-1">
-              From
-            </div>
-            <div className="px-3 py-2.5 min-w-[200px] flex-1">
-              To
-            </div>
-            <div className="px-3 py-2.5 min-w-[280px] flex-1">
-              Time
-            </div>
+            <div className="px-3 py-2.5 min-w-[200px] flex-1">From</div>
+            <div className="px-3 py-2.5 min-w-[200px] flex-1">To</div>
+            <div className="px-3 py-2.5 min-w-[280px] flex-1">Time</div>
           </div>
 
           {/* Virtualized Rows */}
@@ -274,12 +269,8 @@ const ActivityRow = memo(function ActivityRow({
           <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
             {item.objekt.serial}
           </div>
-          <div className="px-3 py-2.5 min-w-[200px] flex-1">
-            {from}
-          </div>
-          <div className="px-3 py-2.5 min-w-[200px] flex-1">
-            {to}
-          </div>
+          <div className="px-3 py-2.5 min-w-[200px] flex-1">{from}</div>
+          <div className="px-3 py-2.5 min-w-[200px] flex-1">{to}</div>
           <div className="px-3 py-2.5 min-w-[280px] flex-1">
             {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
           </div>
