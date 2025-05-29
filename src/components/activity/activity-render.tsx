@@ -19,7 +19,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-import { useVirtualizer, type VirtualItem } from "@tanstack/react-virtual";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { InfiniteQueryNext } from "../infinite-query-pending";
 
 type Data = {
@@ -85,20 +85,18 @@ function Activity() {
     [realtimeTransfers, data?.pages]
   );
 
-  const rowVirtualizer = useVirtualizer({
+  const rowVirtualizer = useWindowVirtualizer({
     count: allTransfers.length,
-    getScrollElement: () => parentRef.current,
     estimateSize: () => 40,
     overscan: 5,
+    scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
 
   const handleWebSocketMessage = useCallback((event: MessageEvent) => {
     const message = JSON.parse(event.data) as WebSocketMessage;
 
     // store current scroll position before update
-    if (parentRef.current) {
-      scrollOffsetRef.current = parentRef.current.scrollTop;
-    }
+    scrollOffsetRef.current = window.scrollY;
 
     setRealtimeTransfers((prev) => [message.data, ...prev]);
     setNewTransferIds((prev) => {
@@ -109,8 +107,11 @@ function Activity() {
 
     // restore scroll position after state updates
     requestAnimationFrame(() => {
-      if (parentRef.current && scrollOffsetRef.current > 0) {
-        parentRef.current.scrollTop = scrollOffsetRef.current + 40; // Add height of one row
+      if (scrollOffsetRef.current > 0) {
+        window.scrollTo({
+          top: scrollOffsetRef.current + 40, // Add height of one row
+          behavior: "instant",
+        });
       }
     });
   }, []);
@@ -141,10 +142,7 @@ function Activity() {
 
   return (
     <Card className="py-0">
-      <div
-        className="relative w-full overflow-x-auto text-sm h-[calc(100svh-170px)]"
-        ref={parentRef}
-      >
+      <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
         {/* Header */}
         <div className="sticky top-0 z-10 bg-bg border-b w-fit min-w-full flex">
           <div
@@ -192,7 +190,7 @@ function Activity() {
           }}
           className="relative w-full"
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow: VirtualItem) => {
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
             const item = allTransfers[virtualRow.index];
             const isNew = newTransferIds.has(item.transfer.id);
             return (
@@ -203,7 +201,9 @@ function Activity() {
                     open={openObjekts}
                     isNew={isNew}
                     style={{
-                      transform: `translateY(${virtualRow.start}px)`,
+                      transform: `translateY(${
+                        virtualRow.start - rowVirtualizer.options.scrollMargin
+                      }px)`,
                     }}
                   />
                 )}
