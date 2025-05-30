@@ -166,6 +166,7 @@ export function EditProfileModal({
             const removeBanner = formData.get("removeBanner") === "on";
             const privateSerial = formData.get("privateSerial") === "on";
             const privateProfile = formData.get("privateProfile") === "on";
+            const hideActivity = formData.get("hideActivity") === "on";
 
             if (droppedImage && !removeBanner) {
               getPresignedUrl.mutate(
@@ -185,6 +186,7 @@ export function EditProfileModal({
                         bannerImgUrl: fileUrl,
                         privateSerial,
                         privateProfile,
+                        hideActivity,
                       });
                     });
                   },
@@ -199,6 +201,7 @@ export function EditProfileModal({
               bannerImgUrl: removeBanner ? null : undefined,
               privateSerial,
               privateProfile,
+              hideActivity,
             });
           }}
         >
