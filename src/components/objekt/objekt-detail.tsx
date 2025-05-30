@@ -246,16 +246,7 @@ function OwnedListPanel({
           >
             <IconChevronLgLeft />
           </Button>
-          <NumberField
-            className="max-w-16"
-            minValue={1}
-            maxValue={totalPages}
-            aria-label="Page"
-            value={currentPage}
-            onChange={setCurrentPage}
-            isWheelDisabled
-          />
-          <span>/ {totalPages}</span>
+          <span>{currentPage} / {totalPages}</span>
           <Button
             size="square-petite"
             intent="outline"
