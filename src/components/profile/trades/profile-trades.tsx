@@ -99,7 +99,7 @@ function ProfileTrades() {
       <Card className="py-0">
         <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
           {/* Header */}
-          <div className="bg-bg border-b min-w-fit flex">
+          <div className="border-b min-w-fit flex">
             <div className="px-3 py-2.5 min-w-[210px] flex-1">Date</div>
             <div className="px-3 py-2.5 min-w-[240px] flex-1">Objekt</div>
             <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">Serial</div>

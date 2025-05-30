@@ -57,6 +57,7 @@ function Activity() {
   const [newTransferIds, setNewTransferIds] = useState<Set<string>>(new Set());
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollOffsetRef = useRef(0);
+  const timeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
@@ -129,11 +130,30 @@ function Activity() {
   useEffect(() => {
     if (newTransferIds.size === 0) return;
 
-    const timeout = setTimeout(() => {
-      setNewTransferIds(new Set());
-    }, 1000);
+    // Create timeouts only for new IDs that don't already have a timeout
+    Array.from(newTransferIds).forEach((id) => {
+      if (!timeoutRef.current.has(id)) {
+        const timeout = setTimeout(() => {
+          setNewTransferIds((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(id);
+            return newSet;
+          });
+          timeoutRef.current.delete(id);
+        }, 2500);
+        timeoutRef.current.set(id, timeout);
+      }
+    });
 
-    return () => clearTimeout(timeout);
+    return () => {
+      // Clear timeouts for IDs that are no longer in newTransferIds
+      timeoutRef.current.forEach((timeout, id) => {
+        if (!newTransferIds.has(id)) {
+          clearTimeout(timeout);
+          timeoutRef.current.delete(id);
+        }
+      });
+    };
   }, [newTransferIds]);
 
   return (
@@ -144,7 +164,7 @@ function Activity() {
           ref={parentRef}
         >
           {/* Header */}
-          <div className="bg-bg border-b min-w-fit flex">
+          <div className="border-b min-w-fit flex">
             <div className="px-3 py-2.5 min-w-[120px] flex-1">Event</div>
             <div className="px-3 py-2.5 min-w-[250px] flex-1">Objekt</div>
             <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
