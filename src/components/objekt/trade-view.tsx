@@ -144,6 +144,7 @@ function TradeTable({
       ),
     queryKey: ["objekts", "transfer", objekt.slug, serial],
     retry: 1,
+    staleTime: 0,
   });
 
   if (status === "pending")

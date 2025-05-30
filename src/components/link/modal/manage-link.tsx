@@ -270,7 +270,7 @@ function EditProfileForm({
       <Checkbox
         label="Hide from Activity"
         name="hideActivity"
-        description="Hide from activity realtime transfer. This include all spin, mint, sent and received event."
+        description="Hide from live activity transfer. This include all spin, mint, sent and received event."
         defaultSelected={data.hideActivity ?? false}
       />
       <Checkbox

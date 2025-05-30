@@ -1,4 +1,3 @@
-import { cacheHeaders } from "@/app/api/common";
 import { cachedSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
@@ -47,9 +46,6 @@ export async function GET(_: Request, props: Params) {
       {
         transfers: [],
       },
-      {
-        headers: cacheHeaders(),
-      }
     );
 
   const session = await cachedSession();
@@ -69,9 +65,6 @@ export async function GET(_: Request, props: Params) {
         hide: true,
         transfers: [],
       },
-      {
-        headers: cacheHeaders(),
-      }
     );
 
   if (session && isPrivate) {
@@ -87,9 +80,6 @@ export async function GET(_: Request, props: Params) {
           hide: true,
           transfers: [],
         },
-        {
-          headers: cacheHeaders(),
-        }
       );
   }
 
@@ -114,8 +104,5 @@ export async function GET(_: Request, props: Params) {
         )?.nickname,
       })),
     },
-    {
-      headers: cacheHeaders(),
-    }
   );
 }
