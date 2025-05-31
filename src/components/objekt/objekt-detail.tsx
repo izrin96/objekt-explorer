@@ -187,9 +187,9 @@ function OwnedListPanel({
   return (
     <div className="flex flex-col gap-2">
       <Card className="py-0">
-        <Card.Content>
-          <Table aria-label="Trades">
-            <Table.Header>
+        <Card.Content className="px-0">
+          <Table bleed aria-label="Trades">
+            <Table.Header className="[--gutter:--spacing(3)]">
               <Table.Column isRowHeader maxWidth={110}>
                 Serial
               </Table.Column>
@@ -197,7 +197,7 @@ function OwnedListPanel({
               <Table.Column minWidth={200}>Received</Table.Column>
               <Table.Column>Transferable</Table.Column>
             </Table.Header>
-            <Table.Body items={currentItems}>
+            <Table.Body items={currentItems} className="[--gutter:--spacing(3)]">
               {(item) => (
                 <Table.Row id={item.id}>
                   <Table.Cell>

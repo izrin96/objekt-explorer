@@ -212,13 +212,13 @@ function TradeTable({
       </div>
 
       <Card className="py-0">
-        <Card.Content>
-          <Table aria-label="Trades">
-            <Table.Header>
+        <Card.Content className="px-0">
+          <Table bleed aria-label="Trades">
+            <Table.Header className="[--gutter:--spacing(3)]">
               <Table.Column isRowHeader>Owner</Table.Column>
               <Table.Column minWidth={200}>Date</Table.Column>
             </Table.Header>
-            <Table.Body items={data.transfers}>
+            <Table.Body items={data.transfers} className="[--gutter:--spacing(3)]">
               {(item) => (
                 <Table.Row id={item.id}>
                   <Table.Cell>

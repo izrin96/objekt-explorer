@@ -107,7 +107,7 @@ const MenuContent = <T extends object>({
   ...props
 }: MenuContentProps<T>) => {
   const { respectScreen: respectScreenContext } = use(MenuContext)
-  const respectScreenInternal = respectScreen ?? respectScreenContext
+  const respectScreenInternal = respectScreenContext ?? respectScreen
   return (
     <PopoverContent
       isOpen={props.isOpen}

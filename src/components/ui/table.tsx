@@ -46,7 +46,7 @@ const useTableContext = () => use(TableContext)
 const Root = (props: TableProps) => {
   return (
     <TablePrimitive
-      className="w-full min-w-full caption-bottom text-sm outline-hidden [--table-selected-bg:var(--color-secondary)]/50"
+      className="w-full min-w-full caption-bottom text-sm/6 outline-hidden [--table-selected-bg:var(--color-secondary)]/50"
       {...props}
     />
   )
@@ -58,8 +58,7 @@ const Table = ({ allowResize, className, bleed, ref, ...props }: TableProps) => 
       <div className="flow-root">
         <div
           className={twMerge(
-            "-mx-(--gutter) relative overflow-x-auto whitespace-nowrap has-data-[slot=table-resizable-container]:overflow-auto",
-            "[--gutter-y:--spacing(2.5)] [--gutter:--spacing(4)]",
+            "-mx-(--gutter) relative overflow-x-auto whitespace-nowrap [--gutter-y:--spacing(2)] has-data-[slot=table-resizable-container]:overflow-auto",
             className,
           )}
         >
@@ -112,10 +111,8 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
         twJoin(
           "text-left font-medium text-fg",
           "relative allows-sorting:cursor-default outline-hidden data-dragging:cursor-grabbing",
-          "px-(--gutter) py-(--gutter-y)",
-          !bleed
-            ? "sm:last:pr-1 sm:first:pl-1"
-            : "first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
+          "px-3 py-(--gutter-y) first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
+          !bleed && "sm:last:pr-1 sm:first:pl-1",
           isResizable && "overflow-hidden truncate",
         ),
       )}
@@ -169,10 +166,8 @@ const TableHeader = <T extends object>({
         <Column
           data-slot="table-column"
           className={twMerge(
-            "w-0 max-w-8 px-(--gutter)",
-            !bleed
-              ? "sm:last:pr-1 sm:first:pl-1"
-              : "first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
+            "w-0 max-w-8 px-3 first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
+            !bleed && "sm:last:pr-1 sm:first:pl-1",
           )}
         />
       )}
@@ -180,10 +175,8 @@ const TableHeader = <T extends object>({
         <Column
           data-slot="table-column"
           className={twMerge(
-            "w-0 max-w-8 px-(--gutter)",
-            !bleed
-              ? "sm:last:pr-1 sm:first:pl-1"
-              : "first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
+            "w-0 max-w-8 px-3 first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
+            !bleed && "sm:last:pr-1 sm:first:pl-1",
           )}
         >
           {selectionMode === "multiple" && <Checkbox slot="selection" />}
@@ -215,17 +208,7 @@ const TableRow = <T extends object>({
       {...props}
       className={composeRenderProps(
         className,
-        (
-          className,
-          {
-            isSelected,
-            isFocusVisible,
-            selectionMode,
-            isFocusVisibleWithin,
-            isDragging,
-            isDisabled,
-          },
-        ) =>
+        (className, { isSelected, selectionMode, isFocusVisibleWithin, isDragging, isDisabled }) =>
           twMerge(
             "group relative cursor-default border-b text-fg outline-transparent ring-primary last:border-b-0 ",
             isDragging && "outline outline-blue-500",
@@ -269,10 +252,8 @@ const TableCell = ({ className, ...props }: CellProps) => {
       className={composeTailwindRenderProps(
         className,
         twJoin(
-          "group px-(--gutter) py-(--gutter-y) align-middle outline-hidden group-has-data-focus-visible-within:text-fg",
-          !bleed
-            ? "sm:last:pr-1 sm:first:pl-1"
-            : "first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
+          "group px-3 py-(--gutter-y) align-middle outline-hidden first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2)) group-has-data-focus-visible-within:text-fg",
+          !bleed && "sm:last:pr-1 sm:first:pl-1",
           allowResize && "overflow-hidden truncate",
         ),
       )}
