@@ -103,14 +103,12 @@ function Activity() {
     });
 
     // restore scroll position after state updates
-    requestAnimationFrame(() => {
-      if (scrollOffsetRef.current > 0) {
-        window.scrollTo({
-          top: scrollOffsetRef.current + ROW_HEIGHT, // Add height of one row
-          behavior: "instant",
-        });
-      }
-    });
+    if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
+      window.scrollTo({
+        top: scrollOffsetRef.current + ROW_HEIGHT * message.data.length,
+        behavior: "instant",
+      });
+    }
   }, []);
 
   // handle incoming message
