@@ -31,7 +31,7 @@ type Data = {
   };
 };
 
-type WebSocketMessage = { type: "transfer"; data: Data };
+type WebSocketMessage = { type: "transfer"; data: Data[] };
 
 const ROW_HEIGHT = 41;
 
@@ -95,10 +95,10 @@ function Activity() {
     // store current scroll position before update
     scrollOffsetRef.current = window.scrollY;
 
-    setRealtimeTransfers((prev) => [message.data, ...prev]);
+    setRealtimeTransfers((prev) => [...message.data, ...prev]);
     setNewTransferIds((prev) => {
       const newSet = new Set(prev);
-      newSet.add(message.data.transfer.id);
+      message.data.forEach((data) => newSet.add(data.transfer.id));
       return newSet;
     });
 
@@ -235,7 +235,7 @@ const ActivityRow = memo(function ActivityRow({
 
   const from =
     event === "mint" ? (
-      <span>COSMO</span>
+      <span className="text-muted-fg font-mono">COSMO</span>
     ) : (
       <UserLink
         address={item.transfer.from}
@@ -245,7 +245,7 @@ const ActivityRow = memo(function ActivityRow({
 
   const to =
     event === "spin" ? (
-      <span>COSMO Spin</span>
+      <span className="text-muted-fg font-mono">COSMO Spin</span>
     ) : (
       <UserLink address={item.transfer.to} nickname={item.user.to?.nickname} />
     );
