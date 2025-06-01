@@ -7,7 +7,7 @@ type UserSearchState = {
   add: (user: CosmoPublicUser) => void;
 };
 
-const MAX_LENGTH = 5;
+const MAX_LENGTH = 7;
 
 export const useUserSearchStore = create<UserSearchState>()(
   persist(
