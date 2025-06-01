@@ -22,7 +22,7 @@ export default function SeasonFilter() {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={filters.season?.length ? "!inset-ring-primary" : ""}

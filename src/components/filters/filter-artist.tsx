@@ -31,7 +31,7 @@ export default function ArtistFilter({ artists }: Props) {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={filters.artist ? "!inset-ring-primary" : ""}

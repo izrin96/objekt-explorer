@@ -62,7 +62,7 @@ export default function SortFilter({
   });
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={filters.sort ? "!inset-ring-primary" : ""}

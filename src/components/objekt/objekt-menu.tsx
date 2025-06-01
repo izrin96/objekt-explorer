@@ -18,7 +18,7 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         className="absolute top-1 sm:top-1.5 p-2 right-10 z-50"
         size="extra-small"

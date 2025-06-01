@@ -57,7 +57,7 @@ function UserMenu({ user }: { user: User }) {
       <UserAccountModal open={accountOpen} setOpen={setAccountOpen} />
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
 
-      <Menu>
+      <Menu respectScreen={false}>
         <Menu.Trigger aria-label="Open Menu">
           <Avatar
             alt={user.name}

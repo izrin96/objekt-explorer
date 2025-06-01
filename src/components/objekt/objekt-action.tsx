@@ -110,7 +110,7 @@ export function ObjektTogglePin({
 
 export function ObjektHoverMenu({ children }: PropsWithChildren) {
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         size="extra-small"
         intent="plain"

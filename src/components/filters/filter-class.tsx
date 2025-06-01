@@ -30,7 +30,7 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={filters.class?.length ? "!inset-ring-primary" : ""}

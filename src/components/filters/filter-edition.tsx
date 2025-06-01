@@ -22,7 +22,7 @@ export default function EditionFilter() {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={filters.edition?.length ? "!inset-ring-primary" : ""}

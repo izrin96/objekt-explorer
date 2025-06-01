@@ -35,7 +35,7 @@ export default function GroupByFilter() {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={filters.group_by ? "!inset-ring-primary" : ""}

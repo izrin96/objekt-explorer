@@ -91,7 +91,7 @@ function ListCard({ list }: ListCardProps) {
           >
             {list.name}
           </Link>
-          <Menu>
+          <Menu respectScreen={false}>
             <Button intent="outline" size="extra-small">
               <IconDotsVertical />
             </Button>

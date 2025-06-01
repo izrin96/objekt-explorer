@@ -33,7 +33,7 @@ export default function OnlineFilter() {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={filters.on_offline?.length ? "!inset-ring-primary" : ""}

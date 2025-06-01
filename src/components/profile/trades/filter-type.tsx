@@ -35,7 +35,7 @@ export default function TypeFilter() {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button
         intent="outline"
         className={type !== "all" ? "!inset-ring-primary" : ""}

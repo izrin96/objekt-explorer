@@ -32,7 +32,7 @@ export default function GroupBysFilter() {
   );
 
   return (
-    <Menu>
+    <Menu respectScreen={false}>
       <Button intent="outline">Group By</Button>
       <Menu.Content
         respectScreen={false}
