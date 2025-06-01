@@ -103,10 +103,6 @@ function Activity() {
       });
     }
 
-    if (message.type === "history") {
-      setRealtimeTransfers((prev) => [...prev, ...message.data]);
-    }
-
     // restore scroll position after state updates
     if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
       window.scrollTo({
@@ -123,18 +119,6 @@ function Activity() {
     const ws = new ReconnectingWebSocket(
       env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!
     );
-
-    ws.onopen = () => {
-      const latestTimestamp = allTransfers[0]?.transfer.timestamp;
-      if (latestTimestamp) {
-        ws.send(
-          JSON.stringify({
-            type: "history_request",
-            timestamp: latestTimestamp,
-          })
-        );
-      }
-    };
 
     ws.onmessage = handleWebSocketMessage;
 
