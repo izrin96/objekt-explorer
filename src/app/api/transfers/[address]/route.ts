@@ -17,7 +17,7 @@ import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { cachedSession } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 const PER_PAGE = 30;
 

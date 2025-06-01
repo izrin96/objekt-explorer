@@ -2,12 +2,9 @@
 
 import { useEffect, useState, useCallback, useMemo, memo, useRef } from "react";
 import { Badge, Card } from "../ui";
-import { Transfer } from "@/lib/server/db/indexer/schema";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
-import { UserAddress } from "@/lib/server/db/schema";
 import UserLink from "../user-link";
 import { format } from "date-fns";
-import { OwnedObjekt } from "@/lib/universal/objekts";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { env } from "@/env";
 import ReconnectingWebSocket from "reconnecting-websocket";
@@ -21,17 +18,11 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { InfiniteQueryNext } from "../infinite-query-pending";
+import { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 
-type Data = {
-  transfer: Transfer;
-  objekt: OwnedObjekt;
-  user: {
-    from: Pick<UserAddress, "address" | "nickname"> | undefined;
-    to: Pick<UserAddress, "address" | "nickname"> | undefined;
-  };
-};
-
-type WebSocketMessage = { type: "transfer"; data: Data[] };
+type WebSocketMessage =
+  | { type: "transfer"; data: ActivityData[] }
+  | { type: "history"; data: ActivityData[] };
 
 const ROW_HEIGHT = 41;
 
@@ -53,26 +44,34 @@ export default function ActivityRender() {
 }
 
 function Activity() {
-  const [realtimeTransfers, setRealtimeTransfers] = useState<Data[]>([]);
+  const [realtimeTransfers, setRealtimeTransfers] = useState<ActivityData[]>(
+    []
+  );
   const [newTransferIds, setNewTransferIds] = useState<Set<string>>(new Set());
   const parentRef = useRef<HTMLDivElement>(null);
   const scrollOffsetRef = useRef(0);
   const timeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
-    useInfiniteQuery({
-      queryKey: ["activity"],
-      queryFn: async ({ pageParam }) => {
-        const response = await ofetch(`/api/activity`, {
-          query: {
-            cursor: pageParam ? JSON.stringify(pageParam) : undefined,
-          },
-        });
-        return response;
-      },
-      initialPageParam: undefined,
-      getNextPageParam: (lastPage) => lastPage.nextCursor,
-    });
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+    isLoading,
+  } = useInfiniteQuery<ActivityResponse>({
+    queryKey: ["activity"],
+    queryFn: async ({ pageParam }) => {
+      const response = await ofetch<ActivityResponse>(`/api/activity`, {
+        query: {
+          cursor: pageParam ? JSON.stringify(pageParam) : undefined,
+        },
+      });
+      return response;
+    },
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
 
   const allTransfers = useMemo(
     () => [
@@ -95,12 +94,14 @@ function Activity() {
     // store current scroll position before update
     scrollOffsetRef.current = window.scrollY;
 
-    setRealtimeTransfers((prev) => [...message.data, ...prev]);
-    setNewTransferIds((prev) => {
-      const newSet = new Set(prev);
-      message.data.forEach((data) => newSet.add(data.transfer.id));
-      return newSet;
-    });
+    if (message.type === "transfer") {
+      setRealtimeTransfers((prev) => [...message.data, ...prev]);
+      setNewTransferIds((prev) => {
+        const newSet = new Set(prev);
+        message.data.forEach((data) => newSet.add(data.transfer.id));
+        return newSet;
+      });
+    }
 
     // restore scroll position after state updates
     if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
@@ -113,6 +114,8 @@ function Activity() {
 
   // handle incoming message
   useEffect(() => {
+    if (isLoading) return;
+
     const ws = new ReconnectingWebSocket(
       env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!
     );
@@ -122,7 +125,7 @@ function Activity() {
     return () => {
       ws.close();
     };
-  }, [handleWebSocketMessage]);
+  }, [isLoading, handleWebSocketMessage]);
 
   // remove new transfer after animation completes
   useEffect(() => {
@@ -219,7 +222,7 @@ const ActivityRow = memo(function ActivityRow({
   style,
   isNew = false,
 }: {
-  item: Data;
+  item: ActivityData;
   open: () => void;
   style?: React.CSSProperties;
   isNew?: boolean;
