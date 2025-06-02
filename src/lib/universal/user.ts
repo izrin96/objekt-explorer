@@ -4,6 +4,7 @@ import { UserAddress } from "../server/db/schema";
 export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
   Partial<Pick<UserAddress, "bannerImgUrl" | "privateProfile">> & {
     user?: PublicUser | null;
+    isAddress?: boolean;
   };
 
 export type PublicUser = Pick<

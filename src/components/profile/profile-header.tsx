@@ -28,7 +28,9 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             intent: "outline",
           })
         }
-        href={`https://apollo.cafe/@${user.nickname}`}
+        href={`https://apollo.cafe/@${
+          user.isAddress ? user.address : user.nickname
+        }`}
         target="_blank"
       >
         View in Apollo

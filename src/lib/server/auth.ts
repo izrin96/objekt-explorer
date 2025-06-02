@@ -189,6 +189,7 @@ export async function fetchUserByIdentifier(
     return {
       address: identifier,
       nickname: identifier.substring(0, 6),
+      isAddress: true,
     };
   }
 
