@@ -19,12 +19,13 @@ export type ObjektItem<T> = {
 };
 
 function parseCollectionNo(value: string) {
-  const expression = /^([a-zA-Z]?)(\d{3})([azAZ]?)$/;
+  const expression = /^([a-zA-Z]*)(\d{3})([azAZ]?)$/;
   const match = value.match(expression);
   if (!match) return null;
   const [, seasonCode, collectionNo, type] = match;
   return {
-    seasonCode,
+    seasonCode: seasonCode.length > 0 ? seasonCode.charAt(0) : "",
+    seasonNumber: seasonCode.length,
     collectionNo,
     type,
   };
@@ -41,6 +42,7 @@ function getObjektBreakdown(objekt: ValidObjekt) {
   return {
     collectionNo: objekt.collectionNo.substring(0, 3).toLowerCase(),
     seasonCode: objekt.season.charAt(0).toLowerCase(),
+    seasonNumber: Number(objekt.season.slice(-2)),
     type: objekt.collectionNo.charAt(3).toLowerCase(),
   };
 }
@@ -64,22 +66,27 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
     const startBreakdown = {
       collectionNo: start.collectionNo,
       seasonCode: start.seasonCode || "a",
+      seasonNumber: start.seasonNumber,
       type: start.type || "a",
     };
 
     const endBreakdown = {
       collectionNo: end.collectionNo,
       seasonCode: end.seasonCode || start.seasonCode || "z",
+      seasonNumber: end.seasonNumber || start.seasonNumber || 99,
       type: end.type || start.type || "z",
     };
 
     return (
+      objekt.artist !== "idntt" &&
       objektBreakdown.collectionNo >= startBreakdown.collectionNo &&
       objektBreakdown.collectionNo <= endBreakdown.collectionNo &&
       objektBreakdown.seasonCode >= startBreakdown.seasonCode &&
       objektBreakdown.seasonCode <= endBreakdown.seasonCode &&
       objektBreakdown.type >= startBreakdown.type &&
-      objektBreakdown.type <= endBreakdown.type
+      objektBreakdown.type <= endBreakdown.type &&
+      objektBreakdown.seasonNumber >= startBreakdown.seasonNumber &&
+      objektBreakdown.seasonNumber <= endBreakdown.seasonNumber
     );
   }
 
