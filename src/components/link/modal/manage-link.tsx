@@ -13,7 +13,7 @@ import {
   Sheet,
 } from "@/components/ui";
 import { api } from "@/lib/trpc/client";
-import { mimeTypes, getMimeTypeFromExtension } from "@/lib/utils";
+import { mimeTypes } from "@/lib/utils";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import {
@@ -304,7 +304,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
 
   return (
     <>
-      {getMimeTypeFromExtension(droppedImage.name).startsWith("video") ? (
+      {droppedImage.type.startsWith("video") ? (
         <video
           src={imageUrl}
           className="aspect-[2.2/1] object-cover rounded"
@@ -313,13 +313,20 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
           muted
           playsInline
         />
-      ) : (
-        <Cropper
-          ref={cropperRef}
+      ) : ["image/gif"].includes(droppedImage.type) ? (
+        <img
           src={imageUrl}
-          aspectRatio={() => 2.2}
-          className="h-full"
+          alt="Selected banner preview"
+          className="aspect-[2.2/1] object-cover rounded"
         />
+      ) : (
+        <div className="h-52">
+          <Cropper
+            ref={cropperRef}
+            src={imageUrl}
+            aspectRatio={() => 2.2}
+          />
+        </div>
       )}
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-fg truncate">
