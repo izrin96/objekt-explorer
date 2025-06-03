@@ -6,10 +6,9 @@ import { getMimeTypeFromExtension } from "@/lib/utils";
 import Image from "next/image";
 
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
-  if (!profile.bannerImgUrl) return;
-
   const [bannerRef, { height }] = useElementSize();
-
+  
+  if (!profile.bannerImgUrl) return;
   const isVideo = getMimeTypeFromExtension(profile.bannerImgUrl).startsWith(
     "video"
   );
