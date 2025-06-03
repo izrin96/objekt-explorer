@@ -20,7 +20,7 @@ type Props = PropsWithChildren<{
 }>;
 
 const BANNER_BREAKPOINT =
-  "h-[280px] sm:h-[340px] md:h-[420px] lg:h-[500px] xl:h-[540px] 2xl:h-[600px]";
+  "h-[280px] sm:h-[340px] md:h-[420px] lg:h-[500px] xl:h-[540px] 2xl:h-[640px]";
 
 export default async function UserCollectionLayout(props: Props) {
   const params = await props.params;
@@ -78,7 +78,7 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
         <div className="mx-auto w-full max-w-7xl lg:max-w-(--breakpoint-xl) 2xl:max-w-(--breakpoint-2xl)">
           <div
             className={cn(
-              "relative mask-x-from-100% xl:mask-x-from-90%",
+              "relative mask-x-from-100% xl:mask-x-from-97%",
               BANNER_BREAKPOINT
             )}
           >
@@ -100,7 +100,7 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 priority
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg from-70% via-80% to-100%"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg from-90% to-100%"></div>
           </div>
         </div>
       </div>
@@ -123,7 +123,7 @@ function ProfileBanner({ profile }: { profile: PublicProfile }) {
             priority
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-bg backdrop-blur-xl from-70% via-80% to-100%"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg backdrop-blur-xl from-90% to-100%"></div>
       </div>
     </>
   );
