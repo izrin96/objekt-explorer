@@ -222,6 +222,7 @@ export function EditProfileModal({
                     address={address}
                     droppedImage={droppedImage}
                     handleSelectImage={handleSelectImage}
+                    setDroppedImage={setDroppedImage}
                   />
                 </Suspense>
               </ErrorBoundary>
@@ -248,12 +249,14 @@ type EditProfileProps = {
   address: string;
   droppedImage: File | null;
   handleSelectImage: (files: FileList | null) => void;
+  setDroppedImage: (file: File | null) => void;
 };
 
 function EditProfileForm({
   address,
   droppedImage,
   handleSelectImage,
+  setDroppedImage,
 }: EditProfileProps) {
   const [data] = api.profile.get.useSuspenseQuery(address);
   return (
@@ -282,17 +285,37 @@ function EditProfileForm({
         description="Make your Cosmo profile private. Only you will be able to view it."
         defaultSelected={data.privateProfile ?? false}
       />
-      <div className="group flex flex-col gap-y-1">
+      <div className="group flex flex-col gap-y-2">
         <Label>Banner Image</Label>
-        {droppedImage && (
-          <span className="text-sm text-muted-fg truncate">
-            Selected file: {droppedImage.name}
-          </span>
-        )}
+
         <FileTrigger
           acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
           onSelect={handleSelectImage}
         />
+        {droppedImage && (
+          <>
+            <img
+              src={URL.createObjectURL(droppedImage)}
+              alt="Selected banner preview"
+              className="aspect-[2.4/1] object-cover rounded"
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-fg truncate">
+                Selected file: {droppedImage.name}
+              </span>
+              <Button
+                size="extra-small"
+                intent="outline"
+                onClick={() => setDroppedImage(null)}
+              >
+                Clear
+              </Button>
+            </div>
+          </>
+        )}
+        <span className="text-muted-fg text-sm">
+          Recommended aspect ratio is 2.4:1
+        </span>
       </div>
       <Checkbox label="Remove Banner" name="removeBanner" />
       <span className="text-muted-fg text-sm">

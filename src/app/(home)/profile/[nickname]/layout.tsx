@@ -6,21 +6,18 @@ import { UserProvider } from "@/hooks/use-user";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { cachedSession, toPublicUser } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
-import { PublicProfile } from "@/lib/universal/user";
-import Image from "next/image";
 import { PropsWithChildren } from "react";
-import { getMimeTypeFromExtension } from "@/lib/utils";
-import { cn } from "@/utils/classes";
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  ProfileBanner,
+  ProfileBannerClearance,
+} from "@/components/profile/profile-banner";
 
 type Props = PropsWithChildren<{
   params: Promise<{
     nickname: string;
   }>;
 }>;
-
-const BANNER_BREAKPOINT =
-  "h-[280px] sm:h-[340px] md:h-[420px] lg:h-[500px] xl:h-[540px] 2xl:h-[640px]";
 
 export default async function UserCollectionLayout(props: Props) {
   const params = await props.params;
@@ -48,9 +45,7 @@ export default async function UserCollectionLayout(props: Props) {
       <ProfileBanner profile={targetUser} />
 
       <Container>
-        {targetUser.bannerImgUrl && (
-          <div className={cn("-mt-22", BANNER_BREAKPOINT)}></div>
-        )}
+        {targetUser.bannerImgUrl && <ProfileBannerClearance />}
         <div className="flex flex-col gap-4 pb-36 pt-2">
           <ProfileProvider profile={targetUser}>
             <UserProvider profiles={profiles} user={toPublicUser(session)}>
@@ -61,70 +56,6 @@ export default async function UserCollectionLayout(props: Props) {
           </ProfileProvider>
         </div>
       </Container>
-    </>
-  );
-}
-
-function ProfileBanner({ profile }: { profile: PublicProfile }) {
-  if (!profile.bannerImgUrl) return;
-
-  const isVideo = getMimeTypeFromExtension(profile.bannerImgUrl).startsWith(
-    "video"
-  );
-
-  return (
-    <>
-      <div className="absolute top-0 inset-0 -z-5">
-        <div className="mx-auto w-full max-w-7xl lg:max-w-(--breakpoint-xl) 2xl:max-w-(--breakpoint-2xl)">
-          <div
-            className={cn(
-              "relative mask-x-from-100% xl:mask-x-from-97%",
-              BANNER_BREAKPOINT
-            )}
-          >
-            {isVideo ? (
-              <video
-                src={profile.bannerImgUrl}
-                className="object-cover object-center size-full"
-                autoPlay
-                loop
-                muted
-                playsInline
-              />
-            ) : (
-              <Image
-                src={profile.bannerImgUrl}
-                className="object-cover object-center size-full"
-                fill
-                alt="Banner"
-                priority
-              />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg from-90% to-100%"></div>
-          </div>
-        </div>
-      </div>
-      <div className={cn("absolute top-0 inset-0 -z-10", BANNER_BREAKPOINT)}>
-        {isVideo ? (
-          <video
-            src={profile.bannerImgUrl}
-            className="object-cover object-center size-full"
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
-        ) : (
-          <Image
-            src={profile.bannerImgUrl}
-            className="object-cover object-center size-full"
-            fill
-            alt="Banner"
-            priority
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg backdrop-blur-xl from-90% to-100%"></div>
-      </div>
     </>
   );
 }
