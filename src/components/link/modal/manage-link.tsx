@@ -307,7 +307,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
       {getMimeTypeFromExtension(droppedImage.name).startsWith("video") ? (
         <video
           src={imageUrl}
-          className="aspect-[2.4/1] object-cover rounded"
+          className="aspect-[2.2/1] object-cover rounded"
           autoPlay
           loop
           muted
@@ -317,7 +317,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         <Cropper
           ref={cropperRef}
           src={imageUrl}
-          aspectRatio={() => 2.4}
+          aspectRatio={() => 2.2}
           className="h-full"
         />
       )}
@@ -380,7 +380,7 @@ function EditProfileForm({
           onClear={() => setDroppedImage(null)}
         />
         <span className="text-muted-fg text-sm">
-          Recommended aspect ratio is 2.4:1
+          Recommended aspect ratio is 2.2:1
         </span>
       </div>
       <Checkbox label="Remove Banner" name="removeBanner" />
