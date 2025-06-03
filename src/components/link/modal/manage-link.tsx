@@ -195,32 +195,30 @@ export function EditProfileModal({
 
             if (droppedImage && !removeBanner) {
               const croppedFile = await generateCroppedImage();
-              if (croppedFile) {
-                getPresignedUrl.mutate(
-                  {
-                    address,
-                    fileName: croppedFile.name,
-                  },
-                  {
-                    onSuccess: async (url) => {
-                      startUploadTransition(async () => {
-                        await handleUpload(url, croppedFile);
+              getPresignedUrl.mutate(
+                {
+                  address,
+                  fileName: droppedImage.name,
+                },
+                {
+                  onSuccess: async (url) => {
+                    startUploadTransition(async () => {
+                      await handleUpload(url, croppedFile ?? droppedImage);
 
-                        const fileUrl = url.split("?")[0];
-                        edit.mutate({
-                          address: address,
-                          hideUser,
-                          bannerImgUrl: fileUrl,
-                          privateSerial,
-                          privateProfile,
-                          hideActivity,
-                        });
+                      const fileUrl = url.split("?")[0];
+                      edit.mutate({
+                        address: address,
+                        hideUser,
+                        bannerImgUrl: fileUrl,
+                        privateSerial,
+                        privateProfile,
+                        hideActivity,
                       });
-                    },
-                  }
-                );
-                return;
-              }
+                    });
+                  },
+                }
+              );
+              return;
             }
 
             edit.mutate({
@@ -321,11 +319,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         />
       ) : (
         <div className="h-52">
-          <Cropper
-            ref={cropperRef}
-            src={imageUrl}
-            aspectRatio={() => 2.2}
-          />
+          <Cropper ref={cropperRef} src={imageUrl} aspectRatio={() => 2.2} />
         </div>
       )}
       <div className="flex items-center justify-between">
