@@ -10,10 +10,17 @@ import { msToCountdown } from "@/lib/utils";
 import { toast } from "sonner";
 import WelcomeIcon from "@/assets/icon-welcome.png";
 import CatIcon from "@/assets/icon-cat.png";
+import AxolotlIcon from "@/assets/icon-axolotl.png";
+import DeerIcon from "@/assets/icon-deer.png";
+import PandaIcon from "@/assets/icon-panda.png";
+import SquirrelIcon from "@/assets/icon-squirrel.png";
+import BearIcon from "@/assets/icon-bear.png";
+import GiraffeIcon from "@/assets/icon-giraffe.png";
+import WhiteFoxIcon from "@/assets/icon-white-fox.png";
 import TrashIcon from "@/assets/icon-trash.png";
 import CarpenterIcon from "@/assets/icon-carpenter.png";
 import SmartphoneIcon from "@/assets/icon-smartphone.png";
-import MugIcon from "@/assets/icon-mug.png";
+import CalligraphyIcon from "@/assets/image-calligraphy.png";
 import Image from "next/image";
 import ReactDOM from "react-dom";
 
@@ -28,10 +35,17 @@ export default function LinkRender() {
   // preload image icons
   ReactDOM.preload(WelcomeIcon.src, { as: "image" });
   ReactDOM.preload(CatIcon.src, { as: "image" });
+  ReactDOM.preload(AxolotlIcon.src, { as: "image" });
+  ReactDOM.preload(DeerIcon.src, { as: "image" });
+  ReactDOM.preload(PandaIcon.src, { as: "image" });
+  ReactDOM.preload(SquirrelIcon.src, { as: "image" });
+  ReactDOM.preload(BearIcon.src, { as: "image" });
+  ReactDOM.preload(GiraffeIcon.src, { as: "image" });
+  ReactDOM.preload(WhiteFoxIcon.src, { as: "image" });
   ReactDOM.preload(TrashIcon.src, { as: "image" });
   ReactDOM.preload(CarpenterIcon.src, { as: "image" });
   ReactDOM.preload(SmartphoneIcon.src, { as: "image" });
-  ReactDOM.preload(MugIcon.src, { as: "image" });
+  ReactDOM.preload(CalligraphyIcon.src, { as: "image" });
 
   return (
     <div className="flex flex-col justify-center items-center gap-5">
@@ -80,7 +94,7 @@ function TicketRender() {
       <div className="flex flex-col gap-2 items-center">
         <Image
           priority
-          src={MugIcon.src}
+          src={CalligraphyIcon.src}
           alt="Mug"
           width={220}
           height={220}
@@ -132,6 +146,20 @@ function StepRender({
     },
   });
 
+  const [randomIcon] = useState(() => {
+    const icons = [
+      { src: AxolotlIcon.src, alt: "Axolotl" },
+      { src: DeerIcon.src, alt: "Deer" },
+      { src: PandaIcon.src, alt: "Panda" },
+      { src: SquirrelIcon.src, alt: "Squirrel" },
+      { src: BearIcon.src, alt: "Bear" },
+      { src: CatIcon.src, alt: "Cat" },
+      { src: GiraffeIcon.src, alt: "Giraffe" },
+      { src: WhiteFoxIcon.src, alt: "White Fox" },
+    ];
+    return icons[Math.floor(Math.random() * icons.length)];
+  });
+
   useEffect(() => {
     if (data?.status === "certified") {
       utils.profile.getAll.invalidate();
@@ -149,7 +177,7 @@ function StepRender({
           </Link>{" "}
           if you are on mobile.
         </span>
-        <div className="bg-white p-3">
+        <div className="bg-white p-3 rounded shadow-lg">
           <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
         </div>
         {data && (
@@ -165,8 +193,8 @@ function StepRender({
       <div className="flex flex-col gap-2 items-center">
         <Image
           priority
-          src={CatIcon.src}
-          alt="Cat"
+          src={randomIcon.src}
+          alt={randomIcon.alt}
           width={220}
           height={220}
           className="animate-in fade-in zoom-in duration-200"
