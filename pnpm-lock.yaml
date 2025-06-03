@@ -101,6 +101,9 @@ importers:
       react:
         specifier: ^19.1.0
         version: 19.1.0
+      react-advanced-cropper:
+        specifier: ^0.20.1
+        version: 0.20.1(react@19.1.0)
       react-aria:
         specifier: ^3.40.0
         version: 3.40.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -2179,6 +2182,10 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  advanced-cropper@0.17.1:
+    resolution: {integrity: sha512-Z1P0sYOXa2tqZjeY742QtNERofXh1AuOa27LEurO9rbx3IfzLrGQlzy7sWEc5VN9hRg+J/qCiMmnB6tUDLb1TA==}
+    engines: {node: '>=8', npm: '>=5'}
+
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
@@ -2425,6 +2432,9 @@ packages:
     resolution: {integrity: sha512-9MSRhWRVoRPDG0TgzkHrshFSJJNZzfY5UFqUMuksg7zL1yoZIZ3jLB0YAgHclbiAxPI86pBnwDX1tbzoiV8aFw==}
     peerDependencies:
       devtools-protocol: '*'
+
+  classnames@2.5.1:
+    resolution: {integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow==}
 
   clean-stack@2.2.0:
     resolution: {integrity: sha512-4diC9HaTE+KRAMWhDhrGOECgWZxoevMc5TlkObMqNSsVU62PYzXZ/SMTjzyGAFF1YusgxGcSWTEXBhp0CPwQ1A==}
@@ -4027,6 +4037,12 @@ packages:
   rc@1.2.8:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
+
+  react-advanced-cropper@0.20.1:
+    resolution: {integrity: sha512-Pcmkv0xQMpig6+LkM+zLbEuqBbYG3+CwXvIfYU+LDNn9l8t91Jm0fp9MSTNW0pjIvT6frAGTfmlnvnZW4PEs7Q==}
+    engines: {node: '>=8', npm: '>=5'}
+    peerDependencies:
+      react: '>=16.8.0'
 
   react-aria-components@1.9.0:
     resolution: {integrity: sha512-7cOYxvODDPn8PlWh7eM6/hcydM9sem9PJfL9XD90hIUGfX/f5wMu4lplpjFVzkoCPe4UcOrqC77k3vpRN+1eaw==}
@@ -7261,6 +7277,10 @@ snapshots:
 
   acorn@8.14.1: {}
 
+  advanced-cropper@0.17.1:
+    dependencies:
+      tslib: 2.8.1
+
   agent-base@6.0.2:
     dependencies:
       debug: 4.4.1
@@ -7576,6 +7596,8 @@ snapshots:
       devtools-protocol: 0.0.1439962
       mitt: 3.0.1
       zod: 3.25.28
+
+  classnames@2.5.1: {}
 
   clean-stack@2.2.0:
     optional: true
@@ -9346,6 +9368,13 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
     optional: true
+
+  react-advanced-cropper@0.20.1(react@19.1.0):
+    dependencies:
+      advanced-cropper: 0.17.1
+      classnames: 2.5.1
+      react: 19.1.0
+      tslib: 2.8.1
 
   react-aria-components@1.9.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:

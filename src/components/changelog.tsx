@@ -34,8 +34,20 @@ export default function Changelog() {
           </Modal.Description>
         </Modal.Header>
         <Modal.Body>
-          <DisclosureGroup defaultExpandedKeys={"9"}>
-            <Disclosure id={"9"}>
+          <DisclosureGroup defaultExpandedKeys={"1"}>
+            <Disclosure id={"1"}>
+              <DisclosureTrigger>2025-06-03</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>
+                      Added a banner image cropping feature in Edit Profile.
+                    </li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
+            <Disclosure>
               <DisclosureTrigger>2025-05-30</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -52,7 +64,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"8"}>
+            <Disclosure>
               <DisclosureTrigger>2025-05-27</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -62,7 +74,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"7"}>
+            <Disclosure>
               <DisclosureTrigger>2025-05-23</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -80,7 +92,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"1"}>
+            <Disclosure>
               <DisclosureTrigger>2025-05-22</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -98,7 +110,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"2"}>
+            <Disclosure>
               <DisclosureTrigger>2025-05-20</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -111,7 +123,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"3"}>
+            <Disclosure>
               <DisclosureTrigger>2025-05-18</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -126,7 +138,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"4"}>
+            <Disclosure>
               <DisclosureTrigger>2025-05-15</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -139,7 +151,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"5"}>
+            <Disclosure>
               <DisclosureTrigger>2025-05-11</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -152,7 +164,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id={"6"}>
+            <Disclosure>
               <DisclosureTrigger>Unknown</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">

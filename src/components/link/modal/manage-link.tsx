@@ -13,12 +13,21 @@ import {
   Sheet,
 } from "@/components/ui";
 import { api } from "@/lib/trpc/client";
-import { mimeTypes } from "@/lib/utils";
+import { mimeTypes, getMimeTypeFromExtension } from "@/lib/utils";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-import { Suspense, useCallback, useRef, useState, useTransition } from "react";
+import {
+  Suspense,
+  useCallback,
+  useRef,
+  useState,
+  useTransition,
+  useEffect,
+} from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
+import { Cropper, CropperRef } from "react-advanced-cropper";
+import "react-advanced-cropper/dist/style.css";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -84,6 +93,7 @@ export function EditProfileModal({
   setOpen,
 }: EditProfileModalProps) {
   const formRef = useRef<HTMLFormElement>(null!);
+  const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
 
@@ -107,28 +117,23 @@ export function EditProfileModal({
     },
   });
 
-  const handleUpload = useCallback(
-    async (url: string) => {
-      if (!droppedImage) return;
+  const handleUpload = useCallback(async (url: string, file: File) => {
+    try {
+      const response = await ofetch.raw(url, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
 
-      try {
-        const response = await ofetch.raw(url, {
-          method: "PUT",
-          body: droppedImage,
-          headers: {
-            "Content-Type": droppedImage.type,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to upload image");
-        }
-      } catch {
-        toast.error("Failed to upload image");
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
       }
-    },
-    [droppedImage]
-  );
+    } catch {
+      toast.error("Failed to upload image");
+    }
+  }, []);
 
   const handleSelectImage = useCallback((e: FileList | null) => {
     const files = Array.from(e ?? []);
@@ -142,6 +147,26 @@ export function EditProfileModal({
 
     setDroppedImage(item);
   }, []);
+
+  const generateCroppedImage = useCallback(() => {
+    if (!cropperRef.current || !droppedImage) return null;
+
+    const canvas = cropperRef.current.getCanvas();
+    if (!canvas) return null;
+
+    return new Promise<File | null>((resolve) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const croppedFile = new File([blob], droppedImage.name, {
+            type: droppedImage.type,
+          });
+          resolve(croppedFile);
+        } else {
+          resolve(null);
+        }
+      }, droppedImage.type);
+    });
+  }, [droppedImage]);
 
   return (
     <Sheet.Content
@@ -169,30 +194,33 @@ export function EditProfileModal({
             const hideActivity = formData.get("hideActivity") === "on";
 
             if (droppedImage && !removeBanner) {
-              getPresignedUrl.mutate(
-                {
-                  address,
-                  fileName: droppedImage.name,
-                },
-                {
-                  onSuccess: async (url) => {
-                    startUploadTransition(async () => {
-                      await handleUpload(url);
-
-                      const fileUrl = url.split("?")[0];
-                      edit.mutate({
-                        address: address,
-                        hideUser,
-                        bannerImgUrl: fileUrl,
-                        privateSerial,
-                        privateProfile,
-                        hideActivity,
-                      });
-                    });
+              const croppedFile = await generateCroppedImage();
+              if (croppedFile) {
+                getPresignedUrl.mutate(
+                  {
+                    address,
+                    fileName: croppedFile.name,
                   },
-                }
-              );
-              return;
+                  {
+                    onSuccess: async (url) => {
+                      startUploadTransition(async () => {
+                        await handleUpload(url, croppedFile);
+
+                        const fileUrl = url.split("?")[0];
+                        edit.mutate({
+                          address: address,
+                          hideUser,
+                          bannerImgUrl: fileUrl,
+                          privateSerial,
+                          privateProfile,
+                          hideActivity,
+                        });
+                      });
+                    },
+                  }
+                );
+                return;
+              }
             }
 
             edit.mutate({
@@ -222,6 +250,7 @@ export function EditProfileModal({
                     address={address}
                     droppedImage={droppedImage}
                     handleSelectImage={handleSelectImage}
+                    cropperRef={cropperRef}
                     setDroppedImage={setDroppedImage}
                   />
                 </Suspense>
@@ -249,16 +278,70 @@ type EditProfileProps = {
   address: string;
   droppedImage: File | null;
   handleSelectImage: (files: FileList | null) => void;
+  cropperRef: React.RefObject<CropperRef | null>;
   setDroppedImage: (file: File | null) => void;
 };
+
+type BannerImageProps = {
+  droppedImage: File | null;
+  cropperRef: React.RefObject<CropperRef | null>;
+  onClear: () => void;
+};
+
+function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (droppedImage) {
+      const url = URL.createObjectURL(droppedImage);
+      setImageUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    return undefined;
+  }, [droppedImage]);
+
+  if (!droppedImage || !imageUrl) return null;
+
+  return (
+    <>
+      {getMimeTypeFromExtension(droppedImage.name).startsWith("video") ? (
+        <video
+          src={imageUrl}
+          className="aspect-[2.4/1] object-cover rounded"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      ) : (
+        <Cropper
+          ref={cropperRef}
+          src={imageUrl}
+          aspectRatio={() => 2.4}
+          className="h-full"
+        />
+      )}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-fg truncate">
+          Selected file: {droppedImage.name}
+        </span>
+        <Button size="extra-small" intent="outline" onClick={onClear}>
+          Clear
+        </Button>
+      </div>
+    </>
+  );
+}
 
 function EditProfileForm({
   address,
   droppedImage,
   handleSelectImage,
+  cropperRef,
   setDroppedImage,
 }: EditProfileProps) {
   const [data] = api.profile.get.useSuspenseQuery(address);
+
   return (
     <div className="flex flex-col gap-6">
       <Checkbox
@@ -287,32 +370,15 @@ function EditProfileForm({
       />
       <div className="group flex flex-col gap-y-2">
         <Label>Banner Image</Label>
-
         <FileTrigger
           acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
           onSelect={handleSelectImage}
         />
-        {droppedImage && (
-          <>
-            <img
-              src={URL.createObjectURL(droppedImage)}
-              alt="Selected banner preview"
-              className="aspect-[2.4/1] object-cover rounded"
-            />
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-fg truncate">
-                Selected file: {droppedImage.name}
-              </span>
-              <Button
-                size="extra-small"
-                intent="outline"
-                onClick={() => setDroppedImage(null)}
-              >
-                Clear
-              </Button>
-            </div>
-          </>
-        )}
+        <BannerImage
+          droppedImage={droppedImage}
+          cropperRef={cropperRef}
+          onClear={() => setDroppedImage(null)}
+        />
         <span className="text-muted-fg text-sm">
           Recommended aspect ratio is 2.4:1
         </span>
