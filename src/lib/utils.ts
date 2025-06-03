@@ -72,10 +72,3 @@ export const mimeTypes = {
   mkv: "video/x-matroska",
   m4v: "video/x-m4v",
 } as const;
-
-export function getMimeTypeFromExtension(filename: string) {
-  const extension = filename.split(".").pop()?.toLowerCase() ?? "";
-  return (
-    mimeTypes[extension as keyof typeof mimeTypes] || "application/octet-stream"
-  );
-}

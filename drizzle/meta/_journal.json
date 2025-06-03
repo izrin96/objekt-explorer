@@ -148,6 +148,13 @@
       "when": 1748320987226,
       "tag": "0020_smart_yellow_claw",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1748952844480,
+      "tag": "0021_known_goliath",
+      "breakpoints": true
     }
   ]
 }

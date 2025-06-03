@@ -2,7 +2,9 @@ import { Session } from "../server/auth";
 import { UserAddress } from "../server/db/schema";
 
 export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
-  Partial<Pick<UserAddress, "bannerImgUrl" | "privateProfile">> & {
+  Partial<
+    Pick<UserAddress, "bannerImgUrl" | "bannerImgType" | "privateProfile">
+  > & {
     user?: PublicUser | null;
     isAddress?: boolean;
   };

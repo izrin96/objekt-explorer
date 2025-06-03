@@ -2,16 +2,14 @@
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { PublicProfile } from "@/lib/universal/user";
-import { getMimeTypeFromExtension } from "@/lib/utils";
 import Image from "next/image";
 
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();
-  
-  if (!profile.bannerImgUrl) return;
-  const isVideo = getMimeTypeFromExtension(profile.bannerImgUrl).startsWith(
-    "video"
-  );
+
+  if (!(profile.bannerImgUrl && profile.bannerImgType)) return;
+
+  const isVideo = profile.bannerImgType.startsWith("video");
 
   return (
     <>

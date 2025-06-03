@@ -32,6 +32,7 @@ export const userAddress = pgTable(
     }),
     linkedAt: timestamp("linked_at"),
     bannerImgUrl: text("banner_img_url"),
+    bannerImgType: text("banner_img_type"),
     hideUser: boolean("hide_user").default(true),
     privateProfile: boolean("private_profile").default(false),
     privateSerial: boolean("private_serial").default(false),

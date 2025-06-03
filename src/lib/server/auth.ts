@@ -152,6 +152,7 @@ export async function fetchUserByIdentifier(
       nickname: true,
       address: true,
       bannerImgUrl: true,
+      bannerImgType: true,
       hideUser: true,
       privateProfile: true,
     },
