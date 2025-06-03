@@ -19,7 +19,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
           <div
             ref={bannerRef}
             className={
-              "relative mask-x-from-100% xl:mask-x-from-97% aspect-[2.2/1]"
+              "relative mask-x-from-100% xl:mask-x-from-97% aspect-[2.3/1]"
             }
           >
             {isVideo ? (
@@ -74,5 +74,5 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
 }
 
 export function ProfileBannerClearance() {
-  return <div className={"-mt-2 xl:-mt-16 aspect-[2.2/1]"}></div>;
+  return <div className={"-mt-2 xl:-mt-16 aspect-[2.3/1]"}></div>;
 }
