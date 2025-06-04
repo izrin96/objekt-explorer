@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
+import dynamic from "next/dynamic";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
 import Navbar from "@/components/navbar";
@@ -8,7 +9,6 @@ import { Analytics } from "@/components/analytics";
 import { PropsWithChildren } from "react";
 import { cn } from "@/utils/classes";
 import { TRPCReactProvider } from "@/lib/trpc/client";
-import MaintenanceNotice from "@/components/maintenance";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -30,6 +30,8 @@ const dotMatrix = localFont({
   src: "./fonts/dotmat.ttf",
   variable: "--font-dot",
 });
+
+const MaintenanceNotice = dynamic(() => import("@/components/maintenance"));
 
 export const metadata: Metadata = {
   title: {
