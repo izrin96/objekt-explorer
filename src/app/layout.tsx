@@ -8,6 +8,7 @@ import { Analytics } from "@/components/analytics";
 import { PropsWithChildren } from "react";
 import { cn } from "@/utils/classes";
 import { TRPCReactProvider } from "@/lib/trpc/client";
+import MaintenanceNotice from "@/components/maintenance";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       >
         <TRPCReactProvider>
           <ClientProviders>
+            <MaintenanceNotice />
             <Navbar />
             <main className="mx-auto w-full">{children}</main>
             <Analytics />
