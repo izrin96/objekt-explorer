@@ -19,7 +19,7 @@ import { fetchUserProfiles } from "@/lib/server/profile";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { z } from "zod/v4";
 
-const PER_PAGE = 30;
+const PER_PAGE = 150;
 
 const cursorSchema = z
   .object({
@@ -130,6 +130,17 @@ export async function GET(
               ),
             ]
           : []),
+        ...(cursor
+          ? [
+              or(
+                lt(transfers.timestamp, cursor.timestamp),
+                and(
+                  eq(transfers.timestamp, cursor.timestamp),
+                  lt(transfers.id, cursor.id)
+                )
+              ),
+            ]
+          : []),
         ...(query.artist.length
           ? [
               inArray(
@@ -149,16 +160,7 @@ export async function GET(
           : []),
         ...(query.on_offline.length
           ? [inArray(collections.onOffline, query.on_offline)]
-          : []),
-        cursor
-          ? or(
-              lt(transfers.timestamp, cursor.timestamp),
-              and(
-                eq(transfers.timestamp, cursor.timestamp),
-                lt(transfers.id, cursor.id)
-              )
-            )
-          : undefined
+          : [])
       )
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
