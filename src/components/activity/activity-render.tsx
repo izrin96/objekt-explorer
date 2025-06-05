@@ -88,6 +88,14 @@ function Activity() {
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
 
+  const addNewTransferIds = useCallback((data: ActivityData[]) => {
+    setNewTransferIds((prev) => {
+      const newSet = new Set(prev);
+      data.forEach((data) => newSet.add(data.transfer.id));
+      return newSet;
+    });
+  }, []);
+
   const handleWebSocketMessage = useCallback((event: MessageEvent) => {
     const message = JSON.parse(event.data) as WebSocketMessage;
 
@@ -96,15 +104,12 @@ function Activity() {
 
     if (message.type === "transfer") {
       setRealtimeTransfers((prev) => [...message.data, ...prev]);
-      setNewTransferIds((prev) => {
-        const newSet = new Set(prev);
-        message.data.forEach((data) => newSet.add(data.transfer.id));
-        return newSet;
-      });
+      addNewTransferIds(message.data);
     }
 
     if (message.type === "history") {
-      setRealtimeTransfers((prev) => [...prev, ...message.data]);
+      setRealtimeTransfers([...message.data]);
+      addNewTransferIds(message.data);
     }
 
     // restore scroll position after state updates
