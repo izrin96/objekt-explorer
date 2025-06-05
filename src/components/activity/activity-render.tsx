@@ -103,6 +103,10 @@ function Activity() {
       });
     }
 
+    if (message.type === "history") {
+      setRealtimeTransfers((prev) => [...prev, ...message.data]);
+    }
+
     // restore scroll position after state updates
     if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
       window.scrollTo({
