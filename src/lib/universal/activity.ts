@@ -2,6 +2,12 @@ import { z } from "zod/v4";
 import { Transfer } from "../server/db/indexer/schema";
 import { UserAddress } from "../server/db/schema";
 import { OwnedObjekt } from "./objekts";
+import {
+  validArtists,
+  validClasses,
+  validOnlineTypes,
+  validSeasons,
+} from "./cosmo/common";
 
 export type ActivityData = {
   transfer: Transfer;
@@ -23,3 +29,17 @@ const cursorSchema = z
     id: z.string(),
   })
   .optional();
+
+export const validType = ["all", "mint", "transfer", "spin"] as const;
+export type ValidType = (typeof validType)[number];
+
+export const activitySchema = z.object({
+  type: z.enum(validType).default("all"),
+  artist: z.enum(validArtists).array(),
+  member: z.string().array(),
+  season: z.enum(validSeasons).array(),
+  class: z.enum(validClasses).array(),
+  on_offline: z.enum(validOnlineTypes).array(),
+});
+
+export type ActivityParams = z.infer<typeof activitySchema>;

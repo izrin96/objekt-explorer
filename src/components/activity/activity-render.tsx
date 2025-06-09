@@ -19,6 +19,11 @@ import { ofetch } from "ofetch";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { InfiniteQueryNext } from "../infinite-query-pending";
 import { ActivityData, ActivityResponse } from "@/lib/universal/activity";
+import ActivityFilter from "./activity-filter";
+import { artists } from "@/lib/server/cosmo/artists";
+import { useFilters } from "@/hooks/use-filters";
+import { useTypeFilter } from "./filter-type";
+import { filterData } from "./utils";
 
 type WebSocketMessage =
   | { type: "transfer"; data: ActivityData[] }
@@ -44,6 +49,8 @@ export default function ActivityRender() {
 }
 
 function Activity() {
+  const [filters] = useFilters();
+  const [type] = useTypeFilter();
   const [realtimeTransfers, setRealtimeTransfers] = useState<ActivityData[]>(
     []
   );
@@ -60,17 +67,26 @@ function Activity() {
     status,
     isLoading,
   } = useInfiniteQuery<ActivityResponse>({
-    queryKey: ["activity"],
-    queryFn: async ({ pageParam }) => {
+    queryKey: ["activity", type, filters],
+    queryFn: async ({ pageParam, signal }) => {
       const response = await ofetch<ActivityResponse>(`/api/activity`, {
         query: {
           cursor: pageParam ? JSON.stringify(pageParam) : undefined,
+          type: type,
+          artist: filters.artist ?? [],
+          member: filters.member ?? [],
+          season: filters.season ?? [],
+          class: filters.class ?? [],
+          on_offline: filters.on_offline ?? [],
         },
+        signal,
       });
       return response;
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const allTransfers = useMemo(
@@ -96,30 +112,35 @@ function Activity() {
     });
   }, []);
 
-  const handleWebSocketMessage = useCallback((event: MessageEvent) => {
-    const message = JSON.parse(event.data) as WebSocketMessage;
+  const handleWebSocketMessage = useCallback(
+    (event: MessageEvent) => {
+      const message = JSON.parse(event.data) as WebSocketMessage;
 
-    // store current scroll position before update
-    scrollOffsetRef.current = window.scrollY;
+      // store current scroll position before update
+      scrollOffsetRef.current = window.scrollY;
 
-    if (message.type === "transfer") {
-      setRealtimeTransfers((prev) => [...message.data, ...prev]);
-      addNewTransferIds(message.data);
-    }
+      if (message.type === "transfer") {
+        setRealtimeTransfers((prev) =>
+          filterData([...message.data, ...prev], type, filters)
+        );
+        addNewTransferIds(message.data);
+      }
 
-    if (message.type === "history") {
-      setRealtimeTransfers([...message.data]);
-      addNewTransferIds(message.data);
-    }
+      if (message.type === "history") {
+        setRealtimeTransfers(filterData(message.data, type, filters));
+        addNewTransferIds(message.data);
+      }
 
-    // restore scroll position after state updates
-    if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
-      window.scrollTo({
-        top: scrollOffsetRef.current + ROW_HEIGHT * message.data.length,
-        behavior: "instant",
-      });
-    }
-  }, []);
+      // restore scroll position after state updates
+      if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
+        window.scrollTo({
+          top: scrollOffsetRef.current + ROW_HEIGHT * message.data.length,
+          behavior: "instant",
+        });
+      }
+    },
+    [type, filters]
+  );
 
   // handle incoming message
   useEffect(() => {
@@ -132,6 +153,7 @@ function Activity() {
     ws.onmessage = handleWebSocketMessage;
 
     return () => {
+      setRealtimeTransfers([]);
       ws.close();
     };
   }, [isLoading, handleWebSocketMessage]);
@@ -168,6 +190,7 @@ function Activity() {
 
   return (
     <>
+      <ActivityFilter artists={artists} />
       <Card className="py-0">
         <div
           className="relative w-full overflow-x-auto text-sm"

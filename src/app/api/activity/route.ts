@@ -5,11 +5,13 @@ import {
   transfers,
   collections,
 } from "@/lib/server/db/indexer/schema";
-import { desc, eq, lt, and, or } from "drizzle-orm";
+import { desc, eq, lt, and, or, inArray, ne } from "drizzle-orm";
 import { z } from "zod/v4";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { db } from "@/lib/server/db";
+import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import { ActivityParams, activitySchema } from "@/lib/universal/activity";
 
 const PAGE_SIZE = 300;
 
@@ -22,6 +24,7 @@ const cursorSchema = z
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+  const query = parseParams(searchParams);
   const cursor = cursorSchema.parse(
     searchParams.get("cursor")
       ? JSON.parse(searchParams.get("cursor")!)
@@ -45,15 +48,49 @@ export async function GET(request: NextRequest) {
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .where(
-      cursor
-        ? or(
-            lt(transfers.timestamp, cursor.timestamp),
-            and(
-              eq(transfers.timestamp, cursor.timestamp),
-              lt(transfers.id, cursor.id)
-            )
-          )
-        : undefined
+      and(
+        ...(cursor
+          ? [
+              or(
+                lt(transfers.timestamp, cursor.timestamp),
+                and(
+                  eq(transfers.timestamp, cursor.timestamp),
+                  lt(transfers.id, cursor.id)
+                )
+              ),
+            ]
+          : []),
+        ...(query.type === "mint" ? [eq(transfers.from, NULL_ADDRESS)] : []),
+        ...(query.type === "transfer"
+          ? [
+              and(
+                ne(transfers.from, NULL_ADDRESS),
+                ne(transfers.to, SPIN_ADDRESS)
+              ),
+            ]
+          : []),
+        ...(query.type === "spin" ? [eq(transfers.to, SPIN_ADDRESS)] : []),
+        ...(query.artist.length
+          ? [
+              inArray(
+                collections.artist,
+                query.artist.map((a) => a.toLowerCase())
+              ),
+            ]
+          : []),
+        ...(query.member.length
+          ? [inArray(collections.member, query.member)]
+          : []),
+        ...(query.season.length
+          ? [inArray(collections.season, query.season)]
+          : []),
+        ...(query.class.length
+          ? [inArray(collections.class, query.class)]
+          : []),
+        ...(query.on_offline.length
+          ? [inArray(collections.onOffline, query.on_offline)]
+          : [])
+      )
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PAGE_SIZE + 1);
@@ -115,4 +152,26 @@ export async function GET(request: NextRequest) {
     items,
     nextCursor,
   });
+}
+
+function parseParams(params: URLSearchParams): ActivityParams {
+  const result = activitySchema.safeParse({
+    type: params.get("type"),
+    artist: params.getAll("artist"),
+    member: params.getAll("member"),
+    season: params.getAll("season"),
+    class: params.getAll("class"),
+    on_offline: params.getAll("on_offline"),
+  });
+
+  return result.success
+    ? result.data
+    : {
+        type: "all",
+        artist: [],
+        member: [],
+        season: [],
+        class: [],
+        on_offline: [],
+      };
 }
