@@ -90,17 +90,6 @@ export async function GET(
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .where(
       and(
-        ...(cursor
-          ? [
-              or(
-                lt(transfers.timestamp, cursor.timestamp),
-                and(
-                  eq(transfers.timestamp, cursor.timestamp),
-                  lt(transfers.id, cursor.id)
-                )
-              ),
-            ]
-          : []),
         ...(query.type === "all"
           ? [
               or(
@@ -138,6 +127,17 @@ export async function GET(
               and(
                 eq(transfers.from, params.address.toLowerCase()),
                 eq(transfers.to, SPIN_ADDRESS)
+              ),
+            ]
+          : []),
+        ...(cursor
+          ? [
+              or(
+                lt(transfers.timestamp, cursor.timestamp),
+                and(
+                  eq(transfers.timestamp, cursor.timestamp),
+                  lt(transfers.id, cursor.id)
+                )
               ),
             ]
           : []),
