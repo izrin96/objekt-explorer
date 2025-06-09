@@ -23,6 +23,7 @@ services:
     environment:
       - TOKEN=your-token-here
   web:
+    restart: always
     image: ghcr.io/izrin96/objekt-explorer-web:latest
     build:
       args:
@@ -75,6 +76,7 @@ services:
       - SES_SECRET_KEY
       - SES_MAIL_FROM
   minio:
+    restart: always
     image: minio/minio:latest
     environment:
       MINIO_ROOT_USER: minioadmin
