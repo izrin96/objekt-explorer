@@ -119,22 +119,21 @@ function Activity() {
       // store current scroll position before update
       scrollOffsetRef.current = window.scrollY;
 
+      const filtered = filterData(message.data, type, filters);
+      addNewTransferIds(filtered);
+
       if (message.type === "transfer") {
-        setRealtimeTransfers((prev) =>
-          filterData([...message.data, ...prev], type, filters)
-        );
-        addNewTransferIds(message.data);
+        setRealtimeTransfers((prev) => [...filtered, ...prev]);
       }
 
       if (message.type === "history") {
-        setRealtimeTransfers(filterData(message.data, type, filters));
-        addNewTransferIds(message.data);
+        setRealtimeTransfers(filtered);
       }
 
       // restore scroll position after state updates
       if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
         window.scrollTo({
-          top: scrollOffsetRef.current + ROW_HEIGHT * message.data.length,
+          top: scrollOffsetRef.current + ROW_HEIGHT * filtered.length,
           behavior: "instant",
         });
       }
