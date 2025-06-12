@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
 
 function parseParams(params: URLSearchParams): ActivityParams {
   const result = activitySchema.safeParse({
-    type: params.get("type"),
+    type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
     member: params.getAll("member"),
     season: params.getAll("season"),

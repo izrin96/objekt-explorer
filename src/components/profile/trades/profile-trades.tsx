@@ -62,7 +62,7 @@ function ProfileTrades() {
       return await ofetch<TransferResult>(url.toString(), {
         query: {
           cursor: pageParam ? JSON.stringify(pageParam) : undefined,
-          type: type,
+          type: type ?? undefined,
           artist: filters.artist ?? [],
           member: filters.member ?? [],
           season: filters.season ?? [],

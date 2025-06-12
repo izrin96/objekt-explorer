@@ -206,7 +206,7 @@ export async function GET(
 
 function parseParams(params: URLSearchParams): TransferParams {
   const result = transfersSchema.safeParse({
-    type: params.get("type"),
+    type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
     member: params.getAll("member"),
     season: params.getAll("season"),

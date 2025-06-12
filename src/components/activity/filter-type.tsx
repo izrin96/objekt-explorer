@@ -15,10 +15,7 @@ const map: Record<ValidType, string> = {
 };
 
 export function useTypeFilter() {
-  return useQueryState(
-    "type",
-    parseAsStringLiteral(validType).withDefault("all")
-  );
+  return useQueryState("type", parseAsStringLiteral(validType));
 }
 
 export default function TypeFilter() {
@@ -28,17 +25,14 @@ export default function TypeFilter() {
   const update = useCallback(
     (key: Selection) => {
       const value = parseSelected<ValidType>(key) ?? "all";
-      setType(value);
+      setType(value === "all" ? null : value);
     },
     [setType]
   );
 
   return (
     <Menu respectScreen={false}>
-      <Button
-        intent="outline"
-        className={type !== "all" ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={type ? "!inset-ring-primary" : ""}>
         Type
       </Button>
       <Menu.Content

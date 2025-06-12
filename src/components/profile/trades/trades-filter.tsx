@@ -10,6 +10,7 @@ import TypeFilter, { useTypeFilter } from "./filter-type";
 import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import React from "react";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+import { checkFiltering, useFilters } from "@/hooks/use-filters";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -17,7 +18,9 @@ type Props = {
 
 export default function TradesFilter({ artists }: Props) {
   const reset = useResetFilters();
-  const [, setType] = useTypeFilter();
+  const [type, setType] = useTypeFilter();
+  const [filters] = useFilters();
+  const isFiltering = checkFiltering(filters);
   return (
     <div className="flex gap-2 items-center flex-wrap justify-center">
       <TypeFilter />
@@ -27,9 +30,10 @@ export default function TradesFilter({ artists }: Props) {
       <FilterClass />
       <FilterOnline />
       <ResetFilter
+        isDisabled={!(isFiltering || type !== null)}
         onReset={() => {
           reset();
-          setType("all");
+          setType(null);
         }}
       />
     </div>

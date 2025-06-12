@@ -72,7 +72,7 @@ function Activity() {
       const response = await ofetch<ActivityResponse>(`/api/activity`, {
         query: {
           cursor: pageParam ? JSON.stringify(pageParam) : undefined,
-          type: type,
+          type: type ?? undefined,
           artist: filters.artist ?? [],
           member: filters.member ?? [],
           season: filters.season ?? [],
@@ -87,6 +87,7 @@ function Activity() {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 0,
     gcTime: 0,
+    refetchOnWindowFocus: false,
   });
 
   const allTransfers = useMemo(
@@ -119,7 +120,7 @@ function Activity() {
       // store current scroll position before update
       scrollOffsetRef.current = window.scrollY;
 
-      const filtered = filterData(message.data, type, filters);
+      const filtered = filterData(message.data, type ?? "all", filters);
       addNewTransferIds(filtered);
 
       if (message.type === "transfer") {

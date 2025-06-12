@@ -2,12 +2,18 @@
 
 import React from "react";
 import { Button } from "../ui";
-import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
 
-export default function ResetFilter({ onReset }: { onReset: () => void }) {
+export default function ResetFilter({
+  onReset,
+  isDisabled,
+}: {
+  onReset: () => void;
+  isDisabled?: boolean;
+}) {
   return (
-    <Button intent="outline" onClick={onReset}>
-      <TrashSimpleIcon data-slot="icon" />
+    <Button intent="outline" onClick={onReset} isDisabled={isDisabled}>
+      <XIcon data-slot="icon" />
       Reset filter
     </Button>
   );

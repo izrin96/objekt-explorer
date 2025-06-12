@@ -10,6 +10,7 @@ import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import React from "react";
 import EditionFilter from "@/components/filters/filter-edition";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+import { checkFiltering, useFilters } from "@/hooks/use-filters";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -17,6 +18,8 @@ type Props = {
 
 export default function StatsFilter({ artists }: Props) {
   const reset = useResetFilters();
+  const [filters] = useFilters();
+  const isFiltering = checkFiltering(filters);
   return (
     <div className="flex gap-2 items-center flex-wrap justify-center">
       <ArtistFilter artists={artists} />
@@ -25,7 +28,7 @@ export default function StatsFilter({ artists }: Props) {
       <FilterClass hideZeroWelcome />
       <EditionFilter />
       <FilterOnline />
-      <ResetFilter onReset={() => reset()} />
+      <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
     </div>
   );
 }

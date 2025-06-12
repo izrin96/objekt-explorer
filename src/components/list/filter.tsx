@@ -18,10 +18,13 @@ import ResetFilter from "../filters/reset-filter";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import ColorFilter from "../filters/filter-color";
+import { checkFiltering, useFilters } from "@/hooks/use-filters";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
   const reset = useResetFilters();
+  const [filters] = useFilters();
+  const isFiltering = checkFiltering(filters);
   return (
     <div className="flex flex-col gap-4">
       <div className="flex gap-2 flex-wrap">
@@ -41,7 +44,7 @@ export default function Filter() {
       <div className="flex gap-2 flex-wrap">
         <ColumnFilter />
         <SearchFilter />
-        <ResetFilter onReset={() => reset()} />
+        <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>
   );
