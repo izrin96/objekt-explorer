@@ -138,21 +138,21 @@ function Content() {
 
                   setFormatText(
                     [
-                      "### Have:",
+                      "## Have",
                       ...format(haveCollections, showCount),
                       ...(includeLink
                         ? [
                             "",
-                            `[View this list with picture](<${getBaseURL()}/list/${haveSlug}>)`,
+                            `[View this list](<${getBaseURL()}/list/${haveSlug}>)`,
                             "", // give a little bit of spacing
                           ]
                         : []),
-                      "### Want:",
+                      "## Want",
                       ...format(wantCollections, showCount),
                       ...(includeLink
                         ? [
                             "",
-                            `[View this list with picture](<${getBaseURL()}/list/${wantSlug}>)`,
+                            `[View this list](<${getBaseURL()}/list/${wantSlug}>)`,
                           ]
                         : []),
                     ].join("\n")
@@ -241,7 +241,7 @@ function format(
       )
       .sort();
 
-    return `${member} ${formattedWithQuantity.join(", ")}`;
+    return `${member} ${formattedWithQuantity.join(" ")}`;
   });
 }
 
