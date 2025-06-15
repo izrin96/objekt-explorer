@@ -1,5 +1,6 @@
-export function cacheHeaders(_?: number) {
+export function cacheHeaders(age = 15) {
   return {
-    "Cache-Control": "max-age=15",
+    "Cache-Control": `max-age=${age}`,
+    "CDN-Cache-Control": `max-age=0, s-maxage=${age}`,
   };
 }
