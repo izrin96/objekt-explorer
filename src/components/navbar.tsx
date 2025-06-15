@@ -51,7 +51,7 @@ function Activity() {
       className="px-2 py-1.5 flex items-center gap-2 text-sm font-medium"
     >
       {/* <RadioTowerIcon size={18} /> */}
-      <span className="hidden sm:block text-xs">Activity</span>
+      <span className="text-xs">Activity</span>
     </Link>
   );
 }
@@ -62,7 +62,7 @@ function Live() {
       href="/live"
       className="px-2 py-1.5 flex items-center gap-2 text-sm font-medium"
     >
-      <span className="hidden sm:block text-xs">Live</span>
+      <span className="text-xs">Live</span>
     </Link>
   );
 }
