@@ -1,6 +1,8 @@
 import LiveSessionList from "@/components/live/session-list";
 import { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Live",
