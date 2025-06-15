@@ -1,6 +1,12 @@
 "use client";
 
-import { CSSProperties, PropsWithChildren, useEffect, useState } from "react";
+import {
+  CSSProperties,
+  PropsWithChildren,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import {
   Call,
   ParticipantView,
@@ -12,7 +18,26 @@ import {
 } from "@stream-io/video-react-sdk";
 import { Avatar, Button } from "../ui";
 import { useLiveSession } from "@/hooks/use-live-session";
-import { CornersOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { CornersOutIcon, UsersIcon } from "@phosphor-icons/react/dist/ssr";
+
+// Add type declarations for webkit fullscreen methods
+declare global {
+  interface HTMLDivElement {
+    webkitEnterFullscreen?: () => Promise<void>;
+    mozRequestFullScreen?: () => Promise<void>;
+  }
+  interface HTMLVideoElement {
+    webkitEnterFullscreen?: () => Promise<void>;
+    mozRequestFullScreen?: () => Promise<void>;
+  }
+  interface Document {
+    webkitExitFullscreen?: () => Promise<void>;
+    webkitFullscreenElement?: Element | null;
+    webkitIsFullScreen?: boolean;
+    mozFullScreenElement?: Element | null;
+    mozCancelFullScreen?: () => Promise<void>;
+  }
+}
 
 export const CustomLivestreamPlayer = (props: {
   callType: string;
@@ -63,34 +88,142 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   );
 };
 
-const CustomParticipantViewUI = (props: PropsWithChildren) => {
-  const { participantViewElement } = useParticipantViewContext();
-  const [isFullsreenElement, setIsFullscreenElement] = useState(false);
+const useToggleFullScreen = () => {
+  const { participantViewElement, videoElement } = useParticipantViewContext();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   useEffect(() => {
-    // sync local state
     const handleFullscreenChange = () => {
-      setIsFullscreenElement(
-        document.fullscreenElement === participantViewElement
+      // Check standard, webkit, and moz fullscreen
+      const isInFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement
+      );
+      setIsFullscreen(isInFullscreen);
+    };
+
+    // Listen for all fullscreen changes
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange
+      );
+      document.removeEventListener(
+        "mozfullscreenchange",
+        handleFullscreenChange
       );
     };
-    window.addEventListener("fullscreenchange", handleFullscreenChange);
-    return () =>
-      window.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, [participantViewElement]);
-  const toggleFullscreen = () => {
-    if (isFullsreenElement) {
-      return document.exitFullscreen();
+  }, []);
+
+  return useCallback(() => {
+    if (isFullscreen) {
+      // Handle iOS Safari exit
+      if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+        setIsFullscreen(false);
+        return;
+      }
+      // Handle Firefox exit
+      if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+        setIsFullscreen(false);
+        return;
+      }
+      // Handle other browsers exit
+      document.exitFullscreen().then(() => {
+        setIsFullscreen(false);
+      });
+    } else {
+      // Handle iOS Safari enter
+      if (videoElement?.webkitEnterFullscreen) {
+        videoElement.webkitEnterFullscreen();
+        setIsFullscreen(true);
+        return;
+      }
+      // Handle Firefox enter
+      if (participantViewElement?.mozRequestFullScreen) {
+        participantViewElement.mozRequestFullScreen();
+        setIsFullscreen(true);
+        return;
+      }
+      // Handle other browsers enter
+      participantViewElement?.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      });
     }
-    return participantViewElement?.requestFullscreen();
-  };
+  }, [isFullscreen, participantViewElement, videoElement]);
+};
+
+const useTogglePictureInPicture = () => {
+  const { videoElement } = useParticipantViewContext();
+  const [isPictureInPicture, setIsPictureInPicture] = useState(
+    !!document.pictureInPictureElement
+  );
+
+  useEffect(() => {
+    if (!videoElement) return;
+
+    const handlePictureInPicture = () => {
+      setIsPictureInPicture(!!document.pictureInPictureElement);
+    };
+
+    videoElement.addEventListener(
+      "enterpictureinpicture",
+      handlePictureInPicture
+    );
+    videoElement.addEventListener(
+      "leavepictureinpicture",
+      handlePictureInPicture
+    );
+
+    return () => {
+      videoElement.removeEventListener(
+        "enterpictureinpicture",
+        handlePictureInPicture
+      );
+      videoElement.removeEventListener(
+        "leavepictureinpicture",
+        handlePictureInPicture
+      );
+    };
+  }, [videoElement]);
+
+  return useCallback(() => {
+    if (!videoElement) return;
+
+    if (isPictureInPicture) {
+      document.exitPictureInPicture();
+    } else {
+      videoElement.requestPictureInPicture();
+    }
+  }, [isPictureInPicture, videoElement]);
+};
+
+const CustomParticipantViewUI = (props: PropsWithChildren) => {
+  const toggleFullscreen = useToggleFullScreen();
+  // const togglePictureInPicture = useTogglePictureInPicture();
+
   return (
-    <div className="flex items-center absolute -bottom-[54px] w-full">
-      <div className="grow">{props.children}</div>
-      <div className="flex items-center gap-2">
+    <div className="flex items-center absolute -bottom-[54px] w-full gap-2">
+      <div className="grow min-w-0">{props.children}</div>
+      <div className="items-center gap-2 flex">
         <ParticipantCounter />
         <Button intent="outline" size="extra-small" onClick={toggleFullscreen}>
           <CornersOutIcon />
         </Button>
+        {/* <Button
+          intent="outline"
+          size="extra-small"
+          onClick={togglePictureInPicture}
+        >
+          <PictureInPictureIcon />
+        </Button> */}
       </div>
     </div>
   );
@@ -100,7 +233,10 @@ const ParticipantCounter = () => {
   const { useParticipantCount } = useCallStateHooks();
   const participantCount = useParticipantCount();
   return (
-    <span className="text-sm font-semibold">Viewer: {participantCount}</span>
+    <span className="text-sm font-semibold flex gap-1 items-center">
+      <UsersIcon size={16} />
+      {participantCount}
+    </span>
   );
 };
 
@@ -114,7 +250,7 @@ const CustomLivestreamLayout = () => {
       {firstParticipant ? (
         <>
           <ParticipantView
-            className="h-[calc(100vh-140px)] relative w-full aspect-[9/16] flex flex-col gap-2 [&>video]:w-full [&>video]:h-full [&>video]:object-contain"
+            className="h-[calc(100svh-140px)] relative w-full aspect-[9/16] flex flex-col items-center justify-center gap-2 [&>video]:w-full [&>video]:h-full [&>video]:object-contain"
             // render when video is disabled
             VideoPlaceholder={CustomVideoPlaceholder}
             // render after video element
@@ -131,8 +267,10 @@ const CustomLivestreamLayout = () => {
                     src={liveSession.channel.profileImageUrl}
                     size="large"
                   />
-                  <div className="flex flex-col">
-                    <span className="font-semibold">{liveSession.title}</span>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-semibold truncate">
+                      {liveSession.title}
+                    </span>
                     <span className="font-semibold text-sm">
                       {liveSession.channel.name}
                     </span>
