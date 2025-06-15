@@ -36,10 +36,10 @@ export default function ActivityRender() {
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Live Activity</h2>
+          <h2 className="text-xl font-semibold">Objekt Activity</h2>
           <Badge intent="primary">Beta</Badge>
         </div>
-        <p className="text-muted-fg text-sm">Latest activity in realtime</p>
+        <p className="text-muted-fg text-sm">Latest objekt activity in realtime</p>
       </div>
       <ObjektModalProvider initialTab="trades">
         <Activity />

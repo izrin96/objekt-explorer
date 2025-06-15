@@ -49,6 +49,8 @@ services:
         SES_ACCESS_KEY: ${SES_ACCESS_KEY}
         SES_SECRET_KEY: ${SES_SECRET_KEY}
         SES_MAIL_FROM: ${SES_MAIL_FROM}
+        NEXT_PUBLIC_LIVE_API_KEY: ${NEXT_PUBLIC_LIVE_API_KEY}
+        COSMO_SHOP_RECAPTCHA_KEY: ${COSMO_SHOP_RECAPTCHA_KEY}
     expose:
       - 3000
     environment:

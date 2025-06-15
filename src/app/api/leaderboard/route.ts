@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     return Response.json(
       {
         status: "error",
-        validationErrors: parsedParams.error.flatten().fieldErrors,
+        validationErrors: z.treeifyError(parsedParams.error),
       },
       {
         status: 400,
