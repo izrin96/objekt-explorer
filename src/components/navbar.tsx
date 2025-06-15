@@ -32,7 +32,7 @@ export default function Navbar() {
           </Link>
           <Changelog />
           <Activity />
-          <Live />
+          {/* <Live /> */}
         </div>
         <div className="flex items-center gap-2">
           <ThemeSwitcher />
