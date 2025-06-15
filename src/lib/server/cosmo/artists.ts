@@ -2,115 +2,6 @@ import { ValidArtist } from "@/lib/universal/cosmo/common";
 
 export const artists = [
   {
-    name: "artms",
-    id: "artms" as ValidArtist,
-    title: "ARTMS",
-    logoImageUrl: "https://static.cosmo.fans/assets/artms-logo.png",
-    contracts: {
-      Como: "0x8254D8D2903B20187cBC4Dd833d49cECc219F32E",
-      ComoMinter: "0x9640531cA96691b7F38e88fA17badAD90534d2A5",
-      CommunityPool: "0x07F93cCc90aF32E4d6ea70A93F36DF9F58C97087",
-      Objekt: "0x0fB69F54bA90f17578a59823E09e5a1f8F3FA200",
-      ObjektMinter: "0x9009e2b4fc02eb18e41994d235a78504600AC87c",
-      Governor: "0x8466e6E218F0fe438Ac8f403f684451D20E59Ee3",
-    },
-    fandomName: "OURII",
-    primaryImageUrl:
-      "https://s3.ap-northeast-2.amazonaws.com/resources.cosmo.fans/artist/ARTMS.jpg",
-    comoTokenId: 2,
-    category: "A",
-    wasReleased: true,
-    artistMembers: [
-      {
-        id: 15,
-        name: "HeeJin",
-        units: "",
-        alias: "HeeJin",
-        profileImageUrl: "https://static.cosmo.fans/images/artms/HeeJin.jpg",
-        order: 1,
-        createdAt: "2023-05-31T16:12:55.865Z",
-        updatedAt: "2024-05-24T06:59:17.144Z",
-        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
-        artistId: "artms",
-        primaryColorHex: "#ED0090",
-      },
-      {
-        id: 20,
-        name: "HaSeul",
-        units: "",
-        alias: "HaSeul",
-        profileImageUrl: "https://static.cosmo.fans/images/artms/HaSeul.jpg",
-        order: 2,
-        createdAt: "2023-07-04T20:23:25.000Z",
-        updatedAt: "2024-05-24T06:59:17.169Z",
-        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
-        artistId: "artms",
-        primaryColorHex: "#00A652",
-      },
-      {
-        id: 16,
-        name: "KimLip",
-        units: "OEC",
-        alias: "KimLip",
-        profileImageUrl: "https://static.cosmo.fans/images/artms/KimLip.jpg",
-        order: 3,
-        createdAt: "2023-05-31T16:12:55.880Z",
-        updatedAt: "2024-05-24T06:59:17.193Z",
-        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
-        artistId: "artms",
-        primaryColorHex: "#EF1841",
-      },
-      {
-        id: 17,
-        name: "JinSoul",
-        units: "OEC",
-        alias: "JinSoul",
-        profileImageUrl: "https://static.cosmo.fans/images/artms/JinSoul.jpg",
-        order: 4,
-        createdAt: "2023-05-31T16:12:55.895Z",
-        updatedAt: "2024-05-24T06:59:17.219Z",
-        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
-        artistId: "artms",
-        primaryColorHex: "#1724A7",
-      },
-      {
-        id: 18,
-        name: "Choerry",
-        units: "OEC",
-        alias: "Choerry",
-        profileImageUrl: "https://static.cosmo.fans/images/artms/Choerry.jpg",
-        order: 5,
-        createdAt: "2023-05-31T16:12:55.907Z",
-        updatedAt: "2024-05-24T06:59:17.244Z",
-        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
-        artistId: "artms",
-        primaryColorHex: "#B510B5",
-      },
-    ],
-    snsLink: {
-      discord: {
-        name: "discord.gg/official-artms",
-        address: "https://discord.com/invite/official-artms",
-      },
-      instagram: {
-        name: "@official_artms",
-        address: "https://www.instagram.com/official_artms",
-      },
-      twitter: {
-        name: "@official_artms",
-        address: "https://x.com/official_artms",
-      },
-      youtube: {
-        name: "@official_artms",
-        address: "https://www.youtube.com/@official_artms",
-      },
-      tiktok: {
-        name: "tiktok.com/@official_artms",
-        address: "https://tiktok.com/@official_artms",
-      },
-    },
-  },
-  {
     name: "tripleS",
     id: "tripleS" as ValidArtist,
     title: "tripleS",
@@ -125,7 +16,7 @@ export const artists = [
     },
     fandomName: "WAV",
     primaryImageUrl:
-      "https://s3.ap-northeast-2.amazonaws.com/resources.cosmo.fans/artist/tripleS.jpg",
+      "https://s3.ap-northeast-2.amazonaws.com/resources.cosmo.fans/artist/tripleS2.jpg",
     comoTokenId: 1,
     category: "A",
     wasReleased: true,
@@ -136,10 +27,13 @@ export const artists = [
         units: "KRE,LOVElution",
         alias: "S1",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S1-E9B675B4-D7DD-466A-B04F-E612D77422C5.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S1.jpg",
+        backgroundImageUrl: "",
         order: 1,
+        password:
+          "$2a$10$2XkcrYOr6lMZElUEbXEtBuCRisyquyRK2pXkkz1uRcDnza8yCxwou",
         createdAt: "2022-11-17T14:26:05.102Z",
-        updatedAt: "2025-04-09T08:12:51.368Z",
+        updatedAt: "2025-06-01T06:19:19.909Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/1c14ab05-5adc-4eba-d553-795f75ce3300/2x",
         artistId: "tripleS",
@@ -151,10 +45,13 @@ export const artists = [
         units: "AAA,LOVElution",
         alias: "S2",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S2-5071B32D-7D1D-432D-A30E-373BD7282CF0.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S2.jpg",
+        backgroundImageUrl: "",
         order: 2,
+        password:
+          "$2a$10$S7TPM3wkQ/4PwkhsXhir4.1WYILCCEquw.9wFiDhOf/EwntTso3EC",
         createdAt: "2022-11-17T14:26:05.116Z",
-        updatedAt: "2025-04-23T04:39:34.212Z",
+        updatedAt: "2025-06-12T11:21:22.945Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/811dd1ac-2534-48c7-7952-4a45180b7c00/2x",
         artistId: "tripleS",
@@ -166,10 +63,13 @@ export const artists = [
         units: "KRE,EVOLution",
         alias: "S3",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S3-EA92CF44-3C2D-4BB6-8573-B45AC51DB425.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S3.jpg",
+        backgroundImageUrl: "",
         order: 3,
+        password:
+          "$2a$10$sDXDy8OOyJFvcUmHdSDljO./DaRcjADkXjv//SNXDik9WZlLfWuSK",
         createdAt: "2022-11-17T14:26:05.129Z",
-        updatedAt: "2024-05-24T06:59:16.585Z",
+        updatedAt: "2025-06-04T08:00:47.178Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/38d7cb18-47d0-4ecc-311d-6cc05c463900/2x",
         artistId: "tripleS",
@@ -181,10 +81,13 @@ export const artists = [
         units: "KRE,EVOLution",
         alias: "S4",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S4-A9D60488-0B61-4CCD-8C00-657F839D4159.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S4.jpg",
+        backgroundImageUrl: "",
         order: 4,
+        password:
+          "$2a$10$3b7D/xwkvqTkUWVtxrJE1eB2hHKFxvcY9ts/U8PaVlvSAD3.Sg8we",
         createdAt: "2022-11-17T14:26:05.143Z",
-        updatedAt: "2024-05-24T06:59:16.605Z",
+        updatedAt: "2025-05-28T10:29:57.254Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/828986b3-1640-4441-76c7-d03dd8941c00/2x",
         artistId: "tripleS",
@@ -196,10 +99,13 @@ export const artists = [
         units: "AAA,EVOLution",
         alias: "S5",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S5-D2B52437-85F1-47AD-9977-FE94C9F950E4.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S5.jpg",
+        backgroundImageUrl: "",
         order: 5,
+        password:
+          "$2a$10$K79db285EGg5lLTfOfvoTezLovz/R.nvqv69QkWaOCQmA.u490VLS",
         createdAt: "2022-11-17T14:26:05.156Z",
-        updatedAt: "2024-05-24T06:59:16.626Z",
+        updatedAt: "2025-06-09T08:15:50.041Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/bab79787-d154-4045-21eb-ba50dc947100/2x",
         artistId: "tripleS",
@@ -211,10 +117,13 @@ export const artists = [
         units: "KRE,EVOLution",
         alias: "S6",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S6-876E58C5-65F8-4FBC-824B-6C40160CE886.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S6.jpg",
+        backgroundImageUrl: "",
         order: 6,
+        password:
+          "$2a$10$7HwbsOBRYc0NXOZa3/G26.Zt.LTLxGq5S/kCnXXwbKAmuzah96wE.",
         createdAt: "2022-11-17T14:26:05.172Z",
-        updatedAt: "2024-05-24T06:59:16.646Z",
+        updatedAt: "2025-06-10T02:23:53.607Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/2fc48e5b-d100-4b7e-1756-0bf3759bcb00/2x",
         artistId: "tripleS",
@@ -226,10 +135,13 @@ export const artists = [
         units: "AAA,EVOLution",
         alias: "S7",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S7-95B80948-87E9-4A94-86C5-21CAFF4AE0B9.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S7.jpg",
+        backgroundImageUrl: "",
         order: 7,
+        password:
+          "$2a$10$xLFlq4h15RUp0p6sXS2Cfe6wLkYe/81NNdebLeSTLDASu.Upmg3Mq",
         createdAt: "2022-11-17T14:26:05.183Z",
-        updatedAt: "2024-05-24T06:59:16.668Z",
+        updatedAt: "2025-05-28T10:30:32.253Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/fb0ac2f3-08f9-41d8-579a-c264242ca300/2x",
         artistId: "tripleS",
@@ -241,10 +153,13 @@ export const artists = [
         units: "AAA,LOVElution",
         alias: "S8",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S8-6422BDD6-21EC-4D47-BA29-213051DB452E.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S8.jpg",
+        backgroundImageUrl: "",
         order: 8,
+        password:
+          "$2a$10$YkRUK/OtBf6mGLocoLNiBeSyZ9IeY1S.fLyivOurnZe1.zQLBt2sa",
         createdAt: "2022-11-17T14:26:05.197Z",
-        updatedAt: "2024-05-24T06:59:16.689Z",
+        updatedAt: "2025-06-05T09:13:53.358Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/e6edf190-b9bf-453a-2e4a-5d7576eca300/2x",
         artistId: "tripleS",
@@ -256,10 +171,13 @@ export const artists = [
         units: "LOVElution",
         alias: "S9",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S9-8AFC3683-88E8-49C5-9977-71378A805BC9.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S9.jpg",
+        backgroundImageUrl: "",
         order: 9,
+        password:
+          "$2a$10$vq718bG05jRnn344hZud.e0KjCuip43T2Ya36wVbdqE.EwdtUY3GG",
         createdAt: "2022-11-17T14:26:05.209Z",
-        updatedAt: "2024-05-24T06:59:16.713Z",
+        updatedAt: "2025-06-12T09:33:07.983Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/c849d3c7-fa69-43be-c981-9ec401c4a800/2x",
         artistId: "tripleS",
@@ -271,10 +189,13 @@ export const artists = [
         units: "LOVElution",
         alias: "S10",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S10-47AACF48-CEB6-4BBC-B9ED-FF799051B637.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S10.jpg",
+        backgroundImageUrl: "",
         order: 10,
+        password:
+          "$2a$10$AMfBVRgiThn.QmjeFLn1IeknbS9WP.88hCLdVnx4ivG23AfpJdDqS",
         createdAt: "2022-12-13T08:16:22.456Z",
-        updatedAt: "2024-05-24T06:59:16.737Z",
+        updatedAt: "2025-06-14T09:39:11.391Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/64929f4b-1f9f-479a-fbd2-c218addda300/2x",
         artistId: "tripleS",
@@ -286,10 +207,13 @@ export const artists = [
         units: "EVOLution",
         alias: "S11",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S11-BCC123AC-8B84-4EFE-AD3B-7D505B0D6999.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S11.jpg",
+        backgroundImageUrl: "",
         order: 11,
+        password:
+          "$2a$10$M30fukkFPRJZ91NSbvEuRehd.4RPOUMODFbSBAw4Q/zEbYYqwhSVS",
         createdAt: "2023-02-23T06:54:19.828Z",
-        updatedAt: "2024-05-24T06:59:16.763Z",
+        updatedAt: "2025-05-28T10:33:06.576Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/d30cf869-5fdb-485f-8553-8042052ff200/2x",
         artistId: "tripleS",
@@ -301,10 +225,13 @@ export const artists = [
         units: "EVOLution",
         alias: "S12",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S12-CB3A60E3-254B-4015-B8E5-BCB1953320B2.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S12.jpg",
+        backgroundImageUrl: "",
         order: 12,
+        password:
+          "$2a$10$.SfydPIlgs0vDRtkHvsJQeA02vMYMRP6vAZ2Cp7UI9yJJSCgPV.pO",
         createdAt: "2023-02-23T06:59:53.658Z",
-        updatedAt: "2024-05-24T06:59:16.787Z",
+        updatedAt: "2025-06-12T10:16:20.548Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/83167030-aa26-476f-3d05-162998620d00/2x",
         artistId: "tripleS",
@@ -316,10 +243,13 @@ export const artists = [
         units: "LOVElution",
         alias: "S13",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S13-F871E7CF-4E2B-4202-A271-225D593A2EE5.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S13.jpg",
+        backgroundImageUrl: "",
         order: 13,
+        password:
+          "$2a$10$jBvTBYBVbxVbEr7k8Jw/fe1y8gU8Wthrsn0ohlTEGqnbLXNdlEvH.",
         createdAt: "2023-03-29T06:11:41.141Z",
-        updatedAt: "2024-05-24T06:59:16.814Z",
+        updatedAt: "2025-06-07T10:03:26.555Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/57578d4c-266f-4b7e-6c44-c8200277d400/2x",
         artistId: "tripleS",
@@ -331,10 +261,13 @@ export const artists = [
         units: "LOVElution",
         alias: "S14",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S14-E9A8464F-EFBB-4B9C-8D66-207B2A0F3A57.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S14.jpg",
+        backgroundImageUrl: "",
         order: 14,
+        password:
+          "$2a$10$dgGl4yb.1ikXzMAUSksZjevdkmqimazvcitYT9HIYooQ1JnLYhpeK",
         createdAt: "2023-04-18T07:59:38.576Z",
-        updatedAt: "2024-05-24T06:59:16.840Z",
+        updatedAt: "2025-06-11T14:00:34.710Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/8a9749d6-7898-44b4-0e70-cda882a47100/2x",
         artistId: "tripleS",
@@ -346,10 +279,13 @@ export const artists = [
         units: "LOVElution",
         alias: "S15",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S15-65DAF215-2DD8-4201-A92A-3023C4AD1699.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S15.jpg",
+        backgroundImageUrl: "",
         order: 15,
+        password:
+          "$2a$10$6IZzK5o.DllD.HUmuuS6wex2KJQ0HObd9zltmPMSTq8lACZQss.Ya",
         createdAt: "2023-07-03T14:55:41.416Z",
-        updatedAt: "2024-05-24T06:59:16.869Z",
+        updatedAt: "2025-05-28T10:34:09.406Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#D51313",
@@ -360,10 +296,13 @@ export const artists = [
         units: "EVOLution",
         alias: "S16",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S16-3E9B2674-8F09-4B85-883C-967669678F75.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S16.jpg",
+        backgroundImageUrl: "",
         order: 16,
+        password:
+          "$2a$10$RMO/Ahy/AKnJKEeDILOnN.sthtEZ71/nTRf8WlF7sLJOou6TJ8Dvu",
         createdAt: "2023-07-24T05:04:35.866Z",
-        updatedAt: "2024-05-24T06:59:16.898Z",
+        updatedAt: "2025-06-13T06:41:05.644Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#FE8E76",
@@ -374,10 +313,13 @@ export const artists = [
         units: "NXT",
         alias: "S17",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S17-473D5B5F-9EEE-4765-A4AE-324626429AA4.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S17.jpg",
+        backgroundImageUrl: "",
         order: 17,
+        password:
+          "$2a$10$fFB0gLM4ZNJ1dQ/t6yPLCeiGb4DK5rxVwkUazNrvjICRiCLo6GXUa",
         createdAt: "2023-12-23T00:30:00.000Z",
-        updatedAt: "2024-05-24T06:59:16.927Z",
+        updatedAt: "2025-05-28T10:34:52.820Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#AC62B7",
@@ -388,10 +330,13 @@ export const artists = [
         units: "NXT",
         alias: "S18",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S18-04927BFC-B926-4D9C-A880-0DDA21F89196.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S18.jpg",
+        backgroundImageUrl: "",
         order: 18,
+        password:
+          "$2a$10$DPY7DiEyddQhW5T7zxmr3udHkr8IVBIRgv6AFjcgPTKDPE8RV8ele",
         createdAt: "2023-12-23T00:30:00.000Z",
-        updatedAt: "2024-05-24T06:59:16.956Z",
+        updatedAt: "2025-06-11T14:02:12.708Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#B7F54C",
@@ -402,10 +347,13 @@ export const artists = [
         units: "NXT",
         alias: "S19",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S19-0A9201D2-7A6F-425A-BC8E-71568372C2FF.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S19.jpg",
+        backgroundImageUrl: "",
         order: 19,
+        password:
+          "$2a$10$Ak5JyaDIzjHJNhedj3Bgt..9qMFYinoIAk.O42hnIhEiM9uQ645zq",
         createdAt: "2023-12-24T12:20:00.000Z",
-        updatedAt: "2024-05-24T06:59:16.985Z",
+        updatedAt: "2025-05-28T10:35:18.567Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#52D9BB",
@@ -416,10 +364,13 @@ export const artists = [
         units: "NXT",
         alias: "S20",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S20-00C58631-5A16-47CF-BF83-BE4CE45A0774.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S20.jpg",
+        backgroundImageUrl: "",
         order: 20,
+        password:
+          "$2a$10$tT167kOkuGuAw.1B8gLwou4ALjui/QCMIAQW8mZk/WZg0zyzCCjUm",
         createdAt: "2023-12-24T12:20:00.000Z",
-        updatedAt: "2024-05-24T06:59:17.014Z",
+        updatedAt: "2025-06-11T05:34:25.334Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#FF428A",
@@ -430,10 +381,13 @@ export const artists = [
         units: "Glow",
         alias: "S21",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S21-47BF5239-9E28-4855-B0C9-6E9F4BFA1BE3.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S21.jpg",
+        backgroundImageUrl: "",
         order: 21,
+        password:
+          "$2a$10$jZafZIsZdhdmsgd0eYkNoe.dM7/cby4CHI8JAsKLbkANNtOiRgUIu",
         createdAt: "2024-04-08T01:57:32.000Z",
-        updatedAt: "2024-05-24T06:59:17.041Z",
+        updatedAt: "2025-06-12T11:27:10.169Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#C7A3E0",
@@ -444,10 +398,13 @@ export const artists = [
         units: "Glow",
         alias: "S22",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S22-FFE330C0-2E1B-49EF-8026-D321FFF18783.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S22.jpg",
+        backgroundImageUrl: "",
         order: 22,
+        password:
+          "$2a$10$sSoLzLBnIrdvauXBwvR//.E4eatcXfqIY2WbC7RoSRgWSJXXvLKZa",
         createdAt: "2024-04-08T01:57:32.000Z",
-        updatedAt: "2024-05-24T06:59:17.067Z",
+        updatedAt: "2025-05-28T09:58:00.761Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#7BBA8D",
@@ -458,10 +415,13 @@ export const artists = [
         units: "Glow",
         alias: "S23",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S23-85A2B777-13C1-44BE-8B91-E0C106544927.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S23.jpg",
+        backgroundImageUrl: "",
         order: 23,
+        password:
+          "$2a$10$/Gb9l6BPz3OCKeAb89B1C.nzwGz3ngQFJGAgFlAMfJ/537/ln7Rf.",
         createdAt: "2024-04-08T01:57:32.000Z",
-        updatedAt: "2024-05-24T06:59:17.093Z",
+        updatedAt: "2025-06-11T14:00:52.998Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#CFF3FF",
@@ -472,10 +432,13 @@ export const artists = [
         units: "Glow",
         alias: "S24",
         profileImageUrl:
-          "https://static.cosmo.fans/uploads/member-profile/tripleS-240509/S24-696E6D31-1618-4DB7-83C4-29AF08CC055D.jpg",
+          "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S24.jpg",
+        backgroundImageUrl: "",
         order: 24,
+        password:
+          "$2a$10$ka85iupvaw.D8IEGuZzttuBgzyq1gc/6ZkGqKZQ8wFOsclWSVg4fW",
         createdAt: "2024-04-08T01:57:32.000Z",
-        updatedAt: "2024-05-24T06:59:17.119Z",
+        updatedAt: "2025-06-01T11:01:36.386Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#FFAB62",
@@ -504,6 +467,132 @@ export const artists = [
       },
     },
   },
+
+  {
+    name: "artms",
+    id: "artms" as ValidArtist,
+    title: "ARTMS",
+    logoImageUrl: "https://static.cosmo.fans/assets/artms-logo.png",
+    contracts: {
+      Como: "0x8254D8D2903B20187cBC4Dd833d49cECc219F32E",
+      ComoMinter: "0x9640531cA96691b7F38e88fA17badAD90534d2A5",
+      CommunityPool: "0x07F93cCc90aF32E4d6ea70A93F36DF9F58C97087",
+      Objekt: "0x0fB69F54bA90f17578a59823E09e5a1f8F3FA200",
+      ObjektMinter: "0x9009e2b4fc02eb18e41994d235a78504600AC87c",
+      Governor: "0x8466e6E218F0fe438Ac8f403f684451D20E59Ee3",
+    },
+    fandomName: "OURII",
+    primaryImageUrl:
+      "https://s3.ap-northeast-2.amazonaws.com/resources.cosmo.fans/artist/ARTMS2.png",
+    comoTokenId: 2,
+    category: "A",
+    wasReleased: true,
+    artistMembers: [
+      {
+        id: 15,
+        name: "HeeJin",
+        units: "",
+        alias: "HeeJin",
+        profileImageUrl: "https://static.cosmo.fans/images/artms/HeeJin.jpg",
+        backgroundImageUrl: "",
+        order: 1,
+        password:
+          "$2a$10$FKuJvphGnn/1fdauRQnBR.5kMqXE11NZGKt9mt23FELna4Q8HTB9S",
+        createdAt: "2023-05-31T16:12:55.865Z",
+        updatedAt: "2025-05-30T07:30:13.834Z",
+        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
+        artistId: "artms",
+        primaryColorHex: "#ED0090",
+      },
+      {
+        id: 20,
+        name: "HaSeul",
+        units: "",
+        alias: "HaSeul",
+        profileImageUrl: "https://static.cosmo.fans/images/artms/HaSeul.jpg",
+        backgroundImageUrl: "",
+        order: 2,
+        password:
+          "$2a$10$MMz92MAFQPoRJBRKRSVDDON3cNTLXUlQE1AYN31FboKuw5zyCsrES",
+        createdAt: "2023-07-04T20:23:25.000Z",
+        updatedAt: "2025-06-05T12:28:43.352Z",
+        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
+        artistId: "artms",
+        primaryColorHex: "#00A652",
+      },
+      {
+        id: 16,
+        name: "KimLip",
+        units: "OEC",
+        alias: "KimLip",
+        profileImageUrl: "https://static.cosmo.fans/images/artms/KimLip.jpg",
+        backgroundImageUrl: "",
+        order: 3,
+        password:
+          "$2a$10$E1p7gGS0xdljuZimpt5sverve2P2cVjfQbN.OisBwcPT4VQ9u3iv6",
+        createdAt: "2023-05-31T16:12:55.880Z",
+        updatedAt: "2025-06-01T06:49:23.701Z",
+        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
+        artistId: "artms",
+        primaryColorHex: "#EF1841",
+      },
+      {
+        id: 17,
+        name: "JinSoul",
+        units: "OEC",
+        alias: "JinSoul",
+        profileImageUrl: "https://static.cosmo.fans/images/artms/JinSoul.jpg",
+        backgroundImageUrl: "",
+        order: 4,
+        password:
+          "$2a$10$vnY2JK76tfMP9GSlER/6yejMrbrb9xr9NQoc6Tujn0KBL6Ph.61J2",
+        createdAt: "2023-05-31T16:12:55.895Z",
+        updatedAt: "2025-05-28T10:37:05.898Z",
+        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
+        artistId: "artms",
+        primaryColorHex: "#1724A7",
+      },
+      {
+        id: 18,
+        name: "Choerry",
+        units: "OEC",
+        alias: "Choerry",
+        profileImageUrl: "https://static.cosmo.fans/images/artms/Choerry.jpg",
+        backgroundImageUrl: "",
+        order: 5,
+        password:
+          "$2a$10$fDT98T/j0kwsnBGlNz1GgeTcm6EuuOleE2hKxJwvrrpWr1PXm5qrW",
+        createdAt: "2023-05-31T16:12:55.907Z",
+        updatedAt: "2025-05-28T10:37:14.486Z",
+        mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
+        artistId: "artms",
+        primaryColorHex: "#B510B5",
+      },
+    ],
+    snsLink: {
+      discord: {
+        name: "discord.gg/official-artms",
+        address: "https://discord.com/invite/official-artms",
+      },
+      instagram: {
+        name: "@official_artms",
+        address: "https://www.instagram.com/official_artms",
+      },
+      twitter: {
+        name: "@official_artms",
+        address: "https://x.com/official_artms",
+      },
+      youtube: {
+        name: "@official_artms",
+        address: "https://www.youtube.com/@official_artms",
+      },
+      tiktok: {
+        name: "tiktok.com/@official_artms",
+        address: "https://tiktok.com/@official_artms",
+      },
+    },
+  },
+
   {
     name: "idntt",
     id: "idntt" as ValidArtist,
@@ -541,7 +630,7 @@ export const artists = [
         address: "https://www.youtube.com/@idntt_cosmo",
       },
       tiktok: {
-        name: "www.tiktok.com/@idntt_cosmo",
+        name: "tiktok.com/@idntt_cosmo",
         address: "https://tiktok.com/@idntt_cosmo",
       },
     },
