@@ -10,8 +10,6 @@ import {
 } from "@/lib/universal/cosmo/shop/qr-auth";
 import { env } from "@/env";
 
-const RECAPTCHA_KEY = "6LeHzjYqAAAAAOR5Up9lFb_sC39YGo5aQFyVDrsK";
-
 export async function generateRecaptchaToken() {
   const launchArgs = JSON.stringify({ headless: "shell" });
   const browser = await chromium.connect({
@@ -33,7 +31,7 @@ export async function generateRecaptchaToken() {
           .catch(reject);
       });
     });
-  }, RECAPTCHA_KEY);
+  }, env.COSMO_SHOP_RECAPTCHA_KEY);
 
   await page.close();
 

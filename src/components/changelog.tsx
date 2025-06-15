@@ -34,8 +34,20 @@ export default function Changelog() {
           </Modal.Description>
         </Modal.Header>
         <Modal.Body>
-          <DisclosureGroup defaultExpandedKeys={"1"}>
-            <Disclosure id={"1"}>
+          <DisclosureGroup defaultExpandedKeys="1">
+            {/* <Disclosure id="1">
+              <DisclosureTrigger>2025-06-15</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>
+                      Implement Cosmo Live.
+                    </li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure> */}
+            <Disclosure id="1">
               <DisclosureTrigger>2025-06-03</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">

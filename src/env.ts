@@ -20,12 +20,14 @@ export const env = createEnv({
     SES_ACCESS_KEY: z.string(),
     SES_SECRET_KEY: z.string(),
     SES_MAIL_FROM: z.string(),
+    COSMO_SHOP_RECAPTCHA_KEY: z.string(),
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.string().optional(),
     NEXT_PUBLIC_UMAMI_SCRIPT_URL: z.string().optional(),
     NEXT_PUBLIC_UMAMI_WEBSITE_ID: z.string().optional(),
     NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: z.string().optional(),
+    NEXT_PUBLIC_LIVE_API_KEY: z.string(),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -33,5 +35,6 @@ export const env = createEnv({
     NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
     NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL:
       process.env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL,
+    NEXT_PUBLIC_LIVE_API_KEY: process.env.NEXT_PUBLIC_LIVE_API_KEY,
   },
 });
