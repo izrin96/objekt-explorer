@@ -213,7 +213,7 @@ const CustomParticipantViewUI = (props: PropsWithChildren) => {
     <div className="flex items-center absolute -bottom-[54px] w-full gap-2">
       <div className="grow min-w-0">{props.children}</div>
       <div className="items-center gap-2 flex">
-        <ParticipantCounter />
+        {/* <ParticipantCounter /> */}
         <Button intent="outline" size="extra-small" onClick={toggleFullscreen}>
           <CornersOutIcon />
         </Button>
