@@ -16,7 +16,7 @@ import {
   useStreamVideoClient,
   VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import { Avatar, Button } from "../ui";
+import { Avatar, Button, Loader } from "../ui";
 import { useLiveSession } from "@/hooks/use-live-session";
 import { CornersOutIcon, UsersIcon } from "@phosphor-icons/react/dist/ssr";
 
@@ -213,7 +213,7 @@ const CustomParticipantViewUI = (props: PropsWithChildren) => {
     <div className="flex items-center absolute -bottom-[54px] w-full gap-2">
       <div className="grow min-w-0">{props.children}</div>
       <div className="items-center gap-2 flex">
-        {/* <ParticipantCounter /> */}
+        <ParticipantCounter />
         <Button intent="outline" size="extra-small" onClick={toggleFullscreen}>
           <CornersOutIcon />
         </Button>
@@ -230,12 +230,14 @@ const CustomParticipantViewUI = (props: PropsWithChildren) => {
 };
 
 const ParticipantCounter = () => {
-  const { useParticipantCount } = useCallStateHooks();
-  const participantCount = useParticipantCount();
+  const { useCallSession } = useCallStateHooks();
+  const session = useCallSession();
+  const cosmoUserCount = session?.participants_count_by_role["cosmo_user"] ?? 0;
+  const anonymousUserCount = session?.anonymous_participant_count ?? 0;
   return (
     <span className="text-sm font-semibold flex gap-1 items-center">
       <UsersIcon size={16} />
-      {participantCount}
+      {cosmoUserCount + anonymousUserCount}
     </span>
   );
 };
@@ -294,7 +296,9 @@ const CustomLivestreamLayout = () => {
           )}
         </>
       ) : (
-        <div>Stream ended</div>
+        <div className="flex justify-center">
+          <Loader variant="ring" />
+        </div>
       )}
     </div>
   );
