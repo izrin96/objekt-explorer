@@ -1,6 +1,9 @@
 "use client";
 
-import { useParticipantViewContext } from "@stream-io/video-react-sdk";
+import {
+  useCallStateHooks,
+  useParticipantViewContext,
+} from "@stream-io/video-react-sdk";
 import { useCallback, useEffect, useState } from "react";
 
 export const useToggleFullScreen = () => {
@@ -91,4 +94,28 @@ export const useToggleFullScreen = () => {
       });
     }
   }, [isFullscreen, participantViewElement, videoElement]);
+};
+
+export const useUpdateCallDuration = () => {
+  const { useIsCallLive, useCallSession } = useCallStateHooks();
+  const isCallLive = useIsCallLive();
+  const session = useCallSession();
+  const [duration, setDuration] = useState(() => {
+    if (!session || !session.live_started_at) return 0;
+    const liveStartTime = new Date(session.live_started_at);
+    const now = new Date();
+    return Math.floor((now.getTime() - liveStartTime.getTime()) / 1000);
+  });
+
+  useEffect(() => {
+    if (!isCallLive) return;
+    const interval = setInterval(() => {
+      setDuration((d) => d + 1);
+    }, 1000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isCallLive]);
+
+  return duration;
 };

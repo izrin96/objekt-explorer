@@ -10,12 +10,15 @@ import {
   useStreamVideoClient,
   VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import { Avatar, Button } from "../ui";
+import { Avatar, Button, Popover, Slider } from "../ui";
 import { useLiveSession } from "@/hooks/use-live-session";
 import LiveEnded from "./live-ended";
 import LiveFooter from "./live-footer";
-import { CornersOutIcon } from "@phosphor-icons/react/dist/ssr";
-import { useToggleFullScreen } from "./hooks";
+import {
+  CornersOutIcon,
+  SpeakerHighIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 
 export const CustomLivestreamPlayer = (props: {
   callType: string;
@@ -69,21 +72,80 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
 function LiveControl() {
   const toggleFullscreen = useToggleFullScreen();
   return (
-    <Button intent="outline" size="extra-small" onClick={toggleFullscreen}>
-      <CornersOutIcon />
-    </Button>
+    <>
+      <LiveDuration />
+      <LiveVolumeControl />
+      <Button intent="outline" size="extra-small" onClick={toggleFullscreen}>
+        <CornersOutIcon />
+      </Button>
+    </>
+  );
+}
+
+function LiveVolumeControl() {
+  const { useParticipants, useSpeakerState } = useCallStateHooks();
+  const [currentSpeaker] = useParticipants();
+  const { speaker } = useSpeakerState();
+  return (
+    <Popover>
+      <Button size="extra-small" intent="outline">
+        <SpeakerHighIcon />
+      </Button>
+      <Popover.Content respectScreen={false} className="min-w-0">
+        <div className="m-4">
+          <Slider
+            className="gap-y-0 min-h-24"
+            defaultValue={currentSpeaker.audioVolume ?? 1}
+            output="none"
+            minValue={0}
+            maxValue={1}
+            step={0.01}
+            aria-label="Volume"
+            orientation="vertical"
+            onChange={(value) => {
+              speaker.setParticipantVolume(
+                currentSpeaker.sessionId,
+                value as number
+              );
+            }}
+          />
+        </div>
+      </Popover.Content>
+    </Popover>
+  );
+}
+
+function LiveDuration() {
+  const duration = useUpdateCallDuration();
+
+  const formatDuration = (durationInMs: number) => {
+    const days = Math.floor(durationInMs / 86400);
+    const hours = Math.floor(durationInMs / 3600);
+    const minutes = Math.floor((durationInMs % 3600) / 60);
+    const seconds = durationInMs % 60;
+
+    return `${days ? days + " " : ""}${hours ? hours + ":" : ""}${
+      minutes < 10 ? "0" : ""
+    }${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+  };
+
+  return (
+    <div className="text-sm flex items-center gap-2 tabular-nums">
+      {formatDuration(duration)}
+    </div>
   );
 }
 
 const CustomLivestreamLayout = () => {
   const { useParticipants } = useCallStateHooks();
-  const [firstParticipant] = useParticipants();
+  const [currentSpeaker] = useParticipants();
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      {firstParticipant ? (
+      {currentSpeaker ? (
         <>
           <ParticipantView
+            PictureInPicturePlaceholder={null}
             className="h-[calc(100svh-140px)] relative w-full aspect-[9/16] flex flex-col items-center justify-center gap-2 [&>video]:w-full [&>video]:h-full [&>video]:object-contain"
             // render when video is disabled
             VideoPlaceholder={CustomVideoPlaceholder}
@@ -93,7 +155,7 @@ const CustomLivestreamLayout = () => {
                 <LiveControl />
               </LiveFooter>
             }
-            participant={firstParticipant}
+            participant={currentSpeaker}
             muteAudio={!open}
             key={"" + open}
           />

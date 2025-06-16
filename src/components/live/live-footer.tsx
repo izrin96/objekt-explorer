@@ -23,7 +23,7 @@ export default function LiveFooter({ children }: PropsWithChildren) {
           />
           <div className="flex flex-col overflow-hidden">
             <span className="font-semibold truncate">{liveSession.title}</span>
-            <span className="font-semibold text-sm">
+            <span className="font-semibold text-sm truncate">
               {liveSession.channel.name}
             </span>
           </div>
