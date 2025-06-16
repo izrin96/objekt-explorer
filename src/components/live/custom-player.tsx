@@ -16,9 +16,10 @@ import {
   useStreamVideoClient,
   VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import { Avatar, Button, Loader } from "../ui";
+import { Avatar, Button } from "../ui";
 import { useLiveSession } from "@/hooks/use-live-session";
 import { CornersOutIcon, UsersIcon } from "@phosphor-icons/react/dist/ssr";
+import LiveEnded from "./live-ended";
 
 // Add type declarations for webkit fullscreen methods
 declare global {
@@ -213,7 +214,7 @@ const CustomParticipantViewUI = (props: PropsWithChildren) => {
     <div className="flex items-center absolute -bottom-[54px] w-full gap-2">
       <div className="grow min-w-0">{props.children}</div>
       <div className="items-center gap-2 flex">
-        <ParticipantCounter />
+        {/* <ParticipantCounter /> */}
         <Button intent="outline" size="extra-small" onClick={toggleFullscreen}>
           <CornersOutIcon />
         </Button>
@@ -249,7 +250,8 @@ const CustomLivestreamLayout = () => {
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      {firstParticipant ? (
+      {!firstParticipant && <LiveEnded />}
+      {firstParticipant && (
         <>
           <ParticipantView
             className="h-[calc(100svh-140px)] relative w-full aspect-[9/16] flex flex-col items-center justify-center gap-2 [&>video]:w-full [&>video]:h-full [&>video]:object-contain"
@@ -295,10 +297,6 @@ const CustomLivestreamLayout = () => {
             </div>
           )}
         </>
-      ) : (
-        <div className="flex justify-center">
-          <Loader variant="ring" />
-        </div>
       )}
     </div>
   );
