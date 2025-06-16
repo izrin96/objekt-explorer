@@ -3,6 +3,7 @@
 import { useLiveSession } from "@/hooks/use-live-session";
 import Image from "next/image";
 import React from "react";
+import LiveFooter from "./live-footer";
 
 export default function LiveEnded() {
   const liveSession = useLiveSession();
@@ -23,6 +24,7 @@ export default function LiveEnded() {
       <div className="absolute flex justify-center font-semibold text-fg">
         Stream ended
       </div>
+      <LiveFooter />
     </div>
   );
 }

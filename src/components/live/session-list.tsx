@@ -17,48 +17,46 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 export default function LiveSessionListRender() {
   const { artists } = useCosmoArtist();
   return (
-    <>
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-xl font-semibold">Cosmo Live</h2>
-            <Badge intent="warning">Alpha</Badge>
-          </div>
-          <p className="text-muted-fg text-sm">Live by member from Cosmo app</p>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-semibold">Cosmo Live</h2>
+          <Badge intent="warning">Alpha</Badge>
         </div>
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary
-              onReset={reset}
-              FallbackComponent={ErrorFallbackRender}
-            >
-              <Tabs aria-label="Recipe App">
-                <Tabs.List className="w-fit">
-                  {artists.map((artist) => (
-                    <Tabs.Tab key={artist.id} id={artist.id}>
-                      {artist.title}
-                    </Tabs.Tab>
-                  ))}
-                </Tabs.List>
-                {artists.map((artist) => (
-                  <Tabs.Panel key={artist.id} id={artist.id}>
-                    <Suspense
-                      fallback={
-                        <div className="flex justify-center">
-                          <Loader variant="ring" />
-                        </div>
-                      }
-                    >
-                      <LiveSessionList artistId={artist.id} />
-                    </Suspense>
-                  </Tabs.Panel>
-                ))}
-              </Tabs>
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
+        <p className="text-muted-fg text-sm">Live by member from Cosmo app</p>
       </div>
-    </>
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary
+            onReset={reset}
+            FallbackComponent={ErrorFallbackRender}
+          >
+            <Tabs aria-label="Recipe App">
+              <Tabs.List className="w-fit">
+                {artists.map((artist) => (
+                  <Tabs.Tab key={artist.id} id={artist.id}>
+                    {artist.title}
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+              {artists.map((artist) => (
+                <Tabs.Panel key={artist.id} id={artist.id}>
+                  <Suspense
+                    fallback={
+                      <div className="flex justify-center">
+                        <Loader variant="ring" />
+                      </div>
+                    }
+                  >
+                    <LiveSessionList artistId={artist.id} />
+                  </Suspense>
+                </Tabs.Panel>
+              ))}
+            </Tabs>
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </div>
   );
 }
 
