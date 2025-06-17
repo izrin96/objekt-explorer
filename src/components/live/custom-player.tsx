@@ -62,7 +62,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
       style={style}
     >
       <div
-        className="relative rounded-full w-28 h-28 outline-4 outline-(--color)"
+        className="relative rounded-full w-24 h-24 outline-4 outline-(--color)"
         style={
           {
             "--color": liveSession.channel.primaryColorHex,
