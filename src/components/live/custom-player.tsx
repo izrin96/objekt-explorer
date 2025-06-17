@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import {
   Call,
   ParticipantView,
@@ -10,7 +10,7 @@ import {
   useStreamVideoClient,
   VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import { Avatar, Button, Popover, Slider } from "../ui";
+import { Button, Popover, Slider } from "../ui";
 import { useLiveSession } from "@/hooks/use-live-session";
 import LiveEnded from "./live-ended";
 import LiveFooter from "./live-footer";
@@ -19,6 +19,7 @@ import {
   SpeakerHighIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
+import Image from "next/image";
 
 export const CustomLivestreamPlayer = (props: {
   callType: string;
@@ -60,11 +61,22 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
       className="w-full h-full aspect-[9/16] flex items-center justify-center"
       style={style}
     >
-      <Avatar
-        size="extra-large"
-        initials={participant.name}
-        src={liveSession.channel.profileImageUrl}
-      />
+      <div
+        className="relative rounded-full w-28 h-28 outline-4 outline-(--color)"
+        style={
+          {
+            "--color": liveSession.channel.primaryColorHex,
+          } as CSSProperties
+        }
+      >
+        <Image
+          priority
+          fill
+          className="object-contain object-center size-full rounded-full"
+          src={liveSession.channel.profileImageUrl}
+          alt={participant.name}
+        />
+      </div>
     </div>
   );
 };
