@@ -19,17 +19,19 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     title: `${live.title} · ${live.channel.name} Live`,
     openGraph: {
       description: `${live.title} · Watch ${live.channel.name} live`,
-      images: [
-        {
-          url: live.thumbnailImage,
-        },
-      ],
+      images: live.thumbnailImage
+        ? [
+            {
+              url: live.thumbnailImage,
+            },
+          ]
+        : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title: `${live.title} · ${live.channel.name} Live`,
       description: `${live.title} · Watch ${live.channel.name} live`,
-      images: [live.thumbnailImage],
+      images: live.thumbnailImage ? [live.thumbnailImage] : undefined,
     },
   };
 }
