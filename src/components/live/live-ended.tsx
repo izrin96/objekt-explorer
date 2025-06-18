@@ -22,7 +22,7 @@ export default function LiveEnded() {
       </div>
       <div className="absolute bg-bg/50 size-full"></div>
       <div className="absolute flex justify-center font-semibold text-fg">
-        Stream ended
+        Live stream ended
       </div>
       <LiveFooter />
     </div>

@@ -39,7 +39,9 @@ export default function ActivityRender() {
           <h2 className="text-xl font-semibold">Objekt Activity</h2>
           <Badge intent="primary">Beta</Badge>
         </div>
-        <p className="text-muted-fg text-sm">Latest objekt activity in realtime</p>
+        <p className="text-muted-fg text-sm">
+          Latest objekt activity in realtime
+        </p>
       </div>
       <ObjektModalProvider initialTab="trades">
         <Activity />
@@ -128,7 +130,11 @@ function Activity() {
       }
 
       if (message.type === "history") {
-        setRealtimeTransfers(filtered);
+        const existing = data?.pages[0].items ?? [];
+        const existHash = new Set(existing.map((a) => a.transfer.hash));
+        setRealtimeTransfers(
+          filtered.filter((a) => existHash.has(a.transfer.hash) === false)
+        );
       }
 
       // restore scroll position after state updates
@@ -139,7 +145,7 @@ function Activity() {
         });
       }
     },
-    [type, filters]
+    [type, filters, data?.pages[0]]
   );
 
   // handle incoming message

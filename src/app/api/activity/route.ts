@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
         from: transfers.from,
         to: transfers.to,
         timestamp: transfers.timestamp,
+        hash: transfers.hash,
       },
       objekt: objekts,
       collection: {
