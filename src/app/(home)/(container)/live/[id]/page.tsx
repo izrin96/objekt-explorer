@@ -1,7 +1,7 @@
 import LiveStreamingRender from "@/components/live/live-render";
 import { getLiveSession } from "@/lib/client-fetching";
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 type Props = {
   params: Promise<{
@@ -37,6 +37,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function Page(props: Props) {
+  onRedirect();
+
   const params = await props.params;
   const live = await getLiveSession(params.id);
 
@@ -47,4 +49,8 @@ export default async function Page(props: Props) {
       <LiveStreamingRender live={live} />
     </div>
   );
+}
+
+function onRedirect() {
+  redirect("/live");
 }
