@@ -5,7 +5,6 @@ import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { Container, Link } from "./ui";
 import UserSearch from "./user-search";
 import UserNav from "./user-nav";
-import Changelog from "./changelog";
 import { motion } from "motion/react";
 
 export default function Navbar() {
@@ -30,7 +29,7 @@ export default function Navbar() {
               </span>
             </motion.div>
           </Link>
-          <Changelog />
+          {/* <Changelog /> */}
           <Activity />
           {/* <Live /> */}
         </div>
