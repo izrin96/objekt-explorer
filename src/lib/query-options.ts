@@ -3,16 +3,40 @@ import { getBaseURL } from "./utils";
 import { mapObjektWithTag, ValidObjekt } from "./universal/objekts";
 import { ofetch } from "ofetch";
 import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
+import { useCollectionsStore } from "@/hooks/use-collections-store";
 
 export const collectionOptions = queryOptions({
   queryKey: ["collections"],
   staleTime: Infinity,
   refetchOnWindowFocus: false,
   queryFn: async () => {
-    const url = new URL(`/api/collection`, getBaseURL());
-    return await ofetch<{ collections: ValidObjekt[] }>(url.toString()).then(
-      (a) => a.collections.map(mapObjektWithTag)
-    );
+    const { lastCursor, setLastCursor, setCollections, addCollections } =
+      useCollectionsStore.getState();
+
+    const url = new URL("/api/collection", getBaseURL());
+    const result = await ofetch<{ collections: ValidObjekt[] }>(
+      url.toString(),
+      {
+        query: {
+          cursor: lastCursor ? JSON.stringify(lastCursor) : undefined,
+        },
+      }
+    ).then((a) => a.collections);
+
+    if (result.length > 0) {
+      if (lastCursor) {
+        addCollections(result);
+      } else {
+        setCollections(result);
+      }
+
+      setLastCursor({
+        createdAt: result[0].createdAt,
+        collectionId: result[0].collectionId,
+      });
+    }
+
+    return useCollectionsStore.getState().collections.map(mapObjektWithTag);
   },
 });
 
