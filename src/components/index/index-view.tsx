@@ -1,6 +1,12 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { WindowVirtualizer } from "virtua";
@@ -25,7 +31,6 @@ import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
 import { ValidObjekt } from "@/lib/universal/objekts";
-import { FilterSheet } from "../filters/filter-sheet";
 import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../list/modal/manage-objekt";
 import ObjektModal from "../objekt/objekt-modal";
@@ -36,6 +41,7 @@ import {
 } from "../objekt/objekt-menu";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 import { useUser } from "@/hooks/use-user";
+import { Loader } from "../ui";
 
 export default function IndexRender() {
   return (
@@ -47,7 +53,15 @@ export default function IndexRender() {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <IndexView />
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <IndexView />
+              </Suspense>
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -148,9 +162,6 @@ function IndexView() {
         <FilterContainer>
           <Filters authenticated={authenticated} />
         </FilterContainer>
-        {/* <FilterSheet>
-          <Filters authenticated={authenticated} />
-        </FilterSheet> */}
       </div>
       <span className="font-semibold">{count} total</span>
 

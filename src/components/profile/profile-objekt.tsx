@@ -38,7 +38,6 @@ import {
   ObjektTogglePin,
 } from "../objekt/objekt-action";
 import { FilterContainer } from "../filters/filter-container";
-import { FilterSheet } from "../filters/filter-sheet";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 import { AddToList } from "../list/modal/manage-objekt";
@@ -255,13 +254,6 @@ function ProfileObjekt() {
             isOwned={isProfileAuthed}
           />
         </FilterContainer>
-        {/* <FilterSheet>
-          <Filters
-            address={profile!.address}
-            authenticated={authenticated}
-            isOwned={isProfileAuthed}
-          />
-        </FilterSheet> */}
       </div>
       <span className="font-semibold">
         {count} total

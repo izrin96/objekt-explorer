@@ -23,7 +23,6 @@ import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
 import { FilterContainer } from "../filters/filter-container";
-import { FilterSheet } from "../filters/filter-sheet";
 import { AddToList, RemoveFromList } from "./modal/manage-objekt";
 import { useListAuthed, useUser } from "@/hooks/use-user";
 import ObjektModal from "../objekt/objekt-modal";
@@ -176,13 +175,6 @@ function ListView({ slug }: Props) {
             slug={slug}
           />
         </FilterContainer>
-        {/* <FilterSheet>
-          <Filters
-            authenticated={authenticated}
-            isOwned={isOwned}
-            slug={slug}
-          />
-        </FilterSheet> */}
       </div>
       <span className="font-semibold">
         {count} total
