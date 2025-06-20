@@ -36,8 +36,16 @@ import {
 import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
 import { useUser } from "@/hooks/use-user";
 import { motion, AnimatePresence } from "motion/react";
+import dynamic from "next/dynamic";
 
-export default function ProgressRender() {
+export const ProgressRenderDynamic = dynamic(
+  () => Promise.resolve(ProgressRender),
+  {
+    ssr: false,
+  }
+);
+
+function ProgressRender() {
   return (
     <ObjektModalProvider initialTab="owned">
       <QueryErrorResetBoundary>

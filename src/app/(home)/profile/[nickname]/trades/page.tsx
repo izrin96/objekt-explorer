@@ -1,4 +1,4 @@
-import ProfileTradesRender from "@/components/profile/trades/profile-trades";
+import { ProfileTradesRenderDynamic } from "@/components/profile/trades/profile-trades";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { Metadata } from "next";
 
@@ -18,5 +18,5 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function UserTransfersPage() {
-  return <ProfileTradesRender />;
+  return <ProfileTradesRenderDynamic />;
 }

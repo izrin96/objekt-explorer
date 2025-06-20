@@ -145,6 +145,7 @@ function Activity() {
         });
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [type, filters, data?.pages[0]]
   );
 
@@ -192,6 +193,7 @@ function Activity() {
         }
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [newTransferIds]);
 
   return (

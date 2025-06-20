@@ -8,7 +8,11 @@ import {
   useState,
 } from "react";
 import { useFilters } from "@/hooks/use-filters";
-import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { Loader } from "../ui";
 import { WindowVirtualizer } from "virtua";
@@ -48,8 +52,16 @@ import {
   SelectMenuItem,
   TogglePinMenuItem,
 } from "../objekt/objekt-menu";
+import dynamic from "next/dynamic";
 
-export default function ProfileObjektRender() {
+export const ProfileObjektRenderDynamic = dynamic(
+  () => Promise.resolve(ProfileObjektRender),
+  {
+    ssr: false,
+  }
+);
+
+function ProfileObjektRender() {
   return (
     <ObjektSelectProvider>
       <ObjektModalProvider initialTab="owned">
@@ -59,7 +71,15 @@ export default function ProfileObjektRender() {
               onReset={reset}
               FallbackComponent={ErrorFallbackRender}
             >
-              <ProfileObjekt />
+              <Suspense
+                fallback={
+                  <div className="justify-center flex">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <ProfileObjekt />
+              </Suspense>
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -87,24 +107,22 @@ function ProfileObjekt() {
     ...collectionOptions,
     enabled: filters.unowned ?? false,
   });
-  const ownedQuery = useQuery(ownedCollectionOptions(profile!.address));
+  const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));
 
-  const pinsQuery = api.pins.get.useQuery(profile!.address, {
+  const [, pinsQuery] = api.pins.get.useSuspenseQuery(profile!.address, {
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
   });
 
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
-      const ownedSlugs = new Set(
-        (ownedQuery.data ?? []).map((obj) => obj.slug)
-      );
+      const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
       const missingObjekts = (objektsQuery.data ?? []).filter(
         (obj) => !ownedSlugs.has(obj.slug)
       );
-      return [...(ownedQuery.data ?? []), ...missingObjekts];
+      return [...ownedQuery.data, ...missingObjekts];
     }
-    return ownedQuery.data ?? [];
+    return ownedQuery.data;
   }, [ownedQuery.data, filters.unowned, objektsQuery.data]);
 
   const virtualList = useMemo(() => {

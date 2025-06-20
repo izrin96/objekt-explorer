@@ -42,8 +42,13 @@ import {
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 import { useUser } from "@/hooks/use-user";
 import { Loader } from "../ui";
+import dynamic from "next/dynamic";
 
-export default function IndexRender() {
+export const IndexRenderDynamic = dynamic(() => Promise.resolve(IndexRender), {
+  ssr: false,
+});
+
+function IndexRender() {
   return (
     <ObjektSelectProvider>
       <ObjektModalProvider initialTab="trades">

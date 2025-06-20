@@ -1,4 +1,4 @@
-import { isServer, queryOptions } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { getBaseURL } from "./utils";
 import { mapObjektWithTag, ValidObjekt } from "./universal/objekts";
 import { ofetch } from "ofetch";
@@ -10,8 +10,6 @@ export const collectionOptions = queryOptions({
   staleTime: Infinity,
   refetchOnWindowFocus: false,
   queryFn: async () => {
-    if (isServer) return [];
-
     const { lastCursor, setLastCursor, setCollections, addCollections } =
       useCollectionsStore.getState();
 

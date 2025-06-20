@@ -1,4 +1,4 @@
-import IndexView from "@/components/index/index-view";
+import { IndexRenderDynamic } from "@/components/index/index-view";
 import { UserProvider } from "@/hooks/use-user";
 import { cachedSession, toPublicUser } from "@/lib/server/auth";
 
@@ -8,7 +8,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col pb-36 pt-2">
       <UserProvider user={toPublicUser(session)}>
-        <IndexView />
+        <IndexRenderDynamic />
       </UserProvider>
     </div>
   );

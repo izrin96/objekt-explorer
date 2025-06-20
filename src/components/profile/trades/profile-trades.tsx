@@ -2,9 +2,9 @@
 
 import {
   QueryErrorResetBoundary,
-  useInfiniteQuery,
+  useSuspenseInfiniteQuery,
 } from "@tanstack/react-query";
-import React, { useRef } from "react";
+import React, { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { ofetch } from "ofetch";
 import { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
@@ -23,8 +23,16 @@ import { useTypeFilter } from "./filter-type";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import dynamic from "next/dynamic";
 
-export default function ProfileTradesRender() {
+export const ProfileTradesRenderDynamic = dynamic(
+  () => Promise.resolve(ProfileTradesRender),
+  {
+    ssr: false,
+  }
+);
+
+function ProfileTradesRender() {
   const { artists } = useCosmoArtist();
   return (
     <ObjektModalProvider initialTab="trades">
@@ -36,7 +44,15 @@ export default function ProfileTradesRender() {
             onReset={reset}
             FallbackComponent={ErrorFallbackRender}
           >
-            <ProfileTrades />
+            <Suspense
+              fallback={
+                <div className="justify-center flex">
+                  <Loader variant="ring" />
+                </div>
+              }
+            >
+              <ProfileTrades />
+            </Suspense>
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
@@ -51,7 +67,7 @@ function ProfileTrades() {
   const address = profile!.address;
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const query = useInfiniteQuery({
+  const query = useSuspenseInfiniteQuery({
     queryKey: ["transfers", address, type, filters],
     queryFn: async ({
       pageParam,
@@ -87,13 +103,6 @@ function ProfileTrades() {
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
 
-  if (query.isLoading)
-    return (
-      <div className="justify-center flex">
-        <Loader variant="ring" />
-      </div>
-    );
-
   return (
     <>
       <Card className="py-0">
@@ -102,7 +111,9 @@ function ProfileTrades() {
           <div className="border-b min-w-fit flex">
             <div className="px-3 py-2.5 min-w-[210px] flex-1">Date</div>
             <div className="px-3 py-2.5 min-w-[240px] flex-1">Objekt</div>
-            <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">Serial</div>
+            <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
+              Serial
+            </div>
             <div className="px-3 py-2.5 min-w-[130px] flex-1">Action</div>
             <div className="px-3 py-2.5 min-w-[200px] flex-1">User</div>
           </div>

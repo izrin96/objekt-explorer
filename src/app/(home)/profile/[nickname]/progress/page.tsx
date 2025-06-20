@@ -1,4 +1,4 @@
-import ProgressRender from "@/components/profile/progress/progress-render";
+import { ProgressRenderDynamic } from "@/components/profile/progress/progress-render";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { Metadata } from "next";
 
@@ -18,5 +18,5 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function UserProgressPage() {
-  return <ProgressRender />;
+  return <ProgressRenderDynamic />;
 }

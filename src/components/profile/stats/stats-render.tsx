@@ -20,7 +20,6 @@ import {
 import React, { Suspense, useMemo } from "react";
 import {
   QueryErrorResetBoundary,
-  useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { ownedCollectionOptions, collectionOptions } from "@/lib/query-options";
@@ -35,8 +34,16 @@ import StatsFilter from "./stats-filter";
 import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
 import { groupBy } from "es-toolkit";
 import { cn } from "@/utils/classes";
+import dynamic from "next/dynamic";
 
-export default function ProfileStatsRender() {
+export const ProfileStatsRenderDynamic = dynamic(
+  () => Promise.resolve(ProfileStatsRender),
+  {
+    ssr: false,
+  }
+);
+
+function ProfileStatsRender() {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
@@ -62,6 +69,7 @@ function ProfileStats() {
   const [filters] = useFilters();
 
   const query = useSuspenseQuery(ownedCollectionOptions(profile!.address));
+  const collectionQuery = useSuspenseQuery(collectionOptions);
 
   const objekts = useMemo(
     () => filterObjekts(filters, query.data),
@@ -74,7 +82,10 @@ function ProfileStats() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <BreakdownByMemberChart objekts={objekts} />
         <BreakdownBySeasonChart objekts={objekts} />
-        <MemberProgressChart objekts={objekts} />
+        <MemberProgressChart
+          objekts={objekts}
+          collections={collectionQuery.data}
+        />
       </div>
     </div>
   );
@@ -168,10 +179,15 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   );
 }
 
-function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
+function MemberProgressChart({
+  objekts,
+  collections,
+}: {
+  objekts: ValidObjekt[];
+  collections: ValidObjekt[];
+}) {
   const [filters] = useFilters();
   const { artists } = useCosmoArtist();
-  const query = useQuery(collectionOptions);
 
   const chartData = useMemo(() => {
     const members = artists
@@ -182,7 +198,7 @@ function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
       groupBy(objekts, (a: ValidObjekt) => a.collectionId)
     );
 
-    const filteredObjekts = filterObjekts(filters, query.data ?? []);
+    const filteredObjekts = filterObjekts(filters, collections);
 
     return members
       .map((member) => {
@@ -211,7 +227,7 @@ function MemberProgressChart({ objekts }: { objekts: ValidObjekt[] }) {
         };
       })
       .toSorted((a, b) => b.percentage - a.percentage);
-  }, [artists, objekts, query.data, filters]);
+  }, [artists, objekts, collections, filters]);
 
   const chartConfig = {
     percentage: {
