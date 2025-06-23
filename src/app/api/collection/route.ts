@@ -1,5 +1,4 @@
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { cacheHeaders } from "../common";
 import { NextRequest } from "next/server";
 import { z } from "zod/v4";
 import { indexer } from "@/lib/server/db/indexer";
@@ -44,7 +43,9 @@ export async function GET(request: NextRequest) {
       collections: result,
     },
     {
-      headers: cacheHeaders(),
+      headers: {
+        "Cache-Control": `max-age=${24 * 60 * 60}`,
+      },
     }
   );
 }
