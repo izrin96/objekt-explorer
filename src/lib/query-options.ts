@@ -42,10 +42,10 @@ export const collectionOptions = queryOptions({
         }
       ).then((a) => a.collections);
 
-      return result;
+      return result.map(mapObjektWithTag);
     }
 
-    return result;
+    return result.map(mapObjektWithTag);
   },
 });
 
