@@ -37,6 +37,7 @@ export const userAddress = pgTable(
     privateProfile: boolean("private_profile").default(false),
     privateSerial: boolean("private_serial").default(false),
     hideActivity: boolean("hide_activity").default(false),
+    hideTransfer: boolean("hide_transfer").default(false),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),

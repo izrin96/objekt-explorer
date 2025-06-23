@@ -192,6 +192,7 @@ export function EditProfileModal({
             const privateSerial = formData.get("privateSerial") === "on";
             const privateProfile = formData.get("privateProfile") === "on";
             const hideActivity = formData.get("hideActivity") === "on";
+            const hideTransfer = formData.get("hideTransfer") === "on";
 
             if (droppedImage && !removeBanner) {
               const croppedFile = await generateCroppedImage();
@@ -214,6 +215,7 @@ export function EditProfileModal({
                         privateSerial,
                         privateProfile,
                         hideActivity,
+                        hideTransfer,
                       });
                     });
                   },
@@ -230,6 +232,7 @@ export function EditProfileModal({
               privateSerial,
               privateProfile,
               hideActivity,
+              hideTransfer,
             });
           }}
         >
@@ -364,6 +367,12 @@ function EditProfileForm({
         name="hideActivity"
         description="Hide from live activity transfer. This include all spin, mint, sent and received event."
         defaultSelected={data.hideActivity ?? false}
+      />
+      <Checkbox
+        label="Hide Trade History"
+        name="hideTransfer"
+        description="Hide your profile trade history. Only you will be able to view it."
+        defaultSelected={data.hideTransfer ?? false}
       />
       <Checkbox
         label="Private Profile"

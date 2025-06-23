@@ -29,6 +29,7 @@ export const profileRouter = createTRPCRouter({
         privateSerial: z.boolean().optional(),
         privateProfile: z.boolean().optional(),
         hideActivity: z.boolean().optional(),
+        hideTransfer: z.boolean().optional(),
       })
     )
     .mutation(async ({ input: { address, ...rest }, ctx: { session } }) => {
@@ -102,6 +103,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
       privateSerial: true,
       privateProfile: true,
       hideActivity: true,
+      hideTransfer: true,
     },
     where: (q, { eq, and }) =>
       and(eq(q.address, address), eq(q.userId, userId)),

@@ -47,10 +47,12 @@ export async function GET(
     where: (q, { eq }) => eq(q.address, params.address),
     columns: {
       privateProfile: true,
+      hideTransfer: true,
     },
   });
 
-  const isPrivate = owner?.privateProfile ?? false;
+  const isPrivate =
+    (owner?.privateProfile ?? false) || (owner?.hideTransfer ?? false);
 
   if (!session && isPrivate)
     return Response.json({

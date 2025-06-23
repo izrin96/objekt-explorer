@@ -24,6 +24,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import ObjektModal from "@/components/objekt/objekt-modal";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import dynamic from "next/dynamic";
+import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 
 export const ProfileTradesRenderDynamic = dynamic(
   () => Promise.resolve(ProfileTradesRender),
@@ -94,7 +95,7 @@ function ProfileTrades() {
     retry: false,
   });
 
-  const rows = query.data?.pages.flatMap((p) => p.results) ?? [];
+  const rows = query.data.pages.flatMap((p) => p.results);
 
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
@@ -102,6 +103,14 @@ function ProfileTrades() {
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
+
+  if (query.data.pages[0].hide)
+    return (
+      <div className="flex flex-col justify-center gap-3 items-center py-3">
+        <LockIcon size={64} weight="light" />
+        <p>Trade History Private</p>
+      </div>
+    );
 
   return (
     <>
