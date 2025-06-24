@@ -12,14 +12,17 @@ import {
   Loader,
 } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { CollectionFormat } from "@/lib/server/api/routers/list";
 import { api } from "@/lib/trpc/client";
 import { getBaseURL } from "@/lib/utils";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { groupBy } from "es-toolkit";
 import { Suspense, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
+import {
+  mapCollectionByMember,
+  format,
+  makeMemberOrderedList,
+} from "@/lib/discord-format-utils";
 
 type Props = {
   open: boolean;
@@ -79,6 +82,7 @@ function Content() {
             const wantSlug = formData.get("wantSlug") as string;
             const includeLink = formData.get("includeLink") === "on";
             const showCount = formData.get("showCount") === "on";
+            const lowercase = formData.get("lowercase") === "on";
 
             generateDiscordFormat.mutate(
               {
@@ -88,42 +92,13 @@ function Content() {
               {
                 onSuccess: async (data) => {
                   const { have, want, collections } = data;
-                  const artistsMembers = artists.flatMap(
-                    (a) => a.artistMembers
-                  );
 
                   // collections map for faster search
                   const collectionsMap = new Map(
                     collections.map((a) => [a.slug, a])
                   );
 
-                  // get ordered member list from collection
-                  const members = Object.values(
-                    groupBy(collections, (a) => `${a.artist}-${a.member}`)
-                  )
-                    .toSorted(([a], [b]) => {
-                      // order by member
-                      const posA = artistsMembers.findIndex(
-                        (p) => p.name === a.member
-                      );
-                      const posB = artistsMembers.findIndex(
-                        (p) => p.name === b.member
-                      );
-
-                      return posA - posB;
-                    })
-                    .toSorted(([a], [b]) => {
-                      // order by artist
-                      const posA = artists.findIndex(
-                        (p) => p.name === a.artist
-                      );
-                      const posB = artists.findIndex(
-                        (p) => p.name === b.artist
-                      );
-
-                      return posA - posB;
-                    })
-                    .map(([a]) => a.member);
+                  const members = makeMemberOrderedList(collections, artists);
 
                   const haveCollections = mapCollectionByMember(
                     collectionsMap,
@@ -139,7 +114,7 @@ function Content() {
                   setFormatText(
                     [
                       "## Have",
-                      ...format(haveCollections, showCount),
+                      ...format(haveCollections, showCount, lowercase),
                       ...(includeLink
                         ? [
                             "",
@@ -148,7 +123,7 @@ function Content() {
                           ]
                         : []),
                       "## Want",
-                      ...format(wantCollections, showCount),
+                      ...format(wantCollections, showCount, lowercase),
                       ...(includeLink
                         ? [
                             "",
@@ -194,12 +169,13 @@ function Content() {
           </Select>
           <Checkbox label="Show count" name="showCount" />
           <Checkbox label="Include link" name="includeLink" />
+          <Checkbox label="Lower case" name="lowercase" />
           <Textarea
             label="Formatted discord text"
             value={formatText}
             onChange={setFormatText}
           />
-          <div>
+          <div className="flex">
             <CopyButton text={formatText} />
           </div>
         </Form>
@@ -215,52 +191,4 @@ function Content() {
       </Modal.Footer>
     </>
   );
-}
-
-function format(
-  collectionMap: Map<string, CollectionFormat[]>,
-  showQuantity: boolean
-) {
-  return Array.from(collectionMap.entries()).map(([member, collections]) => {
-    const formatCollections = collections.map((collection) => {
-      if (collection.artist === "idntt") {
-        return `${collection.season} ${collection.collectionNo}`;
-      }
-      const seasonCode = collection.season.charAt(0);
-      const seasonNumber = collection.season.slice(-2);
-      const seasonFormat = seasonCode.repeat(parseInt(seasonNumber));
-
-      return `${seasonFormat}${collection.collectionNo}`;
-    });
-
-    const groupedFormat = groupBy(formatCollections, (a) => a);
-
-    const formattedWithQuantity = Object.entries(groupedFormat)
-      .map(([key, group]) =>
-        showQuantity && group.length > 1 ? `${key} (x${group.length})` : key
-      )
-      .sort();
-
-    return `${member} ${formattedWithQuantity.join(" ")}`;
-  });
-}
-
-function mapCollectionByMember(
-  collectionMap: Map<string, CollectionFormat>,
-  entries: string[],
-  members: string[]
-): Map<string, CollectionFormat[]> {
-  const output = new Map<string, CollectionFormat[]>();
-  const collectionEntries = entries
-    .map((slug) => collectionMap.get(slug))
-    .filter((a) => a !== undefined);
-  for (const member of members) {
-    for (const collectionEntry of collectionEntries.filter(
-      (a) => a.member === member
-    )) {
-      output.set(member, [...(output.get(member) ?? []), collectionEntry]);
-    }
-  }
-
-  return output;
 }

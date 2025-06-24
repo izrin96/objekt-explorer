@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import ArtistFilter from "../filters/filter-artist";
 import MemberFilter from "../filters/filter-member";
 import TransferableFilter from "../filters/filter-transferable";
@@ -22,6 +22,8 @@ import HidePinFilter from "../filters/filter-hide-pin";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import ColorFilter from "../filters/filter-color";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
+import { Button } from "../ui";
+import { GenerateDiscordFormatModal } from "./modal/generate-discord";
 
 export default function Filter() {
   const { artists } = useCosmoArtist();
@@ -50,8 +52,21 @@ export default function Filter() {
         <UnownedFilter />
         <ColumnFilter />
         <SearchFilter />
+        <GenerateDiscordFormat />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>
+  );
+}
+
+function GenerateDiscordFormat() {
+  const [genOpen, setGenOpen] = useState(false);
+  return (
+    <>
+      <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
+      <Button intent="outline" onClick={() => setGenOpen(true)}>
+        Discord Format
+      </Button>
+    </>
   );
 }

@@ -15,6 +15,11 @@ export type PinObjekt = {
   order: number | null;
 };
 
+export type CollectionFormat = Pick<
+  Collection,
+  "slug" | "member" | "season" | "collectionNo" | "artist"
+>;
+
 export function getCollectionShortId(objekt: ValidObjekt) {
   const seasonNumber = parseInt(objekt.season.slice(-2));
 

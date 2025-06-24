@@ -4,7 +4,7 @@ import {
   createTRPCRouter,
   publicProcedure,
 } from "@/lib/server/api/trpc";
-import { Collection, collections } from "../../db/indexer/schema";
+import { collections } from "../../db/indexer/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { overrideColor } from "@/lib/universal/objekts";
 import { indexer } from "../../db/indexer";
@@ -276,11 +276,6 @@ export const listRouter = createTRPCRouter({
       };
     }),
 });
-
-export type CollectionFormat = Pick<
-  Collection,
-  "slug" | "member" | "season" | "collectionNo" | "artist"
->;
 
 export type PublicList = Pick<List, "slug" | "name"> & {
   user?: PublicUser | null;
