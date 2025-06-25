@@ -16,6 +16,9 @@ export async function GET(_: Request, props: Params) {
   const results = await indexer
     .select({
       total: count(),
+      spin: sql`count(case when ${objekts.owner}=${SPIN_ADDRESS} then 1 end)`.mapWith(
+        Number
+      ),
       transferable:
         sql`count(case when transferable = true and ${objekts.owner}!=${SPIN_ADDRESS} then 1 end)`.mapWith(
           Number
@@ -30,7 +33,8 @@ export async function GET(_: Request, props: Params) {
     return Response.json(
       {
         total: 0,
-        transferable: false,
+        spin: 0,
+        transferable: 0,
       },
       {
         headers: cacheHeaders(),

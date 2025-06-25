@@ -43,43 +43,38 @@ function PillColor({
   );
 }
 
-function PillCopies({ objekt }: { objekt: ValidObjekt }) {
+function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   const { data, status } = useQuery(fetchMetadata(objekt.slug));
   return (
     <>
-      {status === "pending" && <Skeleton className="w-20 h-6" />}
+      {status === "pending" && (
+        <>
+          <Skeleton className="w-20 h-6" />
+          <Skeleton className="w-20 h-6" />
+          <Skeleton className="w-20 h-6" />
+          <Skeleton className="w-35 h-6" />
+        </>
+      )}
       {status === "error" && (
         <Badge shape="square" intent="danger">
-          Error
+          Error fetching metadata
         </Badge>
       )}
       {status === "success" && (
-        <Pill
-          label={objekt.onOffline === "online" ? "Copies" : "Scanned Copies"}
-          value={`${data.total}`}
-        />
-      )}
-    </>
-  );
-}
-
-function PillTradable({ objekt }: { objekt: ValidObjekt }) {
-  const { data, status } = useQuery(fetchMetadata(objekt.slug));
-  return (
-    <>
-      {status === "pending" && <Skeleton className="w-35 h-6" />}
-      {status === "error" && (
-        <Badge shape="square" intent="danger">
-          Error
-        </Badge>
-      )}
-      {status === "success" && (
-        <Pill
-          label={"Tradable"}
-          value={`${((data.transferable / data.total) * 100.0).toFixed(2)}% (${
-            data.transferable
-          })`}
-        />
+        <>
+          <Pill
+            label={objekt.onOffline === "online" ? "Copies" : "Scanned Copies"}
+            value={`${data.total}`}
+          />
+          <Pill label="Spin" value={`${data.spin}`} />
+          <Pill label="Non-Spin" value={`${data.total - data.spin}`} />
+          <Pill
+            label={"Tradable"}
+            value={`${((data.transferable / data.total) * 100.0).toFixed(
+              2
+            )}% (${data.transferable})`}
+          />
+        </>
       )}
     </>
   );
@@ -88,7 +83,7 @@ function PillTradable({ objekt }: { objekt: ValidObjekt }) {
 const fetchMetadata = (slug: string) => ({
   queryKey: ["objekts", "metadata", slug],
   queryFn: async ({}) =>
-    await ofetch<{ transferable: number; total: number }>(
+    await ofetch<{ transferable: number; total: number; spin: number }>(
       `/api/objekts/metadata/${slug}`
     ),
 });
@@ -131,8 +126,7 @@ export function AttributePanel({
           Unobtainable
         </Badge>
       )}
-      <PillCopies objekt={objekt} />
-      <PillTradable objekt={objekt} />
+      <PillMetadata objekt={objekt} />
     </div>
   );
 }
