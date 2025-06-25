@@ -219,6 +219,12 @@ const shortformMembers: Record<string, string> = {
   x: "Xinyu",
   m: "Mayu",
   l: "Lynn",
+  soda: "DaHyun",
+  kwak: "YeonJi",
+  yubam: "YuBin",
+  ham: "SeoYeon",
+  ssaem: "SoHyun",
+  park: "SoHyun",
 };
 
 export function getMemberShortKeys(value: string) {
