@@ -33,14 +33,13 @@ export default function TypeFilter() {
   return (
     <Menu>
       <Button intent="outline" className={type ? "!inset-ring-primary" : ""}>
-        Type
+        Event
       </Button>
       <Menu.Content
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}
         items={validType.map((value) => ({ value }))}
-        className="min-w-52"
       >
         {(item) => (
           <Menu.Item id={item.value} textValue={map[item.value]}>

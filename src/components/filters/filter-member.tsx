@@ -39,7 +39,7 @@ export default function MemberFilter({ artists }: Props) {
         selectedKeys={selected}
         onSelectionChange={update}
         items={artists}
-        className="min-w-52"
+        className="min-w-44"
       >
         {(artist) => (
           <Menu.Section

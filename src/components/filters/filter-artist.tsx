@@ -43,7 +43,6 @@ export default function ArtistFilter({ artists }: Props) {
         selectedKeys={selected}
         onSelectionChange={update}
         items={artists}
-        className="min-w-52"
       >
         {(item) => (
           <Menu.Item id={item.name} textValue={item.title}>
