@@ -84,10 +84,7 @@ const MenuContent = <T extends object>({
 }: MenuContentProps<T>) => {
   return (
     <PopoverContent
-      className={composeTailwindRenderProps(
-        popover?.className,
-        "min-w-40 p-0 shadow-xs outline-hidden overflow-hidden",
-      )}
+      className={composeTailwindRenderProps(popover?.className, "min-w-40 overflow-hidden")}
       placement={placement}
       {...popover}
     >
@@ -95,7 +92,7 @@ const MenuContent = <T extends object>({
         data-slot="menu-content"
         className={composeTailwindRenderProps(
           className,
-          "grid max-h-[calc(var(--visual-viewport-height)-10rem)] grid-cols-[auto_1fr] overflow-auto rounded-xl p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-lg)-2px))] sm:max-h-[inherit] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+          "grid max-h-[calc(var(--visual-viewport-height)-10rem)] grid-cols-[auto_1fr] overflow-y-auto rounded-xl p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-lg)-2px))] sm:max-h-[inherit] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
         )}
         {...props}
       />
@@ -140,7 +137,7 @@ const MenuItem = ({ className, isDanger = false, children, ...props }: MenuItemP
                 </span>
               )}
               {values.selectionMode === "multiple" && (
-                <IconCheck className="-mx-0.5 mr-2 size-4" data-slot="checked-icon" />
+                <IconCheck className="-mx-0.5 mr-2 size-4" data-slot="check-indicator" />
               )}
             </>
           )}
