@@ -15,7 +15,7 @@ import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr";
 export default function Changelog() {
   return (
     <Modal>
-      <Button size="extra-small" intent="plain" className="">
+      <Button size="xs" intent="plain">
         <MegaphoneIcon size={18} weight="light" />
       </Button>
       <Modal.Content>

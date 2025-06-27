@@ -1,7 +1,7 @@
 "use client";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { Button, Tooltip } from "../ui";
+import { Button, Toggle, Tooltip } from "../ui";
 import { useCallback, ReactNode } from "react";
 import { toast } from "sonner";
 import { AnimatePresence, motion } from "motion/react";
@@ -37,14 +37,15 @@ export function SelectMode({ children }: Props) {
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      <Button
+      <Toggle
+        isSelected={mode}
         className={mode ? "!inset-ring-primary" : ""}
         intent="outline"
         onClick={toggleMode}
       >
         <ChecksIcon weight="regular" data-slot="icon" />
         Select mode
-      </Button>
+      </Toggle>
       <Button intent="outline" onClick={reset}>
         <XIcon weight="regular" data-slot="icon" />
         Clear
@@ -77,26 +78,28 @@ export function FloatingSelectMode({ children }: Props) {
     <AnimatePresence>
       {selected.length > 0 && (
         <motion.div
-          className="fixed inset-x-0 bottom-2 w-fit mx-auto z-10 bg-bg/80 backdrop-blur px-3 py-2 rounded shadow border"
+          className="fixed inset-x-0 bottom-2 w-fit mx-auto z-10 bg-bg/80 backdrop-blur px-2 py-1 rounded shadow border"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
         >
           <div className="flex gap-2 items-center flex-wrap justify-center">
             <Tooltip delay={0} closeDelay={0}>
-              <Button intent="outline" onClick={reset}>
+              <Button size="sq-sm" intent="outline" onClick={reset}>
                 <XIcon size={18} weight="regular" />
               </Button>
               <Tooltip.Content>Clear selection</Tooltip.Content>
             </Tooltip>
             <Tooltip delay={0} closeDelay={0}>
-              <Button
+              <Toggle
+                isSelected={mode}
+                size="sq-sm"
                 intent="outline"
                 onClick={toggleMode}
                 className={mode ? "!inset-ring-primary" : ""}
               >
                 <ChecksIcon weight="regular" size={18} />
-              </Button>
+              </Toggle>
               <Tooltip.Content>Toggle select mode</Tooltip.Content>
             </Tooltip>
             {children?.({ handleAction })}

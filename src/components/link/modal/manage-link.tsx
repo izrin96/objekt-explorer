@@ -170,7 +170,7 @@ export function EditProfileModal({
 
   return (
     <Sheet.Content
-      classNames={{ content: "max-w-sm" }}
+      className={"max-w-sm"}
       isOpen={open}
       onOpenChange={setOpen}
     >
@@ -331,7 +331,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         <span className="text-sm text-muted-fg truncate">
           Selected file: {droppedImage.name}
         </span>
-        <Button size="extra-small" intent="outline" onClick={onClear}>
+        <Button size="xs" intent="outline" onClick={onClear}>
           Clear
         </Button>
       </div>

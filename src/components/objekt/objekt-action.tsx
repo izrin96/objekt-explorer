@@ -20,7 +20,7 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   const objektSelect = useObjektSelect((a) => a.select);
   return (
     <Button
-      size="extra-small"
+      size="sq-sm"
       intent="plain"
       className={cn(
         "group-hover:block hidden bg-bg/80 text-fg px-2",
@@ -75,7 +75,7 @@ export function ObjektTogglePin({
   });
   return (
     <Button
-      size="extra-small"
+      size="sq-sm"
       intent="plain"
       className={cn(
         "bg-bg/80 text-fg group group-hover:flex hidden absolute top-0 left-0"
@@ -110,15 +110,15 @@ export function ObjektTogglePin({
 
 export function ObjektHoverMenu({ children }: PropsWithChildren) {
   return (
-    <Menu respectScreen={false}>
+    <Menu>
       <Button
-        size="extra-small"
+        size="sq-sm"
         intent="plain"
         className="hidden group-hover:block data-pressed:block bg-bg/80 text-fg px-2"
       >
         <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
-      <Menu.Content respectScreen={false} placement="bottom right">
+      <Menu.Content placement="bottom right">
         {children}
       </Menu.Content>
     </Menu>

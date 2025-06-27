@@ -81,7 +81,7 @@ export default memo(function ObjektView({
         <Badge
           intent="secondary"
           className="font-semibold cursor-pointer"
-          shape="square"
+          isCircle={false}
           onClick={open}
         >
           {getCollectionShortId(objekt)}
@@ -90,7 +90,7 @@ export default memo(function ObjektView({
         {unobtainable && (
           <Badge
             intent="custom"
-            shape="square"
+            isCircle={false}
             className="font-semibold text-xs"
           >
             Unobtainable

@@ -22,7 +22,7 @@ const InputOTP = ({
       "flex items-center gap-2 has-disabled:opacity-50",
       containerClassName,
     )}
-    className={twMerge("mt-auto h-[2.5rem] bg-red-500 disabled:cursor-not-allowed", className)}
+    className={twMerge("mt-auto h-[2.5rem] bg-danger disabled:cursor-not-allowed", className)}
     {...props}
   />
 )
@@ -51,7 +51,7 @@ const InputOTPSlot = ({ index, className, ref, ...props }: InputOTPSlotProps) =>
       ref={ref}
       className={twMerge(
         "relative flex size-10 items-center justify-center rounded-md border border-input text-sm tabular-nums transition-all",
-        isActive && "z-10 border-ring/70 ring-4 ring-ring/20",
+        isActive && "z-10 border-ring/70 ring-3 ring-ring/20",
         className,
       )}
       {...props}

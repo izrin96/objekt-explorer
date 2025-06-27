@@ -1,6 +1,16 @@
 "use client";
 
-import { Badge, Button, Card, Link, NumberField, Table, Tabs } from "../ui";
+import {
+  Badge,
+  Button,
+  Card,
+  Link,
+  Tab,
+  Table,
+  TabList,
+  TabPanel,
+  Tabs,
+} from "../ui";
 import { CSSProperties, useCallback, useState } from "react";
 import {
   OwnedObjekt,
@@ -59,24 +69,24 @@ export default function ObjektDetail({
           onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
           className="p-2"
         >
-          <Tabs.List>
+          <TabList>
             {showOwned && (
-              <Tabs.Tab id="owned">
+              <Tab id="owned">
                 Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}
-              </Tabs.Tab>
+              </Tab>
             )}
-            <Tabs.Tab id="trades">Trades</Tabs.Tab>
-            <Tabs.Tab
+            <Tab id="trades">Trades</Tab>
+            <Tab
               id="apollo"
               href={`https://apollo.cafe/objekts?id=${objekt.slug}`}
               target="_blank"
             >
               <IconOpenLink />
               View in Apollo
-            </Tabs.Tab>
-          </Tabs.List>
+            </Tab>
+          </TabList>
           {showOwned && (
-            <Tabs.Panel id="owned">
+            <TabPanel id="owned">
               {isOwned ? (
                 <OwnedListPanel
                   setSerial={setSerial}
@@ -88,11 +98,11 @@ export default function ObjektDetail({
                   <p>Not owned</p>
                 </div>
               )}
-            </Tabs.Panel>
+            </TabPanel>
           )}
-          <Tabs.Panel id="trades">
+          <TabPanel id="trades">
             <TradeView objekt={objekt} serial={serial} />
-          </Tabs.Panel>
+          </TabPanel>
         </Tabs>
       </div>
     </div>
@@ -187,9 +197,9 @@ function OwnedListPanel({
   return (
     <div className="flex flex-col gap-2">
       <Card className="py-0">
-        <Card.Content className="px-0">
-          <Table bleed aria-label="Trades">
-            <Table.Header className="[--gutter:--spacing(3)]">
+        <Card.Content className="px-3">
+          <Table className="[--gutter:--spacing(3)]" bleed aria-label="Trades">
+            <Table.Header>
               <Table.Column isRowHeader maxWidth={110}>
                 Serial
               </Table.Column>
@@ -197,7 +207,7 @@ function OwnedListPanel({
               <Table.Column minWidth={200}>Received</Table.Column>
               <Table.Column>Transferable</Table.Column>
             </Table.Header>
-            <Table.Body items={currentItems} className="[--gutter:--spacing(3)]">
+            <Table.Body items={currentItems}>
               {(item) => (
                 <Table.Row id={item.id}>
                   <Table.Cell>
@@ -225,7 +235,7 @@ function OwnedListPanel({
                     <Badge
                       className={cn("text-xs")}
                       intent={!item.transferable ? "custom" : "info"}
-                      shape="square"
+                      isCircle={false}
                     >
                       {item.transferable ? "Yes" : "No"}
                     </Badge>
@@ -239,16 +249,18 @@ function OwnedListPanel({
       {totalPages > 1 && (
         <div className="flex gap-3 items-center justify-center">
           <Button
-            size="square-petite"
+            size="sq-md"
             intent="outline"
             isDisabled={currentPage <= 1}
             onClick={() => setCurrentPage(currentPage - 1)}
           >
             <IconChevronLgLeft />
           </Button>
-          <span>{currentPage} / {totalPages}</span>
+          <span>
+            {currentPage} / {totalPages}
+          </span>
           <Button
-            size="square-petite"
+            size="sq-md"
             intent="outline"
             isDisabled={currentPage >= totalPages}
             onClick={() => setCurrentPage(currentPage + 1)}

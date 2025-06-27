@@ -7,6 +7,7 @@ export default function UnownedFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
+      intent="outline"
       className="data-selected:inset-ring-primary font-medium"
       isSelected={filters.unowned ?? false}
       onChange={(v) =>

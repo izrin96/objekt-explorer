@@ -85,7 +85,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
       />
       <Button
         intent="outline"
-        size="extra-small"
+        size="xs"
         onClick={() => setPullOpen(true)}
       >
         <ArrowsClockwiseIcon data-slot="icon" />
@@ -93,7 +93,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
       </Button>
       <Button
         intent="danger"
-        size="extra-small"
+        size="xs"
         onClick={() =>
           unlinkAccount.mutate({
             providerId: provider.id,
@@ -130,7 +130,7 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
       <span className="text-sm">{provider.label}</span>
       <Button
         intent="outline"
-        size="extra-small"
+        size="xs"
         onClick={() => linkAccount.mutate()}
       >
         <LinkIcon data-slot="icon" />

@@ -16,7 +16,8 @@ export function CopyButton({ text }: { text: string }) {
           setTimeout(() => setCopied(false), 2000);
         });
       }}
-      size="extra-small"
+      size="xs"
+      className="flex gap-1.5 items-center"
     >
       <CopyIcon data-slot="icon" />
       {copied ? "Copied!" : "Copy"}

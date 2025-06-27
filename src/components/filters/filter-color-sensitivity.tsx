@@ -25,7 +25,7 @@ export default function ColorSensitivityFilter() {
   return (
     <Popover>
       <Button intent="outline">Color Sensitivity</Button>
-      <Popover.Content respectScreen={false}>
+      <Popover.Content>
         <div className="p-3">
           <Slider
             label="Color sensitivity"

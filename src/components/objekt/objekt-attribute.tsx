@@ -14,7 +14,7 @@ type PillProps = {
 
 function Pill({ label, value }: PillProps) {
   return (
-    <Badge intent="secondary" shape="square">
+    <Badge intent="secondary" isCircle={false}>
       <span className="font-semibold">{label}</span>
       <span>{value}</span>
     </Badge>
@@ -28,7 +28,7 @@ function PillColor({
 }: PillProps & { objekt: ValidObjekt }) {
   return (
     <Badge
-      shape="square"
+      isCircle={false}
       style={
         {
           "--objekt-bg-color": objekt.backgroundColor,
@@ -51,12 +51,12 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
         <>
           <Skeleton className="w-20 h-6" />
           <Skeleton className="w-20 h-6" />
-          <Skeleton className="w-20 h-6" />
+          <Skeleton className="w-24 h-6" />
           <Skeleton className="w-35 h-6" />
         </>
       )}
       {status === "error" && (
-        <Badge shape="square" intent="danger">
+        <Badge isCircle={false} intent="danger">
           Error fetching metadata
         </Badge>
       )}
@@ -122,7 +122,7 @@ export function AttributePanel({
         />
       )}
       {unobtainable && (
-        <Badge intent="custom" shape="square" className="font-semibold">
+        <Badge intent="custom" isCircle={false} className="font-semibold">
           Unobtainable
         </Badge>
       )}

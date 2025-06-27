@@ -1,6 +1,16 @@
 "use client";
 
-import { Button, Card, Link, Menu, Note, Tabs } from "@/components/ui";
+import {
+  Button,
+  Card,
+  Link,
+  Menu,
+  Note,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+} from "@/components/ui";
 import { api } from "@/lib/trpc/client";
 import React, { useState } from "react";
 import { IconDotsVertical } from "@intentui/icons";
@@ -36,11 +46,11 @@ function MyList() {
       <div className="text-xl font-semibold">My List</div>
 
       <Tabs aria-label="Navbar">
-        <Tabs.List>
-          <Tabs.Tab id="a">Normal List</Tabs.Tab>
-          <Tabs.Tab id="b">Profile List</Tabs.Tab>
-        </Tabs.List>
-        <Tabs.Panel id="a" className="flex flex-col gap-4">
+        <TabList className="w-fit">
+          <Tab id="a">Normal List</Tab>
+          <Tab id="b">Profile List</Tab>
+        </TabList>
+        <TabPanel id="a" className="flex flex-col gap-4">
           <CreateListModal open={addOpen} setOpen={setAddOpen} />
           <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
@@ -56,10 +66,10 @@ function MyList() {
               <ListCard list={list} key={list.slug} />
             ))}
           </div>
-        </Tabs.Panel>
-        <Tabs.Panel id="b">
+        </TabPanel>
+        <TabPanel id="b">
           <Note>This feature is not yet available</Note>
-        </Tabs.Panel>
+        </TabPanel>
       </Tabs>
     </div>
   );
@@ -91,18 +101,20 @@ function ListCard({ list }: ListCardProps) {
           >
             {list.name}
           </Link>
-          <Menu respectScreen={false}>
-            <Button intent="outline" size="extra-small">
-              <IconDotsVertical />
-            </Button>
-            <Menu.Content respectScreen={false} className="sm:min-w-56">
-              <Menu.Item href={`/list/${list.slug}`}>Open</Menu.Item>
-              <Menu.Item onAction={() => setEditOpen(true)}>Edit</Menu.Item>
-              <Menu.Item isDanger onAction={() => setDeleteOpen(true)}>
-                Delete
-              </Menu.Item>
-            </Menu.Content>
-          </Menu>
+          <div className="flex items-center">
+            <Menu>
+              <Button intent="outline" size="xs">
+                <IconDotsVertical />
+              </Button>
+              <Menu.Content className="sm:min-w-56">
+                <Menu.Item href={`/list/${list.slug}`}>Open</Menu.Item>
+                <Menu.Item onAction={() => setEditOpen(true)}>Edit</Menu.Item>
+                <Menu.Item isDanger onAction={() => setDeleteOpen(true)}>
+                  Delete
+                </Menu.Item>
+              </Menu.Content>
+            </Menu>
+          </div>
         </Card.Content>
       </Card>
     </>

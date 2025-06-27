@@ -12,6 +12,7 @@ export default function GroupDirectionFilter() {
   if (!filters.group_by) return;
   return (
     <Toggle
+      intent="outline"
       className="w-[125px] font-medium"
       isSelected={filters.group_dir === "asc"}
       onChange={(v) =>

@@ -36,7 +36,7 @@ export default function UserNav() {
         <>
           <Link
             href="/login"
-            className={buttonStyles({ intent: "outline", size: "small" })}
+            className={buttonStyles({ intent: "outline", size: "sm" })}
           >
             Sign in
           </Link>
@@ -57,21 +57,17 @@ function UserMenu({ user }: { user: User }) {
       <UserAccountModal open={accountOpen} setOpen={setAccountOpen} />
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
 
-      <Menu respectScreen={false}>
+      <Menu>
         <Menu.Trigger aria-label="Open Menu">
           <Avatar
             alt={user.name}
             initials={user.name.charAt(0)}
-            size="medium"
-            shape="square"
+            size="md"
+            isSquare
             src={user.image}
           />
         </Menu.Trigger>
-        <Menu.Content
-          respectScreen={false}
-          placement="bottom right"
-          className="sm:min-w-56"
-        >
+        <Menu.Content className="sm:min-w-56">
           <Menu.Section>
             <Menu.Header separator>
               <div className="flex flex-col">
@@ -152,7 +148,7 @@ function MyListMenuItem({
         <HeartIcon data-slot="icon" />
         <Menu.Label>My List</Menu.Label>
       </Menu.Item>
-      <Menu.Content placement="left top">
+      <Menu.Content>
         {isLoading && (
           <Menu.Item isDisabled>
             <Menu.Label>
@@ -198,7 +194,7 @@ function MyCosmoProfileMenuItem() {
         <DeviceMobileIcon data-slot="icon" />
         <Menu.Label>My Cosmo Link</Menu.Label>
       </Menu.Item>
-      <Menu.Content placement="left top">
+      <Menu.Content>
         {isLoading && (
           <Menu.Item isDisabled>
             <Menu.Label>

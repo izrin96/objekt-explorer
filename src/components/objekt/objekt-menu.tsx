@@ -18,15 +18,15 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
-    <Menu respectScreen={false}>
+    <Menu>
       <Button
-        className="absolute top-1 sm:top-1.5 p-2 right-10 z-50"
-        size="extra-small"
+        className="absolute top-1 sm:top-2 p-2 right-10 z-50"
+        size="sq-xs"
         intent="outline"
       >
         <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
-      <Menu.Content respectScreen={false} placement="bottom right">
+      <Menu.Content placement="bottom right">
         {children}
       </Menu.Content>
     </Menu>
@@ -63,7 +63,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
         <PlusIcon data-slot="icon" />
         <Menu.Label>Add to list</Menu.Label>
       </Menu.Item>
-      <Menu.Content respectScreen={false} placement="bottom right">
+      <Menu.Content placement="bottom right">
         {isLoading && (
           <Menu.Item isDisabled>
             <Menu.Label>

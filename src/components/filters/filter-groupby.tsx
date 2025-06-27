@@ -35,7 +35,7 @@ export default function GroupByFilter() {
   );
 
   return (
-    <Menu respectScreen={false}>
+    <Menu>
       <Button
         intent="outline"
         className={filters.group_by ? "!inset-ring-primary" : ""}
@@ -43,7 +43,6 @@ export default function GroupByFilter() {
         Group By
       </Button>
       <Menu.Content
-        respectScreen={false}
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}

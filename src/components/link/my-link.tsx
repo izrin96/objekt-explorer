@@ -84,20 +84,22 @@ function LinkCard({ link }: LinkCardProps) {
           setOpen={setEditOpen}
         />
 
-        <Menu respectScreen={false}>
-          <Button intent="outline" size="extra-small">
-            <IconDotsVertical />
-          </Button>
-          <Menu.Content respectScreen={false} className="sm:min-w-56">
-            <Menu.Item href={`/@${link.nickname ?? link.address}`}>
-              Open
-            </Menu.Item>
-            <Menu.Item onAction={() => setEditOpen(true)}>Edit</Menu.Item>
-            <Menu.Item isDanger onAction={() => setRemoveOpen(true)}>
-              Unlink
-            </Menu.Item>
-          </Menu.Content>
-        </Menu>
+        <div className="flex items-center">
+          <Menu>
+            <Button intent="outline" size="xs">
+              <IconDotsVertical />
+            </Button>
+            <Menu.Content className="sm:min-w-56">
+              <Menu.Item href={`/@${link.nickname ?? link.address}`}>
+                Open
+              </Menu.Item>
+              <Menu.Item onAction={() => setEditOpen(true)}>Edit</Menu.Item>
+              <Menu.Item isDanger onAction={() => setRemoveOpen(true)}>
+                Unlink
+              </Menu.Item>
+            </Menu.Content>
+          </Menu>
+        </div>
       </Card.Content>
     </Card>
   );

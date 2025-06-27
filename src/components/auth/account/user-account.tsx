@@ -32,7 +32,7 @@ type Props = {
 export default function UserAccountModal({ open, setOpen }: Props) {
   return (
     <Sheet.Content
-      classNames={{ content: "max-w-md" }}
+      className={"max-w-md"}
       isOpen={open}
       onOpenChange={setOpen}
     >
@@ -81,6 +81,8 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       return result.data;
     },
   });
+
+  if (!session.data) return
 
   return (
     <div className="flex flex-col gap-9">
@@ -149,7 +151,7 @@ function UserAccountForm({
         />
 
         <div className="flex">
-          <Button size="medium" intent="outline" type="submit">
+          <Button size="md" intent="outline" type="submit">
             Save
           </Button>
         </div>
@@ -198,7 +200,7 @@ function ChangeEmail({ email }: { email: string }) {
         <div className="flex">
           <Button
             isDisabled={mutation.isPending}
-            size="medium"
+            size="md"
             intent="outline"
             className="flex-none"
             type="submit"
@@ -232,7 +234,7 @@ function DeleteAccount() {
 
   return (
     <>
-      <Button intent="danger" size="small" onClick={() => setOpen(true)}>
+      <Button intent="danger" size="sm" onClick={() => setOpen(true)}>
         <TrashSimpleIcon data-slot="icon" />
         Delete Account
       </Button>

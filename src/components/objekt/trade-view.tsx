@@ -108,7 +108,7 @@ function Trades({
           isWheelDisabled
         />
         <Button
-          size="square-petite"
+          size="sq-md"
           intent="outline"
           className="flex-none"
           onClick={() => updateSerial("prev")}
@@ -116,7 +116,7 @@ function Trades({
           <IconArrowLeft />
         </Button>
         <Button
-          size="square-petite"
+          size="sq-md"
           intent="outline"
           className="flex-none"
           onClick={() => updateSerial("next")}
@@ -204,7 +204,7 @@ function TradeTable({
           <Badge
             className={cn("text-xs")}
             intent={!data.transferable ? "custom" : "info"}
-            shape="square"
+            isCircle={false}
           >
             {data.transferable ? "Yes" : "No"}
           </Badge>
@@ -212,13 +212,13 @@ function TradeTable({
       </div>
 
       <Card className="py-0">
-        <Card.Content className="px-0">
-          <Table bleed aria-label="Trades">
-            <Table.Header className="[--gutter:--spacing(3)]">
+        <Card.Content className="px-3">
+          <Table className="[--gutter:--spacing(3)]" bleed aria-label="Trades">
+            <Table.Header>
               <Table.Column isRowHeader>Owner</Table.Column>
               <Table.Column minWidth={200}>Date</Table.Column>
             </Table.Header>
-            <Table.Body items={data.transfers} className="[--gutter:--spacing(3)]">
+            <Table.Body items={data.transfers}>
               {(item) => (
                 <Table.Row id={item.id}>
                   <Table.Cell>

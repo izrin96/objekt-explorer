@@ -10,7 +10,7 @@ import {
 import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components"
 import { ListBox, ListBoxItem, ListBoxSection, Separator } from "react-aria-components"
 
-import { buttonStyles } from "@/components/ui/button"
+import { type ButtonProps, buttonStyles } from "@/components/ui/button"
 import { composeTailwindRenderProps } from "@/lib/primitive"
 import { twMerge } from "tailwind-merge"
 
@@ -61,20 +61,19 @@ const renderListItem = (
   children: React.ReactNode,
 ) => <ListBoxItem {...props}>{children}</ListBoxItem>
 
-interface PaginationItemProps extends ListBoxItemProps {
+interface PaginationItemProps
+  extends ListBoxItemProps,
+    Pick<ButtonProps, "isCircle" | "size" | "intent"> {
   children?: React.ReactNode
   className?: string
-  intent?: "primary" | "secondary" | "outline" | "plain"
-  size?: "medium" | "large" | "square-petite" | "extra-small" | "small"
-  shape?: "square" | "circle"
   isCurrent?: boolean
   segment?: "label" | "separator" | "ellipsis" | "default" | "last" | "first" | "previous" | "next"
 }
 
 const PaginationItem = ({
   segment = "default",
-  size = "small",
-  intent = "outline",
+  size = "sm",
+  intent = "plain",
   className,
   isCurrent,
   children,
@@ -95,9 +94,9 @@ const PaginationItem = ({
         isDisabled: isCurrent,
         className: buttonStyles({
           intent: "outline",
-          size: "small",
+          size: "sm",
           className: twMerge(
-            "cursor-default font-normal text-fg focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-4 focus-visible:ring-ring/20",
+            "cursor-default font-normal text-fg min-w-10 focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/20",
             className,
           ),
         }),
@@ -133,7 +132,7 @@ const PaginationItem = ({
         {
           textValue: "More pages",
           className: twMerge(
-            "flex size-9 items-center justify-center rounded-lg border border-transparent focus:outline-hidden focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-4 focus-visible:ring-ring/20",
+            "flex size-9 items-center justify-center rounded-lg border border-transparent focus:outline-hidden focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/20",
             className,
           ),
           ...props,
@@ -160,7 +159,7 @@ const PaginationItem = ({
             intent: isCurrent ? "primary" : intent,
             size,
             className: twMerge(
-              "cursor-default font-normal min-w-10 tabular-nums disabled:cursor-default disabled:opacity-100 focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-4 focus-visible:ring-ring/20",
+              "cursor-default font-normal min-w-10 tabular-nums disabled:cursor-default disabled:opacity-100 focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/20",
               className,
             ),
           }),

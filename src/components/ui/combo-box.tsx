@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import type React from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -9,30 +9,33 @@ import {
   DropdownLabel,
   DropdownSection,
 } from "@/components/ui/dropdown"
-import { Description, FieldError, FieldGroup, Input, Label } from "@/components/ui/field"
-import { ListBox } from "@/components/ui/list-box"
-import { PopoverContent, type PopoverContentProps } from "@/components/ui/popover"
+import {
+  Description,
+  FieldError,
+  FieldGroup,
+  type FieldProps,
+  Input,
+  Label,
+} from "@/components/ui/field"
+import { PopoverContent } from "@/components/ui/popover"
 import { composeTailwindRenderProps } from "@/lib/primitive"
-import { IconChevronLgDown, IconX } from "@intentui/icons"
+import { IconChevronsY } from "@intentui/icons"
+import {
+  ComboBoxContext,
+  ComboBox as ComboboxPrimitive,
+  ListBox,
+  useSlottedContext,
+} from "react-aria-components"
 import type {
   ComboBoxProps as ComboboxPrimitiveProps,
   InputProps,
   ListBoxProps,
-  ValidationResult,
-} from "react-aria-components"
-import {
-  Button as ButtonPrimitive,
-  ComboBoxContext,
-  ComboBoxStateContext,
-  ComboBox as ComboboxPrimitive,
-  useSlottedContext,
+  PopoverProps,
 } from "react-aria-components"
 
-interface ComboBoxProps<T extends object> extends Omit<ComboboxPrimitiveProps<T>, "children"> {
-  label?: string
-  placeholder?: string
-  description?: string | null
-  errorMessage?: string | ((validation: ValidationResult) => string)
+interface ComboBoxProps<T extends object>
+  extends Omit<ComboboxPrimitiveProps<T>, "children">,
+    FieldProps {
   children: React.ReactNode
 }
 
@@ -46,8 +49,9 @@ const ComboBox = <T extends object>({
 }: ComboBoxProps<T>) => {
   return (
     <ComboboxPrimitive
+      data-slot="combo-box"
       {...props}
-      className={composeTailwindRenderProps(className, "group flex w-full flex-col gap-y-1.5")}
+      className={composeTailwindRenderProps(className, "group flex w-full flex-col gap-y-1")}
     >
       {label && <Label>{label}</Label>}
       {children}
@@ -59,32 +63,29 @@ const ComboBox = <T extends object>({
 
 interface ComboBoxListProps<T extends object>
   extends Omit<ListBoxProps<T>, "layout" | "orientation">,
-    Pick<PopoverContentProps, "placement"> {
-  popoverClassName?: PopoverContentProps["className"]
+    Pick<PopoverProps, "placement"> {
+  popover?: Omit<PopoverProps, "children">
 }
 
 const ComboBoxList = <T extends object>({
   children,
   items,
   className,
-  popoverClassName,
+  popover,
   ...props
 }: ComboBoxListProps<T>) => {
   return (
     <PopoverContent
-      showArrow={false}
-      respectScreen={false}
-      isNonModal
-      className={popoverClassName}
-      placement={props.placement}
+      className={composeTailwindRenderProps(popover?.className, "min-w-(--trigger-width)")}
+      {...popover}
     >
       <ListBox
-        className={composeTailwindRenderProps(
-          className,
-          "max-h-[inherit] min-w-[inherit] border-0 shadow-none",
-        )}
         layout="stack"
         orientation="vertical"
+        className={composeTailwindRenderProps(
+          className,
+          "grid max-h-96 w-full scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-scroll overscroll-contain p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+        )}
         items={items}
         {...props}
       >
@@ -97,37 +98,21 @@ const ComboBoxList = <T extends object>({
 const ComboBoxInput = (props: InputProps) => {
   const context = useSlottedContext(ComboBoxContext)!
   return (
-    <FieldGroup className="relative pl-0">
+    <FieldGroup>
       <Input {...props} placeholder={props?.placeholder} />
       <Button
-        size="square-petite"
+        size="sq-xs"
         intent="plain"
-        className="h-7 w-8 rounded pressed:bg-transparent outline-offset-0 hover:bg-transparent active:bg-transparent **:data-[slot=icon]:pressed:text-fg **:data-[slot=icon]:text-muted-fg **:data-[slot=icon]:hover:text-fg"
+        className="rounded pressed:bg-transparent outline-offset-0 hover:bg-transparent active:bg-transparent **:data-[slot=icon]:pressed:text-fg **:data-[slot=icon]:text-muted-fg **:data-[slot=icon]:hover:text-fg forced-colors:group-disabled:border-[GrayText] forced-colors:group-disabled:text-[GrayText]"
       >
         {!context?.inputValue && (
-          <IconChevronLgDown className="size-4 shrink-0 transition duration-200 group-open:rotate-180 group-open:text-fg" />
+          <IconChevronsY
+            data-slot="chevron"
+            className="size-4 shrink-0 text-muted-fg group-open:text-fg"
+          />
         )}
       </Button>
-      {context?.inputValue && <ComboBoxClearButton />}
     </FieldGroup>
-  )
-}
-
-const ComboBoxClearButton = () => {
-  const state = React.use(ComboBoxStateContext)
-
-  return (
-    <ButtonPrimitive
-      className="absolute inset-y-0 right-0 flex items-center pr-2 text-muted-fg hover:text-fg focus:outline-hidden"
-      slot={null}
-      aria-label="Clear"
-      onPress={() => {
-        state?.setSelectedKey(null)
-        state?.open()
-      }}
-    >
-      <IconX className="size-4 animate-in" />
-    </ButtonPrimitive>
   )
 }
 

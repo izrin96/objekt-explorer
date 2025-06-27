@@ -13,7 +13,7 @@ import { tv } from "tailwind-variants"
 import { Description, FieldError, FieldGroup, Input, Label } from "@/components/ui/field"
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { composeTailwindRenderProps } from "@/lib/primitive"
-import { twMerge } from "tailwind-merge"
+import { twJoin } from "tailwind-merge"
 
 const fieldBorderStyles = tv({
   base: "group-focus:border-primary/70 forced-colors:border-[Highlight]",
@@ -50,35 +50,41 @@ const NumberField = ({
     >
       {label && <Label>{label}</Label>}
       <FieldGroup
-        className={twMerge(
-          "overflow-hidden",
-          isMobile && "**:[button]:h-10 **:[button]:rounded-none **:[button]:px-2",
+        className={twJoin(
+          isMobile && [
+            "**:[button]:inset-ring **:[button]:inset-ring-fg/5 **:[button]:grid **:[button]:size-8 **:[button]:place-content-center",
+            "*:[button]:first:ml-1 *:[button]:last:mr-1",
+            "**:[button]:bg-secondary **:[button]:pressed:bg-secondary/80",
+          ],
         )}
       >
         {(renderProps) => (
           <>
-            {isMobile ? <StepperButton className="border-r" slot="decrement" /> : null}
-            <Input className="px-13 tabular-nums md:px-2.5" placeholder={placeholder} />
+            {isMobile ? <StepperButton slot="decrement" /> : null}
+            <Input
+              className="px-[calc(--spacing(12)-1px)] tabular-nums"
+              placeholder={placeholder}
+            />
             {!isMobile ? (
               <div
                 className={fieldBorderStyles({
                   ...renderProps,
-                  className: "grid h-10 place-content-center sm:border-s",
+                  className: "grid place-content-center sm:border-s",
                 })}
               >
                 <div className="flex h-full flex-col">
-                  <StepperButton slot="increment" emblemType="chevron" className="h-5 px-1" />
+                  <StepperButton slot="increment" emblemType="chevron" className="h-4 px-1" />
                   <div
                     className={fieldBorderStyles({
                       ...renderProps,
                       className: "border-input border-b",
                     })}
                   />
-                  <StepperButton slot="decrement" emblemType="chevron" className="h-5 px-1" />
+                  <StepperButton slot="decrement" emblemType="chevron" className="h-4 px-1" />
                 </div>
               </div>
             ) : (
-              <StepperButton className="border-l" slot="increment" />
+              <StepperButton slot="increment" />
             )}
           </>
         )}

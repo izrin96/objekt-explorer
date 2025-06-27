@@ -11,6 +11,7 @@ export default function SortDirectionFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
+      intent="outline"
       className="w-[125px] font-medium"
       isSelected={filters.sort_dir === "asc"}
       onChange={(v) =>

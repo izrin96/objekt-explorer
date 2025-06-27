@@ -3,16 +3,9 @@
 import { DropdownItem, DropdownLabel, DropdownSection } from "@/components/ui/dropdown"
 import { Description, FieldGroup, type FieldProps, Input, Label } from "@/components/ui/field"
 import { ListBox } from "@/components/ui/list-box"
-import { PopoverContent } from "@/components/ui/popover"
-import {
-  type RestrictedIntent,
-  Tag,
-  TagGroup,
-  type TagGroupProps,
-  TagList,
-} from "@/components/ui/tag-group"
+import { Tag, TagGroup, TagList } from "@/components/ui/tag-group"
 import { composeTailwindRenderProps } from "@/lib/primitive"
-import { IconChevronLgDown } from "@intentui/icons"
+import { IconChevronsY } from "@intentui/icons"
 import {
   Children,
   type KeyboardEvent,
@@ -22,9 +15,10 @@ import {
   useRef,
   useState,
 } from "react"
+
 import type { ComboBoxProps, GroupProps, Key, ListBoxProps, Selection } from "react-aria-components"
-import { Button, ComboBox, Group } from "react-aria-components"
-import { twMerge } from "tailwind-merge"
+import { Button, ComboBox, Group, Popover } from "react-aria-components"
+import { twJoin } from "tailwind-merge"
 
 interface MultipleSelectProps<T>
   extends Omit<ListBoxProps<T>, "renderEmptyState">,
@@ -33,11 +27,9 @@ interface MultipleSelectProps<T>
       "isRequired" | "validate" | "validationBehavior"
     >,
     FieldProps,
-    Pick<TagGroupProps, "shape">,
     Pick<GroupProps, "isDisabled" | "isInvalid"> {
   className?: string
   errorMessage?: string
-  intent?: RestrictedIntent
   maxItems?: number
   renderEmptyState?: (inputValue: string) => React.ReactNode
 }
@@ -123,7 +115,10 @@ const MultipleSelect = <T extends object>({
     <Group
       isDisabled={props.isDisabled}
       isInvalid={props.isInvalid}
-      className={composeTailwindRenderProps(className, "group flex h-fit flex-col gap-y-1")}
+      className={composeTailwindRenderProps(
+        className,
+        "group flex h-fit min-w-[16rem] flex-col gap-y-1",
+      )}
     >
       {({ isInvalid, isDisabled }) => (
         <>
@@ -132,28 +127,21 @@ const MultipleSelect = <T extends object>({
             ref={triggerRef as RefObject<HTMLDivElement>}
             isDisabled={isDisabled}
             isInvalid={isInvalid}
-            className="flex h-fit min-h-10 flex-wrap items-center"
           >
-            <TagGroup
-              onRemove={removeItem}
-              aria-hidden
-              shape={props.shape}
-              intent={props.intent}
-              aria-label="Selected items"
-            >
+            <TagGroup onRemove={removeItem} aria-hidden aria-label="Selected items">
               <TagList
-                className={twMerge(
-                  [...selectedKeys].length !== 0 && "flex flex-1 flex-wrap py-1.5 pl-2",
-                  "[&_.jdt3lr2x]:last:-mr-1 gap-1.5 outline-hidden",
-                  props.shape === "square" && "[&_.jdt3lr2x]:rounded-[calc(var(--radius-lg)-4px)]",
-                )}
+                className="[[role='row']]:last:-mr-1 gap-1 px-1.5 py-1 outline-hidden"
                 items={[...selectedKeys].map((key) => ({
                   id: key,
                   textValue: parsedItems.find((item) => item.id === key)?.textValue as string,
                 }))}
               >
                 {(item: { id: Key; textValue: Key }) => (
-                  <Tag isDisabled={isDisabled} textValue={item.textValue as string}>
+                  <Tag
+                    className="rounded-[calc(var(--radius-sm)-1px)] bg-secondary/50 text-secondary-fg"
+                    isDisabled={isDisabled}
+                    textValue={item.textValue as string}
+                  >
                     {item.textValue as string}
                   </Tag>
                 )}
@@ -171,11 +159,11 @@ const MultipleSelect = <T extends object>({
               inputValue={inputValue}
               onInputChange={isMax ? () => {} : setInputValue}
             >
-              <div className="flex w-full flex-row items-center justify-between px-2">
+              <div className="flex w-full flex-row items-center justify-between pr-2">
                 <Input
+                  className="px-0 sm:px-0"
                   onFocus={() => triggerButtonRef.current?.click()}
                   ref={inputRef as RefObject<HTMLInputElement>}
-                  className="flex-1 px-0.5 py-1.5 shadow-none ring-0"
                   onBlur={() => {
                     setInputValue("")
                   }}
@@ -184,19 +172,24 @@ const MultipleSelect = <T extends object>({
                 />
                 <Button
                   ref={triggerButtonRef}
-                  aria-label="Chevron"
+                  aria-label="Open"
                   className="ml-auto inline-flex items-center justify-center rounded-lg text-muted-fg outline-hidden"
                 >
-                  <IconChevronLgDown
-                    className={twMerge("group-has-open:-rotate-180 size-4 transition")}
+                  <IconChevronsY
+                    data-slot="chevron"
+                    className="size-4 text-muted-fg group-open:text-fg"
                   />
                 </Button>
               </div>
-              <PopoverContent
-                showArrow={false}
-                respectScreen={false}
+              <Popover
                 triggerRef={triggerRef}
-                className="min-w-(--trigger-width) overflow-hidden"
+                className={twJoin(
+                  "min-w-(--trigger-width) max-w-xs rounded-xl border bg-overlay bg-clip-padding text-overlay-fg shadow-xs transition-transform sm:max-w-3xl sm:text-sm dark:backdrop-saturate-200",
+                  "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
+                  "placement-left:entering:slide-in-from-right-1 placement-right:entering:slide-in-from-left-1 placement-top:entering:slide-in-from-bottom-1 placement-bottom:entering:slide-in-from-top-1",
+                  "placement-left:exiting:slide-out-to-right-1 placement-right:exiting:slide-out-to-left-1 placement-top:exiting:slide-out-to-bottom-1 placement-bottom:exiting:slide-out-to-top-1",
+                  "forced-colors:bg-[Canvas]",
+                )}
                 style={{
                   minWidth: triggerRef.current?.offsetWidth,
                   width: triggerRef.current?.offsetWidth,
@@ -233,7 +226,7 @@ const MultipleSelect = <T extends object>({
                     </MultipleSelect.Item>
                   )) ?? children}
                 </ListBox>
-              </PopoverContent>
+              </Popover>
             </ComboBox>
           </FieldGroup>
           {props.description && <Description>{props.description}</Description>}

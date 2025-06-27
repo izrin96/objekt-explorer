@@ -34,8 +34,8 @@ export default function Navbar() {
           {/* <Live /> */}
         </div>
         <div className="flex items-center gap-2">
-          <ThemeSwitcher />
           <UserNav />
+          <ThemeSwitcher />
           <UserSearch />
         </div>
       </Container>

@@ -33,7 +33,7 @@ export default function OnlineFilter() {
   );
 
   return (
-    <Menu respectScreen={false}>
+    <Menu>
       <Button
         intent="outline"
         className={filters.on_offline?.length ? "!inset-ring-primary" : ""}
@@ -41,7 +41,6 @@ export default function OnlineFilter() {
         Physical
       </Button>
       <Menu.Content
-        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}

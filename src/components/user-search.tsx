@@ -56,7 +56,7 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button onPress={() => setIsOpen(true)} size="small" intent="outline">
+      <Button onPress={() => setIsOpen(true)} size="md" intent="outline">
         <MagnifyingGlassIcon data-slot="icon" />
         <span className="sm:block hidden">Search user</span>
       </Button>

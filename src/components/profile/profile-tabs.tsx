@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Tabs } from "../ui";
+import { Tab, TabList, Tabs } from "../ui";
 import { usePathname } from "next/navigation";
 
 export default function ProfileTabs({ nickname }: { nickname: string }) {
@@ -9,7 +9,7 @@ export default function ProfileTabs({ nickname }: { nickname: string }) {
   return (
     <div className="overflow-x-auto">
       <Tabs aria-label="Navbar" className="w-min" selectedKey={pathname}>
-        <Tabs.List
+        <TabList
           items={[
             { url: `/@${nickname}`, label: "Collection" },
             { url: `/@${nickname}/trades`, label: "Trade History" },
@@ -18,11 +18,11 @@ export default function ProfileTabs({ nickname }: { nickname: string }) {
           ]}
         >
           {(item) => (
-            <Tabs.Tab id={item.url} href={item.url}>
+            <Tab id={item.url} href={item.url}>
               {item.label}
-            </Tabs.Tab>
+            </Tab>
           )}
-        </Tabs.List>
+        </TabList>
       </Tabs>
     </div>
   );

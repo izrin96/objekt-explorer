@@ -43,28 +43,27 @@ const ColorPicker = ({
   ...props
 }: ColorPickerProps) => {
   return (
-    <div className={twMerge("flex flex-col items-start gap-y-1.5", className)}>
+    <div className={twMerge("flex flex-col items-start gap-y-1", className)}>
       <ColorPickerPrimitive {...props}>
         <Popover>
           <Button
             isDisabled={isDisabled}
-            size={label ? "medium" : "square-petite"}
+            size={label ? "md" : "sq-sm"}
             intent="plain"
             className={twJoin(
-              "*:data-[slot=color-swatch]:-mx-0.5 w-auto px-2.5",
+              "*:data-[slot=color-swatch]:-mx-0.5 w-auto px-2.5 *:data-[slot=color-swatch]:size-5",
               !label && "size-10",
             )}
           >
-            <ColorSwatch className="size-6" />
+            <ColorSwatch />
             {label && label}
           </Button>
           <PopoverContent
             className="overflow-auto **:data-[slot=color-area]:w-full **:data-[slot=color-slider]:w-full sm:min-w-min sm:max-w-56 sm:**:data-[slot=color-area]:size-56 *:[[role=dialog]]:p-4 sm:*:[[role=dialog]]:p-3"
             showArrow={showArrow}
             placement={placement}
-            respectScreen={false}
           >
-            <div className="flex flex-col gap-y-1.5">
+            <div className="flex flex-col gap-y-1.5 p-3">
               {children || (
                 <>
                   <ColorArea colorSpace="hsb" xChannel="saturation" yChannel="brightness" />
@@ -94,14 +93,13 @@ const EyeDropper = () => {
   const state = use(ColorPickerStateContext)!
 
   if (!window.EyeDropper) {
-    return;
-    // return "EyeDropper is not supported in your browser."
+    return "EyeDropper is not supported in your browser."
   }
 
   return (
     <Button
       aria-label="Eye dropper"
-      size="square-petite"
+      size="sq-sm"
       intent="outline"
       onPress={() => {
         const eyeDropper = window.EyeDropper ? new window.EyeDropper() : null

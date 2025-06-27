@@ -23,7 +23,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         className={(renderProps) =>
           buttonStyles({
             ...renderProps,
-            size: "small",
+            size: "sm",
             className: "w-full md:w-auto flex-none",
             intent: "outline",
           })
@@ -48,7 +48,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             setOpen={setEditOpen}
           />
           <Button
-            size="small"
+            size="sm"
             intent="outline"
             onClick={() => setEditOpen(true)}
             className="w-full md:w-auto flex-none"
@@ -61,7 +61,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       {user.user && (
         <div className="text-sm flex gap-2 items-center w-full md:w-auto min-w-0">
           <Avatar
-            size="extra-large"
+            size="xl"
             className="self-center"
             src={user.user.image}
             alt={user.user.name}

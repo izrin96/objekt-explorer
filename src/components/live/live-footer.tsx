@@ -19,7 +19,7 @@ export default function LiveFooter({ children }: PropsWithChildren) {
             }
             className="outline-3 outline-(--color)"
             src={liveSession.channel.profileImageUrl}
-            size="large"
+            size="lg"
           />
           <div className="flex flex-col overflow-hidden">
             <span className="font-semibold truncate">{liveSession.title}</span>

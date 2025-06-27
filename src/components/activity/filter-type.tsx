@@ -31,12 +31,11 @@ export default function TypeFilter() {
   );
 
   return (
-    <Menu respectScreen={false}>
+    <Menu>
       <Button intent="outline" className={type ? "!inset-ring-primary" : ""}>
         Type
       </Button>
       <Menu.Content
-        respectScreen={false}
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}

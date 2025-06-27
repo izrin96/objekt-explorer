@@ -31,7 +31,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
 
   return (
     <RouterProvider navigate={router.push}>
-      <ThemeProvider attribute="class" themes={["light", "dark", "matsu"]}>
+      <ThemeProvider enableSystem attribute="class" defaultTheme="system" themes={["light", "dark", "matsu"]}>
         <Toast />
         <div className="texture"></div>
         <NuqsAdapter>

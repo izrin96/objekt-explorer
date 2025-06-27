@@ -18,15 +18,15 @@ const loaderStyles = tv({
       danger: "text-danger",
     },
     size: {
-      small: "size-4",
-      medium: "size-6",
-      large: "size-8",
-      "extra-large": "size-10",
+      sm: "size-4",
+      md: "size-6",
+      lg: "size-8",
+      xl: "size-10",
     },
   },
   defaultVariants: {
     intent: "current",
-    size: "small",
+    size: "sm",
   },
 })
 
@@ -188,6 +188,7 @@ const Loader = ({ isIndeterminate = true, ref, ...props }: LoaderProps) => {
 
   return (
     <ProgressBar
+      data-slot="loader"
       aria-label={props["aria-label"] ?? "Loading..."}
       formatOptions={props.formatOptions}
       isIndeterminate={isIndeterminate}

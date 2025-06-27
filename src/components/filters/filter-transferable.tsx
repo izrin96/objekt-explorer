@@ -7,6 +7,7 @@ export default function TransferableFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
+      intent="outline"
       className="data-selected:inset-ring-primary font-medium"
       isSelected={filters.transferable ?? false}
       onChange={(v) =>

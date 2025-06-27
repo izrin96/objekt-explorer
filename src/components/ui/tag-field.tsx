@@ -10,17 +10,16 @@ import { tv } from "tailwind-variants"
 
 import type { FieldProps } from "@/components/ui/field"
 import { Description, Input, Label } from "@/components/ui/field"
-import type { RestrictedIntent, TagGroupProps } from "@/components/ui/tag-group"
 import { Tag, TagGroup, TagList } from "@/components/ui/tag-group"
 
 const tagFieldsStyles = tv({
-  base: "relative flex min-h-10 flex-row flex-wrap items-center transition",
+  base: "relative flex flex-row flex-wrap items-center transition",
   variants: {
     appearance: {
       outline: [
-        "rounded-lg border px-1 shadow-xs",
+        "rounded-lg border px-1.5 shadow-xs hover:border-[color-mix(in_oklab,var(--color-fg)_10%,var(--color-border))]",
         "has-[input[data-invalid=true][focus=true]]:border-danger has-[input[data-invalid=true]]:border-danger has-[input[data-invalid=true]]:ring-danger/20",
-        "has-[input[focus=true]]:border-ring/70 has-[input[focus=true]]:ring-4 has-[input[focus=true]]:ring-ring/20",
+        "has-[input[focus=true]]:border-ring/70 has-[input[focus=true]]:ring-3 has-[input[focus=true]]:ring-ring/20",
       ],
       plain: "has-[input[focus=true]]:border-transparent",
     },
@@ -32,21 +31,23 @@ interface TagItemProps {
   name: string
 }
 
-interface TagFieldProps extends Pick<TagGroupProps, "shape">, FieldProps {
-  intent?: RestrictedIntent
+interface TagFieldProps extends FieldProps {
   isDisabled?: boolean
   max?: number
   className?: string
+  isCircle?: boolean
   children?: React.ReactNode
   name?: string
   list: ListData<TagItemProps>
   onItemInserted?: (tag: TagItemProps) => void
   onItemCleared?: (tag: TagItemProps | undefined) => void
   appearance?: "outline" | "plain"
+  "aria-label"?: string
 }
 
 const TagField = ({
   appearance = "outline",
+  isCircle = false,
   name,
   className,
   list,
@@ -142,42 +143,24 @@ const TagField = ({
     <div className={twMerge("flex w-full flex-col gap-y-1.5", className)}>
       {props.label && <Label>{props.label}</Label>}
       <Group className={twJoin("flex flex-col", props.isDisabled && "opacity-50")}>
-        <TagGroup
-          intent={props.intent}
-          shape={props.shape}
-          aria-label="List item inserted"
-          onRemove={onRemove}
-        >
+        <TagGroup aria-label="List item inserted" onRemove={onRemove}>
           <div className={tagFieldsStyles({ appearance })}>
-            <div className="flex flex-1 flex-wrap items-center">
-              <TagList
-                items={list.items}
-                className={twJoin(
-                  list.items.length !== 0
-                    ? appearance === "outline" && "gap-1.5 px-1 py-1.5"
-                    : "gap-0",
-                  props.shape === "square" && "[&_.jdt3lr2x]:rounded-[calc(var(--radius-lg)-4px)]",
-                  "[&_.jdt3lr2x]:last:-mr-1 outline-hidden [&_.jdt3lr2x]:cursor-default",
-                )}
-              >
-                {(item) => <Tag>{item.name}</Tag>}
-              </TagList>
-              <TextField
-                isDisabled={props.isDisabled}
-                aria-label={props?.label ?? (props["aria-label"] || props.placeholder)}
-                isInvalid={isInvalid}
-                onKeyDown={onKeyDown}
-                onChange={setInputValue}
-                value={inputValue}
-                className="flex-1"
-                {...props}
-              >
-                <Input
-                  className="inline"
-                  placeholder={maxTagsToAdd <= 0 ? "Remove one to add more" : props.placeholder}
-                />
-              </TextField>
-            </div>
+            <TagList items={list.items}>{(item) => <Tag>{item.name}</Tag>}</TagList>
+            <TextField
+              isDisabled={props.isDisabled}
+              aria-label={props?.label ?? (props["aria-label"] || props.placeholder)}
+              isInvalid={isInvalid}
+              onKeyDown={onKeyDown}
+              onChange={setInputValue}
+              value={inputValue}
+              className="flex-1"
+              {...props}
+            >
+              <Input
+                className="ml-1.5 inline px-0 sm:px-0"
+                placeholder={maxTagsToAdd <= 0 ? "Remove one to add more" : props.placeholder}
+              />
+            </TextField>
           </div>
         </TagGroup>
         {name && (

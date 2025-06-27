@@ -22,7 +22,7 @@ export default function EditionFilter() {
   );
 
   return (
-    <Menu respectScreen={false}>
+    <Menu>
       <Button
         intent="outline"
         className={filters.edition?.length ? "!inset-ring-primary" : ""}
@@ -30,7 +30,6 @@ export default function EditionFilter() {
         Edition
       </Button>
       <Menu.Content
-        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}

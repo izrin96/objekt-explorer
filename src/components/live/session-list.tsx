@@ -1,7 +1,7 @@
 "use client";
 
 import React, { CSSProperties, Suspense } from "react";
-import { Avatar, Badge, Link, Loader, Tabs } from "../ui";
+import { Avatar, Badge, Link, Loader, Tab, TabList, TabPanel, Tabs } from "../ui";
 import {
   QueryErrorResetBoundary,
   useSuspenseQuery,
@@ -32,15 +32,15 @@ export default function LiveSessionListRender() {
             FallbackComponent={ErrorFallbackRender}
           >
             <Tabs aria-label="Recipe App">
-              <Tabs.List className="w-fit">
+              <TabList className="w-fit">
                 {artists.map((artist) => (
-                  <Tabs.Tab key={artist.id} id={artist.id}>
+                  <Tab key={artist.id} id={artist.id}>
                     {artist.title}
-                  </Tabs.Tab>
+                  </Tab>
                 ))}
-              </Tabs.List>
+              </TabList>
               {artists.map((artist) => (
-                <Tabs.Panel key={artist.id} id={artist.id}>
+                <TabPanel key={artist.id} id={artist.id}>
                   <Suspense
                     fallback={
                       <div className="flex justify-center">
@@ -50,7 +50,7 @@ export default function LiveSessionListRender() {
                   >
                     <LiveSessionList artistId={artist.id} />
                   </Suspense>
-                </Tabs.Panel>
+                </TabPanel>
               ))}
             </Tabs>
           </ErrorBoundary>
@@ -118,7 +118,7 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
               } as CSSProperties
             }
             className="outline-2 outline-(--color)"
-            size="small"
+            size="sm"
             src={live.channel.profileImageUrl}
           />
           <span className="text-sm font-semibold">{live.channel.name}</span>

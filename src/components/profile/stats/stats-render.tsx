@@ -116,13 +116,22 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
       </Card.Header>
       <Card.Content className="flex-1 pb-0">
         <Chart
+          layout="radial"
+          data={chartData}
+          dataKey="count"
           config={{} satisfies ChartConfig}
           className="mx-auto aspect-square max-h-[450px]"
         >
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={
+                <ChartTooltipContent
+                  labelSeparator={false}
+                  accessibilityLayer
+                  hideLabel
+                />
+              }
             />
             <Pie
               startAngle={90}
@@ -157,13 +166,22 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
       </Card.Header>
       <Card.Content className="flex-1 pb-0">
         <Chart
+          layout="radial"
+          data={chartData}
+          dataKey="count"
           config={{} satisfies ChartConfig}
           className="mx-auto aspect-square max-h-[450px]"
         >
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={
+                <ChartTooltipContent
+                  labelSeparator={false}
+                  accessibilityLayer
+                  hideLabel
+                />
+              }
             />
             <Pie
               startAngle={90}
@@ -243,7 +261,13 @@ function MemberProgressChart({
         <Card.Description>Progress by member</Card.Description>
       </Card.Header>
       <Card.Content>
-        <Chart config={chartConfig} className="h-[1300px] w-full">
+        <Chart
+          layout="vertical"
+          data={chartData}
+          dataKey="percentage"
+          config={chartConfig}
+          className="h-[1300px] w-full"
+        >
           <BarChart accessibilityLayer data={chartData} layout="vertical">
             <YAxis
               dataKey="name"
@@ -254,7 +278,6 @@ function MemberProgressChart({
             <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
             <Bar
               dataKey="percentage"
-              layout="vertical"
               radius={5}
               shape={(props: any) => (
                 <>
@@ -277,6 +300,8 @@ function MemberProgressChart({
               cursor={false}
               content={
                 <ChartTooltipContent
+                  labelSeparator={false}
+                  accessibilityLayer
                   indicator="line"
                   formatter={(value, name, item, index, payload) => (
                     <>
@@ -287,8 +312,8 @@ function MemberProgressChart({
                         )}
                         style={
                           {
-                            "--color-bg": payload.fill,
-                            "--color-border": payload.fill,
+                            "--color-bg": (payload as any).fill,
+                            "--color-border": (payload as any).fill,
                           } as React.CSSProperties
                         }
                       />

@@ -16,7 +16,7 @@ export default function ListHeader({ list }: { list: PublicList }) {
       <div className="flex gap-3 items-center">
         {user && (
           <Avatar
-            size="extra-large"
+            size="xl"
             className="self-center"
             src={user.image}
             alt={user.name}
@@ -80,7 +80,7 @@ function EditList({ slug }: { slug: string }) {
         setOpen={setOpen}
       />
       <Button
-        size="small"
+        size="sm"
         intent="outline"
         onClick={() => setOpen(true)}
         className="w-full sm:w-auto flex-none"

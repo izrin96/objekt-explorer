@@ -27,7 +27,7 @@ export default function MemberFilter({ artists }: Props) {
   );
 
   return (
-    <Menu respectScreen={false}>
+    <Menu>
       <Button
         intent="outline"
         className={filters.member ? "!inset-ring-primary" : ""}
@@ -35,7 +35,6 @@ export default function MemberFilter({ artists }: Props) {
         Member
       </Button>
       <Menu.Content
-        respectScreen={false}
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
