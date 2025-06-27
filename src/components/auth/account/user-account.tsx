@@ -31,11 +31,7 @@ type Props = {
 
 export default function UserAccountModal({ open, setOpen }: Props) {
   return (
-    <Sheet.Content
-      className={"max-w-md"}
-      isOpen={open}
-      onOpenChange={setOpen}
-    >
+    <Sheet.Content className={"max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <Sheet.Header>
         <Sheet.Title>Account</Sheet.Title>
         <Sheet.Description>Manage your account</Sheet.Description>
@@ -82,7 +78,7 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
     },
   });
 
-  if (!session.data) return
+  if (!session.data) return;
 
   return (
     <div className="flex flex-col gap-9">
@@ -151,7 +147,12 @@ function UserAccountForm({
         />
 
         <div className="flex">
-          <Button size="md" intent="outline" type="submit">
+          <Button
+            size="md"
+            intent="outline"
+            type="submit"
+            isPending={mutation.isPending}
+          >
             Save
           </Button>
         </div>
