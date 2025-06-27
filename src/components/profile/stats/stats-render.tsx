@@ -262,7 +262,7 @@ function MemberProgressChart({
       </Card.Header>
       <Card.Content>
         <Chart
-          layout="vertical"
+          layout="radial"
           data={chartData}
           dataKey="percentage"
           config={chartConfig}
