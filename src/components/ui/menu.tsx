@@ -84,7 +84,7 @@ const MenuContent = <T extends object>({
 }: MenuContentProps<T>) => {
   return (
     <PopoverContent
-      className={composeTailwindRenderProps(popover?.className, "min-w-40")}
+      className={composeTailwindRenderProps(popover?.className, "min-w-40 overflow-y-auto overscroll-contain")}
       placement={placement}
       {...popover}
     >
@@ -92,7 +92,7 @@ const MenuContent = <T extends object>({
         data-slot="menu-content"
         className={composeTailwindRenderProps(
           className,
-          "grid max-h-96 grid-cols-[auto_1fr] overflow-y-auto overscroll-contain p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-lg)-2px))] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+          "grid max-h-[inherit] grid-cols-[auto_1fr] p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
         )}
         {...props}
       />
