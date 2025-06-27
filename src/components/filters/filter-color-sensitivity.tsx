@@ -25,23 +25,21 @@ export default function ColorSensitivityFilter() {
   return (
     <Popover>
       <Button intent="outline">Color Sensitivity</Button>
-      <Popover.Content>
-        <div className="p-3">
-          <Slider
-            label="Color sensitivity"
-            className="pb-2"
-            minValue={0}
-            maxValue={30}
-            value={sensitivity ?? 7}
-            onChange={(v) => setSensitivity(v as number)}
-            step={0.1}
-            style={
-              {
-                "--primary": filters.color,
-              } as CSSProperties
-            }
-          />
-        </div>
+      <Popover.Content className="p-3">
+        <Slider
+          label="Color sensitivity"
+          className="pb-2"
+          minValue={0}
+          maxValue={30}
+          value={sensitivity ?? 7}
+          onChange={(v) => setSensitivity(v as number)}
+          step={0.1}
+          style={
+            {
+              "--primary": filters.color,
+            } as CSSProperties
+          }
+        />
       </Popover.Content>
     </Popover>
   );

@@ -40,34 +40,28 @@ export default function SearchFilter() {
             <Button intent="plain">
               <QuestionMarkIcon data-slot="icon" />
             </Button>
-            <Popover.Content className="sm:max-w-96">
-              <Popover.Header>
-                <Popover.Title hidden>Info</Popover.Title>
-                <Popover.Description className="prose text-fg">
-                  <p>This quick search supports:</p>
-                  <ul>
-                    <li>OR query operation by comma</li>
-                    <li>AND query operation by space</li>
-                    <li>
-                      NOT query operation by starting with an exclamation mark
-                      (example: !seoyeon, !d201-202)
-                    </li>
-                    <li>Artist names (example: triples)</li>
-                    <li>Member short names (example: naky, yy)</li>
-                    <li>Class (example: special, sco)</li>
-                    <li>Season (example: atom)</li>
-                    <li>Collection numbers (example: d207)</li>
-                    <li>Collection number ranges (example: 301z-302z)</li>
-                    <li>Serial numbers (example: #1)</li>
-                    <li>Serial number ranges (example: #1-20)</li>
-                  </ul>
-                  <p>Grouping query using brackets is not supported</p>
-                  <p>
-                    Example: yy c201-204 !c202 #1-200, jw 201z, yb special
-                    divine
-                  </p>
-                </Popover.Description>
-              </Popover.Header>
+            <Popover.Content className="prose p-4 max-w-sm">
+              <span>This quick search supports:</span>
+              <ul>
+                <li>OR query operation by comma</li>
+                <li>AND query operation by space</li>
+                <li>
+                  NOT query operation by starting with an exclamation mark
+                  (example: !seoyeon, !d201-202)
+                </li>
+                <li>Artist names (example: triples)</li>
+                <li>Member short names (example: naky, yy)</li>
+                <li>Class (example: special, sco)</li>
+                <li>Season (example: atom)</li>
+                <li>Collection numbers (example: d207)</li>
+                <li>Collection number ranges (example: 301z-302z)</li>
+                <li>Serial numbers (example: #1)</li>
+                <li>Serial number ranges (example: #1-20)</li>
+              </ul>
+              <span>Grouping query using brackets is not supported</span>
+              <span>
+                Example: yy c201-204 !c202 #1-200, jw 201z, yb special divine
+              </span>
             </Popover.Content>
           </Popover>
         )

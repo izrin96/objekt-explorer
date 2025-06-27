@@ -103,25 +103,23 @@ function LiveVolumeControl() {
       <Button size="xs" intent="outline">
         <SpeakerHighIcon />
       </Button>
-      <Popover.Content className="min-w-0">
-        <div className="m-4">
-          <Slider
-            className="gap-y-0 min-h-24"
-            defaultValue={currentSpeaker.audioVolume ?? 1}
-            output="none"
-            minValue={0}
-            maxValue={1}
-            step={0.01}
-            aria-label="Volume"
-            orientation="vertical"
-            onChange={(value) => {
-              speaker.setParticipantVolume(
-                currentSpeaker.sessionId,
-                value as number
-              );
-            }}
-          />
-        </div>
+      <Popover.Content className="min-w-0 m-4">
+        <Slider
+          className="gap-y-0 min-h-24"
+          defaultValue={currentSpeaker.audioVolume ?? 1}
+          output="none"
+          minValue={0}
+          maxValue={1}
+          step={0.01}
+          aria-label="Volume"
+          orientation="vertical"
+          onChange={(value) => {
+            speaker.setParticipantVolume(
+              currentSpeaker.sessionId,
+              value as number
+            );
+          }}
+        />
       </Popover.Content>
     </Popover>
   );
