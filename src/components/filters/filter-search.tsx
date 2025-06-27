@@ -58,9 +58,8 @@ export default function SearchFilter() {
                 <li>Serial numbers (example: #1)</li>
                 <li>Serial number ranges (example: #1-20)</li>
               </ul>
-              <span>Grouping query using brackets is not supported</span>
               <span>
-                Example: yy c201-204 !c202 #1-200, jw 201z, yb special divine
+                Example: yy c201-204 !c202 #1-200, jw 201z, yb sco divine
               </span>
             </Popover.Content>
           </Popover>
