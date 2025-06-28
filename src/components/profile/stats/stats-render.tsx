@@ -134,6 +134,8 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
               }
             />
             <Pie
+              animationBegin={0}
+              animationDuration={500}
               startAngle={90}
               endAngle={-270}
               data={chartData}
@@ -184,6 +186,8 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
               }
             />
             <Pie
+              animationBegin={0}
+              animationDuration={500}
               startAngle={90}
               endAngle={-270}
               data={chartData}
@@ -277,6 +281,8 @@ function MemberProgressChart({
             />
             <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
             <Bar
+              animationBegin={0}
+              animationDuration={500}
               dataKey="percentage"
               radius={5}
               shape={(props: any) => (
