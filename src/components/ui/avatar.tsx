@@ -1,9 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import { useState } from "react";
+import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { twMerge } from "tailwind-merge";
-import { cn } from "@/utils/classes";
 
 interface AvatarProps {
   src?: string | null;
@@ -23,13 +21,12 @@ const Avatar = ({
   className,
   ...props
 }: AvatarProps & React.ComponentPropsWithoutRef<"span">) => {
-  const [show, setShow] = useState(false);
   return (
-    <span
+    <AvatarPrimitive.Root
       data-slot="avatar"
       {...props}
       className={twMerge(
-        "-outline-offset-1 relative inline-grid shrink-0 align-middle outline-1 outline-fg/(--ring-opacity) [--avatar-radius:20%] [--ring-opacity:20%] *:col-start-1 *:row-start-1",
+        "-outline-offset-1 inline-grid shrink-0 align-middle outline-1 outline-fg/(--ring-opacity) [--avatar-radius:20%] [--ring-opacity:20%] *:col-start-1 *:row-start-1",
         size === "xs" && "size-5 *:size-5",
         size === "sm" && "size-6 *:size-6",
         size === "md" && "size-8 *:size-8",
@@ -41,7 +38,7 @@ const Avatar = ({
         className,
       )}
     >
-      {initials && (
+      <AvatarPrimitive.Fallback asChild>
         <svg
           className="size-full select-none fill-current p-[5%] font-md text-[48px] uppercase"
           viewBox="0 0 100 100"
@@ -59,20 +56,15 @@ const Avatar = ({
             {initials}
           </text>
         </svg>
-      )}
+      </AvatarPrimitive.Fallback>
       {src && (
-        <Image
-          className={cn("size-full object-cover object-center", !show && "hidden")}
+        <AvatarPrimitive.Image
+          className="size-full object-cover object-center"
           src={src}
           alt={alt}
-          fill
-          priority
-          onLoad={() => {
-            setShow(true);
-          }}
         />
       )}
-    </span>
+    </AvatarPrimitive.Root>
   );
 };
 
