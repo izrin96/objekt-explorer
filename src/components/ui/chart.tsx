@@ -1,6 +1,14 @@
-"use client"
+"use client";
 
-import { type ReactElement, createContext, use, useCallback, useId, useMemo, useState } from "react"
+import {
+  type ReactElement,
+  createContext,
+  use,
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 
 import type {
   CartesianGridProps as CartesianGridPrimitiveProps,
@@ -9,7 +17,7 @@ import type {
   LegendProps,
   XAxisProps as XAxisPropsPrimitive,
   YAxisProps as YAxisPrimitiveProps,
-} from "recharts"
+} from "recharts";
 import {
   CartesianGrid as CartesianGridPrimitive,
   Legend as LegendPrimitive,
@@ -17,36 +25,40 @@ import {
   Tooltip as TooltipPrimitive,
   XAxis as XAxisPrimitive,
   YAxis as YAxisPrimitive,
-} from "recharts"
+} from "recharts";
 
-import type { ContentType as LegendContentType } from "recharts/types/component/DefaultLegendContent"
+import type { ContentType as LegendContentType } from "recharts/types/component/DefaultLegendContent";
 import type {
   NameType,
   Props as TooltipContentProps,
   ValueType,
-} from "recharts/types/component/DefaultTooltipContent"
-import type { ContentType as TooltipContentType } from "recharts/types/component/Tooltip"
-import type { CurveType } from "recharts/types/shape/Curve"
+} from "recharts/types/component/DefaultTooltipContent";
+import type { ContentType as TooltipContentType } from "recharts/types/component/Tooltip";
+import type { CurveType } from "recharts/types/shape/Curve";
 
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { ToggleButton, ToggleButtonGroup, type ToggleButtonGroupProps } from "react-aria-components"
-import { twJoin, twMerge } from "tailwind-merge"
-import { Separator } from "./separator"
+import { composeTailwindRenderProps } from "@/lib/primitive";
+import {
+  ToggleButton,
+  ToggleButtonGroup,
+  type ToggleButtonGroupProps,
+} from "react-aria-components";
+import { twJoin, twMerge } from "tailwind-merge";
+import { Separator } from "./separator";
 
 // #region Chart Types
-type ChartType = "default" | "stacked" | "percent"
-type ChartLayout = "horizontal" | "vertical" | "radial"
-type IntervalType = "preserveStartEnd" | "equidistantPreserveStart"
+type ChartType = "default" | "stacked" | "percent";
+type ChartLayout = "horizontal" | "vertical" | "radial";
+type IntervalType = "preserveStartEnd" | "equidistantPreserveStart";
 
 export type ChartConfig = {
   [k in string]: {
-    label?: React.ReactNode
-    icon?: React.ComponentType
+    label?: React.ReactNode;
+    icon?: React.ComponentType;
   } & (
     | { color?: ChartColorKeys | (string & {}); theme?: never }
     | { color?: never; theme: Record<keyof typeof THEMES, string> }
-  )
-}
+  );
+};
 
 const CHART_COLORS = {
   "chart-1": "var(--chart-1)",
@@ -54,35 +66,35 @@ const CHART_COLORS = {
   "chart-3": "var(--chart-3)",
   "chart-4": "var(--chart-4)",
   "chart-5": "var(--chart-5)",
-} as const
+} as const;
 
-type ChartColorKeys = keyof typeof CHART_COLORS | (string & {})
+type ChartColorKeys = keyof typeof CHART_COLORS | (string & {});
 
-const DEFAULT_COLORS = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5"] as const
+const DEFAULT_COLORS = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5"] as const;
 
 // #endregion
 
 // #region Chart Context
 
 type ChartContextProps = {
-  config: ChartConfig
-  data: Record<string, any>[]
-  layout: ChartLayout
-  dataKey: string
-  selectedLegend: string | null
-  onLegendSelect: (legendItem: string | null) => void
-}
+  config: ChartConfig;
+  data: Record<string, any>[];
+  layout: ChartLayout;
+  dataKey: string;
+  selectedLegend: string | null;
+  onLegendSelect: (legendItem: string | null) => void;
+};
 
-const ChartContext = createContext<ChartContextProps | null>(null)
+const ChartContext = createContext<ChartContextProps | null>(null);
 
 export function useChart() {
-  const context = use(ChartContext)
+  const context = use(ChartContext);
 
   if (!context) {
-    throw new Error("useChart must be used within a <Chart />")
+    throw new Error("useChart must be used within a <Chart />");
   }
 
-  return context
+  return context;
 }
 
 // #endregion
@@ -90,56 +102,56 @@ export function useChart() {
 // #region helpers
 
 export function valueToPercent(value: number) {
-  return `${(value * 100).toFixed(0)}%`
+  return `${(value * 100).toFixed(0)}%`;
 }
 
 const constructCategoryColors = (
   categories: string[],
   colors: readonly ChartColorKeys[],
 ): Map<string, ChartColorKeys> => {
-  const categoryColors = new Map<string, ChartColorKeys>()
+  const categoryColors = new Map<string, ChartColorKeys>();
 
   categories.forEach((category, index) => {
-    const color = colors[index % colors.length]
+    const color = colors[index % colors.length];
     if (color !== undefined) {
-      categoryColors.set(category, color)
+      categoryColors.set(category, color);
     }
-  })
+  });
 
-  return categoryColors
-}
+  return categoryColors;
+};
 
 const getColorValue = (color?: string): string => {
   if (!color) {
-    return "var(--chart-1)"
+    return "var(--chart-1)";
   }
 
-  return CHART_COLORS[color as "chart-1"] ?? color
-}
+  return CHART_COLORS[color as "chart-1"] ?? color;
+};
 
 function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string) {
   if (typeof payload !== "object" || payload === null) {
-    return undefined
+    return undefined;
   }
 
   const payloadPayload =
     "payload" in payload && typeof payload.payload === "object" && payload.payload !== null
       ? payload.payload
-      : undefined
+      : undefined;
 
-  let configLabelKey: string = key
+  let configLabelKey: string = key;
 
   if (key in payload && typeof payload[key as keyof typeof payload] === "string") {
-    configLabelKey = payload[key as keyof typeof payload] as string
+    configLabelKey = payload[key as keyof typeof payload] as string;
   } else if (
     payloadPayload &&
     key in payloadPayload &&
     typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
   ) {
-    configLabelKey = payloadPayload[key as keyof typeof payloadPayload] as string
+    configLabelKey = payloadPayload[key as keyof typeof payloadPayload] as string;
   }
 
-  return configLabelKey in config ? config[configLabelKey] : config[key as keyof typeof config]
+  return configLabelKey in config ? config[configLabelKey] : config[key as keyof typeof config];
 }
 
 // #endregion
@@ -148,33 +160,33 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
 
 interface BaseChartProps<TValue extends ValueType, TName extends NameType>
   extends React.HTMLAttributes<HTMLDivElement> {
-  config: ChartConfig
-  data: Record<string, any>[]
-  dataKey: string
-  colors?: readonly (ChartColorKeys | (string & {}))[]
-  type?: ChartType
-  lineType?: CurveType
-  intervalType?: IntervalType
-  layout?: ChartLayout
-  valueFormatter?: (value: number) => string
+  config: ChartConfig;
+  data: Record<string, any>[];
+  dataKey: string;
+  colors?: readonly (ChartColorKeys | (string & {}))[];
+  type?: ChartType;
+  lineType?: CurveType;
+  intervalType?: IntervalType;
+  layout?: ChartLayout;
+  valueFormatter?: (value: number) => string;
 
-  tooltip?: TooltipContentType<TValue, TName> | boolean
-  tooltipProps?: Omit<ChartTooltipProps<TValue, TName>, "content">
+  tooltip?: TooltipContentType<TValue, TName> | boolean;
+  tooltipProps?: Omit<ChartTooltipProps<TValue, TName>, "content">;
 
-  cartesianGridProps?: CartesianGridProps
+  cartesianGridProps?: CartesianGridProps;
 
-  legend?: LegendContentType | boolean
-  legendProps?: Omit<React.ComponentProps<typeof LegendPrimitive>, "content" | "ref">
+  legend?: LegendContentType | boolean;
+  legendProps?: Omit<React.ComponentProps<typeof LegendPrimitive>, "content" | "ref">;
 
-  xAxisProps?: XAxisPropsPrimitive
-  yAxisProps?: YAxisPrimitiveProps
+  xAxisProps?: XAxisPropsPrimitive;
+  yAxisProps?: YAxisPrimitiveProps;
 
   // XAxis
-  displayEdgeLabelsOnly?: boolean
+  displayEdgeLabelsOnly?: boolean;
 
-  hideGridLines?: boolean
-  hideXAxis?: boolean
-  hideYAxis?: boolean
+  hideGridLines?: boolean;
+  hideXAxis?: boolean;
+  hideYAxis?: boolean;
 }
 
 const Chart = ({
@@ -188,20 +200,20 @@ const Chart = ({
   layout = "horizontal",
   ...props
 }: Omit<React.ComponentProps<"div">, "children"> & {
-  config: ChartConfig
-  data: Record<string, any>[]
-  layout?: ChartLayout
-  dataKey: string
-  children: ReactElement | ((props: ChartContextProps) => ReactElement)
+  config: ChartConfig;
+  data: Record<string, any>[];
+  layout?: ChartLayout;
+  dataKey: string;
+  children: ReactElement | ((props: ChartContextProps) => ReactElement);
 }) => {
-  const uniqueId = useId()
-  const chartId = useMemo(() => `chart-${id || uniqueId.replace(/:/g, "")}`, [id, uniqueId])
+  const uniqueId = useId();
+  const chartId = useMemo(() => `chart-${id || uniqueId.replace(/:/g, "")}`, [id, uniqueId]);
 
-  const [selectedLegend, setSelectedLegend] = useState<string | null>(null)
+  const [selectedLegend, setSelectedLegend] = useState<string | null>(null);
 
   const onLegendSelect = useCallback((legendItem: string | null) => {
-    setSelectedLegend(legendItem)
-  }, [])
+    setSelectedLegend(legendItem);
+  }, []);
 
   const value = {
     config,
@@ -210,7 +222,7 @@ const Chart = ({
     data,
     dataKey,
     layout,
-  }
+  };
 
   return (
     <ChartContext.Provider value={value}>
@@ -230,15 +242,15 @@ const Chart = ({
         </ResponsiveContainer>
       </div>
     </ChartContext.Provider>
-  )
-}
+  );
+};
 
-const THEMES = { light: "", dark: ".dark" } as const
+const THEMES = { light: "", dark: ".dark" } as const;
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
-  const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color)
+  const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
 
   if (!colorConfig.length) {
-    return null
+    return null;
   }
 
   return (
@@ -250,8 +262,8 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 ${prefix} [data-chart=${id}] {
 ${colorConfig
   .map(([key, itemConfig]) => {
-    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
+    const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
+    return color ? `  --color-${key}: ${color};` : null;
   })
   .join("\n")}
 }
@@ -260,17 +272,17 @@ ${colorConfig
           .join("\n"),
       }}
     />
-  )
-}
+  );
+};
 
 type ChartTooltipProps<TValue extends ValueType, TName extends NameType> = React.ComponentProps<
   typeof TooltipPrimitive<TValue, TName>
->
+>;
 
 const ChartTooltip = <TValue extends ValueType, TName extends NameType>(
   props: ChartTooltipProps<TValue, TName>,
 ) => {
-  const { layout } = useChart()
+  const { layout } = useChart();
 
   return (
     <TooltipPrimitive
@@ -290,18 +302,18 @@ const ChartTooltip = <TValue extends ValueType, TName extends NameType>(
       }}
       {...props}
     />
-  )
-}
+  );
+};
 
-type ChartLegendProps = Omit<React.ComponentProps<typeof LegendPrimitive>, "ref">
+type ChartLegendProps = Omit<React.ComponentProps<typeof LegendPrimitive>, "ref">;
 
 const ChartLegend = (props: ChartLegendProps) => {
-  return <LegendPrimitive align="center" verticalAlign="bottom" {...props} />
-}
+  return <LegendPrimitive align="center" verticalAlign="bottom" {...props} />;
+};
 
 interface XAxisProps extends Omit<XAxisPropsPrimitive, "ref"> {
-  displayEdgeLabelsOnly?: boolean
-  intervalType?: IntervalType
+  displayEdgeLabelsOnly?: boolean;
+  intervalType?: IntervalType;
 }
 
 const XAxis = ({
@@ -312,7 +324,7 @@ const XAxis = ({
   domain = ["auto", "auto"],
   ...props
 }: XAxisProps) => {
-  const { dataKey, data, layout } = useChart()
+  const { dataKey, data, layout } = useChart();
 
   return (
     <XAxisPrimitive
@@ -332,8 +344,8 @@ const XAxis = ({
       dataKey={layout === "horizontal" ? dataKey : undefined}
       {...props}
     />
-  )
-}
+  );
+};
 
 const YAxis = ({
   className,
@@ -342,7 +354,7 @@ const YAxis = ({
   type,
   ...props
 }: Omit<YAxisPrimitiveProps, "ref">) => {
-  const { layout, dataKey } = useChart()
+  const { layout, dataKey } = useChart();
 
   return (
     <YAxisPrimitive
@@ -359,11 +371,11 @@ const YAxis = ({
       tickLine={false}
       {...props}
     />
-  )
-}
+  );
+};
 
 const CartesianGrid = ({ className, ...props }: CartesianGridPrimitiveProps) => {
-  const { layout } = useChart()
+  const { layout } = useChart();
   return (
     <CartesianGridPrimitive
       className={twMerge("stroke-1 stroke-muted", className)}
@@ -371,8 +383,8 @@ const CartesianGrid = ({ className, ...props }: CartesianGridPrimitiveProps) => 
       vertical={layout === "vertical"}
       {...props}
     />
-  )
-}
+  );
+};
 
 const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
   payload,
@@ -391,49 +403,49 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
   ref,
 }: TooltipContentProps<TValue, TName> &
   React.ComponentProps<"div"> & {
-    hideLabel?: boolean
-    labelSeparator?: boolean
-    hideIndicator?: boolean
-    indicator?: "line" | "dot" | "dashed"
-    nameKey?: string
-    labelKey?: string
+    hideLabel?: boolean;
+    labelSeparator?: boolean;
+    hideIndicator?: boolean;
+    indicator?: "line" | "dot" | "dashed";
+    nameKey?: string;
+    labelKey?: string;
   }) => {
-  const { config } = useChart()
+  const { config } = useChart();
 
   const tooltipLabel = useMemo(() => {
     if (hideLabel || !payload?.length) {
-      return null
+      return null;
     }
 
-    const [item] = payload
+    const [item] = payload;
 
     if (!item) {
-      return null
+      return null;
     }
 
-    const key = `${labelKey || item.dataKey || item.name || "value"}`
-    const itemConfig = getPayloadConfigFromPayload(config, item, key)
+    const key = `${labelKey || item.dataKey || item.name || "value"}`;
+    const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value =
       !labelKey && typeof label === "string"
         ? config[label as keyof typeof config]?.label || label
-        : itemConfig?.label
+        : itemConfig?.label;
 
     if (labelFormatter) {
-      return <div className={labelClassName}>{labelFormatter(value, payload)}</div>
+      return <div className={labelClassName}>{labelFormatter(value, payload)}</div>;
     }
 
     if (!value) {
-      return null
+      return null;
     }
 
-    return <div className={labelClassName}>{value}</div>
-  }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey])
+    return <div className={labelClassName}>{value}</div>;
+  }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
 
   if (!payload?.length) {
-    return null
+    return null;
   }
 
-  const nestLabel = payload.length === 1 && indicator !== "dot"
+  const nestLabel = payload.length === 1 && indicator !== "dot";
 
   return (
     <div
@@ -447,9 +459,9 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
       {labelSeparator && <Separator className="mt-2 mb-2.5 bg-fg/10" />}
       <div className="grid gap-1.5">
         {payload.map((item, index) => {
-          const key = `${nameKey || item.name || item.dataKey || "value"}`
-          const itemConfig = getPayloadConfigFromPayload(config, item, key)
-          const indicatorColor = color || item.payload.fill || item.color
+          const key = `${nameKey || item.name || item.dataKey || "value"}`;
+          const itemConfig = getPayloadConfigFromPayload(config, item, key);
+          const indicatorColor = color || item.payload.fill || item.color;
 
           return (
             <div
@@ -505,20 +517,20 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
                 </>
               )}
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
-}
+  );
+};
 
 type ChartLegendContentProps = ToggleButtonGroupProps &
   Pick<LegendProps, "align" | "verticalAlign"> & {
-    payload?: ReadonlyArray<LegendPayload>
-    hideIcon?: boolean
-    nameKey?: string
-    ref?: React.Ref<any>
-  }
+    payload?: ReadonlyArray<LegendPayload>;
+    hideIcon?: boolean;
+    nameKey?: string;
+    ref?: React.Ref<any>;
+  };
 
 const ChartLegendContent = ({
   className,
@@ -529,10 +541,10 @@ const ChartLegendContent = ({
   nameKey,
   ref,
 }: ChartLegendContentProps) => {
-  const { config, selectedLegend, onLegendSelect } = useChart()
+  const { config, selectedLegend, onLegendSelect } = useChart();
 
   if (!payload?.length) {
-    return null
+    return null;
   }
 
   return (
@@ -548,14 +560,14 @@ const ChartLegendContent = ({
       )}
       selectedKeys={selectedLegend ? [selectedLegend] : undefined}
       onSelectionChange={(v) => {
-        const key = [...v][0]?.toString() ?? null
-        onLegendSelect(key)
+        const key = [...v][0]?.toString() ?? null;
+        onLegendSelect(key);
       }}
       selectionMode="single"
     >
       {payload.map((item: LegendPayload) => {
-        const key = `${nameKey || item.dataKey || "value"}`
-        const itemConfig = getPayloadConfigFromPayload(config, item, key)
+        const key = `${nameKey || item.dataKey || "value"}`;
+        const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
         return (
           <ToggleButton
@@ -581,11 +593,11 @@ const ChartLegendContent = ({
             )}
             {itemConfig?.label}
           </ToggleButton>
-        )
+        );
       })}
     </ToggleButtonGroup>
-  )
-}
+  );
+};
 
 export type {
   ChartColorKeys,
@@ -597,7 +609,7 @@ export type {
   XAxisProps,
   ChartLegendProps,
   ChartLegendContentProps,
-}
+};
 
 export {
   Chart,
@@ -608,5 +620,5 @@ export {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegendContent,
-}
-export { getColorValue, constructCategoryColors, DEFAULT_COLORS, CHART_COLORS }
+};
+export { getColorValue, constructCategoryColors, DEFAULT_COLORS, CHART_COLORS };

@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { type VariantProps, tv } from "tailwind-variants"
+import { tv, type VariantProps } from "tailwind-variants";
 
 const badgeIntents = {
   primary: [
@@ -22,7 +22,7 @@ const badgeIntents = {
   outline: "inset-ring-border bg-transparent text-fg group-hover:bg-secondary",
   custom:
     "bg-pink-500/15 text-pink-700 group-hover:bg-pink-500/25 dark:bg-pink-500/10 dark:text-pink-300 dark:group-hover:bg-pink-500/20",
-}
+};
 const badgeStyles = tv({
   base: "inset-ring inset-ring-transparent inline-flex items-center gap-x-1.5 py-0.5 font-medium text-xs/5 **:data-[slot=icon]:size-3 forced-colors:outline",
   variants: {
@@ -36,13 +36,13 @@ const badgeStyles = tv({
     intent: "primary",
     isCircle: true,
   },
-})
+});
 
 interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeStyles> {
-  className?: string
-  children: React.ReactNode
+  className?: string;
+  children: React.ReactNode;
 }
 
 const Badge = ({ children, intent, isCircle = true, className, ...props }: BadgeProps) => {
@@ -50,8 +50,8 @@ const Badge = ({ children, intent, isCircle = true, className, ...props }: Badge
     <span {...props} className={badgeStyles({ intent, isCircle, className })}>
       {children}
     </span>
-  )
-}
+  );
+};
 
-export type { BadgeProps }
-export { Badge, badgeIntents, badgeStyles }
+export type { BadgeProps };
+export { Badge, badgeIntents, badgeStyles };

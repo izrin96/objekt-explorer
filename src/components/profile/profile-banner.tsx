@@ -1,8 +1,8 @@
 "use client";
 
-import { useElementSize } from "@/hooks/use-element-size";
-import { PublicProfile } from "@/lib/universal/user";
 import Image from "next/image";
+import { useElementSize } from "@/hooks/use-element-size";
+import type { PublicProfile } from "@/lib/universal/user";
 
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();
@@ -14,18 +14,16 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   return (
     <>
       {/* banner */}
-      <div className="absolute xl:top-0 top-14 inset-0 -z-5">
+      <div className="-z-5 absolute inset-0 top-14 xl:top-0">
         <div className="mx-auto w-full max-w-7xl lg:max-w-(--breakpoint-xl) 2xl:max-w-(--breakpoint-2xl)">
           <div
             ref={bannerRef}
-            className={
-              "relative mask-x-from-100% xl:mask-x-from-97% aspect-[2.3/1]"
-            }
+            className={"mask-x-from-100% xl:mask-x-from-97% relative aspect-[2.3/1]"}
           >
             {isVideo ? (
               <video
                 src={profile.bannerImgUrl}
-                className="object-cover object-center size-full"
+                className="size-full object-cover object-center"
                 autoPlay
                 loop
                 muted
@@ -34,25 +32,22 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             ) : (
               <Image
                 src={profile.bannerImgUrl}
-                className="object-cover object-center size-full"
+                className="size-full object-cover object-center"
                 fill
                 alt="Banner"
                 priority
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg from-90% to-100%"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-90% from-transparent to-100% to-bg"></div>
           </div>
         </div>
       </div>
       {/* background */}
-      <div
-        className={"absolute xl:top-0 top-14 inset-0 -z-10"}
-        style={{ height: `${height}px` }}
-      >
+      <div className={"-z-10 absolute inset-0 top-14 xl:top-0"} style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
             src={profile.bannerImgUrl}
-            className="object-cover object-center size-full"
+            className="size-full object-cover object-center"
             autoPlay
             loop
             muted
@@ -61,13 +56,13 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         ) : (
           <Image
             src={profile.bannerImgUrl}
-            className="object-cover object-center size-full"
+            className="size-full object-cover object-center"
             fill
             alt="Banner"
             priority
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg backdrop-blur-xl from-90% to-100%"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-90% from-transparent to-100% to-bg backdrop-blur-xl"></div>
       </div>
     </>
   );

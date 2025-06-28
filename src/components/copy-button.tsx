@@ -1,8 +1,7 @@
-import React, { useState } from "react";
-
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 import { Button } from "./ui";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
 
 export function CopyButton({ text }: { text: string }) {
   const [, copy] = useCopyToClipboard();
@@ -17,7 +16,7 @@ export function CopyButton({ text }: { text: string }) {
         });
       }}
       size="xs"
-      className="flex gap-1.5 items-center"
+      className="flex items-center gap-1.5"
     >
       <CopyIcon data-slot="icon" />
       {copied ? "Copied!" : "Copy"}

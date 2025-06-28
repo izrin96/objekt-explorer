@@ -1,30 +1,24 @@
 "use client";
 
-import { CSSProperties, useEffect, useState } from "react";
+import { CornersOutIcon, SpeakerHighIcon } from "@phosphor-icons/react/dist/ssr";
 import {
-  Call,
+  type Call,
   ParticipantView,
   StreamCall,
   useCallStateHooks,
   useParticipantViewContext,
   useStreamVideoClient,
-  VideoPlaceholderProps,
+  type VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import { Button, Popover, Slider } from "../ui";
+import Image from "next/image";
+import { type CSSProperties, useEffect, useState } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
+import { Button, Popover, Slider } from "../ui";
+import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 import LiveEnded from "./live-ended";
 import LiveFooter from "./live-footer";
-import {
-  CornersOutIcon,
-  SpeakerHighIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
-import Image from "next/image";
 
-export const CustomLivestreamPlayer = (props: {
-  callType: string;
-  callId: string;
-}) => {
+export const CustomLivestreamPlayer = (props: { callType: string; callId: string }) => {
   const { callType, callId } = props;
   const client = useStreamVideoClient();
 
@@ -57,12 +51,9 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   const liveSession = useLiveSession();
   const { participant } = useParticipantViewContext();
   return (
-    <div
-      className="w-full h-full aspect-[9/16] flex items-center justify-center"
-      style={style}
-    >
+    <div className="flex aspect-[9/16] h-full w-full items-center justify-center" style={style}>
       <div
-        className="relative rounded-full w-24 h-24 outline-4 outline-(--color)"
+        className="relative h-24 w-24 rounded-full outline-(--color) outline-4"
         style={
           {
             "--color": liveSession.channel.primaryColorHex,
@@ -72,7 +63,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
         <Image
           priority
           fill
-          className="object-contain object-center size-full rounded-full"
+          className="size-full rounded-full object-contain object-center"
           src={liveSession.channel.profileImageUrl}
           alt={participant.name}
         />
@@ -103,9 +94,9 @@ function LiveVolumeControl() {
       <Button size="xs" intent="outline">
         <SpeakerHighIcon />
       </Button>
-      <Popover.Content className="min-w-0 m-4">
+      <Popover.Content className="m-4 min-w-0">
         <Slider
-          className="gap-y-0 min-h-24"
+          className="min-h-24 gap-y-0"
           defaultValue={currentSpeaker.audioVolume ?? 1}
           output="none"
           minValue={0}
@@ -114,10 +105,7 @@ function LiveVolumeControl() {
           aria-label="Volume"
           orientation="vertical"
           onChange={(value) => {
-            speaker.setParticipantVolume(
-              currentSpeaker.sessionId,
-              value as number
-            );
+            speaker.setParticipantVolume(currentSpeaker.sessionId, value as number);
           }}
         />
       </Popover.Content>
@@ -134,15 +122,13 @@ function LiveDuration() {
     const minutes = Math.floor((durationInMs % 3600) / 60);
     const seconds = durationInMs % 60;
 
-    return `${days ? days + " " : ""}${hours ? hours + ":" : ""}${
+    return `${days ? `${days} ` : ""}${hours ? `${hours}:` : ""}${
       minutes < 10 ? "0" : ""
     }${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
   };
 
   return (
-    <div className="text-sm flex items-center gap-2 tabular-nums">
-      {formatDuration(duration)}
-    </div>
+    <div className="flex items-center gap-2 text-sm tabular-nums">{formatDuration(duration)}</div>
   );
 }
 
@@ -156,7 +142,7 @@ const CustomLivestreamLayout = () => {
         <>
           <ParticipantView
             PictureInPicturePlaceholder={null}
-            className="h-[calc(100svh-140px)] relative w-full aspect-[9/16] flex flex-col items-center justify-center gap-2 [&>video]:w-full [&>video]:h-full [&>video]:object-contain"
+            className="relative flex aspect-[9/16] h-[calc(100svh-140px)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
             // render when video is disabled
             VideoPlaceholder={CustomVideoPlaceholder}
             // render after video element
@@ -167,14 +153,11 @@ const CustomLivestreamLayout = () => {
             }
             participant={currentSpeaker}
             muteAudio={!open}
-            key={"" + open}
+            key={`${open}`}
           />
           {!open && (
-            <div className="absolute top-0 left-0 w-full h-full bg-bg/50 flex justify-center items-center">
-              <Button
-                intent="secondary"
-                onClick={() => setOpen((prev) => !prev)}
-              >
+            <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center bg-bg/50">
+              <Button intent="secondary" onClick={() => setOpen((prev) => !prev)}>
                 Unmute
               </Button>
             </div>

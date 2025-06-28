@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
 import type {
   ColorFieldProps as ColorFieldPrimitiveProps,
   ValidationResult,
-} from "react-aria-components"
-import { ColorField as ColorFieldPrimitive } from "react-aria-components"
+} from "react-aria-components";
+import { ColorField as ColorFieldPrimitive } from "react-aria-components";
 
-import { ColorPicker } from "@/components/ui/color-picker"
-import { ColorSwatch } from "@/components/ui/color-swatch"
-import { Description, FieldError, FieldGroup, Input, Label } from "@/components/ui/field"
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { twJoin } from "tailwind-merge"
+import { ColorPicker } from "@/components/ui/color-picker";
+import { ColorSwatch } from "@/components/ui/color-swatch";
+import { Description, FieldError, FieldGroup, Input, Label } from "@/components/ui/field";
+import { composeTailwindRenderProps } from "@/lib/primitive";
+import { twJoin } from "tailwind-merge";
 
 interface ColorFieldProps extends ColorFieldPrimitiveProps {
-  label?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
-  placeholder?: string
-  prefix?: React.ReactNode
-  suffix?: React.ReactNode
-  isLoading?: boolean
-  enableColorPicker?: boolean
+  label?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
+  placeholder?: string;
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
+  isLoading?: boolean;
+  enableColorPicker?: boolean;
 }
 
 const ColorField = ({
@@ -35,7 +35,7 @@ const ColorField = ({
   className,
   ...props
 }: ColorFieldProps) => {
-  const value = props.value ?? props.defaultValue
+  const value = props.value ?? props.defaultValue;
   return (
     <ColorFieldPrimitive
       {...props}
@@ -78,8 +78,8 @@ const ColorField = ({
       {description && <Description>{description}</Description>}
       <FieldError>{errorMessage}</FieldError>
     </ColorFieldPrimitive>
-  )
-}
+  );
+};
 
-export type { ColorFieldProps }
-export { ColorField }
+export type { ColorFieldProps };
+export { ColorField };

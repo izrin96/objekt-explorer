@@ -1,11 +1,11 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-import { Button, Menu } from "../ui";
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useCallback, useMemo } from "react";
+import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
+import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { parseSelected } from "@/lib/utils";
+import { Button, Menu } from "../ui";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -23,15 +23,12 @@ export default function MemberFilter({ artists }: Props) {
         artist: null,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.member ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.member ? "!inset-ring-primary" : ""}>
         Member
       </Button>
       <Menu.Content
@@ -42,11 +39,7 @@ export default function MemberFilter({ artists }: Props) {
         className="min-w-44"
       >
         {(artist) => (
-          <Menu.Section
-            title={artist.title}
-            items={artist.artistMembers}
-            id={artist.name}
-          >
+          <Menu.Section title={artist.title} items={artist.artistMembers} id={artist.name}>
             {(member) => (
               <Menu.Item id={member.name} textValue={member.name}>
                 <Menu.Label>{member.name}</Menu.Label>

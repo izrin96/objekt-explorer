@@ -1,21 +1,12 @@
 "use client";
 
-import ErrorFallbackRender from "@/components/error-boundary";
-import {
-  Button,
-  Checkbox,
-  Form,
-  Link,
-  Loader,
-  Modal,
-  Sheet,
-  TextField,
-} from "@/components/ui";
-import { api } from "@/lib/trpc/client";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
+import ErrorFallbackRender from "@/components/error-boundary";
+import { Button, Checkbox, Form, Link, Loader, Modal, Sheet, TextField } from "@/components/ui";
+import { api } from "@/lib/trpc/client";
 
 type CreateListModalProps = {
   open: boolean;
@@ -53,13 +44,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
           }}
         >
           <div className="flex flex-col gap-6">
-            <TextField
-              isRequired
-              autoFocus
-              label="Name"
-              placeholder="My list"
-              name="name"
-            />
+            <TextField isRequired autoFocus label="Name" placeholder="My list" name="name" />
             <Checkbox
               label="Hide User"
               name="hideUser"
@@ -131,12 +116,7 @@ type EditListModalProps = {
   setOpen: (val: boolean) => void;
 };
 
-export function EditListModal({
-  slug,
-  onComplete,
-  open,
-  setOpen,
-}: EditListModalProps) {
+export function EditListModal({ slug, onComplete, open, setOpen }: EditListModalProps) {
   const formRef = useRef<HTMLFormElement>(null!);
   const utils = api.useUtils();
   const editList = api.list.edit.useMutation({
@@ -172,10 +152,7 @@ export function EditListModal({
         >
           <QueryErrorResetBoundary>
             {({ reset }) => (
-              <ErrorBoundary
-                onReset={reset}
-                FallbackComponent={ErrorFallbackRender}
-              >
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
                 <Suspense
                   fallback={
                     <div className="flex justify-center">

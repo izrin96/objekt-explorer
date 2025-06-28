@@ -1,35 +1,33 @@
 "use client";
 
-import { CSSProperties, PropsWithChildren } from "react";
-import { Avatar } from "../ui";
+import type { CSSProperties, PropsWithChildren } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
+import { Avatar } from "../ui";
 
 export default function LiveFooter({ children }: PropsWithChildren) {
   const liveSession = useLiveSession();
 
   return (
-    <div className="flex items-center absolute -bottom-[54px] w-full gap-2">
-      <div className="grow min-w-0">
-        <div className="flex gap-2 items-center">
+    <div className="-bottom-[54px] absolute flex w-full items-center gap-2">
+      <div className="min-w-0 grow">
+        <div className="flex items-center gap-2">
           <Avatar
             style={
               {
                 "--color": liveSession.channel.primaryColorHex,
               } as CSSProperties
             }
-            className="outline-3 outline-(--color)"
+            className="outline-(--color) outline-3"
             src={liveSession.channel.profileImageUrl}
             size="lg"
           />
           <div className="flex flex-col overflow-hidden">
-            <span className="font-semibold truncate">{liveSession.title}</span>
-            <span className="font-semibold text-sm truncate">
-              {liveSession.channel.name}
-            </span>
+            <span className="truncate font-semibold">{liveSession.title}</span>
+            <span className="truncate font-semibold text-sm">{liveSession.channel.name}</span>
           </div>
         </div>
       </div>
-      <div className="items-center gap-2 flex">{children}</div>
+      <div className="flex items-center gap-2">{children}</div>
     </div>
   );
 }

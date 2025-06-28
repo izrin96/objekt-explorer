@@ -1,34 +1,34 @@
-"use client"
+"use client";
 
-import { use } from "react"
+import { use } from "react";
 
 import {
   ColorPicker as ColorPickerPrimitive,
   type ColorPickerProps as ColorPickerPrimitiveProps,
   ColorPickerStateContext,
-} from "react-aria-components"
+} from "react-aria-components";
 
-import { Button } from "@/components/ui/button"
-import { ColorArea } from "@/components/ui/color-area"
-import { ColorField } from "@/components/ui/color-field"
-import { ColorSlider } from "@/components/ui/color-slider"
-import { ColorSwatch } from "@/components/ui/color-swatch"
-import { Description } from "@/components/ui/field"
-import { Popover, PopoverContent, type PopoverContentProps } from "@/components/ui/popover"
-import { IconEyeDropper } from "@intentui/icons"
-import { parseColor } from "@react-stately/color"
-import { twJoin, twMerge } from "tailwind-merge"
+import { Button } from "@/components/ui/button";
+import { ColorArea } from "@/components/ui/color-area";
+import { ColorField } from "@/components/ui/color-field";
+import { ColorSlider } from "@/components/ui/color-slider";
+import { ColorSwatch } from "@/components/ui/color-swatch";
+import { Description } from "@/components/ui/field";
+import { Popover, PopoverContent, type PopoverContentProps } from "@/components/ui/popover";
+import { IconEyeDropper } from "@intentui/icons";
+import { parseColor } from "@react-stately/color";
+import { twJoin, twMerge } from "tailwind-merge";
 
 interface ColorPickerProps
   extends ColorPickerPrimitiveProps,
     Pick<PopoverContentProps, "placement"> {
-  label?: string
-  className?: string
-  children?: React.ReactNode
-  showArrow?: boolean
-  isDisabled?: boolean
-  description?: string
-  eyeDropper?: boolean
+  label?: string;
+  className?: string;
+  children?: React.ReactNode;
+  showArrow?: boolean;
+  isDisabled?: boolean;
+  description?: string;
+  eyeDropper?: boolean;
 }
 
 const ColorPicker = ({
@@ -80,20 +80,20 @@ const ColorPicker = ({
       </ColorPickerPrimitive>
       {description && <Description>{description}</Description>}
     </div>
-  )
-}
+  );
+};
 
 declare global {
   interface Window {
-    EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> }
+    EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
   }
 }
 
 const EyeDropper = () => {
-  const state = use(ColorPickerStateContext)!
+  const state = use(ColorPickerStateContext)!;
 
   if (!window.EyeDropper) {
-    return "EyeDropper is not supported in your browser."
+    return "EyeDropper is not supported in your browser.";
   }
 
   return (
@@ -102,14 +102,14 @@ const EyeDropper = () => {
       size="sq-sm"
       intent="outline"
       onPress={() => {
-        const eyeDropper = window.EyeDropper ? new window.EyeDropper() : null
-        eyeDropper?.open().then((result) => state.setColor(parseColor(result.sRGBHex)))
+        const eyeDropper = window.EyeDropper ? new window.EyeDropper() : null;
+        eyeDropper?.open().then((result) => state.setColor(parseColor(result.sRGBHex)));
       }}
     >
       <IconEyeDropper />
     </Button>
-  )
-}
+  );
+};
 
-export type { ColorPickerProps }
-export { ColorPicker, EyeDropper }
+export type { ColorPickerProps };
+export { ColorPicker, EyeDropper };

@@ -1,11 +1,11 @@
 "use client";
 
-import { type Selection } from "react-stately";
 import { useCallback, useMemo } from "react";
-import { Button, Menu } from "../ui";
+import type { Selection } from "react-stately";
 import { useFilters } from "@/hooks/use-filters";
-import { ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
+import { type ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
+import { Button, Menu } from "../ui";
 
 export default function EditionFilter() {
   const [filters, setFilters] = useFilters();
@@ -18,15 +18,12 @@ export default function EditionFilter() {
         edition: value,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.edition?.length ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.edition?.length ? "!inset-ring-primary" : ""}>
         Edition
       </Button>
       <Menu.Content

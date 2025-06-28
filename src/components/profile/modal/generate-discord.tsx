@@ -1,31 +1,17 @@
 "use client";
 
-import { CopyButton } from "@/components/copy-button";
-import ErrorFallbackRender from "@/components/error-boundary";
-import {
-  Button,
-  Checkbox,
-  Modal,
-  Form,
-  Textarea,
-  Loader,
-} from "@/components/ui";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import {
-  QueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useProfile } from "@/hooks/use-profile";
-import {
-  format,
-  makeMemberOrderedList,
-  mapByMember,
-} from "@/lib/discord-format-utils";
-import { ownedCollectionOptions } from "@/lib/query-options";
-import { filterObjekts } from "@/lib/filter-utils";
+import { CopyButton } from "@/components/copy-button";
+import ErrorFallbackRender from "@/components/error-boundary";
+import { Button, Checkbox, Form, Loader, Modal, Textarea } from "@/components/ui";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { useProfile } from "@/hooks/use-profile";
+import { format, makeMemberOrderedList, mapByMember } from "@/lib/discord-format-utils";
+import { filterObjekts } from "@/lib/filter-utils";
+import { ownedCollectionOptions } from "@/lib/query-options";
 
 type Props = {
   open: boolean;
@@ -37,10 +23,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <QueryErrorResetBoundary>
         {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            FallbackComponent={ErrorFallbackRender}
-          >
+          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
             <Suspense
               fallback={
                 <div className="flex justify-center py-2">
@@ -67,16 +50,14 @@ function Content() {
   const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));
   const filteredObjekts = useMemo(
     () => filterObjekts(filters, ownedQuery.data),
-    [filters, ownedQuery.data]
+    [filters, ownedQuery.data],
   );
 
   return (
     <>
       <Modal.Header>
         <Modal.Title>Generate Discord Format</Modal.Title>
-        <Modal.Description>
-          List of objekt is based on current filter.
-        </Modal.Description>
+        <Modal.Description>List of objekt is based on current filter.</Modal.Description>
       </Modal.Header>
       <Modal.Body>
         <Form
@@ -92,21 +73,12 @@ function Content() {
 
             const haveCollections = mapByMember(filteredObjekts, members);
 
-            setFormatText(
-              [
-                "## Have",
-                ...format(haveCollections, showCount, lowercase),
-              ].join("\n")
-            );
+            setFormatText(["## Have", ...format(haveCollections, showCount, lowercase)].join("\n"));
           }}
         >
           <Checkbox label="Show count" name="showCount" />
           <Checkbox label="Lower case" name="lowercase" />
-          <Textarea
-            label="Formatted discord text"
-            value={formatText}
-            onChange={setFormatText}
-          />
+          <Textarea label="Formatted discord text" value={formatText} onChange={setFormatText} />
           <div className="flex">
             <CopyButton text={formatText} />
           </div>

@@ -1,11 +1,8 @@
 "use client";
 
-import { Toggle } from "../ui";
+import { SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react/dist/ssr";
 import { useFilters } from "@/hooks/use-filters";
-import {
-  SortAscendingIcon,
-  SortDescendingIcon,
-} from "@phosphor-icons/react/dist/ssr";
+import { Toggle } from "../ui";
 
 export default function SortDirectionFilter() {
   const [filters, setFilters] = useFilters();

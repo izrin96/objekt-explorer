@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import { motion } from "motion/react"
+import { motion } from "motion/react";
 import {
   ProgressBar as ProgressBarPrimitive,
   type ProgressBarProps as ProgressBarPrimitiveProps,
-} from "react-aria-components"
+} from "react-aria-components";
 
-import { Label } from "@/components/ui/field"
-import { composeTailwindRenderProps } from "@/lib/primitive"
+import { Label } from "@/components/ui/field";
+import { composeTailwindRenderProps } from "@/lib/primitive";
 
 interface ProgressBarProps extends ProgressBarPrimitiveProps {
-  label?: string
-  ref?: React.RefObject<HTMLDivElement>
+  label?: string;
+  ref?: React.RefObject<HTMLDivElement>;
 }
 
 const ProgressBar = ({ label, ref, className, ...props }: ProgressBarProps) => {
@@ -22,7 +22,7 @@ const ProgressBar = ({ label, ref, className, ...props }: ProgressBarProps) => {
       {...props}
     >
       {({ percentage, valueText, isIndeterminate }) => (
-        <div className="flex gap-3 items-center">
+        <div className="flex items-center gap-3">
           <div className="-outline-offset-1 relative h-2 min-w-32 overflow-hidden rounded-full bg-secondary outline-1 outline-transparent">
             {!isIndeterminate ? (
               <motion.div
@@ -53,8 +53,8 @@ const ProgressBar = ({ label, ref, className, ...props }: ProgressBarProps) => {
         </div>
       )}
     </ProgressBarPrimitive>
-  )
-}
+  );
+};
 
-export type { ProgressBarProps }
-export { ProgressBar }
+export type { ProgressBarProps };
+export { ProgressBar };

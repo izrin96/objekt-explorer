@@ -1,28 +1,16 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
-import {
-  QueryErrorResetBoundary,
-  useMutation,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
-import { authClient } from "@/lib/auth-client";
-import {
-  Button,
-  Checkbox,
-  Form,
-  Loader,
-  Modal,
-  Sheet,
-  TextField,
-} from "@/components/ui";
 import ErrorFallbackRender from "@/components/error-boundary";
-import { ListAccounts } from "./link-account";
-import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import type { Session } from "@/lib/server/auth";
+import { Button, Checkbox, Form, Loader, Modal, Sheet, TextField } from "@/components/ui";
+import { authClient } from "@/lib/auth-client";
 import { getQueryClient } from "@/lib/query-client";
+import type { Session } from "@/lib/server/auth";
+import { ListAccounts } from "./link-account";
 
 type Props = {
   open: boolean;
@@ -39,10 +27,7 @@ export default function UserAccountModal({ open, setOpen }: Props) {
       <Sheet.Body>
         <QueryErrorResetBoundary>
           {({ reset }) => (
-            <ErrorBoundary
-              onReset={reset}
-              FallbackComponent={ErrorFallbackRender}
-            >
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
               <Suspense
                 fallback={
                   <div className="flex justify-center py-2">
@@ -147,12 +132,7 @@ function UserAccountForm({
         />
 
         <div className="flex">
-          <Button
-            size="md"
-            intent="outline"
-            type="submit"
-            isPending={mutation.isPending}
-          >
+          <Button size="md" intent="outline" type="submit" isPending={mutation.isPending}>
             Save
           </Button>
         </div>

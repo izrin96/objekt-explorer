@@ -1,18 +1,17 @@
 "use client";
 
-import MemberFilter from "@/components/filters/filter-member";
-import FilterSeason from "@/components/filters/filter-season";
-import FilterOnline from "@/components/filters/filter-online";
-import FilterClass from "@/components/filters/filter-class";
 import ArtistFilter from "@/components/filters/filter-artist";
-import ResetFilter from "@/components/filters/reset-filter";
-import GroupBysFilter from "./filter-groupbys";
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
-import React from "react";
+import FilterClass from "@/components/filters/filter-class";
 import EditionFilter from "@/components/filters/filter-edition";
-import ShowCountFilter from "./filter-showcount";
-import { useResetFilters } from "@/hooks/use-reset-filters";
+import MemberFilter from "@/components/filters/filter-member";
+import FilterOnline from "@/components/filters/filter-online";
+import FilterSeason from "@/components/filters/filter-season";
+import ResetFilter from "@/components/filters/reset-filter";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
+import { useResetFilters } from "@/hooks/use-reset-filters";
+import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
+import GroupBysFilter from "./filter-groupbys";
+import ShowCountFilter from "./filter-showcount";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -23,7 +22,7 @@ export default function ProgressFilter({ artists }: Props) {
   const [filters] = useFilters();
   const isFiltering = checkFiltering(filters);
   return (
-    <div className="flex gap-2 items-center flex-wrap justify-center">
+    <div className="flex flex-wrap items-center justify-center gap-2">
       <ArtistFilter artists={artists} />
       <MemberFilter artists={artists} />
       <FilterSeason />

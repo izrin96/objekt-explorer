@@ -1,21 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { PropsWithChildren } from "react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { RouterProvider } from "react-aria-components";
-import { ThemeProvider } from "@/components/theme-provider";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Toast } from "./ui";
+import { useRouter } from "next/navigation";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+import type { PropsWithChildren } from "react";
+import { RouterProvider } from "react-aria-components";
+import { preconnect, prefetchDNS } from "react-dom";
+import { ThemeProvider } from "@/components/theme-provider";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { artists } from "@/lib/server/cosmo/artists";
-import { preconnect, prefetchDNS } from "react-dom";
+import { Toast } from "./ui";
 
 declare module "react-aria-components" {
   interface RouterConfig {
-    routerOptions: NonNullable<
-      Parameters<ReturnType<typeof useRouter>["push"]>[1]
-    >;
+    routerOptions: NonNullable<Parameters<ReturnType<typeof useRouter>["push"]>[1]>;
   }
 }
 
@@ -31,13 +29,16 @@ export default function ClientProviders({ children }: PropsWithChildren) {
 
   return (
     <RouterProvider navigate={router.push}>
-      <ThemeProvider enableSystem attribute="class" defaultTheme="system" themes={["light", "dark", "matsu"]}>
+      <ThemeProvider
+        enableSystem
+        attribute="class"
+        defaultTheme="system"
+        themes={["light", "dark", "matsu"]}
+      >
         <Toast />
         <div className="texture"></div>
         <NuqsAdapter>
-          <CosmoArtistProvider artists={artists}>
-            {children}
-          </CosmoArtistProvider>
+          <CosmoArtistProvider artists={artists}>{children}</CosmoArtistProvider>
           <ReactQueryDevtools />
         </NuqsAdapter>
       </ThemeProvider>

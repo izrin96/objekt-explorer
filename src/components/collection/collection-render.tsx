@@ -1,4 +1,4 @@
-import { CSSProperties } from "react";
+import type { CSSProperties } from "react";
 
 export function ObjektsRender<T>({
   items,
@@ -32,7 +32,7 @@ export function ObjektsRenderRow<T>({
 }) {
   return (
     <div
-      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-3 lg:gap-4 pb-4"
+      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-3 pb-4 lg:gap-4"
       style={{ "--grid-columns": columns } as CSSProperties}
     >
       {items.map((item, j) => {

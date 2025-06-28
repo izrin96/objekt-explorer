@@ -1,3 +1,6 @@
+import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import type { PropsWithChildren } from "react";
+import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { Container } from "@/components/ui";
@@ -6,12 +9,6 @@ import { UserProvider } from "@/hooks/use-user";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { cachedSession, toPublicUser } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
-import { PropsWithChildren } from "react";
-import { LockIcon } from "@phosphor-icons/react/dist/ssr";
-import {
-  ProfileBanner,
-  ProfileBannerClearance,
-} from "@/components/profile/profile-banner";
 
 type Props = PropsWithChildren<{
   params: Promise<{
@@ -34,7 +31,7 @@ export default async function UserCollectionLayout(props: Props) {
     !(profiles?.some((a) => a.address === targetUser.address) ?? false)
   )
     return (
-      <div className="flex flex-col justify-center items-center w-full gap-2 py-12 font-semibold">
+      <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
         <LockIcon size={72} weight="thin" />
         Profile Private
       </div>
@@ -46,7 +43,7 @@ export default async function UserCollectionLayout(props: Props) {
 
       <Container>
         {targetUser.bannerImgUrl && <ProfileBannerClearance />}
-        <div className="flex flex-col gap-4 pb-36 pt-2 min-h-screen">
+        <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
           <ProfileProvider profile={targetUser}>
             <UserProvider profiles={profiles} user={toPublicUser(session)}>
               <ProfileHeader user={targetUser} />

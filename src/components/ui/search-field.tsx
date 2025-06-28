@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { IconSearch, IconX } from "@intentui/icons"
-import { SearchField as SearchFieldPrimitive } from "react-aria-components"
+import { IconSearch, IconX } from "@intentui/icons";
+import { SearchField as SearchFieldPrimitive } from "react-aria-components";
 
-import type { SearchFieldProps as SearchFieldPrimitiveProps } from "react-aria-components"
+import type { SearchFieldProps as SearchFieldPrimitiveProps } from "react-aria-components";
 
 import {
   Description,
@@ -12,13 +12,13 @@ import {
   type FieldProps,
   Input,
   Label,
-} from "@/components/ui/field"
-import { Loader } from "@/components/ui/loader"
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { Button } from "react-aria-components"
+} from "@/components/ui/field";
+import { Loader } from "@/components/ui/loader";
+import { composeTailwindRenderProps } from "@/lib/primitive";
+import { Button } from "react-aria-components";
 
 interface SearchFieldProps extends SearchFieldPrimitiveProps, FieldProps {
-  isPending?: boolean
+  isPending?: boolean;
 }
 
 const SearchField = ({
@@ -62,8 +62,8 @@ const SearchField = ({
         </>
       )}
     </SearchFieldPrimitive>
-  )
-}
+  );
+};
 
-export type { SearchFieldProps }
-export { SearchField }
+export type { SearchFieldProps };
+export { SearchField };

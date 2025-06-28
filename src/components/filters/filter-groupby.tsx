@@ -1,11 +1,11 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-import { Button, Menu } from "../ui";
 import { useCallback, useMemo } from "react";
+import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
-import { validGroupBy, ValidGroupBy } from "@/lib/universal/cosmo/common";
+import { type ValidGroupBy, validGroupBy } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
+import { Button, Menu } from "../ui";
 
 const map: Record<ValidGroupBy, string> = {
   artist: "Artist",
@@ -20,7 +20,7 @@ export default function GroupByFilter() {
   const [filters, setFilters] = useFilters();
   const selected = useMemo(
     () => new Set(filters.group_by ? [filters.group_by] : []),
-    [filters.group_by]
+    [filters.group_by],
   );
 
   const update = useCallback(
@@ -31,15 +31,12 @@ export default function GroupByFilter() {
         group_dir: ["member", "class"].includes(value ?? "") ? "asc" : null,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.group_by ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.group_by ? "!inset-ring-primary" : ""}>
         Group By
       </Button>
       <Menu.Content

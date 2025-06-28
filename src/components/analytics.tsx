@@ -1,5 +1,5 @@
-import { env } from "@/env";
 import Script from "next/script";
+import { env } from "@/env";
 
 const Analytics = () => {
   if (process.env.NODE_ENV !== "production") return null;

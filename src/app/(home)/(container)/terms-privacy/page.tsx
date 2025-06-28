@@ -1,6 +1,5 @@
+import type { Metadata } from "next";
 import { Link } from "@/components/ui";
-import { Metadata } from "next";
-import React from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -10,14 +9,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function TermsPrivacy() {
   return (
-    <div className="flex flex-col items-center py-8 gap-6">
-      <h2 className="text-lg font-semibold">Terms and Privacy</h2>
+    <div className="flex flex-col items-center gap-6 py-8">
+      <h2 className="font-semibold text-lg">Terms and Privacy</h2>
 
       <div className="prose text-fg text-sm">
         <ul>
           <li>
-            When you log in with Twitter (X) or Discord, we get your public
-            profile info (like your name and username).
+            When you log in with Twitter (X) or Discord, we get your public profile info (like your
+            name and username).
           </li>
           <li>We do not post anything or access your private data.</li>
           <li>We do not sell or share your data.</li>

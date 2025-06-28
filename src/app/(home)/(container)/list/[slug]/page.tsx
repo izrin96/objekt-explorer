@@ -1,13 +1,12 @@
-import ListRender from "@/components/list/list-view";
-import { api, HydrateClient } from "@/lib/trpc/server";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import React from "react";
-import { cachedSession, toPublicUser } from "@/lib/server/auth";
-import { fetchList, fetchOwnedLists } from "@/lib/server/api/routers/list";
-import { UserProvider } from "@/hooks/use-user";
 import ListHeader from "@/components/list/list-header";
+import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/hooks/use-profile";
+import { UserProvider } from "@/hooks/use-user";
+import { fetchList, fetchOwnedLists } from "@/lib/server/api/routers/list";
+import { cachedSession, toPublicUser } from "@/lib/server/auth";
+import { api, HydrateClient } from "@/lib/trpc/server";
 
 type Props = {
   params: Promise<{
@@ -32,16 +31,14 @@ export default async function Page(props: Props) {
 
   const session = await cachedSession();
 
-  const [lists] = await Promise.all([
-    session ? fetchOwnedLists(session.user.id) : undefined,
-  ]);
+  const [lists] = await Promise.all([session ? fetchOwnedLists(session.user.id) : undefined]);
 
   api.list.getEntries.prefetch(params.slug);
 
   return (
     <ProfileProvider list={list}>
       <UserProvider lists={lists} user={toPublicUser(session)}>
-        <div className="flex flex-col pb-36 pt-2 gap-4">
+        <div className="flex flex-col gap-4 pt-2 pb-36">
           <ListHeader list={list} />
 
           <HydrateClient>

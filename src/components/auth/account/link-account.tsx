@@ -1,18 +1,14 @@
 "use client";
 
+import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Button, Label, Modal } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { getQueryClient } from "@/lib/query-client";
 import { api } from "@/lib/trpc/client";
-import { Provider, ProviderId, providersMap } from "@/lib/universal/user";
-import {
-  LinkBreakIcon,
-  LinkIcon,
-  ArrowsClockwiseIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { toast } from "sonner";
+import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";
 
 const providers = Object.values(providersMap);
 
@@ -30,7 +26,7 @@ export function ListAccounts() {
 
   const linkedAccounts = query.data.filter((a) => a.provider !== "credential");
   const unlinkedProviders = providers.filter(
-    (a) => !linkedAccounts.some((b) => b.provider === a.id)
+    (a) => !linkedAccounts.some((b) => b.provider === a.id),
   );
 
   return (
@@ -74,20 +70,12 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex gap-2 text-sm items-center flex-1">
+      <div className="flex flex-1 items-center gap-2 text-sm">
         <span>{provider.label}</span>
         <span className="text-muted-fg text-xs">{accountId}</span>
       </div>
-      <PullProfileModal
-        provider={provider}
-        open={pullOpen}
-        setOpen={setPullOpen}
-      />
-      <Button
-        intent="outline"
-        size="xs"
-        onClick={() => setPullOpen(true)}
-      >
+      <PullProfileModal provider={provider} open={pullOpen} setOpen={setPullOpen} />
+      <Button intent="outline" size="xs" onClick={() => setPullOpen(true)}>
         <ArrowsClockwiseIcon data-slot="icon" />
         Refresh
       </Button>
@@ -126,13 +114,9 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
   });
 
   return (
-    <div className="flex justify-between items-center">
+    <div className="flex items-center justify-between">
       <span className="text-sm">{provider.label}</span>
-      <Button
-        intent="outline"
-        size="xs"
-        onClick={() => linkAccount.mutate()}
-      >
+      <Button intent="outline" size="xs" onClick={() => linkAccount.mutate()}>
         <LinkIcon data-slot="icon" />
         Link
       </Button>
@@ -163,8 +147,7 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
       <Modal.Header>
         <Modal.Title>Update Profile from {provider.label}</Modal.Title>
         <Modal.Description>
-          This will update your {provider.label} username and profile picture.
-          Continue?
+          This will update your {provider.label} username and profile picture. Continue?
         </Modal.Description>
       </Modal.Header>
       <Modal.Footer>

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { Modal } from "../ui";
 import ObjektDetail from "./objekt-detail";
-import { ValidObjekt } from "@/lib/universal/objekts";
 
 type Props = {
   showOwned?: boolean;
@@ -12,12 +13,7 @@ type Props = {
   menu?: React.ReactNode;
 };
 
-export default function ObjektModal({
-  children,
-  showOwned,
-  objekts,
-  menu,
-}: Props) {
+export default function ObjektModal({ children, showOwned, objekts, menu }: Props) {
   const [open, setOpen] = useState(false);
   return (
     <>

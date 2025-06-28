@@ -1,23 +1,14 @@
 "use client";
 
+import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { Suspense, useRef, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { api } from "@/lib/trpc/client";
-import { Suspense, useRef, useState } from "react";
-import { toast } from "sonner";
-import {
-  Button,
-  Checkbox,
-  Form,
-  Link,
-  Loader,
-  Modal,
-  Note,
-  Select,
-} from "../../ui";
 import ErrorFallbackRender from "../../error-boundary";
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { ErrorBoundary } from "react-error-boundary";
-import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { Button, Checkbox, Form, Link, Loader, Modal, Note, Select } from "../../ui";
 
 type AddProps = {
   handleAction: (open: () => void) => void;
@@ -28,10 +19,7 @@ export function AddToList({ handleAction }: AddProps) {
   return (
     <>
       <AddToListModal open={addOpen} setOpen={setAddOpen} />
-      <Button
-        intent="outline"
-        onClick={() => handleAction(() => setAddOpen(true))}
-      >
+      <Button intent="outline" onClick={() => handleAction(() => setAddOpen(true))}>
         <PlusIcon weight="regular" data-slot="icon" />
         Add to list
       </Button>
@@ -80,10 +68,7 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
         >
           <QueryErrorResetBoundary>
             {({ reset }) => (
-              <ErrorBoundary
-                onReset={reset}
-                FallbackComponent={ErrorFallbackRender}
-              >
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
                 <Suspense
                   fallback={
                     <div className="flex justify-center">
@@ -128,12 +113,7 @@ function AddToListForm() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Select
-        label="My List"
-        placeholder="Select a list"
-        name="slug"
-        isRequired
-      >
+      <Select label="My List" placeholder="Select a list" name="slug" isRequired>
         <Select.Trigger />
         <Select.List items={data}>
           {(item) => (
@@ -163,10 +143,7 @@ export function RemoveFromList({ slug, handleAction }: RemoveProps) {
   return (
     <>
       <RemoveFromListModal slug={slug} open={open} setOpen={setOpen} />
-      <Button
-        intent="outline"
-        onClick={() => handleAction(() => setOpen(true))}
-      >
+      <Button intent="outline" onClick={() => handleAction(() => setOpen(true))}>
         <TrashSimpleIcon weight="regular" data-slot="icon" />
         Remove from list
       </Button>
@@ -180,11 +157,7 @@ type RemoveFromListModalProps = {
   setOpen: (val: boolean) => void;
 };
 
-export function RemoveFromListModal({
-  slug,
-  open,
-  setOpen,
-}: RemoveFromListModalProps) {
+export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModalProps) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
   const utils = api.useUtils();
@@ -206,8 +179,7 @@ export function RemoveFromListModal({
       <Modal.Header>
         <Modal.Title>Remove objekt</Modal.Title>
         <Modal.Description>
-          This will permanently remove the selected objekt from the list.
-          Continue?
+          This will permanently remove the selected objekt from the list. Continue?
         </Modal.Description>
       </Modal.Header>
       <Modal.Footer>

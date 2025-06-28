@@ -1,65 +1,49 @@
 "use client";
 
-import {
-  Suspense,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { useFilters } from "@/hooks/use-filters";
-import {
-  QueryErrorResetBoundary,
-  useQuery,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { Loader } from "../ui";
-import { WindowVirtualizer } from "virtua";
+import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
+import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "../error-boundary";
-import { ValidObjekt } from "@/lib/universal/objekts";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { useProfile } from "@/hooks/use-profile";
+import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
-import { GroupLabelRender } from "../collection/label-render";
-import {
-  ObjektsRender,
-  ObjektsRenderRow,
-} from "../collection/collection-render";
-import ObjektView from "../objekt/objekt-view";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
-import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
-import Filter from "./filter";
+import { useProfile } from "@/hooks/use-profile";
+import { useProfileAuthed, useUser } from "@/hooks/use-user";
+import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
+import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { api } from "@/lib/trpc/client";
+import type { ValidObjekt } from "@/lib/universal/objekts";
+import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
+import { GroupLabelRender } from "../collection/label-render";
+import ErrorFallbackRender from "../error-boundary";
+import { FilterContainer } from "../filters/filter-container";
+import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { AddToList } from "../list/modal/manage-objekt";
 import {
   ObjektHoverMenu,
   ObjektOverlay,
   ObjektSelect,
   ObjektTogglePin,
 } from "../objekt/objekt-action";
-import { FilterContainer } from "../filters/filter-container";
-import { useProfileAuthed, useUser } from "@/hooks/use-user";
-import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
-import { AddToList } from "../list/modal/manage-objekt";
-import ObjektModal from "../objekt/objekt-modal";
 import {
   AddToListMenu,
   ObjektStaticMenu,
   SelectMenuItem,
   TogglePinMenuItem,
 } from "../objekt/objekt-menu";
-import dynamic from "next/dynamic";
+import ObjektModal from "../objekt/objekt-modal";
+import { ObjektViewSelectable } from "../objekt/objekt-selectable";
+import ObjektView from "../objekt/objekt-view";
+import { Loader } from "../ui";
+import Filter from "./filter";
+import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 
-export const ProfileObjektRenderDynamic = dynamic(
-  () => Promise.resolve(ProfileObjektRender),
-  {
-    ssr: false,
-  }
-);
+export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileObjektRender), {
+  ssr: false,
+});
 
 function ProfileObjektRender() {
   return (
@@ -67,13 +51,10 @@ function ProfileObjektRender() {
       <ObjektModalProvider initialTab="owned">
         <QueryErrorResetBoundary>
           {({ reset }) => (
-            <ErrorBoundary
-              onReset={reset}
-              FallbackComponent={ErrorFallbackRender}
-            >
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
               <Suspense
                 fallback={
-                  <div className="justify-center flex">
+                  <div className="flex justify-center">
                     <Loader variant="ring" />
                   </div>
                 }
@@ -98,9 +79,9 @@ function ProfileObjekt() {
   const [count, setCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
 
-  const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, ObjektItem<ValidObjekt[]>[]][]
-  >([]);
+  const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
+    [],
+  );
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const objektsQuery = useQuery({
@@ -117,9 +98,7 @@ function ProfileObjekt() {
   const joinedObjekts = useMemo(() => {
     if (filters.unowned) {
       const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
-      const missingObjekts = (objektsQuery.data ?? []).filter(
-        (obj) => !ownedSlugs.has(obj.slug)
-      );
+      const missingObjekts = (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug));
       return [...ownedQuery.data, ...missingObjekts];
     }
     return ownedQuery.data;
@@ -127,9 +106,7 @@ function ProfileObjekt() {
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, items]) => [
-      ...(title
-        ? [<GroupLabelRender title={title} key={`label-${title}`} />]
-        : []),
+      ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...ObjektsRender({
         items,
         columns,
@@ -164,10 +141,7 @@ function ProfileObjekt() {
                   }
                 >
                   {({ openObjekts }) => (
-                    <ObjektViewSelectable
-                      objekt={objekt}
-                      openObjekts={openObjekts}
-                    >
+                    <ObjektViewSelectable objekt={objekt} openObjekts={openObjekts}>
                       {({ isSelected, open }) => (
                         <ObjektView
                           objekts={item.item}
@@ -213,22 +187,10 @@ function ProfileObjekt() {
         ),
       }),
     ]);
-  }, [
-    deferredObjektsFiltered,
-    filters.grouped,
-    columns,
-    authenticated,
-    isProfileAuthed,
-    profile,
-  ]);
+  }, [deferredObjektsFiltered, filters.grouped, columns, authenticated, isProfileAuthed, profile]);
 
   useEffect(() => {
-    const shaped = shapeObjekts(
-      filters,
-      joinedObjekts,
-      artists,
-      pinsQuery.data
-    );
+    const shaped = shapeObjekts(filters, joinedObjekts, artists, pinsQuery.data);
     const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
     const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
     setGroupCount(allGroupedObjekts.length);
@@ -252,14 +214,8 @@ function ProfileObjekt() {
               <AddToList handleAction={handleAction} />
               {isProfileAuthed && (
                 <>
-                  <PinObjekt
-                    address={profile!.address}
-                    handleAction={handleAction}
-                  />
-                  <UnpinObjekt
-                    address={profile!.address}
-                    handleAction={handleAction}
-                  />
+                  <PinObjekt address={profile!.address} handleAction={handleAction} />
+                  <UnpinObjekt address={profile!.address} handleAction={handleAction} />
                 </>
               )}
             </>

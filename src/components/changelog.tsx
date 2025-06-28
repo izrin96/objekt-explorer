@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr";
 import {
   Button,
   Disclosure,
@@ -10,7 +10,6 @@ import {
   Link,
   Modal,
 } from "./ui";
-import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function Changelog() {
   return (
@@ -40,9 +39,7 @@ export default function Changelog() {
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
                   <ul>
-                    <li>
-                      Implement Cosmo Live.
-                    </li>
+                    <li>Implement Cosmo Live.</li>
                   </ul>
                 </div>
               </DisclosurePanel>
@@ -52,9 +49,7 @@ export default function Changelog() {
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
                   <ul>
-                    <li>
-                      Added a banner image cropping feature in Edit Profile.
-                    </li>
+                    <li>Added a banner image cropping feature in Edit Profile.</li>
                   </ul>
                 </div>
               </DisclosurePanel>
@@ -66,10 +61,9 @@ export default function Changelog() {
                   <ul>
                     <li>Added Live Activity page.</li>
                     <li>
-                      Added option to hide from Activity in Edit Profile.
-                      Existing Cosmo profiles with either &apos;Hide
-                      Serial&apos; or &apos;Private Profile&apos; enabled have
-                      been updated to hide activity by default.
+                      Added option to hide from Activity in Edit Profile. Existing Cosmo profiles
+                      with either &apos;Hide Serial&apos; or &apos;Private Profile&apos; enabled
+                      have been updated to hide activity by default.
                     </li>
                     <li>Added filter by objekt color.</li>
                   </ul>
@@ -91,14 +85,10 @@ export default function Changelog() {
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
                   <ul>
+                    <li>Cosmo profile will hide user info by default after successful link.</li>
                     <li>
-                      Cosmo profile will hide user info by default after
-                      successful link.
-                    </li>
-                    <li>
-                      Added show social option in manage account. All users are
-                      set to hide by default. Please update if you want to show
-                      it.
+                      Added show social option in manage account. All users are set to hide by
+                      default. Please update if you want to show it.
                     </li>
                   </ul>
                 </div>
@@ -110,14 +100,11 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>
-                      User can now hide their objekt from serial lookup and
-                      private their Cosmo profile. Option are available in Edit
-                      Profile. User must link with their Cosmo profile first.
+                      User can now hide their objekt from serial lookup and private their Cosmo
+                      profile. Option are available in Edit Profile. User must link with their Cosmo
+                      profile first.
                     </li>
-                    <li>
-                      Added menu on objekt modal to allow user quickly add to
-                      list.
-                    </li>
+                    <li>Added menu on objekt modal to allow user quickly add to list.</li>
                   </ul>
                 </div>
               </DisclosurePanel>
@@ -128,8 +115,8 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>
-                      Allow user to hide user info from list and Cosmo profile.
-                      Option are available in both Edit List and Edit Profile.
+                      Allow user to hide user info from list and Cosmo profile. Option are available
+                      in both Edit List and Edit Profile.
                     </li>
                   </ul>
                 </div>
@@ -141,9 +128,8 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>
-                      User can now customize their Cosmo profile banner. Support
-                      video and image. User must link with their Cosmo profile
-                      first.
+                      User can now customize their Cosmo profile banner. Support video and image.
+                      User must link with their Cosmo profile first.
                     </li>
                     <li>Update site theme.</li>
                   </ul>
@@ -155,10 +141,7 @@ export default function Changelog() {
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
                   <ul>
-                    <li>
-                      Added new Progress by Member statistic chart to Cosmo
-                      profile.
-                    </li>
+                    <li>Added new Progress by Member statistic chart to Cosmo profile.</li>
                   </ul>
                 </div>
               </DisclosurePanel>
@@ -168,10 +151,7 @@ export default function Changelog() {
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
                   <ul>
-                    <li>
-                      User can now pin objekt. User must link with their Cosmo
-                      profile first.
-                    </li>
+                    <li>User can now pin objekt. User must link with their Cosmo profile first.</li>
                   </ul>
                 </div>
               </DisclosurePanel>
@@ -182,17 +162,12 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>Added Generate Discord Format List feature.</li>
-                    <li>
-                      Added Refresh Profile button to pull latest Discord info.
-                    </li>
+                    <li>Added Refresh Profile button to pull latest Discord info.</li>
                     <li>New domain, move out from Vercel hosting.</li>
+                    <li>Added support to search by double season number like AA201.</li>
                     <li>
-                      Added support to search by double season number like
-                      AA201.
-                    </li>
-                    <li>
-                      Allow user to link their Cosmo profile with their account.
-                      Support multiple Cosmo profile.
+                      Allow user to link their Cosmo profile with their account. Support multiple
+                      Cosmo profile.
                     </li>
                     <li>Added List feature.</li>
                     <li>Added Sign in with Discord.</li>

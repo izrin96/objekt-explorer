@@ -1,11 +1,11 @@
 "use client";
 
-import { ValidClass, validClasses } from "@/lib/universal/cosmo/common";
 import { useCallback, useMemo } from "react";
-import { Button, Menu } from "../ui";
+import type { Selection } from "react-stately";
 import { useFilters } from "@/hooks/use-filters";
+import { type ValidClass, validClasses } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
-import { Selection } from "react-stately";
+import { Button, Menu } from "../ui";
 
 type Props = {
   hideZeroWelcome?: boolean;
@@ -22,19 +22,16 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
         class: value,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   const availableClasses = validClasses.filter((s) =>
-    hideZeroWelcome ? !["Zero", "Welcome"].includes(s) : true
+    hideZeroWelcome ? !["Zero", "Welcome"].includes(s) : true,
   );
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.class?.length ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.class?.length ? "!inset-ring-primary" : ""}>
         Class
       </Button>
       <Menu.Content

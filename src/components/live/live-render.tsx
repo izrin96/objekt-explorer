@@ -1,15 +1,10 @@
 "use client";
 
-import React from "react";
-import {
-  StreamVideo,
-  StreamVideoClient,
-  User,
-} from "@stream-io/video-react-sdk";
-import { CustomLivestreamPlayer } from "./custom-player";
+import { StreamVideo, StreamVideoClient, type User } from "@stream-io/video-react-sdk";
 import { env } from "@/env";
-import { LiveSession } from "@/lib/universal/cosmo/live";
 import { LiveSessionProvider } from "@/hooks/use-live-session";
+import type { LiveSession } from "@/lib/universal/cosmo/live";
+import { CustomLivestreamPlayer } from "./custom-player";
 import LiveEnded from "./live-ended";
 
 const user: User = { type: "anonymous" };
@@ -29,10 +24,7 @@ export default function LiveStreamingRender({ live }: Props) {
         {live.endedAt !== null ? (
           <LiveEnded />
         ) : (
-          <CustomLivestreamPlayer
-            callType="livestream"
-            callId={live.videoCallId}
-          />
+          <CustomLivestreamPlayer callType="livestream" callId={live.videoCallId} />
         )}
       </StreamVideo>
     </LiveSessionProvider>

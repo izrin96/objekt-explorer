@@ -1,7 +1,5 @@
 "use client";
 
-import { ValidObjekt } from "@/lib/universal/objekts";
-import { Button, Loader, Menu } from "../ui";
 import {
   CheckIcon,
   DotsThreeVerticalIcon,
@@ -10,25 +8,21 @@ import {
   PushPinSlashIcon,
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { PropsWithChildren, useCallback } from "react";
+import { type PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
-import { api } from "@/lib/trpc/client";
-import { PublicProfile } from "@/lib/universal/user";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { api } from "@/lib/trpc/client";
+import type { ValidObjekt } from "@/lib/universal/objekts";
+import type { PublicProfile } from "@/lib/universal/user";
+import { Button, Loader, Menu } from "../ui";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
     <Menu>
-      <Button
-        className="absolute top-1 sm:top-2 p-2 right-10 z-50"
-        size="sq-xs"
-        intent="outline"
-      >
+      <Button className="absolute top-1 right-10 z-50 p-2 sm:top-2" size="sq-xs" intent="outline">
         <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
-      <Menu.Content placement="bottom right">
-        {children}
-      </Menu.Content>
+      <Menu.Content placement="bottom right">{children}</Menu.Content>
     </Menu>
   );
 }
@@ -55,7 +49,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
         collectionSlugs: [objekt.slug],
       });
     },
-    [objekt, addToList]
+    [objekt, addToList],
   );
   return (
     <Menu.Submenu>
@@ -88,13 +82,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   );
 }
 
-export function RemoveFromListMenu({
-  slug,
-  objekt,
-}: {
-  slug: string;
-  objekt: ValidObjekt;
-}) {
+export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: ValidObjekt }) {
   const utils = api.useUtils();
   const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
     onSuccess: () => {
@@ -168,11 +156,7 @@ export function TogglePinMenuItem({
         }
       }}
     >
-      {isPin ? (
-        <PushPinSlashIcon data-slot="icon" />
-      ) : (
-        <PushPinIcon data-slot="icon" />
-      )}
+      {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
       <Menu.Label>{isPin ? "Unpin" : "Pin"}</Menu.Label>
     </Menu.Item>
   );

@@ -1,37 +1,32 @@
 "use client";
 
-import {
-  QueryErrorResetBoundary,
-  useSuspenseInfiniteQuery,
-} from "@tanstack/react-query";
-import React, { Suspense, useRef } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { ofetch } from "ofetch";
-import { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
-import { InfiniteQueryNext } from "@/components/infinite-query-pending";
-import { Badge, Card, Loader } from "@/components/ui";
-import { useProfile } from "@/hooks/use-profile";
-import { format } from "date-fns";
 import { IconOpenLink } from "@intentui/icons";
-import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
-import UserLink from "@/components/user-link";
-import { useFilters } from "@/hooks/use-filters";
-import ErrorFallbackRender from "@/components/error-boundary";
-import TradesFilter from "./trades-filter";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { useTypeFilter } from "./filter-type";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import ObjektModal from "@/components/objekt/objekt-modal";
-import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import dynamic from "next/dynamic";
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { format } from "date-fns";
+import dynamic from "next/dynamic";
+import { ofetch } from "ofetch";
+import type React from "react";
+import { Suspense, useRef } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import ErrorFallbackRender from "@/components/error-boundary";
+import { InfiniteQueryNext } from "@/components/infinite-query-pending";
+import ObjektModal from "@/components/objekt/objekt-modal";
+import { Badge, Card, Loader } from "@/components/ui";
+import UserLink from "@/components/user-link";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import { useProfile } from "@/hooks/use-profile";
+import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
+import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import { useTypeFilter } from "./filter-type";
+import TradesFilter from "./trades-filter";
 
-export const ProfileTradesRenderDynamic = dynamic(
-  () => Promise.resolve(ProfileTradesRender),
-  {
-    ssr: false,
-  }
-);
+export const ProfileTradesRenderDynamic = dynamic(() => Promise.resolve(ProfileTradesRender), {
+  ssr: false,
+});
 
 function ProfileTradesRender() {
   const { artists } = useCosmoArtist();
@@ -41,13 +36,10 @@ function ProfileTradesRender() {
 
       <QueryErrorResetBoundary>
         {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            FallbackComponent={ErrorFallbackRender}
-          >
+          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
             <Suspense
               fallback={
-                <div className="justify-center flex">
+                <div className="flex justify-center">
                   <Loader variant="ring" />
                 </div>
               }
@@ -70,11 +62,7 @@ function ProfileTrades() {
 
   const query = useSuspenseInfiniteQuery({
     queryKey: ["transfers", address, type, filters],
-    queryFn: async ({
-      pageParam,
-    }: {
-      pageParam?: { timestamp: string; id: string };
-    }) => {
+    queryFn: async ({ pageParam }: { pageParam?: { timestamp: string; id: string } }) => {
       const url = new URL(`/api/transfers/${address}`, getBaseURL());
       return await ofetch<TransferResult>(url.toString(), {
         query: {
@@ -106,7 +94,7 @@ function ProfileTrades() {
 
   if (query.data.pages[0].hide)
     return (
-      <div className="flex flex-col justify-center gap-3 items-center py-3">
+      <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
         <p>Trade History Private</p>
       </div>
@@ -117,14 +105,12 @@ function ProfileTrades() {
       <Card className="py-0">
         <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
           {/* Header */}
-          <div className="border-b min-w-fit flex">
-            <div className="px-3 py-2.5 min-w-[210px] flex-1">Date</div>
-            <div className="px-3 py-2.5 min-w-[240px] flex-1">Objekt</div>
-            <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
-              Serial
-            </div>
-            <div className="px-3 py-2.5 min-w-[130px] flex-1">Action</div>
-            <div className="px-3 py-2.5 min-w-[200px] flex-1">User</div>
+          <div className="flex min-w-fit border-b">
+            <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
+            <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
+            <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
+            <div className="min-w-[130px] flex-1 px-3 py-2.5">Action</div>
+            <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
           </div>
 
           {/* Virtualized Rows */}
@@ -132,7 +118,7 @@ function ProfileTrades() {
             style={{
               height: `${rowVirtualizer.getTotalSize()}px`,
             }}
-            className="w-full relative"
+            className="relative w-full"
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const row = rows[virtualRow.index];
@@ -202,25 +188,20 @@ function TradeRow({
   );
 
   return (
-    <div className="absolute left-0 top-0 w-full" style={style}>
-      <div className="items-center border-b min-w-full inline-flex">
-        <div className="px-3 py-2.5 min-w-[210px] flex-1">
+    <div className="absolute top-0 left-0 w-full" style={style}>
+      <div className="inline-flex min-w-full items-center border-b">
+        <div className="min-w-[210px] flex-1 px-3 py-2.5">
           {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
         </div>
-        <div
-          className="px-3 py-2.5 cursor-pointer min-w-[240px] flex-1"
-          onClick={open}
-        >
-          <div className="inline-flex gap-2 items-center">
+        <div role="none" className="min-w-[240px] flex-1 cursor-pointer px-3 py-2.5" onClick={open}>
+          <div className="inline-flex items-center gap-2">
             {row.objekt.collectionId}
             <IconOpenLink />
           </div>
         </div>
-        <div className="px-3 py-2.5 min-w-[100px] max-w-[130px] flex-1">
-          {row.objekt.serial}
-        </div>
-        <div className="px-3 py-2.5 min-w-[130px] flex-1">{action}</div>
-        <div className="px-3 py-2.5 min-w-[200px] flex-1">{user}</div>
+        <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
+        <div className="min-w-[130px] flex-1 px-3 py-2.5">{action}</div>
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>
       </div>
     </div>
   );

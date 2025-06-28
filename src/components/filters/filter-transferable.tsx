@@ -1,14 +1,14 @@
 "use client";
 
-import { Toggle } from "../ui";
 import { useFilters } from "@/hooks/use-filters";
+import { Toggle } from "../ui";
 
 export default function TransferableFilter() {
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
       intent="outline"
-      className="data-selected:inset-ring-primary font-medium"
+      className="font-medium data-selected:inset-ring-primary"
       isSelected={filters.transferable ?? false}
       onChange={(v) =>
         setFilters({

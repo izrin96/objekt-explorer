@@ -3,12 +3,12 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import { createTRPCReact } from "@trpc/react-query";
-import { type inferRouterInputs, type inferRouterOutputs } from "@trpc/server";
+import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { useState } from "react";
 
-import { type AppRouter } from "@/lib/server/api/root";
-import { getBaseURL } from "../utils";
+import type { AppRouter } from "@/lib/server/api/root";
 import { getQueryClient } from "../query-client";
+import { getBaseURL } from "../utils";
 
 export const api = createTRPCReact<AppRouter>();
 
@@ -28,7 +28,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
             (op.direction === "down" && op.result instanceof Error),
         }),
         httpBatchLink({
-          url: getBaseURL() + "/api/trpc",
+          url: `${getBaseURL()}/api/trpc`,
           headers: () => {
             const headers = new Headers();
             headers.set("x-trpc-source", "nextjs-react");
@@ -36,7 +36,7 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
           },
         }),
       ],
-    })
+    }),
   );
 
   return (

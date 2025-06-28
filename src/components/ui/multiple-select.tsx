@@ -1,23 +1,29 @@
-"use client"
+"use client";
 
-import { DropdownItem, DropdownLabel, DropdownSection } from "@/components/ui/dropdown"
-import { Description, FieldGroup, type FieldProps, Input, Label } from "@/components/ui/field"
-import { Tag, TagGroup, TagList } from "@/components/ui/tag-group"
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { IconChevronsY } from "@intentui/icons"
+import { IconChevronsY } from "@intentui/icons";
 import {
   Children,
+  isValidElement,
   type KeyboardEvent,
   type RefObject,
-  isValidElement,
   useEffect,
   useRef,
   useState,
-} from "react"
+} from "react";
+import type {
+  ComboBoxProps,
+  GroupProps,
+  Key,
+  ListBoxProps,
+  Selection,
+} from "react-aria-components";
+import { Button, ComboBox, Group, ListBox } from "react-aria-components";
+import { DropdownItem, DropdownLabel, DropdownSection } from "@/components/ui/dropdown";
+import { Description, FieldGroup, type FieldProps, Input, Label } from "@/components/ui/field";
 
-import { PopoverContent } from "@/components/ui/popover"
-import type { ComboBoxProps, GroupProps, Key, ListBoxProps, Selection } from "react-aria-components"
-import { Button, ComboBox, Group, ListBox } from "react-aria-components"
+import { PopoverContent } from "@/components/ui/popover";
+import { Tag, TagGroup, TagList } from "@/components/ui/tag-group";
+import { composeTailwindRenderProps } from "@/lib/primitive";
 
 interface MultipleSelectProps<T>
   extends Omit<ListBoxProps<T>, "renderEmptyState">,
@@ -27,21 +33,21 @@ interface MultipleSelectProps<T>
     >,
     FieldProps,
     Pick<GroupProps, "isDisabled" | "isInvalid"> {
-  className?: string
-  errorMessage?: string
-  maxItems?: number
-  renderEmptyState?: (inputValue: string) => React.ReactNode
+  className?: string;
+  errorMessage?: string;
+  maxItems?: number;
+  renderEmptyState?: (inputValue: string) => React.ReactNode;
 }
 
 function mapToNewObject<T extends object>(array: T[]): { id: T[keyof T]; textValue: T[keyof T] }[] {
   return array.map((item) => {
-    const idProperty = Object.keys(item).find((key) => key === "id" || key === "key")
-    const textProperty = Object.keys(item).find((key) => key !== "id" && key !== "key")
+    const idProperty = Object.keys(item).find((key) => key === "id" || key === "key");
+    const textProperty = Object.keys(item).find((key) => key !== "id" && key !== "key");
     return {
       id: item[idProperty as keyof T],
       textValue: item[textProperty as keyof T],
-    }
-  })
+    };
+  });
 }
 
 const MultipleSelect = <T extends object>({
@@ -51,44 +57,43 @@ const MultipleSelect = <T extends object>({
   children,
   ...props
 }: MultipleSelectProps<T>) => {
-  const triggerRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const triggerButtonRef = useRef<HTMLButtonElement>(null)
-  const [inputValue, setInputValue] = useState("")
-  const [selectedKeys, onSelectionChange] = useState<Selection>(new Set(props.selectedKeys))
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [selectedKeys, onSelectionChange] = useState<Selection>(new Set(props.selectedKeys));
 
-  const isMax = [...selectedKeys].length >= maxItems
+  const isMax = [...selectedKeys].length >= maxItems;
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   useEffect(() => {
-    setInputValue("")
+    setInputValue("");
     return () => {
-      inputRef.current?.focus()
-    }
-  }, [props?.selectedKeys, selectedKeys])
+      inputRef.current?.focus();
+    };
+  }, [props?.selectedKeys, selectedKeys]);
 
   const addItem = (e: Key | null) => {
-    if (!e || isMax) return
-    onSelectionChange?.((s) => new Set([...s, e!]))
+    if (!e || isMax) return;
+    onSelectionChange?.((s) => new Set([...s, e!]));
     // @ts-expect-error incompatible type Key and Selection
-    props.onSelectionChange?.((s) => new Set([...s, e!]))
-  }
+    props.onSelectionChange?.((s) => new Set([...s, e!]));
+  };
 
   const removeItem = (e: Set<Key>) => {
-    onSelectionChange?.((s) => new Set([...s].filter((i) => i !== e.values().next().value)))
+    onSelectionChange?.((s) => new Set([...s].filter((i) => i !== e.values().next().value)));
     props.onSelectionChange?.(
       // @ts-expect-error incompatible type Key and Selection
       (s) => new Set([...s].filter((i) => i !== e.values().next().value)),
-    )
-  }
+    );
+  };
 
   const onKeyDownCapture = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && inputValue === "") {
-      onSelectionChange?.((s) => new Set([...s].slice(0, -1)))
+      onSelectionChange?.((s) => new Set([...s].slice(0, -1)));
       // @ts-expect-error incompatible type Key and Selection
-      props.onSelectionChange?.((s) => new Set([...s].slice(0, -1)))
+      props.onSelectionChange?.((s) => new Set([...s].slice(0, -1)));
     }
-  }
+  };
 
   const parsedItems = props.items
     ? mapToNewObject(props.items as T[])
@@ -97,18 +102,18 @@ const MultipleSelect = <T extends object>({
           children as React.ReactNode,
           (child) => isValidElement(child) && child.props,
         ) as T[],
-      )
+      );
 
   const availableItemsToSelect = props.items
     ? parsedItems.filter((item) => ![...selectedKeys].includes(item.id as Key))
-    : parsedItems
+    : parsedItems;
 
   const filteredChildren = props.items
     ? parsedItems.filter((item) => ![...selectedKeys].includes(item.id as Key))
     : Children.map(
         children as React.ReactNode,
         (child) => isValidElement(child) && child.props,
-      )?.filter((item: T & any) => ![...selectedKeys].includes(item.id))
+      )?.filter((item: T & any) => ![...selectedKeys].includes(item.id));
 
   return (
     <Group
@@ -164,7 +169,7 @@ const MultipleSelect = <T extends object>({
                   onFocus={() => triggerButtonRef.current?.click()}
                   ref={inputRef as RefObject<HTMLInputElement>}
                   onBlur={() => {
-                    setInputValue("")
+                    setInputValue("");
                   }}
                   onKeyDownCapture={onKeyDownCapture}
                   placeholder={isMax ? "Maximum reached" : props.placeholder}
@@ -228,12 +233,12 @@ const MultipleSelect = <T extends object>({
         </>
       )}
     </Group>
-  )
-}
+  );
+};
 
-MultipleSelect.Item = DropdownItem
-MultipleSelect.Label = DropdownLabel
-MultipleSelect.Section = DropdownSection
+MultipleSelect.Item = DropdownItem;
+MultipleSelect.Label = DropdownLabel;
+MultipleSelect.Section = DropdownSection;
 
-export { MultipleSelect }
-export type { MultipleSelectProps }
+export { MultipleSelect };
+export type { MultipleSelectProps };

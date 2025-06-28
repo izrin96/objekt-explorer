@@ -1,59 +1,39 @@
 "use client";
 
-import ObjektView from "@/components/objekt/objekt-view";
-import { checkFiltering, useFilters } from "@/hooks/use-filters";
-import { shapeProgressCollections } from "@/lib/filter-utils";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import {
-  QueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import React, {
-  memo,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useCallback,
-  Suspense,
-} from "react";
-import ProgressFilter from "./progress-filter";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { groupBy } from "es-toolkit";
+import { AnimatePresence, motion } from "motion/react";
+import dynamic from "next/dynamic";
+import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
+import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
+import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
+import ObjektModal from "@/components/objekt/objekt-modal";
+import ObjektView from "@/components/objekt/objekt-view";
 import { Loader, ProgressBar } from "@/components/ui";
-import { unobtainables, ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { checkFiltering, useFilters } from "@/hooks/use-filters";
+import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProfile } from "@/hooks/use-profile";
-import { groupBy } from "es-toolkit";
+import { useUser } from "@/hooks/use-user";
+import { shapeProgressCollections } from "@/lib/filter-utils";
+import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import ObjektModal from "@/components/objekt/objekt-modal";
-import {
-  AddToListMenu,
-  ObjektStaticMenu,
-} from "@/components/objekt/objekt-menu";
-import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
-import { useUser } from "@/hooks/use-user";
-import { motion, AnimatePresence } from "motion/react";
-import dynamic from "next/dynamic";
+import ProgressFilter from "./progress-filter";
 
-export const ProgressRenderDynamic = dynamic(
-  () => Promise.resolve(ProgressRender),
-  {
-    ssr: false,
-  }
-);
+export const ProgressRenderDynamic = dynamic(() => Promise.resolve(ProgressRender), {
+  ssr: false,
+});
 
 function ProgressRender() {
   return (
     <ObjektModalProvider initialTab="owned">
       <QueryErrorResetBoundary>
         {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            FallbackComponent={ErrorFallbackRender}
-          >
+          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
             <Suspense
               fallback={
                 <div className="flex justify-center">
@@ -82,9 +62,7 @@ function Progress() {
 
   const { ownedSlugs, shaped } = useMemo(() => {
     const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
-    const missingObjekts = objektsQuery.data.filter(
-      (obj) => !ownedSlugs.has(obj.slug)
-    );
+    const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
     const joinedObjekts = [...ownedQuery.data, ...missingObjekts];
     const shaped = shapeProgressCollections(artists, filters, joinedObjekts);
     return { ownedSlugs, shaped };
@@ -92,9 +70,7 @@ function Progress() {
 
   const calculateMemberRanks = useCallback(() => {
     const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
-    const grouped = Object.values(
-      groupBy(ownedQuery.data, (a) => a.collectionId)
-    );
+    const grouped = Object.values(groupBy(ownedQuery.data, (a) => a.collectionId));
 
     return members
       .map((member) => ({
@@ -136,7 +112,7 @@ function Progress() {
     <div className="flex flex-col gap-8">
       <ProgressFilter artists={artists} />
       {!filters.artist && !filters.member ? (
-        <div className="flex justify-center text-sm text-muted-fg">
+        <div className="flex justify-center text-muted-fg text-sm">
           Select at least 1 artist or 1 member
         </div>
       ) : (
@@ -178,20 +154,19 @@ const ProgressCollapse = memo(function ProgressCollapse({
   }, [objekts, ownedSlugs]);
 
   const percentage =
-    filteredObjekts.length === 0
-      ? 100
-      : Math.floor((owned.length / filteredObjekts.length) * 100);
+    filteredObjekts.length === 0 ? 100 : Math.floor((owned.length / filteredObjekts.length) * 100);
 
   return (
     <div className="flex flex-col">
       <div
+        role="none"
         className={cn(
-          "flex gap-4 py-4 flex-wrap cursor-pointer select-none items-center transition rounded-lg p-4 inset-ring inset-ring-fg/10 bg-secondary/30 hover:bg-secondary/60",
-          percentage >= 100 && "inset-ring-primary"
+          "inset-ring inset-ring-fg/10 flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-secondary/30 p-4 py-4 transition hover:bg-secondary/60",
+          percentage >= 100 && "inset-ring-primary",
         )}
         onClick={() => setShow(!show)}
       >
-        <div className="font-semibold text-base inline-flex gap-2 items-center min-w-72">
+        <div className="inline-flex min-w-72 items-center gap-2 font-semibold text-base">
           {title}
         </div>
         <ProgressBar
@@ -209,44 +184,42 @@ const ProgressCollapse = memo(function ProgressCollapse({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
           >
-            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 lg:gap-3 mt-4">
-              {Object.values(groupBy(objekts, (a) => a.collectionId)).map(
-                (objekts) => {
-                  const [objekt] = objekts;
-                  return (
-                    <ObjektModal
-                      key={objekt.id}
-                      objekts={objekts}
-                      showOwned
-                      menu={
-                        authenticated && (
-                          <ObjektStaticMenu>
-                            <AddToListMenu objekt={objekt} />
-                          </ObjektStaticMenu>
-                        )
-                      }
-                    >
-                      {({ openObjekts }) => (
-                        <ObjektView
-                          objekts={objekts}
-                          isFade={!ownedSlugs.has(objekt.slug)}
-                          unobtainable={unobtainables.includes(objekt.slug)}
-                          showCount={showCount}
-                          open={openObjekts}
-                        >
-                          {authenticated && (
-                            <div className="absolute top-0 right-0 flex">
-                              <ObjektHoverMenu>
-                                <AddToListMenu objekt={objekt} />
-                              </ObjektHoverMenu>
-                            </div>
-                          )}
-                        </ObjektView>
-                      )}
-                    </ObjektModal>
-                  );
-                }
-              )}
+            <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 lg:gap-3">
+              {Object.values(groupBy(objekts, (a) => a.collectionId)).map((objekts) => {
+                const [objekt] = objekts;
+                return (
+                  <ObjektModal
+                    key={objekt.id}
+                    objekts={objekts}
+                    showOwned
+                    menu={
+                      authenticated && (
+                        <ObjektStaticMenu>
+                          <AddToListMenu objekt={objekt} />
+                        </ObjektStaticMenu>
+                      )
+                    }
+                  >
+                    {({ openObjekts }) => (
+                      <ObjektView
+                        objekts={objekts}
+                        isFade={!ownedSlugs.has(objekt.slug)}
+                        unobtainable={unobtainables.includes(objekt.slug)}
+                        showCount={showCount}
+                        open={openObjekts}
+                      >
+                        {authenticated && (
+                          <div className="absolute top-0 right-0 flex">
+                            <ObjektHoverMenu>
+                              <AddToListMenu objekt={objekt} />
+                            </ObjektHoverMenu>
+                          </div>
+                        )}
+                      </ObjektView>
+                    )}
+                  </ObjektModal>
+                );
+              })}
             </div>
           </motion.div>
         )}

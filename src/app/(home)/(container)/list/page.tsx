@@ -1,9 +1,8 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import MyListRender from "@/components/list/my-list";
 import { cachedSession } from "@/lib/server/auth";
 import { api, HydrateClient } from "@/lib/trpc/server";
-import { Metadata } from "next";
-import { redirect } from "next/navigation";
-import React from "react";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -19,7 +18,7 @@ export default async function Page() {
   api.list.myList.prefetch();
 
   return (
-    <div className="flex flex-col pb-36 pt-2">
+    <div className="flex flex-col pt-2 pb-36">
       <HydrateClient>
         <MyListRender />
       </HydrateClient>

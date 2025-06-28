@@ -1,14 +1,10 @@
 "use client";
 
-import {
-  GRID_COLUMNS,
-  GRID_COLUMNS_MOBILE,
-  GRID_COLUMNS_TABLET,
-} from "@/lib/utils";
 import { useEffect } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET } from "@/lib/utils";
 
 type BreakpointColumnState = {
   columns: number;
@@ -36,8 +32,8 @@ export const useBreakpointColumnStore = create<BreakpointColumnState>()(
       onRehydrateStorage: (state) => {
         return () => state.setHasHydrated(true);
       },
-    }
-  )
+    },
+  ),
 );
 
 export function useBreakpointColumn() {
@@ -54,8 +50,8 @@ export function useBreakpointColumn() {
     const newColumns = isDesktop
       ? GRID_COLUMNS
       : isTablet
-      ? GRID_COLUMNS_TABLET
-      : GRID_COLUMNS_MOBILE;
+        ? GRID_COLUMNS_TABLET
+        : GRID_COLUMNS_MOBILE;
     setColumns(newColumns);
   }, [isDesktop, isTablet, setColumns, hasHydrated, initial]);
 

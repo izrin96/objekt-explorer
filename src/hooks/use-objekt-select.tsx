@@ -1,8 +1,8 @@
 "use client";
 
-import { PropsWithChildren, createContext, useContext, useRef } from "react";
-import { createStore, useStore, type StoreApi } from "zustand";
-import { ValidObjekt } from "@/lib/universal/objekts";
+import { createContext, type PropsWithChildren, useContext, useRef } from "react";
+import { createStore, type StoreApi, useStore } from "zustand";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 
 type ObjektSelectedState = {
   mode: boolean;
@@ -48,9 +48,7 @@ const createObjektSelectStore = () =>
       })),
   }));
 
-const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(
-  null
-);
+const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(null);
 
 export function ObjektSelectProvider({ children }: PropsWithChildren) {
   const storeRef = useRef<StoreApi<ObjektSelectedState> | null>(null);
@@ -59,14 +57,12 @@ export function ObjektSelectProvider({ children }: PropsWithChildren) {
   }
 
   return (
-    <ObjektSelectContext.Provider value={storeRef.current}>
-      {children}
-    </ObjektSelectContext.Provider>
+    <ObjektSelectContext.Provider value={storeRef.current}>{children}</ObjektSelectContext.Provider>
   );
 }
 
 export function useObjektSelect<SelectorOutput>(
-  selector: (state: ObjektSelectedState) => SelectorOutput
+  selector: (state: ObjektSelectedState) => SelectorOutput,
 ) {
   const store = useContext(ObjektSelectContext);
   if (!store) {

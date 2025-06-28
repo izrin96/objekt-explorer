@@ -1,19 +1,14 @@
 "use client";
 
+import { ChecksIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import { AnimatePresence, motion } from "motion/react";
+import { type ReactNode, useCallback } from "react";
+import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { Button, Toggle, Tooltip } from "../ui";
-import { useCallback, ReactNode } from "react";
-import { toast } from "sonner";
-import { AnimatePresence, motion } from "motion/react";
-import React from "react";
-import { ChecksIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
-  children?: ({
-    handleAction,
-  }: {
-    handleAction: (open: () => void) => void;
-  }) => ReactNode;
+  children?: ({ handleAction }: { handleAction: (open: () => void) => void }) => ReactNode;
 };
 
 export function SelectMode({ children }: Props) {
@@ -32,11 +27,11 @@ export function SelectMode({ children }: Props) {
         open();
       }
     },
-    [selected]
+    [selected],
   );
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
+    <div className="flex flex-wrap items-center gap-2">
       <Toggle
         isSelected={mode}
         className={mode ? "!inset-ring-primary" : ""}
@@ -71,19 +66,19 @@ export function FloatingSelectMode({ children }: Props) {
         open();
       }
     },
-    [selected]
+    [selected],
   );
 
   return (
     <AnimatePresence>
       {selected.length > 0 && (
         <motion.div
-          className="fixed inset-x-0 bottom-2 w-fit mx-auto z-10 bg-bg/80 backdrop-blur px-2 py-1 rounded shadow border"
+          className="fixed inset-x-0 bottom-2 z-10 mx-auto w-fit rounded border bg-bg/80 px-2 py-1 shadow backdrop-blur"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
         >
-          <div className="flex gap-2 items-center flex-wrap justify-center">
+          <div className="flex flex-wrap items-center justify-center gap-2">
             <Tooltip delay={0} closeDelay={0}>
               <Button size="sq-sm" intent="outline" onClick={reset}>
                 <XIcon size={18} weight="regular" />
@@ -103,9 +98,7 @@ export function FloatingSelectMode({ children }: Props) {
               <Tooltip.Content>Toggle select mode</Tooltip.Content>
             </Tooltip>
             {children?.({ handleAction })}
-            <span className="font-semibold text-sm py-2 px-1">
-              {selected.length} selected
-            </span>
+            <span className="px-1 py-2 font-semibold text-sm">{selected.length} selected</span>
           </div>
         </motion.div>
       )}

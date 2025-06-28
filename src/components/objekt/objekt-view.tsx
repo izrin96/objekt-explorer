@@ -1,14 +1,10 @@
-import { CSSProperties, memo, PropsWithChildren } from "react";
 import NextImage from "next/image";
-import {
-  getCollectionShortId,
-  OwnedObjekt,
-  ValidObjekt,
-} from "@/lib/universal/objekts";
+import { type CSSProperties, memo, type PropsWithChildren } from "react";
+import { getCollectionShortId, type OwnedObjekt, type ValidObjekt } from "@/lib/universal/objekts";
+import { replaceUrlSize } from "@/lib/utils";
+import { cn } from "@/utils/classes";
 import { Badge } from "../ui";
 import ObjektSidebar from "./objekt-sidebar";
-import { cn } from "@/utils/classes";
-import { replaceUrlSize } from "@/lib/utils";
 
 type Props = PropsWithChildren<{
   objekts: ValidObjekt[];
@@ -33,7 +29,7 @@ export default memo(function ObjektView({
   ...props
 }: Props) {
   const objekts = props.objekts.toSorted(
-    (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial
+    (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial,
   );
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
@@ -46,23 +42,16 @@ export default memo(function ObjektView({
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
   return (
-    <div
-      className={cn("flex flex-col gap-2 @container", isFade && "opacity-35")}
-      style={css}
-    >
+    <div className={cn("@container flex flex-col gap-2", isFade && "opacity-35")} style={css}>
       <div
+        role="none"
         className={cn(
-          "cursor-pointer relative overflow-hidden aspect-photocard drop-shadow select-none hover:scale-[1.01] transition duration-150 group rounded-[4.5cqw]",
-          isSelected && "ring-[3cqw] bg-fg"
+          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-[4.5cqw] drop-shadow transition duration-150 hover:scale-[1.01]",
+          isSelected && "bg-fg ring-[3cqw]",
         )}
         onClick={open}
       >
-        <NextImage
-          fill
-          priority={priority}
-          src={resizedUrl}
-          alt={objekt.collectionId}
-        />
+        <NextImage fill priority={priority} src={resizedUrl} alt={objekt.collectionId} />
         {objekt.artist !== "idntt" && (
           <ObjektSidebar
             collection={objekt.collectionNo}
@@ -70,17 +59,17 @@ export default memo(function ObjektView({
           />
         )}
         {showCount && objekts.length > 1 && (
-          <div className="flex absolute bottom-1 left-1 rounded-full px-2 py-1 font-bold bg-bg text-fg text-xs">
+          <div className="absolute bottom-1 left-1 flex rounded-full bg-bg px-2 py-1 font-bold text-fg text-xs">
             {objekts.length}
           </div>
         )}
 
         {children}
       </div>
-      <div className="flex flex-col justify-center text-sm text-center items-center gap-1">
+      <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
         <Badge
           intent="secondary"
-          className="font-semibold cursor-pointer"
+          className="cursor-pointer font-semibold"
           isCircle={false}
           onClick={open}
         >
@@ -88,11 +77,7 @@ export default memo(function ObjektView({
           {showSerial && isOwned && ` #${objekt.serial}`}
         </Badge>
         {unobtainable && (
-          <Badge
-            intent="custom"
-            isCircle={false}
-            className="font-semibold text-xs"
-          >
+          <Badge intent="custom" isCircle={false} className="font-semibold text-xs">
             Unobtainable
           </Badge>
         )}

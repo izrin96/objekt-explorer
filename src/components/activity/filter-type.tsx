@@ -1,10 +1,10 @@
 "use client";
 
+import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { Button, Menu } from "@/components/ui";
-import { useCallback, useMemo } from "react";
-import { ValidType, validType } from "@/lib/universal/activity";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { type ValidType, validType } from "@/lib/universal/activity";
 import { parseSelected } from "@/lib/utils";
 
 const map: Record<ValidType, string> = {
@@ -27,7 +27,7 @@ export default function TypeFilter() {
       const value = parseSelected<ValidType>(key) ?? "all";
       setType(value === "all" ? null : value);
     },
-    [setType]
+    [setType],
   );
 
   return (

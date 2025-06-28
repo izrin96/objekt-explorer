@@ -1,6 +1,6 @@
+import type { Metadata } from "next";
 import { ProfileTradesRenderDynamic } from "@/components/profile/trades/profile-trades";
 import { getUserByIdentifier } from "@/lib/client-fetching";
-import { Metadata } from "next";
 
 type Props = {
   params: Promise<{

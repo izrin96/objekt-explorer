@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react";
 
-import { IconX } from "@intentui/icons"
-import type { HeadingProps } from "react-aria-components"
+import { IconX } from "@intentui/icons";
+import type { HeadingProps } from "react-aria-components";
 import {
   Button as ButtonPrimitive,
   Dialog as DialogPrimitive,
   Heading,
   Text,
-} from "react-aria-components"
+} from "react-aria-components";
 
-import { Button, type ButtonProps } from "@/components/ui/button"
-import { useMediaQuery } from "@/hooks/use-media-query"
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { twMerge } from "tailwind-merge"
+import { Button, type ButtonProps } from "@/components/ui/button";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { composeTailwindRenderProps } from "@/lib/primitive";
+import { twMerge } from "tailwind-merge";
 
 const Dialog = ({
   role = "dialog",
@@ -30,25 +30,25 @@ const Dialog = ({
       )}
       {...props}
     />
-  )
-}
+  );
+};
 
 const DialogTrigger = (props: React.ComponentProps<typeof ButtonPrimitive>) => (
   <ButtonPrimitive {...props} />
-)
+);
 
 type DialogHeaderProps = React.HTMLAttributes<HTMLDivElement> & {
-  title?: string
-  description?: string
-}
+  title?: string;
+  description?: string;
+};
 
 const DialogHeader = ({ className, ...props }: DialogHeaderProps) => {
-  const headerRef = useRef<HTMLHeadingElement>(null)
+  const headerRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
-    const header = headerRef.current
+    const header = headerRef.current;
     if (!header) {
-      return
+      return;
     }
 
     const observer = new ResizeObserver((entries) => {
@@ -56,13 +56,13 @@ const DialogHeader = ({ className, ...props }: DialogHeaderProps) => {
         header.parentElement?.style.setProperty(
           "--dialog-header-height",
           `${entry.target.clientHeight}px`,
-        )
+        );
       }
-    })
+    });
 
-    observer.observe(header)
-    return () => observer.unobserve(header)
-  }, [])
+    observer.observe(header);
+    return () => observer.unobserve(header);
+  }, []);
 
   return (
     <div
@@ -81,12 +81,12 @@ const DialogHeader = ({ className, ...props }: DialogHeaderProps) => {
         props.children
       )}
     </div>
-  )
-}
+  );
+};
 
 interface DialogTitleProps extends Omit<HeadingProps, "level"> {
-  level?: 1 | 2 | 3 | 4
-  ref?: React.Ref<HTMLHeadingElement>
+  level?: 1 | 2 | 3 | 4;
+  ref?: React.Ref<HTMLHeadingElement>;
 }
 const DialogTitle = ({ level = 2, className, ref, ...props }: DialogTitleProps) => (
   <Heading
@@ -96,9 +96,9 @@ const DialogTitle = ({ level = 2, className, ref, ...props }: DialogTitleProps) 
     className={twMerge("text-balance font-semibold text-fg text-lg/6 sm:text-base/6", className)}
     {...props}
   />
-)
+);
 
-type DialogDescriptionProps = React.ComponentProps<"div">
+type DialogDescriptionProps = React.ComponentProps<"div">;
 const DialogDescription = ({ className, ref, ...props }: DialogDescriptionProps) => (
   <Text
     slot="description"
@@ -109,9 +109,9 @@ const DialogDescription = ({ className, ref, ...props }: DialogDescriptionProps)
     ref={ref}
     {...props}
   />
-)
+);
 
-type DialogBodyProps = React.ComponentProps<"div">
+type DialogBodyProps = React.ComponentProps<"div">;
 const DialogBody = ({ className, ref, ...props }: DialogBodyProps) => (
   <div
     data-slot="dialog-body"
@@ -122,17 +122,17 @@ const DialogBody = ({ className, ref, ...props }: DialogBodyProps) => (
     )}
     {...props}
   />
-)
+);
 
-type DialogFooterProps = React.ComponentProps<"div">
+type DialogFooterProps = React.ComponentProps<"div">;
 const DialogFooter = ({ className, ...props }: DialogFooterProps) => {
-  const footerRef = useRef<HTMLDivElement>(null)
+  const footerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const footer = footerRef.current
+    const footer = footerRef.current;
 
     if (!footer) {
-      return
+      return;
     }
 
     const observer = new ResizeObserver((entries) => {
@@ -140,15 +140,15 @@ const DialogFooter = ({ className, ...props }: DialogFooterProps) => {
         footer.parentElement?.style.setProperty(
           "--dialog-footer-height",
           `${entry.target.clientHeight}px`,
-        )
+        );
       }
-    })
+    });
 
-    observer.observe(footer)
+    observer.observe(footer);
     return () => {
-      observer.unobserve(footer)
-    }
-  }, [])
+      observer.unobserve(footer);
+    };
+  }, []);
   return (
     <div
       ref={footerRef}
@@ -159,20 +159,20 @@ const DialogFooter = ({ className, ...props }: DialogFooterProps) => {
       )}
       {...props}
     />
-  )
-}
+  );
+};
 
 const DialogClose = ({ className, intent = "outline", ref, ...props }: ButtonProps) => {
-  return <Button slot="close" className={className} ref={ref} intent={intent} {...props} />
-}
+  return <Button slot="close" className={className} ref={ref} intent={intent} {...props} />;
+};
 
 interface CloseButtonIndicatorProps extends Omit<ButtonProps, "children"> {
-  className?: string
-  isDismissable?: boolean | undefined
+  className?: string;
+  isDismissable?: boolean | undefined;
 }
 
 const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => {
-  const isMobile = useMediaQuery("(max-width: 600px)")
+  const isMobile = useMediaQuery("(max-width: 600px)");
   return props.isDismissable ? (
     <ButtonPrimitive
       {...(isMobile ? { autoFocus: true } : {})}
@@ -185,8 +185,8 @@ const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => 
     >
       <IconX className="size-4" />
     </ButtonPrimitive>
-  ) : null
-}
+  ) : null;
+};
 
 export type {
   DialogHeaderProps,
@@ -195,7 +195,7 @@ export type {
   DialogFooterProps,
   DialogDescriptionProps,
   CloseButtonIndicatorProps,
-}
+};
 export {
   Dialog,
   DialogClose,
@@ -206,4 +206,4 @@ export {
   DialogBody,
   DialogFooter,
   DialogCloseIcon,
-}
+};

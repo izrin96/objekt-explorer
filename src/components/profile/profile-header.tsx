@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
-import { Avatar, Button, buttonStyles, Link } from "../ui";
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { PublicProfile } from "@/lib/universal/user";
-import { useProfileAuthed } from "@/hooks/use-user";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useProfileAuthed } from "@/hooks/use-user";
+import type { PublicProfile } from "@/lib/universal/user";
 import { EditProfileModal } from "../link/modal/manage-link";
+import { Avatar, Button, buttonStyles, Link } from "../ui";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const router = useRouter();
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 pb-2 md:pb-0 flex-wrap">
-      <div className="flex flex-col w-full md:w-auto">
-        <div className="text-xl font-semibold">{user.nickname}</div>
-        <div className="text-xs text-muted-fg truncate">{user.address}</div>
+    <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
+      <div className="flex w-full flex-col md:w-auto">
+        <div className="font-semibold text-xl">{user.nickname}</div>
+        <div className="truncate text-muted-fg text-xs">{user.address}</div>
       </div>
 
       <Link
@@ -24,13 +24,11 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           buttonStyles({
             ...renderProps,
             size: "sm",
-            className: "w-full md:w-auto flex-none",
+            className: "w-full flex-none md:w-auto",
             intent: "outline",
           })
         }
-        href={`https://apollo.cafe/@${
-          user.isAddress ? user.address : user.nickname
-        }`}
+        href={`https://apollo.cafe/@${user.isAddress ? user.address : user.nickname}`}
         target="_blank"
       >
         View in Apollo
@@ -51,7 +49,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             size="sm"
             intent="outline"
             onClick={() => setEditOpen(true)}
-            className="w-full md:w-auto flex-none"
+            className="w-full flex-none md:w-auto"
           >
             Edit Profile
           </Button>
@@ -59,7 +57,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       )}
 
       {user.user && (
-        <div className="text-sm flex gap-2 items-center w-full md:w-auto min-w-0">
+        <div className="flex w-full min-w-0 items-center gap-2 text-sm md:w-auto">
           <Avatar
             size="xl"
             className="self-center"
@@ -67,29 +65,21 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             alt={user.user.name}
             initials={user.user.name.charAt(0)}
           />
-          <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-lg truncate inline-flex gap-1">
+          <div className="flex min-w-0 flex-col">
+            <span className="inline-flex gap-1 truncate font-semibold text-lg">
               {user.user.name}
             </span>
             {user.user.showSocial && (
               <div className="flex gap-2">
                 {user.user.discord && (
-                  <div className="text-sm truncate flex gap-1">
-                    <DiscordLogoIcon
-                      size={16}
-                      weight="regular"
-                      className="self-center"
-                    />
+                  <div className="flex gap-1 truncate text-sm">
+                    <DiscordLogoIcon size={16} weight="regular" className="self-center" />
                     <span className="text-muted-fg">{user.user.discord}</span>
                   </div>
                 )}
                 {user.user.twitter && (
-                  <div className="text-sm truncate flex gap-1">
-                    <XLogoIcon
-                      size={16}
-                      weight="regular"
-                      className="self-center"
-                    />
+                  <div className="flex gap-1 truncate text-sm">
+                    <XLogoIcon size={16} weight="regular" className="self-center" />
                     <span className="text-muted-fg">{user.user.twitter}</span>
                   </div>
                 )}

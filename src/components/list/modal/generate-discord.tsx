@@ -1,28 +1,16 @@
 "use client";
 
-import { CopyButton } from "@/components/copy-button";
-import ErrorFallbackRender from "@/components/error-boundary";
-import {
-  Button,
-  Checkbox,
-  Modal,
-  Select,
-  Form,
-  Textarea,
-  Loader,
-} from "@/components/ui";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { api } from "@/lib/trpc/client";
-import { getBaseURL } from "@/lib/utils";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
-import {
-  mapCollectionByMember,
-  format,
-  makeMemberOrderedList,
-} from "@/lib/discord-format-utils";
+import { CopyButton } from "@/components/copy-button";
+import ErrorFallbackRender from "@/components/error-boundary";
+import { Button, Checkbox, Form, Loader, Modal, Select, Textarea } from "@/components/ui";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { format, makeMemberOrderedList, mapCollectionByMember } from "@/lib/discord-format-utils";
+import { api } from "@/lib/trpc/client";
+import { getBaseURL } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -34,10 +22,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <QueryErrorResetBoundary>
         {({ reset }) => (
-          <ErrorBoundary
-            onReset={reset}
-            FallbackComponent={ErrorFallbackRender}
-          >
+          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
             <Suspense
               fallback={
                 <div className="flex justify-center py-2">
@@ -94,22 +79,12 @@ function Content() {
                   const { have, want, collections } = data;
 
                   // collections map for faster search
-                  const collectionsMap = new Map(
-                    collections.map((a) => [a.slug, a])
-                  );
+                  const collectionsMap = new Map(collections.map((a) => [a.slug, a]));
 
                   const members = makeMemberOrderedList(collections, artists);
 
-                  const haveCollections = mapCollectionByMember(
-                    collectionsMap,
-                    have,
-                    members
-                  );
-                  const wantCollections = mapCollectionByMember(
-                    collectionsMap,
-                    want,
-                    members
-                  );
+                  const haveCollections = mapCollectionByMember(collectionsMap, have, members);
+                  const wantCollections = mapCollectionByMember(collectionsMap, want, members);
 
                   setFormatText(
                     [
@@ -125,24 +100,16 @@ function Content() {
                       "## Want",
                       ...format(wantCollections, showCount, lowercase),
                       ...(includeLink
-                        ? [
-                            "",
-                            `[View this list](<${getBaseURL()}/list/${wantSlug}>)`,
-                          ]
+                        ? ["", `[View this list](<${getBaseURL()}/list/${wantSlug}>)`]
                         : []),
-                    ].join("\n")
+                    ].join("\n"),
                   );
                 },
-              }
+              },
             );
           }}
         >
-          <Select
-            label="Have list"
-            name="haveSlug"
-            placeholder="Select a list"
-            isRequired
-          >
+          <Select label="Have list" name="haveSlug" placeholder="Select a list" isRequired>
             <Select.Trigger />
             <Select.List items={data}>
               {(item) => (
@@ -152,12 +119,7 @@ function Content() {
               )}
             </Select.List>
           </Select>
-          <Select
-            label="Want list"
-            name="wantSlug"
-            placeholder="Select a list"
-            isRequired
-          >
+          <Select label="Want list" name="wantSlug" placeholder="Select a list" isRequired>
             <Select.Trigger />
             <Select.List items={data}>
               {(item) => (
@@ -170,11 +132,7 @@ function Content() {
           <Checkbox label="Show count" name="showCount" />
           <Checkbox label="Include link" name="includeLink" />
           <Checkbox label="Lower case" name="lowercase" />
-          <Textarea
-            label="Formatted discord text"
-            value={formatText}
-            onChange={setFormatText}
-          />
+          <Textarea label="Formatted discord text" value={formatText} onChange={setFormatText} />
           <div className="flex">
             <CopyButton text={formatText} />
           </div>

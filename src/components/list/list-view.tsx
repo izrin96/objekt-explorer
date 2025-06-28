@@ -1,38 +1,35 @@
 "use client";
 
-import { mapObjektWithTag, ValidObjekt } from "@/lib/universal/objekts";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useFilters } from "@/hooks/use-filters";
-import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { WindowVirtualizer } from "virtua";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "../error-boundary";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
-import { GroupLabelRender } from "../collection/label-render";
-import {
-  ObjektsRender,
-  ObjektsRenderRow,
-} from "../collection/collection-render";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { api } from "@/lib/trpc/client";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
-import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
-import { ObjektViewSelectable } from "../objekt/objekt-selectable";
-import ObjektView from "../objekt/objekt-view";
-import Filter from "./filter";
-import { FilterContainer } from "../filters/filter-container";
-import { AddToList, RemoveFromList } from "./modal/manage-objekt";
 import { useListAuthed, useUser } from "@/hooks/use-user";
-import ObjektModal from "../objekt/objekt-modal";
+import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
+import { api } from "@/lib/trpc/client";
+import { mapObjektWithTag, type ValidObjekt } from "@/lib/universal/objekts";
+import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
+import { GroupLabelRender } from "../collection/label-render";
+import ErrorFallbackRender from "../error-boundary";
+import { FilterContainer } from "../filters/filter-container";
+import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 import {
   AddToListMenu,
   ObjektStaticMenu,
   RemoveFromListMenu,
   SelectMenuItem,
 } from "../objekt/objekt-menu";
-import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
+import ObjektModal from "../objekt/objekt-modal";
+import { ObjektViewSelectable } from "../objekt/objekt-selectable";
+import ObjektView from "../objekt/objekt-view";
+import Filter from "./filter";
+import { AddToList, RemoveFromList } from "./modal/manage-objekt";
 
 type Props = { slug: string };
 
@@ -42,10 +39,7 @@ export default function ListRender(props: Props) {
       <ObjektModalProvider initialTab="trades">
         <QueryErrorResetBoundary>
           {({ reset }) => (
-            <ErrorBoundary
-              onReset={reset}
-              FallbackComponent={ErrorFallbackRender}
-            >
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
               <ListView {...props} />
             </ErrorBoundary>
           )}
@@ -67,16 +61,14 @@ function ListView({ slug }: Props) {
     select: (data) => data.collections.map(mapObjektWithTag),
   });
 
-  const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, ObjektItem<ValidObjekt[]>[]][]
-  >([]);
+  const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
+    [],
+  );
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, items]) => [
-      ...(title
-        ? [<GroupLabelRender title={title} key={`label-${title}`} />]
-        : []),
+      ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...ObjektsRender({
         items,
         columns,
@@ -107,10 +99,7 @@ function ListView({ slug }: Props) {
                   }
                 >
                   {({ openObjekts }) => (
-                    <ObjektViewSelectable
-                      objekt={objekt}
-                      openObjekts={openObjekts}
-                    >
+                    <ObjektViewSelectable objekt={objekt} openObjekts={openObjekts}>
                       {({ isSelected, open }) => (
                         <ObjektView
                           objekts={item.item}
@@ -124,10 +113,7 @@ function ListView({ slug }: Props) {
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
                                 {isOwned ? (
-                                  <RemoveFromListMenu
-                                    slug={slug}
-                                    objekt={objekt}
-                                  />
+                                  <RemoveFromListMenu slug={slug} objekt={objekt} />
                                 ) : (
                                   <AddToListMenu objekt={objekt} />
                                 )}
@@ -169,11 +155,7 @@ function ListView({ slug }: Props) {
           }
         </FloatingSelectMode>
         <FilterContainer>
-          <Filters
-            authenticated={authenticated}
-            isOwned={isOwned}
-            slug={slug}
-          />
+          <Filters authenticated={authenticated} isOwned={isOwned} slug={slug} />
         </FilterContainer>
       </div>
       <span className="font-semibold">

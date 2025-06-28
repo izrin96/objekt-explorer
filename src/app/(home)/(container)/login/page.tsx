@@ -1,5 +1,5 @@
+import type { Metadata } from "next";
 import SignIn from "@/components/auth/sign-in";
-import { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

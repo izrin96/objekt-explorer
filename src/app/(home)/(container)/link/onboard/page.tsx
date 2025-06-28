@@ -1,7 +1,6 @@
+import { redirect } from "next/navigation";
 import LinkRender from "@/components/link/link-process";
 import { cachedSession } from "@/lib/server/auth";
-import { redirect } from "next/navigation";
-import React from "react";
 
 export default async function Page() {
   const session = await cachedSession();
@@ -9,7 +8,7 @@ export default async function Page() {
   if (!session) redirect("/");
 
   return (
-    <div className="flex flex-col pb-36 pt-2">
+    <div className="flex flex-col pt-2 pb-36">
       <LinkRender />
     </div>
   );

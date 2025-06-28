@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { Link as LinkPrimitive, type LinkProps as LinkPrimitiveProps } from "react-aria-components"
-import { twJoin } from "tailwind-merge"
+import { composeTailwindRenderProps } from "@/lib/primitive";
+import { Link as LinkPrimitive, type LinkProps as LinkPrimitiveProps } from "react-aria-components";
+import { twJoin } from "tailwind-merge";
 
 interface LinkProps extends LinkPrimitiveProps {
-  intent?: "primary" | "secondary" | "unstyled"
-  ref?: React.RefObject<HTMLAnchorElement>
+  intent?: "primary" | "secondary" | "unstyled";
+  ref?: React.RefObject<HTMLAnchorElement>;
 }
 
 const Link = ({ className, ref, intent = "unstyled", ...props }: LinkProps) => {
@@ -29,8 +29,8 @@ const Link = ({ className, ref, intent = "unstyled", ...props }: LinkProps) => {
         <>{typeof props.children === "function" ? props.children(values) : props.children}</>
       )}
     </LinkPrimitive>
-  )
-}
+  );
+};
 
-export type { LinkProps }
-export { Link }
+export type { LinkProps };
+export { Link };

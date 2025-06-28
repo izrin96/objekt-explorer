@@ -1,14 +1,11 @@
 "use client";
 
-import { type Selection } from "react-stately";
-import {
-  ValidOnlineType,
-  validOnlineTypes,
-} from "@/lib/universal/cosmo/common";
 import { useCallback, useMemo } from "react";
-import { Menu, Button } from "../ui";
+import type { Selection } from "react-stately";
 import { useFilters } from "@/hooks/use-filters";
+import { type ValidOnlineType, validOnlineTypes } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
+import { Button, Menu } from "../ui";
 
 const map: Record<ValidOnlineType, string> = {
   online: "Digital",
@@ -17,10 +14,7 @@ const map: Record<ValidOnlineType, string> = {
 
 export default function OnlineFilter() {
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(
-    () => new Set(filters.on_offline),
-    [filters.on_offline]
-  );
+  const selected = useMemo(() => new Set(filters.on_offline), [filters.on_offline]);
 
   const update = useCallback(
     (key: Selection) => {
@@ -29,15 +23,12 @@ export default function OnlineFilter() {
         on_offline: value,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.on_offline?.length ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.on_offline?.length ? "!inset-ring-primary" : ""}>
         Physical
       </Button>
       <Menu.Content

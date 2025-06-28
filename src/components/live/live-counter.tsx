@@ -6,10 +6,10 @@ import { useCallStateHooks } from "@stream-io/video-react-sdk";
 export default function ParticipantCounter() {
   const { useCallSession } = useCallStateHooks();
   const session = useCallSession();
-  const cosmoUserCount = session?.participants_count_by_role["cosmo_user"] ?? 0;
+  const cosmoUserCount = session?.participants_count_by_role.cosmo_user ?? 0;
   const anonymousUserCount = session?.anonymous_participant_count ?? 0;
   return (
-    <span className="text-sm font-semibold flex gap-1 items-center">
+    <span className="flex items-center gap-1 font-semibold text-sm">
       <UsersIcon size={16} />
       {cosmoUserCount + anonymousUserCount}
     </span>

@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import type { TooltipProps as TooltipPrimitiveProps } from "react-aria-components"
+import type { TooltipProps as TooltipPrimitiveProps } from "react-aria-components";
 import {
   Button,
+  composeRenderProps,
   OverlayArrow,
   Tooltip as TooltipPrimitive,
   TooltipTrigger as TooltipTriggerPrimitive,
-  composeRenderProps,
-} from "react-aria-components"
-import type { VariantProps } from "tailwind-variants"
-import { tv } from "tailwind-variants"
+} from "react-aria-components";
+import type { VariantProps } from "tailwind-variants";
+import { tv } from "tailwind-variants";
 
 const tooltipStyles = tv({
   base: [
@@ -38,16 +38,16 @@ const tooltipStyles = tv({
   defaultVariants: {
     intent: "default",
   },
-})
+});
 
-type TooltipProps = React.ComponentProps<typeof TooltipTriggerPrimitive>
-const Tooltip = (props: TooltipProps) => <TooltipTriggerPrimitive {...props} />
+type TooltipProps = React.ComponentProps<typeof TooltipTriggerPrimitive>;
+const Tooltip = (props: TooltipProps) => <TooltipTriggerPrimitive {...props} />;
 
 interface TooltipContentProps
   extends Omit<TooltipPrimitiveProps, "children">,
     VariantProps<typeof tooltipStyles> {
-  showArrow?: boolean
-  children: React.ReactNode
+  showArrow?: boolean;
+  children: React.ReactNode;
 }
 
 const TooltipContent = ({
@@ -84,11 +84,11 @@ const TooltipContent = ({
       )}
       {children}
     </TooltipPrimitive>
-  )
-}
+  );
+};
 
-Tooltip.Trigger = Button
-Tooltip.Content = TooltipContent
+Tooltip.Trigger = Button;
+Tooltip.Content = TooltipContent;
 
-export type { TooltipProps, TooltipContentProps }
-export { Tooltip }
+export type { TooltipProps, TooltipContentProps };
+export { Tooltip };

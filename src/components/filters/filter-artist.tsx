@@ -1,12 +1,12 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-import { Button, Menu } from "../ui";
-import { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import { useCallback, useMemo } from "react";
-import { ValidArtist } from "@/lib/universal/cosmo/common";
+import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
+import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
+import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
+import { Button, Menu } from "../ui";
 
 type Props = {
   artists: CosmoArtistWithMembersBFF[];
@@ -14,10 +14,7 @@ type Props = {
 
 export default function ArtistFilter({ artists }: Props) {
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(
-    () => new Set(filters.artist ?? []),
-    [filters.artist]
-  );
+  const selected = useMemo(() => new Set(filters.artist ?? []), [filters.artist]);
 
   const update = useCallback(
     (key: Selection) => {
@@ -27,15 +24,12 @@ export default function ArtistFilter({ artists }: Props) {
         member: null,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.artist ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.artist ? "!inset-ring-primary" : ""}>
         Artist
       </Button>
       <Menu.Content

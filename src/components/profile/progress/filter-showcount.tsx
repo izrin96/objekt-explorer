@@ -1,5 +1,5 @@
-import { Toggle } from "@/components/ui";
 import { parseAsBoolean, useQueryState } from "nuqs";
+import { Toggle } from "@/components/ui";
 
 export function useShowCount() {
   return useQueryState("showCount", parseAsBoolean.withDefault(false));
@@ -11,7 +11,7 @@ export default function ShowCountFilter() {
   return (
     <Toggle
       intent="outline"
-      className="data-selected:inset-ring-primary font-medium"
+      className="font-medium data-selected:inset-ring-primary"
       isSelected={showCount ?? false}
       onChange={setShowCount}
     >

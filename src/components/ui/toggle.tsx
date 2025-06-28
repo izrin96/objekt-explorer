@@ -1,8 +1,8 @@
-"use client"
-import { ToggleButton, composeRenderProps } from "react-aria-components"
-import type { ToggleButtonProps } from "react-aria-components"
-import { twMerge } from "tailwind-merge"
-import { type VariantProps, tv } from "tailwind-variants"
+"use client";
+import { ToggleButton, composeRenderProps } from "react-aria-components";
+import type { ToggleButtonProps } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
+import { type VariantProps, tv } from "tailwind-variants";
 
 const toggleStyles = tv({
   base: [
@@ -72,10 +72,10 @@ const toggleStyles = tv({
       className: "rounded-md *:data-[slot=icon]:size-3.5 sm:*:data-[slot=icon]:size-3",
     },
   ],
-})
+});
 
 interface ToggleProps extends ToggleButtonProps, VariantProps<typeof toggleStyles> {
-  ref?: React.Ref<HTMLButtonElement>
+  ref?: React.Ref<HTMLButtonElement>;
 }
 const Toggle = ({ className, size, intent, ref, ...props }: ToggleProps) => {
   return (
@@ -93,7 +93,7 @@ const Toggle = ({ className, size, intent, ref, ...props }: ToggleProps) => {
       )}
       {...props}
     />
-  )
-}
-export type { ToggleProps }
-export { Toggle }
+  );
+};
+export type { ToggleProps };
+export { Toggle };

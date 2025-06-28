@@ -1,10 +1,10 @@
 "use client";
 
-import { PublicList } from "@/lib/server/api/routers/list";
-import { PinObjekt } from "@/lib/universal/objekts";
-import { PublicProfile } from "@/lib/universal/user";
-import { PropsWithChildren, createContext, useContext, useRef } from "react";
-import { createStore, StoreApi, useStore } from "zustand";
+import { createContext, type PropsWithChildren, useContext, useRef } from "react";
+import { createStore, type StoreApi, useStore } from "zustand";
+import type { PublicList } from "@/lib/server/api/routers/list";
+import type { PinObjekt } from "@/lib/universal/objekts";
+import type { PublicProfile } from "@/lib/universal/user";
 
 type ProfileProps = {
   profile: PublicProfile | undefined;
@@ -52,9 +52,7 @@ export function ProfileProvider({ children, ...props }: ProviderProps) {
   return <ProfileContext value={storeRef.current}>{children}</ProfileContext>;
 }
 
-export function useProfile<SelectorOutput>(
-  selector: (state: ProfileState) => SelectorOutput
-) {
+export function useProfile<SelectorOutput>(selector: (state: ProfileState) => SelectorOutput) {
   const store = useContext(ProfileContext);
   if (!store) {
     throw new Error("useProfile must be used within an ProfileContext");

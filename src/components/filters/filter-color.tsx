@@ -1,12 +1,12 @@
 "use client";
 
-import React, { CSSProperties, useEffect, useState } from "react";
-import { useFilters } from "@/hooks/use-filters";
-import { parseColor } from "@react-stately/color";
-import { Button, ColorPicker } from "../ui";
-import { useDebounceValue } from "usehooks-ts";
-import { cn } from "@/utils/classes";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { parseColor } from "@react-stately/color";
+import { type CSSProperties, useEffect, useState } from "react";
+import { useDebounceValue } from "usehooks-ts";
+import { useFilters } from "@/hooks/use-filters";
+import { cn } from "@/utils/classes";
+import { Button, ColorPicker } from "../ui";
 import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {
@@ -31,7 +31,7 @@ export default function ColorFilter() {
           eyeDropper
           className={cn(
             "inset-ring inset-ring-fg/15 rounded",
-            color && "inset-ring-(--ring-color)"
+            color && "inset-ring-(--ring-color)",
           )}
           label="Color"
           value={color ? parseColor(color) : "#000"}

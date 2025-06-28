@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
-import { Button } from "../ui";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "../ui";
 
 export default function ResetFilter({
   onReset,

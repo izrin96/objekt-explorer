@@ -1,26 +1,26 @@
-"use client"
-import { Description, Label } from "@/components/ui/field"
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { IconX } from "@intentui/icons"
+"use client";
+import { Description, Label } from "@/components/ui/field";
+import { composeTailwindRenderProps } from "@/lib/primitive";
+import { IconX } from "@intentui/icons";
 import type {
   TagGroupProps as TagGroupPrimitiveProps,
   TagListProps,
   TagProps as TagPrimitiveProps,
-} from "react-aria-components"
+} from "react-aria-components";
 import {
   Button,
   TagGroup as TagGroupPrimitive,
   TagList as TagListPrimitive,
   Tag as TagPrimitive,
   composeRenderProps,
-} from "react-aria-components"
-import { twMerge } from "tailwind-merge"
+} from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 
 interface TagGroupProps extends TagGroupPrimitiveProps {
-  errorMessage?: string
-  label?: string
-  description?: string
-  ref?: React.RefObject<HTMLDivElement>
+  errorMessage?: string;
+  label?: string;
+  description?: string;
+  ref?: React.RefObject<HTMLDivElement>;
 }
 
 const TagGroup = ({ children, ref, className, ...props }: TagGroupProps) => {
@@ -34,8 +34,8 @@ const TagGroup = ({ children, ref, className, ...props }: TagGroupProps) => {
       {children}
       {props.description && <Description>{props.description}</Description>}
     </TagGroupPrimitive>
-  )
-}
+  );
+};
 
 const TagList = <T extends object>({ className, ...props }: TagListProps<T>) => {
   return (
@@ -43,13 +43,13 @@ const TagList = <T extends object>({ className, ...props }: TagListProps<T>) => 
       {...props}
       className={composeTailwindRenderProps(className, "flex flex-wrap gap-1")}
     />
-  )
-}
+  );
+};
 
 interface TagProps extends TagPrimitiveProps {}
 
 const Tag = ({ className, children, ...props }: TagProps) => {
-  const textValue = typeof children === "string" ? children : undefined
+  const textValue = typeof children === "string" ? children : undefined;
   return (
     <TagPrimitive
       textValue={textValue}
@@ -82,8 +82,8 @@ const Tag = ({ className, children, ...props }: TagProps) => {
         </>
       )}
     </TagPrimitive>
-  )
-}
+  );
+};
 
-export type { TagGroupProps, TagProps, TagListProps }
-export { Tag, TagList, TagGroup }
+export type { TagGroupProps, TagProps, TagListProps };
+export { Tag, TagList, TagGroup };

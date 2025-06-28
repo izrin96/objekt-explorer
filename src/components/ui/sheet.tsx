@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components"
+import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components";
 import {
+  composeRenderProps,
   DialogTrigger as DialogTriggerPrimitive,
   Modal,
   ModalOverlay,
-  composeRenderProps,
-} from "react-aria-components"
-import { type VariantProps, tv } from "tailwind-variants"
+} from "react-aria-components";
+import { tv, type VariantProps } from "tailwind-variants";
 
 import {
   Dialog,
@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 const overlayStyles = tv({
   base: [
@@ -36,9 +36,9 @@ const overlayStyles = tv({
       true: "fade-out animate-out duration-200 ease-in",
     },
   },
-})
+});
 
-type Sides = "top" | "bottom" | "left" | "right"
+type Sides = "top" | "bottom" | "left" | "right";
 const generateCompoundVariants = (sides: Array<Sides>) => {
   return sides.map((side) => ({
     side,
@@ -51,8 +51,8 @@ const generateCompoundVariants = (sides: Array<Sides>) => {
           : side === "left"
             ? "left-2 inset-y-2 rounded-lg ring-1 border-r-0"
             : "right-2 inset-y-2 rounded-lg ring-1 border-l-0",
-  }))
-}
+  }));
+};
 
 const contentStyles = tv({
   base: "fixed z-50 grid gap-4 border-fg/5 bg-overlay text-overlay-fg shadow-lg transition ease-in-out dark:border-border",
@@ -77,21 +77,21 @@ const contentStyles = tv({
     },
   },
   compoundVariants: generateCompoundVariants(["top", "bottom", "left", "right"]),
-})
+});
 
-type SheetProps = DialogTriggerProps
+type SheetProps = DialogTriggerProps;
 const Sheet = (props: SheetProps) => {
-  return <DialogTriggerPrimitive {...props} />
-}
+  return <DialogTriggerPrimitive {...props} />;
+};
 
 interface SheetContentProps
   extends Omit<ModalOverlayProps, "children">,
     Pick<DialogProps, "aria-label" | "role" | "aria-labelledby" | "children">,
     VariantProps<typeof overlayStyles> {
-  closeButton?: boolean
-  isBlurred?: boolean
-  isFloat?: boolean
-  side?: Sides
+  closeButton?: boolean;
+  isBlurred?: boolean;
+  isFloat?: boolean;
+  side?: Sides;
 }
 
 const SheetContent = ({
@@ -105,15 +105,15 @@ const SheetContent = ({
   children,
   ...props
 }: SheetContentProps) => {
-  const isDismissable = isDismissableInternal ?? role !== "alertdialog"
+  const isDismissable = isDismissableInternal ?? role !== "alertdialog";
   return (
     <ModalOverlay
       isDismissable={isDismissable}
-      className={composeRenderProps(className, (className, renderProps) => {
+      className={composeRenderProps(className, (_className, renderProps) => {
         return overlayStyles({
           ...renderProps,
           isBlurred,
-        })
+        });
       })}
       {...props}
     >
@@ -140,25 +140,25 @@ const SheetContent = ({
         </Dialog>
       </Modal>
     </ModalOverlay>
-  )
-}
+  );
+};
 
-const SheetTrigger = DialogTrigger
-const SheetFooter = DialogFooter
-const SheetHeader = DialogHeader
-const SheetTitle = DialogTitle
-const SheetDescription = DialogDescription
-const SheetBody = DialogBody
-const SheetClose = DialogClose
+const SheetTrigger = DialogTrigger;
+const SheetFooter = DialogFooter;
+const SheetHeader = DialogHeader;
+const SheetTitle = DialogTitle;
+const SheetDescription = DialogDescription;
+const SheetBody = DialogBody;
+const SheetClose = DialogClose;
 
-Sheet.Trigger = SheetTrigger
-Sheet.Footer = SheetFooter
-Sheet.Header = SheetHeader
-Sheet.Title = SheetTitle
-Sheet.Description = SheetDescription
-Sheet.Body = SheetBody
-Sheet.Close = SheetClose
-Sheet.Content = SheetContent
+Sheet.Trigger = SheetTrigger;
+Sheet.Footer = SheetFooter;
+Sheet.Header = SheetHeader;
+Sheet.Title = SheetTitle;
+Sheet.Description = SheetDescription;
+Sheet.Body = SheetBody;
+Sheet.Close = SheetClose;
+Sheet.Content = SheetContent;
 
-export type { SheetProps, SheetContentProps, Sides }
-export { Sheet }
+export type { SheetProps, SheetContentProps, Sides };
+export { Sheet };

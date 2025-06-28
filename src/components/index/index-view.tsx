@@ -1,48 +1,32 @@
 "use client";
 
-import {
-  Suspense,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { useFilters } from "@/hooks/use-filters";
-import { ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { WindowVirtualizer } from "virtua";
-import {
-  QueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
+import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { collectionOptions } from "@/lib/query-options";
-import ErrorFallbackRender from "../error-boundary";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
-import { GroupLabelRender } from "../collection/label-render";
-import {
-  ObjektsRender,
-  ObjektsRenderRow,
-} from "../collection/collection-render";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
+import { useUser } from "@/hooks/use-user";
+import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
+import { collectionOptions } from "@/lib/query-options";
+import type { ValidObjekt } from "@/lib/universal/objekts";
+import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
+import { GroupLabelRender } from "../collection/label-render";
+import ErrorFallbackRender from "../error-boundary";
+import { FilterContainer } from "../filters/filter-container";
+import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { AddToList } from "../list/modal/manage-objekt";
+import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
+import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objekt-menu";
+import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
-import Filter from "./filter";
-import { ValidObjekt } from "@/lib/universal/objekts";
-import { FilterContainer } from "../filters/filter-container";
-import { AddToList } from "../list/modal/manage-objekt";
-import ObjektModal from "../objekt/objekt-modal";
-import {
-  AddToListMenu,
-  ObjektStaticMenu,
-  SelectMenuItem,
-} from "../objekt/objekt-menu";
-import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
-import { useUser } from "@/hooks/use-user";
 import { Loader } from "../ui";
-import dynamic from "next/dynamic";
+import Filter from "./filter";
 
 export const IndexRenderDynamic = dynamic(() => Promise.resolve(IndexRender), {
   ssr: false,
@@ -54,10 +38,7 @@ function IndexRender() {
       <ObjektModalProvider initialTab="trades">
         <QueryErrorResetBoundary>
           {({ reset }) => (
-            <ErrorBoundary
-              onReset={reset}
-              FallbackComponent={ErrorFallbackRender}
-            >
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
               <Suspense
                 fallback={
                   <div className="flex justify-center">
@@ -83,16 +64,14 @@ function IndexView() {
   const [count, setCount] = useState(0);
   const query = useSuspenseQuery(collectionOptions);
 
-  const [objektsFiltered, setObjektsFiltered] = useState<
-    [string, ObjektItem<ValidObjekt[]>[]][]
-  >([]);
+  const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
+    [],
+  );
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const virtualList = useMemo(() => {
     return deferredObjektsFiltered.flatMap(([title, items]) => [
-      ...(title
-        ? [<GroupLabelRender title={title} key={`label-${title}`} />]
-        : []),
+      ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...ObjektsRender({
         items,
         columns,
@@ -119,10 +98,7 @@ function IndexView() {
                   }
                 >
                   {({ openObjekts }) => (
-                    <ObjektViewSelectable
-                      objekt={objekt}
-                      openObjekts={openObjekts}
-                    >
+                    <ObjektViewSelectable objekt={objekt} openObjekts={openObjekts}>
                       {({ isSelected, open }) => (
                         <ObjektView
                           objekts={item.item}
@@ -180,9 +156,7 @@ function Filters({ authenticated }: { authenticated: boolean }) {
     <div className="flex flex-col gap-6">
       <Filter />
       {authenticated && (
-        <SelectMode>
-          {({ handleAction }) => <AddToList handleAction={handleAction} />}
-        </SelectMode>
+        <SelectMode>{({ handleAction }) => <AddToList handleAction={handleAction} />}</SelectMode>
       )}
     </div>
   );

@@ -6,7 +6,7 @@ export default async function Home() {
   const session = await cachedSession();
 
   return (
-    <div className="flex flex-col pb-36 pt-2">
+    <div className="flex flex-col pt-2 pb-36">
       <UserProvider user={toPublicUser(session)}>
         <IndexRenderDynamic />
       </UserProvider>

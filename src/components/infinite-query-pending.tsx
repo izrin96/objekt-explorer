@@ -1,10 +1,7 @@
-import { QueryStatus } from "@tanstack/react-query";
+import { CaretDownIcon, FlagBannerFoldIcon } from "@phosphor-icons/react/dist/ssr";
+import type { QueryStatus } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 import { Loader } from "./ui";
-import {
-  CaretDownIcon,
-  FlagBannerFoldIcon,
-} from "@phosphor-icons/react/dist/ssr";
 
 type Props = {
   status: QueryStatus;
@@ -39,9 +36,7 @@ export function InfiniteQueryNext({
 
       {isFetchingNextPage && <Loader variant="ring" />}
 
-      {status === "success" && !hasNextPage && (
-        <FlagBannerFoldIcon size={32} weight="light" />
-      )}
+      {status === "success" && !hasNextPage && <FlagBannerFoldIcon size={32} weight="light" />}
     </div>
   );
 }

@@ -1,26 +1,24 @@
-"use client"
-
-import { useId } from "react"
+"use client";
 
 import type {
   TabListProps as TabListPrimitiveProps,
   TabPanelProps as TabPanelPrimitiveProps,
   TabProps as TabPrimitiveProps,
   TabsProps as TabsPrimitiveProps,
-} from "react-aria-components"
+} from "react-aria-components";
 import {
+  composeRenderProps,
   TabList as TabListPrimitive,
   TabPanel as TabPanelPrimitive,
   Tab as TabPrimitive,
   Tabs as TabsPrimitive,
-  composeRenderProps,
-} from "react-aria-components"
-import { twMerge } from "tailwind-merge"
+} from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 
-import { composeTailwindRenderProps } from "@/lib/primitive"
+import { composeTailwindRenderProps } from "@/lib/primitive";
 
 interface TabsProps extends TabsPrimitiveProps {
-  ref?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLDivElement>;
 }
 const Tabs = ({ className, ref, ...props }: TabsProps) => {
   return (
@@ -32,14 +30,13 @@ const Tabs = ({ className, ref, ...props }: TabsProps) => {
       ref={ref}
       {...props}
     />
-  )
-}
+  );
+};
 
 interface TabListProps<T extends object> extends TabListPrimitiveProps<T> {
-  ref?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLDivElement>;
 }
 const TabList = <T extends object>({ className, ref, ...props }: TabListProps<T>) => {
-  const id = useId()
   return (
     <TabListPrimitive
       ref={ref}
@@ -53,18 +50,18 @@ const TabList = <T extends object>({ className, ref, ...props }: TabListProps<T>
         ]),
       )}
     />
-  )
-}
+  );
+};
 
 interface TabProps extends TabPrimitiveProps {
-  ref?: React.RefObject<HTMLButtonElement>
+  ref?: React.RefObject<HTMLButtonElement>;
 }
 const Tab = ({ children, className, ref, ...props }: TabProps) => {
   return (
     <TabPrimitive
       ref={ref}
       {...props}
-      className={composeRenderProps(className, (className, renderProps) =>
+      className={composeRenderProps(className, (className, _renderProps) =>
         twMerge([
           "relative flex cursor-default items-center whitespace-nowrap rounded-full font-medium text-fg text-sm outline-hidden transition hover:text-fg *:data-[slot=icon]:mr-2 *:data-[slot=icon]:size-4",
           "group-orientation-vertical/tabs:w-full group-orientation-vertical/tabs:py-0 group-orientation-vertical/tabs:pr-2 group-orientation-vertical/tabs:pl-4",
@@ -92,11 +89,11 @@ const Tab = ({ children, className, ref, ...props }: TabProps) => {
         </>
       )}
     </TabPrimitive>
-  )
-}
+  );
+};
 
 interface TabPanelProps extends TabPanelPrimitiveProps {
-  ref?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLDivElement>;
 }
 const TabPanel = ({ className, ref, ...props }: TabPanelProps) => {
   return (
@@ -108,8 +105,8 @@ const TabPanel = ({ className, ref, ...props }: TabPanelProps) => {
         "flex-1 text-fg text-sm focus-visible:outline-hidden",
       )}
     />
-  )
-}
+  );
+};
 
-export type { TabsProps, TabListProps, TabProps, TabPanelProps }
-export { Tabs, TabList, Tab, TabPanel }
+export type { TabsProps, TabListProps, TabProps, TabPanelProps };
+export { Tabs, TabList, Tab, TabPanel };

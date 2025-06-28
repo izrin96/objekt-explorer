@@ -1,20 +1,20 @@
 "use client";
 
-import { ThemeSwitcher } from "./theme-switcher";
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
-import { Container, Link } from "./ui";
-import UserSearch from "./user-search";
-import UserNav from "./user-nav";
 import { motion } from "motion/react";
+import { ThemeSwitcher } from "./theme-switcher";
+import { Container, Link } from "./ui";
+import UserNav from "./user-nav";
+import UserSearch from "./user-search";
 
 export default function Navbar() {
   return (
-    <nav className="sticky left-0 right-0 top-0 h-14 z-30 from-bg/80 bg-gradient-to-b to-transparent">
-      <div className="size-full absolute -z-1 mask-b-from-40% backdrop-blur-lg"></div>
+    <nav className="sticky top-0 right-0 left-0 z-30 h-14 bg-gradient-to-b from-bg/80 to-transparent">
+      <div className="-z-1 mask-b-from-40% absolute size-full backdrop-blur-lg"></div>
       <Container className="flex justify-center">
-        <div className="grow gap-2 flex items-center h-14">
+        <div className="flex h-14 grow items-center gap-2">
           <Link href="/">
-            <motion.div className="flex gap-2 items-center" whileHover="hover">
+            <motion.div className="flex items-center gap-2" whileHover="hover">
               <motion.div
                 variants={{
                   initial: { rotate: 0 },
@@ -24,7 +24,7 @@ export default function Navbar() {
               >
                 <CubeIcon size={24} weight="fill" />
               </motion.div>
-              <span className="font-semibold text-lg select-none truncate hidden sm:block">
+              <span className="hidden select-none truncate font-semibold text-lg sm:block">
                 Objekt Tracker
               </span>
             </motion.div>
@@ -45,23 +45,9 @@ export default function Navbar() {
 
 function Activity() {
   return (
-    <Link
-      href="/activity"
-      className="px-1.5 py-1.5 flex items-center gap-2 text-sm font-medium"
-    >
+    <Link href="/activity" className="flex items-center gap-2 px-1.5 py-1.5 font-medium text-sm">
       {/* <RadioTowerIcon size={18} /> */}
       <span className="text-xs">Activity</span>
-    </Link>
-  );
-}
-
-function Live() {
-  return (
-    <Link
-      href="/live"
-      className="px-1.5 py-1.5 flex items-center gap-2 text-sm font-medium"
-    >
-      <span className="text-xs">Live</span>
     </Link>
   );
 }

@@ -1,10 +1,9 @@
-"use client"
+"use client";
 
-import { Bar, BarChart as BarChartPrimitive } from "recharts"
-
-import { type ComponentProps, startTransition } from "react"
-import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent"
-import { twMerge } from "tailwind-merge"
+import { type ComponentProps, startTransition } from "react";
+import { Bar, BarChart as BarChartPrimitive } from "recharts";
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+import { twMerge } from "tailwind-merge";
 import {
   type BaseChartProps,
   CartesianGrid,
@@ -13,22 +12,22 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  DEFAULT_COLORS,
-  XAxis,
-  YAxis,
   constructCategoryColors,
+  DEFAULT_COLORS,
   getColorValue,
   valueToPercent,
-} from "./chart"
+  XAxis,
+  YAxis,
+} from "./chart";
 
 interface BarChartProps<TValue extends ValueType, TName extends NameType>
   extends BaseChartProps<TValue, TName> {
-  barCategoryGap?: number
-  barRadius?: number
-  barGap?: number
-  barSize?: number
+  barCategoryGap?: number;
+  barRadius?: number;
+  barGap?: number;
+  barSize?: number;
 
-  chartProps?: Omit<ComponentProps<typeof BarChartPrimitive>, "data" | "stackOffset">
+  chartProps?: Omit<ComponentProps<typeof BarChartPrimitive>, "data" | "stackOffset">;
 }
 
 const BarChart = <TValue extends ValueType, TName extends NameType>({
@@ -71,9 +70,9 @@ const BarChart = <TValue extends ValueType, TName extends NameType>({
   chartProps,
   ...props
 }: BarChartProps<TValue, TName>) => {
-  const categoryColors = constructCategoryColors(Object.keys(config), colors)
+  const categoryColors = constructCategoryColors(Object.keys(config), colors);
 
-  const stacked = type === "stacked" || type === "percent"
+  const stacked = type === "stacked" || type === "percent";
 
   return (
     <Chart
@@ -87,7 +86,7 @@ const BarChart = <TValue extends ValueType, TName extends NameType>({
       {({ onLegendSelect, selectedLegend }) => (
         <BarChartPrimitive
           onClick={() => {
-            onLegendSelect(null)
+            onLegendSelect(null);
           }}
           data={data}
           margin={{
@@ -144,26 +143,26 @@ const BarChart = <TValue extends ValueType, TName extends NameType>({
                 stroke={getColorValue(values.color || categoryColors.get(category))}
                 strokeWidth={1}
                 stackId={stacked ? "stack" : undefined}
-                onClick={(item, number, event) => {
-                  event.stopPropagation()
+                onClick={(_item, _number, event) => {
+                  event.stopPropagation();
 
                   startTransition(() => {
-                    onLegendSelect(category)
-                  })
+                    onLegendSelect(category);
+                  });
                 }}
                 radius={barRadius ?? (stacked ? undefined : 4)}
                 strokeOpacity={selectedLegend && selectedLegend !== category ? 0.2 : 0}
                 fillOpacity={selectedLegend && selectedLegend !== category ? 0.1 : 1}
                 fill={getColorValue(values.color || categoryColors.get(category))}
               />
-            )
+            );
           })}
           {children}
         </BarChartPrimitive>
       )}
     </Chart>
-  )
-}
+  );
+};
 
-export type { BarChartProps }
-export { BarChart }
+export type { BarChartProps };
+export { BarChart };

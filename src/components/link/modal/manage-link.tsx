@@ -1,5 +1,11 @@
 "use client";
 
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { ofetch } from "ofetch";
+import { Suspense, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Cropper, type CropperRef } from "react-advanced-cropper";
+import { ErrorBoundary } from "react-error-boundary";
+import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 import {
   Button,
@@ -14,19 +20,6 @@ import {
 } from "@/components/ui";
 import { api } from "@/lib/trpc/client";
 import { mimeTypes } from "@/lib/utils";
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { ofetch } from "ofetch";
-import {
-  Suspense,
-  useCallback,
-  useRef,
-  useState,
-  useTransition,
-  useEffect,
-} from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { toast } from "sonner";
-import { Cropper, CropperRef } from "react-advanced-cropper";
 import "react-advanced-cropper/dist/style.css";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -37,11 +30,7 @@ type RemoveLinkModalProps = {
   setOpen: (val: boolean) => void;
 };
 
-export function RemoveLinkModal({
-  address,
-  open,
-  setOpen,
-}: RemoveLinkModalProps) {
+export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps) {
   const utils = api.useUtils();
   const removeLink = api.cosmoLink.removeLink.useMutation({
     onSuccess: () => {
@@ -58,8 +47,7 @@ export function RemoveLinkModal({
       <Modal.Header>
         <Modal.Title>Unlink Cosmo</Modal.Title>
         <Modal.Description>
-          This will unlink your Cosmo from this account. You can link it again
-          later. Continue?
+          This will unlink your Cosmo from this account. You can link it again later. Continue?
         </Modal.Description>
       </Modal.Header>
       <Modal.Footer>
@@ -169,16 +157,11 @@ export function EditProfileModal({
   }, [droppedImage]);
 
   return (
-    <Sheet.Content
-      className={"max-w-sm"}
-      isOpen={open}
-      onOpenChange={setOpen}
-    >
+    <Sheet.Content className={"max-w-sm"} isOpen={open} onOpenChange={setOpen}>
       <Sheet.Header>
         <Sheet.Title>Edit Profile</Sheet.Title>
         <Sheet.Description>
-          Currently editing <span className="text-fg">{nickname}</span> Cosmo
-          profile
+          Currently editing <span className="text-fg">{nickname}</span> Cosmo profile
         </Sheet.Description>
       </Sheet.Header>
       <Sheet.Body>
@@ -219,7 +202,7 @@ export function EditProfileModal({
                       });
                     });
                   },
-                }
+                },
               );
               return;
             }
@@ -238,10 +221,7 @@ export function EditProfileModal({
         >
           <QueryErrorResetBoundary>
             {({ reset }) => (
-              <ErrorBoundary
-                onReset={reset}
-                FallbackComponent={ErrorFallbackRender}
-              >
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
                 <Suspense
                   fallback={
                     <div className="flex justify-center">
@@ -310,7 +290,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
       {droppedImage.type.startsWith("video") ? (
         <video
           src={imageUrl}
-          className="aspect-[2.3/1] object-cover rounded"
+          className="aspect-[2.3/1] rounded object-cover"
           autoPlay
           loop
           muted
@@ -320,7 +300,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         <img
           src={imageUrl}
           alt="Selected banner preview"
-          className="aspect-[2.3/1] object-cover rounded"
+          className="aspect-[2.3/1] rounded object-cover"
         />
       ) : (
         <div className="h-52">
@@ -328,9 +308,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         </div>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-fg truncate">
-          Selected file: {droppedImage.name}
-        </span>
+        <span className="truncate text-muted-fg text-sm">Selected file: {droppedImage.name}</span>
         <Button size="xs" intent="outline" onClick={onClear}>
           Clear
         </Button>
@@ -391,9 +369,7 @@ function EditProfileForm({
           cropperRef={cropperRef}
           onClear={() => setDroppedImage(null)}
         />
-        <span className="text-muted-fg text-sm">
-          Recommended aspect ratio is 2.3:1
-        </span>
+        <span className="text-muted-fg text-sm">Recommended aspect ratio is 2.3:1</span>
       </div>
       <Checkbox label="Remove Banner" name="removeBanner" />
       <span className="text-muted-fg text-sm">

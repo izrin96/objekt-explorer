@@ -1,11 +1,11 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-import { ValidSort, validSorts } from "@/lib/universal/cosmo/common";
-import { Button, Menu } from "../ui";
 import { useMemo } from "react";
+import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
+import { type ValidSort, validSorts } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
+import { Button, Menu } from "../ui";
 
 type Props = {
   allowDuplicateSort?: boolean;
@@ -30,15 +30,9 @@ const mapDesc: Record<ValidSort, string> = {
   member: "Sort by Member order",
 };
 
-export default function SortFilter({
-  allowDuplicateSort = false,
-  allowSerialSort = false,
-}: Props) {
+export default function SortFilter({ allowDuplicateSort = false, allowSerialSort = false }: Props) {
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(
-    () => new Set(filters.sort ? [filters.sort] : ["date"]),
-    [filters.sort]
-  );
+  const selected = useMemo(() => new Set(filters.sort ? [filters.sort] : ["date"]), [filters.sort]);
 
   function update(key: Selection) {
     const value = parseSelected<ValidSort>(key) ?? "date";
@@ -46,12 +40,7 @@ export default function SortFilter({
     setFilters((current) => ({
       sort: value === "date" ? null : value,
       sort_dir: ["serial", "member"].includes(value) ? "asc" : null,
-      grouped:
-        value === "duplicate"
-          ? true
-          : value === "serial"
-          ? false
-          : current.grouped,
+      grouped: value === "duplicate" ? true : value === "serial" ? false : current.grouped,
     }));
   }
 
@@ -63,10 +52,7 @@ export default function SortFilter({
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.sort ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.sort ? "!inset-ring-primary" : ""}>
         Sort by
       </Button>
       <Menu.Content

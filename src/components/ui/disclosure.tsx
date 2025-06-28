@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { IconChevronLeft } from "@intentui/icons"
+import { composeTailwindRenderProps } from "@/lib/primitive";
+import { IconChevronLeft } from "@intentui/icons";
 import type {
   DisclosureGroupProps as AccordionProps,
   ButtonProps,
   DisclosureProps as CollapsibleProps,
   DisclosurePanelProps as DisclosurePanelPrimitiveProps,
-} from "react-aria-components"
+} from "react-aria-components";
 import {
   DisclosureGroup as Accordion,
   Button,
   Disclosure as Collapsible,
   DisclosurePanel as CollapsiblePanel,
   Heading,
-} from "react-aria-components"
+} from "react-aria-components";
 
 interface DisclosureGroupProps extends AccordionProps {
-  ref?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLDivElement>;
 }
 const DisclosureGroup = ({ children, ref, className, ...props }: DisclosureGroupProps) => {
   return (
@@ -36,11 +36,11 @@ const DisclosureGroup = ({ children, ref, className, ...props }: DisclosureGroup
         </div>
       )}
     </Accordion>
-  )
-}
+  );
+};
 
 interface DisclosureProps extends CollapsibleProps {
-  ref?: React.Ref<HTMLDivElement>
+  ref?: React.Ref<HTMLDivElement>;
 }
 const Disclosure = ({ className, ref, ...props }: DisclosureProps) => {
   return (
@@ -55,11 +55,11 @@ const Disclosure = ({ className, ref, ...props }: DisclosureProps) => {
     >
       {props.children}
     </Collapsible>
-  )
-}
+  );
+};
 
 interface DisclosureTriggerProps extends ButtonProps {
-  ref?: React.Ref<HTMLButtonElement>
+  ref?: React.Ref<HTMLButtonElement>;
 }
 const DisclosureTrigger = ({ className, ref, ...props }: DisclosureTriggerProps) => {
   return (
@@ -84,11 +84,11 @@ const DisclosureTrigger = ({ className, ref, ...props }: DisclosureTriggerProps)
         )}
       </Button>
     </Heading>
-  )
-}
+  );
+};
 
 interface DisclosurePanelProps extends DisclosurePanelPrimitiveProps {
-  ref?: React.Ref<HTMLDivElement>
+  ref?: React.Ref<HTMLDivElement>;
 }
 const DisclosurePanel = ({ className, ref, ...props }: DisclosurePanelProps) => {
   return (
@@ -108,8 +108,8 @@ const DisclosurePanel = ({ className, ref, ...props }: DisclosurePanelProps) => 
         {props.children}
       </div>
     </CollapsiblePanel>
-  )
-}
+  );
+};
 
-export type { DisclosureGroupProps, DisclosureProps, DisclosurePanelProps, DisclosureTriggerProps }
-export { DisclosureGroup, Disclosure, DisclosurePanel, DisclosureTrigger }
+export type { DisclosureGroupProps, DisclosureProps, DisclosurePanelProps, DisclosureTriggerProps };
+export { DisclosureGroup, Disclosure, DisclosurePanel, DisclosureTrigger };

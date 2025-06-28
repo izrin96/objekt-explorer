@@ -1,15 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Button, CommandMenu } from "./ui";
-import { useDebounceValue } from "usehooks-ts";
-import { useQuery } from "@tanstack/react-query";
-import { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
-import { ofetch } from "ofetch";
-import { useRouter } from "nextjs-toploader/app";
-import { usePathname } from "next/navigation";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
+import { useQuery } from "@tanstack/react-query";
+import { usePathname } from "next/navigation";
+import { useRouter } from "nextjs-toploader/app";
+import { ofetch } from "ofetch";
+import { useCallback, useEffect, useState } from "react";
+import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
+import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+import { Button, CommandMenu } from "./ui";
 
 export default function UserSearch() {
   const recentUsers = useUserSearchStore((a) => a.users);
@@ -40,7 +40,7 @@ export default function UserSearch() {
       addRecent(user);
       router.push(`/@${user.nickname}`);
     },
-    [router, setIsOpen, addRecent]
+    [router, setIsOpen, addRecent],
   );
 
   // set result after getting data
@@ -58,7 +58,7 @@ export default function UserSearch() {
     <>
       <Button onPress={() => setIsOpen(true)} size="md" intent="outline">
         <MagnifyingGlassIcon data-slot="icon" />
-        <span className="sm:block hidden">Search user</span>
+        <span className="hidden sm:block">Search user</span>
       </Button>
       <CommandMenu
         key={`${pathname}-${isOpen}`}

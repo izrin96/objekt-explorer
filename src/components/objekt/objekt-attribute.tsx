@@ -1,11 +1,11 @@
-import { ValidObjekt } from "@/lib/universal/objekts";
-import { Badge, Skeleton } from "../ui";
-import { CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
+import type { CSSProperties } from "react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { getEdition } from "@/lib/utils";
+import { Badge, Skeleton } from "../ui";
 
 type PillProps = {
   label: string;
@@ -21,11 +21,7 @@ function Pill({ label, value }: PillProps) {
   );
 }
 
-function PillColor({
-  label,
-  value,
-  objekt,
-}: PillProps & { objekt: ValidObjekt }) {
+function PillColor({ label, value, objekt }: PillProps & { objekt: ValidObjekt }) {
   return (
     <Badge
       isCircle={false}
@@ -49,10 +45,10 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
     <>
       {status === "pending" && (
         <>
-          <Skeleton className="w-20 h-6" />
-          <Skeleton className="w-20 h-6" />
-          <Skeleton className="w-24 h-6" />
-          <Skeleton className="w-35 h-6" />
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-24" />
+          <Skeleton className="h-6 w-35" />
         </>
       )}
       {status === "error" && (
@@ -71,7 +67,7 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
           <Pill
             label={"Tradable"}
             value={`${((data.transferable / data.total) * 100.0).toFixed(
-              2
+              2,
             )}% (${data.transferable})`}
           />
         </>
@@ -82,9 +78,9 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
 
 const fetchMetadata = (slug: string) => ({
   queryKey: ["objekts", "metadata", slug],
-  queryFn: async ({}) =>
+  queryFn: async () =>
     await ofetch<{ transferable: number; total: number; spin: number }>(
-      `/api/objekts/metadata/${slug}`
+      `/api/objekts/metadata/${slug}`,
     ),
 });
 
@@ -104,10 +100,7 @@ export function AttributePanel({
       <Pill label="Season" value={objekt.season} />
       <Pill label="Class" value={objekt.class} />
       {objekt.class === "First" && <Pill label="Edition" value={edition!} />}
-      <Pill
-        label="Type"
-        value={objekt.onOffline === "online" ? "Digital" : "Physical"}
-      />
+      <Pill label="Type" value={objekt.onOffline === "online" ? "Digital" : "Physical"} />
       <Pill label="Collection No." value={objekt.collectionNo} />
       <PillColor
         label="Accent Color"
@@ -116,10 +109,7 @@ export function AttributePanel({
       />
       <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />
       {objekt.createdAt && (
-        <Pill
-          label="Created at"
-          value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
-        />
+        <Pill label="Created at" value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
       )}
       {unobtainable && (
         <Badge intent="custom" isCircle={false} className="font-semibold">

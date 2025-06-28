@@ -1,7 +1,7 @@
 "use client";
 
-import { LiveSession } from "@/lib/universal/cosmo/live";
-import { PropsWithChildren, createContext, useContext } from "react";
+import { createContext, type PropsWithChildren, useContext } from "react";
+import type { LiveSession } from "@/lib/universal/cosmo/live";
 
 type ContextProps = {
   live: LiveSession;
@@ -19,7 +19,6 @@ export function LiveSessionProvider({ children, live }: ProviderProps) {
 
 export function useLiveSession() {
   const ctx = useContext(LiveSessionContext);
-  if (!ctx)
-    throw new Error("useLiveSession must be used within LiveSessionProvider");
+  if (!ctx) throw new Error("useLiveSession must be used within LiveSessionProvider");
   return ctx.live;
 }

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import type {
   FieldErrorProps as FieldErrorPrimitiveProps,
@@ -7,23 +7,23 @@ import type {
   LabelProps,
   TextProps,
   ValidationResult,
-} from "react-aria-components"
+} from "react-aria-components";
 import {
   FieldError as FieldErrorPrimitive,
   Group,
   Input as InputPrimitive,
   Label as LabelPrimitive,
   Text,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
 
-import { composeTailwindRenderProps } from "@/lib/primitive"
+import { composeTailwindRenderProps } from "@/lib/primitive";
 
 interface FieldProps {
-  label?: string
-  placeholder?: string
-  description?: string
-  errorMessage?: string | ((validation: ValidationResult) => string)
+  label?: string;
+  placeholder?: string;
+  description?: string;
+  errorMessage?: string | ((validation: ValidationResult) => string);
 }
 
 const fieldStyles = tv({
@@ -33,24 +33,24 @@ const fieldStyles = tv({
     fieldError:
       "text-base/6 text-danger group-disabled:opacity-50 sm:text-sm/6 forced-colors:text-[Mark]",
   },
-})
+});
 
-const { description, label, fieldError } = fieldStyles()
+const { description, label, fieldError } = fieldStyles();
 
 const Label = ({ className, ...props }: LabelProps) => {
-  return <LabelPrimitive data-slot="label" {...props} className={label({ className })} />
-}
+  return <LabelPrimitive data-slot="label" {...props} className={label({ className })} />;
+};
 
 interface DescriptionProps extends TextProps {
-  ref?: React.RefObject<HTMLElement>
+  ref?: React.RefObject<HTMLElement>;
 }
 
 const Description = ({ ref, className, ...props }: DescriptionProps) => {
-  return <Text ref={ref} {...props} slot="description" className={description({ className })} />
-}
+  return <Text ref={ref} {...props} slot="description" className={description({ className })} />;
+};
 
 interface FieldErrorProps extends FieldErrorPrimitiveProps {
-  ref?: React.RefObject<HTMLElement>
+  ref?: React.RefObject<HTMLElement>;
 }
 const FieldError = ({ className, ref, ...props }: FieldErrorProps) => {
   return (
@@ -59,11 +59,11 @@ const FieldError = ({ className, ref, ...props }: FieldErrorProps) => {
       {...props}
       className={composeTailwindRenderProps(className, fieldError())}
     />
-  )
-}
+  );
+};
 
 interface FieldGroupProps extends GroupProps {
-  ref?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLDivElement>;
 }
 const FieldGroup = ({ className, ref, ...props }: FieldGroupProps) => {
   return (
@@ -89,11 +89,11 @@ const FieldGroup = ({ className, ref, ...props }: FieldGroupProps) => {
         "focus-within:inset-ring-ring/70 focus-within:ring-3 focus-within:ring-ring/20",
       ])}
     />
-  )
-}
+  );
+};
 
 interface InputProps extends InputPrimitiveProps {
-  ref?: React.RefObject<HTMLInputElement>
+  ref?: React.RefObject<HTMLInputElement>;
 }
 
 const Input = ({ className, ref, ...props }: InputProps) => {
@@ -106,8 +106,8 @@ const Input = ({ className, ref, ...props }: InputProps) => {
         "relative block w-full px-3.5 py-2 placeholder-muted-fg outline-hidden sm:px-3 sm:py-1.5 sm:text-sm/6 [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
       )}
     />
-  )
-}
+  );
+};
 
-export type { FieldProps, InputProps, DescriptionProps, FieldErrorProps }
-export { Description, FieldError, FieldGroup, Input, Label, fieldStyles }
+export type { FieldProps, InputProps, DescriptionProps, FieldErrorProps };
+export { Description, FieldError, FieldGroup, Input, Label, fieldStyles };

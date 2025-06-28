@@ -1,5 +1,5 @@
+import type { Metadata } from "next";
 import ActivityRender from "@/components/activity/activity-render";
-import { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

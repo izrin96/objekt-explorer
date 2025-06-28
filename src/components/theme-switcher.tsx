@@ -1,36 +1,37 @@
-"use client"
+"use client";
 
-import { IconDeviceDesktop2, IconMoon, IconSun, IconColorPalette } from "@intentui/icons"
-import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
-import { Button } from "./ui"
+import { IconColorPalette, IconDeviceDesktop2, IconMoon, IconSun } from "@intentui/icons";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { Button } from "./ui";
 
 export function ThemeSwitcher({
   intent = "outline",
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : theme === "dark" ? "matsu" : theme === "matsu" ? "system" : "light"
-    setTheme(nextTheme)
-  }
+    const nextTheme =
+      theme === "light"
+        ? "dark"
+        : theme === "dark"
+          ? "matsu"
+          : theme === "matsu"
+            ? "system"
+            : "light";
+    setTheme(nextTheme);
+  };
 
-  if (!mounted) return null
+  if (!mounted) return null;
 
   return (
-    <Button
-      intent={intent}
-      size="sq-md"
-      aria-label="Switch theme"
-      onPress={toggleTheme}
-      {...props}
-    >
+    <Button intent={intent} size="sq-md" aria-label="Switch theme" onPress={toggleTheme} {...props}>
       {theme === "light" ? (
         <IconSun />
       ) : theme === "dark" ? (
@@ -41,5 +42,5 @@ export function ThemeSwitcher({
         <IconDeviceDesktop2 />
       )}
     </Button>
-  )
+  );
 }

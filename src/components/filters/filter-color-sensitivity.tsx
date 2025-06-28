@@ -1,9 +1,9 @@
 "use client";
 
-import React, { CSSProperties, useEffect, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
+import { useDebounceValue } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { Button, Popover, Slider } from "../ui";
-import { useDebounceValue } from "usehooks-ts";
 
 export default function ColorSensitivityFilter() {
   const [filters, setFilters] = useFilters();

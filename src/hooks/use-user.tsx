@@ -1,9 +1,9 @@
 "use client";
 
-import { PublicProfile, PublicUser } from "@/lib/universal/user";
-import { PropsWithChildren, createContext, useContext } from "react";
+import { createContext, type PropsWithChildren, useContext } from "react";
+import type { PublicList } from "@/lib/server/api/routers/list";
+import type { PublicProfile, PublicUser } from "@/lib/universal/user";
 import { useProfile } from "./use-profile";
-import { PublicList } from "@/lib/server/api/routers/list";
 
 type UserProps = {
   profiles?: PublicProfile[];

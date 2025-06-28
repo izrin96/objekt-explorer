@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { IconLoader } from "@intentui/icons"
-import { ProgressBar } from "react-aria-components"
-import { twMerge } from "tailwind-merge"
-import type { VariantProps } from "tailwind-variants"
-import { tv } from "tailwind-variants"
+import { IconLoader } from "@intentui/icons";
+import { ProgressBar } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
+import type { VariantProps } from "tailwind-variants";
+import { tv } from "tailwind-variants";
 
 const loaderStyles = tv({
   base: "relative",
@@ -28,9 +28,9 @@ const loaderStyles = tv({
     intent: "current",
     size: "sm",
   },
-})
+});
 
-type LoaderVariantProps = VariantProps<typeof loaderStyles>
+type LoaderVariantProps = VariantProps<typeof loaderStyles>;
 
 const Bars = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -132,8 +132,8 @@ const Bars = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
       />
     </rect>
   </svg>
-)
-const Ring = (props: React.SVGProps<SVGSVGElement>) => <IconLoader {...props} />
+);
+const Ring = (props: React.SVGProps<SVGSVGElement>) => <IconLoader {...props} />;
 const Spin = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
   <svg className={twMerge("size-4", className)} data-slot="icon" viewBox="0 0 2400 2400" {...props}>
     <g strokeWidth="200" strokeLinecap="round" fill="none">
@@ -162,29 +162,29 @@ const Spin = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
       />
     </g>
   </svg>
-)
+);
 
 const LOADERS = {
   bars: Bars,
   ring: Ring,
   spin: Spin,
-}
+};
 
-const DEFAULT_SPINNER = "spin"
+const DEFAULT_SPINNER = "spin";
 
 interface LoaderProps
   extends Omit<React.ComponentPropsWithoutRef<"svg">, "display" | "opacity" | "intent">,
     LoaderVariantProps {
-  variant?: keyof typeof LOADERS
-  percentage?: number
-  isIndeterminate?: boolean
-  formatOptions?: Intl.NumberFormatOptions
-  ref?: React.RefObject<SVGSVGElement>
+  variant?: keyof typeof LOADERS;
+  percentage?: number;
+  isIndeterminate?: boolean;
+  formatOptions?: Intl.NumberFormatOptions;
+  ref?: React.RefObject<SVGSVGElement>;
 }
 
 const Loader = ({ isIndeterminate = true, ref, ...props }: LoaderProps) => {
-  const { className, variant = DEFAULT_SPINNER, intent, size, ...spinnerProps } = props
-  const LoaderPrimitive = LOADERS[variant in LOADERS ? variant : DEFAULT_SPINNER]
+  const { className, variant = DEFAULT_SPINNER, intent, size, ...spinnerProps } = props;
+  const LoaderPrimitive = LOADERS[variant in LOADERS ? variant : DEFAULT_SPINNER];
 
   return (
     <ProgressBar
@@ -208,7 +208,7 @@ const Loader = ({ isIndeterminate = true, ref, ...props }: LoaderProps) => {
         {...spinnerProps}
       />
     </ProgressBar>
-  )
-}
+  );
+};
 
-export { Loader }
+export { Loader };

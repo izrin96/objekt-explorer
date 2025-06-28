@@ -1,5 +1,3 @@
-import React from "react";
-
 type Props = {
   collection: string;
   serial?: number;
@@ -7,10 +5,10 @@ type Props = {
 
 export default function ObjektSidebar({ collection, serial }: Props) {
   return (
-    <div className="absolute @container h-full items-center w-[11%] flex gap-1.5 justify-center right-0 [writing-mode:vertical-lr] text-(--objekt-text-color) select-none">
-      <span className="text-[3.4cqh] font-bold">{collection}</span>
+    <div className="@container absolute right-0 flex h-full w-[11%] select-none items-center justify-center gap-1.5 text-(--objekt-text-color) [writing-mode:vertical-lr]">
+      <span className="font-bold text-[3.4cqh]">{collection}</span>
       {serial !== undefined && (
-        <div className="text-[3.4cqh] font-light tabular-nums gap-0.5 flex">
+        <div className="flex gap-0.5 font-light text-[3.4cqh] tabular-nums">
           <span>#</span>
           <span>{serial}</span>
         </div>

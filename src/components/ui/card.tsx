@@ -1,4 +1,4 @@
-import { twMerge } from "tailwind-merge"
+import { twMerge } from "tailwind-merge";
 
 const Card = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
@@ -10,12 +10,12 @@ const Card = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => 
       )}
       {...props}
     />
-  )
-}
+  );
+};
 
 interface HeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string
-  description?: string
+  title?: string;
+  description?: string;
 }
 
 const CardHeader = ({ className, title, description, children, ...props }: HeaderProps) => (
@@ -31,7 +31,7 @@ const CardHeader = ({ className, title, description, children, ...props }: Heade
     {description && <CardDescription>{description}</CardDescription>}
     {!title && typeof children === "string" ? <CardTitle>{children}</CardTitle> : children}
   </div>
-)
+);
 
 const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
@@ -40,8 +40,8 @@ const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
       className={twMerge("text-balance font-semibold text-fg text-lg/6 sm:text-base/6", className)}
       {...props}
     />
-  )
-}
+  );
+};
 
 const CardDescription = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
@@ -51,8 +51,8 @@ const CardDescription = ({ className, ...props }: React.HTMLAttributes<HTMLDivEl
       className={twMerge("row-start-2 text-pretty text-muted-fg text-sm", className)}
       {...props}
     />
-  )
-}
+  );
+};
 
 const CardAction = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
@@ -64,8 +64,8 @@ const CardAction = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement
       )}
       {...props}
     />
-  )
-}
+  );
+};
 
 const CardContent = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
@@ -74,8 +74,8 @@ const CardContent = ({ className, ...props }: React.HTMLAttributes<HTMLDivElemen
       className={twMerge("px-(--card-spacing)", className)}
       {...props}
     />
-  )
-}
+  );
+};
 
 const CardFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
@@ -87,14 +87,14 @@ const CardFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement
       )}
       {...props}
     />
-  )
-}
+  );
+};
 
-Card.Content = CardContent
-Card.Description = CardDescription
-Card.Footer = CardFooter
-Card.Header = CardHeader
-Card.Title = CardTitle
-Card.Action = CardAction
+Card.Content = CardContent;
+Card.Description = CardDescription;
+Card.Footer = CardFooter;
+Card.Header = CardHeader;
+Card.Title = CardTitle;
+Card.Action = CardAction;
 
-export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CardAction }
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CardAction };

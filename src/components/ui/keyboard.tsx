@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import { Keyboard as KeyboardPrimitive } from "react-aria-components"
-import { twMerge } from "tailwind-merge"
+import { Keyboard as KeyboardPrimitive } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 
 interface KeyboardProps extends React.HTMLAttributes<HTMLElement> {
-  keys: string | string[]
+  keys: string | string[];
   classNames?: {
-    base?: string
-    kbd?: string
-  }
+    base?: string;
+    kbd?: string;
+  };
 }
 
 const Keyboard = ({ keys, classNames, className, ...props }: KeyboardProps) => {
@@ -33,8 +33,8 @@ const Keyboard = ({ keys, classNames, className, ...props }: KeyboardProps) => {
         </kbd>
       ))}
     </KeyboardPrimitive>
-  )
-}
+  );
+};
 
-export type { KeyboardProps }
-export { Keyboard }
+export type { KeyboardProps };
+export { Keyboard };

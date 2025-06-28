@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { IconCamera, IconFolder, IconPaperclip45 } from "@intentui/icons"
+import { IconCamera, IconFolder, IconPaperclip45 } from "@intentui/icons";
 import {
   FileTrigger as FileTriggerPrimitive,
   type FileTriggerProps as FileTriggerPrimitiveProps,
-} from "react-aria-components"
+} from "react-aria-components";
 
-import { Button, type buttonStyles } from "@/components/ui/button"
-import { Loader } from "@/components/ui/loader"
-import type { VariantProps } from "tailwind-variants"
+import { Button, type buttonStyles } from "@/components/ui/button";
+import { Loader } from "@/components/ui/loader";
+import type { VariantProps } from "tailwind-variants";
 
 interface FileTriggerProps extends FileTriggerPrimitiveProps, VariantProps<typeof buttonStyles> {
-  isDisabled?: boolean
-  ref?: React.RefObject<HTMLInputElement>
-  className?: string
+  isDisabled?: boolean;
+  ref?: React.RefObject<HTMLInputElement>;
+  className?: string;
 }
 
 const FileTrigger = ({
@@ -58,8 +58,8 @@ const FileTrigger = ({
         )}
       </Button>
     </FileTriggerPrimitive>
-  )
-}
+  );
+};
 
-export type { FileTriggerProps }
-export { FileTrigger }
+export type { FileTriggerProps };
+export { FileTrigger };

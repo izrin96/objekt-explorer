@@ -1,10 +1,10 @@
 "use client";
 
+import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { Button, Menu } from "@/components/ui";
-import { useCallback, useMemo } from "react";
 import { useFilters } from "@/hooks/use-filters";
-import { ValidGroupBy } from "@/lib/universal/cosmo/common";
+import type { ValidGroupBy } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
 
 const map: Record<string, string> = {
@@ -16,10 +16,7 @@ const map: Record<string, string> = {
 
 export default function GroupBysFilter() {
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(
-    () => new Set(filters.group_bys ?? []),
-    [filters.group_bys]
-  );
+  const selected = useMemo(() => new Set(filters.group_bys ?? []), [filters.group_bys]);
 
   const update = useCallback(
     (key: Selection) => {
@@ -28,7 +25,7 @@ export default function GroupBysFilter() {
         group_bys: value,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return (

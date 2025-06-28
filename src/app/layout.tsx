@@ -3,11 +3,11 @@ import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
-import Navbar from "@/components/navbar";
+import type { PropsWithChildren } from "react";
 import { Analytics } from "@/components/analytics";
-import { PropsWithChildren } from "react";
-import { cn } from "@/utils/classes";
+import Navbar from "@/components/navbar";
 import { TRPCReactProvider } from "@/lib/trpc/client";
+import { cn } from "@/utils/classes";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -68,7 +68,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <body
         className={cn(
           "min-h-svh antialiased",
-          process.env.NODE_ENV === "development" ? "debug-screens" : ""
+          process.env.NODE_ENV === "development" ? "debug-screens" : "",
         )}
       >
         <TRPCReactProvider>

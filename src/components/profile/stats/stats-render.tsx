@@ -1,47 +1,34 @@
 "use client";
 
-import {
-  Pie,
-  PieChart,
-  Bar,
-  BarChart,
-  Rectangle,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { groupBy } from "es-toolkit";
+import dynamic from "next/dynamic";
+import type React from "react";
+import { Suspense, useMemo } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
+import ErrorFallbackRender from "@/components/error-boundary";
 import {
   Card,
   Chart,
-  ChartConfig,
+  type ChartConfig,
   ChartTooltip,
   ChartTooltipContent,
   Loader,
 } from "@/components/ui";
-import React, { Suspense, useMemo } from "react";
-import {
-  QueryErrorResetBoundary,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { ownedCollectionOptions, collectionOptions } from "@/lib/query-options";
-import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "@/components/error-boundary";
-import { useProfile } from "@/hooks/use-profile";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { filterObjekts } from "@/lib/filter-utils";
 import { useFilters } from "@/hooks/use-filters";
-import { ValidObjekt, unobtainables } from "@/lib/universal/objekts";
-import StatsFilter from "./stats-filter";
+import { useProfile } from "@/hooks/use-profile";
+import { filterObjekts } from "@/lib/filter-utils";
+import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
-import { groupBy } from "es-toolkit";
+import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
-import dynamic from "next/dynamic";
+import StatsFilter from "./stats-filter";
 
-export const ProfileStatsRenderDynamic = dynamic(
-  () => Promise.resolve(ProfileStatsRender),
-  {
-    ssr: false,
-  }
-);
+export const ProfileStatsRenderDynamic = dynamic(() => Promise.resolve(ProfileStatsRender), {
+  ssr: false,
+});
 
 function ProfileStatsRender() {
   return (
@@ -71,21 +58,15 @@ function ProfileStats() {
   const query = useSuspenseQuery(ownedCollectionOptions(profile!.address));
   const collectionQuery = useSuspenseQuery(collectionOptions);
 
-  const objekts = useMemo(
-    () => filterObjekts(filters, query.data),
-    [filters, query.data]
-  );
+  const objekts = useMemo(() => filterObjekts(filters, query.data), [filters, query.data]);
 
   return (
     <div className="flex flex-col gap-4">
       <StatsFilter artists={artists} />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <BreakdownByMemberChart objekts={objekts} />
         <BreakdownBySeasonChart objekts={objekts} />
-        <MemberProgressChart
-          objekts={objekts}
-          collections={collectionQuery.data}
-        />
+        <MemberProgressChart objekts={objekts} collections={collectionQuery.data} />
       </div>
     </div>
   );
@@ -125,13 +106,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelSeparator={false}
-                  accessibilityLayer
-                  hideLabel
-                />
-              }
+              content={<ChartTooltipContent labelSeparator={false} accessibilityLayer hideLabel />}
             />
             <Pie
               animationBegin={0}
@@ -177,13 +152,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={
-                <ChartTooltipContent
-                  labelSeparator={false}
-                  accessibilityLayer
-                  hideLabel
-                />
-              }
+              content={<ChartTooltipContent labelSeparator={false} accessibilityLayer hideLabel />}
             />
             <Pie
               animationBegin={0}
@@ -216,9 +185,7 @@ function MemberProgressChart({
       .flatMap((a) => a.artistMembers)
       .map((a) => ({ color: a.primaryColorHex, name: a.name }));
 
-    const grouped = Object.values(
-      groupBy(objekts, (a: ValidObjekt) => a.collectionId)
-    );
+    const grouped = Object.values(groupBy(objekts, (a: ValidObjekt) => a.collectionId));
 
     const filteredObjekts = filterObjekts(filters, collections);
 
@@ -236,7 +203,7 @@ function MemberProgressChart({
           (a: ValidObjekt) =>
             a.member === member.name &&
             !unobtainables.includes(a.slug) &&
-            !["Welcome", "Zero"].includes(a.class)
+            !["Welcome", "Zero"].includes(a.class),
         ).length;
         const percentage = total > 0 ? (owned / total) * 100 : 0;
 
@@ -273,12 +240,7 @@ function MemberProgressChart({
           className="h-[1300px] w-full"
         >
           <BarChart accessibilityLayer data={chartData} layout="vertical">
-            <YAxis
-              dataKey="name"
-              type="category"
-              tickLine={false}
-              axisLine={false}
-            />
+            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
             <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
             <Bar
               animationBegin={0}
@@ -309,12 +271,12 @@ function MemberProgressChart({
                   labelSeparator={false}
                   accessibilityLayer
                   indicator="line"
-                  formatter={(value, name, item, index, payload) => (
+                  formatter={(value, _name, _item, _index, payload) => (
                     <>
                       <div
                         className={cn(
                           "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                          "w-1"
+                          "w-1",
                         )}
                         style={
                           {
@@ -324,10 +286,7 @@ function MemberProgressChart({
                         }
                       />
                       <div
-                        className={cn(
-                          "flex flex-1 justify-between leading-none",
-                          "items-center"
-                        )}
+                        className={cn("flex flex-1 justify-between leading-none", "items-center")}
                       >
                         <div className="grid gap-1.5">
                           {(payload as any).name}

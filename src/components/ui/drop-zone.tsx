@@ -1,7 +1,7 @@
-"use client"
-import type { DropZoneProps } from "react-aria-components"
-import { DropZone as DropPrimitiveZone, composeRenderProps } from "react-aria-components"
-import { twMerge } from "tailwind-merge"
+"use client";
+import type { DropZoneProps } from "react-aria-components";
+import { DropZone as DropPrimitiveZone, composeRenderProps } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
 
 const DropZone = ({ className, ...props }: DropZoneProps) => (
   <DropPrimitiveZone
@@ -15,5 +15,5 @@ const DropZone = ({ className, ...props }: DropZoneProps) => (
     )}
     {...props}
   />
-)
-export { DropZone }
+);
+export { DropZone };

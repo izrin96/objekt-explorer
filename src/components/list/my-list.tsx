@@ -1,28 +1,14 @@
 "use client";
 
-import {
-  Button,
-  Card,
-  Link,
-  Menu,
-  Note,
-  Tab,
-  TabList,
-  TabPanel,
-  Tabs,
-} from "@/components/ui";
-import { api } from "@/lib/trpc/client";
-import React, { useState } from "react";
 import { IconDotsVertical } from "@intentui/icons";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { Button, Card, Link, Menu, Note, Tab, TabList, TabPanel, Tabs } from "@/components/ui";
+import { api } from "@/lib/trpc/client";
 import ErrorFallbackRender from "../error-boundary";
-import {
-  CreateListModal,
-  DeleteListModal,
-  EditListModal,
-} from "./modal/manage-list";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
+import { CreateListModal, DeleteListModal, EditListModal } from "./modal/manage-list";
 
 export default function MyListRender() {
   return (
@@ -43,7 +29,7 @@ function MyList() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-xl font-semibold">My List</div>
+      <div className="font-semibold text-xl">My List</div>
 
       <Tabs aria-label="Navbar">
         <TabList className="w-fit">
@@ -54,14 +40,14 @@ function MyList() {
           <CreateListModal open={addOpen} setOpen={setAddOpen} />
           <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
-          <div className="w-full flex gap-2">
+          <div className="flex w-full gap-2">
             <Button onClick={() => setAddOpen(true)}>Create list</Button>
             <Button intent="outline" onClick={() => setGenOpen(true)}>
               Generate Discord Format
             </Button>
           </div>
 
-          <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {lists.map((list) => (
               <ListCard list={list} key={list.slug} />
             ))}
@@ -88,17 +74,10 @@ function ListCard({ list }: ListCardProps) {
   return (
     <>
       <EditListModal slug={list.slug} open={editOpen} setOpen={setEditOpen} />
-      <DeleteListModal
-        slug={list.slug}
-        open={deleteOpen}
-        setOpen={setDeleteOpen}
-      />
+      <DeleteListModal slug={list.slug} open={deleteOpen} setOpen={setDeleteOpen} />
       <Card key={list.slug} className="bg-secondary/20">
         <Card.Content className="flex justify-between">
-          <Link
-            href={`/list/${list.slug}`}
-            className="font-semibold text-base flex-1"
-          >
+          <Link href={`/list/${list.slug}`} className="flex-1 font-semibold text-base">
             {list.name}
           </Link>
           <div className="flex items-center">

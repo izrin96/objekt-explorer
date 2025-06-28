@@ -1,28 +1,28 @@
 "use client";
 
-import { TicketAuth } from "@/lib/universal/cosmo/shop/qr-auth";
-import React, { useEffect, useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
-import { api } from "@/lib/trpc/client";
-import { InputOTP } from "../ui/input-otp";
-import { Button, buttonStyles, Form, Link, Loader } from "../ui";
-import { msToCountdown } from "@/lib/utils";
-import { toast } from "sonner";
-import WelcomeIcon from "@/assets/icon-welcome.png";
-import CatIcon from "@/assets/icon-cat.png";
-import AxolotlIcon from "@/assets/icon-axolotl.png";
-import DeerIcon from "@/assets/icon-deer.png";
-import PandaIcon from "@/assets/icon-panda.png";
-import SquirrelIcon from "@/assets/icon-squirrel.png";
-import BearIcon from "@/assets/icon-bear.png";
-import GiraffeIcon from "@/assets/icon-giraffe.png";
-import WhiteFoxIcon from "@/assets/icon-white-fox.png";
-import TrashIcon from "@/assets/icon-trash.png";
-import CarpenterIcon from "@/assets/icon-carpenter.png";
-import SmartphoneIcon from "@/assets/icon-smartphone.png";
-import CalligraphyIcon from "@/assets/image-calligraphy.png";
 import Image from "next/image";
+import { QRCodeSVG } from "qrcode.react";
+import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import { toast } from "sonner";
+import AxolotlIcon from "@/assets/icon-axolotl.png";
+import BearIcon from "@/assets/icon-bear.png";
+import CarpenterIcon from "@/assets/icon-carpenter.png";
+import CatIcon from "@/assets/icon-cat.png";
+import DeerIcon from "@/assets/icon-deer.png";
+import GiraffeIcon from "@/assets/icon-giraffe.png";
+import PandaIcon from "@/assets/icon-panda.png";
+import SmartphoneIcon from "@/assets/icon-smartphone.png";
+import SquirrelIcon from "@/assets/icon-squirrel.png";
+import TrashIcon from "@/assets/icon-trash.png";
+import WelcomeIcon from "@/assets/icon-welcome.png";
+import WhiteFoxIcon from "@/assets/icon-white-fox.png";
+import CalligraphyIcon from "@/assets/image-calligraphy.png";
+import { api } from "@/lib/trpc/client";
+import type { TicketAuth } from "@/lib/universal/cosmo/shop/qr-auth";
+import { msToCountdown } from "@/lib/utils";
+import { Button, buttonStyles, Form, Link, Loader } from "../ui";
+import { InputOTP } from "../ui/input-otp";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -48,23 +48,22 @@ export default function LinkRender() {
   ReactDOM.preload(CalligraphyIcon.src, { as: "image" });
 
   return (
-    <div className="flex flex-col justify-center items-center gap-5">
+    <div className="flex flex-col items-center justify-center gap-5">
       {step === 0 && (
-        <div className="flex flex-col justify-center items-center max-w-xl gap-4">
-          <h2 className="text-lg font-semibold">Link your Cosmo profile</h2>
+        <div className="flex max-w-xl flex-col items-center justify-center gap-4">
+          <h2 className="font-semibold text-lg">Link your Cosmo profile</h2>
           <Image
             priority
             src={SmartphoneIcon.src}
             alt="Smartphone"
             width={220}
             height={220}
-            className="animate-in fade-in zoom-in duration-200"
+            className="fade-in zoom-in animate-in duration-200"
           />
           <p>
-            You need to download the Cosmo app and sign in with the Cosmo ID you
-            want to link before continuing. This linking process will{" "}
-            <span className="font-bold">not</span> allow Objekt Tracker to
-            access your Cosmo, but only to verify ownership of it.
+            You need to download the Cosmo app and sign in with the Cosmo ID you want to link before
+            continuing. This linking process will <span className="font-bold">not</span> allow
+            Objekt Tracker to access your Cosmo, but only to verify ownership of it.
           </p>
           <Button
             intent="primary"
@@ -83,22 +82,24 @@ export default function LinkRender() {
 }
 
 function TicketRender() {
-  const { data, status, refetch, isRefetching, isLoading } =
-    api.cosmoLink.getTicket.useQuery(undefined, {
+  const { data, status, refetch, isRefetching, isLoading } = api.cosmoLink.getTicket.useQuery(
+    undefined,
+    {
       staleTime: Infinity,
       retry: false,
-    });
+    },
+  );
 
   if (isRefetching || isLoading)
     return (
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col items-center gap-2">
         <Image
           priority
           src={CalligraphyIcon.src}
           alt="Mug"
           width={220}
           height={220}
-          className="animate-in fade-in zoom-in duration-200"
+          className="fade-in zoom-in animate-in duration-200"
         />
         <span>Generating QR code</span>
         <Loader variant="ring" />
@@ -107,14 +108,14 @@ function TicketRender() {
 
   if (status === "error")
     return (
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col items-center gap-2">
         <Image
           priority
           src={CarpenterIcon.src}
           alt="Carpenter"
           width={220}
           height={220}
-          className="animate-in fade-in zoom-in duration-200"
+          className="fade-in zoom-in animate-in duration-200"
         />
         <span>Error generating QR ticket</span>
         <Button intent="secondary" onClick={() => refetch()}>
@@ -123,26 +124,16 @@ function TicketRender() {
       </div>
     );
 
-  if (status === "success")
-    return <StepRender ticketAuth={data} refetch={refetch} />;
+  if (status === "success") return <StepRender ticketAuth={data} refetch={refetch} />;
 }
 
-function StepRender({
-  ticketAuth,
-  refetch,
-}: {
-  ticketAuth: TicketAuth;
-  refetch: () => void;
-}) {
+function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: () => void }) {
   const utils = api.useUtils();
   const { data } = api.cosmoLink.checkTicket.useQuery(ticketAuth.ticket, {
     retry: false,
     refetchInterval: 2000,
     enabled: (query) => {
-      return !(
-        query.state.data?.status === "expired" ||
-        query.state.data?.status === "certified"
-      );
+      return !(query.state.data?.status === "expired" || query.state.data?.status === "certified");
     },
   });
 
@@ -168,7 +159,7 @@ function StepRender({
 
   if (!data || data.status === "wait_for_user_action")
     return (
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col items-center gap-2">
         <span>Scan this QR and click &apos;Continue&apos; in Cosmo app.</span>
         <span>
           Or{" "}
@@ -177,27 +168,23 @@ function StepRender({
           </Link>{" "}
           if you are on mobile.
         </span>
-        <div className="bg-white p-3 rounded shadow-lg">
+        <div className="rounded bg-white p-3 shadow-lg">
           <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
         </div>
-        {data && (
-          <span className="text-sm">
-            Remaining {msToCountdown(data.ticketRemainingMs)}
-          </span>
-        )}
+        {data && <span className="text-sm">Remaining {msToCountdown(data.ticketRemainingMs)}</span>}
       </div>
     );
 
   if (data.status === "wait_for_certify")
     return (
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col items-center gap-2">
         <Image
           priority
           src={randomIcon.src}
           alt={randomIcon.alt}
           width={220}
           height={220}
-          className="animate-in fade-in zoom-in duration-200"
+          className="fade-in zoom-in animate-in duration-200"
         />
         <span>Detected Cosmo &apos;{data.user.nickname}&apos;</span>
         <span>Enter the verification code</span>
@@ -207,14 +194,14 @@ function StepRender({
 
   if (data.status === "expired")
     return (
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col items-center gap-2">
         <Image
           priority
           src={TrashIcon.src}
           alt="Trash"
           width={220}
           height={220}
-          className="animate-in fade-in zoom-in duration-200"
+          className="fade-in zoom-in animate-in duration-200"
         />
         <span>QR expired</span>
         <Button intent="secondary" onClick={refetch}>
@@ -225,14 +212,14 @@ function StepRender({
 
   if (data.status === "certified")
     return (
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col items-center gap-2">
         <Image
           priority
           src={WelcomeIcon.src}
           width={220}
           height={220}
           alt="Welcome"
-          className="animate-in fade-in zoom-in duration-200"
+          className="fade-in zoom-in animate-in duration-200"
         />
         <span>Success. Cosmo &apos;{data.user.nickname}&apos; linked.</span>
         <div>
@@ -268,7 +255,7 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
 
   if (otpAndLink.isError)
     return (
-      <div className="flex flex-col gap-2 items-center">
+      <div className="flex flex-col items-center gap-2">
         <span>{otpAndLink.error.message}</span>
         <Button intent="secondary" onClick={() => otpAndLink.reset()}>
           Try again
@@ -277,7 +264,7 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
     );
 
   return (
-    <div className="flex flex-col gap-2 items-center">
+    <div className="flex flex-col items-center gap-2">
       <Form
         onSubmit={(e) => {
           e.preventDefault();
@@ -286,15 +273,9 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
             ticket: ticketAuth.ticket,
           });
         }}
-        className="flex flex-col gap-2 items-center"
+        className="flex flex-col items-center gap-2"
       >
-        <InputOTP
-          minLength={2}
-          maxLength={2}
-          required
-          value={value}
-          onChange={setValue}
-        >
+        <InputOTP minLength={2} maxLength={2} required value={value} onChange={setValue}>
           <InputOTP.Group>
             {[...Array(2)].map((_, index) => (
               <InputOTP.Slot key={index} index={index} />

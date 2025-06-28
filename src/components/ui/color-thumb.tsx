@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { ColorThumb as ColorThumbPrimitive, type ColorThumbProps } from "react-aria-components"
-import { tv } from "tailwind-variants"
+import { ColorThumb as ColorThumbPrimitive, type ColorThumbProps } from "react-aria-components";
+import { tv } from "tailwind-variants";
 
 const thumbStyles = tv({
   base: "top-[50%] left-[50%] size-6 rounded-full border-2 border-white [box-shadow:0_0_0_1px_black,_inset_0_0_0_1px_black]",
@@ -16,7 +16,7 @@ const thumbStyles = tv({
       true: "opacity-50 forced-colors:border-[GrayText] forced-colors:bg-[GrayText]",
     },
   },
-})
+});
 
 const ColorThumb = (props: ColorThumbProps) => {
   return (
@@ -28,7 +28,7 @@ const ColorThumb = (props: ColorThumbProps) => {
       })}
       className={thumbStyles}
     />
-  )
-}
+  );
+};
 
-export { ColorThumb }
+export { ColorThumb };

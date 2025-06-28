@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ColorSlider as ColorSliderPrimitive,
@@ -6,11 +6,11 @@ import {
   SliderOutput,
   SliderTrack,
   composeRenderProps,
-} from "react-aria-components"
-import { tv } from "tailwind-variants"
+} from "react-aria-components";
+import { tv } from "tailwind-variants";
 
-import { ColorThumb } from "@/components/ui/color-thumb"
-import { Label } from "@/components/ui/field"
+import { ColorThumb } from "@/components/ui/color-thumb";
+import { Label } from "@/components/ui/field";
 
 const trackStyles = tv({
   base: "group col-span-2 rounded-lg",
@@ -23,11 +23,11 @@ const trackStyles = tv({
       true: "bg-muted opacity-75 forced-colors:bg-[GrayText]",
     },
   },
-})
+});
 
 interface ColorSliderProps extends ColorSliderPrimitiveProps {
-  label?: string
-  showOutput?: boolean
+  label?: string;
+  showOutput?: boolean;
 }
 
 const colorSliderStyles = tv({
@@ -41,7 +41,7 @@ const colorSliderStyles = tv({
       true: "bg-muted opacity-75 forced-colors:bg-[GrayText]",
     },
   },
-})
+});
 const ColorSlider = ({ showOutput = true, label, className, ...props }: ColorSliderProps) => {
   return (
     <ColorSliderPrimitive
@@ -69,8 +69,8 @@ const ColorSlider = ({ showOutput = true, label, className, ...props }: ColorSli
         <ColorThumb />
       </SliderTrack>
     </ColorSliderPrimitive>
-  )
-}
+  );
+};
 
-export type { ColorSliderProps }
-export { ColorSlider }
+export type { ColorSliderProps };
+export { ColorSlider };

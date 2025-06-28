@@ -1,23 +1,19 @@
 "use client";
 
-import {
-  QueryErrorResetBoundary,
-  useQuery,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { IconArrowLeft, IconArrowRight, IconOpenLink } from "@intentui/icons";
+import { LockIcon, QuestionMarkIcon } from "@phosphor-icons/react/dist/ssr";
+import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useState } from "react";
-import { Badge, Button, Card, Link, Loader, NumberField, Table } from "../ui";
-import { IconArrowLeft, IconArrowRight, IconOpenLink } from "@intentui/icons";
-import { format } from "date-fns";
 import { ErrorBoundary } from "react-error-boundary";
-import ErrorFallbackRender from "../error-boundary";
-import UserLink from "../user-link";
-import { ObjektSerial, ObjektTransferResponse } from "./common";
-import { cn } from "@/utils/classes";
-import { ValidObjekt } from "@/lib/universal/objekts";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
-import { LockIcon, QuestionMarkIcon } from "@phosphor-icons/react/dist/ssr";
+import { cn } from "@/utils/classes";
+import ErrorFallbackRender from "../error-boundary";
+import { Badge, Button, Card, Link, Loader, NumberField, Table } from "../ui";
+import UserLink from "../user-link";
+import type { ObjektSerial, ObjektTransferResponse } from "./common";
 
 type TradeViewProps = {
   objekt: ValidObjekt;
@@ -26,9 +22,9 @@ type TradeViewProps = {
 
 const fetchObjektsQuery = (slug: string) => ({
   queryKey: ["objekts", "list", slug],
-  queryFn: async ({}) =>
+  queryFn: async () =>
     await ofetch<{ serials: ObjektSerial[] }>(`/api/objekts/list/${slug}`).then(
-      (res) => res.serials
+      (res) => res.serials,
     ),
 });
 
@@ -58,11 +54,7 @@ function TradeViewRender({ objekt, serial }: TradeViewProps) {
   return (
     <>
       {data.length > 0 && (
-        <Trades
-          serials={data}
-          initialSerial={serial ?? data[0]}
-          objekt={objekt}
-        />
+        <Trades serials={data} initialSerial={serial ?? data[0]} objekt={objekt} />
       )}
     </>
   );
@@ -82,10 +74,8 @@ function Trades({
   const updateSerial = useCallback(
     (mode: "prev" | "next") => {
       setSerial((prevSerial) => {
-        if (mode == "prev") {
-          const newSerial = serials
-            .filter((serial) => serial < prevSerial)
-            .pop();
+        if (mode === "prev") {
+          const newSerial = serials.filter((serial) => serial < prevSerial).pop();
           return newSerial ?? prevSerial;
         }
 
@@ -93,12 +83,12 @@ function Trades({
         return newSerial ?? prevSerial;
       });
     },
-    [serials]
+    [serials],
   );
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex gap-2 items-center">
+      <div className="flex items-center gap-2">
         <NumberField
           minValue={1}
           className="grow"
@@ -130,18 +120,10 @@ function Trades({
   );
 }
 
-function TradeTable({
-  objekt,
-  serial,
-}: {
-  objekt: ValidObjekt;
-  serial: number;
-}) {
+function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
   const { data, status, refetch } = useQuery({
     queryFn: async () =>
-      await ofetch<ObjektTransferResponse>(
-        `/api/objekts/transfers/${objekt.slug}/${serial}`
-      ),
+      await ofetch<ObjektTransferResponse>(`/api/objekts/transfers/${objekt.slug}/${serial}`),
     queryKey: ["objekts", "transfer", objekt.slug, serial],
     retry: 1,
     staleTime: 0,
@@ -154,16 +136,15 @@ function TradeTable({
       </div>
     );
 
-  if (status === "error")
-    return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
+  if (status === "error") return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
 
   const ownerNickname = data.transfers.find(
-    (a) => a.to.toLowerCase() === data.owner?.toLowerCase()
+    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
   )?.nickname;
 
   if (data.hide)
     return (
-      <div className="flex flex-col justify-center gap-3 items-center py-3">
+      <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
         <p>Objekt Private</p>
       </div>
@@ -171,7 +152,7 @@ function TradeTable({
 
   if (!data.owner)
     return (
-      <div className="flex flex-col justify-center gap-3 items-center py-3">
+      <div className="flex flex-col items-center justify-center gap-3 py-3">
         <QuestionMarkIcon size={64} weight="light" />
         <p>Not found</p>
       </div>
@@ -191,7 +172,7 @@ function TradeTable({
           <span>
             <Link
               href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
-              className="cursor-pointer inline-flex gap-2 items-center"
+              className="inline-flex cursor-pointer items-center gap-2"
               target="_blank"
             >
               {data.tokenId}
@@ -224,9 +205,7 @@ function TradeTable({
                   <Table.Cell>
                     <UserLink address={item.to} nickname={item.nickname} />
                   </Table.Cell>
-                  <Table.Cell>
-                    {format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}
-                  </Table.Cell>
+                  <Table.Cell>{format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}</Table.Cell>
                 </Table.Row>
               )}
             </Table.Body>

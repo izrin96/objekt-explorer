@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useCallback, useState } from "react"
+import { useCallback, useState } from "react";
 
-import type { Key } from "react-aria-components"
-import { Group, TextField } from "react-aria-components"
-import type { ListData } from "react-stately"
-import { twJoin, twMerge } from "tailwind-merge"
-import { tv } from "tailwind-variants"
+import type { Key } from "react-aria-components";
+import { Group, TextField } from "react-aria-components";
+import type { ListData } from "react-stately";
+import { twJoin, twMerge } from "tailwind-merge";
+import { tv } from "tailwind-variants";
 
-import type { FieldProps } from "@/components/ui/field"
-import { Description, Input, Label } from "@/components/ui/field"
-import { Tag, TagGroup, TagList } from "@/components/ui/tag-group"
+import type { FieldProps } from "@/components/ui/field";
+import { Description, Input, Label } from "@/components/ui/field";
+import { Tag, TagGroup, TagList } from "@/components/ui/tag-group";
 
 const tagFieldsStyles = tv({
   base: "relative flex flex-row flex-wrap items-center transition",
@@ -24,25 +24,25 @@ const tagFieldsStyles = tv({
       plain: "has-[input[focus=true]]:border-transparent",
     },
   },
-})
+});
 
 interface TagItemProps {
-  id: number
-  name: string
+  id: number;
+  name: string;
 }
 
 interface TagFieldProps extends FieldProps {
-  isDisabled?: boolean
-  max?: number
-  className?: string
-  isCircle?: boolean
-  children?: React.ReactNode
-  name?: string
-  list: ListData<TagItemProps>
-  onItemInserted?: (tag: TagItemProps) => void
-  onItemCleared?: (tag: TagItemProps | undefined) => void
-  appearance?: "outline" | "plain"
-  "aria-label"?: string
+  isDisabled?: boolean;
+  max?: number;
+  className?: string;
+  isCircle?: boolean;
+  children?: React.ReactNode;
+  name?: string;
+  list: ListData<TagItemProps>;
+  onItemInserted?: (tag: TagItemProps) => void;
+  onItemCleared?: (tag: TagItemProps | undefined) => void;
+  appearance?: "outline" | "plain";
+  "aria-label"?: string;
 }
 
 const TagField = ({
@@ -55,30 +55,30 @@ const TagField = ({
   onItemInserted,
   ...props
 }: TagFieldProps) => {
-  const [isInvalid, setIsInvalid] = useState(false)
-  const [inputValue, setInputValue] = useState("")
+  const [isInvalid, setIsInvalid] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
-  const existingTagCount = list.items.length
-  const maxTags = props.max !== undefined ? props.max : Number.POSITIVE_INFINITY
-  const maxTagsToAdd = maxTags - existingTagCount
+  const existingTagCount = list.items.length;
+  const maxTags = props.max !== undefined ? props.max : Number.POSITIVE_INFINITY;
+  const maxTagsToAdd = maxTags - existingTagCount;
 
   const insertTag = () => {
-    const tagNames = inputValue.split(/,/)
+    const tagNames = inputValue.split(/,/);
     if (maxTagsToAdd <= 0) {
-      setIsInvalid(true)
-      setInputValue("")
+      setIsInvalid(true);
+      setInputValue("");
       const timeoutId = setTimeout(() => {
-        setIsInvalid(false)
-      }, 2000)
+        setIsInvalid(false);
+      }, 2000);
 
-      return () => clearTimeout(timeoutId)
+      return () => clearTimeout(timeoutId);
     }
 
     for (const tagName of tagNames.slice(0, maxTagsToAdd)) {
       const formattedName = tagName
         .trim()
         .replace(/\s+/g, " ")
-        .replace(/[\t\r\n]/g, "")
+        .replace(/[\t\r\n]/g, "");
 
       if (
         formattedName &&
@@ -87,57 +87,57 @@ const TagField = ({
         const tag = {
           id: (list.items.at(-1)?.id ?? 0) + 1,
           name: formattedName,
-        }
+        };
 
-        list.append(tag)
-        onItemInserted?.(tag)
+        list.append(tag);
+        onItemInserted?.(tag);
       }
     }
 
-    setInputValue("")
-  }
+    setInputValue("");
+  };
 
   const clearInvalidFeedback = () => {
     if (maxTags - list.items.length <= maxTagsToAdd) {
-      setIsInvalid(false)
+      setIsInvalid(false);
     }
-  }
+  };
 
   const onRemove = (keys: Set<Key>) => {
-    list.remove(...keys)
+    list.remove(...keys);
 
-    const firstKey = [...keys][0]
+    const firstKey = [...keys][0];
     if (firstKey !== undefined) {
-      onItemCleared?.(list.getItem(firstKey))
+      onItemCleared?.(list.getItem(firstKey));
     }
 
-    clearInvalidFeedback()
-  }
+    clearInvalidFeedback();
+  };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault()
-      insertTag()
+      e.preventDefault();
+      insertTag();
     }
 
     if (e.key === "Backspace" && inputValue === "") {
-      popLast()
-      clearInvalidFeedback()
+      popLast();
+      clearInvalidFeedback();
     }
-  }
+  };
 
   const popLast = useCallback(() => {
     if (list.items.length === 0) {
-      return
+      return;
     }
 
-    const endKey = list.items[list.items.length - 1]!
+    const endKey = list.items[list.items.length - 1]!;
 
     if (endKey !== null) {
-      list.remove(endKey.id)
-      onItemCleared?.(list.getItem(endKey.id))
+      list.remove(endKey.id);
+      onItemCleared?.(list.getItem(endKey.id));
     }
-  }, [list, onItemCleared])
+  }, [list, onItemCleared]);
 
   return (
     <div className={twMerge("flex w-full flex-col gap-y-1.5", className)}>
@@ -169,8 +169,8 @@ const TagField = ({
       </Group>
       {props.description && <Description>{props.description}</Description>}
     </div>
-  )
-}
+  );
+};
 
-export type { TagFieldProps, TagItemProps }
-export { TagField }
+export type { TagFieldProps, TagItemProps };
+export { TagField };

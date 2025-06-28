@@ -1,8 +1,5 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Button, Form, Note, TextField } from "../ui";
-import { authClient } from "@/lib/auth-client";
 import {
   DiscordLogoIcon,
   EnvelopeSimpleIcon,
@@ -10,17 +7,18 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
+import { Button, Form, TextField } from "../ui";
 
 export default function SignIn() {
-  const [state, setState] = useState<"sign-in" | "sign-up" | "forgot-password">(
-    "sign-in"
-  );
+  const [state, setState] = useState<"sign-in" | "sign-up" | "forgot-password">("sign-in");
 
   return (
-    <div className="flex flex-col py-6 gap-6">
-      <div className="flex flex-col gap-6 max-w-md w-full self-center">
+    <div className="flex flex-col gap-6 py-6">
+      <div className="flex w-full max-w-md flex-col gap-6 self-center">
         {state === "sign-in" && <SignInForm setState={setState} />}
         {state === "sign-up" && <SignUpForm setState={setState} />}
         {state === "forgot-password" && <ForgotPassword setState={setState} />}
@@ -36,13 +34,7 @@ function SignInForm({
 }) {
   const router = useRouter();
   const mutation = useMutation({
-    mutationFn: async ({
-      email,
-      password,
-    }: {
-      email: string;
-      password: string;
-    }) => {
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const result = await authClient.signIn.email({
         email: email,
         password: password,
@@ -98,27 +90,19 @@ function SignInForm({
       </Form>
 
       <div className="flex flex-col gap-2">
-        <Button
-          intent="outline"
-          className="gap-2"
-          onClick={() => setState("forgot-password")}
-        >
+        <Button intent="outline" className="gap-2" onClick={() => setState("forgot-password")}>
           <EnvelopeSimpleIcon size={18} weight="light" />
           Forgot password
         </Button>
-        <Button
-          intent="outline"
-          className="gap-2"
-          onClick={() => setState("sign-up")}
-        >
+        <Button intent="outline" className="gap-2" onClick={() => setState("sign-up")}>
           <UserPlusIcon size={18} weight="light" />
           Create new account
         </Button>
       </div>
 
-      <div className="my-2 flex items-center justify-center text-sm relative">
+      <div className="relative my-2 flex items-center justify-center text-sm">
         <div className="absolute inset-0 flex items-center">
-          <div className="shrink-0 bg-border h-px w-full"></div>
+          <div className="h-px w-full shrink-0 bg-border"></div>
         </div>
         <span className="relative bg-bg px-3">Or continue with</span>
       </div>
@@ -179,11 +163,7 @@ function SignUpForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const mutation = useMutation({
-    mutationFn: async (data: {
-      email: string;
-      password: string;
-      name: string;
-    }) => {
+    mutationFn: async (data: { email: string; password: string; name: string }) => {
       const result = await authClient.signUp.email({
         ...data,
         callbackURL: "/auth/verified",
@@ -214,13 +194,7 @@ function SignUpForm({
       }}
     >
       <div className="flex flex-col gap-4">
-        <TextField
-          label="Name"
-          type="text"
-          name="name"
-          isRequired
-          placeholder="Your name"
-        />
+        <TextField label="Name" type="text" name="name" isRequired placeholder="Your name" />
         <TextField
           label="Email"
           type="email"
@@ -228,13 +202,7 @@ function SignUpForm({
           isRequired
           placeholder="your@email.com"
         />
-        <TextField
-          label="Password"
-          type="password"
-          name="password"
-          isRequired
-          isRevealable
-        />
+        <TextField label="Password" type="password" name="password" isRequired isRevealable />
         <Button type="submit" isDisabled={mutation.isPending}>
           Create Account
         </Button>

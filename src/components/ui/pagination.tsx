@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   IconChevronLgLeft,
@@ -6,15 +6,14 @@ import {
   IconChevronWallLeft,
   IconChevronWallRight,
   IconDotsHorizontal,
-} from "@intentui/icons"
-import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components"
-import { ListBox, ListBoxItem, ListBoxSection, Separator } from "react-aria-components"
+} from "@intentui/icons";
+import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components";
+import { ListBox, ListBoxItem, ListBoxSection, Separator } from "react-aria-components";
+import { twMerge } from "tailwind-merge";
+import { type ButtonProps, buttonStyles } from "@/components/ui/button";
+import { composeTailwindRenderProps } from "@/lib/primitive";
 
-import { type ButtonProps, buttonStyles } from "@/components/ui/button"
-import { composeTailwindRenderProps } from "@/lib/primitive"
-import { twMerge } from "tailwind-merge"
-
-type PaginationProps = React.ComponentProps<"nav">
+type PaginationProps = React.ComponentProps<"nav">;
 const Pagination = ({ className, ref, ...props }: PaginationProps) => (
   <nav
     aria-label="pagination"
@@ -22,10 +21,10 @@ const Pagination = ({ className, ref, ...props }: PaginationProps) => (
     className={twMerge("mx-auto flex w-full justify-center gap-[5px]", className)}
     {...props}
   />
-)
+);
 
 interface PaginationSectionProps<T> extends ListBoxSectionProps<T> {
-  ref?: React.RefObject<HTMLElement>
+  ref?: React.RefObject<HTMLElement>;
 }
 const PaginationSection = <T extends object>({
   className,
@@ -33,10 +32,10 @@ const PaginationSection = <T extends object>({
   ...props
 }: PaginationSectionProps<T>) => (
   <ListBoxSection ref={ref} {...props} className={twMerge("flex h-9 gap-[5px]", className)} />
-)
+);
 
 interface PaginationListProps<T> extends ListBoxProps<T> {
-  ref?: React.RefObject<HTMLDivElement>
+  ref?: React.RefObject<HTMLDivElement>;
 }
 const PaginationList = <T extends object>({ className, ref, ...props }: PaginationListProps<T>) => {
   return (
@@ -48,26 +47,26 @@ const PaginationList = <T extends object>({ className, ref, ...props }: Paginati
       className={composeTailwindRenderProps(className, "flex flex-row items-center gap-[5px]")}
       {...props}
     />
-  )
-}
+  );
+};
 
 const renderListItem = (
   props: ListBoxItemProps & {
-    textValue?: string
-    "aria-current"?: string | undefined
-    isDisabled?: boolean
-    className?: string
+    textValue?: string;
+    "aria-current"?: string | undefined;
+    isDisabled?: boolean;
+    className?: string;
   },
   children: React.ReactNode,
-) => <ListBoxItem {...props}>{children}</ListBoxItem>
+) => <ListBoxItem {...props}>{children}</ListBoxItem>;
 
 interface PaginationItemProps
   extends ListBoxItemProps,
     Pick<ButtonProps, "isCircle" | "size" | "intent"> {
-  children?: React.ReactNode
-  className?: string
-  isCurrent?: boolean
-  segment?: "label" | "separator" | "ellipsis" | "default" | "last" | "first" | "previous" | "next"
+  children?: React.ReactNode;
+  className?: string;
+  isCurrent?: boolean;
+  segment?: "label" | "separator" | "ellipsis" | "default" | "last" | "first" | "previous" | "next";
 }
 
 const PaginationItem = ({
@@ -84,7 +83,7 @@ const PaginationItem = ({
       ? children
       : typeof children === "number"
         ? children.toString()
-        : undefined
+        : undefined;
 
   const renderPaginationIndicator = (indicator: React.ReactNode) =>
     renderListItem(
@@ -96,14 +95,14 @@ const PaginationItem = ({
           intent: "outline",
           size: "sm",
           className: twMerge(
-            "cursor-default font-normal text-fg min-w-10 focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/20",
+            "min-w-10 cursor-default font-normal text-fg focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/20",
             className,
           ),
         }),
         ...props,
       },
       indicator,
-    )
+    );
 
   switch (segment) {
     case "label":
@@ -114,7 +113,7 @@ const PaginationItem = ({
           ...props,
         },
         children,
-      )
+      );
     case "separator":
       return renderListItem(
         {
@@ -126,7 +125,7 @@ const PaginationItem = ({
           orientation="vertical"
           className="h-5 w-[1.5px] shrink-0 rotate-[14deg] bg-secondary-fg/40"
         />,
-      )
+      );
     case "ellipsis":
       return renderListItem(
         {
@@ -140,15 +139,15 @@ const PaginationItem = ({
         <span aria-hidden className={twMerge("flex size-9 items-center justify-center", className)}>
           <IconDotsHorizontal />
         </span>,
-      )
+      );
     case "previous":
-      return renderPaginationIndicator(<IconChevronLgLeft />)
+      return renderPaginationIndicator(<IconChevronLgLeft />);
     case "next":
-      return renderPaginationIndicator(<IconChevronLgRight />)
+      return renderPaginationIndicator(<IconChevronLgRight />);
     case "first":
-      return renderPaginationIndicator(<IconChevronWallLeft />)
+      return renderPaginationIndicator(<IconChevronWallLeft />);
     case "last":
-      return renderPaginationIndicator(<IconChevronWallRight />)
+      return renderPaginationIndicator(<IconChevronWallRight />);
     default:
       return renderListItem(
         {
@@ -159,20 +158,20 @@ const PaginationItem = ({
             intent: isCurrent ? "primary" : intent,
             size,
             className: twMerge(
-              "cursor-default font-normal min-w-10 tabular-nums disabled:cursor-default disabled:opacity-100 focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/20",
+              "min-w-10 cursor-default font-normal tabular-nums focus-visible:border-primary focus-visible:bg-primary/10 focus-visible:ring-3 focus-visible:ring-ring/20 disabled:cursor-default disabled:opacity-100",
               className,
             ),
           }),
           ...props,
         },
         children,
-      )
+      );
   }
-}
+};
 
-Pagination.Item = PaginationItem
-Pagination.List = PaginationList
-Pagination.Section = PaginationSection
+Pagination.Item = PaginationItem;
+Pagination.List = PaginationList;
+Pagination.Section = PaginationSection;
 
-export type { PaginationProps, PaginationListProps, PaginationSectionProps, PaginationItemProps }
-export { Pagination }
+export type { PaginationProps, PaginationListProps, PaginationSectionProps, PaginationItemProps };
+export { Pagination };

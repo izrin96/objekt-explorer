@@ -1,25 +1,25 @@
 "use client";
 
-import { authClient } from "@/lib/auth-client";
-import React, { useState } from "react";
-import { Avatar, buttonStyles, Menu, Link, Loader } from "./ui";
-import { usePathname, useRouter } from "next/navigation";
-import { User } from "@/lib/server/db/schema";
-import { api } from "@/lib/trpc/client";
-import { toast } from "sonner";
 import {
+  DeviceMobileIcon,
   DiscordLogoIcon,
+  GearSixIcon,
+  HeartIcon,
+  PlusIcon,
   SignOutIcon,
   UserIcon,
-  HeartIcon,
-  GearSixIcon,
-  PlusIcon,
-  DeviceMobileIcon,
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import UserAccountModal from "@/components/auth/account/user-account";
+import { authClient } from "@/lib/auth-client";
+import type { User } from "@/lib/server/db/schema";
+import { api } from "@/lib/trpc/client";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
-import UserAccountModal from "@/components/auth/account/user-account";
+import { Avatar, buttonStyles, Link, Loader, Menu } from "./ui";
 
 export default function UserNav() {
   // temporary fix for ui being stuck after navigate
@@ -29,18 +29,13 @@ export default function UserNav() {
   if (isPending) return;
 
   return (
-    <div className="text-sm gap-2 inline-flex">
+    <div className="inline-flex gap-2 text-sm">
       {data ? (
         <UserMenu key={pathname} user={data.user as User} />
       ) : (
-        <>
-          <Link
-            href="/login"
-            className={buttonStyles({ intent: "outline", size: "sm" })}
-          >
-            Sign in
-          </Link>
-        </>
+        <Link href="/login" className={buttonStyles({ intent: "outline", size: "sm" })}>
+          Sign in
+        </Link>
       )}
     </div>
   );
@@ -74,23 +69,15 @@ function UserMenu({ user }: { user: User }) {
                 <span>{user.name}</span>
                 <div className="flex gap-2">
                   {user.discord && (
-                    <span className="font-normal text-muted-fg inline-flex gap-1">
+                    <span className="inline-flex gap-1 font-normal text-muted-fg">
                       {user.discord}
-                      <DiscordLogoIcon
-                        size={16}
-                        weight="regular"
-                        className="self-center"
-                      />
+                      <DiscordLogoIcon size={16} weight="regular" className="self-center" />
                     </span>
                   )}
                   {user.twitter && (
-                    <span className="font-normal text-muted-fg inline-flex gap-1">
+                    <span className="inline-flex gap-1 font-normal text-muted-fg">
                       {user.twitter}
-                      <XLogoIcon
-                        size={16}
-                        weight="regular"
-                        className="self-center"
-                      />
+                      <XLogoIcon size={16} weight="regular" className="self-center" />
                     </span>
                   )}
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import { PropsWithChildren, createContext, useContext, useRef } from "react";
-import { createStore, useStore, type StoreApi } from "zustand";
+import { createContext, type PropsWithChildren, useContext, useRef } from "react";
+import { createStore, type StoreApi, useStore } from "zustand";
 
 export type ValidTab = "owned" | "trades";
 
@@ -9,9 +9,7 @@ type ObjektModalProps = {
   initialTab: ValidTab;
 };
 
-const ObjektModalContext = createContext<StoreApi<ObjektModalState> | null>(
-  null
-);
+const ObjektModalContext = createContext<StoreApi<ObjektModalState> | null>(null);
 
 type ProviderProps = PropsWithChildren<ObjektModalProps>;
 
@@ -33,19 +31,15 @@ export function ObjektModalProvider({ children, ...props }: ProviderProps) {
     storeRef.current = createObjektModalStore(props);
   }
 
-  return (
-    <ObjektModalContext value={storeRef.current}>{children}</ObjektModalContext>
-  );
+  return <ObjektModalContext value={storeRef.current}>{children}</ObjektModalContext>;
 }
 
 export function useObjektModal<SelectorOutput>(
-  selector: (state: ObjektModalState) => SelectorOutput
+  selector: (state: ObjektModalState) => SelectorOutput,
 ) {
   const store = useContext(ObjektModalContext);
   if (!store) {
-    throw new Error(
-      "useObjektModal must be used within an ObjektModalProvider"
-    );
+    throw new Error("useObjektModal must be used within an ObjektModalProvider");
   }
   return useStore(store, selector);
 }

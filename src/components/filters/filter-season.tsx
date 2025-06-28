@@ -1,11 +1,11 @@
 "use client";
 
-import { type Selection } from "react-stately";
-import { ValidSeason, validSeasons } from "@/lib/universal/cosmo/common";
-import { useMemo, useCallback } from "react";
-import { Menu, Button } from "../ui";
+import { useCallback, useMemo } from "react";
+import type { Selection } from "react-stately";
 import { useFilters } from "@/hooks/use-filters";
+import { type ValidSeason, validSeasons } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
+import { Button, Menu } from "../ui";
 
 export default function SeasonFilter() {
   const [filters, setFilters] = useFilters();
@@ -18,15 +18,12 @@ export default function SeasonFilter() {
         season: value,
       });
     },
-    [setFilters]
+    [setFilters],
   );
 
   return (
     <Menu>
-      <Button
-        intent="outline"
-        className={filters.season?.length ? "!inset-ring-primary" : ""}
-      >
+      <Button intent="outline" className={filters.season?.length ? "!inset-ring-primary" : ""}>
         Season
       </Button>
       <Menu.Content
