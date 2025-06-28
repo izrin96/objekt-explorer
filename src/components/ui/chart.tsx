@@ -1,15 +1,19 @@
 "use client";
 
 import {
-  type ReactElement,
   createContext,
+  type ReactElement,
   use,
   useCallback,
   useId,
   useMemo,
   useState,
 } from "react";
-
+import {
+  ToggleButton,
+  ToggleButtonGroup,
+  type ToggleButtonGroupProps,
+} from "react-aria-components";
 import type {
   CartesianGridProps as CartesianGridPrimitiveProps,
   CartesianGridProps,
@@ -26,7 +30,6 @@ import {
   XAxis as XAxisPrimitive,
   YAxis as YAxisPrimitive,
 } from "recharts";
-
 import type { ContentType as LegendContentType } from "recharts/types/component/DefaultLegendContent";
 import type {
   NameType,
@@ -35,14 +38,8 @@ import type {
 } from "recharts/types/component/DefaultTooltipContent";
 import type { ContentType as TooltipContentType } from "recharts/types/component/Tooltip";
 import type { CurveType } from "recharts/types/shape/Curve";
-
-import { composeTailwindRenderProps } from "@/lib/primitive";
-import {
-  ToggleButton,
-  ToggleButtonGroup,
-  type ToggleButtonGroupProps,
-} from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
+import { composeTailwindRenderProps } from "@/lib/primitive";
 import { Separator } from "./separator";
 
 // #region Chart Types
