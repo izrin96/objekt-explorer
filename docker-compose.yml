@@ -1,8 +1,9 @@
 services:
   postgres:
     restart: always
-    image: postgres:latest
-    command: "-d 1"
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
