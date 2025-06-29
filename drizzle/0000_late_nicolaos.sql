@@ -1,4 +1,4 @@
-CREATE EXTENSION citext;
+CREATE EXTENSION IF NOT EXISTS "citext";
 
 CREATE TABLE "access_token" (
 	"id" serial PRIMARY KEY NOT NULL,
