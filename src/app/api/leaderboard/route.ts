@@ -1,18 +1,14 @@
-import { indexer } from "@/lib/server/db/indexer";
-import { and, count, eq, desc, not, inArray, ne } from "drizzle-orm";
-import { collections, objekts } from "@/lib/server/db/indexer/schema";
+import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
+import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
-import {
-  validArtists,
-  validOnlineTypes,
-  validSeasons,
-} from "@/lib/universal/cosmo/common";
-import { NextRequest } from "next/server";
 import { db } from "@/lib/server/db";
+import { indexer } from "@/lib/server/db/indexer";
+import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { userAddress } from "@/lib/server/db/schema";
-import { cacheHeaders } from "../common";
+import { validArtists, validOnlineTypes, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
+import { cacheHeaders } from "../common";
 
 const schema = z.object({
   artist: z.enum(validArtists).nullable().optional(),
@@ -34,7 +30,7 @@ export async function GET(request: NextRequest) {
       },
       {
         status: 400,
-      }
+      },
     );
 
   const options = parsedParams.data;
@@ -42,14 +38,10 @@ export async function GET(request: NextRequest) {
   const wheres = [
     not(inArray(collections.slug, unobtainables)),
     not(inArray(collections.class, ["Welcome", "Zero"])),
-    ...(options.artist
-      ? [eq(collections.artist, options.artist.toLowerCase())]
-      : []),
+    ...(options.artist ? [eq(collections.artist, options.artist.toLowerCase())] : []),
     ...(options.member ? [eq(collections.member, options.member)] : []),
     ...(options.season ? [eq(collections.season, options.season)] : []),
-    ...(options.onlineType
-      ? [eq(collections.onOffline, options.onlineType)]
-      : []),
+    ...(options.onlineType ? [eq(collections.onOffline, options.onlineType)] : []),
   ];
 
   // get total collection
@@ -90,9 +82,8 @@ export async function GET(request: NextRequest) {
       rank: i + 1,
       count: q.count,
       address: q.owner,
-      nickname: knownAddresses.find(
-        (a) => a.address.toLowerCase() === q.owner.toLowerCase()
-      )?.nickname,
+      nickname: knownAddresses.find((a) => a.address.toLowerCase() === q.owner.toLowerCase())
+        ?.nickname,
     };
   });
 
@@ -103,6 +94,6 @@ export async function GET(request: NextRequest) {
     },
     {
       headers: cacheHeaders(3600),
-    }
+    },
   );
 }

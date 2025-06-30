@@ -1,13 +1,8 @@
 import { z } from "zod/v4";
-import { Transfer } from "../server/db/indexer/schema";
-import { UserAddress } from "../server/db/schema";
-import { OwnedObjekt } from "./objekts";
-import {
-  validArtists,
-  validClasses,
-  validOnlineTypes,
-  validSeasons,
-} from "./cosmo/common";
+import type { Transfer } from "../server/db/indexer/schema";
+import type { UserAddress } from "../server/db/schema";
+import { validArtists, validClasses, validOnlineTypes, validSeasons } from "./cosmo/common";
+import type { OwnedObjekt } from "./objekts";
 
 export type ActivityData = {
   transfer: Transfer;

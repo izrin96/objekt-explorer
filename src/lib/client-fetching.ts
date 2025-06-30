@@ -1,5 +1,5 @@
-import { fetchUserByIdentifier } from "./server/auth";
 import { cache } from "react";
+import { fetchUserByIdentifier } from "./server/auth";
 import { fetchLiveSession } from "./server/cosmo/live";
 import { getAccessToken } from "./server/token";
 

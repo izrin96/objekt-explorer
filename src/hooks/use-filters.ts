@@ -1,63 +1,47 @@
 import {
-  validArtists,
-  validClasses,
-  validSeasons,
-  validSorts,
-  ValidArtist,
-  ValidClass,
-  ValidOnlineType,
-  validOnlineTypes,
-  ValidSeason,
-  ValidSort,
-  ValidGroupBy,
-  validGroupBy,
-  ValidSortDirection,
-  validSortDirection,
-  ValidEdition,
-  validEdition,
-} from "@/lib/universal/cosmo/common";
-import {
   parseAsArrayOf,
+  parseAsBoolean,
+  parseAsFloat,
   parseAsString,
   parseAsStringEnum,
   useQueryStates,
-  parseAsBoolean,
-  parseAsFloat,
 } from "nuqs";
+import {
+  type ValidArtist,
+  type ValidClass,
+  type ValidEdition,
+  type ValidGroupBy,
+  type ValidOnlineType,
+  type ValidSeason,
+  type ValidSort,
+  type ValidSortDirection,
+  validArtists,
+  validClasses,
+  validEdition,
+  validGroupBy,
+  validOnlineTypes,
+  validSeasons,
+  validSortDirection,
+  validSorts,
+} from "@/lib/universal/cosmo/common";
 
 export function useFilters() {
   return useQueryStates({
     member: parseAsArrayOf(parseAsString),
-    artist: parseAsArrayOf(
-      parseAsStringEnum<ValidArtist>(Object.values(validArtists))
-    ),
+    artist: parseAsArrayOf(parseAsStringEnum<ValidArtist>(Object.values(validArtists))),
     sort: parseAsStringEnum<ValidSort>(Object.values(validSorts)),
-    class: parseAsArrayOf(
-      parseAsStringEnum<ValidClass>(Object.values(validClasses))
-    ),
-    season: parseAsArrayOf(
-      parseAsStringEnum<ValidSeason>(Object.values(validSeasons))
-    ),
-    on_offline: parseAsArrayOf(
-      parseAsStringEnum<ValidOnlineType>(Object.values(validOnlineTypes))
-    ),
+    class: parseAsArrayOf(parseAsStringEnum<ValidClass>(Object.values(validClasses))),
+    season: parseAsArrayOf(parseAsStringEnum<ValidSeason>(Object.values(validSeasons))),
+    on_offline: parseAsArrayOf(parseAsStringEnum<ValidOnlineType>(Object.values(validOnlineTypes))),
     transferable: parseAsBoolean,
     search: parseAsString,
     grouped: parseAsBoolean,
     group_by: parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy)),
-    group_bys: parseAsArrayOf(
-      parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy))
-    ),
-    sort_dir: parseAsStringEnum<ValidSortDirection>(
-      Object.values(validSortDirection)
-    ),
-    group_dir: parseAsStringEnum<ValidSortDirection>(
-      Object.values(validSortDirection)
-    ),
+    group_bys: parseAsArrayOf(parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy))),
+    sort_dir: parseAsStringEnum<ValidSortDirection>(Object.values(validSortDirection)),
+    group_dir: parseAsStringEnum<ValidSortDirection>(Object.values(validSortDirection)),
     unowned: parseAsBoolean,
-    edition: parseAsArrayOf(
-      parseAsStringEnum<ValidEdition>(Object.values(validEdition))
-    ),
+    edition: parseAsArrayOf(parseAsStringEnum<ValidEdition>(Object.values(validEdition))),
     hidePin: parseAsBoolean,
     color: parseAsString,
     colorSensitivity: parseAsFloat,

@@ -1,7 +1,7 @@
-import { indexer } from "@/lib/server/db/indexer";
 import { count, eq, sql } from "drizzle-orm";
-import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { cacheHeaders } from "@/app/api/common";
+import { indexer } from "@/lib/server/db/indexer";
+import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { SPIN_ADDRESS } from "@/lib/utils";
 
 type Params = {
@@ -16,12 +16,10 @@ export async function GET(_: Request, props: Params) {
   const results = await indexer
     .select({
       total: count(),
-      spin: sql`count(case when ${objekts.owner}=${SPIN_ADDRESS} then 1 end)`.mapWith(
-        Number
-      ),
+      spin: sql`count(case when ${objekts.owner}=${SPIN_ADDRESS} then 1 end)`.mapWith(Number),
       transferable:
         sql`count(case when transferable = true and ${objekts.owner}!=${SPIN_ADDRESS} then 1 end)`.mapWith(
-          Number
+          Number,
         ),
     })
     .from(collections)
@@ -38,7 +36,7 @@ export async function GET(_: Request, props: Params) {
       },
       {
         headers: cacheHeaders(),
-      }
+      },
     );
 
   const [result] = results;

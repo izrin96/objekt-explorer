@@ -1,23 +1,15 @@
-import { Session } from "../server/auth";
-import { UserAddress } from "../server/db/schema";
+import type { Session } from "../server/auth";
+import type { UserAddress } from "../server/db/schema";
 
 export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
-  Partial<
-    Pick<UserAddress, "bannerImgUrl" | "bannerImgType" | "privateProfile">
-  > & {
+  Partial<Pick<UserAddress, "bannerImgUrl" | "bannerImgType" | "privateProfile">> & {
     user?: PublicUser | null;
     isAddress?: boolean;
   };
 
 export type PublicUser = Pick<
   Session["user"],
-  | "name"
-  | "image"
-  | "username"
-  | "discord"
-  | "twitter"
-  | "displayUsername"
-  | "showSocial"
+  "name" | "image" | "username" | "discord" | "twitter" | "displayUsername" | "showSocial"
 >;
 
 export type ProviderId = "twitter" | "discord";

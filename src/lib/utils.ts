@@ -1,5 +1,5 @@
-import { env } from "@/env";
 import type { Selection } from "react-aria-components";
+import { env } from "@/env";
 
 export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_TABLET = 5;
@@ -47,10 +47,7 @@ export function parseSelected<T>(keys: Selection, multiple = false) {
 export function msToCountdown(ms: number) {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
-    2,
-    "0"
-  )}`;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 export const mimeTypes = {

@@ -1,4 +1,4 @@
-import { LiveSession, OnAirResult } from "@/lib/universal/cosmo/live";
+import type { LiveSession, OnAirResult } from "@/lib/universal/cosmo/live";
 import { cosmo } from "../http";
 
 export async function fetchLiveSessions(token: string, artistId: string) {

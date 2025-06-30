@@ -1,6 +1,6 @@
-import { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 
 type UserSearchState = {
   users: CosmoPublicUser[];
@@ -16,7 +16,7 @@ export const useUserSearchStore = create<UserSearchState>()(
       add: (user: CosmoPublicUser) =>
         set((state) => {
           const existing = state.users.findIndex(
-            (a) => a.nickname.toLowerCase() === user.nickname.toLowerCase()
+            (a) => a.nickname.toLowerCase() === user.nickname.toLowerCase(),
           );
           if (existing !== -1) {
             return state;
@@ -26,6 +26,6 @@ export const useUserSearchStore = create<UserSearchState>()(
     }),
     {
       name: "user-searches",
-    }
-  )
+    },
+  ),
 );

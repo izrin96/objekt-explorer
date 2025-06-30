@@ -1,7 +1,7 @@
-import { indexer } from "@/lib/server/db/indexer";
 import { asc, eq } from "drizzle-orm";
-import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { cacheHeaders } from "@/app/api/common";
+import { indexer } from "@/lib/server/db/indexer";
+import { collections, objekts } from "@/lib/server/db/indexer/schema";
 
 type Params = {
   params: Promise<{
@@ -27,6 +27,6 @@ export async function GET(_: Request, props: Params) {
     },
     {
       headers: cacheHeaders(),
-    }
+    },
   );
 }

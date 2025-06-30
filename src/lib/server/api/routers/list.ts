@@ -1,73 +1,62 @@
-import { z } from "zod/v4";
-import {
-  authProcedure,
-  createTRPCRouter,
-  publicProcedure,
-} from "@/lib/server/api/trpc";
-import { collections } from "../../db/indexer/schema";
-import { and, eq, inArray } from "drizzle-orm";
-import { overrideColor } from "@/lib/universal/objekts";
-import { indexer } from "../../db/indexer";
-import { db } from "../../db";
-import { getCollectionColumns } from "../../objekts/objekt-index";
 import { TRPCError } from "@trpc/server";
-import { List, listEntries, lists } from "../../db/schema";
+import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { PublicUser } from "@/lib/universal/user";
+import { z } from "zod/v4";
+import { authProcedure, createTRPCRouter, publicProcedure } from "@/lib/server/api/trpc";
+import { overrideCollection } from "@/lib/universal/objekts";
+import type { PublicUser } from "@/lib/universal/user";
 import { mapPublicUser } from "../../auth";
+import { db } from "../../db";
+import { indexer } from "../../db/indexer";
+import { collections } from "../../db/indexer/schema";
+import { type List, listEntries, lists } from "../../db/schema";
+import { getCollectionColumns } from "../../objekts/objekt-index";
 
 export const listRouter = createTRPCRouter({
-  get: authProcedure
-    .input(z.string())
-    .query(async ({ input: slug, ctx: { session } }) => {
-      const result = await db.query.lists.findFirst({
-        columns: {
-          name: true,
-          hideUser: true,
-        },
-        where: (lists, { eq, and }) =>
-          and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
-      });
+  get: authProcedure.input(z.string()).query(async ({ input: slug, ctx: { session } }) => {
+    const result = await db.query.lists.findFirst({
+      columns: {
+        name: true,
+        hideUser: true,
+      },
+      where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
+    });
 
-      if (!result) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!result) throw new TRPCError({ code: "NOT_FOUND" });
 
-      return result;
-    }),
+    return result;
+  }),
 
-  getEntries: publicProcedure
-    .input(z.string())
-    .query(async ({ input: slug }) => {
-      const result = await db.query.lists.findFirst({
-        with: {
-          entries: {
-            orderBy: (entries, { desc }) => [desc(entries.id)],
-            columns: {
-              id: true,
-              createdAt: true,
-              collectionSlug: true,
-            },
+  getEntries: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
+    const result = await db.query.lists.findFirst({
+      with: {
+        entries: {
+          orderBy: (entries, { desc }) => [desc(entries.id)],
+          columns: {
+            id: true,
+            createdAt: true,
+            collectionSlug: true,
           },
         },
-        where: (lists, { eq }) => eq(lists.slug, slug),
-      });
+      },
+      where: (lists, { eq }) => eq(lists.slug, slug),
+    });
 
-      if (!result) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!result) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const slugs = result.entries.map((a) => a.collectionSlug);
-      const collections = await fetchCollections(slugs);
-      const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
+    const slugs = result.entries.map((a) => a.collectionSlug);
+    const collections = await fetchCollections(slugs);
+    const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
 
-      return {
-        name: result.name,
-        collections: result.entries.map(
-          ({ collectionSlug, id, createdAt }) => ({
-            ...collectionsMap.get(collectionSlug)!,
-            id: id.toString(),
-            createdAt,
-          })
-        ),
-      };
-    }),
+    return {
+      name: result.name,
+      collections: result.entries.map(({ collectionSlug, id, createdAt }) => ({
+        ...collectionsMap.get(collectionSlug)!,
+        id: id.toString(),
+        createdAt,
+      })),
+    };
+  }),
 
   myList: authProcedure.query(async ({ ctx: { session } }) => {
     const { user } = session;
@@ -81,7 +70,7 @@ export const listRouter = createTRPCRouter({
         slug: z.string(),
         skipDups: z.boolean(),
         collectionSlugs: z.string().array(),
-      })
+      }),
     )
     .mutation(
       async ({
@@ -104,9 +93,7 @@ export const listRouter = createTRPCRouter({
             .where(eq(listEntries.listId, list.id));
 
           const existingSlugs = new Set(entries.map((a) => a.slug));
-          const filtered = uniqueCollectionSlugs.filter(
-            (slug) => !existingSlugs.has(slug)
-          );
+          const filtered = uniqueCollectionSlugs.filter((slug) => !existingSlugs.has(slug));
 
           if (filtered.length < 1) return 0;
 
@@ -114,7 +101,7 @@ export const listRouter = createTRPCRouter({
             filtered.map((collectionSlug) => ({
               listId: list.id,
               collectionSlug: collectionSlug,
-            }))
+            })),
           );
 
           return filtered.length;
@@ -126,11 +113,11 @@ export const listRouter = createTRPCRouter({
           collectionSlugs.map((collectionSlug) => ({
             listId: list.id,
             collectionSlug: collectionSlug,
-          }))
+          })),
         );
 
         return collectionSlugs.length;
-      }
+      },
     ),
 
   removeObjektsFromList: authProcedure
@@ -138,7 +125,7 @@ export const listRouter = createTRPCRouter({
       z.object({
         slug: z.string(),
         ids: z.number().array(),
-      })
+      }),
     )
     .mutation(
       async ({
@@ -153,10 +140,8 @@ export const listRouter = createTRPCRouter({
 
         await db
           .delete(listEntries)
-          .where(
-            and(inArray(listEntries.id, ids), eq(listEntries.listId, list.id))
-          );
-      }
+          .where(and(inArray(listEntries.id, ids), eq(listEntries.listId, list.id)));
+      },
     ),
 
   edit: authProcedure
@@ -165,7 +150,7 @@ export const listRouter = createTRPCRouter({
         slug: z.string(),
         name: z.string().min(1),
         hideUser: z.boolean(),
-      })
+      }),
     )
     .mutation(
       async ({
@@ -183,14 +168,14 @@ export const listRouter = createTRPCRouter({
             hideUser: hideUser,
           })
           .where(eq(lists.id, list.id));
-      }
+      },
     ),
 
   delete: authProcedure
     .input(
       z.object({
         slug: z.string(),
-      })
+      }),
     )
     .mutation(
       async ({
@@ -202,7 +187,7 @@ export const listRouter = createTRPCRouter({
         const list = await findOwnedList(slug, user.id);
 
         await db.delete(lists).where(eq(lists.id, list.id));
-      }
+      },
     ),
 
   create: authProcedure
@@ -210,7 +195,7 @@ export const listRouter = createTRPCRouter({
       z.object({
         name: z.string().min(1),
         hideUser: z.boolean(),
-      })
+      }),
     )
     .mutation(
       async ({
@@ -225,7 +210,7 @@ export const listRouter = createTRPCRouter({
           slug: nanoid(9),
           hideUser: hideUser,
         });
-      }
+      },
     ),
 
   generateDiscordFormat: authProcedure
@@ -233,7 +218,7 @@ export const listRouter = createTRPCRouter({
       z.object({
         haveSlug: z.string(),
         wantSlug: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input: { haveSlug, wantSlug } }) => {
       // get both list
@@ -249,13 +234,12 @@ export const listRouter = createTRPCRouter({
       });
 
       const uniqueCollectionSlug = new Set(
-        lists.flatMap((a) => a.entries).map((a) => a.collectionSlug)
+        lists.flatMap((a) => a.entries).map((a) => a.collectionSlug),
       );
 
       // get all collections based on both list
       const collections = await indexer.query.collections.findMany({
-        where: (t, { inArray }) =>
-          inArray(t.slug, Array.from(uniqueCollectionSlug)),
+        where: (t, { inArray }) => inArray(t.slug, Array.from(uniqueCollectionSlug)),
         columns: {
           slug: true,
           season: true,
@@ -329,8 +313,7 @@ async function findOwnedList(slug: string, userId: string) {
     columns: {
       id: true,
     },
-    where: (lists, { eq, and }) =>
-      and(eq(lists.slug, slug), eq(lists.userId, userId)),
+    where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, userId)),
   });
 
   if (!list) throw new TRPCError({ code: "NOT_FOUND" });
@@ -350,6 +333,6 @@ async function fetchCollections(slugs: string[]) {
 
   return result.map((collection) => ({
     ...collection,
-    ...overrideColor(collection),
+    ...overrideCollection(collection),
   }));
 }

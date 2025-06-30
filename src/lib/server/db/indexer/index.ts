@@ -1,8 +1,8 @@
 import { drizzle as drizzleNode } from "drizzle-orm/node-postgres";
 import { drizzle } from "drizzle-orm/pg-proxy";
-import * as schema from "./schema";
-import { env } from "@/env";
 import { ofetch } from "ofetch";
+import { env } from "@/env";
+import * as schema from "./schema";
 
 export const indexer =
   process.env.NODE_ENV === "development"
@@ -32,5 +32,5 @@ export const indexer =
             return { rows: [] };
           }
         },
-        { schema }
+        { schema },
       );

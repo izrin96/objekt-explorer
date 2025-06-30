@@ -31,9 +31,7 @@ export const collections = pgTable(
     textColor: varchar("text_color", { length: 8 }).notNull(),
     accentColor: varchar("accent_color", { length: 8 }).notNull(),
     comoAmount: integer("como_amount").notNull(),
-    onOffline: varchar("on_offline", { length: 16 })
-      .notNull()
-      .$type<"online" | "offline">(),
+    onOffline: varchar("on_offline", { length: 16 }).notNull().$type<"online" | "offline">(),
   },
   (table) => [
     index("slug_idx").on(table.slug),
@@ -43,7 +41,7 @@ export const collections = pgTable(
     index("class_idx").on(table.class),
     index("collectionNo_idx").on(table.collectionNo),
     index("onOffline_idx").on(table.onOffline),
-  ]
+  ],
 );
 
 export const collectionRelations = relations(collections, ({ many }) => ({
@@ -67,7 +65,7 @@ export const objekts = pgTable(
   (table) => [
     index("owner_idx").on(table.owner),
     index("collection_id_idx").on(table.collectionId),
-  ]
+  ],
 );
 
 export const objektRelations = relations(objekts, ({ many, one }) => ({
@@ -99,7 +97,7 @@ export const transfers = pgTable(
     index("to_idx").on(table.to),
     index("objekt_id_idx").on(table.objektId),
     index("collection_id_idx").on(table.collectionId),
-  ]
+  ],
 );
 
 export const transferRelations = relations(transfers, ({ one }) => ({
@@ -121,10 +119,7 @@ export const comoBalances = pgTable(
     owner: varchar("owner", { length: 42 }).notNull(),
     amount: bigint("amount", { mode: "number" }).notNull(),
   },
-  (table) => [
-    index("contract_idx").on(table.contract),
-    index("owner_idx").on(table.owner),
-  ]
+  (table) => [index("contract_idx").on(table.contract), index("owner_idx").on(table.owner)],
 );
 
 export const votes = pgTable(
@@ -143,7 +138,7 @@ export const votes = pgTable(
     index("from_idx").on(table.from),
     index("contract_idx").on(table.contract),
     index("poll_id_idx").on(table.pollId),
-  ]
+  ],
 );
 
 export type Transfer = typeof transfers.$inferSelect;

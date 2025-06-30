@@ -1,4 +1,4 @@
-import { refresh, RefreshTokenResult } from "./cosmo/auth";
+import { type RefreshTokenResult, refresh } from "./cosmo/auth";
 import { db } from "./db";
 import { accessToken } from "./db/schema";
 import { validateExpiry } from "./jwt";

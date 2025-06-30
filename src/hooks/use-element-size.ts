@@ -1,4 +1,4 @@
-import { RefObject, useRef, useState, useCallback } from "react";
+import { type RefObject, useCallback, useRef, useState } from "react";
 import { useIsomorphicLayoutEffect } from "usehooks-ts";
 
 type Size = {
@@ -8,7 +8,7 @@ type Size = {
 
 export const useElementSize = <T extends HTMLElement = HTMLDivElement>(): [
   RefObject<T | null>,
-  Size
+  Size,
 ] => {
   const ref = useRef<T>(null);
   const [size, setSize] = useState<Size>({

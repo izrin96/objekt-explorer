@@ -1,16 +1,16 @@
+import { relations } from "drizzle-orm";
 import {
+  boolean,
   index,
+  integer,
   pgTable,
   serial,
-  uniqueIndex,
-  varchar,
-  integer,
   text,
   timestamp,
-  boolean,
+  uniqueIndex,
+  varchar,
 } from "drizzle-orm/pg-core";
-import { user, session, account, verification } from "./auth-schema";
-import { relations } from "drizzle-orm";
+import { account, session, user, verification } from "./auth-schema";
 import { citext } from "./custom-type";
 
 export { user, session, account, verification };
@@ -44,7 +44,7 @@ export const userAddress = pgTable(
     index("user_address_nickname_idx").on(t.nickname),
     uniqueIndex("user_address_address_nickname_idx").on(t.address, t.nickname),
     index("user_address_user_id_idx").on(t.userId),
-  ]
+  ],
 );
 
 export const userAddressRelations = relations(userAddress, ({ one, many }) => ({
@@ -66,7 +66,7 @@ export const lists = pgTable(
     hideUser: boolean("hide_user").default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("lists_slug_idx").on(t.slug)]
+  (t) => [uniqueIndex("lists_slug_idx").on(t.slug)],
 );
 
 export const listsRelations = relations(lists, ({ many, one }) => ({
@@ -86,7 +86,7 @@ export const listEntries = pgTable(
     collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("list_entries_list_idx").on(t.listId)]
+  (t) => [index("list_entries_list_idx").on(t.listId)],
 );
 
 export const listEntriesRelations = relations(listEntries, ({ one }) => ({
@@ -102,19 +102,16 @@ export const profileLists = pgTable(
     name: text("name").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("profile_list_slug_idx").on(t.slug)]
+  (t) => [uniqueIndex("profile_list_slug_idx").on(t.slug)],
 );
 
-export const profileListRelations = relations(
-  profileLists,
-  ({ many, one }) => ({
-    entries: many(profileListEntries),
-    user: one(userAddress, {
-      fields: [profileLists.address],
-      references: [userAddress.address],
-    }),
-  })
-);
+export const profileListRelations = relations(profileLists, ({ many, one }) => ({
+  entries: many(profileListEntries),
+  user: one(userAddress, {
+    fields: [profileLists.address],
+    references: [userAddress.address],
+  }),
+}));
 
 export const profileListEntries = pgTable(
   "profile_list_entries",
@@ -129,18 +126,15 @@ export const profileListEntries = pgTable(
     receivedAt: timestamp("received_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("profile_list_entries_list_idx").on(t.listId)]
+  (t) => [index("profile_list_entries_list_idx").on(t.listId)],
 );
 
-export const profileListEntriesRelations = relations(
-  profileListEntries,
-  ({ one }) => ({
-    list: one(profileLists, {
-      fields: [profileListEntries.listId],
-      references: [profileLists.id],
-    }),
-  })
-);
+export const profileListEntriesRelations = relations(profileListEntries, ({ one }) => ({
+  list: one(profileLists, {
+    fields: [profileListEntries.listId],
+    references: [profileLists.id],
+  }),
+}));
 
 export const pins = pgTable(
   "pins",
@@ -151,10 +145,7 @@ export const pins = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     order: integer("order"),
   },
-  (t) => [
-    index("pins_address_idx").on(t.address),
-    index("pins_token_id_idx").on(t.tokenId),
-  ]
+  (t) => [index("pins_address_idx").on(t.address), index("pins_token_id_idx").on(t.tokenId)],
 );
 
 export const pinsRelations = relations(pins, ({ one }) => ({

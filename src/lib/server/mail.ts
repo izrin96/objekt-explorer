@@ -1,5 +1,5 @@
-import { env } from "@/env";
 import { SES } from "@aws-sdk/client-ses";
+import { env } from "@/env";
 
 const ses = new SES({
   region: env.SES_REGION,

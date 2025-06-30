@@ -1,11 +1,11 @@
 import { groupBy } from "es-toolkit";
-import { CollectionFormat } from "./universal/objekts";
-import { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
+import type { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
+import type { CollectionFormat } from "./universal/objekts";
 
 export function format(
   collectionMap: Map<string, CollectionFormat[]>,
   showQuantity: boolean,
-  lowercase: boolean
+  lowercase: boolean,
 ) {
   return Array.from(collectionMap.entries()).map(([member, collections]) => {
     const formatCollections = collections.map((collection) => {
@@ -22,9 +22,7 @@ export function format(
     const groupedFormat = groupBy(formatCollections, (a) => a);
 
     const formattedWithQuantity = Object.entries(groupedFormat)
-      .map(([key, group]) =>
-        showQuantity && group.length > 1 ? `${key} (x${group.length})` : key
-      )
+      .map(([key, group]) => (showQuantity && group.length > 1 ? `${key} (x${group.length})` : key))
       .sort();
 
     const output = `${member} ${formattedWithQuantity.join(" ")}`;
@@ -35,16 +33,14 @@ export function format(
 export function mapCollectionByMember(
   collectionMap: Map<string, CollectionFormat>,
   entries: string[],
-  members: string[]
+  members: string[],
 ): Map<string, CollectionFormat[]> {
   const output = new Map<string, CollectionFormat[]>();
   const collectionEntries = entries
     .map((slug) => collectionMap.get(slug))
     .filter((a) => a !== undefined);
   for (const member of members) {
-    for (const collectionEntry of collectionEntries.filter(
-      (a) => a.member === member
-    )) {
+    for (const collectionEntry of collectionEntries.filter((a) => a.member === member)) {
       output.set(member, [...(output.get(member) ?? []), collectionEntry]);
     }
   }
@@ -54,7 +50,7 @@ export function mapCollectionByMember(
 
 export function mapByMember(
   entries: CollectionFormat[],
-  members: string[]
+  members: string[],
 ): Map<string, CollectionFormat[]> {
   const output = new Map<string, CollectionFormat[]>();
   for (const member of members) {
@@ -68,14 +64,12 @@ export function mapByMember(
 
 export function makeMemberOrderedList(
   entries: CollectionFormat[],
-  artists: CosmoArtistWithMembersBFF[]
+  artists: CosmoArtistWithMembersBFF[],
 ) {
   const artistsMembers = artists.flatMap((a) => a.artistMembers);
 
   // get ordered member list from collection
-  const members = Object.values(
-    groupBy(entries, (a) => `${a.artist}-${a.member}`)
-  )
+  const members = Object.values(groupBy(entries, (a) => `${a.artist}-${a.member}`))
     .toSorted(([a], [b]) => {
       // order by member
       const posA = artistsMembers.findIndex((p) => p.name === a.member);

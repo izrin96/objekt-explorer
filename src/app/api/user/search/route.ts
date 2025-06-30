@@ -1,9 +1,9 @@
+import { like, sql } from "drizzle-orm";
+import { after, type NextRequest } from "next/server";
 import { search } from "@/lib/server/cosmo/auth";
 import { db } from "@/lib/server/db";
-import { like, sql } from "drizzle-orm";
 import { userAddress } from "@/lib/server/db/schema";
 import { getAccessToken } from "@/lib/server/token";
-import { after, NextRequest } from "next/server";
 import type { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 
 export async function GET(request: NextRequest) {
@@ -34,10 +34,7 @@ export async function GET(request: NextRequest) {
         }));
 
         const newAddressFiltered = newAddress.filter(
-          (a) =>
-            !users.some(
-              (b) => b.address === a.address && b.nickname === a.nickname
-            )
+          (a) => !users.some((b) => b.address === a.address && b.nickname === a.nickname),
         );
 
         if (newAddressFiltered.length > 0) {

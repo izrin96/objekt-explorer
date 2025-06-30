@@ -1,23 +1,21 @@
+import { TRPCError } from "@trpc/server";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { authProcedure, createTRPCRouter } from "@/lib/server/api/trpc";
 import { db } from "../../db";
-import { TRPCError } from "@trpc/server";
 import { userAddress } from "../../db/schema";
-import { and, eq } from "drizzle-orm";
-import { fetchUserProfiles } from "../../profile";
 import { createPresignedUrlToUpload, deleteFileFromBucket } from "../../minio";
+import { fetchUserProfiles } from "../../profile";
 
 export const profileRouter = createTRPCRouter({
   getAll: authProcedure.query(async ({ ctx: { session } }) => {
     return await fetchUserProfiles(session.user.id);
   }),
 
-  get: authProcedure
-    .input(z.string())
-    .query(async ({ input: address, ctx: { session } }) => {
-      const profile = await fetchOwnedProfile(address, session.user.id);
-      return profile;
-    }),
+  get: authProcedure.input(z.string()).query(async ({ input: address, ctx: { session } }) => {
+    const profile = await fetchOwnedProfile(address, session.user.id);
+    return profile;
+  }),
 
   edit: authProcedure
     .input(
@@ -30,7 +28,7 @@ export const profileRouter = createTRPCRouter({
         privateProfile: z.boolean().optional(),
         hideActivity: z.boolean().optional(),
         hideTransfer: z.boolean().optional(),
-      })
+      }),
     )
     .mutation(async ({ input: { address, ...rest }, ctx: { session } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id);
@@ -51,12 +49,7 @@ export const profileRouter = createTRPCRouter({
         .set({
           ...rest,
         })
-        .where(
-          and(
-            eq(userAddress.address, address),
-            eq(userAddress.userId, session.user.id)
-          )
-        );
+        .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
     }),
 
   getPresignedUrl: authProcedure
@@ -64,7 +57,7 @@ export const profileRouter = createTRPCRouter({
       z.object({
         address: z.string(),
         fileName: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input: { address, fileName }, ctx: { session } }) => {
       await checkAddressOwned(address, session.user.id);
@@ -82,7 +75,7 @@ export const profileRouter = createTRPCRouter({
 export async function checkAddressOwned(address: string, userId: string) {
   const count = await db.$count(
     userAddress,
-    and(eq(userAddress.address, address), eq(userAddress.userId, userId))
+    and(eq(userAddress.address, address), eq(userAddress.userId, userId)),
   );
 
   if (count < 1)
@@ -105,8 +98,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
       hideActivity: true,
       hideTransfer: true,
     },
-    where: (q, { eq, and }) =>
-      and(eq(q.address, address), eq(q.userId, userId)),
+    where: (q, { eq, and }) => and(eq(q.address, address), eq(q.userId, userId)),
   });
 
   if (!profile)

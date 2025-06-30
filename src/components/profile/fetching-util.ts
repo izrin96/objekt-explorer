@@ -1,5 +1,5 @@
 import { ofetch } from "ofetch";
-import { OwnedObjekt } from "@/lib/universal/objekts";
+import type { OwnedObjekt } from "@/lib/universal/objekts";
 import { getBaseURL } from "@/lib/utils";
 
 type OwnedObjektsResult = {
@@ -12,7 +12,7 @@ type OwnedObjektsResult = {
 
 export async function fetchOwnedObjektsByCursor(
   address: string,
-  cursor?: { receivedAt: string; id: number }
+  cursor?: { receivedAt: string; id: number },
 ) {
   const url = new URL(`/api/objekts/owned-by/${address}`, getBaseURL());
   const result = await ofetch<OwnedObjektsResult>(url.toString(), {
@@ -27,7 +27,7 @@ export async function fetchOwnedObjektsByCursor(
 
 export async function fetchOwnedObjekts(address: string) {
   let allObjekts: OwnedObjekt[] = [];
-  let cursor: { receivedAt: string; id: number } | undefined = undefined;
+  let cursor: { receivedAt: string; id: number } | undefined;
 
   // Loop until there are no more pages
   while (true) {

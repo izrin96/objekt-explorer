@@ -1,4 +1,8 @@
+/** biome-ignore-all lint/correctness/noInnerDeclarations: false */
 import { TRPCError } from "@trpc/server";
+import { and, eq, sql } from "drizzle-orm";
+import { z } from "zod/v4";
+import type { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import {
   certifyTicket,
   checkTicket,
@@ -6,12 +10,9 @@ import {
   generateRecaptchaToken,
   getUser,
 } from "../../cosmo/shop/qr-auth";
-import { authProcedure, createTRPCRouter } from "../trpc";
-import { z } from "zod/v4";
-import { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { authProcedure, createTRPCRouter } from "../trpc";
 
 export const cosmoLinkRouter = createTRPCRouter({
   // remove link
@@ -23,12 +24,7 @@ export const cosmoLinkRouter = createTRPCRouter({
         .set({
           userId: null,
         })
-        .where(
-          and(
-            eq(userAddress.userId, session.user.id),
-            eq(userAddress.address, address)
-          )
-        );
+        .where(and(eq(userAddress.userId, session.user.id), eq(userAddress.address, address)));
     }),
 
   // generate qr ticket
@@ -55,18 +51,16 @@ export const cosmoLinkRouter = createTRPCRouter({
   }),
 
   // check the ticket with cosmo shop
-  checkTicket: authProcedure
-    .input(z.string())
-    .query(async ({ input: ticket }) => {
-      try {
-        var result = await checkTicket(ticket);
-      } catch {
-        return {
-          status: "expired",
-        } satisfies TicketCheck;
-      }
-      return result;
-    }),
+  checkTicket: authProcedure.input(z.string()).query(async ({ input: ticket }) => {
+    try {
+      var result = await checkTicket(ticket);
+    } catch {
+      return {
+        status: "expired",
+      } satisfies TicketCheck;
+    }
+    return result;
+  }),
 
   // send otp and check the ticket
   // and then link cosmo id with user
@@ -75,7 +69,7 @@ export const cosmoLinkRouter = createTRPCRouter({
       z.object({
         otp: z.number(),
         ticket: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input: { otp, ticket }, ctx: { session } }) => {
       try {

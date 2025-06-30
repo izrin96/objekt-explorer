@@ -1,10 +1,7 @@
+import { inferAdditionalFields, usernameClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
-import {
-  inferAdditionalFields,
-  usernameClient,
-} from "better-auth/client/plugins";
+import type { auth } from "./server/auth";
 import { getBaseURL } from "./utils";
-import { auth } from "./server/auth";
 
 export const authClient = createAuthClient({
   baseURL: getBaseURL(),

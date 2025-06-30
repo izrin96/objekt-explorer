@@ -1,12 +1,7 @@
 import { z } from "zod/v4";
 import type { Transfer } from "../server/db/indexer/schema";
+import { validArtists, validClasses, validOnlineTypes, validSeasons } from "./cosmo/common";
 import type { OwnedObjekt } from "./objekts";
-import {
-  validArtists,
-  validClasses,
-  validOnlineTypes,
-  validSeasons,
-} from "./cosmo/common";
 
 export type AggregatedTransfer = {
   transfer: Pick<Transfer, "id" | "from" | "to" | "timestamp">;

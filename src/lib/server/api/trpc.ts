@@ -1,5 +1,5 @@
 import { initTRPC, TRPCError } from "@trpc/server";
-import { z, ZodError } from "zod/v4";
+import { ZodError, z } from "zod/v4";
 import { auth } from "../auth";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
@@ -14,8 +14,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
       ...shape,
       data: {
         ...shape.data,
-        zodError:
-          error.cause instanceof ZodError ? z.treeifyError(error.cause) : null,
+        zodError: error.cause instanceof ZodError ? z.treeifyError(error.cause) : null,
       },
     };
   },

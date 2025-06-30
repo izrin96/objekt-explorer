@@ -23,12 +23,9 @@ export type CollectionFormat = Pick<
 export function getCollectionShortId(objekt: ValidObjekt) {
   const seasonNumber = parseInt(objekt.season.slice(-2));
 
-  if (seasonNumber <= 1)
-    return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
+  if (seasonNumber <= 1) return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
 
-  return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${
-    objekt.collectionNo
-  }`;
+  return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${objekt.collectionNo}`;
 }
 
 function makeCollectionTags(objekt: ValidObjekt) {
@@ -47,7 +44,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
     collectionNoSliced, // 201
     objekt.member,
     objekt.class, // special
-    objekt.class.charAt(0) + "co", // sco
+    `${objekt.class.charAt(0)}co`, // sco
     objekt.season, // atom01
     objekt.season.slice(0, -2), // atom
     seasonCode + seasonNumber, // a01
@@ -58,7 +55,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
 export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
   return {
     ...collection,
-    ...overrideColor(collection),
+    ...overrideCollection(collection),
     id: objekt.id.toString(),
     serial: objekt.serial,
     receivedAt: objekt.receivedAt,
@@ -74,8 +71,8 @@ export function mapObjektWithTag(objekt: ValidObjekt) {
   };
 }
 
-// temporary fix accent color for some collection
-export function overrideColor(objekt: ValidObjekt) {
+export function overrideCollection(objekt: ValidObjekt) {
+  // temporary fix accent color for some collection
   const accentColor = overrideAccents[objekt.slug];
   const fontColor = overrideFonts[objekt.slug];
 
@@ -228,7 +225,5 @@ const shortformMembers: Record<string, string> = {
 };
 
 export function getMemberShortKeys(value: string) {
-  return Object.keys(shortformMembers).filter(
-    (key) => shortformMembers[key] === value
-  );
+  return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
 }

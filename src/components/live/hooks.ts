@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useCallStateHooks,
-  useParticipantViewContext,
-} from "@stream-io/video-react-sdk";
+import { useCallStateHooks, useParticipantViewContext } from "@stream-io/video-react-sdk";
 import { useCallback, useEffect, useState } from "react";
 
 export const useToggleFullScreen = () => {
@@ -30,18 +27,9 @@ export const useToggleFullScreen = () => {
 
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener(
-        "webkitfullscreenchange",
-        handleFullscreenChange
-      );
-      document.removeEventListener(
-        "mozfullscreenchange",
-        handleFullscreenChange
-      );
-      document.removeEventListener(
-        "MSFullscreenChange",
-        handleFullscreenChange
-      );
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
     };
   }, []);
 

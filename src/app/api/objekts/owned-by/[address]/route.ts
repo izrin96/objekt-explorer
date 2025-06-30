@@ -1,13 +1,13 @@
+import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
+import type { NextRequest } from "next/server";
+import { z } from "zod/v4";
 import { cachedSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
-import { objekts, collections } from "@/lib/server/db/indexer/schema";
+import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
-import { eq, desc, asc, and, lt, gt, or } from "drizzle-orm";
-import { NextRequest } from "next/server";
-import { z } from "zod/v4";
 
 type Params = {
   params: Promise<{
@@ -28,9 +28,7 @@ export async function GET(request: NextRequest, props: Params) {
   const params = await props.params;
   const searchParams = request.nextUrl.searchParams;
   const cursor = cursorSchema.parse(
-    searchParams.get("cursor")
-      ? JSON.parse(searchParams.get("cursor")!)
-      : undefined
+    searchParams.get("cursor") ? JSON.parse(searchParams.get("cursor")!) : undefined,
   );
 
   const session = await cachedSession();
@@ -53,7 +51,7 @@ export async function GET(request: NextRequest, props: Params) {
     const profiles = await fetchUserProfiles(session.user.id);
 
     const isProfileAuthed = profiles.some(
-      (a) => a.address.toLowerCase() === params.address.toLowerCase()
+      (a) => a.address.toLowerCase() === params.address.toLowerCase(),
     );
 
     if (!isProfileAuthed)
@@ -77,13 +75,10 @@ export async function GET(request: NextRequest, props: Params) {
         cursor
           ? or(
               lt(objekts.receivedAt, cursor.receivedAt),
-              and(
-                eq(objekts.receivedAt, cursor.receivedAt),
-                gt(objekts.id, cursor.id)
-              )
+              and(eq(objekts.receivedAt, cursor.receivedAt), gt(objekts.id, cursor.id)),
             )
-          : undefined
-      )
+          : undefined,
+      ),
     )
     .orderBy(desc(objekts.receivedAt), asc(objekts.id))
     .limit(PER_PAGE + 1);
@@ -98,8 +93,6 @@ export async function GET(request: NextRequest, props: Params) {
 
   return Response.json({
     nextCursor,
-    objekts: results
-      .slice(0, PER_PAGE)
-      .map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
   });
 }

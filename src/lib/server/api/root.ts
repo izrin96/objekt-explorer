@@ -1,9 +1,9 @@
 import { listRouter } from "@/lib/server/api/routers/list";
 import { createCallerFactory, createTRPCRouter } from "@/lib/server/api/trpc";
 import { cosmoLinkRouter } from "./routers/cosmo-link";
-import { userRouter } from "./routers/user";
 import { pinsRouter } from "./routers/pins";
 import { profileRouter } from "./routers/profile";
+import { userRouter } from "./routers/user";
 
 export const appRouter = createTRPCRouter({
   list: listRouter,

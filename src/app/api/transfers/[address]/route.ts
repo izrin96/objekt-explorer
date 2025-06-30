@@ -1,23 +1,19 @@
-import { NextRequest } from "next/server";
-import { desc, or, eq, and, inArray, ne, lt } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
+import type { NextRequest } from "next/server";
+import { z } from "zod/v4";
+import { cachedSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
-import {
-  collections,
-  transfers,
-  objekts,
-} from "@/lib/server/db/indexer/schema";
 import { indexer } from "@/lib/server/db/indexer";
+import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
+import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
+import { fetchUserProfiles } from "@/lib/server/profile";
+import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import {
-  TransferParams,
-  TransferResult,
+  type TransferParams,
+  type TransferResult,
   transfersSchema,
 } from "@/lib/universal/transfers";
-import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
-import { cachedSession } from "@/lib/server/auth";
-import { fetchUserProfiles } from "@/lib/server/profile";
-import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { z } from "zod/v4";
 
 const PER_PAGE = 150;
 
@@ -28,17 +24,12 @@ const cursorSchema = z
   })
   .optional();
 
-export async function GET(
-  request: NextRequest,
-  props: { params: Promise<{ address: string }> }
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ address: string }> }) {
   const params = await props.params;
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
   const cursor = cursorSchema.parse(
-    searchParams.get("cursor")
-      ? JSON.parse(searchParams.get("cursor")!)
-      : undefined
+    searchParams.get("cursor") ? JSON.parse(searchParams.get("cursor")!) : undefined,
   );
 
   const session = await cachedSession();
@@ -51,8 +42,7 @@ export async function GET(
     },
   });
 
-  const isPrivate =
-    (owner?.privateProfile ?? false) || (owner?.hideTransfer ?? false);
+  const isPrivate = (owner?.privateProfile ?? false) || (owner?.hideTransfer ?? false);
 
   if (!session && isPrivate)
     return Response.json({
@@ -64,7 +54,7 @@ export async function GET(
     const profiles = await fetchUserProfiles(session.user.id);
 
     const isProfileAuthed = profiles.some(
-      (a) => a.address.toLowerCase() === params.address.toLowerCase()
+      (a) => a.address.toLowerCase() === params.address.toLowerCase(),
     );
 
     if (!isProfileAuthed)
@@ -96,50 +86,27 @@ export async function GET(
           ? [
               or(
                 eq(transfers.from, params.address.toLowerCase()),
-                eq(transfers.to, params.address.toLowerCase())
+                eq(transfers.to, params.address.toLowerCase()),
               ),
             ]
           : []),
         ...(query.type === "mint"
-          ? [
-              and(
-                eq(transfers.from, NULL_ADDRESS),
-                eq(transfers.to, params.address.toLowerCase())
-              ),
-            ]
+          ? [and(eq(transfers.from, NULL_ADDRESS), eq(transfers.to, params.address.toLowerCase()))]
           : []),
         ...(query.type === "received"
-          ? [
-              and(
-                ne(transfers.from, NULL_ADDRESS),
-                eq(transfers.to, params.address.toLowerCase())
-              ),
-            ]
+          ? [and(ne(transfers.from, NULL_ADDRESS), eq(transfers.to, params.address.toLowerCase()))]
           : []),
         ...(query.type === "sent"
-          ? [
-              and(
-                eq(transfers.from, params.address.toLowerCase()),
-                ne(transfers.to, SPIN_ADDRESS)
-              ),
-            ]
+          ? [and(eq(transfers.from, params.address.toLowerCase()), ne(transfers.to, SPIN_ADDRESS))]
           : []),
         ...(query.type === "spin"
-          ? [
-              and(
-                eq(transfers.from, params.address.toLowerCase()),
-                eq(transfers.to, SPIN_ADDRESS)
-              ),
-            ]
+          ? [and(eq(transfers.from, params.address.toLowerCase()), eq(transfers.to, SPIN_ADDRESS))]
           : []),
         ...(cursor
           ? [
               or(
                 lt(transfers.timestamp, cursor.timestamp),
-                and(
-                  eq(transfers.timestamp, cursor.timestamp),
-                  lt(transfers.id, cursor.id)
-                )
+                and(eq(transfers.timestamp, cursor.timestamp), lt(transfers.id, cursor.id)),
               ),
             ]
           : []),
@@ -147,23 +114,15 @@ export async function GET(
           ? [
               inArray(
                 collections.artist,
-                query.artist.map((a) => a.toLowerCase())
+                query.artist.map((a) => a.toLowerCase()),
               ),
             ]
           : []),
-        ...(query.member.length
-          ? [inArray(collections.member, query.member)]
-          : []),
-        ...(query.season.length
-          ? [inArray(collections.season, query.season)]
-          : []),
-        ...(query.class.length
-          ? [inArray(collections.class, query.class)]
-          : []),
-        ...(query.on_offline.length
-          ? [inArray(collections.onOffline, query.on_offline)]
-          : [])
-      )
+        ...(query.member.length ? [inArray(collections.member, query.member)] : []),
+        ...(query.season.length ? [inArray(collections.season, query.season)] : []),
+        ...(query.class.length ? [inArray(collections.class, query.class)] : []),
+        ...(query.on_offline.length ? [inArray(collections.onOffline, query.on_offline)] : []),
+      ),
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PER_PAGE + 1);
@@ -177,16 +136,12 @@ export async function GET(
     : undefined;
   const slicedResults = results.slice(0, PER_PAGE);
 
-  const addresses = slicedResults.flatMap((r) => [
-    r.transfer.from,
-    r.transfer.to,
-  ]);
+  const addresses = slicedResults.flatMap((r) => [r.transfer.from, r.transfer.to]);
 
   const addressesUnique = Array.from(new Set(addresses));
 
   const knownAddresses = await db.query.userAddress.findMany({
-    where: (userAddress, { inArray }) =>
-      inArray(userAddress.address, addressesUnique),
+    where: (userAddress, { inArray }) => inArray(userAddress.address, addressesUnique),
   });
 
   return Response.json({
@@ -196,11 +151,10 @@ export async function GET(
       objekt: mapOwnedObjekt(row.objekt, row.collection),
       nickname: {
         from: knownAddresses.find(
-          (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase()
+          (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase(),
         )?.nickname,
-        to: knownAddresses.find(
-          (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase()
-        )?.nickname,
+        to: knownAddresses.find((a) => row.transfer.to.toLowerCase() === a.address.toLowerCase())
+          ?.nickname,
       },
     })),
   } satisfies TransferResult);

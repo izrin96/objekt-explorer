@@ -1,17 +1,17 @@
-import { Filters } from "@/hooks/use-filters";
-import { ActivityData, ValidType } from "@/lib/universal/activity";
-import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
-import {
+import type { Filters } from "@/hooks/use-filters";
+import type { ActivityData, ValidType } from "@/lib/universal/activity";
+import type {
   ValidArtist,
   ValidClass,
   ValidOnlineType,
   ValidSeason,
 } from "@/lib/universal/cosmo/common";
+import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 export function filterData(
   data: ActivityData[],
   type: ValidType,
-  filters: Filters
+  filters: Filters,
 ): ActivityData[] {
   return data.filter((item) => {
     // Filter by type
@@ -27,11 +27,7 @@ export function filterData(
 
     // Filter by artist
     if (filters.artist?.length) {
-      if (
-        !filters.artist.includes(
-          item.objekt.artist.toLowerCase() as ValidArtist
-        )
-      ) {
+      if (!filters.artist.includes(item.objekt.artist.toLowerCase() as ValidArtist)) {
         return false;
       }
     }
@@ -59,9 +55,7 @@ export function filterData(
 
     // Filter by on/offline
     if (filters.on_offline?.length) {
-      if (
-        !filters.on_offline.includes(item.objekt.onOffline as ValidOnlineType)
-      ) {
+      if (!filters.on_offline.includes(item.objekt.onOffline as ValidOnlineType)) {
         return false;
       }
     }

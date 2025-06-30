@@ -1,14 +1,10 @@
 import "server-only";
 
-import { cosmoShop } from "./http";
 import { randomUUID } from "node:crypto";
 import chromium from "puppeteer-core";
-import {
-  CosmoShopUser,
-  TicketAuth,
-  TicketCheck,
-} from "@/lib/universal/cosmo/shop/qr-auth";
 import { env } from "@/env";
+import type { CosmoShopUser, TicketAuth, TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
+import { cosmoShop } from "./http";
 
 export async function generateRecaptchaToken() {
   const launchArgs = JSON.stringify({ headless: "shell" });
@@ -39,49 +35,40 @@ export async function generateRecaptchaToken() {
 }
 
 export async function generateQrTicket(token: string) {
-  return await cosmoShop<TicketAuth>(
-    `/bff/v1/users/auth/login/native/qr/ticket`,
-    {
-      method: "post",
-      body: {
-        recaptcha: {
-          action: "login",
-          token: token,
-        },
+  return await cosmoShop<TicketAuth>(`/bff/v1/users/auth/login/native/qr/ticket`, {
+    method: "post",
+    body: {
+      recaptcha: {
+        action: "login",
+        token: token,
       },
-      query: {
-        tid: randomUUID(),
-      },
-    }
-  );
+    },
+    query: {
+      tid: randomUUID(),
+    },
+  });
 }
 
 export async function checkTicket(ticket: string) {
-  return await cosmoShop<TicketCheck>(
-    `/bff/v1/users/auth/login/native/qr/ticket`,
-    {
-      query: {
-        tid: crypto.randomUUID(),
-        ticket,
-      },
-    }
-  );
+  return await cosmoShop<TicketCheck>(`/bff/v1/users/auth/login/native/qr/ticket`, {
+    query: {
+      tid: crypto.randomUUID(),
+      ticket,
+    },
+  });
 }
 
 export async function certifyTicket(otp: number, ticket: string) {
-  return await cosmoShop.raw(
-    `/bff/v1/users/auth/login/native/qr/ticket/certify`,
-    {
-      method: "post",
-      body: {
-        otp,
-        ticket,
-      },
-      query: {
-        tid: crypto.randomUUID(),
-      },
-    }
-  );
+  return await cosmoShop.raw(`/bff/v1/users/auth/login/native/qr/ticket/certify`, {
+    method: "post",
+    body: {
+      otp,
+      ticket,
+    },
+    query: {
+      tid: crypto.randomUUID(),
+    },
+  });
 }
 
 export async function getUser(cookie: string) {

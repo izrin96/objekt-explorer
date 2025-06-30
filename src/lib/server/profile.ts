@@ -9,8 +9,8 @@ export async function fetchKnownAddresses(addresses: string[]) {
     .where(
       inArray(
         userAddress.address,
-        addresses.map((a) => a.toLowerCase())
-      )
+        addresses.map((a) => a.toLowerCase()),
+      ),
     );
   return result;
 }

@@ -1,23 +1,19 @@
-import { fetchByNickname } from "./cosmo/auth";
-import { isAddress } from "viem";
-import { notFound } from "next/navigation";
-import { db } from "./db";
-import { userAddress } from "./db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { getBaseURL } from "../utils";
-import { cache } from "react";
-import { headers } from "next/headers";
-import { PublicProfile, PublicUser } from "../universal/user";
 import { username } from "better-auth/plugins/username";
-import * as authSchema from "./db/auth-schema";
-import {
-  sendDeleteAccountVerification,
-  sendResetPassword,
-  sendVerificationEmail,
-} from "./mail";
-import { env } from "@/env";
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
+import { cache } from "react";
+import { isAddress } from "viem";
+import { env } from "@/env";
+import type { PublicProfile, PublicUser } from "../universal/user";
+import { getBaseURL } from "../utils";
+import { fetchByNickname } from "./cosmo/auth";
+import { db } from "./db";
+import * as authSchema from "./db/auth-schema";
+import { userAddress } from "./db/schema";
+import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({
   appName: "Objekt Tracker",
@@ -115,9 +111,7 @@ export const auth = betterAuth({
           if (account.providerId === "credential") return;
 
           const authContext = await auth.$context;
-          const provider = authContext.socialProviders.find(
-            (p) => p.id === account.providerId
-          );
+          const provider = authContext.socialProviders.find((p) => p.id === account.providerId);
           const info = await provider!.getUserInfo({
             accessToken: account.accessToken ?? undefined,
           });
@@ -140,12 +134,12 @@ export const auth = betterAuth({
 export const cachedSession = cache(async () =>
   auth.api.getSession({
     headers: await headers(),
-  })
+  }),
 );
 
 export async function fetchUserByIdentifier(
   identifier: string,
-  token?: string
+  token?: string,
 ): Promise<PublicProfile> {
   const cachedUser = await db.query.userAddress.findFirst({
     columns: {
@@ -169,18 +163,13 @@ export async function fetchUserByIdentifier(
         },
       },
     },
-    where: (t, { eq, or }) =>
-      or(eq(t.nickname, identifier), eq(t.address, identifier)),
+    where: (t, { eq, or }) => or(eq(t.nickname, identifier), eq(t.address, identifier)),
   });
 
   if (cachedUser) {
     return {
       ...cachedUser,
-      user: cachedUser.hideUser
-        ? null
-        : cachedUser.user
-        ? mapPublicUser(cachedUser.user)
-        : null,
+      user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
     };
   }
 

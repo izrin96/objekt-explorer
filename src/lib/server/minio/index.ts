@@ -25,7 +25,7 @@ export async function deleteFileFromBucket({
 }) {
   try {
     await s3Client.removeObject(bucketName, fileName);
-  } catch (error) {
+  } catch {
     return false;
   }
   return true;
