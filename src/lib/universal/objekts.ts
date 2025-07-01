@@ -21,10 +21,11 @@ export type CollectionFormat = Pick<
 >;
 
 export function getCollectionShortId(objekt: ValidObjekt) {
+  if (objekt.artist === "idntt") {
+    return `${objekt.member} ${objekt.season} ${objekt.collectionNo}`;
+  }
   const seasonNumber = parseInt(objekt.season.slice(-2));
-
   if (seasonNumber <= 1) return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
-
   return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${objekt.collectionNo}`;
 }
 

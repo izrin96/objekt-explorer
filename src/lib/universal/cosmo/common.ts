@@ -20,6 +20,7 @@ export const validSortDirection = ["desc", "asc"] as const;
 export type ValidSortDirection = (typeof validSortDirection)[number];
 
 // seasons
+// todo: fetch from db
 export const seasonColors = [
   "#FFDD00",
   "#75FB4C",
@@ -27,7 +28,9 @@ export const seasonColors = [
   "#B400FF",
   "#33ECFD",
   "#FFDD00",
-  "#25347C", // Spring25
+  // for idntt
+  "#25347C",
+  "#25347C",
 ];
 export const validSeasons = [
   "Atom01",
@@ -38,6 +41,7 @@ export const validSeasons = [
   "Atom02",
   // for idntt
   "Spring25",
+  "Summer25",
 ] as const;
 export type ValidSeason = (typeof validSeasons)[number];
 
