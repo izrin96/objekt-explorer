@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
@@ -57,8 +57,9 @@ function Progress() {
   const [filters, setFilters] = useFilters();
   const first = useRef(false);
 
-  const objektsQuery = useSuspenseQuery(collectionOptions);
-  const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));
+  const [objektsQuery, ownedQuery] = useSuspenseQueries({
+    queries: [collectionOptions, ownedCollectionOptions(profile!.address)],
+  });
 
   const { ownedSlugs, shaped } = useMemo(() => {
     const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));

@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import dynamic from "next/dynamic";
 import type React from "react";
@@ -55,8 +55,9 @@ function ProfileStats() {
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const query = useSuspenseQuery(ownedCollectionOptions(profile!.address));
-  const collectionQuery = useSuspenseQuery(collectionOptions);
+  const [query, collectionQuery] = useSuspenseQueries({
+    queries: [ownedCollectionOptions(profile!.address), collectionOptions],
+  });
 
   const objekts = useMemo(() => filterObjekts(filters, query.data), [filters, query.data]);
 

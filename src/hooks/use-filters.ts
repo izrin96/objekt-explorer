@@ -45,6 +45,7 @@ export function useFilters() {
     hidePin: parseAsBoolean,
     color: parseAsString,
     colorSensitivity: parseAsFloat,
+    collection: parseAsArrayOf(parseAsString),
   });
 }
 
@@ -69,6 +70,7 @@ export function checkFiltering(filters: Filters) {
     filters.edition !== null ||
     filters.hidePin !== null ||
     filters.color !== null ||
-    filters.colorSensitivity !== null
+    filters.colorSensitivity !== null ||
+    filters.collection !== null
   );
 }

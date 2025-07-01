@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useQuery, useSuspenseQueries } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -71,6 +71,7 @@ function ProfileObjektRender() {
 
 function ProfileObjekt() {
   const { authenticated } = useUser();
+  const utils = api.useUtils();
   const isProfileAuthed = useProfileAuthed();
   const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();
@@ -88,11 +89,15 @@ function ProfileObjekt() {
     ...collectionOptions,
     enabled: filters.unowned ?? false,
   });
-  const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));
 
-  const [, pinsQuery] = api.pins.get.useSuspenseQuery(profile!.address, {
-    refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
+  const [ownedQuery, pinsQuery] = useSuspenseQueries({
+    queries: [
+      ownedCollectionOptions(profile!.address),
+      utils.pins.get.queryOptions(profile!.address, {
+        refetchOnWindowFocus: false,
+        staleTime: 1000 * 60 * 5,
+      }),
+    ],
   });
 
   const joinedObjekts = useMemo(() => {

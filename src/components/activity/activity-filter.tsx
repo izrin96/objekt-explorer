@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import ArtistFilter from "@/components/filters/filter-artist";
 import FilterClass from "@/components/filters/filter-class";
 import MemberFilter from "@/components/filters/filter-member";
@@ -9,6 +10,7 @@ import ResetFilter from "@/components/filters/reset-filter";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
+import CollectionFilter from "../filters/filter-collection";
 import TypeFilter, { useTypeFilter } from "./filter-type";
 
 type Props = {
@@ -28,6 +30,9 @@ export default function ActivityFilter({ artists }: Props) {
       <FilterSeason />
       <FilterClass />
       <FilterOnline />
+      <Suspense>
+        <CollectionFilter />
+      </Suspense>
       <ResetFilter
         isDisabled={!(isFiltering || type !== null)}
         onReset={() => {

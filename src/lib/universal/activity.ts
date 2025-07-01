@@ -35,6 +35,7 @@ export const activitySchema = z.object({
   season: z.enum(validSeasons).array(),
   class: z.enum(validClasses).array(),
   on_offline: z.enum(validOnlineTypes).array(),
+  collection: z.string().array(),
 });
 
 export type ActivityParams = z.infer<typeof activitySchema>;

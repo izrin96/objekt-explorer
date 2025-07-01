@@ -68,9 +68,13 @@ const MultipleSelect = <T extends object>({
   useEffect(() => {
     setInputValue("");
     return () => {
-      inputRef.current?.focus();
+      // inputRef.current?.focus();
     };
   }, [props?.selectedKeys, selectedKeys]);
+
+  useEffect(() => {
+    onSelectionChange(new Set(props.selectedKeys));
+  }, [props.selectedKeys]);
 
   const addItem = (e: Key | null) => {
     if (!e || isMax) return;
