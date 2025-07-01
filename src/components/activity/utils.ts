@@ -60,6 +60,13 @@ export function filterData(
       }
     }
 
+    // Filter by collectionNo
+    if (filters.collection?.length) {
+      if (!filters.collection.includes(item.objekt.collectionNo)) {
+        return false;
+      }
+    }
+
     return true;
   });
 }
