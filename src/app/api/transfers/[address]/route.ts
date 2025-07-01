@@ -122,6 +122,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         ...(query.season.length ? [inArray(collections.season, query.season)] : []),
         ...(query.class.length ? [inArray(collections.class, query.class)] : []),
         ...(query.on_offline.length ? [inArray(collections.onOffline, query.on_offline)] : []),
+        ...(query.collection.length ? [inArray(collections.collectionNo, query.collection)] : []),
       ),
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
@@ -168,6 +169,7 @@ function parseParams(params: URLSearchParams): TransferParams {
     season: params.getAll("season"),
     class: params.getAll("class"),
     on_offline: params.getAll("on_offline"),
+    collection: params.getAll("collection"),
   });
 
   return result.success
@@ -179,5 +181,6 @@ function parseParams(params: URLSearchParams): TransferParams {
         season: [],
         class: [],
         on_offline: [],
+        collection: [],
       };
 }

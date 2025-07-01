@@ -73,6 +73,7 @@ function ProfileTrades() {
           season: filters.season ?? [],
           class: filters.class ?? [],
           on_offline: filters.on_offline ?? [],
+          collection: filters.collection ?? [],
         },
       });
     },

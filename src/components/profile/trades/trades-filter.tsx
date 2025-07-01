@@ -1,7 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import ArtistFilter from "@/components/filters/filter-artist";
 import FilterClass from "@/components/filters/filter-class";
+import CollectionFilter from "@/components/filters/filter-collection";
 import MemberFilter from "@/components/filters/filter-member";
 import FilterOnline from "@/components/filters/filter-online";
 import FilterSeason from "@/components/filters/filter-season";
@@ -28,6 +30,9 @@ export default function TradesFilter({ artists }: Props) {
       <FilterSeason />
       <FilterClass />
       <FilterOnline />
+      <Suspense>
+        <CollectionFilter />
+      </Suspense>
       <ResetFilter
         isDisabled={!(isFiltering || type !== null)}
         onReset={() => {
