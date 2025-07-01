@@ -114,6 +114,7 @@ const MenuItem = ({ className, isDanger = false, children, ...props }: MenuItemP
       className={composeRenderProps(className, (className, { hasSubmenu, ...renderProps }) =>
         dropdownItemStyles({
           ...renderProps,
+          isDanger: isDanger,
           className: hasSubmenu
             ? twMerge(
                 "open:data-danger:bg-danger/10 open:data-danger:text-danger",
@@ -124,7 +125,6 @@ const MenuItem = ({ className, isDanger = false, children, ...props }: MenuItemP
         }),
       )}
       textValue={textValue}
-      data-danger={isDanger ? "true" : undefined}
       {...props}
     >
       {(values) => (
