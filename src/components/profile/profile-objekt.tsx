@@ -26,12 +26,14 @@ import {
   ObjektHoverMenu,
   ObjektOverlay,
   ObjektSelect,
+  ObjektToggleLock,
   ObjektTogglePin,
 } from "../objekt/objekt-action";
 import {
   AddToListMenu,
   ObjektStaticMenu,
   SelectMenuItem,
+  ToggleLockMenuItem,
   TogglePinMenuItem,
 } from "../objekt/objekt-menu";
 import ObjektModal from "../objekt/objekt-modal";
@@ -90,10 +92,14 @@ function ProfileObjekt() {
     enabled: filters.unowned ?? false,
   });
 
-  const [ownedQuery, pinsQuery] = useSuspenseQueries({
+  const [ownedQuery, pinsQuery, lockedObjektQuery] = useSuspenseQueries({
     queries: [
       ownedCollectionOptions(profile!.address),
       utils.pins.get.queryOptions(profile!.address, {
+        refetchOnWindowFocus: false,
+        staleTime: 1000 * 60 * 5,
+      }),
+      utils.lockedObjekt.get.queryOptions(profile!.address, {
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
@@ -134,11 +140,18 @@ function ProfileObjekt() {
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
                         {isProfileAuthed && (
-                          <TogglePinMenuItem
-                            isPin={item.type === "pin"}
-                            profile={profile!}
-                            tokenId={objekt.id}
-                          />
+                          <>
+                            <TogglePinMenuItem
+                              isPin={item.isPin}
+                              profile={profile!}
+                              tokenId={objekt.id}
+                            />
+                            <ToggleLockMenuItem
+                              isLocked={item.isLocked}
+                              profile={profile!}
+                              tokenId={objekt.id}
+                            />
+                          </>
                         )}
                         <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
@@ -163,23 +176,37 @@ function ProfileObjekt() {
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
                                 {isProfileAuthed && (
-                                  <TogglePinMenuItem
-                                    isPin={item.type === "pin"}
-                                    profile={profile!}
-                                    tokenId={objekt.id}
-                                  />
+                                  <>
+                                    <TogglePinMenuItem
+                                      isPin={item.isPin}
+                                      profile={profile!}
+                                      tokenId={objekt.id}
+                                    />
+                                    <ToggleLockMenuItem
+                                      isLocked={item.isLocked}
+                                      profile={profile!}
+                                      tokenId={objekt.id}
+                                    />
+                                  </>
                                 )}
                                 <AddToListMenu objekt={objekt} />
                               </ObjektHoverMenu>
                             </div>
                           )}
-                          <ObjektOverlay isPin={item.type === "pin"} />
+                          <ObjektOverlay isPin={item.isPin} isLocked={item.isLocked} />
                           {isProfileAuthed && (
-                            <ObjektTogglePin
-                              isPin={item.type === "pin"}
-                              profile={profile!}
-                              tokenId={objekt.id}
-                            />
+                            <div className="absolute top-0 left-0 hidden group-hover:flex">
+                              <ObjektTogglePin
+                                isPin={item.isPin}
+                                profile={profile!}
+                                tokenId={objekt.id}
+                              />
+                              <ObjektToggleLock
+                                isLocked={item.isLocked}
+                                profile={profile!}
+                                tokenId={objekt.id}
+                              />
+                            </div>
                           )}
                         </ObjektView>
                       )}
@@ -195,13 +222,19 @@ function ProfileObjekt() {
   }, [deferredObjektsFiltered, filters.grouped, columns, authenticated, isProfileAuthed, profile]);
 
   useEffect(() => {
-    const shaped = shapeObjekts(filters, joinedObjekts, artists, pinsQuery.data);
+    const shaped = shapeObjekts(
+      filters,
+      joinedObjekts,
+      artists,
+      pinsQuery.data,
+      lockedObjektQuery.data,
+    );
     const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
     const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
     setGroupCount(allGroupedObjekts.length);
     setCount(allObjekts.length);
     setObjektsFiltered(shaped);
-  }, [filters, joinedObjekts, artists, pinsQuery.data]);
+  }, [filters, joinedObjekts, artists, pinsQuery.data, lockedObjektQuery.data]);
 
   if (ownedQuery.isLoading)
     return (

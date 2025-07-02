@@ -3,6 +3,8 @@
 import {
   CheckIcon,
   DotsThreeVerticalIcon,
+  LockSimpleIcon,
+  LockSimpleOpenIcon,
   PushPinIcon,
   PushPinSlashIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -30,15 +32,20 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   );
 }
 
-export function ObjektOverlay({ isPin }: { isPin: boolean }) {
+export function ObjektOverlay({ isPin, isLocked }: { isPin: boolean; isLocked: boolean }) {
   return (
-    <>
+    <div className="absolute top-0 left-0 flex">
       {isPin && (
-        <div className="absolute rounded-md bg-bg p-1 text-fg">
+        <div className="rounded bg-bg p-1 text-fg">
           <PushPinIcon weight="bold" size={12} />
         </div>
       )}
-    </>
+      {isLocked && (
+        <div className="rounded bg-bg p-1 text-fg">
+          <LockSimpleIcon weight="bold" size={12} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -74,7 +81,7 @@ export function ObjektTogglePin({
     <Button
       size="sq-sm"
       intent="plain"
-      className={cn("group absolute top-0 left-0 hidden bg-bg/80 text-fg group-hover:flex")}
+      className="bg-bg/80"
       onClick={() => {
         if (isPin) {
           unpin.mutate({
@@ -97,6 +104,67 @@ export function ObjektTogglePin({
           <PushPinSlashIcon size={16} />
         ) : (
           <PushPinIcon size={16} />
+        )}
+      </span>
+    </Button>
+  );
+}
+
+export function ObjektToggleLock({
+  profile,
+  isLocked,
+  tokenId,
+}: {
+  profile: PublicProfile;
+  isLocked: boolean;
+  tokenId: string;
+}) {
+  const utils = api.useUtils();
+  const lock = api.lockedObjekt.lock.useMutation({
+    onSuccess: () => {
+      utils.lockedObjekt.get.invalidate(profile.address);
+      toast.success("Objekt locked");
+    },
+    onError: () => {
+      toast.error("Error lock objekt");
+    },
+  });
+  const unlock = api.lockedObjekt.unlock.useMutation({
+    onSuccess: () => {
+      utils.lockedObjekt.get.invalidate(profile.address);
+      toast.success("Objekt unlocked");
+    },
+    onError: () => {
+      toast.error("Error unlock objekt");
+    },
+  });
+  return (
+    <Button
+      size="sq-sm"
+      intent="plain"
+      className="bg-bg/80"
+      onClick={() => {
+        if (isLocked) {
+          unlock.mutate({
+            address: profile.address,
+            tokenId: Number(tokenId),
+          });
+        } else {
+          lock.mutate({
+            address: profile.address,
+            tokenId: Number(tokenId),
+          });
+        }
+      }}
+      isPending={lock.isPending || unlock.isPending}
+    >
+      <span className="text-nowrap font-semibold text-xs">
+        {lock.isPending || unlock.isPending ? (
+          <Loader variant="ring" />
+        ) : isLocked ? (
+          <LockSimpleOpenIcon size={16} />
+        ) : (
+          <LockSimpleIcon size={16} />
         )}
       </span>
     </Button>

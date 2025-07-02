@@ -9,7 +9,7 @@ export default function SortDirectionFilter() {
   return (
     <Toggle
       intent="outline"
-      className="w-[125px] font-medium"
+      className="w-fit"
       isSelected={filters.sort_dir === "asc"}
       onChange={(v) =>
         setFilters({

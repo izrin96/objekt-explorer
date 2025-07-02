@@ -162,6 +162,13 @@
       "when": 1750674345904,
       "tag": "0022_silent_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1751443149030,
+      "tag": "0023_brief_strong_guy",
+      "breakpoints": true
     }
   ]
 }

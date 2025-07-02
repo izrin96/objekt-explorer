@@ -155,6 +155,16 @@ export const pinsRelations = relations(pins, ({ one }) => ({
   }),
 }));
 
+export const lockedObjekts = pgTable(
+  "locked_objekts",
+  {
+    id: serial("id").primaryKey(),
+    address: citext("address", { length: 42 }).notNull(),
+    tokenId: integer("tokenId").notNull(),
+  },
+  (t) => [index("locked_objekts_address_idx").on(t.address)],
+);
+
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAddress = typeof userAddress.$inferSelect;
 export type Pin = typeof pins.$inferSelect;

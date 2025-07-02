@@ -14,8 +14,9 @@ import type { PinObjekt, ValidObjekt } from "./universal/objekts";
 import { getEdition } from "./utils";
 
 export type ObjektItem<T> = {
-  type: "pin" | "item";
   item: T;
+  isPin: boolean;
+  isLocked: boolean;
   order: number | null;
 };
 
@@ -247,6 +248,7 @@ export function shapeObjekts<T extends ValidObjekt>(
   objekts: T[],
   artists: CosmoArtistWithMembersBFF[],
   pins: PinObjekt[] = [],
+  lockedObjekts: PinObjekt[] = [],
 ): [string, ObjektItem<T[]>[]][] {
   // 1. filter all
   // 2. group by key
@@ -312,28 +314,35 @@ export function shapeObjekts<T extends ValidObjekt>(
     let items: ObjektItem<T[]>[] = sortedDuplicateObjekts.map((objekts) => {
       const [objekt] = objekts;
       const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
-      const isPinned = pinObjekt !== undefined;
+      const lockedObjekt = lockedObjekts.find((lock) => lock.tokenId === objekt.id);
+      const isPin = pinObjekt !== undefined;
+      const isLocked = lockedObjekt !== undefined;
       return {
-        type: isPinned ? "pin" : "item",
+        isPin: isPin,
+        isLocked: isLocked,
         item: objekts,
-        order: isPinned ? pinObjekt.order : null,
+        order: isPin ? pinObjekt.order : null,
       };
     });
 
     if (pins.length > 0) {
       // if not filtering, pins should show first
       const isFiltering = checkFiltering(filters);
-      if (!isFiltering) {
-        // show/hide pins, hide pins mean stop sorting pins at first
-        if (!filters.hidePin) {
-          items = [
-            ...items
-              .filter((item) => item.type === "pin")
-              .toSorted((a, b) => (a.order && b.order ? b.order - a.order : 0)),
-            ...items.filter((item) => item.type === "item"),
-          ];
-        }
+      if (!isFiltering && !filters.hidePin) {
+        items = [
+          ...items
+            .filter((item) => item.isPin === true)
+            .toSorted((a, b) => (a.order && b.order ? b.order - a.order : 0)),
+          ...items.filter((item) => item.isPin === false),
+        ];
       }
+    }
+
+    // filter locked / unlocked
+    if (filters.locked !== null) {
+      items = items.filter((item) =>
+        filters.locked !== null ? item.isLocked === filters.locked : true,
+      );
     }
 
     return [key, items];

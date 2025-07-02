@@ -1,6 +1,7 @@
 import { listRouter } from "@/lib/server/api/routers/list";
 import { createCallerFactory, createTRPCRouter } from "@/lib/server/api/trpc";
 import { cosmoLinkRouter } from "./routers/cosmo-link";
+import { lockedObjektsRouter } from "./routers/locked-objekts";
 import { pinsRouter } from "./routers/pins";
 import { profileRouter } from "./routers/profile";
 import { userRouter } from "./routers/user";
@@ -11,6 +12,7 @@ export const appRouter = createTRPCRouter({
   user: userRouter,
   pins: pinsRouter,
   profile: profileRouter,
+  lockedObjekt: lockedObjektsRouter,
 });
 
 export type AppRouter = typeof appRouter;

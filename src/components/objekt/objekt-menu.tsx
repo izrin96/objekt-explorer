@@ -3,6 +3,8 @@
 import {
   CheckIcon,
   DotsThreeVerticalIcon,
+  LockSimpleIcon,
+  LockSimpleOpenIcon,
   PlusIcon,
   PushPinIcon,
   PushPinSlashIcon,
@@ -158,6 +160,56 @@ export function TogglePinMenuItem({
     >
       {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
       <Menu.Label>{isPin ? "Unpin" : "Pin"}</Menu.Label>
+    </Menu.Item>
+  );
+}
+
+export function ToggleLockMenuItem({
+  profile,
+  isLocked,
+  tokenId,
+}: {
+  profile: PublicProfile;
+  isLocked: boolean;
+  tokenId: string;
+}) {
+  const utils = api.useUtils();
+  const lock = api.lockedObjekt.lock.useMutation({
+    onSuccess: () => {
+      utils.lockedObjekt.get.invalidate(profile.address);
+      toast.success("Objekt locked");
+    },
+    onError: () => {
+      toast.error("Error lock objekt");
+    },
+  });
+  const unlock = api.lockedObjekt.unlock.useMutation({
+    onSuccess: () => {
+      utils.lockedObjekt.get.invalidate(profile.address);
+      toast.success("Objekt unlocked");
+    },
+    onError: () => {
+      toast.error("Error unlock objekt");
+    },
+  });
+  return (
+    <Menu.Item
+      onAction={() => {
+        if (isLocked) {
+          unlock.mutate({
+            address: profile.address,
+            tokenId: Number(tokenId),
+          });
+        } else {
+          lock.mutate({
+            address: profile.address,
+            tokenId: Number(tokenId),
+          });
+        }
+      }}
+    >
+      {isLocked ? <LockSimpleOpenIcon data-slot="icon" /> : <LockSimpleIcon data-slot="icon" />}
+      <Menu.Label>{isLocked ? "Unlock" : "Lock"}</Menu.Label>
     </Menu.Item>
   );
 }
