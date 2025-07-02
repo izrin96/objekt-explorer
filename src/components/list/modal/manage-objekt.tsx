@@ -36,10 +36,12 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
   const formRef = useRef<HTMLFormElement>(null!);
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
+  const utils = api.useUtils();
   const addToList = api.list.addObjektsToList.useMutation({
-    onSuccess: (rowCount) => {
+    onSuccess: (rowCount, { slug }) => {
       setOpen(false);
       reset();
+      utils.list.getEntries.invalidate(slug);
       toast.success(`${rowCount} objekt added to the list`, {
         duration: 1300,
       });

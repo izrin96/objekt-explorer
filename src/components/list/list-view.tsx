@@ -182,13 +182,12 @@ function Filters({
       <Filter />
       {authenticated && (
         <SelectMode>
-          {({ handleAction }) =>
-            isOwned ? (
-              <RemoveFromList slug={slug} handleAction={handleAction} />
-            ) : (
+          {({ handleAction }) => (
+            <>
+              {isOwned && <RemoveFromList slug={slug} handleAction={handleAction} />}
               <AddToList handleAction={handleAction} />
-            )
-          }
+            </>
+          )}
         </SelectMode>
       )}
     </div>
