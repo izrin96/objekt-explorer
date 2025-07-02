@@ -31,8 +31,10 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 
 export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   const { data, isLoading } = api.list.myList.useQuery();
+  const utils = api.useUtils();
   const addToList = api.list.addObjektsToList.useMutation({
-    onSuccess: (rowCount) => {
+    onSuccess: (rowCount, { slug }) => {
+      utils.list.getEntries.invalidate(slug);
       toast.success(`${rowCount} objekt added to the list`, {
         duration: 1300,
       });
