@@ -89,11 +89,8 @@ function ListView({ slug }: Props) {
                     authenticated && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
-                        {isOwned ? (
-                          <RemoveFromListMenu slug={slug} objekt={objekt} />
-                        ) : (
-                          <AddToListMenu objekt={objekt} />
-                        )}
+                        {isOwned && <RemoveFromListMenu slug={slug} objekt={objekt} />}
+                        <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
                     )
                   }
@@ -112,11 +109,8 @@ function ListView({ slug }: Props) {
                             <div className="absolute top-0 right-0 flex">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
-                                {isOwned ? (
-                                  <RemoveFromListMenu slug={slug} objekt={objekt} />
-                                ) : (
-                                  <AddToListMenu objekt={objekt} />
-                                )}
+                                {isOwned && <RemoveFromListMenu slug={slug} objekt={objekt} />}
+                                <AddToListMenu objekt={objekt} />
                               </ObjektHoverMenu>
                             </div>
                           )}
@@ -145,15 +139,16 @@ function ListView({ slug }: Props) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        <FloatingSelectMode>
-          {({ handleAction }) =>
-            isOwned ? (
-              <RemoveFromList slug={slug} handleAction={handleAction} />
-            ) : (
-              <AddToList handleAction={handleAction} />
-            )
-          }
-        </FloatingSelectMode>
+        {authenticated && (
+          <FloatingSelectMode>
+            {({ handleAction }) => (
+              <>
+                {isOwned && <RemoveFromList slug={slug} handleAction={handleAction} />}
+                <AddToList handleAction={handleAction} />
+              </>
+            )}
+          </FloatingSelectMode>
+        )}
         <FilterContainer>
           <Filters authenticated={authenticated} isOwned={isOwned} slug={slug} />
         </FilterContainer>

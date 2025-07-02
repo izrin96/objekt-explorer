@@ -137,9 +137,11 @@ function IndexView() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        <FloatingSelectMode>
-          {({ handleAction }) => <AddToList handleAction={handleAction} />}
-        </FloatingSelectMode>
+        {authenticated && (
+          <FloatingSelectMode>
+            {({ handleAction }) => <AddToList handleAction={handleAction} />}
+          </FloatingSelectMode>
+        )}
         <FilterContainer>
           <Filters authenticated={authenticated} />
         </FilterContainer>

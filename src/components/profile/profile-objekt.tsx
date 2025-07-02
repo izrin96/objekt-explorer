@@ -247,21 +247,23 @@ function ProfileObjekt() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        <FloatingSelectMode>
-          {({ handleAction }) => (
-            <>
-              <AddToList handleAction={handleAction} />
-              {isProfileAuthed && (
-                <>
-                  <PinObjekt address={profile!.address} handleAction={handleAction} />
-                  <UnpinObjekt address={profile!.address} handleAction={handleAction} />
-                  <LockObjekt address={profile!.address} handleAction={handleAction} />
-                  <UnlockObjekt address={profile!.address} handleAction={handleAction} />
-                </>
-              )}
-            </>
-          )}
-        </FloatingSelectMode>
+        {authenticated && (
+          <FloatingSelectMode>
+            {({ handleAction }) => (
+              <>
+                <AddToList handleAction={handleAction} />
+                {isProfileAuthed && (
+                  <>
+                    <PinObjekt address={profile!.address} handleAction={handleAction} />
+                    <UnpinObjekt address={profile!.address} handleAction={handleAction} />
+                    <LockObjekt address={profile!.address} handleAction={handleAction} />
+                    <UnlockObjekt address={profile!.address} handleAction={handleAction} />
+                  </>
+                )}
+              </>
+            )}
+          </FloatingSelectMode>
+        )}
         <FilterContainer>
           <Filters
             address={profile!.address}
