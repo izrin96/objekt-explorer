@@ -54,7 +54,7 @@ export default function LiveSessionListRender() {
   );
 }
 
-export function LiveSessionList({ artistId }: { artistId: string }) {
+function LiveSessionList({ artistId }: { artistId: string }) {
   const query = useSuspenseQuery({
     queryKey: ["live-session", artistId],
     queryFn: async () => {
