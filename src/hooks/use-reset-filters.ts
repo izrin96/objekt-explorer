@@ -23,6 +23,7 @@ export function useResetFilters() {
       color: null,
       colorSensitivity: null,
       collection: null,
+      locked: null,
     });
   }
   return reset;
