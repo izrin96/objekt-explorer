@@ -41,6 +41,7 @@ import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import { Loader } from "../ui";
 import Filter from "./filter";
+import { LockObjekt, UnlockObjekt } from "./form/lock-unlock";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 
 export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileObjektRender), {
@@ -254,6 +255,8 @@ function ProfileObjekt() {
                 <>
                   <PinObjekt address={profile!.address} handleAction={handleAction} />
                   <UnpinObjekt address={profile!.address} handleAction={handleAction} />
+                  <LockObjekt address={profile!.address} handleAction={handleAction} />
+                  <UnlockObjekt address={profile!.address} handleAction={handleAction} />
                 </>
               )}
             </>
@@ -298,6 +301,8 @@ function Filters({
                 <>
                   <PinObjekt address={address} handleAction={handleAction} />
                   <UnpinObjekt address={address} handleAction={handleAction} />
+                  <LockObjekt address={address} handleAction={handleAction} />
+                  <UnlockObjekt address={address} handleAction={handleAction} />
                 </>
               )}
             </>
