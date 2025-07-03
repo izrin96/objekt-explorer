@@ -3,16 +3,9 @@
 import { IconSearch, IconX } from "@intentui/icons";
 import type { SearchFieldProps as SearchFieldPrimitiveProps } from "react-aria-components";
 import { Button, SearchField as SearchFieldPrimitive } from "react-aria-components";
-import {
-  Description,
-  FieldError,
-  FieldGroup,
-  type FieldProps,
-  Input,
-  Label,
-} from "@/components/ui/field";
-import { Loader } from "@/components/ui/loader";
 import { composeTailwindRenderProps } from "@/lib/primitive";
+import { Description, FieldError, FieldGroup, type FieldProps, Input, Label } from "./field";
+import { Loader } from "./loader";
 
 interface SearchFieldProps extends SearchFieldPrimitiveProps, FieldProps {
   isPending?: boolean;
@@ -39,23 +32,24 @@ const SearchField = ({
     >
       {(values) => (
         <>
+          {label && <Label>{label}</Label>}
           {typeof children === "function" ? (
             children(values)
           ) : children ? (
             children
           ) : (
             <FieldGroup>
-              {label && <Label>{label}</Label>}
               {isPending ? <Loader variant="spin" /> : <IconSearch />}
               <Input placeholder={placeholder ?? "Search..."} />
 
               <Button className="grid place-content-center pressed:text-fg text-muted-fg hover:text-fg group-empty/search-field:invisible">
                 <IconX />
               </Button>
-              {description && <Description>{description}</Description>}
-              <FieldError>{errorMessage}</FieldError>
             </FieldGroup>
           )}
+
+          {description && <Description>{description}</Description>}
+          <FieldError>{errorMessage}</FieldError>
         </>
       )}
     </SearchFieldPrimitive>

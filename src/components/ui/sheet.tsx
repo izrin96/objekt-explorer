@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "./dialog";
 
 const overlayStyles = tv({
   base: [
@@ -92,6 +92,7 @@ interface SheetContentProps
   isBlurred?: boolean;
   isFloat?: boolean;
   side?: Sides;
+  overlay?: Omit<ModalOverlayProps, "children">;
 }
 
 const SheetContent = ({
@@ -102,6 +103,7 @@ const SheetContent = ({
   role = "dialog",
   closeButton = true,
   isFloat = true,
+  overlay,
   children,
   ...props
 }: SheetContentProps) => {
@@ -109,10 +111,11 @@ const SheetContent = ({
   return (
     <ModalOverlay
       isDismissable={isDismissable}
-      className={composeRenderProps(className, (_className, renderProps) => {
+      className={composeRenderProps(overlay?.className, (className, renderProps) => {
         return overlayStyles({
           ...renderProps,
           isBlurred,
+          className,
         });
       })}
       {...props}

@@ -13,8 +13,8 @@ import {
   Tag as TagPrimitive,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
-import { Description, Label } from "@/components/ui/field";
 import { composeTailwindRenderProps } from "@/lib/primitive";
+import { Description, Label } from "./field";
 
 interface TagGroupProps extends TagGroupPrimitiveProps {
   errorMessage?: string;
@@ -70,7 +70,7 @@ const Tag = ({ className, children, ...props }: TagProps) => {
     >
       {({ allowsRemoving }) => (
         <>
-          {children as React.ReactNode}
+          {children}
           {allowsRemoving && (
             <Button
               slot="remove"

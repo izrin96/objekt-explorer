@@ -28,10 +28,10 @@ import {
   useFilter,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
-import { DropdownKeyboard } from "@/components/ui/dropdown";
-import { Loader } from "@/components/ui/loader";
-import { Menu, type MenuSectionProps } from "@/components/ui/menu";
 import { composeTailwindRenderProps } from "@/lib/primitive";
+import { DropdownKeyboard } from "./dropdown";
+import { Loader } from "./loader";
+import { Menu, type MenuSectionProps } from "./menu";
 
 interface CommandMenuProviderProps {
   isPending?: boolean;
@@ -225,10 +225,7 @@ const renderer: CollectionRenderer = {
   CollectionRoot(props) {
     if (props.collection.size === 0) {
       return (
-        // biome-ignore lint/a11y/useFocusableInteractive: false
-        <div role="menuitem" className="col-span-full p-4 text-center text-muted-fg text-sm">
-          No results found.
-        </div>
+        <div className="col-span-full p-4 text-center text-muted-fg text-sm">No results found.</div>
       );
     }
     return <DefaultCollectionRenderer.CollectionRoot {...props} />;

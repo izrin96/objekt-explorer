@@ -61,21 +61,18 @@ const Tab = ({ children, className, ref, ...props }: TabProps) => {
     <TabPrimitive
       ref={ref}
       {...props}
-      className={composeRenderProps(className, (className, _renderProps) =>
-        twMerge([
-          "relative flex cursor-default items-center whitespace-nowrap rounded-full font-medium text-fg text-sm outline-hidden transition hover:text-fg *:data-[slot=icon]:mr-2 *:data-[slot=icon]:size-4",
-          "group-orientation-vertical/tabs:w-full group-orientation-vertical/tabs:py-0 group-orientation-vertical/tabs:pr-2 group-orientation-vertical/tabs:pl-4",
-          "group-orientation-horizontal/tabs:pb-3",
-          "selected:text-fg text-muted-fg focus:ring-0",
-          "disabled:opacity-50",
-          "href" in props && "cursor-pointer",
-          className,
-        ]),
-      )}
+      className={composeTailwindRenderProps(className, [
+        "relative flex cursor-default items-center whitespace-nowrap rounded-full font-medium text-fg text-sm outline-hidden transition hover:text-fg *:data-[slot=icon]:mr-2 *:data-[slot=icon]:size-4",
+        "group-orientation-vertical/tabs:w-full group-orientation-vertical/tabs:py-0 group-orientation-vertical/tabs:pr-2 group-orientation-vertical/tabs:pl-4",
+        "group-orientation-horizontal/tabs:pb-3",
+        "selected:text-fg text-muted-fg focus:ring-0",
+        "disabled:opacity-50",
+        "href" in props && "cursor-pointer",
+      ])}
     >
       {({ isSelected }) => (
         <>
-          {children as React.ReactNode}
+          {children}
           {isSelected && (
             <span
               data-slot="selected-indicator"

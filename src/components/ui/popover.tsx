@@ -9,6 +9,7 @@ import {
   OverlayArrow,
   Popover as PopoverPrimitive,
 } from "react-aria-components";
+import { composeTailwindRenderProps } from "@/lib/primitive";
 import {
   DialogBody,
   DialogClose,
@@ -17,8 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { composeTailwindRenderProps } from "@/lib/primitive";
+} from "./dialog";
 
 type PopoverProps = DialogTriggerProps;
 const Popover = (props: PopoverProps) => {
@@ -49,7 +49,8 @@ const PopoverContent = ({
       offset={offset}
       className={composeTailwindRenderProps(className, [
         "group/popover min-w-(--trigger-width) max-w-xs overflow-y-auto overscroll-contain rounded-xl border bg-overlay text-overlay-fg shadow-xs outline-hidden transition-transform [--gutter:--spacing(6)] sm:text-sm dark:backdrop-saturate-200 **:[[role=dialog]]:[--gutter:--spacing(4)]",
-        "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
+        "entering:fade-in entering:animate-in",
+        "exiting:fade-out exiting:animate-out",
         "placement-left:entering:slide-in-from-right-1 placement-right:entering:slide-in-from-left-1 placement-top:entering:slide-in-from-bottom-1 placement-bottom:entering:slide-in-from-top-1",
         "placement-left:exiting:slide-out-to-right-1 placement-right:exiting:slide-out-to-left-1 placement-top:exiting:slide-out-to-bottom-1 placement-bottom:exiting:slide-out-to-top-1",
         "forced-colors:bg-[Canvas]",
