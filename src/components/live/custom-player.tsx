@@ -78,7 +78,7 @@ function LiveControl() {
     <>
       <LiveDuration />
       <LiveVolumeControl />
-      <Button intent="outline" size="xs" onClick={toggleFullscreen}>
+      <Button intent="outline" size="sq-sm" onClick={toggleFullscreen}>
         <CornersOutIcon />
       </Button>
     </>
@@ -91,10 +91,10 @@ function LiveVolumeControl() {
   const { speaker } = useSpeakerState();
   return (
     <Popover>
-      <Button size="xs" intent="outline">
+      <Button size="sq-sm" intent="outline">
         <SpeakerHighIcon />
       </Button>
-      <Popover.Content className="m-4 min-w-0">
+      <Popover.Content className="m-4 min-w-0 p-4">
         <Slider
           className="min-h-24 gap-y-0"
           defaultValue={currentSpeaker.audioVolume ?? 1}
