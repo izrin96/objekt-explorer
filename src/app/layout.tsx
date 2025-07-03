@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 import type { PropsWithChildren } from "react";
 import { Analytics } from "@/components/analytics";
 import Navbar from "@/components/navbar";
@@ -58,10 +60,11 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function RootLayout({ children }: PropsWithChildren) {
+export default async function RootLayout({ children }: PropsWithChildren) {
+  const locale = await getLocale();
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${nunitoFont.variable}`}
     >
@@ -71,13 +74,15 @@ export default function RootLayout({ children }: PropsWithChildren) {
           process.env.NODE_ENV === "development" ? "debug-screens" : "",
         )}
       >
-        <TRPCReactProvider>
-          <ClientProviders>
-            <Navbar />
-            <main className="mx-auto w-full">{children}</main>
-            <Analytics />
-          </ClientProviders>
-        </TRPCReactProvider>
+        <NextIntlClientProvider>
+          <TRPCReactProvider>
+            <ClientProviders>
+              <Navbar />
+              <main className="mx-auto w-full">{children}</main>
+              <Analytics />
+            </ClientProviders>
+          </TRPCReactProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
