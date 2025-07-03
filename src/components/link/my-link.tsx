@@ -22,7 +22,7 @@ export default function MyLinkRender() {
 }
 
 function MyLink() {
-  const [links] = api.profile.getAll.useSuspenseQuery();
+  const [links] = api.profile.list.useSuspenseQuery();
 
   return (
     <div className="flex flex-col gap-4">

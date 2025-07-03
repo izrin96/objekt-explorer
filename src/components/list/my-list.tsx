@@ -25,7 +25,7 @@ export default function MyListRender() {
 function MyList() {
   const [addOpen, setAddOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
-  const [lists] = api.list.myList.useSuspenseQuery();
+  const [lists] = api.list.list.useSuspenseQuery();
 
   return (
     <div className="flex flex-col gap-4">

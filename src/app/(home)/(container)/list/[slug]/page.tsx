@@ -33,7 +33,7 @@ export default async function Page(props: Props) {
 
   const [lists] = await Promise.all([session ? fetchOwnedLists(session.user.id) : undefined]);
 
-  api.list.getEntries.prefetch(params.slug);
+  api.list.listEntries.prefetch(params.slug);
 
   return (
     <ProfileProvider list={list}>

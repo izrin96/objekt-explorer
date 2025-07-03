@@ -17,7 +17,7 @@ export function LockObjekt({ address, handleAction }: Props) {
   const utils = api.useUtils();
   const batchLock = api.lockedObjekt.batchLock.useMutation({
     onSuccess: () => {
-      utils.lockedObjekt.get.invalidate(address);
+      utils.lockedObjekt.list.invalidate(address);
       toast.success("Objekt locked");
       reset();
     },
@@ -50,7 +50,7 @@ export function UnlockObjekt({ address, handleAction }: Props) {
   const utils = api.useUtils();
   const batchUnlock = api.lockedObjekt.batchUnlock.useMutation({
     onSuccess: () => {
-      utils.lockedObjekt.get.invalidate(address);
+      utils.lockedObjekt.list.invalidate(address);
       toast.success("Objekt unlocked");
       reset();
     },

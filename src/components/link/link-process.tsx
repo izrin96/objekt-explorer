@@ -153,9 +153,9 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
 
   useEffect(() => {
     if (data?.status === "certified") {
-      utils.profile.getAll.invalidate();
+      utils.profile.list.invalidate();
     }
-  }, [data?.status, utils.profile.getAll]);
+  }, [data?.status, utils.profile.list]);
 
   if (!data || data.status === "wait_for_user_action")
     return (

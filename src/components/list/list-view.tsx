@@ -57,7 +57,7 @@ function ListView({ slug }: Props) {
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
-  const [objekts] = api.list.getEntries.useSuspenseQuery(slug, {
+  const [objekts] = api.list.listEntries.useSuspenseQuery(slug, {
     select: (data) => data.collections.map(mapObjektWithTag),
   });
 

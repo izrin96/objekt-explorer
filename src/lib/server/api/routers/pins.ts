@@ -6,7 +6,7 @@ import { pins } from "../../db/schema";
 import { checkAddressOwned } from "./profile";
 
 export const pinsRouter = createTRPCRouter({
-  get: publicProcedure.input(z.string()).query(async ({ input: address }) => {
+  list: publicProcedure.input(z.string()).query(async ({ input: address }) => {
     const result = await db.query.pins.findMany({
       columns: {
         id: true,

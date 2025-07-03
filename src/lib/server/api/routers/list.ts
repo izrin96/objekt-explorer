@@ -13,7 +13,7 @@ import { type List, listEntries, lists } from "../../db/schema";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 
 export const listRouter = createTRPCRouter({
-  get: authProcedure.input(z.string()).query(async ({ input: slug, ctx: { session } }) => {
+  find: authProcedure.input(z.string()).query(async ({ input: slug, ctx: { session } }) => {
     const result = await db.query.lists.findFirst({
       columns: {
         name: true,
@@ -27,7 +27,7 @@ export const listRouter = createTRPCRouter({
     return result;
   }),
 
-  getEntries: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
+  listEntries: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
     const result = await db.query.lists.findFirst({
       with: {
         entries: {
@@ -58,7 +58,7 @@ export const listRouter = createTRPCRouter({
     };
   }),
 
-  myList: authProcedure.query(async ({ ctx: { session } }) => {
+  list: authProcedure.query(async ({ ctx: { session } }) => {
     const { user } = session;
     const result = await fetchOwnedLists(user.id);
     return result;

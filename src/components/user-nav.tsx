@@ -127,7 +127,7 @@ function MyListMenuItem({
   openCreateList: () => void;
   openDiscordFormat: () => void;
 }) {
-  const { data, isLoading } = api.list.myList.useQuery();
+  const { data, isLoading } = api.list.list.useQuery();
   const items = data ?? [];
   return (
     <Menu.Submenu>
@@ -173,7 +173,7 @@ function MyListMenuItem({
 }
 
 function MyCosmoProfileMenuItem() {
-  const { data, isLoading } = api.profile.getAll.useQuery();
+  const { data, isLoading } = api.profile.list.useQuery();
   const items = data ?? [];
   return (
     <Menu.Submenu>

@@ -17,7 +17,7 @@ export function PinObjekt({ address, handleAction }: Props) {
   const utils = api.useUtils();
   const batchPin = api.pins.batchPin.useMutation({
     onSuccess: () => {
-      utils.pins.get.invalidate(address);
+      utils.pins.list.invalidate(address);
       toast.success("Objekt pinned");
       reset();
     },
@@ -50,7 +50,7 @@ export function UnpinObjekt({ address, handleAction }: Props) {
   const utils = api.useUtils();
   const batchUnpin = api.pins.batchUnpin.useMutation({
     onSuccess: () => {
-      utils.pins.get.invalidate(address);
+      utils.pins.list.invalidate(address);
       toast.success("Objekt unpinned");
       reset();
     },

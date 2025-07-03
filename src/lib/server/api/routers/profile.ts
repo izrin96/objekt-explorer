@@ -8,11 +8,11 @@ import { createPresignedUrlToUpload, deleteFileFromBucket } from "../../minio";
 import { fetchUserProfiles } from "../../profile";
 
 export const profileRouter = createTRPCRouter({
-  getAll: authProcedure.query(async ({ ctx: { session } }) => {
+  list: authProcedure.query(async ({ ctx: { session } }) => {
     return await fetchUserProfiles(session.user.id);
   }),
 
-  get: authProcedure.input(z.string()).query(async ({ input: address, ctx: { session } }) => {
+  find: authProcedure.input(z.string()).query(async ({ input: address, ctx: { session } }) => {
     const profile = await fetchOwnedProfile(address, session.user.id);
     return profile;
   }),

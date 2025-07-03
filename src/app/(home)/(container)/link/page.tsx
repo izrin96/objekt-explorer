@@ -15,7 +15,7 @@ export default async function Page() {
 
   if (!session) redirect("/");
 
-  api.profile.getAll.prefetch();
+  api.profile.list.prefetch();
 
   return (
     <div className="flex flex-col pt-2 pb-36">

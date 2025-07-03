@@ -36,7 +36,7 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
     onSuccess: () => {
       setOpen(false);
       toast.success("Cosmo unlinked");
-      utils.profile.getAll.invalidate();
+      utils.profile.list.invalidate();
     },
     onError: () => {
       toast.error("Error unlink cosmo");
@@ -90,7 +90,7 @@ export function EditProfileModal({
     onSuccess: () => {
       setOpen(false);
       setDroppedImage(null);
-      utils.profile.get.invalidate(address);
+      utils.profile.find.invalidate(address);
       onComplete?.();
       toast.success("Cosmo profile updated");
     },
@@ -324,7 +324,7 @@ function EditProfileForm({
   cropperRef,
   setDroppedImage,
 }: EditProfileProps) {
-  const [data] = api.profile.get.useSuspenseQuery(address);
+  const [data] = api.profile.find.useSuspenseQuery(address);
 
   return (
     <div className="flex flex-col gap-6">

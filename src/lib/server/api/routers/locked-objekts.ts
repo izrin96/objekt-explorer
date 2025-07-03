@@ -6,7 +6,7 @@ import { lockedObjekts } from "../../db/schema";
 import { checkAddressOwned } from "./profile";
 
 export const lockedObjektsRouter = createTRPCRouter({
-  get: publicProcedure.input(z.string()).query(async ({ input: address }) => {
+  list: publicProcedure.input(z.string()).query(async ({ input: address }) => {
     const result = await db.query.lockedObjekts.findMany({
       columns: {
         id: true,

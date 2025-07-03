@@ -41,7 +41,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
 
 function Content() {
   const formRef = useRef<HTMLFormElement>(null!);
-  const [data] = api.list.myList.useSuspenseQuery();
+  const [data] = api.list.list.useSuspenseQuery();
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
 

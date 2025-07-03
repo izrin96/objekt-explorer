@@ -41,7 +41,7 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
     onSuccess: (rowCount, { slug }) => {
       setOpen(false);
       reset();
-      utils.list.getEntries.invalidate(slug);
+      utils.list.listEntries.invalidate(slug);
       toast.success(`${rowCount} objekt added to the list`, {
         duration: 1300,
       });
@@ -100,7 +100,7 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
 }
 
 function AddToListForm() {
-  const [data] = api.list.myList.useSuspenseQuery();
+  const [data] = api.list.list.useSuspenseQuery();
 
   if (data.length === 0)
     return (
@@ -167,7 +167,7 @@ export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModal
     onSuccess: () => {
       setOpen(false);
       reset();
-      utils.list.getEntries.invalidate(slug);
+      utils.list.listEntries.invalidate(slug);
       toast.success("Objekt removed from the list", {
         duration: 1300,
       });

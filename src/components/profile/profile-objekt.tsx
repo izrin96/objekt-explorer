@@ -96,11 +96,11 @@ function ProfileObjekt() {
   const [ownedQuery, pinsQuery, lockedObjektQuery] = useSuspenseQueries({
     queries: [
       ownedCollectionOptions(profile!.address),
-      utils.pins.get.queryOptions(profile!.address, {
+      utils.pins.list.queryOptions(profile!.address, {
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
-      utils.lockedObjekt.get.queryOptions(profile!.address, {
+      utils.lockedObjekt.list.queryOptions(profile!.address, {
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),

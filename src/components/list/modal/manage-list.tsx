@@ -20,7 +20,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
     onSuccess: () => {
       setOpen(false);
       toast.success("List created");
-      utils.list.myList.invalidate();
+      utils.list.list.invalidate();
     },
     onError: () => {
       toast.error("Error creating list");
@@ -80,7 +80,7 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
     onSuccess: () => {
       setOpen(false);
       toast.success("List deleted");
-      utils.list.myList.invalidate();
+      utils.list.list.invalidate();
     },
     onError: () => {
       toast.error("Error deleting list");
@@ -123,8 +123,8 @@ export function EditListModal({ slug, onComplete, open, setOpen }: EditListModal
     onSuccess: () => {
       setOpen(false);
       toast.success("List updated");
-      utils.list.myList.invalidate();
-      utils.list.get.invalidate(slug);
+      utils.list.list.invalidate();
+      utils.list.find.invalidate(slug);
       onComplete?.();
     },
     onError: () => {
@@ -182,7 +182,7 @@ export function EditListModal({ slug, onComplete, open, setOpen }: EditListModal
 }
 
 function EditListForm({ slug }: { slug: string }) {
-  const [data] = api.list.get.useSuspenseQuery(slug);
+  const [data] = api.list.find.useSuspenseQuery(slug);
   return (
     <div className="flex flex-col gap-6">
       <TextField

@@ -61,7 +61,7 @@ export function ObjektTogglePin({
   const utils = api.useUtils();
   const pin = api.pins.pin.useMutation({
     onSuccess: () => {
-      utils.pins.get.invalidate(profile.address);
+      utils.pins.list.invalidate(profile.address);
       toast.success("Objekt pinned");
     },
     onError: () => {
@@ -70,7 +70,7 @@ export function ObjektTogglePin({
   });
   const unpin = api.pins.unpin.useMutation({
     onSuccess: () => {
-      utils.pins.get.invalidate(profile.address);
+      utils.pins.list.invalidate(profile.address);
       toast.success("Objekt unpinned");
     },
     onError: () => {
@@ -122,7 +122,7 @@ export function ObjektToggleLock({
   const utils = api.useUtils();
   const lock = api.lockedObjekt.lock.useMutation({
     onSuccess: () => {
-      utils.lockedObjekt.get.invalidate(profile.address);
+      utils.lockedObjekt.list.invalidate(profile.address);
       toast.success("Objekt locked");
     },
     onError: () => {
@@ -131,7 +131,7 @@ export function ObjektToggleLock({
   });
   const unlock = api.lockedObjekt.unlock.useMutation({
     onSuccess: () => {
-      utils.lockedObjekt.get.invalidate(profile.address);
+      utils.lockedObjekt.list.invalidate(profile.address);
       toast.success("Objekt unlocked");
     },
     onError: () => {

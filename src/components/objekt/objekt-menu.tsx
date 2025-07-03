@@ -30,11 +30,11 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 }
 
 export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
-  const { data, isLoading } = api.list.myList.useQuery();
+  const { data, isLoading } = api.list.list.useQuery();
   const utils = api.useUtils();
   const addToList = api.list.addObjektsToList.useMutation({
     onSuccess: (rowCount, { slug }) => {
-      utils.list.getEntries.invalidate(slug);
+      utils.list.listEntries.invalidate(slug);
       toast.success(`${rowCount} objekt added to the list`, {
         duration: 1300,
       });
@@ -90,7 +90,7 @@ export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: Val
   const utils = api.useUtils();
   const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
     onSuccess: () => {
-      utils.list.getEntries.invalidate(slug);
+      utils.list.listEntries.invalidate(slug);
       toast.success("Objekt removed from the list", {
         duration: 1300,
       });
@@ -128,7 +128,7 @@ export function TogglePinMenuItem({
   const utils = api.useUtils();
   const pin = api.pins.pin.useMutation({
     onSuccess: () => {
-      utils.pins.get.invalidate(profile.address);
+      utils.pins.list.invalidate(profile.address);
       toast.success("Objekt pinned");
     },
     onError: () => {
@@ -137,7 +137,7 @@ export function TogglePinMenuItem({
   });
   const unpin = api.pins.unpin.useMutation({
     onSuccess: () => {
-      utils.pins.get.invalidate(profile.address);
+      utils.pins.list.invalidate(profile.address);
       toast.success("Objekt unpinned");
     },
     onError: () => {
@@ -178,7 +178,7 @@ export function ToggleLockMenuItem({
   const utils = api.useUtils();
   const lock = api.lockedObjekt.lock.useMutation({
     onSuccess: () => {
-      utils.lockedObjekt.get.invalidate(profile.address);
+      utils.lockedObjekt.list.invalidate(profile.address);
       toast.success("Objekt locked");
     },
     onError: () => {
@@ -187,7 +187,7 @@ export function ToggleLockMenuItem({
   });
   const unlock = api.lockedObjekt.unlock.useMutation({
     onSuccess: () => {
-      utils.lockedObjekt.get.invalidate(profile.address);
+      utils.lockedObjekt.list.invalidate(profile.address);
       toast.success("Objekt unlocked");
     },
     onError: () => {
