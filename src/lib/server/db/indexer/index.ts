@@ -13,8 +13,8 @@ export const indexer =
         async (sql, params, method) => {
           try {
             const rows = await ofetch(`${env.INDEXER_PROXY_URL}/query`, {
-              retry: 1,
-              retryDelay: 500,
+              retry: false,
+              timeout: 10000,
               method: "POST",
               headers: {
                 "proxy-key": env.INDEXER_PROXY_KEY,
