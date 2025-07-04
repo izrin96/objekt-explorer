@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
@@ -12,27 +13,22 @@ type Props = {
   allowSerialSort?: boolean;
 };
 
-const map: Record<ValidSort, string> = {
-  date: "Date",
-  season: "Season",
-  collectionNo: "Collection No.",
-  serial: "Serial",
-  duplicate: "Duplicate",
-  member: "Member Order",
-};
-
-const mapDesc: Record<ValidSort, string> = {
-  date: "Sort by date",
-  season: "Sort by Season and Collection No.",
-  collectionNo: "Sort by Collection No.",
-  serial: "Sort by Serial",
-  duplicate: "Sort by duplicate count",
-  member: "Sort by Member order",
-};
-
 export default function SortFilter({ allowDuplicateSort = false, allowSerialSort = false }: Props) {
+  const t = useTranslations("filter.sort_by");
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.sort ? [filters.sort] : ["date"]), [filters.sort]);
+
+  const map = useMemo<Record<ValidSort, { label: string; desc: string }>>(
+    () => ({
+      date: { label: t("date.label"), desc: t("date.desc") },
+      season: { label: t("season.label"), desc: t("season.desc") },
+      collectionNo: { label: t("collection_no.label"), desc: t("collection_no.desc") },
+      serial: { label: t("serial.label"), desc: t("serial.desc") },
+      duplicate: { label: t("dups.label"), desc: t("dups.desc") },
+      member: { label: t("member.label"), desc: t("member.desc") },
+    }),
+    [t],
+  );
 
   function update(key: Selection) {
     const value = parseSelected<ValidSort>(key) ?? "date";
@@ -53,7 +49,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
   return (
     <Menu>
       <Button intent="outline" className={filters.sort ? "!inset-ring-primary" : ""}>
-        Sort by
+        {t("label")}
       </Button>
       <Menu.Content
         selectionMode="single"
@@ -62,12 +58,15 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
         items={availableSorts.map((value) => ({ value }))}
         className="min-w-52"
       >
-        {(item) => (
-          <Menu.Item id={item.value} textValue={map[item.value]}>
-            <Menu.Label>{map[item.value]}</Menu.Label>
-            <Menu.Description>{mapDesc[item.value]}</Menu.Description>
-          </Menu.Item>
-        )}
+        {(item) => {
+          const i = map[item.value];
+          return (
+            <Menu.Item id={item.value} textValue={i.label}>
+              <Menu.Label>{i.label}</Menu.Label>
+              <Menu.Description>{i.desc}</Menu.Description>
+            </Menu.Item>
+          );
+        }}
       </Menu.Content>
     </Menu>
   );

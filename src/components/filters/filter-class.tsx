@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-stately";
 import { useFilters } from "@/hooks/use-filters";
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export default function ClassFilter({ hideZeroWelcome = false }: Props) {
+  const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.class), [filters.class]);
 
@@ -32,7 +34,7 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
   return (
     <Menu>
       <Button intent="outline" className={filters.class?.length ? "!inset-ring-primary" : ""}>
-        Class
+        {t("class")}
       </Button>
       <Menu.Content
         selectionMode="multiple"

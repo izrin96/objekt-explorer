@@ -1,5 +1,145 @@
 {
-  "HomePage": {
-    "title": "Hello world! {test}"
+  "filter": {
+    "artist": "Artist",
+    "member": "Member",
+    "season": "Season",
+    "class": "Class",
+    "edition": "Edition",
+    "physical": "Physical",
+    "digital": "Digital",
+    "color": "Color",
+    "color_sensitivity": "Color Sensitivity",
+    "clear_color": "Clear color",
+    "sort_by": {
+      "label": "Sort by",
+      "date": {
+        "label": "Date",
+        "desc": "Sort by date"
+      },
+      "season": {
+        "label": "Season",
+        "desc": "Sort by Season and Collection No."
+      },
+      "collection_no": {
+        "label": "Collection No.",
+        "desc": "Sort by Collection No."
+      },
+      "serial": {
+        "label": "Serial",
+        "desc": "Sort by Serial"
+      },
+      "dups": {
+        "label": "Duplicate",
+        "desc": "Sort by duplicate count"
+      },
+      "member": {
+        "label": "Member Order",
+        "desc": "Sort by Member order"
+      }
+    },
+    "desc": "Descending",
+    "asc": "Ascending",
+    "group_by": {
+      "label": "Group By",
+      "artist": "Artist",
+      "member": "Member",
+      "season": "Season",
+      "class": "Class",
+      "collection_no": "Collection No.",
+      "season_collection_no": "Season & Collection No."
+    },
+    "collection_no": "Collection No.",
+    "column": "Columns",
+    "combine_dups": "Combine duplicate",
+    "select_mode": "Select mode",
+    "clear": "Clear",
+    "add_to_list": "Add to list",
+    "remove_from_list": "Remove from list",
+    "reset_filter": "Reset filter",
+    "quick_search": "Quick search..",
+    "disable_pin": "Disable Pin",
+    "only_locked": "Only locked",
+    "only_unlocked": "Only unlocked",
+    "lock_unlocked": "Lock/unlocked",
+    "transferable": "Transferable",
+    "show_unowned": "Show Unowned",
+    "filters": "Filters",
+    "event": {
+      "label": "Event",
+      "all": "All",
+      "mint": "Mint",
+      "transfer": "Transfer",
+      "spin": "Spin"
+    }
+  },
+  "objekt": {
+    "artist": "Artist",
+    "member": "Member",
+    "season": "Season",
+    "class": "Class",
+    "edition": "Edition",
+    "type": "Type",
+    "physical": "Physical",
+    "digital": "Digital",
+    "collection_no": "Collection No.",
+    "accent_color": "Accent Color",
+    "text_color": "Text Color",
+    "created_at": "Created at",
+    "copies": "Copies",
+    "scanned_copies": "Scanned Copies",
+    "spin": "Spin",
+    "non_spin": "Non-Spin",
+    "tradable": "Tradable",
+    "trades": "Trades",
+    "owned": "Owned",
+    "view_in_apollo": "View in Apollo",
+    "owner": "Owner",
+    "token_id": "Token ID",
+    "transferable": "Transferable",
+    "unobtainable": "Unobtainable",
+    "date": "Date"
+  },
+  "nav": {
+    "activity": "Activity",
+    "my_list": "My List",
+    "my_cosmo_link": "My Cosmo Link",
+    "no_cosmo_found": "No Cosmo found",
+    "manage_cosmo_link": "Manage Cosmo link",
+    "account": "Account",
+    "sign_out": "Sign out",
+    "sign_in": "Sign in",
+    "search_user": {
+      "label": "Search user",
+      "placeholder": "Search user...",
+      "result_label": "Results",
+      "recent_label": "Recents"
+    }
+  },
+  "edit_profile": {
+    "title": "Edit Profile",
+    "desc": "Currently editing {nickname} Cosmo profile",
+    "hide_user": {
+      "title": "Hide User",
+      "desc": "Hide Objekt Tracker account from Cosmo profile"
+    }
+  },
+  "auth": {
+    "reset_password": {
+      "invalid_token": "Invalid token"
+    },
+    "verified": {
+      "email_verified": "Email has been verified"
+    }
+  },
+  "link": {
+    "my_cosmo": "My Cosmo",
+    "link_cosmo": "Link Cosmo",
+    "continue": "Continue",
+    "generating_qr": "Generating QR code",
+    "error_generating_qr": "Error generating QR ticket",
+    "try_again": "Try again",
+    "submit": "Submit",
+    "success": "Success. Cosmo {nickname} linked.",
+    "go_to_cosmo": "Go to your Cosmo"
   }
 }

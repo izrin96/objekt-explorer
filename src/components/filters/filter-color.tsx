@@ -2,6 +2,7 @@
 
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { parseColor } from "@react-stately/color";
+import { useTranslations } from "next-intl";
 import { type CSSProperties, useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
@@ -10,6 +11,7 @@ import { Button, ColorPicker } from "../ui";
 import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {
+  const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const [color, setColor] = useState(filters.color);
   const [debouncedColor] = useDebounceValue(color, 60);
@@ -30,7 +32,7 @@ export default function ColorFilter() {
         <ColorPicker
           eyeDropper
           buttonClassName={cn(color && "inset-ring-(--objekt-color)")}
-          label="Color"
+          label={t("color")}
           value={color ? parseColor(color) : "#000"}
           onChange={(color) => setColor(color.toString("hsl"))}
         />
@@ -48,7 +50,7 @@ export default function ColorFilter() {
             }
           >
             <XIcon data-slot="icon" />
-            Clear color
+            {t("clear_color")}
           </Button>
         </>
       )}

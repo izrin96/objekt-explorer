@@ -4,6 +4,7 @@ import { IconArrowLeft, IconArrowRight, IconOpenLink } from "@intentui/icons";
 import { LockIcon, QuestionMarkIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -121,6 +122,7 @@ function Trades({
 }
 
 function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
+  const t = useTranslations("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: async () =>
       await ofetch<ObjektTransferResponse>(`/api/objekts/transfers/${objekt.slug}/${serial}`),
@@ -162,13 +164,13 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     <>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">Owner</span>
+          <span className="font-semibold text-sm">{t("owner")}</span>
           <span>
             <UserLink address={data.owner} nickname={ownerNickname} />
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">Token ID</span>
+          <span className="font-semibold text-sm">{t("token_id")}</span>
           <span>
             <Link
               href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
@@ -181,7 +183,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">Transferable</span>
+          <span className="font-semibold text-sm">{t("transferable")}</span>
           <Badge
             className={cn("text-xs")}
             intent={!data.transferable ? "custom" : "info"}
@@ -196,8 +198,8 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
         <Card.Content className="px-3">
           <Table className="[--gutter:--spacing(3)]" bleed aria-label="Trades">
             <Table.Header>
-              <Table.Column isRowHeader>Owner</Table.Column>
-              <Table.Column minWidth={200}>Date</Table.Column>
+              <Table.Column isRowHeader>{t("owner")}</Table.Column>
+              <Table.Column minWidth={200}>{t("date")}</Table.Column>
             </Table.Header>
             <Table.Body items={data.transfers}>
               {(item) => (

@@ -2,6 +2,7 @@
 
 import { IconDotsVertical } from "@intentui/icons";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { api } from "@/lib/trpc/client";
@@ -22,6 +23,7 @@ export default function MyLinkRender() {
 }
 
 function MyLink() {
+  const t = useTranslations("link");
   const [links] = api.profile.list.useSuspenseQuery();
 
   return (
@@ -35,7 +37,7 @@ function MyLink() {
             })
           }
         >
-          Link Cosmo
+          {t("link_cosmo")}
         </Link>
       </div>
 

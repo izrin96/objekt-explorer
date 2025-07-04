@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useFilters } from "@/hooks/use-filters";
 import { Toggle } from "../ui";
 
 export default function UnownedFilter() {
+  const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
@@ -16,7 +18,7 @@ export default function UnownedFilter() {
         })
       }
     >
-      Show Unowned
+      {t("show_unowned")}
     </Toggle>
   );
 }

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import type { CSSProperties } from "react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
@@ -40,6 +41,7 @@ function PillColor({ label, value, objekt }: PillProps & { objekt: ValidObjekt }
 }
 
 function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
+  const t = useTranslations("objekt");
   const { data, status } = useQuery(fetchMetadata(objekt.slug));
   return (
     <>
@@ -59,13 +61,13 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
       {status === "success" && (
         <>
           <Pill
-            label={objekt.onOffline === "online" ? "Copies" : "Scanned Copies"}
+            label={objekt.onOffline === "online" ? t("copies") : t("scanned_copies")}
             value={`${data.total}`}
           />
-          <Pill label="Spin" value={`${data.spin}`} />
-          <Pill label="Non-Spin" value={`${data.total - data.spin}`} />
+          <Pill label={t("spin")} value={`${data.spin}`} />
+          <Pill label={t("non_spin")} value={`${data.total - data.spin}`} />
           <Pill
-            label={"Tradable"}
+            label={t("tradable")}
             value={`${((data.transferable / data.total) * 100.0).toFixed(
               2,
             )}% (${data.transferable})`}
@@ -91,29 +93,33 @@ export function AttributePanel({
   objekt: ValidObjekt;
   unobtainable: boolean;
 }) {
+  const t = useTranslations("objekt");
   const { getArtist } = useCosmoArtist();
   const edition = getEdition(objekt.collectionNo);
   return (
     <div className="flex flex-wrap gap-2 p-2">
-      <Pill label="Artist" value={getArtist(objekt.artist)?.title ?? ""} />
-      <Pill label="Member" value={objekt.member} />
-      <Pill label="Season" value={objekt.season} />
-      <Pill label="Class" value={objekt.class} />
-      {objekt.class === "First" && <Pill label="Edition" value={edition!} />}
-      <Pill label="Type" value={objekt.onOffline === "online" ? "Digital" : "Physical"} />
-      <Pill label="Collection No." value={objekt.collectionNo} />
+      <Pill label={t("artist")} value={getArtist(objekt.artist)?.title ?? ""} />
+      <Pill label={t("member")} value={objekt.member} />
+      <Pill label={t("season")} value={objekt.season} />
+      <Pill label={t("class")} value={objekt.class} />
+      {objekt.class === "First" && <Pill label={t("edition")} value={edition!} />}
+      <Pill
+        label={t("type")}
+        value={objekt.onOffline === "online" ? t("digital") : t("physical")}
+      />
+      <Pill label={t("collection_no")} value={objekt.collectionNo} />
       <PillColor
-        label="Accent Color"
+        label={t("accent_color")}
         value={objekt.backgroundColor.toUpperCase()}
         objekt={objekt}
       />
-      <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />
+      <Pill label={t("text_color")} value={objekt.textColor.toUpperCase()} />
       {objekt.createdAt && (
-        <Pill label="Created at" value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
+        <Pill label={t("created_at")} value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
       )}
       {unobtainable && (
         <Badge intent="custom" isCircle={false} className="font-semibold">
-          Unobtainable
+          {t("unobtainable")}
         </Badge>
       )}
       <PillMetadata objekt={objekt} />

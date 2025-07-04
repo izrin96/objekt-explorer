@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-stately";
 import { useFilters } from "@/hooks/use-filters";
@@ -8,6 +9,7 @@ import { parseSelected } from "@/lib/utils";
 import { Button, Menu } from "../ui";
 
 export default function EditionFilter() {
+  const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.edition), [filters.edition]);
 
@@ -24,7 +26,7 @@ export default function EditionFilter() {
   return (
     <Menu>
       <Button intent="outline" className={filters.edition?.length ? "!inset-ring-primary" : ""}>
-        Edition
+        {t("edition")}
       </Button>
       <Menu.Content
         selectionMode="multiple"

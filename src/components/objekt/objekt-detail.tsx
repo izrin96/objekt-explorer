@@ -4,6 +4,7 @@ import { IconChevronLgLeft, IconChevronLgRight, IconOpenLink } from "@intentui/i
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import NextImage from "next/image";
+import { useTranslations } from "next-intl";
 import { type CSSProperties, useCallback, useState } from "react";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
@@ -20,6 +21,7 @@ type ObjektDetailProps = {
 };
 
 export default function ObjektDetail({ objekts, showOwned }: ObjektDetailProps) {
+  const t = useTranslations("objekt");
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
   const currentTab = useObjektModal((a) => a.currentTab);
@@ -45,12 +47,15 @@ export default function ObjektDetail({ objekts, showOwned }: ObjektDetailProps) 
         >
           <TabList>
             {showOwned && (
-              <Tab id="owned">Owned{objekts.length > 1 ? ` (${objekts.length})` : ""}</Tab>
+              <Tab id="owned">
+                {t("owned")}
+                {objekts.length > 1 ? ` (${objekts.length})` : ""}
+              </Tab>
             )}
-            <Tab id="trades">Trades</Tab>
+            <Tab id="trades">{t("trades")}</Tab>
             <Tab id="apollo" href={`https://apollo.cafe/objekts?id=${objekt.slug}`} target="_blank">
               <IconOpenLink />
-              View in Apollo
+              {t("view_in_apollo")}
             </Tab>
           </TabList>
           {showOwned && (

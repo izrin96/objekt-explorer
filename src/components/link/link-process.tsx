@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useLocale, useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
@@ -29,6 +30,8 @@ function generateQrCode(ticket: string) {
 }
 
 export default function LinkRender() {
+  const t = useTranslations("link");
+  const locale = useLocale();
   const utils = api.useUtils();
   const [step, setStep] = useState(0);
 
@@ -51,7 +54,10 @@ export default function LinkRender() {
     <div className="flex flex-col items-center justify-center gap-5">
       {step === 0 && (
         <div className="flex max-w-xl flex-col items-center justify-center gap-4">
-          <h2 className="font-semibold text-lg">Link your Cosmo profile</h2>
+          <h2 className="font-semibold text-lg">
+            {locale === "en" && "Link your Cosmo profile"}
+            {locale === "ko" && "Cosmo 프로필을 연결하세요"}
+          </h2>
           <Image
             priority
             src={SmartphoneIcon.src}
@@ -60,11 +66,20 @@ export default function LinkRender() {
             height={220}
             className="fade-in zoom-in animate-in duration-200"
           />
-          <p>
-            You need to download the Cosmo app and sign in with the Cosmo ID you want to link before
-            continuing. This linking process will <span className="font-bold">not</span> allow
-            Objekt Tracker to access your Cosmo, but only to verify ownership of it.
-          </p>
+          {locale === "en" && (
+            <p>
+              You need to download the Cosmo app and sign in with the Cosmo ID you want to link
+              before continuing. This linking process will <span className="font-bold">not</span>{" "}
+              allow Objekt Tracker to access your Cosmo, but only to verify ownership of it.
+            </p>
+          )}
+          {locale === "ko" && (
+            <p>
+              계속하려면 Cosmo 앱을 다운로드하고 연결하고자 하는 Cosmo ID로 로그인해야 합니다. 이
+              연결 과정은 Objekt Tracker가 사용자의 Cosmo에 <span className="font-bold">접근</span>
+              하는 것이 아니라, <span className="font-bold">소유 여부만 확인</span>합니다.
+            </p>
+          )}
           <Button
             intent="primary"
             onClick={() => {
@@ -72,7 +87,7 @@ export default function LinkRender() {
               setStep(1);
             }}
           >
-            Continue
+            {t("continue")}
           </Button>
         </div>
       )}
@@ -82,6 +97,7 @@ export default function LinkRender() {
 }
 
 function TicketRender() {
+  const t = useTranslations("link");
   const { data, status, refetch, isRefetching, isLoading } = api.cosmoLink.getTicket.useQuery(
     undefined,
     {
@@ -96,12 +112,12 @@ function TicketRender() {
         <Image
           priority
           src={CalligraphyIcon.src}
-          alt="Mug"
+          alt="Loading"
           width={220}
           height={220}
           className="fade-in zoom-in animate-in duration-200"
         />
-        <span>Generating QR code</span>
+        <span>{t("generating_qr")}</span>
         <Loader variant="ring" />
       </div>
     );
@@ -117,9 +133,9 @@ function TicketRender() {
           height={220}
           className="fade-in zoom-in animate-in duration-200"
         />
-        <span>Error generating QR ticket</span>
+        <span>{t("error_generating_qr")}</span>
         <Button intent="secondary" onClick={() => refetch()}>
-          Try again
+          {t("try_again")}
         </Button>
       </div>
     );
@@ -128,6 +144,7 @@ function TicketRender() {
 }
 
 function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: () => void }) {
+  const t = useTranslations("link");
   const utils = api.useUtils();
   const { data } = api.cosmoLink.checkTicket.useQuery(ticketAuth.ticket, {
     retry: false,
@@ -221,7 +238,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
           alt="Welcome"
           className="fade-in zoom-in animate-in duration-200"
         />
-        <span>Success. Cosmo &apos;{data.user.nickname}&apos; linked.</span>
+        <span>{t("success", { nickname: data.user.nickname })}</span>
         <div>
           <Link
             className={(renderProps) =>
@@ -232,7 +249,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
             }
             href={`/@${data.user.nickname}`}
           >
-            Go to your Cosmo
+            {t("go_to_cosmo")}
           </Link>
         </div>
       </div>

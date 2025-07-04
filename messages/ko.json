@@ -1,0 +1,145 @@
+{
+  "filter": {
+    "artist": "아티스트",
+    "member": "멤버",
+    "season": "시즌",
+    "class": "클래스",
+    "edition": "에디션",
+    "physical": "피지컬",
+    "digital": "디지털",
+    "color": "색상",
+    "color_sensitivity": "색상 민감도",
+    "clear_color": "투명 색상",
+    "sort_by": {
+      "label": "정렬 기준",
+      "date": {
+        "label": "날짜",
+        "desc": "날짜순으로 정렬"
+      },
+      "season": {
+        "label": "시즌",
+        "desc": "시즌 및 컬렉션 번호순으로 정렬"
+      },
+      "collection_no": {
+        "label": "컬렉션 번호",
+        "desc": "컬렉션 번호순으로 정렬"
+      },
+      "serial": {
+        "label": "시리얼",
+        "desc": "시리얼 번호순으로 정렬"
+      },
+      "dups": {
+        "label": "중복",
+        "desc": "중복 수순으로 정렬"
+      },
+      "member": {
+        "label": "멤버 순서",
+        "desc": "멤버 순서대로 정렬"
+      }
+    },
+    "desc": "내림차순",
+    "asc": "오름차순",
+    "group_by": {
+      "label": "그룹 기준",
+      "artist": "아티스트",
+      "member": "멤버",
+      "season": "시즌",
+      "class": "클래스",
+      "collection_no": "컬렉션 번호",
+      "season_collection_no": "시즌 및 컬렉션 번호"
+    },
+    "collection_no": "컬렉션 번호",
+    "column": "열",
+    "combine_dups": "중복 항목 병합",
+    "select_mode": "선택 모드",
+    "clear": "초기화",
+    "add_to_list": "목록에 추가",
+    "remove_from_list": "목록에서 제거",
+    "reset_filter": "필터 초기화",
+    "quick_search": "빠른 검색..",
+    "disable_pin": "고정 해제",
+    "only_locked": "잠긴 항목만",
+    "only_unlocked": "잠기지 않은 항목만",
+    "lock_unlocked": "잠김/해제",
+    "transferable": "전송 가능",
+    "show_unowned": "미보유 항목 표시",
+    "filters": "필터",
+    "event": {
+      "label": "이벤트",
+      "all": "전체",
+      "mint": "민팅",
+      "transfer": "전송",
+      "spin": "스핀"
+    }
+  },
+  "objekt": {
+    "artist": "아티스트",
+    "member": "멤버",
+    "season": "시즌",
+    "class": "클래스",
+    "edition": "에디션",
+    "type": "타입",
+    "physical": "피지컬",
+    "digital": "디지털",
+    "collection_no": "컬렉션 번호",
+    "accent_color": "강조 색상",
+    "text_color": "텍스트 색상",
+    "created_at": "생성일",
+    "copies": "복제본",
+    "scanned_copies": "스캔된 복제본",
+    "spin": "스핀",
+    "non_spin": "논스핀",
+    "tradable": "거래 가능",
+    "trades": "거래 내역",
+    "owned": "보유함",
+    "view_in_apollo": "Apollo에서 보기",
+    "owner": "소유자",
+    "token_id": "토큰 ID",
+    "transferable": "전송 가능",
+    "unobtainable": "획득 불가",
+    "date": "날짜"
+  },
+  "nav": {
+    "activity": "활동",
+    "my_list": "내 목록",
+    "my_cosmo_link": "내 Cosmo 링크",
+    "no_cosmo_found": "Cosmo를 찾을 수 없습니다",
+    "manage_cosmo_link": "Cosmo 링크 관리",
+    "account": "계정",
+    "sign_out": "로그아웃",
+    "sign_in": "로그인",
+    "search_user": {
+      "label": "사용자 검색",
+      "placeholder": "사용자를 검색하세요...",
+      "result_label": "검색 결과",
+      "recent_label": "최근 검색"
+    }
+  },
+  "edit_profile": {
+    "title": "프로필 편집",
+    "desc": "현재 {nickname}님의 Cosmo 프로필을 편집 중입니다",
+    "hide_user": {
+      "title": "사용자 숨기기",
+      "desc": "Cosmo 프로필에서 Objekt Tracker 계정을 숨깁니다"
+    }
+  },
+  "auth": {
+    "reset_password": {
+      "invalid_token": "유효하지 않은 토큰입니다"
+    },
+    "verified": {
+      "email_verified": "이메일이 인증되었습니다"
+    }
+  },
+  "link": {
+    "my_cosmo": "내 Cosmo",
+    "link_cosmo": "Cosmo 연결",
+    "continue": "계속하기",
+    "generating_qr": "QR 코드 생성 중",
+    "error_generating_qr": "QR 티켓 생성 중 오류가 발생했습니다",
+    "try_again": "다시 시도하기",
+    "submit": "제출",
+    "success": "성공. Cosmo {nickname}님이 연결되었습니다.",
+    "go_to_cosmo": "내 Cosmo로 이동"
+  }
+}

@@ -2,6 +2,7 @@
 
 import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Suspense, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
@@ -15,13 +16,14 @@ type AddProps = {
 };
 
 export function AddToList({ handleAction }: AddProps) {
+  const t = useTranslations("filter");
   const [addOpen, setAddOpen] = useState(false);
   return (
     <>
       <AddToListModal open={addOpen} setOpen={setAddOpen} />
       <Button intent="outline" onClick={() => handleAction(() => setAddOpen(true))}>
         <PlusIcon weight="regular" data-slot="icon" />
-        Add to list
+        {t("add_to_list")}
       </Button>
     </>
   );
@@ -141,13 +143,14 @@ type RemoveProps = {
 };
 
 export function RemoveFromList({ slug, handleAction }: RemoveProps) {
+  const t = useTranslations("filter");
   const [open, setOpen] = useState(false);
   return (
     <>
       <RemoveFromListModal slug={slug} open={open} setOpen={setOpen} />
       <Button intent="outline" onClick={() => handleAction(() => setOpen(true))}>
         <TrashSimpleIcon weight="regular" data-slot="icon" />
-        Remove from list
+        {t("remove_from_list")}
       </Button>
     </>
   );

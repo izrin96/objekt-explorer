@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export default function MemberFilter({ artists }: Props) {
+  const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.member), [filters.member]);
 
@@ -29,7 +31,7 @@ export default function MemberFilter({ artists }: Props) {
   return (
     <Menu>
       <Button intent="outline" className={filters.member ? "!inset-ring-primary" : ""}>
-        Member
+        {t("member")}
       </Button>
       <Menu.Content
         selectionMode="multiple"

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
@@ -7,17 +8,22 @@ import { type ValidGroupBy, validGroupBy } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
 import { Button, Menu } from "../ui";
 
-const map: Record<ValidGroupBy, string> = {
-  artist: "Artist",
-  class: "Class",
-  collectionNo: "Collection No.",
-  member: "Member",
-  season: "Season",
-  seasonCollectionNo: "Season & Collection No.",
-};
-
 export default function GroupByFilter() {
+  const t = useTranslations("filter.group_by");
   const [filters, setFilters] = useFilters();
+
+  const map = useMemo<Record<ValidGroupBy, string>>(
+    () => ({
+      artist: t("artist"),
+      class: t("class"),
+      collectionNo: t("collection_no"),
+      member: t("member"),
+      season: t("season"),
+      seasonCollectionNo: t("season_collection_no"),
+    }),
+    [t],
+  );
+
   const selected = useMemo(
     () => new Set(filters.group_by ? [filters.group_by] : []),
     [filters.group_by],
@@ -37,7 +43,7 @@ export default function GroupByFilter() {
   return (
     <Menu>
       <Button intent="outline" className={filters.group_by ? "!inset-ring-primary" : ""}>
-        Group By
+        {t("label")}
       </Button>
       <Menu.Content
         selectionMode="single"

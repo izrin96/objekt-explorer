@@ -2,6 +2,7 @@
 
 import { ChecksIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { AnimatePresence, motion } from "motion/react";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export function SelectMode({ children }: Props) {
+  const t = useTranslations("filter");
   const mode = useObjektSelect((a) => a.mode);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
@@ -39,11 +41,11 @@ export function SelectMode({ children }: Props) {
         onClick={toggleMode}
       >
         <ChecksIcon weight="regular" data-slot="icon" />
-        Select mode
+        {t("select_mode")}
       </Toggle>
       <Button intent="outline" onClick={reset}>
         <XIcon weight="regular" data-slot="icon" />
-        Clear
+        {t("clear")}
       </Button>
       {children?.({ handleAction })}
     </div>

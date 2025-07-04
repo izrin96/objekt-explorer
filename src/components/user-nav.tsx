@@ -11,6 +11,7 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import UserAccountModal from "@/components/auth/account/user-account";
@@ -173,13 +174,14 @@ function MyListMenuItem({
 }
 
 function MyCosmoProfileMenuItem() {
+  const t = useTranslations("nav");
   const { data, isLoading } = api.profile.list.useQuery();
   const items = data ?? [];
   return (
     <Menu.Submenu>
       <Menu.Item>
         <DeviceMobileIcon data-slot="icon" />
-        <Menu.Label>My Cosmo Link</Menu.Label>
+        <Menu.Label>{t("my_cosmo_link")}</Menu.Label>
       </Menu.Item>
       <Menu.Content>
         {isLoading && (
@@ -192,7 +194,7 @@ function MyCosmoProfileMenuItem() {
         {!isLoading && items.length === 0 && (
           <Menu.Item isDisabled>
             <Menu.Label>
-              <span>No Cosmo found</span>
+              <span>{t("no_cosmo_found")}</span>
             </Menu.Label>
           </Menu.Item>
         )}
@@ -203,7 +205,7 @@ function MyCosmoProfileMenuItem() {
         ))}
         <Menu.Item href={`/link`}>
           <GearSixIcon data-slot="icon" />
-          <Menu.Label>Manage Cosmo link</Menu.Label>
+          <Menu.Label>{t("manage_cosmo_link")}</Menu.Label>
         </Menu.Item>
       </Menu.Content>
     </Menu.Submenu>

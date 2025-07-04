@@ -8,6 +8,7 @@ import {
   PushPinIcon,
   PushPinSlashIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 import type { PropsWithChildren } from "react";
 import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
@@ -119,6 +120,7 @@ export function ObjektToggleLock({
   isLocked: boolean;
   tokenId: string;
 }) {
+  const t = useTranslations();
   const utils = api.useUtils();
   const lock = api.lockedObjekt.lock.useMutation({
     onSuccess: () => {

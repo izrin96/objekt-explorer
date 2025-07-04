@@ -1,9 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useFilters } from "@/hooks/use-filters";
 import { Button } from "../ui";
 
 export default function LockedFilter() {
+  const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Button
@@ -17,10 +19,10 @@ export default function LockedFilter() {
       }
     >
       {filters.locked === true
-        ? "Only locked"
+        ? t("only_locked")
         : filters.locked === false
-          ? "Only unlocked"
-          : "Lock/unlocked"}
+          ? t("only_unlocked")
+          : t("lock_unlocked")}
     </Button>
   );
 }

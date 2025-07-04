@@ -7,5 +7,5 @@ export default function IndexError() {
     window.location.reload();
   }
 
-  return <ErrorRender onRetry={refresh} message="Error loading objekt" />;
+  return <ErrorRender onRetry={refresh} message="Error loading page" />;
 }
