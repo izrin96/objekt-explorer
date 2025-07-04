@@ -62,7 +62,6 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const locale = await getLocale();
-  console.log(locale);
   return (
     <html
       lang={locale}
