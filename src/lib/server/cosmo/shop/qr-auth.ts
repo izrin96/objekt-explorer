@@ -18,6 +18,8 @@ export async function generateRecaptchaToken() {
     timeout: 0,
   });
 
+  let result: string | null = null;
+
   try {
     const token = await page.evaluate((key) => {
       const grecaptcha = (window as any).grecaptcha;
@@ -32,14 +34,16 @@ export async function generateRecaptchaToken() {
         });
       });
     }, env.COSMO_SHOP_RECAPTCHA_KEY);
-    return token;
+
+    result = token;
   } catch (e) {
     console.error(e);
   } finally {
     await page.close();
+    await browser.close();
   }
 
-  return null;
+  return result;
 }
 
 export async function generateQrTicket(token: string) {
