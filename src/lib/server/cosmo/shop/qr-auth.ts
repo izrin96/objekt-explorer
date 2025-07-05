@@ -35,9 +35,9 @@ export async function generateRecaptchaToken() {
     return token;
   } catch (e) {
     console.error(e);
+  } finally {
+    await page.close();
   }
-
-  await page.close();
 
   return null;
 }
