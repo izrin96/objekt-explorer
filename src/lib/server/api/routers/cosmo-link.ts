@@ -28,9 +28,9 @@ export const cosmoLinkRouter = {
 
   // generate qr ticket
   getTicket: authed.handler(async () => {
-    try {
-      var token = await generateRecaptchaToken();
-    } catch {
+    const token = await generateRecaptchaToken();
+
+    if (token === null) {
       throw new ORPCError("INTERNAL_SERVER_ERROR", {
         message: "Error getting recaptcha token",
       });

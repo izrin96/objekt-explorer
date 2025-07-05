@@ -13,25 +13,33 @@ export async function generateRecaptchaToken() {
   });
 
   const page = await browser.newPage();
-  await page.goto("https://shop.cosmo.fans/404"); // go to 404 seem a bit faster
+  await page.goto("https://shop.cosmo.fans/404", {
+    waitUntil: "networkidle0",
+    timeout: 0,
+  });
 
-  const token = await page.evaluate((key) => {
-    const grecaptcha = (window as any).grecaptcha;
-    return new Promise<string>((resolve, reject) => {
-      grecaptcha.ready(() => {
-        grecaptcha
-          .execute(key, {
-            action: "login",
-          })
-          .then(resolve)
-          .catch(reject);
+  try {
+    const token = await page.evaluate((key) => {
+      const grecaptcha = (window as any).grecaptcha;
+      return new Promise<string>((resolve, reject) => {
+        grecaptcha.ready(() => {
+          grecaptcha
+            .execute(key, {
+              action: "login",
+            })
+            .then(resolve)
+            .catch(reject);
+        });
       });
-    });
-  }, env.COSMO_SHOP_RECAPTCHA_KEY);
+    }, env.COSMO_SHOP_RECAPTCHA_KEY);
+    return token;
+  } catch (e) {
+    console.error(e);
+  }
 
   await page.close();
 
-  return token;
+  return null;
 }
 
 export async function generateQrTicket(token: string) {

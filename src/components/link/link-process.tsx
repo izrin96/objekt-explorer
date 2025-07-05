@@ -105,6 +105,7 @@ function TicketRender() {
     orpc.cosmoLink.getTicket.queryOptions({
       staleTime: Infinity,
       retry: false,
+      refetchOnWindowFocus: false,
     }),
   );
 
