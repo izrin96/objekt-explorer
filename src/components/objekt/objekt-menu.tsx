@@ -10,10 +10,11 @@ import {
   PushPinSlashIcon,
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicProfile } from "@/lib/universal/user";
 import { Button, Loader, Menu } from "../ui";
@@ -30,19 +31,25 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 }
 
 export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
-  const { data, isLoading } = api.list.list.useQuery();
-  const utils = api.useUtils();
-  const addToList = api.list.addObjektsToList.useMutation({
-    onSuccess: (rowCount, { slug }) => {
-      utils.list.listEntries.invalidate(slug);
-      toast.success(`${rowCount} objekt added to the list`, {
-        duration: 1300,
-      });
-    },
-    onError: () => {
-      toast.error("Error adding objekt to list");
-    },
-  });
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery(orpc.list.list.queryOptions());
+  const addToList = useMutation(
+    orpc.list.addObjektsToList.mutationOptions({
+      onSuccess: (rowCount, { slug }) => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.listEntries.key({
+            input: slug,
+          }),
+        });
+        toast.success(`${rowCount} objekt added to the list`, {
+          duration: 1300,
+        });
+      },
+      onError: () => {
+        toast.error("Error adding objekt to list");
+      },
+    }),
+  );
   const items = data ?? [];
 
   const handleAction = useCallback(
@@ -87,18 +94,24 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
 }
 
 export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: ValidObjekt }) {
-  const utils = api.useUtils();
-  const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
-    onSuccess: () => {
-      utils.list.listEntries.invalidate(slug);
-      toast.success("Objekt removed from the list", {
-        duration: 1300,
-      });
-    },
-    onError: () => {
-      toast.error("Error removing objekt from list");
-    },
-  });
+  const queryClient = useQueryClient();
+  const removeObjektsFromList = useMutation(
+    orpc.list.removeObjektsFromList.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.listEntries.key({
+            input: slug,
+          }),
+        });
+        toast.success("Objekt removed from the list", {
+          duration: 1300,
+        });
+      },
+      onError: () => {
+        toast.error("Error removing objekt from list");
+      },
+    }),
+  );
 
   return (
     <Menu.Item
@@ -125,25 +138,37 @@ export function TogglePinMenuItem({
   isPin: boolean;
   tokenId: string;
 }) {
-  const utils = api.useUtils();
-  const pin = api.pins.pin.useMutation({
-    onSuccess: () => {
-      utils.pins.list.invalidate(profile.address);
-      toast.success("Objekt pinned");
-    },
-    onError: () => {
-      toast.error("Error pin objekt");
-    },
-  });
-  const unpin = api.pins.unpin.useMutation({
-    onSuccess: () => {
-      utils.pins.list.invalidate(profile.address);
-      toast.success("Objekt unpinned");
-    },
-    onError: () => {
-      toast.error("Error unpin objekt");
-    },
-  });
+  const queryClient = useQueryClient();
+  const pin = useMutation(
+    orpc.pins.pin.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.pins.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt pinned");
+      },
+      onError: () => {
+        toast.error("Error pin objekt");
+      },
+    }),
+  );
+  const unpin = useMutation(
+    orpc.pins.unpin.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.pins.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt unpinned");
+      },
+      onError: () => {
+        toast.error("Error unpin objekt");
+      },
+    }),
+  );
   return (
     <Menu.Item
       onAction={() => {
@@ -175,25 +200,37 @@ export function ToggleLockMenuItem({
   isLocked: boolean;
   tokenId: string;
 }) {
-  const utils = api.useUtils();
-  const lock = api.lockedObjekt.lock.useMutation({
-    onSuccess: () => {
-      utils.lockedObjekt.list.invalidate(profile.address);
-      toast.success("Objekt locked");
-    },
-    onError: () => {
-      toast.error("Error lock objekt");
-    },
-  });
-  const unlock = api.lockedObjekt.unlock.useMutation({
-    onSuccess: () => {
-      utils.lockedObjekt.list.invalidate(profile.address);
-      toast.success("Objekt unlocked");
-    },
-    onError: () => {
-      toast.error("Error unlock objekt");
-    },
-  });
+  const queryClient = useQueryClient();
+  const lock = useMutation(
+    orpc.lockedObjekt.lock.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.lockedObjekt.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt locked");
+      },
+      onError: () => {
+        toast.error("Error lock objekt");
+      },
+    }),
+  );
+  const unlock = useMutation(
+    orpc.lockedObjekt.unlock.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.lockedObjekt.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt unlocked");
+      },
+      onError: () => {
+        toast.error("Error unlock objekt");
+      },
+    }),
+  );
   return (
     <Menu.Item
       onAction={() => {

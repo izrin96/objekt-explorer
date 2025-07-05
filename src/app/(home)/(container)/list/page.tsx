@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import MyListRender from "@/components/list/my-list";
+import { orpc } from "@/lib/orpc/client";
+import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { cachedSession } from "@/lib/server/auth";
-import { api, HydrateClient } from "@/lib/trpc/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -11,15 +12,16 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
+  const queryClient = getQueryClient();
   const session = await cachedSession();
 
   if (!session) redirect("/");
 
-  api.list.list.prefetch();
+  queryClient.prefetchQuery(orpc.list.list.queryOptions());
 
   return (
     <div className="flex flex-col pt-2 pb-36">
-      <HydrateClient>
+      <HydrateClient client={queryClient}>
         <MyListRender />
       </HydrateClient>
     </div>

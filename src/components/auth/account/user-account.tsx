@@ -1,14 +1,18 @@
 "use client";
 
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { Button, Checkbox, Form, Loader, Modal, Sheet, TextField } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
-import { getQueryClient } from "@/lib/query-client";
 import type { Session } from "@/lib/server/auth";
 import { ListAccounts } from "./link-account";
 
@@ -80,6 +84,7 @@ function UserAccountForm({
   user: Session["user"];
   setOpen: (val: boolean) => void;
 }) {
+  const queryClient = useQueryClient();
   const session = authClient.useSession();
 
   const mutation = useMutation({
@@ -90,7 +95,7 @@ function UserAccountForm({
     },
     onSuccess: () => {
       session.refetch();
-      getQueryClient().invalidateQueries({
+      queryClient.invalidateQueries({
         queryKey: ["session"],
       });
       setOpen(false);

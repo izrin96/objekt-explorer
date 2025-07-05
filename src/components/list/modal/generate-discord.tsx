@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
@@ -9,7 +9,7 @@ import ErrorFallbackRender from "@/components/error-boundary";
 import { Button, Checkbox, Form, Loader, Modal, Select, Textarea } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { format, makeMemberOrderedList, mapCollectionByMember } from "@/lib/discord-format-utils";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import { getBaseURL } from "@/lib/utils";
 
 type Props = {
@@ -41,15 +41,17 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
 
 function Content() {
   const formRef = useRef<HTMLFormElement>(null!);
-  const [data] = api.list.list.useSuspenseQuery();
+  const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
 
-  const generateDiscordFormat = api.list.generateDiscordFormat.useMutation({
-    onError: () => {
-      toast.error("Error generating Discord format");
-    },
-  });
+  const generateDiscordFormat = useMutation(
+    orpc.list.generateDiscordFormat.mutationOptions({
+      onError: () => {
+        toast.error("Error generating Discord format");
+      },
+    }),
+  );
 
   return (
     <>

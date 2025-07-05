@@ -1,10 +1,11 @@
 "use client";
 
 import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 
 type Props = {
   address: string;
@@ -12,19 +13,25 @@ type Props = {
 };
 
 export function PinObjekt({ address, handleAction }: Props) {
+  const queryClient = useQueryClient();
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const utils = api.useUtils();
-  const batchPin = api.pins.batchPin.useMutation({
-    onSuccess: () => {
-      utils.pins.list.invalidate(address);
-      toast.success("Objekt pinned");
-      reset();
-    },
-    onError: () => {
-      toast.error("Error pin objekt");
-    },
-  });
+  const batchPin = useMutation(
+    orpc.pins.batchPin.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.pins.list.key({
+            input: address,
+          }),
+        });
+        toast.success("Objekt pinned");
+        reset();
+      },
+      onError: () => {
+        toast.error("Error pin objekt");
+      },
+    }),
+  );
   return (
     <Button
       intent="outline"
@@ -45,19 +52,25 @@ export function PinObjekt({ address, handleAction }: Props) {
 }
 
 export function UnpinObjekt({ address, handleAction }: Props) {
+  const queryClient = useQueryClient();
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const utils = api.useUtils();
-  const batchUnpin = api.pins.batchUnpin.useMutation({
-    onSuccess: () => {
-      utils.pins.list.invalidate(address);
-      toast.success("Objekt unpinned");
-      reset();
-    },
-    onError: () => {
-      toast.error("Error unpin objekt");
-    },
-  });
+  const batchUnpin = useMutation(
+    orpc.pins.batchUnpin.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.pins.list.key({
+            input: address,
+          }),
+        });
+        toast.success("Objekt unpinned");
+        reset();
+      },
+      onError: () => {
+        toast.error("Error unpin objekt");
+      },
+    }),
+  );
   return (
     <Button
       intent="outline"

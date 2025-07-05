@@ -8,8 +8,8 @@ import { getLocale } from "next-intl/server";
 import type { PropsWithChildren } from "react";
 import { Analytics } from "@/components/analytics";
 import Navbar from "@/components/navbar";
-import { TRPCReactProvider } from "@/lib/trpc/client";
 import { cn } from "@/utils/classes";
+import "../lib/orpc/server";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -75,13 +75,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         )}
       >
         <NextIntlClientProvider>
-          <TRPCReactProvider>
-            <ClientProviders>
-              <Navbar />
-              <main className="mx-auto w-full">{children}</main>
-              <Analytics />
-            </ClientProviders>
-          </TRPCReactProvider>
+          <ClientProviders>
+            <Navbar />
+            <main className="mx-auto w-full">{children}</main>
+            <Analytics />
+          </ClientProviders>
         </NextIntlClientProvider>
       </body>
     </html>

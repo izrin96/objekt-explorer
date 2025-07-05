@@ -1,12 +1,12 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
-import { authProcedure, createTRPCRouter, publicProcedure } from "@/lib/server/api/trpc";
 import { db } from "../../db";
 import { pins } from "../../db/schema";
+import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
-export const pinsRouter = createTRPCRouter({
-  list: publicProcedure.input(z.string()).query(async ({ input: address }) => {
+export const pinsRouter = {
+  list: pub.input(z.string()).handler(async ({ input: address }) => {
     const result = await db.query.pins.findMany({
       columns: {
         id: true,
@@ -22,14 +22,14 @@ export const pinsRouter = createTRPCRouter({
     }));
   }),
 
-  pin: authProcedure
+  pin: authed
     .input(
       z.object({
         address: z.string(),
         tokenId: z.number(),
       }),
     )
-    .mutation(async ({ input: { address, tokenId }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       // unpin existing first then pin again
@@ -41,27 +41,27 @@ export const pinsRouter = createTRPCRouter({
       });
     }),
 
-  unpin: authProcedure
+  unpin: authed
     .input(
       z.object({
         address: z.string(),
         tokenId: z.number(),
       }),
     )
-    .mutation(async ({ input: { address, tokenId }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       await db.delete(pins).where(and(eq(pins.tokenId, tokenId), eq(pins.address, address)));
     }),
 
-  batchPin: authProcedure
+  batchPin: authed
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .mutation(async ({ input: { address, tokenIds }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       // unpin existing first then pin again
@@ -75,16 +75,16 @@ export const pinsRouter = createTRPCRouter({
       );
     }),
 
-  batchUnpin: authProcedure
+  batchUnpin: authed
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .mutation(async ({ input: { address, tokenIds }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
     }),
-});
+};

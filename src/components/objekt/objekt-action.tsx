@@ -8,11 +8,11 @@ import {
   PushPinIcon,
   PushPinSlashIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
 import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicProfile } from "@/lib/universal/user";
 import { cn } from "@/utils/classes";
@@ -59,25 +59,37 @@ export function ObjektTogglePin({
   isPin: boolean;
   tokenId: string;
 }) {
-  const utils = api.useUtils();
-  const pin = api.pins.pin.useMutation({
-    onSuccess: () => {
-      utils.pins.list.invalidate(profile.address);
-      toast.success("Objekt pinned");
-    },
-    onError: () => {
-      toast.error("Error pin objekt");
-    },
-  });
-  const unpin = api.pins.unpin.useMutation({
-    onSuccess: () => {
-      utils.pins.list.invalidate(profile.address);
-      toast.success("Objekt unpinned");
-    },
-    onError: () => {
-      toast.error("Error unpin objekt");
-    },
-  });
+  const queryClient = useQueryClient();
+  const pin = useMutation(
+    orpc.pins.pin.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.pins.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt pinned");
+      },
+      onError: () => {
+        toast.error("Error pin objekt");
+      },
+    }),
+  );
+  const unpin = useMutation(
+    orpc.pins.unpin.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.pins.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt unpinned");
+      },
+      onError: () => {
+        toast.error("Error unpin objekt");
+      },
+    }),
+  );
   return (
     <Button
       size="sq-sm"
@@ -120,26 +132,37 @@ export function ObjektToggleLock({
   isLocked: boolean;
   tokenId: string;
 }) {
-  const t = useTranslations();
-  const utils = api.useUtils();
-  const lock = api.lockedObjekt.lock.useMutation({
-    onSuccess: () => {
-      utils.lockedObjekt.list.invalidate(profile.address);
-      toast.success("Objekt locked");
-    },
-    onError: () => {
-      toast.error("Error lock objekt");
-    },
-  });
-  const unlock = api.lockedObjekt.unlock.useMutation({
-    onSuccess: () => {
-      utils.lockedObjekt.list.invalidate(profile.address);
-      toast.success("Objekt unlocked");
-    },
-    onError: () => {
-      toast.error("Error unlock objekt");
-    },
-  });
+  const queryClient = useQueryClient();
+  const lock = useMutation(
+    orpc.lockedObjekt.lock.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.lockedObjekt.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt locked");
+      },
+      onError: () => {
+        toast.error("Error lock objekt");
+      },
+    }),
+  );
+  const unlock = useMutation(
+    orpc.lockedObjekt.unlock.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: orpc.lockedObjekt.list.key({
+            input: profile.address,
+          }),
+        });
+        toast.success("Objekt unlocked");
+      },
+      onError: () => {
+        toast.error("Error unlock objekt");
+      },
+    }),
+  );
   return (
     <Button
       size="sq-sm"

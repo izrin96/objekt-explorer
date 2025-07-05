@@ -1,8 +1,7 @@
-import { TRPCError } from "@trpc/server";
+import { ORPCError } from "@orpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod/v4";
-import { authProcedure, createTRPCRouter, publicProcedure } from "@/lib/server/api/trpc";
 import { overrideCollection } from "@/lib/universal/objekts";
 import type { PublicUser } from "@/lib/universal/user";
 import { mapPublicUser } from "../../auth";
@@ -11,9 +10,10 @@ import { indexer } from "../../db/indexer";
 import { collections } from "../../db/indexer/schema";
 import { type List, listEntries, lists } from "../../db/schema";
 import { getCollectionColumns } from "../../objekts/objekt-index";
+import { authed, pub } from "../orpc";
 
-export const listRouter = createTRPCRouter({
-  find: authProcedure.input(z.string()).query(async ({ input: slug, ctx: { session } }) => {
+export const listRouter = {
+  find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
     const result = await db.query.lists.findFirst({
       columns: {
         name: true,
@@ -22,12 +22,12 @@ export const listRouter = createTRPCRouter({
       where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
     });
 
-    if (!result) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!result) throw new ORPCError("NOT_FOUND");
 
     return result;
   }),
 
-  listEntries: publicProcedure.input(z.string()).query(async ({ input: slug }) => {
+  listEntries: pub.input(z.string()).handler(async ({ input: slug }) => {
     const result = await db.query.lists.findFirst({
       with: {
         entries: {
@@ -42,7 +42,7 @@ export const listRouter = createTRPCRouter({
       where: (lists, { eq }) => eq(lists.slug, slug),
     });
 
-    if (!result) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!result) throw new ORPCError("NOT_FOUND");
 
     const slugs = result.entries.map((a) => a.collectionSlug);
     const collections = await fetchCollections(slugs);
@@ -53,18 +53,18 @@ export const listRouter = createTRPCRouter({
       collections: result.entries.map(({ collectionSlug, id, createdAt }) => ({
         ...collectionsMap.get(collectionSlug)!,
         id: id.toString(),
-        createdAt,
+        createdAt: createdAt.toISOString(),
       })),
     };
   }),
 
-  list: authProcedure.query(async ({ ctx: { session } }) => {
+  list: authed.handler(async ({ context: { session } }) => {
     const { user } = session;
     const result = await fetchOwnedLists(user.id);
     return result;
   }),
 
-  addObjektsToList: authProcedure
+  addObjektsToList: authed
     .input(
       z.object({
         slug: z.string(),
@@ -72,10 +72,10 @@ export const listRouter = createTRPCRouter({
         collectionSlugs: z.string().array(),
       }),
     )
-    .mutation(
+    .handler(
       async ({
         input: { slug, skipDups, collectionSlugs },
-        ctx: {
+        context: {
           session: { user },
         },
       }) => {
@@ -120,17 +120,17 @@ export const listRouter = createTRPCRouter({
       },
     ),
 
-  removeObjektsFromList: authProcedure
+  removeObjektsFromList: authed
     .input(
       z.object({
         slug: z.string(),
         ids: z.number().array(),
       }),
     )
-    .mutation(
+    .handler(
       async ({
         input: { slug, ids },
-        ctx: {
+        context: {
           session: { user },
         },
       }) => {
@@ -144,7 +144,7 @@ export const listRouter = createTRPCRouter({
       },
     ),
 
-  edit: authProcedure
+  edit: authed
     .input(
       z.object({
         slug: z.string(),
@@ -152,10 +152,10 @@ export const listRouter = createTRPCRouter({
         hideUser: z.boolean(),
       }),
     )
-    .mutation(
+    .handler(
       async ({
         input: { slug, name, hideUser },
-        ctx: {
+        context: {
           session: { user },
         },
       }) => {
@@ -171,16 +171,16 @@ export const listRouter = createTRPCRouter({
       },
     ),
 
-  delete: authProcedure
+  delete: authed
     .input(
       z.object({
         slug: z.string(),
       }),
     )
-    .mutation(
+    .handler(
       async ({
         input: { slug },
-        ctx: {
+        context: {
           session: { user },
         },
       }) => {
@@ -190,17 +190,17 @@ export const listRouter = createTRPCRouter({
       },
     ),
 
-  create: authProcedure
+  create: authed
     .input(
       z.object({
         name: z.string().min(1),
         hideUser: z.boolean(),
       }),
     )
-    .mutation(
+    .handler(
       async ({
         input: { name, hideUser },
-        ctx: {
+        context: {
           session: { user },
         },
       }) => {
@@ -213,14 +213,14 @@ export const listRouter = createTRPCRouter({
       },
     ),
 
-  generateDiscordFormat: authProcedure
+  generateDiscordFormat: authed
     .input(
       z.object({
         haveSlug: z.string(),
         wantSlug: z.string(),
       }),
     )
-    .mutation(async ({ input: { haveSlug, wantSlug } }) => {
+    .handler(async ({ input: { haveSlug, wantSlug } }) => {
       // get both list
       const lists = await db.query.lists.findMany({
         where: (t, { inArray }) => inArray(t.slug, [haveSlug, wantSlug]),
@@ -259,7 +259,7 @@ export const listRouter = createTRPCRouter({
         want: wantList?.entries.map((a) => a.collectionSlug) ?? [],
       };
     }),
-});
+};
 
 export type PublicList = Pick<List, "slug" | "name"> & {
   user?: PublicUser | null;
@@ -316,7 +316,7 @@ async function findOwnedList(slug: string, userId: string) {
     where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, userId)),
   });
 
-  if (!list) throw new TRPCError({ code: "NOT_FOUND" });
+  if (!list) throw new ORPCError("NOT_FOUND");
 
   return list;
 }

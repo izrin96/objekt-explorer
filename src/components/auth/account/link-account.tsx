@@ -1,13 +1,12 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button, Label, Modal } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
-import { getQueryClient } from "@/lib/query-client";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";
 
 const providers = Object.values(providersMap);
@@ -53,20 +52,23 @@ type LinkedAccountProps = {
 };
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
+  const queryClient = useQueryClient();
   const [pullOpen, setPullOpen] = useState(false);
   const session = authClient.useSession();
-  const unlinkAccount = api.user.unlinkAccount.useMutation({
-    onSuccess: () => {
-      toast.success(`${provider.label} unlinked`);
-      getQueryClient().invalidateQueries({
-        queryKey: ["accounts"],
-      });
-      session.refetch();
-    },
-    onError: () => {
-      toast.error(`Error unlink from ${provider.label}`);
-    },
-  });
+  const unlinkAccount = useMutation(
+    orpc.user.unlinkAccount.mutationOptions({
+      onSuccess: () => {
+        toast.success(`${provider.label} unlinked`);
+        queryClient.invalidateQueries({
+          queryKey: ["accounts"],
+        });
+        session.refetch();
+      },
+      onError: () => {
+        toast.error(`Error unlink from ${provider.label}`);
+      },
+    }),
+  );
 
   return (
     <div className="flex items-center gap-2">
@@ -132,16 +134,18 @@ type PullProfileProps = {
 
 function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
   const session = authClient.useSession();
-  const refreshProfile = api.user.refreshProfile.useMutation({
-    onSuccess: () => {
-      session.refetch();
-      setOpen(false);
-      toast.success("Profile updated");
-    },
-    onError: ({ message }) => {
-      toast.error(`Error updating profile. ${message}`);
-    },
-  });
+  const refreshProfile = useMutation(
+    orpc.user.refreshProfile.mutationOptions({
+      onSuccess: () => {
+        session.refetch();
+        setOpen(false);
+        toast.success("Profile updated");
+      },
+      onError: ({ message }) => {
+        toast.error(`Error updating profile. ${message}`);
+      },
+    }),
+  );
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>

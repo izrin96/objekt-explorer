@@ -1,0 +1,15 @@
+import { cosmoLinkRouter } from "./cosmo-link";
+import { listRouter } from "./list";
+import { lockedObjektsRouter } from "./locked-objekts";
+import { pinsRouter } from "./pins";
+import { profileRouter } from "./profile";
+import { userRouter } from "./user";
+
+export const router = {
+  list: listRouter,
+  cosmoLink: cosmoLinkRouter,
+  user: userRouter,
+  pins: pinsRouter,
+  profile: profileRouter,
+  lockedObjekt: lockedObjektsRouter,
+};

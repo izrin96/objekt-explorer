@@ -1,13 +1,18 @@
 "use client";
 
 import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Suspense, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../../error-boundary";
 import { Button, Checkbox, Form, Link, Loader, Modal, Note, Select } from "../../ui";
 
@@ -35,23 +40,29 @@ type AddToListModalProps = {
 };
 
 export function AddToListModal({ open, setOpen }: AddToListModalProps) {
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null!);
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const utils = api.useUtils();
-  const addToList = api.list.addObjektsToList.useMutation({
-    onSuccess: (rowCount, { slug }) => {
-      setOpen(false);
-      reset();
-      utils.list.listEntries.invalidate(slug);
-      toast.success(`${rowCount} objekt added to the list`, {
-        duration: 1300,
-      });
-    },
-    onError: () => {
-      toast.error("Error adding objekt to list");
-    },
-  });
+  const addToList = useMutation(
+    orpc.list.addObjektsToList.mutationOptions({
+      onSuccess: (rowCount, { slug }) => {
+        setOpen(false);
+        reset();
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.listEntries.key({
+            input: slug,
+          }),
+        });
+        toast.success(`${rowCount} objekt added to the list`, {
+          duration: 1300,
+        });
+      },
+      onError: () => {
+        toast.error("Error adding objekt to list");
+      },
+    }),
+  );
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>
@@ -102,7 +113,7 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
 }
 
 function AddToListForm() {
-  const [data] = api.list.list.useSuspenseQuery();
+  const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
 
   if (data.length === 0)
     return (
@@ -163,22 +174,28 @@ type RemoveFromListModalProps = {
 };
 
 export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModalProps) {
+  const queryClient = useQueryClient();
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const utils = api.useUtils();
-  const removeObjektsFromList = api.list.removeObjektsFromList.useMutation({
-    onSuccess: () => {
-      setOpen(false);
-      reset();
-      utils.list.listEntries.invalidate(slug);
-      toast.success("Objekt removed from the list", {
-        duration: 1300,
-      });
-    },
-    onError: () => {
-      toast.error("Error removing objekt from list");
-    },
-  });
+  const removeObjektsFromList = useMutation(
+    orpc.list.removeObjektsFromList.mutationOptions({
+      onSuccess: () => {
+        setOpen(false);
+        reset();
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.listEntries.key({
+            input: slug,
+          }),
+        });
+        toast.success("Objekt removed from the list", {
+          duration: 1300,
+        });
+      },
+      onError: () => {
+        toast.error("Error removing objekt from list");
+      },
+    }),
+  );
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>

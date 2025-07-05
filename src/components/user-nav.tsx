@@ -10,19 +10,21 @@ import {
   UserIcon,
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import UserAccountModal from "@/components/auth/account/user-account";
 import { authClient } from "@/lib/auth-client";
+import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/db/schema";
-import { api } from "@/lib/trpc/client";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
 import { Avatar, buttonStyles, Link, Loader, Menu } from "./ui";
 
 export default function UserNav() {
+  const t = useTranslations("nav");
   // temporary fix for ui being stuck after navigate
   const pathname = usePathname();
   const { data, isPending } = authClient.useSession();
@@ -35,7 +37,7 @@ export default function UserNav() {
         <UserMenu key={pathname} user={data.user as User} />
       ) : (
         <Link href="/login" className={buttonStyles({ intent: "outline", size: "sm" })}>
-          Sign in
+          {t("sign_in")}
         </Link>
       )}
     </div>
@@ -43,6 +45,7 @@ export default function UserNav() {
 }
 
 function UserMenu({ user }: { user: User }) {
+  const t = useTranslations("nav");
   const [genOpen, setGenOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
@@ -113,7 +116,7 @@ function UserMenu({ user }: { user: User }) {
             }}
           >
             <SignOutIcon data-slot="icon" />
-            <Menu.Label>Sign out</Menu.Label>
+            <Menu.Label>{t("sign_out")}</Menu.Label>
           </Menu.Item>
         </Menu.Content>
       </Menu>
@@ -128,7 +131,7 @@ function MyListMenuItem({
   openCreateList: () => void;
   openDiscordFormat: () => void;
 }) {
-  const { data, isLoading } = api.list.list.useQuery();
+  const { data, isLoading } = useQuery(orpc.list.list.queryOptions());
   const items = data ?? [];
   return (
     <Menu.Submenu>
@@ -175,7 +178,7 @@ function MyListMenuItem({
 
 function MyCosmoProfileMenuItem() {
   const t = useTranslations("nav");
-  const { data, isLoading } = api.profile.list.useQuery();
+  const { data, isLoading } = useQuery(orpc.profile.list.queryOptions());
   const items = data ?? [];
   return (
     <Menu.Submenu>

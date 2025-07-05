@@ -1,6 +1,11 @@
 "use client";
 
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Cropper, type CropperRef } from "react-advanced-cropper";
@@ -18,7 +23,7 @@ import {
   Modal,
   Sheet,
 } from "@/components/ui";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import { mimeTypes } from "@/lib/utils";
 import "react-advanced-cropper/dist/style.css";
 
@@ -31,17 +36,21 @@ type RemoveLinkModalProps = {
 };
 
 export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps) {
-  const utils = api.useUtils();
-  const removeLink = api.cosmoLink.removeLink.useMutation({
-    onSuccess: () => {
-      setOpen(false);
-      toast.success("Cosmo unlinked");
-      utils.profile.list.invalidate();
-    },
-    onError: () => {
-      toast.error("Error unlink cosmo");
-    },
-  });
+  const queryClient = useQueryClient();
+  const removeLink = useMutation(
+    orpc.cosmoLink.removeLink.mutationOptions({
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("Cosmo unlinked");
+        queryClient.invalidateQueries({
+          queryKey: orpc.profile.list.key(),
+        });
+      },
+      onError: () => {
+        toast.error("Error unlink cosmo");
+      },
+    }),
+  );
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>
@@ -80,30 +89,38 @@ export function EditProfileModal({
   open,
   setOpen,
 }: EditProfileModalProps) {
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null!);
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
 
-  const utils = api.useUtils();
-  const edit = api.profile.edit.useMutation({
-    onSuccess: () => {
-      setOpen(false);
-      setDroppedImage(null);
-      utils.profile.find.invalidate(address);
-      onComplete?.();
-      toast.success("Cosmo profile updated");
-    },
-    onError: () => {
-      toast.error("Error edit Cosmo profile");
-    },
-  });
+  const edit = useMutation(
+    orpc.profile.edit.mutationOptions({
+      onSuccess: () => {
+        setOpen(false);
+        setDroppedImage(null);
+        queryClient.invalidateQueries({
+          queryKey: orpc.profile.find.key({
+            input: address,
+          }),
+        });
+        onComplete?.();
+        toast.success("Cosmo profile updated");
+      },
+      onError: () => {
+        toast.error("Error edit Cosmo profile");
+      },
+    }),
+  );
 
-  const getPresignedUrl = api.profile.getPresignedUrl.useMutation({
-    onError: () => {
-      toast.error("Failed to upload image");
-    },
-  });
+  const getPresignedUrl = useMutation(
+    orpc.profile.getPresignedUrl.mutationOptions({
+      onError: () => {
+        toast.error("Failed to upload image");
+      },
+    }),
+  );
 
   const handleUpload = useCallback(async (url: string, file: File) => {
     try {
@@ -324,7 +341,11 @@ function EditProfileForm({
   cropperRef,
   setDroppedImage,
 }: EditProfileProps) {
-  const [data] = api.profile.find.useSuspenseQuery(address);
+  const { data } = useSuspenseQuery(
+    orpc.profile.find.queryOptions({
+      input: address,
+    }),
+  );
 
   return (
     <div className="flex flex-col gap-6">

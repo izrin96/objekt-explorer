@@ -1,12 +1,17 @@
 "use client";
 
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { Button, Checkbox, Form, Link, Loader, Modal, Sheet, TextField } from "@/components/ui";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 
 type CreateListModalProps = {
   open: boolean;
@@ -14,18 +19,22 @@ type CreateListModalProps = {
 };
 
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null!);
-  const utils = api.useUtils();
-  const createList = api.list.create.useMutation({
-    onSuccess: () => {
-      setOpen(false);
-      toast.success("List created");
-      utils.list.list.invalidate();
-    },
-    onError: () => {
-      toast.error("Error creating list");
-    },
-  });
+  const createList = useMutation(
+    orpc.list.create.mutationOptions({
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("List created");
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.list.key(),
+        });
+      },
+      onError: () => {
+        toast.error("Error creating list");
+      },
+    }),
+  );
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>
@@ -75,17 +84,21 @@ type DeleteListModalProps = {
 };
 
 export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
-  const utils = api.useUtils();
-  const deleteList = api.list.delete.useMutation({
-    onSuccess: () => {
-      setOpen(false);
-      toast.success("List deleted");
-      utils.list.list.invalidate();
-    },
-    onError: () => {
-      toast.error("Error deleting list");
-    },
-  });
+  const queryClient = useQueryClient();
+  const deleteList = useMutation(
+    orpc.list.delete.mutationOptions({
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("List deleted");
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.list.key(),
+        });
+      },
+      onError: () => {
+        toast.error("Error deleting list");
+      },
+    }),
+  );
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>
@@ -117,20 +130,28 @@ type EditListModalProps = {
 };
 
 export function EditListModal({ slug, onComplete, open, setOpen }: EditListModalProps) {
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null!);
-  const utils = api.useUtils();
-  const editList = api.list.edit.useMutation({
-    onSuccess: () => {
-      setOpen(false);
-      toast.success("List updated");
-      utils.list.list.invalidate();
-      utils.list.find.invalidate(slug);
-      onComplete?.();
-    },
-    onError: () => {
-      toast.error("Error editing list");
-    },
-  });
+  const editList = useMutation(
+    orpc.list.edit.mutationOptions({
+      onSuccess: () => {
+        setOpen(false);
+        toast.success("List updated");
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.list.key(),
+        });
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.find.key({
+            input: slug,
+          }),
+        });
+        onComplete?.();
+      },
+      onError: () => {
+        toast.error("Error editing list");
+      },
+    }),
+  );
   return (
     <Sheet.Content isOpen={open} onOpenChange={setOpen}>
       <Sheet.Header>
@@ -182,7 +203,11 @@ export function EditListModal({ slug, onComplete, open, setOpen }: EditListModal
 }
 
 function EditListForm({ slug }: { slug: string }) {
-  const [data] = api.list.find.useSuspenseQuery(slug);
+  const { data } = useSuspenseQuery(
+    orpc.list.find.queryOptions({
+      input: slug,
+    }),
+  );
   return (
     <div className="flex flex-col gap-6">
       <TextField

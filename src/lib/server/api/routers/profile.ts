@@ -1,23 +1,23 @@
-import { TRPCError } from "@trpc/server";
+import { ORPCError } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { authProcedure, createTRPCRouter } from "@/lib/server/api/trpc";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
 import { createPresignedUrlToUpload, deleteFileFromBucket } from "../../minio";
 import { fetchUserProfiles } from "../../profile";
+import { authed } from "../orpc";
 
-export const profileRouter = createTRPCRouter({
-  list: authProcedure.query(async ({ ctx: { session } }) => {
+export const profileRouter = {
+  list: authed.handler(async ({ context: { session } }) => {
     return await fetchUserProfiles(session.user.id);
   }),
 
-  find: authProcedure.input(z.string()).query(async ({ input: address, ctx: { session } }) => {
+  find: authed.input(z.string()).handler(async ({ input: address, context: { session } }) => {
     const profile = await fetchOwnedProfile(address, session.user.id);
     return profile;
   }),
 
-  edit: authProcedure
+  edit: authed
     .input(
       z.object({
         address: z.string(),
@@ -30,7 +30,7 @@ export const profileRouter = createTRPCRouter({
         hideTransfer: z.boolean().optional(),
       }),
     )
-    .mutation(async ({ input: { address, ...rest }, ctx: { session } }) => {
+    .handler(async ({ input: { address, ...rest }, context: { session } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id);
 
       // Delete previous banner if it exists and new banner is being set
@@ -52,14 +52,14 @@ export const profileRouter = createTRPCRouter({
         .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
     }),
 
-  getPresignedUrl: authProcedure
+  getPresignedUrl: authed
     .input(
       z.object({
         address: z.string(),
         fileName: z.string(),
       }),
     )
-    .mutation(async ({ input: { address, fileName }, ctx: { session } }) => {
+    .handler(async ({ input: { address, fileName }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       const ext = fileName.split(".").pop();
@@ -70,7 +70,7 @@ export const profileRouter = createTRPCRouter({
 
       return url;
     }),
-});
+};
 
 export async function checkAddressOwned(address: string, userId: string) {
   const count = await db.$count(
@@ -79,8 +79,7 @@ export async function checkAddressOwned(address: string, userId: string) {
   );
 
   if (count < 1)
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
+    throw new ORPCError("UNAUTHORIZED", {
       message: "This Cosmo not linked with your account",
     });
 }
@@ -102,8 +101,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
   });
 
   if (!profile)
-    throw new TRPCError({
-      code: "NOT_FOUND",
+    throw new ORPCError("NOT_FOUND", {
       message: "Profile not found or not link with this account",
     });
 

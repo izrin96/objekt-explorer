@@ -1,11 +1,11 @@
 "use client";
 
 import { IconDotsVertical } from "@intentui/icons";
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Button, Card, Link, Menu, Note, Tab, TabList, TabPanel, Tabs } from "@/components/ui";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../error-boundary";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
 import { CreateListModal, DeleteListModal, EditListModal } from "./modal/manage-list";
@@ -25,7 +25,7 @@ export default function MyListRender() {
 function MyList() {
   const [addOpen, setAddOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
-  const [lists] = api.list.list.useSuspenseQuery();
+  const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
 
   return (
     <div className="flex flex-col gap-4">

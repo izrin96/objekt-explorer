@@ -1,15 +1,15 @@
-import { TRPCError } from "@trpc/server";
+import { ORPCError } from "@orpc/server";
 import { z } from "zod/v4";
 import { providersMap } from "@/lib/universal/user";
 import { auth } from "../../auth";
 import { db } from "../../db";
-import { authProcedure, createTRPCRouter } from "../trpc";
+import { authed } from "../orpc";
 
-export const userRouter = createTRPCRouter({
-  refreshProfile: authProcedure.input(z.enum(["discord", "twitter"])).mutation(
+export const userRouter = {
+  refreshProfile: authed.input(z.enum(["discord", "twitter"])).handler(
     async ({
       input: providerId,
-      ctx: {
+      context: {
         session: { user },
         headers,
       },
@@ -25,8 +25,7 @@ export const userRouter = createTRPCRouter({
       });
 
       if (!account)
-        throw new TRPCError({
-          code: "BAD_REQUEST",
+        throw new ORPCError("BAD_REQUEST", {
           message: "User not link with provider",
         });
 
@@ -42,8 +41,7 @@ export const userRouter = createTRPCRouter({
       });
 
       if (!info)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: `Failed to get info. Please sign in with ${providersMap[providerId].label} and try again.`,
         });
 
@@ -58,14 +56,14 @@ export const userRouter = createTRPCRouter({
     },
   ),
 
-  unlinkAccount: authProcedure
+  unlinkAccount: authed
     .input(
       z.object({
         providerId: z.enum(["discord", "twitter"]),
         accountId: z.string(),
       }),
     )
-    .mutation(async ({ input: { providerId, accountId }, ctx: { headers } }) => {
+    .handler(async ({ input: { providerId, accountId }, context: { headers } }) => {
       // unlink using auth api
       const result = await auth.api.unlinkAccount({
         headers: headers,
@@ -75,10 +73,7 @@ export const userRouter = createTRPCRouter({
         },
       });
 
-      if (!result.status)
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-        });
+      if (!result.status) throw new ORPCError("INTERNAL_SERVER_ERROR");
 
       // remove username
       await auth.api.updateUser({
@@ -88,4 +83,4 @@ export const userRouter = createTRPCRouter({
         },
       });
     }),
-});
+};

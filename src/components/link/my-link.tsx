@@ -1,11 +1,11 @@
 "use client";
 
 import { IconDotsVertical } from "@intentui/icons";
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../error-boundary";
 import { Button, buttonStyles, Card, Link, Menu } from "../ui";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
@@ -24,7 +24,7 @@ export default function MyLinkRender() {
 
 function MyLink() {
   const t = useTranslations("link");
-  const [links] = api.profile.list.useSuspenseQuery();
+  const { data: links } = useSuspenseQuery(orpc.profile.list.queryOptions());
 
   return (
     <div className="flex flex-col gap-4">

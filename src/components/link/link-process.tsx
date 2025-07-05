@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
@@ -19,7 +20,7 @@ import TrashIcon from "@/assets/icon-trash.png";
 import WelcomeIcon from "@/assets/icon-welcome.png";
 import WhiteFoxIcon from "@/assets/icon-white-fox.png";
 import CalligraphyIcon from "@/assets/image-calligraphy.png";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import type { TicketAuth } from "@/lib/universal/cosmo/shop/qr-auth";
 import { msToCountdown } from "@/lib/utils";
 import { Button, buttonStyles, Form, Link, Loader } from "../ui";
@@ -30,9 +31,9 @@ function generateQrCode(ticket: string) {
 }
 
 export default function LinkRender() {
+  const queryClient = useQueryClient();
   const t = useTranslations("link");
   const locale = useLocale();
-  const utils = api.useUtils();
   const [step, setStep] = useState(0);
 
   // preload image icons
@@ -83,7 +84,9 @@ export default function LinkRender() {
           <Button
             intent="primary"
             onClick={() => {
-              utils.cosmoLink.getTicket.invalidate();
+              queryClient.invalidateQueries({
+                queryKey: orpc.cosmoLink.getTicket.key(),
+              });
               setStep(1);
             }}
           >
@@ -98,12 +101,11 @@ export default function LinkRender() {
 
 function TicketRender() {
   const t = useTranslations("link");
-  const { data, status, refetch, isRefetching, isLoading } = api.cosmoLink.getTicket.useQuery(
-    undefined,
-    {
+  const { data, status, refetch, isRefetching, isLoading } = useQuery(
+    orpc.cosmoLink.getTicket.queryOptions({
       staleTime: Infinity,
       retry: false,
-    },
+    }),
   );
 
   if (isRefetching || isLoading)
@@ -144,15 +146,20 @@ function TicketRender() {
 }
 
 function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: () => void }) {
+  const queryClient = useQueryClient();
   const t = useTranslations("link");
-  const utils = api.useUtils();
-  const { data } = api.cosmoLink.checkTicket.useQuery(ticketAuth.ticket, {
-    retry: false,
-    refetchInterval: 2000,
-    enabled: (query) => {
-      return !(query.state.data?.status === "expired" || query.state.data?.status === "certified");
-    },
-  });
+  const { data } = useQuery(
+    orpc.cosmoLink.checkTicket.queryOptions({
+      input: ticketAuth.ticket,
+      retry: false,
+      refetchInterval: 2000,
+      enabled: (query) => {
+        return !(
+          query.state.data?.status === "expired" || query.state.data?.status === "certified"
+        );
+      },
+    }),
+  );
 
   const [randomIcon] = useState(() => {
     const icons = [
@@ -170,9 +177,11 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
 
   useEffect(() => {
     if (data?.status === "certified") {
-      utils.profile.list.invalidate();
+      queryClient.invalidateQueries({
+        queryKey: orpc.profile.list.key(),
+      });
     }
-  }, [data?.status, utils.profile.list]);
+  }, [data?.status]);
 
   if (!data || data.status === "wait_for_user_action")
     return (
@@ -260,15 +269,17 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
   const [value, setValue] = useState("");
   const [wait, setWait] = useState(false);
 
-  const otpAndLink = api.cosmoLink.otpAndLink.useMutation({
-    onSuccess: () => {
-      toast.success("Successfully linked your Cosmo profile");
-      setWait(true);
-    },
-    onError: ({ message }) => {
-      toast.error(message || "Error sending OTP");
-    },
-  });
+  const otpAndLink = useMutation(
+    orpc.cosmoLink.otpAndLink.mutationOptions({
+      onSuccess: () => {
+        toast.success("Successfully linked your Cosmo profile");
+        setWait(true);
+      },
+      onError: ({ message }) => {
+        toast.error(message || "Error sending OTP");
+      },
+    }),
+  );
 
   if (otpAndLink.isError)
     return (

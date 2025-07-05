@@ -1,12 +1,12 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
-import { authProcedure, createTRPCRouter, publicProcedure } from "@/lib/server/api/trpc";
 import { db } from "../../db";
 import { lockedObjekts } from "../../db/schema";
+import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
-export const lockedObjektsRouter = createTRPCRouter({
-  list: publicProcedure.input(z.string()).query(async ({ input: address }) => {
+export const lockedObjektsRouter = {
+  list: pub.input(z.string()).handler(async ({ input: address }) => {
     const result = await db.query.lockedObjekts.findMany({
       columns: {
         id: true,
@@ -21,14 +21,14 @@ export const lockedObjektsRouter = createTRPCRouter({
     }));
   }),
 
-  lock: authProcedure
+  lock: authed
     .input(
       z.object({
         address: z.string(),
         tokenId: z.number(),
       }),
     )
-    .mutation(async ({ input: { address, tokenId }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       await db
@@ -41,14 +41,14 @@ export const lockedObjektsRouter = createTRPCRouter({
       });
     }),
 
-  unlock: authProcedure
+  unlock: authed
     .input(
       z.object({
         address: z.string(),
         tokenId: z.number(),
       }),
     )
-    .mutation(async ({ input: { address, tokenId }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       await db
@@ -56,14 +56,14 @@ export const lockedObjektsRouter = createTRPCRouter({
         .where(and(eq(lockedObjekts.tokenId, tokenId), eq(lockedObjekts.address, address)));
     }),
 
-  batchLock: authProcedure
+  batchLock: authed
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .mutation(async ({ input: { address, tokenIds }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       await db
@@ -78,18 +78,18 @@ export const lockedObjektsRouter = createTRPCRouter({
       );
     }),
 
-  batchUnlock: authProcedure
+  batchUnlock: authed
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .mutation(async ({ input: { address, tokenIds }, ctx: { session } }) => {
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       await db
         .delete(lockedObjekts)
         .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
     }),
-});
+};

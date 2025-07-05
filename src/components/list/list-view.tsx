@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -11,7 +11,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useListAuthed, useUser } from "@/hooks/use-user";
 import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { api } from "@/lib/trpc/client";
+import { orpc } from "@/lib/orpc/client";
 import { mapObjektWithTag, type ValidObjekt } from "@/lib/universal/objekts";
 import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -57,9 +57,12 @@ function ListView({ slug }: Props) {
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
-  const [objekts] = api.list.listEntries.useSuspenseQuery(slug, {
-    select: (data) => data.collections.map(mapObjektWithTag),
-  });
+  const { data: objekts } = useSuspenseQuery(
+    orpc.list.listEntries.queryOptions({
+      input: slug,
+      select: (data) => data.collections.map(mapObjektWithTag),
+    }),
+  );
 
   const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
     [],

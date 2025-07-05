@@ -13,8 +13,8 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfile } from "@/hooks/use-profile";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
+import { orpc } from "@/lib/orpc/client";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import { api } from "@/lib/trpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -74,7 +74,6 @@ function ProfileObjektRender() {
 
 function ProfileObjekt() {
   const { authenticated } = useUser();
-  const utils = api.useUtils();
   const isProfileAuthed = useProfileAuthed();
   const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();
@@ -96,11 +95,13 @@ function ProfileObjekt() {
   const [ownedQuery, pinsQuery, lockedObjektQuery] = useSuspenseQueries({
     queries: [
       ownedCollectionOptions(profile!.address),
-      utils.pins.list.queryOptions(profile!.address, {
+      orpc.pins.list.queryOptions({
+        input: profile!.address,
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
-      utils.lockedObjekt.list.queryOptions(profile!.address, {
+      orpc.lockedObjekt.list.queryOptions({
+        input: profile!.address,
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
