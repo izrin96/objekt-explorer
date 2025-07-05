@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
 import { toast } from "sonner";
 import AxolotlIcon from "@/assets/icon-axolotl.png";
 import BearIcon from "@/assets/icon-bear.png";
@@ -35,21 +34,6 @@ export default function LinkRender() {
   const t = useTranslations("link");
   const locale = useLocale();
   const [step, setStep] = useState(0);
-
-  // preload image icons
-  ReactDOM.preload(WelcomeIcon.src, { as: "image" });
-  ReactDOM.preload(CatIcon.src, { as: "image" });
-  ReactDOM.preload(AxolotlIcon.src, { as: "image" });
-  ReactDOM.preload(DeerIcon.src, { as: "image" });
-  ReactDOM.preload(PandaIcon.src, { as: "image" });
-  ReactDOM.preload(SquirrelIcon.src, { as: "image" });
-  ReactDOM.preload(BearIcon.src, { as: "image" });
-  ReactDOM.preload(GiraffeIcon.src, { as: "image" });
-  ReactDOM.preload(WhiteFoxIcon.src, { as: "image" });
-  ReactDOM.preload(TrashIcon.src, { as: "image" });
-  ReactDOM.preload(CarpenterIcon.src, { as: "image" });
-  ReactDOM.preload(SmartphoneIcon.src, { as: "image" });
-  ReactDOM.preload(CalligraphyIcon.src, { as: "image" });
 
   return (
     <div className="flex flex-col items-center justify-center gap-5">
