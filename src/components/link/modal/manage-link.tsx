@@ -344,6 +344,7 @@ function EditProfileForm({
   const { data } = useSuspenseQuery(
     orpc.profile.find.queryOptions({
       input: address,
+      gcTime: 0,
     }),
   );
 

@@ -206,6 +206,7 @@ function EditListForm({ slug }: { slug: string }) {
   const { data } = useSuspenseQuery(
     orpc.list.find.queryOptions({
       input: slug,
+      gcTime: 0,
     }),
   );
   return (
