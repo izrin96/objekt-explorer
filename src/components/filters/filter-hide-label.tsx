@@ -8,7 +8,7 @@ export default function HideLabelFilter() {
   const setHideLabel = useConfigStore((a) => a.setHideLabel);
   return (
     <Toggle intent="outline" isSelected={hideLabel} onChange={setHideLabel}>
-      {hideLabel ? "Hiding label" : "Showing label"}
+      {hideLabel ? "Show label" : "Hide label"}
     </Toggle>
   );
 }
