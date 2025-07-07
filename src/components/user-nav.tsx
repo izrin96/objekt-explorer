@@ -165,7 +165,7 @@ function MyListMenuItem({
         </Menu.Item>
         <Menu.Item onAction={openDiscordFormat}>
           <DiscordLogoIcon data-slot="icon" />
-          <Menu.Label>Discord Format</Menu.Label>
+          <Menu.Label>Discord format</Menu.Label>
         </Menu.Item>
         <Menu.Item href={`/list`}>
           <GearSixIcon data-slot="icon" />

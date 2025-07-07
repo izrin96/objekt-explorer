@@ -8,7 +8,7 @@
     "physical": "Physical",
     "digital": "Digital",
     "color": "Color",
-    "color_sensitivity": "Color Sensitivity",
+    "color_sensitivity": "Color sensitivity",
     "clear_color": "Clear color",
     "sort_by": {
       "label": "Sort by",
@@ -57,12 +57,12 @@
     "remove_from_list": "Remove from list",
     "reset_filter": "Reset filter",
     "quick_search": "Quick search..",
-    "disable_pin": "Disable Pin",
+    "disable_pin": "Disable pin",
     "only_locked": "Only locked",
     "only_unlocked": "Only unlocked",
     "lock_unlocked": "Lock/unlocked",
     "transferable": "Transferable",
-    "show_unowned": "Show Unowned",
+    "show_unowned": "Show unowned",
     "filters": "Filters",
     "event": {
       "label": "Event",

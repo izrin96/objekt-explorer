@@ -43,7 +43,7 @@ function MyList() {
           <div className="flex w-full gap-2">
             <Button onClick={() => setAddOpen(true)}>Create list</Button>
             <Button intent="outline" onClick={() => setGenOpen(true)}>
-              Generate Discord Format
+              Generate Discord format
             </Button>
           </div>
 

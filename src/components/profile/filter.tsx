@@ -69,7 +69,7 @@ function GenerateDiscordFormat() {
     <>
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
       <Button intent="outline" onClick={() => setGenOpen(true)}>
-        Discord Format
+        Discord format
       </Button>
     </>
   );
