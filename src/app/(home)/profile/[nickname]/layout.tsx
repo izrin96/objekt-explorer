@@ -3,9 +3,8 @@ import type { PropsWithChildren } from "react";
 import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
+import { ProfileProvider } from "@/components/profile-provider";
 import { Container } from "@/components/ui";
-import { ProfileProvider } from "@/hooks/use-profile";
-import { UserProvider } from "@/hooks/use-user";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { cachedSession, toPublicUser } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
@@ -38,21 +37,16 @@ export default async function UserCollectionLayout(props: Props) {
     );
 
   return (
-    <>
+    <ProfileProvider profiles={profiles} targetProfile={targetUser} user={toPublicUser(session)}>
       <ProfileBanner profile={targetUser} />
-
       <Container>
         {targetUser.bannerImgUrl && <ProfileBannerClearance />}
         <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
-          <ProfileProvider profile={targetUser}>
-            <UserProvider profiles={profiles} user={toPublicUser(session)}>
-              <ProfileHeader user={targetUser} />
-              <ProfileTabs nickname={params.nickname} />
-              {props.children}
-            </UserProvider>
-          </ProfileProvider>
+          <ProfileHeader user={targetUser} />
+          <ProfileTabs nickname={params.nickname} />
+          {props.children}
         </div>
       </Container>
-    </>
+    </ProfileProvider>
   );
 }

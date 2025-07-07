@@ -1,5 +1,5 @@
 import type { Session } from "../server/auth";
-import type { UserAddress } from "../server/db/schema";
+import type { List, UserAddress } from "../server/db/schema";
 
 export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
   Partial<Pick<UserAddress, "bannerImgUrl" | "bannerImgType" | "privateProfile">> & {
@@ -27,4 +27,8 @@ export const providersMap: Record<ProviderId, Provider> = {
     id: "discord",
     label: "Discord",
   },
+};
+
+export type PublicList = Pick<List, "slug" | "name"> & {
+  user?: PublicUser | null;
 };

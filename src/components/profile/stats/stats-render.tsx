@@ -18,7 +18,7 @@ import {
 } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
-import { useProfile } from "@/hooks/use-profile";
+import { useTarget } from "@/hooks/use-target";
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
@@ -51,7 +51,7 @@ function ProfileStatsRender() {
 }
 
 function ProfileStats() {
-  const profile = useProfile((a) => a.profile);
+  const profile = useTarget((a) => a.profile);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
 

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
-import { ProfileProvider } from "@/hooks/use-profile";
-import { UserProvider } from "@/hooks/use-user";
+import { ProfileProvider } from "@/components/profile-provider";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchList, fetchOwnedLists } from "@/lib/server/api/routers/list";
@@ -42,16 +41,14 @@ export default async function Page(props: Props) {
   );
 
   return (
-    <ProfileProvider list={list}>
-      <UserProvider lists={lists} user={toPublicUser(session)}>
-        <div className="flex flex-col gap-4 pt-2 pb-36">
-          <ListHeader list={list} />
+    <ProfileProvider targetList={list} lists={lists} user={toPublicUser(session)}>
+      <div className="flex flex-col gap-4 pt-2 pb-36">
+        <ListHeader list={list} />
 
-          <HydrateClient client={queryClient}>
-            <ListRender slug={params.slug} />
-          </HydrateClient>
-        </div>
-      </UserProvider>
+        <HydrateClient client={queryClient}>
+          <ListRender slug={params.slug} />
+        </HydrateClient>
+      </div>
     </ProfileProvider>
   );
 }

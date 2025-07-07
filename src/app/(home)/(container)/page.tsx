@@ -1,5 +1,5 @@
 import { IndexRenderDynamic } from "@/components/index/index-view";
-import { UserProvider } from "@/hooks/use-user";
+import { ProfileProvider } from "@/components/profile-provider";
 import { cachedSession, toPublicUser } from "@/lib/server/auth";
 
 export default async function Home() {
@@ -7,9 +7,9 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col pt-2 pb-36">
-      <UserProvider user={toPublicUser(session)}>
+      <ProfileProvider user={toPublicUser(session)}>
         <IndexRenderDynamic />
-      </UserProvider>
+      </ProfileProvider>
     </div>
   );
 }

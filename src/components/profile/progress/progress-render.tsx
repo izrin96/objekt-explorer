@@ -15,7 +15,7 @@ import { Loader, ProgressBar } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { useProfile } from "@/hooks/use-profile";
+import { useTarget } from "@/hooks/use-target";
 import { useUser } from "@/hooks/use-user";
 import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
@@ -53,7 +53,7 @@ function ProgressRender() {
 function Progress() {
   const { authenticated } = useUser();
   const { artists } = useCosmoArtist();
-  const profile = useProfile((a) => a.profile);
+  const profile = useTarget((a) => a.profile);
   const [filters, setFilters] = useFilters();
   const first = useRef(false);
 

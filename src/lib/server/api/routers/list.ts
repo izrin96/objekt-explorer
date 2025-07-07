@@ -3,12 +3,11 @@ import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod/v4";
 import { overrideCollection } from "@/lib/universal/objekts";
-import type { PublicUser } from "@/lib/universal/user";
 import { mapPublicUser } from "../../auth";
 import { db } from "../../db";
 import { indexer } from "../../db/indexer";
 import { collections } from "../../db/indexer/schema";
-import { type List, listEntries, lists } from "../../db/schema";
+import { listEntries, lists } from "../../db/schema";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { authed, pub } from "../orpc";
 
@@ -259,10 +258,6 @@ export const listRouter = {
         want: wantList?.entries.map((a) => a.collectionSlug) ?? [],
       };
     }),
-};
-
-export type PublicList = Pick<List, "slug" | "name"> & {
-  user?: PublicUser | null;
 };
 
 export async function fetchList(slug: string) {

@@ -18,7 +18,7 @@ import UserLink from "@/components/user-link";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { useProfile } from "@/hooks/use-profile";
+import { useTarget } from "@/hooks/use-target";
 import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { useTypeFilter } from "./filter-type";
@@ -54,7 +54,7 @@ function ProfileTradesRender() {
 }
 
 function ProfileTrades() {
-  const profile = useProfile((a) => a.profile);
+  const profile = useTarget((a) => a.profile);
   const [filters] = useFilters();
   const [type] = useTypeFilter();
   const address = profile!.address;

@@ -4,7 +4,7 @@ import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useListAuthed } from "@/hooks/use-user";
-import type { PublicList } from "@/lib/server/api/routers/list";
+import type { PublicList } from "@/lib/universal/user";
 import { Avatar, Button } from "../ui";
 import { EditListModal } from "./modal/manage-list";
 

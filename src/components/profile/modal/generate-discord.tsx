@@ -8,7 +8,7 @@ import ErrorFallbackRender from "@/components/error-boundary";
 import { Button, Checkbox, Form, Loader, Modal, Textarea } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
-import { useProfile } from "@/hooks/use-profile";
+import { useTarget } from "@/hooks/use-target";
 import { format, makeMemberOrderedList, mapByMember } from "@/lib/discord-format-utils";
 import { filterObjekts } from "@/lib/filter-utils";
 import { ownedCollectionOptions } from "@/lib/query-options";
@@ -44,7 +44,7 @@ function Content() {
   const formRef = useRef<HTMLFormElement>(null!);
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
-  const profile = useProfile((a) => a.profile);
+  const profile = useTarget((a) => a.profile);
   const [filters] = useFilters();
 
   const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));

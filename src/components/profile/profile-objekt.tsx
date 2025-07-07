@@ -11,7 +11,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { useConfigStore } from "@/hooks/use-hide-label";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
-import { useProfile } from "@/hooks/use-profile";
+import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { orpc } from "@/lib/orpc/client";
@@ -76,7 +76,7 @@ function ProfileObjektRender() {
 function ProfileObjekt() {
   const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
-  const profile = useProfile((a) => a.profile);
+  const profile = useTarget((a) => a.profile);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);

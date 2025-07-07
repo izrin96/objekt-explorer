@@ -1,9 +1,8 @@
 "use client";
 
 import { createContext, type PropsWithChildren, useContext } from "react";
-import type { PublicList } from "@/lib/server/api/routers/list";
-import type { PublicProfile, PublicUser } from "@/lib/universal/user";
-import { useProfile } from "./use-profile";
+import type { PublicList, PublicProfile, PublicUser } from "@/lib/universal/user";
+import { useTarget } from "./use-target";
 
 type UserProps = {
   profiles?: PublicProfile[];
@@ -41,7 +40,7 @@ export function useUser(): UserState {
 }
 
 export function useProfileAuthed() {
-  const target = useProfile((a) => a.profile);
+  const target = useTarget((a) => a.profile);
   const { profiles } = useUser();
   return profiles?.some((a) => a.address === target?.address) ?? false;
 }
