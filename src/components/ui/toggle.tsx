@@ -18,7 +18,7 @@ const toggleStyles = tv({
         "[--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))] pressed:[--toggle-icon:var(--secondary-fg)] selected:[--toggle-icon:var(--secondary-fg)] hover:[--toggle-icon:var(--secondary-fg)]",
       ],
       plain: [
-        "inset-ring-transparent bg-transparent selected:bg-secondary outline-secondary-fg ring-secondary-fg/25 hover:bg-secondary",
+        "inset-ring-transparent bg-transparent outline-secondary-fg ring-secondary-fg/25 hover:bg-secondary",
         "[--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))] pressed:[--toggle-icon:var(--secondary-fg)] selected:[--toggle-icon:var(--secondary-fg)] hover:[--toggle-icon:var(--secondary-fg)]",
       ],
     },
