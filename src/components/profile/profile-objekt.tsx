@@ -8,6 +8,7 @@ import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { useConfigStore } from "@/hooks/use-hide-label";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfile } from "@/hooks/use-profile";
@@ -78,6 +79,7 @@ function ProfileObjekt() {
   const profile = useProfile((a) => a.profile);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
+  const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
@@ -167,6 +169,7 @@ function ProfileObjekt() {
                           objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
+                          hideLabel={hideLabel}
                           open={open}
                           // for profile
                           showCount
@@ -221,7 +224,15 @@ function ProfileObjekt() {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, filters.grouped, columns, authenticated, isProfileAuthed, profile]);
+  }, [
+    deferredObjektsFiltered,
+    filters.grouped,
+    columns,
+    authenticated,
+    isProfileAuthed,
+    profile,
+    hideLabel,
+  ]);
 
   useEffect(() => {
     const shaped = shapeObjekts(
@@ -293,7 +304,7 @@ function Filters({
   isOwned: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <Filter />
       {authenticated && (
         <SelectMode>

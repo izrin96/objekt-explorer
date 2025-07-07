@@ -7,6 +7,7 @@ import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { useConfigStore } from "@/hooks/use-hide-label";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useListAuthed, useUser } from "@/hooks/use-user";
@@ -54,6 +55,7 @@ function ListView({ slug }: Props) {
   const isOwned = useListAuthed(slug);
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
+  const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
   const [groupCount, setGroupCount] = useState(0);
@@ -105,6 +107,7 @@ function ListView({ slug }: Props) {
                           objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
+                          hideLabel={hideLabel}
                           open={open}
                           showCount
                         >
@@ -128,7 +131,7 @@ function ListView({ slug }: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, isOwned, slug, authenticated]);
+  }, [deferredObjektsFiltered, columns, isOwned, slug, authenticated, hideLabel]);
 
   useEffect(() => {
     const shaped = shapeObjekts(filters, objekts, artists);
@@ -176,7 +179,7 @@ function Filters({
   slug: string;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <Filter />
       {authenticated && (
         <SelectMode>

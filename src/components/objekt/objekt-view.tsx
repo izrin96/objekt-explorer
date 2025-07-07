@@ -14,6 +14,7 @@ type Props = PropsWithChildren<{
   showCount?: boolean;
   showSerial?: boolean;
   isSelected?: boolean;
+  hideLabel?: boolean;
   open: () => void;
 }>;
 
@@ -24,6 +25,7 @@ export default memo(function ObjektView({
   showCount = false,
   showSerial = false,
   isSelected = false,
+  hideLabel = false,
   open,
   children,
   ...props
@@ -66,22 +68,24 @@ export default memo(function ObjektView({
 
         {children}
       </div>
-      <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
-        <Badge
-          intent="secondary"
-          className="cursor-pointer font-semibold"
-          isCircle={false}
-          onClick={open}
-        >
-          {getCollectionShortId(objekt)}
-          {showSerial && isOwned && ` #${objekt.serial}`}
-        </Badge>
-        {unobtainable && (
-          <Badge intent="custom" isCircle={false} className="font-semibold text-xs">
-            Unobtainable
+      {!hideLabel && (
+        <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
+          <Badge
+            intent="secondary"
+            className="cursor-pointer font-semibold"
+            isCircle={false}
+            onClick={open}
+          >
+            {getCollectionShortId(objekt)}
+            {showSerial && isOwned && ` #${objekt.serial}`}
           </Badge>
-        )}
-      </div>
+          {unobtainable && (
+            <Badge intent="custom" isCircle={false} className="font-semibold text-xs">
+              Unobtainable
+            </Badge>
+          )}
+        </div>
+      )}
     </div>
   );
 });

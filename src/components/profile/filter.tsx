@@ -12,6 +12,7 @@ import CombineDuplicateFilter from "../filters/filter-combine-duplicate";
 import EditionFilter from "../filters/filter-edition";
 import GroupDirectionFilter from "../filters/filter-group-direction";
 import GroupByFilter from "../filters/filter-groupby";
+import HideLabelFilter from "../filters/filter-hide-label";
 import HidePinFilter from "../filters/filter-hide-pin";
 import LockedFilter from "../filters/filter-locked";
 import MemberFilter from "../filters/filter-member";
@@ -52,6 +53,7 @@ export default function Filter() {
         <HidePinFilter />
         <LockedFilter />
         <UnownedFilter />
+        <HideLabelFilter />
         <ColumnFilter />
         <SearchFilter />
         <GenerateDiscordFormat />

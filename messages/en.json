@@ -40,7 +40,7 @@
     "desc": "Descending",
     "asc": "Ascending",
     "group_by": {
-      "label": "Group By",
+      "label": "Group by",
       "artist": "Artist",
       "member": "Member",
       "season": "Season",

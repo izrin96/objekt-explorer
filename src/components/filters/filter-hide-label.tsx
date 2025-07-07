@@ -1,0 +1,14 @@
+"use client";
+
+import { useConfigStore } from "@/hooks/use-hide-label";
+import { Toggle } from "../ui";
+
+export default function HideLabelFilter() {
+  const hideLabel = useConfigStore((a) => a.hideLabel);
+  const setHideLabel = useConfigStore((a) => a.setHideLabel);
+  return (
+    <Toggle intent="outline" isSelected={hideLabel} onChange={setHideLabel}>
+      {hideLabel ? "Hiding label" : "Showing label"}
+    </Toggle>
+  );
+}

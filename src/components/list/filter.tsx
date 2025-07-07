@@ -11,6 +11,7 @@ import CombineDuplicateFilter from "../filters/filter-combine-duplicate";
 import EditionFilter from "../filters/filter-edition";
 import GroupDirectionFilter from "../filters/filter-group-direction";
 import GroupByFilter from "../filters/filter-groupby";
+import HideLabelFilter from "../filters/filter-hide-label";
 import MemberFilter from "../filters/filter-member";
 import OnlineFilter from "../filters/filter-online";
 import SearchFilter from "../filters/filter-search";
@@ -41,6 +42,7 @@ export default function Filter() {
         <GroupDirectionFilter />
       </div>
       <div className="flex flex-wrap gap-2">
+        <HideLabelFilter />
         <ColumnFilter />
         <SearchFilter />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />

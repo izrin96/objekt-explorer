@@ -8,6 +8,7 @@ import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { useConfigStore } from "@/hooks/use-hide-label";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useUser } from "@/hooks/use-user";
@@ -60,6 +61,7 @@ function IndexView() {
   const { authenticated } = useUser();
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
+  const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
   const query = useSuspenseQuery(collectionOptions);
@@ -104,6 +106,7 @@ function IndexView() {
                           objekts={item.item}
                           priority={index < columns * 3}
                           isSelected={isSelected}
+                          hideLabel={hideLabel}
                           open={open}
                         >
                           {authenticated && (
@@ -125,7 +128,7 @@ function IndexView() {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, authenticated]);
+  }, [deferredObjektsFiltered, columns, authenticated, hideLabel]);
 
   useEffect(() => {
     const shaped = shapeObjekts(filters, query.data, artists);
@@ -155,7 +158,7 @@ function IndexView() {
 
 function Filters({ authenticated }: { authenticated: boolean }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full flex-col gap-6">
       <Filter />
       {authenticated && (
         <SelectMode>{({ handleAction }) => <AddToList handleAction={handleAction} />}</SelectMode>
