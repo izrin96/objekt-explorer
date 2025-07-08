@@ -32,7 +32,7 @@ export function ObjektsRenderRow<T>({
 }) {
   return (
     <div
-      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-1.5 pb-1.5 sm:gap-2 sm:pb-2 md:gap-2.5 md:pb-2.5 lg:gap-3 lg:pb-3"
+      className="grid grid-cols-[repeat(var(--grid-columns),_minmax(0,_1fr))] gap-2 pb-2 sm:gap-2.5 sm:pb-2.5 md:gap-3 md:pb-3 lg:gap-3.5 lg:pb-3.5"
       style={{ "--grid-columns": columns } as CSSProperties}
     >
       {items.map((item, j) => {
