@@ -31,7 +31,6 @@ export * from "./modal";
 export * from "./multiple-select";
 export * from "./note";
 export * from "./number-field";
-export * from "./pagination";
 export * from "./pie-chart";
 export * from "./popover";
 export * from "./progress-bar";
