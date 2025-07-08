@@ -102,7 +102,7 @@ export function AttributePanel({
       <Pill label={t("member")} value={objekt.member} />
       <Pill label={t("season")} value={objekt.season} />
       <Pill label={t("class")} value={objekt.class} />
-      {objekt.class === "First" && <Pill label={t("edition")} value={edition!} />}
+      {objekt.class === "First" && edition && <Pill label={t("edition")} value={edition} />}
       <Pill
         label={t("type")}
         value={objekt.onOffline === "online" ? t("digital") : t("physical")}

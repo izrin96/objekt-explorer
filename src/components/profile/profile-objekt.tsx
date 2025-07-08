@@ -76,7 +76,7 @@ function ProfileObjektRender() {
 function ProfileObjekt() {
   const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
-  const profile = useTarget((a) => a.profile);
+  const profile = useTarget((a) => a.profile)!;
   const { artists } = useCosmoArtist();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -147,12 +147,12 @@ function ProfileObjekt() {
                           <>
                             <TogglePinMenuItem
                               isPin={item.isPin}
-                              profile={profile!}
+                              profile={profile}
                               tokenId={objekt.id}
                             />
                             <ToggleLockMenuItem
                               isLocked={item.isLocked}
-                              profile={profile!}
+                              profile={profile}
                               tokenId={objekt.id}
                             />
                           </>
@@ -184,12 +184,12 @@ function ProfileObjekt() {
                                   <>
                                     <TogglePinMenuItem
                                       isPin={item.isPin}
-                                      profile={profile!}
+                                      profile={profile}
                                       tokenId={objekt.id}
                                     />
                                     <ToggleLockMenuItem
                                       isLocked={item.isLocked}
-                                      profile={profile!}
+                                      profile={profile}
                                       tokenId={objekt.id}
                                     />
                                   </>
@@ -203,12 +203,12 @@ function ProfileObjekt() {
                             <div className="absolute top-0 left-0 hidden group-hover:flex">
                               <ObjektTogglePin
                                 isPin={item.isPin}
-                                profile={profile!}
+                                profile={profile}
                                 tokenId={objekt.id}
                               />
                               <ObjektToggleLock
                                 isLocked={item.isLocked}
-                                profile={profile!}
+                                profile={profile}
                                 tokenId={objekt.id}
                               />
                             </div>
