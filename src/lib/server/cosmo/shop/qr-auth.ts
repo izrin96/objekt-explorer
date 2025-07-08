@@ -9,7 +9,7 @@ import { cosmoShop } from "./http";
 export async function generateRecaptchaToken() {
   const launchArgs = JSON.stringify({ headless: "shell" });
   const browser = await chromium.connect({
-    browserWSEndpoint: `${env.BROWSER_CDP_URL!}&launch=${launchArgs}`,
+    browserWSEndpoint: `${env.BROWSER_CDP_URL}&launch=${launchArgs}`,
   });
 
   const page = await browser.newPage();

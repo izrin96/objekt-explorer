@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import LiveStreamingRender from "@/components/live/live-render";
+import { env } from "@/env";
 import { getLiveSession } from "@/lib/client-fetching";
 
 type Props = {
   params: Promise<{
     id: string;
+  }>;
+  searchParams?: Promise<{
+    token?: string;
   }>;
 };
 
@@ -37,7 +41,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function Page(props: Props) {
-  onRedirect();
+  const searchParams = await props.searchParams;
+
+  if (env.BYPASS_LIVE_KEY === undefined || searchParams?.token !== env.BYPASS_LIVE_KEY) {
+    onRedirect();
+  }
 
   const params = await props.params;
   const live = await getLiveSession(params.id);

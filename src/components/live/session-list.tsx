@@ -2,6 +2,7 @@
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
 import { type CSSProperties, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -84,8 +85,11 @@ function LiveSessionList({ artistId }: { artistId: string }) {
 }
 
 function LiveSessionCard({ live }: { live: LiveSession }) {
+  const searchParams = useSearchParams();
   return (
-    <Link href={`/live/${live.id}`}>
+    <Link
+      href={`/live/${live.id}${searchParams.get("token") ? `?token=${searchParams.get("token")}` : ""}`}
+    >
       <div className="flex flex-col gap-2">
         <div className="relative aspect-square overflow-hidden rounded">
           <Image

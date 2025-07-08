@@ -39,15 +39,15 @@ export const auth = betterAuth({
   },
   socialProviders: {
     discord: {
-      clientId: env.DISCORD_CLIENT_ID!,
-      clientSecret: env.DISCORD_CLIENT_SECRET!,
+      clientId: env.DISCORD_CLIENT_ID,
+      clientSecret: env.DISCORD_CLIENT_SECRET,
       mapProfileToUser: (profile) => ({
         discord: profile.username,
       }),
     },
     twitter: {
-      clientId: env.TWITTER_CLIENT_ID!,
-      clientSecret: env.TWITTER_CLIENT_SECRET!,
+      clientId: env.TWITTER_CLIENT_ID,
+      clientSecret: env.TWITTER_CLIENT_SECRET,
       mapProfileToUser: (profile) => ({
         twitter: profile.data.username,
       }),

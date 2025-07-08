@@ -21,6 +21,7 @@ export const env = createEnv({
     SES_SECRET_KEY: z.string(),
     SES_MAIL_FROM: z.string(),
     COSMO_SHOP_RECAPTCHA_KEY: z.string(),
+    BYPASS_LIVE_KEY: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.string().optional(),
