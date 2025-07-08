@@ -74,6 +74,8 @@ ARG NEXT_PUBLIC_LIVE_API_KEY
 ENV NEXT_PUBLIC_LIVE_API_KEY=${NEXT_PUBLIC_LIVE_API_KEY}
 ARG COSMO_SHOP_RECAPTCHA_KEY
 ENV COSMO_SHOP_RECAPTCHA_KEY=${COSMO_SHOP_RECAPTCHA_KEY}
+ARG BYPASS_LIVE_KEY
+ENV BYPASS_LIVE_KEY=${BYPASS_LIVE_KEY}
 
 # Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line to disable telemetry at build time

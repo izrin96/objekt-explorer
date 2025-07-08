@@ -52,6 +52,7 @@ services:
         SES_MAIL_FROM: ${SES_MAIL_FROM}
         NEXT_PUBLIC_LIVE_API_KEY: ${NEXT_PUBLIC_LIVE_API_KEY}
         COSMO_SHOP_RECAPTCHA_KEY: ${COSMO_SHOP_RECAPTCHA_KEY}
+        BYPASS_LIVE_KEY: ${BYPASS_LIVE_KEY}
     expose:
       - 3000
     environment:
@@ -80,6 +81,7 @@ services:
       - SES_MAIL_FROM
       - NEXT_PUBLIC_LIVE_API_KEY
       - COSMO_SHOP_RECAPTCHA_KEY
+      - BYPASS_LIVE_KEY
   minio:
     restart: always
     image: minio/minio:latest
