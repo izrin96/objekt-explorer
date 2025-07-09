@@ -173,7 +173,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
           <span className="font-semibold text-sm">{t("token_id")}</span>
           <span>
             <Link
-              href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
+              href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
               className="inline-flex cursor-pointer items-center gap-2"
               target="_blank"
             >

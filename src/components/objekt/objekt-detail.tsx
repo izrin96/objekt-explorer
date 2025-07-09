@@ -177,7 +177,7 @@ function OwnedListPanel({
                   </Table.Cell>
                   <Table.Cell>
                     <Link
-                      href={`https://magiceden.io/item-details/abstract/${OBJEKT_CONTRACT}/${item.id}`}
+                      href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${item.id}`}
                       className="inline-flex cursor-pointer items-center gap-2"
                       target="_blank"
                     >
