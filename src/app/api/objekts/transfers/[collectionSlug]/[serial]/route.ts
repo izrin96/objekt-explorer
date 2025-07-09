@@ -73,6 +73,10 @@ export async function GET(_: Request, props: Params) {
   const addresses = Array.from(new Set(results.map((r) => r.to)));
 
   const knownAddresses = await db.query.userAddress.findMany({
+    columns: {
+      address: true,
+      nickname: true,
+    },
     where: (userAddress, { inArray }) => inArray(userAddress.address, addresses),
   });
 

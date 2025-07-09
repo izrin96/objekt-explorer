@@ -142,6 +142,10 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   const addressesUnique = Array.from(new Set(addresses));
 
   const knownAddresses = await db.query.userAddress.findMany({
+    columns: {
+      address: true,
+      nickname: true,
+    },
     where: (userAddress, { inArray }) => inArray(userAddress.address, addressesUnique),
   });
 
