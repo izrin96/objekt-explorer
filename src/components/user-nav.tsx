@@ -11,7 +11,7 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -25,8 +25,6 @@ import { Avatar, buttonStyles, Link, Loader, Menu } from "./ui";
 
 export default function UserNav() {
   const t = useTranslations("nav");
-  // temporary fix for ui being stuck after navigate
-  const pathname = usePathname();
   const { data, isPending } = authClient.useSession();
 
   if (isPending) return;
@@ -34,7 +32,7 @@ export default function UserNav() {
   return (
     <div className="inline-flex gap-2 text-sm">
       {data ? (
-        <UserMenu key={pathname} user={data.user as User} />
+        <UserMenu user={data.user as User} />
       ) : (
         <Link href="/login" className={buttonStyles({ intent: "outline", size: "sm" })}>
           {t("sign_in")}

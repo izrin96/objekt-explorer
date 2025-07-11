@@ -60,7 +60,6 @@ export default function UserSearch() {
         <span className="hidden sm:block">{t("label")}</span>
       </Button>
       <CommandMenu
-        key={`${pathname}-${isOpen}`}
         shortcut="k"
         isPending={enable && isPending}
         onInputChange={setQuery}
