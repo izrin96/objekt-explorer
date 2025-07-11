@@ -1,9 +1,10 @@
+import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 
-export const artists = [
+export const artists: CosmoArtistWithMembersBFF[] = [
   {
     name: "tripleS",
-    id: "tripleS" as ValidArtist,
+    id: "tripleS",
     title: "tripleS",
     logoImageUrl: "https://static.cosmo.fans/assets/triples-logo.png",
     contracts: {
@@ -29,7 +30,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S1.jpg",
         backgroundImageUrl: "",
         order: 1,
-        password: "$2a$10$2XkcrYOr6lMZElUEbXEtBuCRisyquyRK2pXkkz1uRcDnza8yCxwou",
         createdAt: "2022-11-17T14:26:05.102Z",
         updatedAt: "2025-06-01T06:19:19.909Z",
         mainObjektImageUrl:
@@ -45,7 +45,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S2.jpg",
         backgroundImageUrl: "",
         order: 2,
-        password: "$2a$10$S7TPM3wkQ/4PwkhsXhir4.1WYILCCEquw.9wFiDhOf/EwntTso3EC",
         createdAt: "2022-11-17T14:26:05.116Z",
         updatedAt: "2025-06-12T11:21:22.945Z",
         mainObjektImageUrl:
@@ -61,7 +60,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S3.jpg",
         backgroundImageUrl: "",
         order: 3,
-        password: "$2a$10$sDXDy8OOyJFvcUmHdSDljO./DaRcjADkXjv//SNXDik9WZlLfWuSK",
         createdAt: "2022-11-17T14:26:05.129Z",
         updatedAt: "2025-06-04T08:00:47.178Z",
         mainObjektImageUrl:
@@ -77,9 +75,8 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S4.jpg",
         backgroundImageUrl: "",
         order: 4,
-        password: "$2a$10$3b7D/xwkvqTkUWVtxrJE1eB2hHKFxvcY9ts/U8PaVlvSAD3.Sg8we",
         createdAt: "2022-11-17T14:26:05.143Z",
-        updatedAt: "2025-05-28T10:29:57.254Z",
+        updatedAt: "2025-06-16T11:21:56.066Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/828986b3-1640-4441-76c7-d03dd8941c00/2x",
         artistId: "tripleS",
@@ -93,7 +90,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S5.jpg",
         backgroundImageUrl: "",
         order: 5,
-        password: "$2a$10$K79db285EGg5lLTfOfvoTezLovz/R.nvqv69QkWaOCQmA.u490VLS",
         createdAt: "2022-11-17T14:26:05.156Z",
         updatedAt: "2025-06-09T08:15:50.041Z",
         mainObjektImageUrl:
@@ -109,7 +105,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S6.jpg",
         backgroundImageUrl: "",
         order: 6,
-        password: "$2a$10$7HwbsOBRYc0NXOZa3/G26.Zt.LTLxGq5S/kCnXXwbKAmuzah96wE.",
         createdAt: "2022-11-17T14:26:05.172Z",
         updatedAt: "2025-06-10T02:23:53.607Z",
         mainObjektImageUrl:
@@ -125,7 +120,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S7.jpg",
         backgroundImageUrl: "",
         order: 7,
-        password: "$2a$10$xLFlq4h15RUp0p6sXS2Cfe6wLkYe/81NNdebLeSTLDASu.Upmg3Mq",
         createdAt: "2022-11-17T14:26:05.183Z",
         updatedAt: "2025-05-28T10:30:32.253Z",
         mainObjektImageUrl:
@@ -141,7 +135,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S8.jpg",
         backgroundImageUrl: "",
         order: 8,
-        password: "$2a$10$YkRUK/OtBf6mGLocoLNiBeSyZ9IeY1S.fLyivOurnZe1.zQLBt2sa",
         createdAt: "2022-11-17T14:26:05.197Z",
         updatedAt: "2025-06-05T09:13:53.358Z",
         mainObjektImageUrl:
@@ -157,7 +150,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S9.jpg",
         backgroundImageUrl: "",
         order: 9,
-        password: "$2a$10$vq718bG05jRnn344hZud.e0KjCuip43T2Ya36wVbdqE.EwdtUY3GG",
         createdAt: "2022-11-17T14:26:05.209Z",
         updatedAt: "2025-06-12T09:33:07.983Z",
         mainObjektImageUrl:
@@ -173,7 +165,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S10.jpg",
         backgroundImageUrl: "",
         order: 10,
-        password: "$2a$10$AMfBVRgiThn.QmjeFLn1IeknbS9WP.88hCLdVnx4ivG23AfpJdDqS",
         createdAt: "2022-12-13T08:16:22.456Z",
         updatedAt: "2025-06-14T09:39:11.391Z",
         mainObjektImageUrl:
@@ -189,9 +180,8 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S11.jpg",
         backgroundImageUrl: "",
         order: 11,
-        password: "$2a$10$M30fukkFPRJZ91NSbvEuRehd.4RPOUMODFbSBAw4Q/zEbYYqwhSVS",
         createdAt: "2023-02-23T06:54:19.828Z",
-        updatedAt: "2025-05-28T10:33:06.576Z",
+        updatedAt: "2025-06-20T03:04:41.278Z",
         mainObjektImageUrl:
           "https://imagedelivery.net/qQuMkbHJ-0s6rwu8vup_5w/d30cf869-5fdb-485f-8553-8042052ff200/2x",
         artistId: "tripleS",
@@ -205,7 +195,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S12.jpg",
         backgroundImageUrl: "",
         order: 12,
-        password: "$2a$10$.SfydPIlgs0vDRtkHvsJQeA02vMYMRP6vAZ2Cp7UI9yJJSCgPV.pO",
         createdAt: "2023-02-23T06:59:53.658Z",
         updatedAt: "2025-06-12T10:16:20.548Z",
         mainObjektImageUrl:
@@ -221,7 +210,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S13.jpg",
         backgroundImageUrl: "",
         order: 13,
-        password: "$2a$10$jBvTBYBVbxVbEr7k8Jw/fe1y8gU8Wthrsn0ohlTEGqnbLXNdlEvH.",
         createdAt: "2023-03-29T06:11:41.141Z",
         updatedAt: "2025-06-07T10:03:26.555Z",
         mainObjektImageUrl:
@@ -237,7 +225,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S14.jpg",
         backgroundImageUrl: "",
         order: 14,
-        password: "$2a$10$dgGl4yb.1ikXzMAUSksZjevdkmqimazvcitYT9HIYooQ1JnLYhpeK",
         createdAt: "2023-04-18T07:59:38.576Z",
         updatedAt: "2025-06-11T14:00:34.710Z",
         mainObjektImageUrl:
@@ -253,9 +240,8 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S15.jpg",
         backgroundImageUrl: "",
         order: 15,
-        password: "$2a$10$6IZzK5o.DllD.HUmuuS6wex2KJQ0HObd9zltmPMSTq8lACZQss.Ya",
         createdAt: "2023-07-03T14:55:41.416Z",
-        updatedAt: "2025-05-28T10:34:09.406Z",
+        updatedAt: "2025-06-20T14:16:30.975Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#D51313",
@@ -268,7 +254,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S16.jpg",
         backgroundImageUrl: "",
         order: 16,
-        password: "$2a$10$RMO/Ahy/AKnJKEeDILOnN.sthtEZ71/nTRf8WlF7sLJOou6TJ8Dvu",
         createdAt: "2023-07-24T05:04:35.866Z",
         updatedAt: "2025-06-13T06:41:05.644Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -283,7 +268,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S17.jpg",
         backgroundImageUrl: "",
         order: 17,
-        password: "$2a$10$fFB0gLM4ZNJ1dQ/t6yPLCeiGb4DK5rxVwkUazNrvjICRiCLo6GXUa",
         createdAt: "2023-12-23T00:30:00.000Z",
         updatedAt: "2025-05-28T10:34:52.820Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -298,7 +282,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S18.jpg",
         backgroundImageUrl: "",
         order: 18,
-        password: "$2a$10$DPY7DiEyddQhW5T7zxmr3udHkr8IVBIRgv6AFjcgPTKDPE8RV8ele",
         createdAt: "2023-12-23T00:30:00.000Z",
         updatedAt: "2025-06-11T14:02:12.708Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -313,7 +296,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S19.jpg",
         backgroundImageUrl: "",
         order: 19,
-        password: "$2a$10$Ak5JyaDIzjHJNhedj3Bgt..9qMFYinoIAk.O42hnIhEiM9uQ645zq",
         createdAt: "2023-12-24T12:20:00.000Z",
         updatedAt: "2025-05-28T10:35:18.567Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -328,7 +310,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S20.jpg",
         backgroundImageUrl: "",
         order: 20,
-        password: "$2a$10$tT167kOkuGuAw.1B8gLwou4ALjui/QCMIAQW8mZk/WZg0zyzCCjUm",
         createdAt: "2023-12-24T12:20:00.000Z",
         updatedAt: "2025-06-11T05:34:25.334Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -343,7 +324,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S21.jpg",
         backgroundImageUrl: "",
         order: 21,
-        password: "$2a$10$jZafZIsZdhdmsgd0eYkNoe.dM7/cby4CHI8JAsKLbkANNtOiRgUIu",
         createdAt: "2024-04-08T01:57:32.000Z",
         updatedAt: "2025-06-12T11:27:10.169Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -358,7 +338,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S22.jpg",
         backgroundImageUrl: "",
         order: 22,
-        password: "$2a$10$sSoLzLBnIrdvauXBwvR//.E4eatcXfqIY2WbC7RoSRgWSJXXvLKZa",
         createdAt: "2024-04-08T01:57:32.000Z",
         updatedAt: "2025-05-28T09:58:00.761Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -373,7 +352,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S23.jpg",
         backgroundImageUrl: "",
         order: 23,
-        password: "$2a$10$/Gb9l6BPz3OCKeAb89B1C.nzwGz3ngQFJGAgFlAMfJ/537/ln7Rf.",
         createdAt: "2024-04-08T01:57:32.000Z",
         updatedAt: "2025-06-11T14:00:52.998Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -388,9 +366,8 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/uploads/member-profile/2025-05-01/S24.jpg",
         backgroundImageUrl: "",
         order: 24,
-        password: "$2a$10$ka85iupvaw.D8IEGuZzttuBgzyq1gc/6ZkGqKZQ8wFOsclWSVg4fW",
         createdAt: "2024-04-08T01:57:32.000Z",
-        updatedAt: "2025-06-01T11:01:36.386Z",
+        updatedAt: "2025-06-30T05:23:23.865Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "tripleS",
         primaryColorHex: "#FFAB62",
@@ -422,7 +399,7 @@ export const artists = [
 
   {
     name: "artms",
-    id: "artms" as ValidArtist,
+    id: "artms",
     title: "ARTMS",
     logoImageUrl: "https://static.cosmo.fans/assets/artms-logo.png",
     contracts: {
@@ -448,7 +425,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/images/artms/HeeJin.jpg",
         backgroundImageUrl: "",
         order: 1,
-        password: "$2a$10$FKuJvphGnn/1fdauRQnBR.5kMqXE11NZGKt9mt23FELna4Q8HTB9S",
         createdAt: "2023-05-31T16:12:55.865Z",
         updatedAt: "2025-05-30T07:30:13.834Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -463,7 +439,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/images/artms/HaSeul.jpg",
         backgroundImageUrl: "",
         order: 2,
-        password: "$2a$10$MMz92MAFQPoRJBRKRSVDDON3cNTLXUlQE1AYN31FboKuw5zyCsrES",
         createdAt: "2023-07-04T20:23:25.000Z",
         updatedAt: "2025-06-05T12:28:43.352Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -478,7 +453,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/images/artms/KimLip.jpg",
         backgroundImageUrl: "",
         order: 3,
-        password: "$2a$10$E1p7gGS0xdljuZimpt5sverve2P2cVjfQbN.OisBwcPT4VQ9u3iv6",
         createdAt: "2023-05-31T16:12:55.880Z",
         updatedAt: "2025-06-01T06:49:23.701Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -493,9 +467,8 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/images/artms/JinSoul.jpg",
         backgroundImageUrl: "",
         order: 4,
-        password: "$2a$10$vnY2JK76tfMP9GSlER/6yejMrbrb9xr9NQoc6Tujn0KBL6Ph.61J2",
         createdAt: "2023-05-31T16:12:55.895Z",
-        updatedAt: "2025-05-28T10:37:05.898Z",
+        updatedAt: "2025-06-23T08:10:46.877Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
         artistId: "artms",
         primaryColorHex: "#1724A7",
@@ -508,7 +481,6 @@ export const artists = [
         profileImageUrl: "https://static.cosmo.fans/images/artms/Choerry.jpg",
         backgroundImageUrl: "",
         order: 5,
-        password: "$2a$10$fDT98T/j0kwsnBGlNz1GgeTcm6EuuOleE2hKxJwvrrpWr1PXm5qrW",
         createdAt: "2023-05-31T16:12:55.907Z",
         updatedAt: "2025-05-28T10:37:14.486Z",
         mainObjektImageUrl: "https://via.placeholder.com/328x488?text=Objekt",
@@ -542,7 +514,7 @@ export const artists = [
 
   {
     name: "idntt",
-    id: "idntt" as ValidArtist,
+    id: "idntt",
     title: "idntt",
     logoImageUrl: "https://static.cosmo.fans/assets/idntt-logo.png",
     contracts: {

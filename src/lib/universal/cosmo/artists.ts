@@ -67,10 +67,11 @@ export type CosmoMemberBFF = {
   units: string;
   alias: string;
   profileImageUrl: string;
+  backgroundImageUrl: string;
   order: number;
   createdAt: string;
   updatedAt: string;
-  mainObjektImageUrl: string;
+  mainObjektImageUrl: string | null;
   artistId: string;
   primaryColorHex: string;
 };
