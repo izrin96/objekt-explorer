@@ -20,6 +20,13 @@ export type CollectionFormat = Pick<
   "slug" | "member" | "season" | "collectionNo" | "artist"
 >;
 
+export type CollectionMetadata = {
+  transferable: number;
+  total: number;
+  spin: number;
+  createdAt: string;
+};
+
 export function getCollectionShortId(objekt: ValidObjekt) {
   if (objekt.artist === "idntt") {
     return `${objekt.member} ${objekt.season} ${objekt.collectionNo}`;

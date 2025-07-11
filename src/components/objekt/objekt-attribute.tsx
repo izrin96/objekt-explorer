@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import type { CSSProperties } from "react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import type { ValidObjekt } from "@/lib/universal/objekts";
+import type { CollectionMetadata, ValidObjekt } from "@/lib/universal/objekts";
 import { getEdition } from "@/lib/utils";
 import { Badge, Skeleton } from "../ui";
 
@@ -47,6 +47,7 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
     <>
       {status === "pending" && (
         <>
+          <Skeleton className="h-6 w-57" />
           <Skeleton className="h-6 w-20" />
           <Skeleton className="h-6 w-16" />
           <Skeleton className="h-6 w-20" />
@@ -60,6 +61,7 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
       )}
       {status === "success" && (
         <>
+          <Pill label={t("created_at")} value={format(data.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
           <Pill
             label={objekt.onOffline === "online" ? t("copies") : t("scanned_copies")}
             value={`${data.total}`}
@@ -80,10 +82,7 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
 
 const fetchMetadata = (slug: string) => ({
   queryKey: ["objekts", "metadata", slug],
-  queryFn: async () =>
-    await ofetch<{ transferable: number; total: number; spin: number }>(
-      `/api/objekts/metadata/${slug}`,
-    ),
+  queryFn: async () => await ofetch<CollectionMetadata>(`/api/objekts/metadata/${slug}`),
 });
 
 export function AttributePanel({
@@ -114,9 +113,6 @@ export function AttributePanel({
         objekt={objekt}
       />
       <Pill label={t("text_color")} value={objekt.textColor.toUpperCase()} />
-      {objekt.createdAt && (
-        <Pill label={t("created_at")} value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
-      )}
       {unobtainable && (
         <Badge intent="custom" isCircle={false} className="font-semibold">
           {t("unobtainable")}
