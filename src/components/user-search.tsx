@@ -4,7 +4,6 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRouter } from "nextjs-toploader/app";
 import { ofetch } from "ofetch";
 import { useCallback, useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
@@ -17,7 +16,6 @@ export default function UserSearch() {
   const recentUsers = useUserSearchStore((a) => a.users);
   const addRecent = useUserSearchStore((a) => a.add);
   const pathname = usePathname();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [result, setResult] = useState<CosmoPublicUser[]>([]);
   const [query, setQuery] = useState("");
@@ -40,9 +38,8 @@ export default function UserSearch() {
       setQuery("");
       setResult([]);
       addRecent(user);
-      router.push(`/@${user.nickname}`);
     },
-    [router, setIsOpen, addRecent],
+    [setIsOpen, addRecent],
   );
 
   // set result after getting data
@@ -76,6 +73,7 @@ export default function UserSearch() {
           <CommandMenu.Section title={t("result_label")}>
             {result.map((user) => (
               <CommandMenu.Item
+                href={`/@${user.nickname}`}
                 onAction={() => selectUser(user)}
                 key={user.nickname}
                 id={user.nickname}
@@ -88,6 +86,7 @@ export default function UserSearch() {
           <CommandMenu.Section title={t("recent_label")}>
             {recentUsers.map((user) => (
               <CommandMenu.Item
+                href={`/@${user.nickname}`}
                 onAction={() => selectUser(user)}
                 key={user.nickname}
                 id={user.nickname}
