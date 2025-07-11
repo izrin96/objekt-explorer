@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import UserAccountModal from "@/components/auth/account/user-account";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
-import type { User } from "@/lib/server/db/schema";
+import type { User } from "@/lib/server/auth";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
 import { Avatar, buttonStyles, Link, Loader, Menu } from "./ui";
@@ -32,7 +32,7 @@ export default function UserNav() {
   return (
     <div className="inline-flex gap-2 text-sm">
       {data ? (
-        <UserMenu user={data.user as User} />
+        <UserMenu user={data.user} />
       ) : (
         <Link href="/login" className={buttonStyles({ intent: "outline", size: "sm" })}>
           {t("sign_in")}

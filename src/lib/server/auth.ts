@@ -208,6 +208,7 @@ export async function fetchUserByIdentifier(
 }
 
 export type Session = typeof auth.$Infer.Session;
+export type User = Session["user"];
 
 export function toPublicUser(session: Session | null): PublicUser | undefined {
   if (!session) return undefined;
