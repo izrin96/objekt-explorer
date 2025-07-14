@@ -149,7 +149,7 @@ function IndexView() {
           <Filters authenticated={authenticated} />
         </FilterContainer>
       </div>
-      <span className="font-semibold">{count} total</span>
+      <span className="font-semibold">{count.toLocaleString()} total</span>
 
       <WindowVirtualizer>{virtualList}</WindowVirtualizer>
     </div>

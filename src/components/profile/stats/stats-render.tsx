@@ -81,11 +81,16 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
       .flatMap((a) => a.artistMembers)
       .map((a) => ({ color: a.primaryColorHex, name: a.name }));
 
-    return members
-      .map((a) => ({
-        name: a.name,
-        fill: a.color,
-        count: objekts.filter((obj) => obj.member === a.name).length,
+    const data = members.map((a) => ({
+      name: a.name,
+      fill: a.color,
+      count: objekts.filter((obj) => obj.member === a.name).length,
+    }));
+    const total = data.reduce((sum, d) => sum + d.count, 0);
+    return data
+      .map((d) => ({
+        ...d,
+        percentage: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
       }))
       .toSorted((a, b) => b.count - a.count);
   }, [artists, objekts]);
@@ -107,7 +112,39 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent labelSeparator={false} accessibilityLayer hideLabel />}
+              content={
+                <ChartTooltipContent
+                  labelSeparator={false}
+                  accessibilityLayer
+                  hideLabel
+                  formatter={(value, _name, _item, _index, payload) => (
+                    <>
+                      <div
+                        className={cn(
+                          "shrink-0 rounded-full border-(--color-border) bg-(--color-bg)",
+                          "size-2.5",
+                        )}
+                        style={
+                          {
+                            "--color-bg": (payload as any).fill,
+                            "--color-border": (payload as any).fill,
+                          } as React.CSSProperties
+                        }
+                      />
+                      <div
+                        className={cn("flex flex-1 justify-between leading-none", "items-center")}
+                      >
+                        <div className="grid gap-1.5">
+                          <span className="text-muted-fg">{(payload as any).name}</span>
+                        </div>
+                        <span className="font-medium text-fg tabular-nums">
+                          {(payload as any).percentage}% ({value.toLocaleString()})
+                        </span>
+                      </div>
+                    </>
+                  )}
+                />
+              }
             />
             <Pie
               animationBegin={0}
@@ -127,11 +164,16 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
 
 function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   const chartData = useMemo(() => {
-    return validSeasons
-      .map((season, i) => ({
-        name: season,
-        fill: seasonColors[i],
-        count: objekts.filter((obj) => obj.season === season).length,
+    const data = validSeasons.map((season, i) => ({
+      name: season,
+      fill: seasonColors[i],
+      count: objekts.filter((obj) => obj.season === season).length,
+    }));
+    const total = data.reduce((sum, d) => sum + d.count, 0);
+    return data
+      .map((d) => ({
+        ...d,
+        percentage: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
       }))
       .toSorted((a, b) => b.count - a.count);
   }, [objekts]);
@@ -153,7 +195,39 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
           <PieChart>
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent labelSeparator={false} accessibilityLayer hideLabel />}
+              content={
+                <ChartTooltipContent
+                  labelSeparator={false}
+                  accessibilityLayer
+                  hideLabel
+                  formatter={(value, _name, _item, _index, payload) => (
+                    <>
+                      <div
+                        className={cn(
+                          "shrink-0 rounded-full border-(--color-border) bg-(--color-bg)",
+                          "size-2.5",
+                        )}
+                        style={
+                          {
+                            "--color-bg": (payload as any).fill,
+                            "--color-border": (payload as any).fill,
+                          } as React.CSSProperties
+                        }
+                      />
+                      <div
+                        className={cn("flex flex-1 justify-between leading-none", "items-center")}
+                      >
+                        <div className="grid gap-1.5">
+                          <span className="text-muted-fg">{(payload as any).name}</span>
+                        </div>
+                        <span className="font-medium text-fg tabular-nums">
+                          {(payload as any).percentage}% ({value.toLocaleString()})
+                        </span>
+                      </div>
+                    </>
+                  )}
+                />
+              }
             />
             <Pie
               animationBegin={0}
@@ -239,9 +313,9 @@ function MemberProgressChart({
           data={chartData}
           dataKey="percentage"
           config={chartConfig}
-          className="h-[1340px] w-full"
+          className="h-[1390px] w-full"
         >
-          <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={31}>
+          <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={32}>
             <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
             <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
             <Bar

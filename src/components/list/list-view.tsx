@@ -160,7 +160,7 @@ function ListView({ slug }: Props) {
         </FilterContainer>
       </div>
       <span className="font-semibold">
-        {count} total
+        {count.toLocaleString()} total
         {filters.grouped ? ` (${groupCount} types)` : undefined}
       </span>
 
