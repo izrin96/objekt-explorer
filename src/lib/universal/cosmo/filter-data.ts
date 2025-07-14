@@ -12,7 +12,7 @@ export const seasonArtist: SeasonArtist[] = [
   },
   {
     artistId: "artms",
-    seasons: ["Atom01", "Binary01", "Cream01", "Divine01", "Ever01", "Atom02"],
+    seasons: ["Atom01", "Binary01", "Cream01", "Divine01"],
   },
   {
     artistId: "idntt",

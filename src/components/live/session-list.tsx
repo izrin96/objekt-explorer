@@ -13,7 +13,7 @@ import ErrorFallbackRender from "../error-boundary";
 import { Avatar, Badge, Link, Loader, Tab, TabList, TabPanel, Tabs } from "../ui";
 
 export default function LiveSessionListRender() {
-  const { artists } = useCosmoArtist();
+  const { selectedArtists } = useCosmoArtist();
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -28,13 +28,13 @@ export default function LiveSessionListRender() {
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
             <Tabs aria-label="Recipe App">
               <TabList className="w-fit">
-                {artists.map((artist) => (
+                {selectedArtists.map((artist) => (
                   <Tab key={artist.id} id={artist.id}>
                     {artist.title}
                   </Tab>
                 ))}
               </TabList>
-              {artists.map((artist) => (
+              {selectedArtists.map((artist) => (
                 <TabPanel key={artist.id} id={artist.id}>
                   <Suspense
                     fallback={

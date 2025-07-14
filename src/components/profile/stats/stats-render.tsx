@@ -82,10 +82,10 @@ function ProfileStats() {
 }
 
 function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
-  const { artists } = useCosmoArtist();
+  const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
-    const members = artists
+    const members = selectedArtists
       .flatMap((a) => a.artistMembers)
       .map((a) => ({ color: a.primaryColorHex, name: a.name }));
 
@@ -101,7 +101,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
         percentage: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
       }))
       .toSorted((a, b) => b.count - a.count);
-  }, [artists, objekts]);
+  }, [selectedArtists, objekts]);
 
   return (
     <Card>
