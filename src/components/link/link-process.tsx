@@ -13,12 +13,12 @@ import CatIcon from "@/assets/icon-cat.png";
 import DeerIcon from "@/assets/icon-deer.png";
 import GiraffeIcon from "@/assets/icon-giraffe.png";
 import PandaIcon from "@/assets/icon-panda.png";
+import QRCodeIcon from "@/assets/icon-qrcode.png";
 import SmartphoneIcon from "@/assets/icon-smartphone.png";
 import SquirrelIcon from "@/assets/icon-squirrel.png";
 import TrashIcon from "@/assets/icon-trash.png";
 import WelcomeIcon from "@/assets/icon-welcome.png";
 import WhiteFoxIcon from "@/assets/icon-white-fox.png";
-import CalligraphyIcon from "@/assets/image-calligraphy.png";
 import { orpc } from "@/lib/orpc/client";
 import type { TicketAuth } from "@/lib/universal/cosmo/shop/qr-auth";
 import { msToCountdown } from "@/lib/utils";
@@ -98,7 +98,7 @@ function TicketRender() {
       <div className="flex flex-col items-center gap-2">
         <Image
           priority
-          src={CalligraphyIcon.src}
+          src={QRCodeIcon.src}
           alt="Loading"
           width={220}
           height={220}
