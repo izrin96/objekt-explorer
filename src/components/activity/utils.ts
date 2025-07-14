@@ -1,11 +1,6 @@
 import type { Filters } from "@/hooks/use-filters";
 import type { ActivityData, ValidType } from "@/lib/universal/activity";
-import type {
-  ValidArtist,
-  ValidClass,
-  ValidOnlineType,
-  ValidSeason,
-} from "@/lib/universal/cosmo/common";
+import type { ValidClass, ValidOnlineType, ValidSeason } from "@/lib/universal/cosmo/common";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 export function filterData(
@@ -27,7 +22,7 @@ export function filterData(
 
     // Filter by artist
     if (filters.artist?.length) {
-      if (!filters.artist.includes(item.objekt.artist.toLowerCase() as ValidArtist)) {
+      if (!filters.artist.map((a) => a.toLowerCase()).includes(item.objekt.artist.toLowerCase())) {
         return false;
       }
     }
