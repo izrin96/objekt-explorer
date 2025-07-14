@@ -51,6 +51,7 @@ export default function ListRender(props: Props) {
 }
 
 function ListView({ slug }: Props) {
+  const { getSelectedArtistIds } = useCosmoArtist();
   const { authenticated } = useUser();
   const isOwned = useListAuthed(slug);
   const { artists, getArtist } = useCosmoArtist();
@@ -134,13 +135,21 @@ function ListView({ slug }: Props) {
   }, [deferredObjektsFiltered, columns, isOwned, slug, authenticated, hideLabel]);
 
   useEffect(() => {
-    const shaped = shapeObjekts(filters, objekts, artists, getArtist);
+    const shaped = shapeObjekts(
+      {
+        ...filters,
+        artist: getSelectedArtistIds(filters.artist),
+      },
+      objekts,
+      artists,
+      getArtist,
+    );
     const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
     const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
     setGroupCount(allGroupedObjekts.length);
     setCount(allObjekts.length);
     setObjektsFiltered(shaped);
-  }, [filters, objekts, artists]);
+  }, [filters, objekts, artists, getSelectedArtistIds]);
 
   return (
     <div className="flex flex-col gap-4">
