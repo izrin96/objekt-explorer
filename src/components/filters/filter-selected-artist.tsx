@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useTransition } from "react";
 import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
@@ -12,6 +13,7 @@ import { Avatar, Button, Menu } from "../ui";
 
 export default function SelectedArtistFilter() {
   const router = useRouter();
+  const [, setFilters] = useFilters();
   const { artists, selectedArtistIds, selectedArtists } = useCosmoArtist();
   const [isPending, startTransition] = useTransition();
   const selected = useMemo(() => new Set(selectedArtistIds), [selectedArtistIds]);
@@ -22,6 +24,12 @@ export default function SelectedArtistFilter() {
       const value = parseSelected<ValidArtist>(key, true);
       await setArtists.mutateAsync(value ?? []);
       router.refresh();
+      setFilters(() => ({
+        artist: null,
+        member: null,
+        season: null,
+        class: null,
+      }));
     });
   }, []);
 
