@@ -13,8 +13,8 @@ export async function generateRecaptchaToken() {
   });
 
   const page = await browser.newPage();
-  await page.goto("https://shop.cosmo.fans/404", {
-    waitUntil: "networkidle0",
+  await page.goto("https://shop.cosmo.fans/en/login/landing", {
+    waitUntil: ["domcontentloaded", "networkidle2"],
     timeout: 0,
   });
 
@@ -35,12 +35,11 @@ export async function generateRecaptchaToken() {
       });
     }, env.COSMO_SHOP_RECAPTCHA_KEY);
 
-    result = token;
+    result = token.toString();
   } catch (e) {
     console.error(e);
   } finally {
     await page.close();
-    await browser.close();
   }
 
   return result;
