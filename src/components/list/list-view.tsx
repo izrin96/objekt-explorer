@@ -51,7 +51,7 @@ export default function ListRender(props: Props) {
 }
 
 function ListView({ slug }: Props) {
-  const { getSelectedArtistIds } = useCosmoArtist();
+  const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
   const { authenticated } = useUser();
   const isOwned = useListAuthed(slug);
   const { artists, getArtist } = useCosmoArtist();
@@ -149,7 +149,7 @@ function ListView({ slug }: Props) {
     setGroupCount(allGroupedObjekts.length);
     setCount(allObjekts.length);
     setObjektsFiltered(shaped);
-  }, [filters, objekts, artists, getSelectedArtistIds]);
+  }, [filters, objekts, artists, selectedArtistIds]);
 
   return (
     <div className="flex flex-col gap-4">

@@ -131,7 +131,7 @@ function Activity() {
         });
       }
     },
-    [type, filters, getSelectedArtistIds],
+    [type, filters, selectedArtistIds],
   );
 
   // handle incoming message
