@@ -35,14 +35,13 @@ export default function GroupBysFilter() {
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
-        items={Object.keys(map).map((value) => ({ value }))}
         className="min-w-52"
       >
-        {(item) => (
-          <Menu.Item id={item.value} textValue={map[item.value]}>
-            <Menu.Label>{map[item.value]}</Menu.Label>
+        {Object.keys(map).map((item) => (
+          <Menu.Item key={item} id={item} textValue={map[item]}>
+            <Menu.Label>{map[item]}</Menu.Label>
           </Menu.Item>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

@@ -113,22 +113,22 @@ function Content() {
         >
           <Select label="Have list" name="haveSlug" placeholder="Select a list" isRequired>
             <Select.Trigger />
-            <Select.List items={data}>
-              {(item) => (
-                <Select.Option id={item.slug} textValue={item.slug}>
+            <Select.List>
+              {data.map((item) => (
+                <Select.Option key={item.slug} id={item.slug} textValue={item.slug}>
                   {item.name}
                 </Select.Option>
-              )}
+              ))}
             </Select.List>
           </Select>
           <Select label="Want list" name="wantSlug" placeholder="Select a list" isRequired>
             <Select.Trigger />
-            <Select.List items={data}>
-              {(item) => (
-                <Select.Option id={item.slug} textValue={item.slug}>
+            <Select.List>
+              {data.map((item) => (
+                <Select.Option key={item.slug} id={item.slug} textValue={item.slug}>
                   {item.name}
                 </Select.Option>
-              )}
+              ))}
             </Select.List>
           </Select>
           <Checkbox label="Show count" name="showCount" />

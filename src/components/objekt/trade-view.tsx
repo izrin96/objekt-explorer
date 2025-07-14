@@ -201,15 +201,15 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
               <Table.Column isRowHeader>{t("owner")}</Table.Column>
               <Table.Column minWidth={200}>{t("date")}</Table.Column>
             </Table.Header>
-            <Table.Body items={data.transfers}>
-              {(item) => (
-                <Table.Row id={item.id}>
+            <Table.Body>
+              {data.transfers.map((item) => (
+                <Table.Row key={item.id} id={item.id}>
                   <Table.Cell>
                     <UserLink address={item.to} nickname={item.nickname} />
                   </Table.Cell>
                   <Table.Cell>{format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}</Table.Cell>
                 </Table.Row>
-              )}
+              ))}
             </Table.Body>
           </Table>
         </Card.Content>

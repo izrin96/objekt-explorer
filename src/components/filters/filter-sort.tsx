@@ -55,18 +55,17 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}
-        items={availableSorts.map((value) => ({ value }))}
         className="min-w-52"
       >
-        {(item) => {
-          const i = map[item.value];
+        {availableSorts.map((item) => {
+          const i = map[item];
           return (
-            <Menu.Item id={item.value} textValue={i.label}>
+            <Menu.Item key={item} id={item} textValue={i.label}>
               <Menu.Label>{i.label}</Menu.Label>
               <Menu.Description>{i.desc}</Menu.Description>
             </Menu.Item>
           );
-        }}
+        })}
       </Menu.Content>
     </Menu>
   );

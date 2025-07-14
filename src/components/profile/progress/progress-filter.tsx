@@ -21,7 +21,7 @@ export default function ProgressFilter() {
       <ArtistFilter />
       <MemberFilter />
       <FilterSeason />
-      <FilterClass hideZeroWelcome />
+      <FilterClass hideEtc />
       <EditionFilter />
       <FilterOnline />
       <GroupBysFilter />

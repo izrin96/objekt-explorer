@@ -3,12 +3,15 @@
 import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
 import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
+import type { ClassArtist, SeasonArtist } from "@/lib/universal/cosmo/filter-data";
 
 type ContextProps = {
   artists: CosmoArtistWithMembersBFF[];
+  selectedArtistIds: ValidArtist[];
+  season: SeasonArtist[];
+  classes: ClassArtist[];
   artistMap: Map<string, CosmoArtistWithMembersBFF>;
   memberMap: Map<string, CosmoMemberBFF>;
-  selectedArtistIds: ValidArtist[];
 };
 
 const CosmoArtistContext = createContext<ContextProps | null>(null);
@@ -16,9 +19,17 @@ const CosmoArtistContext = createContext<ContextProps | null>(null);
 type ProviderProps = PropsWithChildren<{
   artists: CosmoArtistWithMembersBFF[];
   selectedArtistIds: ValidArtist[];
+  season: SeasonArtist[];
+  classes: ClassArtist[];
 }>;
 
-export function CosmoArtistProvider({ children, artists, selectedArtistIds }: ProviderProps) {
+export function CosmoArtistProvider({
+  children,
+  artists,
+  selectedArtistIds,
+  season,
+  classes,
+}: ProviderProps) {
   const artistMap = new Map(artists.map((artist) => [artist.id.toLowerCase(), artist]));
   const memberMap = new Map(
     artists.flatMap((artist) =>
@@ -26,7 +37,9 @@ export function CosmoArtistProvider({ children, artists, selectedArtistIds }: Pr
     ),
   );
   return (
-    <CosmoArtistContext value={{ artists, artistMap, memberMap, selectedArtistIds }}>
+    <CosmoArtistContext
+      value={{ artists, artistMap, memberMap, selectedArtistIds, season, classes }}
+    >
       {children}
     </CosmoArtistContext>
   );
@@ -61,6 +74,16 @@ export function useCosmoArtist() {
       ? ctx.artists.filter((a) => ctx.selectedArtistIds.includes(a.id))
       : ctx.artists;
 
+  const selectedSeason =
+    ctx.selectedArtistIds.length > 0
+      ? ctx.season.filter((a) => ctx.selectedArtistIds.includes(a.artistId))
+      : ctx.season;
+
+  const selectedClass =
+    ctx.selectedArtistIds.length > 0
+      ? ctx.classes.filter((a) => ctx.selectedArtistIds.includes(a.artistId))
+      : ctx.classes;
+
   return {
     artists: ctx.artists,
     getArtist,
@@ -68,5 +91,7 @@ export function useCosmoArtist() {
     selectedArtistIds: ctx.selectedArtistIds,
     selectedArtists,
     getSelectedArtistIds,
+    selectedSeason: Array.from(new Set(selectedSeason.flatMap((a) => a.seasons))),
+    selectedClass: Array.from(new Set(selectedClass.flatMap((a) => a.classes))),
   };
 }

@@ -3,12 +3,14 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-stately";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
-import { type ValidSeason, validSeasons } from "@/lib/universal/cosmo/common";
+import type { ValidSeason } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
 import { Button, Menu } from "../ui";
 
 export default function SeasonFilter() {
+  const { selectedSeason } = useCosmoArtist();
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.season), [filters.season]);
@@ -28,17 +30,12 @@ export default function SeasonFilter() {
       <Button intent="outline" className={filters.season?.length ? "!inset-ring-primary" : ""}>
         {t("season")}
       </Button>
-      <Menu.Content
-        selectionMode="multiple"
-        selectedKeys={selected}
-        onSelectionChange={update}
-        items={Object.values(validSeasons).map((value) => ({ value }))}
-      >
-        {(item) => (
-          <Menu.Item id={item.value} textValue={item.value}>
-            <Menu.Label>{item.value}</Menu.Label>
+      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+        {selectedSeason.map((item) => (
+          <Menu.Item key={item} id={item} textValue={item}>
+            <Menu.Label>{item}</Menu.Label>
           </Menu.Item>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

@@ -49,14 +49,13 @@ export default function GroupByFilter() {
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}
-        items={Object.values(validGroupBy).map((value) => ({ value }))}
         className="min-w-52"
       >
-        {(item) => (
-          <Menu.Item id={item.value} textValue={map[item.value]}>
-            <Menu.Label>{map[item.value]}</Menu.Label>
+        {Object.values(validGroupBy).map((item) => (
+          <Menu.Item key={item} id={item} textValue={map[item]}>
+            <Menu.Label>{map[item]}</Menu.Label>
           </Menu.Item>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

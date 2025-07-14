@@ -31,13 +31,12 @@ export default function CollectionFilter() {
       aria-label={t("collection_no")}
       selectedKeys={selected}
       onSelectionChange={(set) => update(set as any, selected)}
-      items={collections.map((collection) => ({ id: collection, value: collection }))}
     >
-      {(item) => (
-        <MultipleSelect.Item id={item.id} textValue={item.value}>
-          {item.value}
+      {collections.map((item) => (
+        <MultipleSelect.Item key={item} id={item} textValue={item}>
+          {item}
         </MultipleSelect.Item>
-      )}
+      ))}
     </MultipleSelect>
   );
 }

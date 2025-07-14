@@ -34,18 +34,17 @@ export default function MemberFilter() {
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
-        items={selectedArtists}
         className="min-w-44"
       >
-        {(artist) => (
-          <Menu.Section title={artist.title} items={artist.artistMembers} id={artist.name}>
-            {(member) => (
-              <Menu.Item id={member.name} textValue={member.name}>
+        {selectedArtists.map((artist) => (
+          <Menu.Section key={artist.name} title={artist.title} id={artist.name}>
+            {artist.artistMembers.map((member) => (
+              <Menu.Item key={member.name} id={member.name} textValue={member.name}>
                 <Menu.Label>{member.name}</Menu.Label>
               </Menu.Item>
-            )}
+            ))}
           </Menu.Section>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

@@ -36,17 +36,12 @@ export default function OnlineFilter() {
       <Button intent="outline" className={filters.on_offline?.length ? "!inset-ring-primary" : ""}>
         {t("physical")}
       </Button>
-      <Menu.Content
-        selectionMode="multiple"
-        selectedKeys={selected}
-        onSelectionChange={update}
-        items={Object.values(validOnlineTypes).map((value) => ({ value }))}
-      >
-        {(item) => (
-          <Menu.Item id={item.value} textValue={item.value}>
-            <Menu.Label>{map[item.value]}</Menu.Label>
+      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+        {Object.values(validOnlineTypes).map((item) => (
+          <Menu.Item key={item} id={item} textValue={item}>
+            <Menu.Label>{map[item]}</Menu.Label>
           </Menu.Item>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

@@ -31,17 +31,12 @@ export default function ArtistFilter() {
       <Button intent="outline" className={filters.artist ? "!inset-ring-primary" : ""}>
         {t("artist")}
       </Button>
-      <Menu.Content
-        selectionMode="multiple"
-        selectedKeys={selected}
-        onSelectionChange={update}
-        items={selectedArtists}
-      >
-        {(item) => (
-          <Menu.Item id={item.name} textValue={item.title}>
+      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+        {selectedArtists.map((item) => (
+          <Menu.Item key={item.name} id={item.name} textValue={item.title}>
             <Menu.Label>{item.title}</Menu.Label>
           </Menu.Item>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

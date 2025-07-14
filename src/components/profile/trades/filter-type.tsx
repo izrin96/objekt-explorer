@@ -36,17 +36,12 @@ export default function TypeFilter() {
       <Button intent="outline" className={type ? "!inset-ring-primary" : ""}>
         Event
       </Button>
-      <Menu.Content
-        selectionMode="single"
-        selectedKeys={selected}
-        onSelectionChange={update}
-        items={validType.map((value) => ({ value }))}
-      >
-        {(item) => (
-          <Menu.Item id={item.value} textValue={map[item.value]}>
-            <Menu.Label>{map[item.value]}</Menu.Label>
+      <Menu.Content selectionMode="single" selectedKeys={selected} onSelectionChange={update}>
+        {validType.map((item) => (
+          <Menu.Item key={item} id={item} textValue={map[item]}>
+            <Menu.Label>{map[item]}</Menu.Label>
           </Menu.Item>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

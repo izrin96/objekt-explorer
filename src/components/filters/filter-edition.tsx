@@ -28,17 +28,12 @@ export default function EditionFilter() {
       <Button intent="outline" className={filters.edition?.length ? "!inset-ring-primary" : ""}>
         {t("edition")}
       </Button>
-      <Menu.Content
-        selectionMode="multiple"
-        selectedKeys={selected}
-        onSelectionChange={update}
-        items={validEdition.map((value) => ({ value }))}
-      >
-        {(item) => (
-          <Menu.Item id={item.value} textValue={item.value}>
-            <Menu.Label>{item.value}</Menu.Label>
+      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+        {validEdition.map((item) => (
+          <Menu.Item key={item} id={item} textValue={item}>
+            <Menu.Label>{item}</Menu.Label>
           </Menu.Item>
-        )}
+        ))}
       </Menu.Content>
     </Menu>
   );

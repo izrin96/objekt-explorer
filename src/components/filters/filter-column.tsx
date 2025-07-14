@@ -20,15 +20,14 @@ export default function ColumnFilter() {
       aria-label={t("column")}
     >
       <Select.Trigger />
-      <Select.List
-        className="min-w-[160px]"
-        items={cols.map((a) => ({ id: a, name: `${a} ${t("column").toLowerCase()}` }))}
-      >
-        {(item) => (
-          <Select.Option id={item.id} textValue={item.name}>
-            {item.name}
-          </Select.Option>
-        )}
+      <Select.List className="min-w-[160px]">
+        {cols
+          .map((a) => ({ id: a, name: `${a} ${t("column").toLowerCase()}` }))
+          .map((item) => (
+            <Select.Option key={item.id} id={item.id} textValue={item.name}>
+              {item.name}
+            </Select.Option>
+          ))}
       </Select.List>
     </Select>
   );

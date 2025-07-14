@@ -163,9 +163,9 @@ function OwnedListPanel({
               <Table.Column minWidth={200}>Received</Table.Column>
               <Table.Column>Transferable</Table.Column>
             </Table.Header>
-            <Table.Body items={currentItems}>
-              {(item) => (
-                <Table.Row id={item.id}>
+            <Table.Body>
+              {currentItems.map((item) => (
+                <Table.Row key={item.id} id={item.id}>
                   <Table.Cell>
                     <span
                       role="none"
@@ -196,7 +196,7 @@ function OwnedListPanel({
                     </Badge>
                   </Table.Cell>
                 </Table.Row>
-              )}
+              ))}
             </Table.Body>
           </Table>
         </Card.Content>

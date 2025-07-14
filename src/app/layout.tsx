@@ -12,6 +12,7 @@ import { cn } from "@/utils/classes";
 import "../lib/orpc/server";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
+import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
 
 const geistSans = Geist({
   variable: "--font-geist",
@@ -63,7 +64,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const [locale, selectedArtists] = await Promise.all([getLocale(), getSelectedArtists()]);
+  const [locale, selectedArtistIds] = await Promise.all([getLocale(), getSelectedArtists()]);
   return (
     <html
       lang={locale}
@@ -77,7 +78,12 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         )}
       >
         <NextIntlClientProvider>
-          <ClientProviders artists={artists} selectedArtists={selectedArtists}>
+          <ClientProviders
+            artists={artists}
+            selectedArtistIds={selectedArtistIds}
+            season={seasonArtist}
+            classes={classArtist}
+          >
             <Navbar />
             <main className="mx-auto w-full">{children}</main>
             <Analytics />

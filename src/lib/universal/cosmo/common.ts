@@ -56,7 +56,6 @@ export const validClasses = [
   // for idntt
   "Basic",
   "Event",
-  "ETC",
 ] as const;
 export type ValidClass = (typeof validClasses)[number];
 

@@ -130,12 +130,12 @@ function AddToListForm() {
     <div className="flex flex-col gap-4">
       <Select label="My List" placeholder="Select a list" name="slug" isRequired>
         <Select.Trigger />
-        <Select.List items={data}>
-          {(item) => (
-            <Select.Option id={item.slug} textValue={item.slug}>
+        <Select.List>
+          {data.map((item) => (
+            <Select.Option key={item.slug} id={item.slug} textValue={item.slug}>
               {item.name}
             </Select.Option>
-          )}
+          ))}
         </Select.List>
       </Select>
       <Checkbox
