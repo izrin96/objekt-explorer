@@ -233,14 +233,15 @@ function MemberProgressChart({
         <Card.Description>Progress by member</Card.Description>
       </Card.Header>
       <Card.Content>
+        {/* todo: chart height based on number of member */}
         <Chart
           layout="radial"
           data={chartData}
           dataKey="percentage"
           config={chartConfig}
-          className="h-[1300px] w-full"
+          className="h-[1340px] w-full"
         >
-          <BarChart accessibilityLayer data={chartData} layout="vertical">
+          <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={31}>
             <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
             <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
             <Bar
@@ -251,9 +252,6 @@ function MemberProgressChart({
               shape={(props: any) => (
                 <>
                   <Rectangle {...props} />
-                  {/* <text x={props.x + 10} y={props.y + 20} fill="var(--fg)">
-                    {props.name}
-                  </text> */}
                   <text
                     x={props.background.width + props.x - 20}
                     y={props.y + 20}
