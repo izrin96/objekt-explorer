@@ -53,7 +53,7 @@ export default function ListRender(props: Props) {
 function ListView({ slug }: Props) {
   const { authenticated } = useUser();
   const isOwned = useListAuthed(slug);
-  const { artists } = useCosmoArtist();
+  const { artists, getArtist } = useCosmoArtist();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
@@ -134,7 +134,7 @@ function ListView({ slug }: Props) {
   }, [deferredObjektsFiltered, columns, isOwned, slug, authenticated, hideLabel]);
 
   useEffect(() => {
-    const shaped = shapeObjekts(filters, objekts, artists);
+    const shaped = shapeObjekts(filters, objekts, artists, getArtist);
     const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
     const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
     setGroupCount(allGroupedObjekts.length);

@@ -1,16 +1,16 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { type InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { env } from "@/env";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { artists } from "@/lib/server/cosmo/artists";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { InfiniteQueryNext } from "../infinite-query-pending";
@@ -45,6 +45,7 @@ export default function ActivityRender() {
 }
 
 function Activity() {
+  const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const [type] = useTypeFilter();
   const [realtimeTransfers, setRealtimeTransfers] = useState<ActivityData[]>([]);
@@ -55,13 +56,13 @@ function Activity() {
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isLoading } =
     useInfiniteQuery<ActivityResponse>({
-      queryKey: ["activity", type, filters],
+      queryKey: ["activity", type, filters, selectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
         const response = await ofetch<ActivityResponse>(`/api/activity`, {
           query: {
             cursor: pageParam ? JSON.stringify(pageParam) : undefined,
             type: type ?? undefined,
-            artist: filters.artist ?? [],
+            artist: getSelectedArtistIds(filters.artist) ?? [],
             member: filters.member ?? [],
             season: filters.season ?? [],
             class: filters.class ?? [],
@@ -100,13 +101,16 @@ function Activity() {
   }, []);
 
   const handleWebSocketMessage = useCallback(
-    (event: MessageEvent) => {
+    (event: MessageEvent, data: InfiniteData<ActivityResponse> | undefined) => {
       const message = JSON.parse(event.data) as WebSocketMessage;
 
       // store current scroll position before update
       scrollOffsetRef.current = window.scrollY;
 
-      const filtered = filterData(message.data, type ?? "all", filters);
+      const filtered = filterData(message.data, type ?? "all", {
+        ...filters,
+        artist: getSelectedArtistIds(filters.artist),
+      });
       addNewTransferIds(filtered);
 
       if (message.type === "transfer") {
@@ -127,7 +131,7 @@ function Activity() {
         });
       }
     },
-    [type, filters, data?.pages[0]],
+    [type, filters, selectedArtistIds],
   );
 
   // handle incoming message
@@ -136,7 +140,7 @@ function Activity() {
 
     const ws = new ReconnectingWebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
 
-    ws.onmessage = handleWebSocketMessage;
+    ws.onmessage = (e) => handleWebSocketMessage(e, data);
 
     return () => {
       setRealtimeTransfers([]);
@@ -176,7 +180,7 @@ function Activity() {
 
   return (
     <>
-      <ActivityFilter artists={artists} />
+      <ActivityFilter />
       <Card className="py-0">
         <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
           {/* Header */}

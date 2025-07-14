@@ -1,3 +1,4 @@
+import { configRouter } from "./config";
 import { cosmoLinkRouter } from "./cosmo-link";
 import { listRouter } from "./list";
 import { lockedObjektsRouter } from "./locked-objekts";
@@ -12,4 +13,5 @@ export const router = {
   pins: pinsRouter,
   profile: profileRouter,
   lockedObjekt: lockedObjektsRouter,
+  config: configRouter,
 };

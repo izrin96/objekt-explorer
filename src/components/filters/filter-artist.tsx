@@ -3,17 +3,14 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
-import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
 import { Button, Menu } from "../ui";
 
-type Props = {
-  artists: CosmoArtistWithMembersBFF[];
-};
-
-export default function ArtistFilter({ artists }: Props) {
+export default function ArtistFilter() {
+  const { selectedArtists } = useCosmoArtist();
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const selected = useMemo(() => new Set(filters.artist ?? []), [filters.artist]);
@@ -38,7 +35,7 @@ export default function ArtistFilter({ artists }: Props) {
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
-        items={artists}
+        items={selectedArtists}
       >
         {(item) => (
           <Menu.Item id={item.name} textValue={item.title}>

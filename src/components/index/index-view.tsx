@@ -59,12 +59,12 @@ function IndexRender() {
 
 function IndexView() {
   const { authenticated } = useUser();
-  const { artists } = useCosmoArtist();
+  const { artists, selectedArtistIds, getArtist } = useCosmoArtist();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
   const [count, setCount] = useState(0);
-  const query = useSuspenseQuery(collectionOptions);
+  const query = useSuspenseQuery(collectionOptions(selectedArtistIds));
 
   const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
     [],
@@ -131,7 +131,7 @@ function IndexView() {
   }, [deferredObjektsFiltered, columns, authenticated, hideLabel]);
 
   useEffect(() => {
-    const shaped = shapeObjekts(filters, query.data, artists);
+    const shaped = shapeObjekts(filters, query.data, artists, getArtist);
     const allObjekts = shaped.flatMap(([, objekts]) => objekts);
     setCount(allObjekts.length);
     setObjektsFiltered(shaped);

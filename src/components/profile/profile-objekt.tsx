@@ -77,7 +77,7 @@ function ProfileObjekt() {
   const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
   const profile = useTarget((a) => a.profile)!;
-  const { artists } = useCosmoArtist();
+  const { artists, selectedArtistIds, getArtist } = useCosmoArtist();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
@@ -90,20 +90,20 @@ function ProfileObjekt() {
   const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const objektsQuery = useQuery({
-    ...collectionOptions,
+    ...collectionOptions(selectedArtistIds),
     enabled: filters.unowned ?? false,
   });
 
   const [ownedQuery, pinsQuery, lockedObjektQuery] = useSuspenseQueries({
     queries: [
-      ownedCollectionOptions(profile!.address),
+      ownedCollectionOptions(profile.address, selectedArtistIds),
       orpc.pins.list.queryOptions({
-        input: profile!.address,
+        input: profile.address,
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
       orpc.lockedObjekt.list.queryOptions({
-        input: profile!.address,
+        input: profile.address,
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
@@ -239,6 +239,7 @@ function ProfileObjekt() {
       filters,
       joinedObjekts,
       artists,
+      getArtist,
       pinsQuery.data,
       lockedObjektQuery.data,
     );
@@ -266,10 +267,10 @@ function ProfileObjekt() {
                 <AddToList handleAction={handleAction} />
                 {isProfileAuthed && (
                   <>
-                    <PinObjekt address={profile!.address} handleAction={handleAction} />
-                    <UnpinObjekt address={profile!.address} handleAction={handleAction} />
-                    <LockObjekt address={profile!.address} handleAction={handleAction} />
-                    <UnlockObjekt address={profile!.address} handleAction={handleAction} />
+                    <PinObjekt address={profile.address} handleAction={handleAction} />
+                    <UnpinObjekt address={profile.address} handleAction={handleAction} />
+                    <LockObjekt address={profile.address} handleAction={handleAction} />
+                    <UnlockObjekt address={profile.address} handleAction={handleAction} />
                   </>
                 )}
               </>
@@ -278,7 +279,7 @@ function ProfileObjekt() {
         )}
         <FilterContainer>
           <Filters
-            address={profile!.address}
+            address={profile.address}
             authenticated={authenticated}
             isOwned={isProfileAuthed}
           />

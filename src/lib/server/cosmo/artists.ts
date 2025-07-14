@@ -1,5 +1,4 @@
 import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
-import type { ValidArtist } from "@/lib/universal/cosmo/common";
 
 export const artists: CosmoArtistWithMembersBFF[] = [
   {
@@ -668,7 +667,3 @@ export const artists: CosmoArtistWithMembersBFF[] = [
     },
   },
 ];
-
-export const artistsMap: Map<string, { id: ValidArtist; title: string }> = new Map(
-  artists.map((artist) => [artist.id.toLowerCase(), { id: artist.id, title: artist.title }]),
-);

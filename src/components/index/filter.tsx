@@ -1,6 +1,5 @@
 "use client";
 
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import ArtistFilter from "../filters/filter-artist";
@@ -20,15 +19,14 @@ import SortDirectionFilter from "../filters/filter-sort-direction";
 import ResetFilter from "../filters/reset-filter";
 
 export default function Filter() {
-  const { artists } = useCosmoArtist();
   const reset = useResetFilters();
   const [filters] = useFilters();
   const isFiltering = checkFiltering(filters);
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
-        <ArtistFilter artists={artists} />
-        <MemberFilter artists={artists} />
+        <ArtistFilter />
+        <MemberFilter />
         <SeasonFilter />
         <ClassFilter />
         <EditionFilter />

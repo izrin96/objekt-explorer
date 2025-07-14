@@ -1,5 +1,6 @@
 import chroma from "chroma-js";
 import { groupBy } from "es-toolkit";
+import type { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { checkFiltering, type Filters } from "@/hooks/use-filters";
 import {
   type ValidClass,
@@ -8,7 +9,6 @@ import {
   validGroupBy,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import { artistsMap } from "./server/cosmo/artists";
 import type { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import type { PinObjekt, ValidObjekt } from "./universal/objekts";
 import { getEdition } from "./utils";
@@ -249,6 +249,7 @@ export function shapeObjekts<T extends ValidObjekt>(
   filters: Filters,
   objekts: T[],
   artists: CosmoArtistWithMembersBFF[],
+  getArtist: ReturnType<typeof useCosmoArtist>["getArtist"],
   pins: PinObjekt[] = [],
   lockedObjekts: PinObjekt[] = [],
 ): [string, ObjektItem<T[]>[]][] {
@@ -271,7 +272,7 @@ export function shapeObjekts<T extends ValidObjekt>(
       return filters.group_by === "seasonCollectionNo"
         ? `${objekt.season} ${objekt.collectionNo}`
         : filters.group_by === "artist"
-          ? (artistsMap.get(objekt.artist.toLowerCase())?.title ?? objekt.artist)
+          ? (getArtist(objekt.artist)?.title ?? objekt.artist)
           : objekt[filters.group_by!];
     });
   } else {
@@ -384,10 +385,13 @@ export function shapeProgressCollections<T extends ValidObjekt>(
   artists: CosmoArtistWithMembersBFF[],
   filters: Filters,
   data: T[],
+  getArtist: ReturnType<typeof useCosmoArtist>["getArtist"],
 ): [string, T[]][] {
   let objekts = data;
 
-  objekts = filterObjekts(filters, objekts).filter((a) => !["Welcome", "Zero"].includes(a.class));
+  objekts = filterObjekts(filters, objekts).filter(
+    (a) => ["Welcome", "Zero"].includes(a.class) === false,
+  );
 
   const groupBys = filters.group_bys?.toSorted(
     (a, b) => validGroupBy.findIndex((c) => c === a) - validGroupBy.findIndex((c) => c === b),
@@ -397,7 +401,7 @@ export function shapeProgressCollections<T extends ValidObjekt>(
     groupBys
       .map((key) =>
         key === "artist"
-          ? (artistsMap.get(objekt.artist.toLowerCase())?.title ?? objekt.artist)
+          ? (getArtist(objekt.artist)?.title ?? objekt.artist)
           : objekt[key as keyof typeof objekt],
       )
       .join(" "),

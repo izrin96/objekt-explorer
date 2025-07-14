@@ -10,14 +10,9 @@ import FilterSeason from "@/components/filters/filter-season";
 import ResetFilter from "@/components/filters/reset-filter";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
-import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import TypeFilter, { useTypeFilter } from "./filter-type";
 
-type Props = {
-  artists: CosmoArtistWithMembersBFF[];
-};
-
-export default function TradesFilter({ artists }: Props) {
+export default function TradesFilter() {
   const reset = useResetFilters();
   const [type, setType] = useTypeFilter();
   const [filters] = useFilters();
@@ -25,8 +20,8 @@ export default function TradesFilter({ artists }: Props) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
       <TypeFilter />
-      <ArtistFilter artists={artists} />
-      <MemberFilter artists={artists} />
+      <ArtistFilter />
+      <MemberFilter />
       <FilterSeason />
       <FilterClass />
       <FilterOnline />

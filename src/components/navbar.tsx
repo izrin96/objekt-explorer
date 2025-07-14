@@ -2,6 +2,7 @@
 
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { motion } from "motion/react";
+import SelectedArtistFilter from "./filters/filter-selected-artist";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Container, Link } from "./ui";
 import UserNav from "./user-nav";
@@ -36,6 +37,7 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           <UserNav />
           <ThemeSwitcher />
+          <SelectedArtistFilter />
           <UserSearch />
         </div>
       </Container>

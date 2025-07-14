@@ -4,7 +4,7 @@ import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-que
 import { groupBy } from "es-toolkit";
 import dynamic from "next/dynamic";
 import type React from "react";
-import { Suspense, useMemo } from "react";
+import { type CSSProperties, Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -51,23 +51,31 @@ function ProfileStatsRender() {
 }
 
 function ProfileStats() {
-  const profile = useTarget((a) => a.profile);
-  const { artists } = useCosmoArtist();
+  const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
+  const { selectedArtistIds } = useCosmoArtist();
 
   const [query, collectionQuery] = useSuspenseQueries({
-    queries: [ownedCollectionOptions(profile!.address), collectionOptions],
+    queries: [
+      ownedCollectionOptions(profile.address, selectedArtistIds),
+      collectionOptions(selectedArtistIds),
+    ],
   });
 
   const objekts = useMemo(() => filterObjekts(filters, query.data), [filters, query.data]);
 
+  const collections = useMemo(
+    () => filterObjekts(filters, collectionQuery.data),
+    [filters, collectionQuery.data],
+  );
+
   return (
     <div className="flex flex-col gap-4">
-      <StatsFilter artists={artists} />
+      <StatsFilter />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <BreakdownByMemberChart objekts={objekts} />
         <BreakdownBySeasonChart objekts={objekts} />
-        <MemberProgressChart objekts={objekts} collections={collectionQuery.data} />
+        <MemberProgressChart objekts={objekts} collections={collections} />
       </div>
     </div>
   );
@@ -253,16 +261,14 @@ function MemberProgressChart({
   collections: ValidObjekt[];
 }) {
   const [filters] = useFilters();
-  const { artists } = useCosmoArtist();
+  const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
-    const members = artists
+    const members = selectedArtists
       .flatMap((a) => a.artistMembers)
       .map((a) => ({ color: a.primaryColorHex, name: a.name }));
 
     const grouped = Object.values(groupBy(objekts, (a: ValidObjekt) => a.collectionId));
-
-    const filteredObjekts = filterObjekts(filters, collections);
 
     return members
       .map((member) => {
@@ -270,15 +276,15 @@ function MemberProgressChart({
           const [objekt] = group;
           return (
             objekt.member === member.name &&
-            !unobtainables.includes(objekt.slug) &&
-            !["Welcome", "Zero"].includes(objekt.class)
+            unobtainables.includes(objekt.slug) === false &&
+            ["Welcome", "Zero"].includes(objekt.class) === false
           );
         }).length;
-        const total = filteredObjekts.filter(
+        const total = collections.filter(
           (a: ValidObjekt) =>
             a.member === member.name &&
-            !unobtainables.includes(a.slug) &&
-            !["Welcome", "Zero"].includes(a.class),
+            unobtainables.includes(a.slug) === false &&
+            ["Welcome", "Zero"].includes(a.class) === false,
         ).length;
         const percentage = total > 0 ? (owned / total) * 100 : 0;
 
@@ -291,7 +297,7 @@ function MemberProgressChart({
         };
       })
       .toSorted((a, b) => b.percentage - a.percentage);
-  }, [artists, objekts, collections, filters]);
+  }, [selectedArtists, objekts, collections, filters]);
 
   const chartConfig = {
     percentage: {
@@ -313,7 +319,12 @@ function MemberProgressChart({
           data={chartData}
           dataKey="percentage"
           config={chartConfig}
-          className="h-[1390px] w-full"
+          className="h-(--height) w-full"
+          style={
+            {
+              "--height": `${chartData.length * 40}px`,
+            } as CSSProperties
+          }
         >
           <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={32}>
             <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />

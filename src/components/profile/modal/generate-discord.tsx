@@ -43,11 +43,11 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
 function Content() {
   const formRef = useRef<HTMLFormElement>(null!);
   const [formatText, setFormatText] = useState("");
-  const { artists } = useCosmoArtist();
-  const profile = useTarget((a) => a.profile);
+  const { artists, selectedArtistIds } = useCosmoArtist();
+  const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
 
-  const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile!.address));
+  const ownedQuery = useSuspenseQuery(ownedCollectionOptions(profile.address, selectedArtistIds));
   const filteredObjekts = useMemo(
     () => filterObjekts(filters, ownedQuery.data),
     [filters, ownedQuery.data],

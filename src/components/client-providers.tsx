@@ -10,7 +10,8 @@ import { preconnect, prefetchDNS } from "react-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { createQueryClient } from "@/lib/query/client";
-import { artists } from "@/lib/server/cosmo/artists";
+import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
+import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { Toast } from "./ui";
 
 declare module "react-aria-components" {
@@ -19,7 +20,16 @@ declare module "react-aria-components" {
   }
 }
 
-export default function ClientProviders({ children }: PropsWithChildren) {
+type Props = {
+  artists: CosmoArtistWithMembersBFF[];
+  selectedArtists: ValidArtist[];
+};
+
+export default function ClientProviders({
+  children,
+  artists,
+  selectedArtists,
+}: PropsWithChildren<Props>) {
   const [queryClient] = useState(() => createQueryClient());
   const router = useRouter();
 
@@ -42,7 +52,9 @@ export default function ClientProviders({ children }: PropsWithChildren) {
           <Toast />
           <div className="texture"></div>
           <NuqsAdapter>
-            <CosmoArtistProvider artists={artists}>{children}</CosmoArtistProvider>
+            <CosmoArtistProvider artists={artists} selectedArtistIds={selectedArtists}>
+              {children}
+            </CosmoArtistProvider>
             <ReactQueryDevtools />
           </NuqsAdapter>
         </ThemeProvider>

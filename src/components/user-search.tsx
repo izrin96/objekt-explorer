@@ -55,7 +55,7 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button onPress={() => setIsOpen(true)} size="md" intent="outline">
+      <Button onPress={() => setIsOpen(true)} size="sm" intent="outline">
         <MagnifyingGlassIcon data-slot="icon" />
         <span className="hidden sm:block">{t("label")}</span>
       </Button>

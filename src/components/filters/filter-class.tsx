@@ -28,7 +28,7 @@ export default function ClassFilter({ hideZeroWelcome = false }: Props) {
   );
 
   const availableClasses = validClasses.filter((s) =>
-    hideZeroWelcome ? !["Zero", "Welcome"].includes(s) : true,
+    hideZeroWelcome ? ["Zero", "Welcome"].includes(s) === false : true,
   );
 
   return (

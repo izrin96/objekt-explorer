@@ -29,10 +29,9 @@ export const ProfileTradesRenderDynamic = dynamic(() => Promise.resolve(ProfileT
 });
 
 function ProfileTradesRender() {
-  const { artists } = useCosmoArtist();
   return (
     <ObjektModalProvider initialTab="trades">
-      <TradesFilter artists={artists} />
+      <TradesFilter />
 
       <QueryErrorResetBoundary>
         {({ reset }) => (
@@ -54,21 +53,22 @@ function ProfileTradesRender() {
 }
 
 function ProfileTrades() {
-  const profile = useTarget((a) => a.profile);
+  const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
+  const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
   const [type] = useTypeFilter();
-  const address = profile!.address;
+  const address = profile.address;
   const parentRef = useRef<HTMLDivElement>(null);
 
   const query = useSuspenseInfiniteQuery({
-    queryKey: ["transfers", address, type, filters],
+    queryKey: ["transfers", address, type, filters, selectedArtistIds],
     queryFn: async ({ pageParam }: { pageParam?: { timestamp: string; id: string } }) => {
       const url = new URL(`/api/transfers/${address}`, getBaseURL());
       return await ofetch<TransferResult>(url.toString(), {
         query: {
           cursor: pageParam ? JSON.stringify(pageParam) : undefined,
           type: type ?? undefined,
-          artist: filters.artist ?? [],
+          artist: getSelectedArtistIds(filters.artist) ?? [],
           member: filters.member ?? [],
           season: filters.season ?? [],
           class: filters.class ?? [],

@@ -52,25 +52,28 @@ function ProgressRender() {
 
 function Progress() {
   const { authenticated } = useUser();
-  const { artists } = useCosmoArtist();
-  const profile = useTarget((a) => a.profile);
+  const { artists, selectedArtists, selectedArtistIds, getArtist } = useCosmoArtist();
+  const profile = useTarget((a) => a.profile)!;
   const [filters, setFilters] = useFilters();
   const first = useRef(false);
 
   const [objektsQuery, ownedQuery] = useSuspenseQueries({
-    queries: [collectionOptions, ownedCollectionOptions(profile!.address)],
+    queries: [
+      collectionOptions(selectedArtistIds),
+      ownedCollectionOptions(profile.address, selectedArtistIds),
+    ],
   });
 
   const { ownedSlugs, shaped } = useMemo(() => {
     const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
     const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
     const joinedObjekts = [...ownedQuery.data, ...missingObjekts];
-    const shaped = shapeProgressCollections(artists, filters, joinedObjekts);
+    const shaped = shapeProgressCollections(artists, filters, joinedObjekts, getArtist);
     return { ownedSlugs, shaped };
   }, [ownedQuery.data, objektsQuery.data, artists, filters]);
 
   const calculateMemberRanks = useCallback(() => {
-    const members = artists.flatMap((a) => a.artistMembers).map((a) => a.name);
+    const members = selectedArtists.flatMap((a) => a.artistMembers).map((a) => a.name);
     const grouped = Object.values(groupBy(ownedQuery.data, (a) => a.collectionId));
 
     return members
@@ -81,10 +84,10 @@ function Progress() {
       }))
       .map((a) => ({
         name: a.name,
-        progress: (a.owned / a.total) * 100,
+        progress: a.total === 0 ? 0 : (a.owned / a.total) * 100,
       }))
       .toSorted((a, b) => b.progress - a.progress);
-  }, [artists, ownedQuery.data, objektsQuery.data]);
+  }, [selectedArtists, ownedQuery.data, objektsQuery.data]);
 
   useEffect(() => {
     if (first.current || ownedQuery.isLoading || objektsQuery.isLoading) return;
@@ -111,7 +114,7 @@ function Progress() {
 
   return (
     <div className="flex flex-col gap-8">
-      <ProgressFilter artists={artists} />
+      <ProgressFilter />
       {!filters.artist && !filters.member ? (
         <div className="flex justify-center text-muted-fg text-sm">
           Select at least 1 artist or 1 member
@@ -149,7 +152,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
     const groupObjekts = Object.values(groupBy(objekts, (a) => a.collectionId));
     const filtered = groupObjekts
       .map(([objekt]) => objekt)
-      .filter((a) => !unobtainables.includes(a.slug));
+      .filter((a) => unobtainables.includes(a.slug) === false);
     const owned = filtered.filter((a) => ownedSlugs.has(a.slug));
     return { filteredObjekts: filtered, owned };
   }, [objekts, ownedSlugs]);

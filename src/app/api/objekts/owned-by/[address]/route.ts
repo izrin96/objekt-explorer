@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
 import { cachedSession } from "@/lib/server/auth";
@@ -7,6 +7,7 @@ import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
+import { validArtists } from "@/lib/universal/cosmo/common";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 
 type Params = {
@@ -17,19 +18,20 @@ type Params = {
 
 const PER_PAGE = 10000;
 
-const cursorSchema = z
-  .object({
-    receivedAt: z.string(),
-    id: z.number(),
-  })
-  .optional();
+const schema = z.object({
+  artist: z.enum(validArtists).array(),
+  cursor: z
+    .object({
+      receivedAt: z.string(),
+      id: z.number(),
+    })
+    .optional(),
+});
 
 export async function GET(request: NextRequest, props: Params) {
   const params = await props.params;
   const searchParams = request.nextUrl.searchParams;
-  const cursor = cursorSchema.parse(
-    searchParams.get("cursor") ? JSON.parse(searchParams.get("cursor")!) : undefined,
-  );
+  const query = parseParams(searchParams);
 
   const session = await cachedSession();
 
@@ -72,10 +74,18 @@ export async function GET(request: NextRequest, props: Params) {
     .where(
       and(
         eq(objekts.owner, params.address.toLowerCase()),
-        cursor
+        ...(query.artist.length
+          ? [
+              inArray(
+                collections.artist,
+                query.artist.map((a) => a.toLowerCase()),
+              ),
+            ]
+          : []),
+        query.cursor
           ? or(
-              lt(objekts.receivedAt, cursor.receivedAt),
-              and(eq(objekts.receivedAt, cursor.receivedAt), gt(objekts.id, cursor.id)),
+              lt(objekts.receivedAt, query.cursor.receivedAt),
+              and(eq(objekts.receivedAt, query.cursor.receivedAt), gt(objekts.id, query.cursor.id)),
             )
           : undefined,
       ),
@@ -95,4 +105,17 @@ export async function GET(request: NextRequest, props: Params) {
     nextCursor,
     objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
   });
+}
+
+function parseParams(params: URLSearchParams): z.infer<typeof schema> {
+  const result = schema.safeParse({
+    artist: params.getAll("artist"),
+    cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
+  });
+
+  return result.success
+    ? result.data
+    : {
+        artist: [],
+      };
 }

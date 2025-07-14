@@ -1,23 +1,25 @@
-import { and, asc, desc, eq, gt, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
+import { validArtists } from "@/lib/universal/cosmo/common";
 import { overrideCollection } from "@/lib/universal/objekts";
 
-const cursorSchema = z
-  .object({
-    createdAt: z.string(),
-    collectionId: z.string(),
-  })
-  .optional();
+const schema = z.object({
+  artist: z.enum(validArtists).array(),
+  cursor: z
+    .object({
+      createdAt: z.string(),
+      collectionId: z.string(),
+    })
+    .optional(),
+});
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const cursor = cursorSchema.parse(
-    searchParams.get("cursor") ? JSON.parse(searchParams.get("cursor")!) : undefined,
-  );
+  const query = parseParams(searchParams);
 
   const result = await indexer
     .select({
@@ -25,15 +27,25 @@ export async function GET(request: NextRequest) {
     })
     .from(collections)
     .where(
-      cursor
-        ? or(
-            gt(collections.createdAt, cursor.createdAt),
-            and(
-              eq(collections.createdAt, cursor.createdAt),
-              lt(collections.collectionId, cursor.collectionId),
-            ),
-          )
-        : undefined,
+      and(
+        ...(query.artist.length
+          ? [
+              inArray(
+                collections.artist,
+                query.artist.map((a) => a.toLowerCase()),
+              ),
+            ]
+          : []),
+        query.cursor
+          ? or(
+              gt(collections.createdAt, query.cursor.createdAt),
+              and(
+                eq(collections.createdAt, query.cursor.createdAt),
+                lt(collections.collectionId, query.cursor.collectionId),
+              ),
+            )
+          : undefined,
+      ),
     )
     .orderBy(desc(collections.createdAt), asc(collections.collectionId));
 
@@ -50,4 +62,17 @@ export async function GET(request: NextRequest) {
       },
     },
   );
+}
+
+function parseParams(params: URLSearchParams): z.infer<typeof schema> {
+  const result = schema.safeParse({
+    artist: params.getAll("artist"),
+    cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
+  });
+
+  return result.success
+    ? result.data
+    : {
+        artist: [],
+      };
 }
