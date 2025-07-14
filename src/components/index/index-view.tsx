@@ -6,9 +6,9 @@ import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
+import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
-import { useConfigStore } from "@/hooks/use-hide-label";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useUser } from "@/hooks/use-user";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useConfigStore } from "@/hooks/use-hide-label";
+import { useConfigStore } from "@/hooks/use-config";
 import { Toggle } from "../ui";
 
 export default function HideLabelFilter() {
