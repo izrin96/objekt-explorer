@@ -23,13 +23,13 @@ export default function SelectedArtistFilter() {
     startTransition(async () => {
       const value = parseSelected<ValidArtist>(key, true);
       await setArtists.mutateAsync(value ?? []);
-      router.refresh();
-      setFilters(() => ({
+      await setFilters(() => ({
         artist: null,
         member: null,
         season: null,
         class: null,
       }));
+      router.refresh();
     });
   }, []);
 
