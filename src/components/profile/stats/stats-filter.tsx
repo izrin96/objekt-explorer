@@ -19,7 +19,7 @@ export default function StatsFilter() {
       <ArtistFilter />
       <MemberFilter />
       <FilterSeason />
-      <FilterClass hideEtc />
+      <FilterClass />
       <EditionFilter />
       <FilterOnline />
       <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
