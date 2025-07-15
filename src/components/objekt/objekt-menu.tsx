@@ -109,8 +109,8 @@ export function TogglePinMenuItem({
   isPin: boolean;
   tokenId: string;
 }) {
-  const pin = useBatchPin(profile.address);
-  const unpin = useBatchUnpin(profile.address);
+  const pin = useBatchPin();
+  const unpin = useBatchUnpin();
   return (
     <Menu.Item
       onAction={() => {
@@ -142,8 +142,8 @@ export function ToggleLockMenuItem({
   isLocked: boolean;
   tokenId: string;
 }) {
-  const lock = useBatchLock(profile.address);
-  const unlock = useBatchUnlock(profile.address);
+  const lock = useBatchLock();
+  const unlock = useBatchUnlock();
   return (
     <Menu.Item
       onAction={() => {

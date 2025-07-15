@@ -8,9 +8,9 @@ export function useRemoveFromList({ onSuccess }: { onSuccess?: () => void } = {}
   const removeObjektsFromList = useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
       onMutate: async ({ slug, ids }) => {
-        await queryClient.cancelQueries({
-          queryKey: orpc.list.listEntries.key({ input: slug }),
-        });
+        // await queryClient.cancelQueries({
+        //   queryKey: orpc.list.listEntries.key({ input: slug }),
+        // });
         const previousEntries = queryClient.getQueryData<ListEntriesOutput>(
           orpc.list.listEntries.queryKey({ input: slug }),
         );
@@ -23,13 +23,13 @@ export function useRemoveFromList({ onSuccess }: { onSuccess?: () => void } = {}
         );
         return { previousEntries };
       },
-      onSuccess: (_, { slug }) => {
+      onSuccess: () => {
         onSuccess?.();
-        queryClient.invalidateQueries({
-          queryKey: orpc.list.listEntries.key({
-            input: slug,
-          }),
-        });
+        // queryClient.invalidateQueries({
+        //   queryKey: orpc.list.listEntries.key({
+        //     input: slug,
+        //   }),
+        // });
         toast.success("Objekt removed from the list", {
           duration: 1300,
         });

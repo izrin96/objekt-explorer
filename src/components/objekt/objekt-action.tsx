@@ -60,8 +60,8 @@ export function ObjektTogglePin({
   isPin: boolean;
   tokenId: string;
 }) {
-  const pin = useBatchPin(profile.address);
-  const unpin = useBatchUnpin(profile.address);
+  const pin = useBatchPin();
+  const unpin = useBatchUnpin();
   return (
     <Button
       size="sq-xs"
@@ -97,8 +97,8 @@ export function ObjektToggleLock({
   isLocked: boolean;
   tokenId: string;
 }) {
-  const lock = useBatchLock(profile.address);
-  const unlock = useBatchUnlock(profile.address);
+  const lock = useBatchLock();
+  const unlock = useBatchUnlock();
   return (
     <Button
       size="sq-xs"

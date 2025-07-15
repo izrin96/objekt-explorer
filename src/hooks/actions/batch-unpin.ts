@@ -3,14 +3,14 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { PinListOutput } from "@/lib/server/api/routers/pins";
 
-export function useBatchUnpin(address: string, { onSuccess }: { onSuccess?: () => void } = {}) {
+export function useBatchUnpin({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
   const batchUnpin = useMutation(
     orpc.pins.batchUnpin.mutationOptions({
-      onMutate: async ({ tokenIds }) => {
-        await queryClient.cancelQueries({
-          queryKey: orpc.pins.list.key({ input: address }),
-        });
+      onMutate: async ({ tokenIds, address }) => {
+        // await queryClient.cancelQueries({
+        //   queryKey: orpc.pins.list.key({ input: address }),
+        // });
         const previousPins = queryClient.getQueryData<PinListOutput>(
           orpc.pins.list.queryKey({ input: address }),
         );
@@ -25,16 +25,16 @@ export function useBatchUnpin(address: string, { onSuccess }: { onSuccess?: () =
       },
       onSuccess: (_, { tokenIds }) => {
         onSuccess?.();
-        queryClient.invalidateQueries({
-          queryKey: orpc.pins.list.key({
-            input: address,
-          }),
-        });
+        // queryClient.invalidateQueries({
+        //   queryKey: orpc.pins.list.key({
+        //     input: address,
+        //   }),
+        // });
         toast.success(
           tokenIds.length > 1 ? `${tokenIds.length} objekts unpinned` : "Objekt unpinned",
         );
       },
-      onError: (_err, { tokenIds }, context) => {
+      onError: (_err, { tokenIds, address }, context) => {
         if (context?.previousPins) {
           queryClient.setQueryData(
             orpc.pins.list.queryKey({ input: address }),

@@ -3,14 +3,14 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
 
-export function useBatchLock(address: string, { onSuccess }: { onSuccess?: () => void } = {}) {
+export function useBatchLock({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
   const batchLock = useMutation(
     orpc.lockedObjekt.batchLock.mutationOptions({
-      onMutate: async ({ tokenIds }) => {
-        await queryClient.cancelQueries({
-          queryKey: orpc.lockedObjekt.list.key({ input: address }),
-        });
+      onMutate: async ({ tokenIds, address }) => {
+        // await queryClient.cancelQueries({
+        //   queryKey: orpc.lockedObjekt.list.key({ input: address }),
+        // });
         const previousLocks = queryClient.getQueryData<LockListOutput>(
           orpc.lockedObjekt.list.queryKey({ input: address }),
         );
@@ -28,14 +28,14 @@ export function useBatchLock(address: string, { onSuccess }: { onSuccess?: () =>
       },
       onSuccess: (_, { tokenIds }) => {
         onSuccess?.();
-        queryClient.invalidateQueries({
-          queryKey: orpc.lockedObjekt.list.key({
-            input: address,
-          }),
-        });
+        // queryClient.invalidateQueries({
+        //   queryKey: orpc.lockedObjekt.list.key({
+        //     input: address,
+        //   }),
+        // });
         toast.success(tokenIds.length > 1 ? `${tokenIds.length} objekts locked` : "Objekt locked");
       },
-      onError: (_err, { tokenIds }, context) => {
+      onError: (_err, { tokenIds, address }, context) => {
         if (context?.previousLocks) {
           queryClient.setQueryData(
             orpc.lockedObjekt.list.queryKey({ input: address }),

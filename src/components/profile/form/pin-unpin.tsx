@@ -14,7 +14,7 @@ type Props = {
 export function PinObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const batchPin = useBatchPin(address, {
+  const batchPin = useBatchPin({
     onSuccess: () => {
       reset();
     },
@@ -40,7 +40,7 @@ export function PinObjekt({ address, handleAction }: Props) {
 export function UnpinObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const batchUnpin = useBatchUnpin(address, {
+  const batchUnpin = useBatchUnpin({
     onSuccess: () => {
       reset();
     },
