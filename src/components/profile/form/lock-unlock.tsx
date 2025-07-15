@@ -25,7 +25,6 @@ export function LockObjekt({ address, handleAction }: Props) {
           });
         })
       }
-      isPending={batchLock.isPending}
     >
       <LockSimpleIcon data-slot="icon" />
       Lock
@@ -47,7 +46,6 @@ export function UnlockObjekt({ address, handleAction }: Props) {
           });
         });
       }}
-      isPending={batchUnlock.isPending}
     >
       <LockSimpleOpenIcon data-slot="icon" />
       Unlock

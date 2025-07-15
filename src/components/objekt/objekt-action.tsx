@@ -17,7 +17,7 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicProfile } from "@/lib/universal/user";
 import { cn } from "@/utils/classes";
-import { Button, Loader, Menu } from "../ui";
+import { Button, Menu } from "../ui";
 
 export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
@@ -80,16 +80,9 @@ export function ObjektTogglePin({
           });
         }
       }}
-      isPending={pin.isPending || unpin.isPending}
     >
       <span className="text-nowrap font-semibold text-xs">
-        {pin.isPending || unpin.isPending ? (
-          <Loader variant="ring" />
-        ) : isPin ? (
-          <PushPinSlashIcon size={14} />
-        ) : (
-          <PushPinIcon size={14} />
-        )}
+        {isPin ? <PushPinSlashIcon size={14} /> : <PushPinIcon size={14} />}
       </span>
     </Button>
   );
@@ -124,16 +117,9 @@ export function ObjektToggleLock({
           });
         }
       }}
-      isPending={lock.isPending || unlock.isPending}
     >
       <span className="text-nowrap font-semibold text-xs">
-        {lock.isPending || unlock.isPending ? (
-          <Loader variant="ring" />
-        ) : isLocked ? (
-          <LockSimpleOpenIcon size={14} />
-        ) : (
-          <LockSimpleIcon size={14} />
-        )}
+        {isLocked ? <LockSimpleOpenIcon size={14} /> : <LockSimpleIcon size={14} />}
       </span>
     </Button>
   );

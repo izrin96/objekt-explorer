@@ -25,7 +25,6 @@ export function PinObjekt({ address, handleAction }: Props) {
           });
         })
       }
-      isPending={batchPin.isPending}
     >
       <PushPinIcon data-slot="icon" />
       Pin
@@ -47,7 +46,6 @@ export function UnpinObjekt({ address, handleAction }: Props) {
           });
         });
       }}
-      isPending={batchUnpin.isPending}
     >
       <PushPinSlashIcon data-slot="icon" />
       Unpin
