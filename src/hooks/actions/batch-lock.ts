@@ -2,11 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
-import { useObjektSelect } from "../use-objekt-select";
 
-export function useBatchLock(address: string) {
+export function useBatchLock(address: string, { onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
-  const reset = useObjektSelect((a) => a.reset);
   const batchLock = useMutation(
     orpc.lockedObjekt.batchLock.mutationOptions({
       onMutate: async ({ tokenIds }) => {
@@ -29,13 +27,13 @@ export function useBatchLock(address: string) {
         return { previousLocks };
       },
       onSuccess: (_, { tokenIds }) => {
+        onSuccess?.();
         queryClient.invalidateQueries({
           queryKey: orpc.lockedObjekt.list.key({
             input: address,
           }),
         });
         toast.success(tokenIds.length > 1 ? `${tokenIds.length} objekts locked` : "Objekt locked");
-        reset();
       },
       onError: (_err, { tokenIds }, context) => {
         if (context?.previousLocks) {

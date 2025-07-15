@@ -2,11 +2,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { PinListOutput } from "@/lib/server/api/routers/pins";
-import { useObjektSelect } from "../use-objekt-select";
 
-export function useBatchUnpin(address: string) {
+export function useBatchUnpin(address: string, { onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
-  const reset = useObjektSelect((a) => a.reset);
   const batchUnpin = useMutation(
     orpc.pins.batchUnpin.mutationOptions({
       onMutate: async ({ tokenIds }) => {
@@ -26,6 +24,7 @@ export function useBatchUnpin(address: string) {
         return { previousPins };
       },
       onSuccess: (_, { tokenIds }) => {
+        onSuccess?.();
         queryClient.invalidateQueries({
           queryKey: orpc.pins.list.key({
             input: address,
@@ -34,7 +33,6 @@ export function useBatchUnpin(address: string) {
         toast.success(
           tokenIds.length > 1 ? `${tokenIds.length} objekts unpinned` : "Objekt unpinned",
         );
-        reset();
       },
       onError: (_err, { tokenIds }, context) => {
         if (context?.previousPins) {

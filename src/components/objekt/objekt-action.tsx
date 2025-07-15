@@ -9,10 +9,10 @@ import {
   PushPinSlashIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import type { PropsWithChildren } from "react";
-import { useLock } from "@/hooks/actions/lock";
-import { usePin } from "@/hooks/actions/pin";
-import { useUnlock } from "@/hooks/actions/unlock";
-import { useUnpin } from "@/hooks/actions/unpin";
+import { useBatchLock } from "@/hooks/actions/batch-lock";
+import { useBatchPin } from "@/hooks/actions/batch-pin";
+import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
+import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicProfile } from "@/lib/universal/user";
@@ -60,8 +60,8 @@ export function ObjektTogglePin({
   isPin: boolean;
   tokenId: string;
 }) {
-  const pin = usePin(profile.address);
-  const unpin = useUnpin(profile.address);
+  const pin = useBatchPin(profile.address);
+  const unpin = useBatchUnpin(profile.address);
   return (
     <Button
       size="sq-xs"
@@ -71,12 +71,12 @@ export function ObjektTogglePin({
         if (isPin) {
           unpin.mutate({
             address: profile.address,
-            tokenId: Number(tokenId),
+            tokenIds: [Number(tokenId)],
           });
         } else {
           pin.mutate({
             address: profile.address,
-            tokenId: Number(tokenId),
+            tokenIds: [Number(tokenId)],
           });
         }
       }}
@@ -97,8 +97,8 @@ export function ObjektToggleLock({
   isLocked: boolean;
   tokenId: string;
 }) {
-  const lock = useLock(profile.address);
-  const unlock = useUnlock(profile.address);
+  const lock = useBatchLock(profile.address);
+  const unlock = useBatchUnlock(profile.address);
   return (
     <Button
       size="sq-xs"
@@ -108,12 +108,12 @@ export function ObjektToggleLock({
         if (isLocked) {
           unlock.mutate({
             address: profile.address,
-            tokenId: Number(tokenId),
+            tokenIds: [Number(tokenId)],
           });
         } else {
           lock.mutate({
             address: profile.address,
-            tokenId: Number(tokenId),
+            tokenIds: [Number(tokenId)],
           });
         }
       }}

@@ -22,38 +22,6 @@ export const pinsRouter = {
     }));
   }),
 
-  pin: authed
-    .input(
-      z.object({
-        address: z.string(),
-        tokenId: z.number(),
-      }),
-    )
-    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
-
-      // unpin existing first then pin again
-      await db.delete(pins).where(and(eq(pins.tokenId, tokenId), eq(pins.address, address)));
-
-      await db.insert(pins).values({
-        address,
-        tokenId,
-      });
-    }),
-
-  unpin: authed
-    .input(
-      z.object({
-        address: z.string(),
-        tokenId: z.number(),
-      }),
-    )
-    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
-
-      await db.delete(pins).where(and(eq(pins.tokenId, tokenId), eq(pins.address, address)));
-    }),
-
   batchPin: authed
     .input(
       z.object({

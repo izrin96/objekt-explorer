@@ -22,41 +22,6 @@ export const lockedObjektsRouter = {
     }));
   }),
 
-  lock: authed
-    .input(
-      z.object({
-        address: z.string(),
-        tokenId: z.number(),
-      }),
-    )
-    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
-
-      await db
-        .delete(lockedObjekts)
-        .where(and(eq(lockedObjekts.tokenId, tokenId), eq(lockedObjekts.address, address)));
-
-      await db.insert(lockedObjekts).values({
-        address,
-        tokenId,
-      });
-    }),
-
-  unlock: authed
-    .input(
-      z.object({
-        address: z.string(),
-        tokenId: z.number(),
-      }),
-    )
-    .handler(async ({ input: { address, tokenId }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
-
-      await db
-        .delete(lockedObjekts)
-        .where(and(eq(lockedObjekts.tokenId, tokenId), eq(lockedObjekts.address, address)));
-    }),
-
   batchLock: authed
     .input(
       z.object({

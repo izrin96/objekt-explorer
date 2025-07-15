@@ -13,7 +13,12 @@ type Props = {
 
 export function LockObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
-  const batchLock = useBatchLock(address);
+  const reset = useObjektSelect((a) => a.reset);
+  const batchLock = useBatchLock(address, {
+    onSuccess: () => {
+      reset();
+    },
+  });
   return (
     <Button
       intent="outline"
@@ -34,7 +39,12 @@ export function LockObjekt({ address, handleAction }: Props) {
 
 export function UnlockObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
-  const batchUnlock = useBatchUnlock(address);
+  const reset = useObjektSelect((a) => a.reset);
+  const batchUnlock = useBatchUnlock(address, {
+    onSuccess: () => {
+      reset();
+    },
+  });
   return (
     <Button
       intent="outline"

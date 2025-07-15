@@ -13,7 +13,12 @@ type Props = {
 
 export function PinObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
-  const batchPin = useBatchPin(address);
+  const reset = useObjektSelect((a) => a.reset);
+  const batchPin = useBatchPin(address, {
+    onSuccess: () => {
+      reset();
+    },
+  });
   return (
     <Button
       intent="outline"
@@ -34,7 +39,12 @@ export function PinObjekt({ address, handleAction }: Props) {
 
 export function UnpinObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
-  const batchUnpin = useBatchUnpin(address);
+  const reset = useObjektSelect((a) => a.reset);
+  const batchUnpin = useBatchUnpin(address, {
+    onSuccess: () => {
+      reset();
+    },
+  });
   return (
     <Button
       intent="outline"
