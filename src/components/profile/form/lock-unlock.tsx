@@ -1,11 +1,10 @@
 "use client";
 
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/ssr";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { Button } from "@/components/ui";
+import { useBatchLock } from "@/hooks/actions/batch-lock";
+import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { orpc } from "@/lib/orpc/client";
 
 type Props = {
   address: string;
@@ -13,25 +12,8 @@ type Props = {
 };
 
 export function LockObjekt({ address, handleAction }: Props) {
-  const queryClient = useQueryClient();
   const selected = useObjektSelect((a) => a.selected);
-  const reset = useObjektSelect((a) => a.reset);
-  const batchLock = useMutation(
-    orpc.lockedObjekt.batchLock.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.lockedObjekt.list.key({
-            input: address,
-          }),
-        });
-        toast.success("Objekt locked");
-        reset();
-      },
-      onError: () => {
-        toast.error("Error lock objekt");
-      },
-    }),
-  );
+  const batchLock = useBatchLock(address);
   return (
     <Button
       intent="outline"
@@ -52,25 +34,8 @@ export function LockObjekt({ address, handleAction }: Props) {
 }
 
 export function UnlockObjekt({ address, handleAction }: Props) {
-  const queryClient = useQueryClient();
   const selected = useObjektSelect((a) => a.selected);
-  const reset = useObjektSelect((a) => a.reset);
-  const batchUnlock = useMutation(
-    orpc.lockedObjekt.batchUnlock.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.lockedObjekt.list.key({
-            input: address,
-          }),
-        });
-        toast.success("Objekt unlocked");
-        reset();
-      },
-      onError: () => {
-        toast.error("Error unlock objekt");
-      },
-    }),
-  );
+  const batchUnlock = useBatchUnlock(address);
   return (
     <Button
       intent="outline"

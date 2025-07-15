@@ -313,7 +313,6 @@ function MemberProgressChart({
         <Card.Description>Progress by member</Card.Description>
       </Card.Header>
       <Card.Content>
-        {/* todo: chart height based on number of member */}
         <Chart
           layout="radial"
           data={chartData}

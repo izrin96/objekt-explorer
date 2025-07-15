@@ -13,7 +13,9 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
+import { useLock } from "@/hooks/actions/lock";
 import { usePin } from "@/hooks/actions/pin";
+import { useUnlock } from "@/hooks/actions/unlock";
 import { useUnpin } from "@/hooks/actions/unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { orpc } from "@/lib/orpc/client";
@@ -173,37 +175,8 @@ export function ToggleLockMenuItem({
   isLocked: boolean;
   tokenId: string;
 }) {
-  const queryClient = useQueryClient();
-  const lock = useMutation(
-    orpc.lockedObjekt.lock.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.lockedObjekt.list.key({
-            input: profile.address,
-          }),
-        });
-        toast.success("Objekt locked");
-      },
-      onError: () => {
-        toast.error("Error lock objekt");
-      },
-    }),
-  );
-  const unlock = useMutation(
-    orpc.lockedObjekt.unlock.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.lockedObjekt.list.key({
-            input: profile.address,
-          }),
-        });
-        toast.success("Objekt unlocked");
-      },
-      onError: () => {
-        toast.error("Error unlock objekt");
-      },
-    }),
-  );
+  const lock = useLock(profile.address);
+  const unlock = useUnlock(profile.address);
   return (
     <Menu.Item
       onAction={() => {

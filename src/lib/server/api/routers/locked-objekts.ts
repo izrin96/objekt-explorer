@@ -1,5 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
+import type { Outputs } from "@/lib/orpc/server";
 import { db } from "../../db";
 import { lockedObjekts } from "../../db/schema";
 import { authed, pub } from "../orpc";
@@ -93,3 +94,5 @@ export const lockedObjektsRouter = {
         .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
     }),
 };
+
+export type LockListOutput = Outputs["lockedObjekt"]["list"];
