@@ -6,14 +6,16 @@ export function useAddToList({ onSuccess }: { onSuccess?: () => void } = {}) {
   const queryClient = useQueryClient();
   const addToList = useMutation(
     orpc.list.addObjektsToList.mutationOptions({
-      onSuccess: (result, { slug }) => {
+      onSuccess: (rowCount, { slug }) => {
         onSuccess?.();
 
-        queryClient.setQueryData(orpc.list.listEntries.queryKey({ input: slug }), (old = []) => {
-          return [...result, ...old];
+        queryClient.invalidateQueries({
+          queryKey: orpc.list.listEntries.key({
+            input: slug,
+          }),
         });
 
-        toast.success(`${result.length} objekt added to the list`, {
+        toast.success(`${rowCount} objekt added to the list`, {
           duration: 1300,
         });
       },

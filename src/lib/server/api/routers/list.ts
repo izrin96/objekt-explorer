@@ -84,34 +84,28 @@ export const listRouter = {
           const existingSlugs = new Set(entries.map((a) => a.slug));
           const filtered = uniqueCollectionSlugs.filter((slug) => !existingSlugs.has(slug));
 
-          if (filtered.length === 0) return [];
+          if (filtered.length === 0) return 0;
 
-          const result = await db
-            .insert(listEntries)
-            .values(
-              filtered.map((collectionSlug) => ({
-                listId: list.id,
-                collectionSlug: collectionSlug,
-              })),
-            )
-            .returning();
-
-          return mapEntriesCollection(result);
-        }
-
-        if (collectionSlugs.length === 0) return [];
-
-        const result = await db
-          .insert(listEntries)
-          .values(
-            collectionSlugs.map((collectionSlug) => ({
+          const result = await db.insert(listEntries).values(
+            filtered.map((collectionSlug) => ({
               listId: list.id,
               collectionSlug: collectionSlug,
             })),
-          )
-          .returning();
+          );
 
-        return mapEntriesCollection(result);
+          return result.rowCount ?? 0;
+        }
+
+        if (collectionSlugs.length === 0) return 0;
+
+        const result = await db.insert(listEntries).values(
+          collectionSlugs.map((collectionSlug) => ({
+            listId: list.id,
+            collectionSlug: collectionSlug,
+          })),
+        );
+
+        return result.rowCount ?? 0;
       },
     ),
 
