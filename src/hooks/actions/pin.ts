@@ -17,8 +17,8 @@ export function usePin(address: string) {
         queryClient.setQueryData<PinListOutput>(
           orpc.pins.list.queryKey({ input: address }),
           (old = []) => [
-            ...old.filter((item) => item.tokenId !== String(tokenId)),
             { tokenId: String(tokenId), order: Date.now() },
+            ...old.filter((item) => item.tokenId !== String(tokenId)),
           ],
         );
         return { previousPins };

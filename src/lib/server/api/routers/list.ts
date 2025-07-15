@@ -8,7 +8,7 @@ import { mapPublicUser } from "../../auth";
 import { db } from "../../db";
 import { indexer } from "../../db/indexer";
 import { collections } from "../../db/indexer/schema";
-import { listEntries, lists } from "../../db/schema";
+import { type ListEntry, listEntries, lists } from "../../db/schema";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { authed, pub } from "../orpc";
 
@@ -44,15 +44,7 @@ export const listRouter = {
 
     if (!result) throw new ORPCError("NOT_FOUND");
 
-    const slugs = result.entries.map((a) => a.collectionSlug);
-    const collections = await fetchCollections(slugs);
-    const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
-
-    return result.entries.map(({ collectionSlug, id, createdAt }) => ({
-      ...collectionsMap.get(collectionSlug)!,
-      id: id.toString(),
-      createdAt: createdAt.toISOString(),
-    }));
+    return mapEntriesCollection(result.entries);
   }),
 
   list: authed.handler(async ({ context: { session } }) => {
@@ -92,28 +84,34 @@ export const listRouter = {
           const existingSlugs = new Set(entries.map((a) => a.slug));
           const filtered = uniqueCollectionSlugs.filter((slug) => !existingSlugs.has(slug));
 
-          if (filtered.length < 1) return 0;
+          if (filtered.length === 0) return [];
 
-          await db.insert(listEntries).values(
-            filtered.map((collectionSlug) => ({
+          const result = await db
+            .insert(listEntries)
+            .values(
+              filtered.map((collectionSlug) => ({
+                listId: list.id,
+                collectionSlug: collectionSlug,
+              })),
+            )
+            .returning();
+
+          return mapEntriesCollection(result);
+        }
+
+        if (collectionSlugs.length === 0) return [];
+
+        const result = await db
+          .insert(listEntries)
+          .values(
+            collectionSlugs.map((collectionSlug) => ({
               listId: list.id,
               collectionSlug: collectionSlug,
             })),
-          );
+          )
+          .returning();
 
-          return filtered.length;
-        }
-
-        if (collectionSlugs.length < 1) return 0;
-
-        await db.insert(listEntries).values(
-          collectionSlugs.map((collectionSlug) => ({
-            listId: list.id,
-            collectionSlug: collectionSlug,
-          })),
-        );
-
-        return collectionSlugs.length;
+        return mapEntriesCollection(result);
       },
     ),
 
@@ -133,7 +131,7 @@ export const listRouter = {
       }) => {
         const list = await findOwnedList(slug, user.id);
 
-        if (ids.length < 1) return;
+        if (ids.length === 0) return;
 
         await db
           .delete(listEntries)
@@ -329,5 +327,19 @@ async function fetchCollections(slugs: string[]) {
   return result.map((collection) => ({
     ...collection,
     ...overrideCollection(collection),
+  }));
+}
+
+async function mapEntriesCollection(
+  result: Pick<ListEntry, "collectionSlug" | "id" | "createdAt">[],
+) {
+  const slugs = result.map((a) => a.collectionSlug);
+  const collections = await fetchCollections(slugs);
+  const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
+
+  return result.map(({ collectionSlug, id, createdAt }) => ({
+    ...collectionsMap.get(collectionSlug)!,
+    id: id.toString(),
+    createdAt: createdAt.toISOString(),
   }));
 }

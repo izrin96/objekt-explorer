@@ -21,8 +21,8 @@ export function useBatchPin(address: string) {
           (old = []) => {
             const tokenIdSet = new Set(tokenIds.map(String));
             return [
-              ...old.filter((item) => tokenIdSet.has(item.tokenId) === false),
               ...tokenIds.map((tokenId) => ({ tokenId: String(tokenId), order: Date.now() })),
+              ...old.filter((item) => tokenIdSet.has(item.tokenId) === false),
             ];
           },
         );

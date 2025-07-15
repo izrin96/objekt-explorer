@@ -17,8 +17,8 @@ export function useLock(address: string) {
         queryClient.setQueryData<LockListOutput>(
           orpc.lockedObjekt.list.queryKey({ input: address }),
           (old = []) => [
-            ...old.filter((item) => item.tokenId !== String(tokenId)),
             { tokenId: String(tokenId), order: 0 },
+            ...old.filter((item) => item.tokenId !== String(tokenId)),
           ],
         );
         return { previousLocks };
