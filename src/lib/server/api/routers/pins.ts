@@ -1,5 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod/v4";
+import type { Outputs } from "@/lib/orpc/server";
 import { db } from "../../db";
 import { pins } from "../../db/schema";
 import { authed, pub } from "../orpc";
@@ -9,16 +10,15 @@ export const pinsRouter = {
   list: pub.input(z.string()).handler(async ({ input: address }) => {
     const result = await db.query.pins.findMany({
       columns: {
-        id: true,
         tokenId: true,
-        order: true,
+        createdAt: true,
       },
       where: (pins, { eq }) => eq(pins.address, address),
       orderBy: (pins, { desc }) => desc(pins.id),
     });
     return result.map((a) => ({
       tokenId: a.tokenId.toString(),
-      order: a.id,
+      order: a.createdAt.getTime(),
     }));
   }),
 
@@ -88,3 +88,5 @@ export const pinsRouter = {
       await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
     }),
 };
+
+export type PinListOutput = Outputs["pins"]["list"];

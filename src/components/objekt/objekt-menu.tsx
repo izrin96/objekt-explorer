@@ -13,6 +13,8 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type PropsWithChildren, useCallback } from "react";
 import { toast } from "sonner";
+import { usePin } from "@/hooks/actions/pin";
+import { useUnpin } from "@/hooks/actions/unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
@@ -138,37 +140,8 @@ export function TogglePinMenuItem({
   isPin: boolean;
   tokenId: string;
 }) {
-  const queryClient = useQueryClient();
-  const pin = useMutation(
-    orpc.pins.pin.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.pins.list.key({
-            input: profile.address,
-          }),
-        });
-        toast.success("Objekt pinned");
-      },
-      onError: () => {
-        toast.error("Error pin objekt");
-      },
-    }),
-  );
-  const unpin = useMutation(
-    orpc.pins.unpin.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.pins.list.key({
-            input: profile.address,
-          }),
-        });
-        toast.success("Objekt unpinned");
-      },
-      onError: () => {
-        toast.error("Error unpin objekt");
-      },
-    }),
-  );
+  const pin = usePin(profile.address);
+  const unpin = useUnpin(profile.address);
   return (
     <Menu.Item
       onAction={() => {
