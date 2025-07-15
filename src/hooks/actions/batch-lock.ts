@@ -28,23 +28,25 @@ export function useBatchLock(address: string) {
         );
         return { previousLocks };
       },
-      onSuccess: () => {
+      onSuccess: (_, { tokenIds }) => {
         queryClient.invalidateQueries({
           queryKey: orpc.lockedObjekt.list.key({
             input: address,
           }),
         });
-        toast.success("Objekt locked");
+        toast.success(tokenIds.length > 1 ? `${tokenIds.length} objekts locked` : "Objekt locked");
         reset();
       },
-      onError: (_err, _variables, context) => {
+      onError: (_err, { tokenIds }, context) => {
         if (context?.previousLocks) {
           queryClient.setQueryData(
             orpc.lockedObjekt.list.queryKey({ input: address }),
             context.previousLocks,
           );
         }
-        toast.error("Error lock objekt");
+        toast.error(
+          tokenIds.length > 1 ? `Error lock ${tokenIds.length} objekts` : "Error lock objekt",
+        );
       },
     }),
   );

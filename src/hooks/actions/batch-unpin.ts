@@ -25,23 +25,27 @@ export function useBatchUnpin(address: string) {
         );
         return { previousPins };
       },
-      onSuccess: () => {
+      onSuccess: (_, { tokenIds }) => {
         queryClient.invalidateQueries({
           queryKey: orpc.pins.list.key({
             input: address,
           }),
         });
-        toast.success("Objekt unpinned");
+        toast.success(
+          tokenIds.length > 1 ? `${tokenIds.length} objekts unpinned` : "Objekt unpinned",
+        );
         reset();
       },
-      onError: (_err, _variables, context) => {
+      onError: (_err, { tokenIds }, context) => {
         if (context?.previousPins) {
           queryClient.setQueryData(
             orpc.pins.list.queryKey({ input: address }),
             context.previousPins,
           );
         }
-        toast.error("Error unpin objekt");
+        toast.error(
+          tokenIds.length > 1 ? `Error unpin ${tokenIds.length} objekts` : "Error unpin objekt",
+        );
       },
     }),
   );

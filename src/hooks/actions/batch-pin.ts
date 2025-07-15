@@ -28,23 +28,25 @@ export function useBatchPin(address: string) {
         );
         return { previousPins };
       },
-      onSuccess: () => {
+      onSuccess: (_, { tokenIds }) => {
         queryClient.invalidateQueries({
           queryKey: orpc.pins.list.key({
             input: address,
           }),
         });
-        toast.success("Objekt pinned");
+        toast.success(tokenIds.length > 1 ? `${tokenIds.length} objekts pinned` : "Objekt pinned");
         reset();
       },
-      onError: (_err, _variables, context) => {
+      onError: (_err, { tokenIds }, context) => {
         if (context?.previousPins) {
           queryClient.setQueryData(
             orpc.pins.list.queryKey({ input: address }),
             context.previousPins,
           );
         }
-        toast.error("Error pin objekt");
+        toast.error(
+          tokenIds.length > 1 ? `Error pin ${tokenIds.length} objekts` : "Error pin objekt",
+        );
       },
     }),
   );

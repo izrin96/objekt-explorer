@@ -25,23 +25,27 @@ export function useBatchUnlock(address: string) {
         );
         return { previousLocks };
       },
-      onSuccess: () => {
+      onSuccess: (_, { tokenIds }) => {
         queryClient.invalidateQueries({
           queryKey: orpc.lockedObjekt.list.key({
             input: address,
           }),
         });
-        toast.success("Objekt unlocked");
+        toast.success(
+          tokenIds.length > 1 ? `${tokenIds.length} objekts unlocked` : "Objekt unlocked",
+        );
         reset();
       },
-      onError: (_err, _variables, context) => {
+      onError: (_err, { tokenIds }, context) => {
         if (context?.previousLocks) {
           queryClient.setQueryData(
             orpc.lockedObjekt.list.queryKey({ input: address }),
             context.previousLocks,
           );
         }
-        toast.error("Error unlock objekt");
+        toast.error(
+          tokenIds.length > 1 ? `Error unlock ${tokenIds.length} objekts` : "Error unlock objekt",
+        );
       },
     }),
   );
