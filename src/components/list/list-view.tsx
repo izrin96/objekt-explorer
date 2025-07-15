@@ -63,7 +63,7 @@ function ListView({ slug }: Props) {
   const { data: objekts } = useSuspenseQuery(
     orpc.list.listEntries.queryOptions({
       input: slug,
-      select: (data) => data.collections.map(mapObjektWithTag),
+      select: (data) => data.map(mapObjektWithTag),
     }),
   );
 

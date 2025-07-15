@@ -10,11 +10,12 @@ import {
   PushPinSlashIcon,
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { type PropsWithChildren, useCallback } from "react";
-import { toast } from "sonner";
+import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useLock } from "@/hooks/actions/lock";
 import { usePin } from "@/hooks/actions/pin";
+import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useUnlock } from "@/hooks/actions/unlock";
 import { useUnpin } from "@/hooks/actions/unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
@@ -35,25 +36,8 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 }
 
 export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
-  const queryClient = useQueryClient();
   const { data, isLoading } = useQuery(orpc.list.list.queryOptions());
-  const addToList = useMutation(
-    orpc.list.addObjektsToList.mutationOptions({
-      onSuccess: (rowCount, { slug }) => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.list.listEntries.key({
-            input: slug,
-          }),
-        });
-        toast.success(`${rowCount} objekt added to the list`, {
-          duration: 1300,
-        });
-      },
-      onError: () => {
-        toast.error("Error adding objekt to list");
-      },
-    }),
-  );
+  const addToList = useAddToList();
   const items = data ?? [];
 
   const handleAction = useCallback(
@@ -98,24 +82,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
 }
 
 export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: ValidObjekt }) {
-  const queryClient = useQueryClient();
-  const removeObjektsFromList = useMutation(
-    orpc.list.removeObjektsFromList.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: orpc.list.listEntries.key({
-            input: slug,
-          }),
-        });
-        toast.success("Objekt removed from the list", {
-          duration: 1300,
-        });
-      },
-      onError: () => {
-        toast.error("Error removing objekt from list");
-      },
-    }),
-  );
+  const removeObjektsFromList = useRemoveFromList();
 
   return (
     <Menu.Item

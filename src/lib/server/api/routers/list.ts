@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod/v4";
+import type { Outputs } from "@/lib/orpc/server";
 import { overrideCollection } from "@/lib/universal/objekts";
 import { mapPublicUser } from "../../auth";
 import { db } from "../../db";
@@ -47,14 +48,11 @@ export const listRouter = {
     const collections = await fetchCollections(slugs);
     const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
 
-    return {
-      name: result.name,
-      collections: result.entries.map(({ collectionSlug, id, createdAt }) => ({
-        ...collectionsMap.get(collectionSlug)!,
-        id: id.toString(),
-        createdAt: createdAt.toISOString(),
-      })),
-    };
+    return result.entries.map(({ collectionSlug, id, createdAt }) => ({
+      ...collectionsMap.get(collectionSlug)!,
+      id: id.toString(),
+      createdAt: createdAt.toISOString(),
+    }));
   }),
 
   list: authed.handler(async ({ context: { session } }) => {
@@ -259,6 +257,8 @@ export const listRouter = {
       };
     }),
 };
+
+export type ListEntriesOutput = Outputs["list"]["listEntries"];
 
 export async function fetchList(slug: string) {
   const result = await db.query.lists.findFirst({
