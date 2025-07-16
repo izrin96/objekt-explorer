@@ -290,7 +290,7 @@ function ProfileObjekt() {
         {filters.grouped ? ` (${groupCount} types)` : undefined}
       </span>
 
-      <WindowVirtualizer>{virtualList}</WindowVirtualizer>
+      <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
     </div>
   );
 }

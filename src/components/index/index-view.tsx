@@ -151,7 +151,7 @@ function IndexView() {
       </div>
       <span className="font-semibold">{count.toLocaleString()} total</span>
 
-      <WindowVirtualizer>{virtualList}</WindowVirtualizer>
+      <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
     </div>
   );
 }
