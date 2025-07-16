@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build --turbopack",
     "format": "biome lint --fix && biome format --write",
     "start": "next start",
     "lint": "biome lint --fix",
@@ -17,11 +17,11 @@
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.844.0",
+    "@aws-sdk/client-ses": "^3.846.0",
     "@intentui/icons": "^1.11.0",
-    "@orpc/client": "^1.7.1",
-    "@orpc/server": "^1.7.1",
-    "@orpc/tanstack-query": "^1.7.1",
+    "@orpc/client": "^1.7.2",
+    "@orpc/server": "^1.7.2",
+    "@orpc/tanstack-query": "^1.7.2",
     "@phosphor-icons/react": "^2.1.10",
     "@radix-ui/react-avatar": "^1.1.10",
     "@react-stately/color": "^3.8.6",
@@ -36,7 +36,7 @@
     "drizzle-orm": "^0.44.3",
     "es-toolkit": "^1.39.7",
     "input-otp": "^1.4.2",
-    "jose": "^6.0.11",
+    "jose": "^6.0.12",
     "lucide-react": "^0.525.0",
     "minio": "^8.0.5",
     "motion": "^12.23.6",
