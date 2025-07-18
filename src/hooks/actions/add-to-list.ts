@@ -2,13 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 
-export function useAddToList({ onSuccess }: { onSuccess?: () => void } = {}) {
+export function useAddToList() {
   const queryClient = useQueryClient();
   const addToList = useMutation(
     orpc.list.addObjektsToList.mutationOptions({
       onSuccess: (rowCount, { slug }) => {
-        onSuccess?.();
-
         queryClient.invalidateQueries({
           queryKey: orpc.list.listEntries.key({
             input: slug,

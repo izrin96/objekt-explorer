@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { PinListOutput } from "@/lib/server/api/routers/pins";
 
-export function useBatchPin({ onSuccess }: { onSuccess?: () => void } = {}) {
+export function useBatchPin() {
   const queryClient = useQueryClient();
   const batchPin = useMutation(
     orpc.pins.batchPin.mutationOptions({
@@ -27,7 +27,6 @@ export function useBatchPin({ onSuccess }: { onSuccess?: () => void } = {}) {
         return { previousPins };
       },
       onSuccess: (_, { tokenIds }) => {
-        onSuccess?.();
         // queryClient.invalidateQueries({
         //   queryKey: orpc.pins.list.key({
         //     input: address,

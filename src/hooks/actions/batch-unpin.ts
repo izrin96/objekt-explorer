@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { PinListOutput } from "@/lib/server/api/routers/pins";
 
-export function useBatchUnpin({ onSuccess }: { onSuccess?: () => void } = {}) {
+export function useBatchUnpin() {
   const queryClient = useQueryClient();
   const batchUnpin = useMutation(
     orpc.pins.batchUnpin.mutationOptions({
@@ -24,7 +24,6 @@ export function useBatchUnpin({ onSuccess }: { onSuccess?: () => void } = {}) {
         return { previousPins };
       },
       onSuccess: (_, { tokenIds }) => {
-        onSuccess?.();
         // queryClient.invalidateQueries({
         //   queryKey: orpc.pins.list.key({
         //     input: address,

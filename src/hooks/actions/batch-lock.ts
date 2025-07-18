@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
 
-export function useBatchLock({ onSuccess }: { onSuccess?: () => void } = {}) {
+export function useBatchLock() {
   const queryClient = useQueryClient();
   const batchLock = useMutation(
     orpc.lockedObjekt.batchLock.mutationOptions({
@@ -27,7 +27,6 @@ export function useBatchLock({ onSuccess }: { onSuccess?: () => void } = {}) {
         return { previousLocks };
       },
       onSuccess: (_, { tokenIds }) => {
-        onSuccess?.();
         // queryClient.invalidateQueries({
         //   queryKey: orpc.lockedObjekt.list.key({
         //     input: address,

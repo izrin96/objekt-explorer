@@ -14,20 +14,23 @@ type Props = {
 export function LockObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const batchLock = useBatchLock({
-    onSuccess: () => {
-      reset();
-    },
-  });
+  const batchLock = useBatchLock();
   return (
     <Button
       intent="outline"
       onClick={() =>
         handleAction(() => {
-          batchLock.mutate({
-            address: address,
-            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
-          });
+          batchLock.mutate(
+            {
+              address: address,
+              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+            },
+            {
+              onSuccess: () => {
+                reset();
+              },
+            },
+          );
         })
       }
     >
@@ -40,20 +43,23 @@ export function LockObjekt({ address, handleAction }: Props) {
 export function UnlockObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const batchUnlock = useBatchUnlock({
-    onSuccess: () => {
-      reset();
-    },
-  });
+  const batchUnlock = useBatchUnlock();
   return (
     <Button
       intent="outline"
       onClick={() => {
         handleAction(() => {
-          batchUnlock.mutate({
-            address: address,
-            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
-          });
+          batchUnlock.mutate(
+            {
+              address: address,
+              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+            },
+            {
+              onSuccess: () => {
+                reset();
+              },
+            },
+          );
         });
       }}
     >

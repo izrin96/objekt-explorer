@@ -14,20 +14,23 @@ type Props = {
 export function PinObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const batchPin = useBatchPin({
-    onSuccess: () => {
-      reset();
-    },
-  });
+  const batchPin = useBatchPin();
   return (
     <Button
       intent="outline"
       onClick={() =>
         handleAction(() => {
-          batchPin.mutate({
-            address: address,
-            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
-          });
+          batchPin.mutate(
+            {
+              address: address,
+              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+            },
+            {
+              onSuccess: () => {
+                reset();
+              },
+            },
+          );
         })
       }
     >
@@ -40,20 +43,23 @@ export function PinObjekt({ address, handleAction }: Props) {
 export function UnpinObjekt({ address, handleAction }: Props) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const batchUnpin = useBatchUnpin({
-    onSuccess: () => {
-      reset();
-    },
-  });
+  const batchUnpin = useBatchUnpin();
   return (
     <Button
       intent="outline"
       onClick={() => {
         handleAction(() => {
-          batchUnpin.mutate({
-            address: address,
-            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
-          });
+          batchUnpin.mutate(
+            {
+              address: address,
+              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+            },
+            {
+              onSuccess: () => {
+                reset();
+              },
+            },
+          );
         });
       }}
     >

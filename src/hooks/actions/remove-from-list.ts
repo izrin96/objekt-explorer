@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import type { ListEntriesOutput } from "@/lib/server/api/routers/list";
 
-export function useRemoveFromList({ onSuccess }: { onSuccess?: () => void } = {}) {
+export function useRemoveFromList() {
   const queryClient = useQueryClient();
   const removeObjektsFromList = useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
@@ -24,7 +24,6 @@ export function useRemoveFromList({ onSuccess }: { onSuccess?: () => void } = {}
         return { previousEntries };
       },
       onSuccess: () => {
-        onSuccess?.();
         // queryClient.invalidateQueries({
         //   queryKey: orpc.list.listEntries.key({
         //     input: slug,

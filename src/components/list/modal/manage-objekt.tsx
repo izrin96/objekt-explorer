@@ -39,12 +39,7 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
   const formRef = useRef<HTMLFormElement>(null!);
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const addToList = useAddToList({
-    onSuccess: () => {
-      setOpen(false);
-      reset();
-    },
-  });
+  const addToList = useAddToList();
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>
@@ -56,11 +51,19 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
-            addToList.mutate({
-              slug: formData.get("slug") as string,
-              skipDups: formData.get("skipDups") === "on",
-              collectionSlugs: selected.map((a) => a.slug),
-            });
+            addToList.mutate(
+              {
+                slug: formData.get("slug") as string,
+                skipDups: formData.get("skipDups") === "on",
+                collectionSlugs: selected.map((a) => a.slug),
+              },
+              {
+                onSuccess: () => {
+                  setOpen(false);
+                  reset();
+                },
+              },
+            );
           }}
         >
           <QueryErrorResetBoundary>
@@ -158,12 +161,7 @@ type RemoveFromListModalProps = {
 export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModalProps) {
   const selected = useObjektSelect((a) => a.selected);
   const reset = useObjektSelect((a) => a.reset);
-  const removeObjektsFromList = useRemoveFromList({
-    onSuccess: () => {
-      setOpen(false);
-      reset();
-    },
-  });
+  const removeObjektsFromList = useRemoveFromList();
   return (
     <Modal.Content isOpen={open} onOpenChange={setOpen}>
       <Modal.Header>
@@ -180,10 +178,18 @@ export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModal
           type="submit"
           isPending={removeObjektsFromList.isPending}
           onClick={() => {
-            removeObjektsFromList.mutate({
-              slug: slug.toString(),
-              ids: selected.map((a) => Number(a.id)),
-            });
+            removeObjektsFromList.mutate(
+              {
+                slug: slug.toString(),
+                ids: selected.map((a) => Number(a.id)),
+              },
+              {
+                onSuccess: () => {
+                  setOpen(false);
+                  reset();
+                },
+              },
+            );
           }}
         >
           Continue
