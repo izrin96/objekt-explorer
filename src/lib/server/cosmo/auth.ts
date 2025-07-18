@@ -24,15 +24,8 @@ export async function refresh(refreshToken: string): Promise<RefreshTokenResult>
   }).then((res) => res.credentials);
 }
 
-export async function fetchByNickname(
-  nickname: string,
-  token?: string,
-): Promise<CosmoPublicUser | undefined> {
-  return await cosmo<{ profile: CosmoPublicUser }>(`/user/v1/by-nickname/${nickname}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
+export async function fetchByNickname(nickname: string): Promise<CosmoPublicUser | undefined> {
+  return await cosmo<{ profile: CosmoPublicUser }>(`/user/v1/by-nickname/${nickname}`)
     .then((res) => res.profile)
     .catch(() => undefined);
 }

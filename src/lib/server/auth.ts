@@ -137,10 +137,7 @@ export const cachedSession = cache(async () =>
   }),
 );
 
-export async function fetchUserByIdentifier(
-  identifier: string,
-  token?: string,
-): Promise<PublicProfile> {
+export async function fetchUserByIdentifier(identifier: string): Promise<PublicProfile> {
   const cachedUser = await db.query.userAddress.findFirst({
     columns: {
       nickname: true,
@@ -183,7 +180,7 @@ export async function fetchUserByIdentifier(
     };
   }
 
-  const user = await fetchByNickname(identifier, token);
+  const user = await fetchByNickname(identifier);
   if (!user) {
     notFound();
   }
