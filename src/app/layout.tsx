@@ -41,9 +41,10 @@ export const metadata: Metadata = {
     default: "Objekt Tracker",
     absolute: "Objekt Tracker",
   },
-  description: "Cosmo objekt explorer",
+  description: "Cosmo objekt explorer (formerly Lunar Cosmo)",
   // keywords taken from teamreflex/cosmo-web
   keywords: [
+    "lunar",
     "kpop",
     "modhaus",
     "모드하우스",
