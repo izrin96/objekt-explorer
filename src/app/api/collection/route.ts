@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, lt, or } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
 import { indexer } from "@/lib/server/db/indexer";
@@ -41,13 +41,13 @@ export async function GET(request: NextRequest) {
               gt(collections.createdAt, query.cursor.createdAt),
               and(
                 eq(collections.createdAt, query.cursor.createdAt),
-                lt(collections.collectionId, query.cursor.collectionId),
+                gt(collections.collectionId, query.cursor.collectionId),
               ),
             )
           : undefined,
       ),
     )
-    .orderBy(desc(collections.createdAt), asc(collections.collectionId));
+    .orderBy(desc(collections.createdAt), desc(collections.collectionId));
 
   return Response.json(
     {
