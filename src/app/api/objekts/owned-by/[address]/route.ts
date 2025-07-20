@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, lt, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
 import { cachedSession } from "@/lib/server/auth";
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest, props: Params) {
         query.cursor
           ? or(
               lt(objekts.receivedAt, query.cursor.receivedAt),
-              and(eq(objekts.receivedAt, query.cursor.receivedAt), lt(objekts.id, query.cursor.id)),
+              and(eq(objekts.receivedAt, query.cursor.receivedAt), gt(objekts.id, query.cursor.id)),
             )
           : undefined,
       ),
