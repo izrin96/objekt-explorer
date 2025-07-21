@@ -98,10 +98,12 @@ function Progress() {
 
     const ranks = calculateMemberRanks();
     if (ranks.length) {
-      const { name } = ranks[0];
-      setFilters({
-        member: [name],
-      });
+      const { name, progress } = ranks[0];
+      if (progress > 0) {
+        setFilters({
+          member: [name],
+        });
+      }
     }
   }, [
     ownedQuery.data,
