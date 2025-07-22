@@ -113,6 +113,10 @@ services:
       - AUTH_TYPE=scram-sha-256
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
+  cronjob:
+    build:
+      context: ./docker/cron
+      dockerfile: Dockerfile
 volumes:
   db_data:
   minio_data:
