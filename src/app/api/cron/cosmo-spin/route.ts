@@ -1,5 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm";
-import { indexer } from "@/lib/server/db/indexer";
+import { indexerWritable as indexer } from "@/lib/server/db/indexer";
 import { objekts } from "@/lib/server/db/indexer/schema";
 import { SPIN_ADDRESS } from "@/lib/utils";
 

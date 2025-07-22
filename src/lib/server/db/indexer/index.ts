@@ -34,3 +34,7 @@ export const indexer =
         },
         { schema },
       );
+
+export const indexerWritable = drizzleNode(process.env.DATABASE_URL_INDEXER!, {
+  schema,
+});

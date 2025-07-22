@@ -1,5 +1,5 @@
 import { and, eq, gt, inArray } from "drizzle-orm";
-import { indexer } from "@/lib/server/db/indexer";
+import { indexerWritable as indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { fetchMetadata } from "@/lib/server/objekts/objekt-metadata";
 import { redis } from "@/lib/server/redis";
