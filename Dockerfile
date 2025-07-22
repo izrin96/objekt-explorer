@@ -80,6 +80,8 @@ ARG UPSTASH_REDIS_REST_URL
 ENV UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
 ARG UPSTASH_REDIS_REST_TOKEN
 ENV UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+ARG DATABASE_URL_INDEXER
+ENV DATABASE_URL_INDEXER=${DATABASE_URL_INDEXER}
 
 # Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line to disable telemetry at build time

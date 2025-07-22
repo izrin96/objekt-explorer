@@ -55,6 +55,7 @@ services:
         BYPASS_LIVE_KEY: ${BYPASS_LIVE_KEY}
         UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL}
         UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN}
+        DATABASE_URL_INDEXER: ${DATABASE_URL_INDEXER}
     expose:
       - 3000
     environment:
@@ -86,6 +87,7 @@ services:
       - BYPASS_LIVE_KEY
       - UPSTASH_REDIS_REST_URL
       - UPSTASH_REDIS_REST_TOKEN
+      - DATABASE_URL_INDEXER
   minio:
     restart: always
     image: minio/minio:latest
