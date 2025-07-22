@@ -76,6 +76,10 @@ ARG COSMO_SHOP_RECAPTCHA_KEY
 ENV COSMO_SHOP_RECAPTCHA_KEY=${COSMO_SHOP_RECAPTCHA_KEY}
 ARG BYPASS_LIVE_KEY
 ENV BYPASS_LIVE_KEY=${BYPASS_LIVE_KEY}
+ARG UPSTASH_REDIS_REST_URL
+ENV UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+ARG UPSTASH_REDIS_REST_TOKEN
+ENV UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
 
 # Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line to disable telemetry at build time

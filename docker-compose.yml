@@ -53,6 +53,8 @@ services:
         NEXT_PUBLIC_LIVE_API_KEY: ${NEXT_PUBLIC_LIVE_API_KEY}
         COSMO_SHOP_RECAPTCHA_KEY: ${COSMO_SHOP_RECAPTCHA_KEY}
         BYPASS_LIVE_KEY: ${BYPASS_LIVE_KEY}
+        UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL}
+        UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN}
     expose:
       - 3000
     environment:
@@ -82,6 +84,8 @@ services:
       - NEXT_PUBLIC_LIVE_API_KEY
       - COSMO_SHOP_RECAPTCHA_KEY
       - BYPASS_LIVE_KEY
+      - UPSTASH_REDIS_REST_URL
+      - UPSTASH_REDIS_REST_TOKEN
   minio:
     restart: always
     image: minio/minio:latest
