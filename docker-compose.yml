@@ -1,9 +1,7 @@
 services:
   postgres:
     restart: always
-    build:
-      context: ./docker/postgres
-      dockerfile: Dockerfile
+    image: postgres:latest
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -55,7 +53,6 @@ services:
         BYPASS_LIVE_KEY: ${BYPASS_LIVE_KEY}
         UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL}
         UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN}
-        DATABASE_URL_INDEXER: ${DATABASE_URL_INDEXER}
     expose:
       - 3000
     environment:
@@ -87,7 +84,6 @@ services:
       - BYPASS_LIVE_KEY
       - UPSTASH_REDIS_REST_URL
       - UPSTASH_REDIS_REST_TOKEN
-      - DATABASE_URL_INDEXER
   minio:
     restart: always
     image: minio/minio:latest
@@ -113,10 +109,6 @@ services:
       - AUTH_TYPE=scram-sha-256
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
-  cronjob:
-    build:
-      context: ./docker/cron
-      dockerfile: Dockerfile
 volumes:
   db_data:
   minio_data:

@@ -24,7 +24,6 @@ export const env = createEnv({
     BYPASS_LIVE_KEY: z.string().optional(),
     UPSTASH_REDIS_REST_URL: z.string(),
     UPSTASH_REDIS_REST_TOKEN: z.string(),
-    DATABASE_URL_INDEXER: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.string().optional(),
