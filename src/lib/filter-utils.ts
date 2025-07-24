@@ -156,9 +156,13 @@ export function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: 
     }
 
     if (targetColor) {
-      const color = chroma(a.backgroundColor);
-      const deltaE = chroma.deltaE(targetColor, color);
-      if (deltaE > (filters.colorSensitivity ?? 7)) return false;
+      try {
+        const color = chroma(a.backgroundColor.trim());
+        const deltaE = chroma.deltaE(targetColor, color);
+        if (deltaE > (filters.colorSensitivity ?? 7)) return false;
+      } catch {
+        console.error(`Error parsing background color for ${a.slug}`, a.backgroundColor);
+      }
     }
 
     return true;
