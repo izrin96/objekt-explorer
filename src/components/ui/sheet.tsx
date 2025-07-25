@@ -7,8 +7,8 @@ import {
   Modal,
   ModalOverlay,
 } from "react-aria-components";
-import { tv, type VariantProps } from "tailwind-variants";
-
+import { twJoin } from "tailwind-merge";
+import { tv } from "tailwind-variants";
 import {
   Dialog,
   DialogBody,
@@ -20,23 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./dialog";
-
-const overlayStyles = tv({
-  base: [
-    "fixed top-0 left-0 isolate z-50 flex h-(--visual-viewport-height) w-full items-center justify-center bg-fg/15 p-4 dark:bg-bg/40",
-  ],
-  variants: {
-    isBlurred: {
-      true: "bg-bg/15 backdrop-blur dark:bg-bg/40",
-    },
-    isEntering: {
-      true: "fade-in animate-in duration-300 ease-out",
-    },
-    isExiting: {
-      true: "fade-out animate-out duration-200 ease-in",
-    },
-  },
-});
 
 type Sides = "top" | "bottom" | "left" | "right";
 const generateCompoundVariants = (sides: Array<Sides>) => {
@@ -55,21 +38,21 @@ const generateCompoundVariants = (sides: Array<Sides>) => {
 };
 
 const contentStyles = tv({
-  base: "fixed z-50 grid gap-4 border-fg/5 bg-overlay text-overlay-fg shadow-lg transition ease-in-out dark:border-border",
+  base: "fixed z-50 grid gap-4 border-muted-fg/20 bg-overlay text-overlay-fg shadow-lg transition ease-in-out dark:border-border",
   variants: {
     isEntering: {
-      true: "animate-in duration-300 ",
+      true: "fade-in animate-in duration-300",
     },
     isExiting: {
-      true: "animate-out duration-200",
+      true: "fade-out animate-out",
     },
     side: {
       top: "entering:slide-in-from-top exiting:slide-out-to-top inset-x-0 top-0 rounded-b-2xl border-b",
       bottom:
         "entering:slide-in-from-bottom exiting:slide-out-to-bottom inset-x-0 bottom-0 rounded-t-2xl border-t",
-      left: "entering:slide-in-from-left exiting:slide-out-to-left inset-y-0 left-0 h-auto w-full max-w-xs overflow-y-auto border-r",
+      left: "entering:slide-in-from-left exiting:slide-out-to-left inset-y-0 left-0 h-auto w-full overflow-y-auto border-r sm:max-w-sm",
       right:
-        "entering:slide-in-from-right exiting:slide-out-to-right inset-y-0 right-0 h-auto w-full max-w-xs overflow-y-auto border-l",
+        "entering:slide-in-from-right exiting:slide-out-to-right inset-y-0 right-0 h-auto w-full overflow-y-auto border-l sm:max-w-sm",
     },
     isFloat: {
       false: "border-fg/20 dark:border-border",
@@ -86,8 +69,7 @@ const Sheet = (props: SheetProps) => {
 
 interface SheetContentProps
   extends Omit<ModalOverlayProps, "children">,
-    Pick<DialogProps, "aria-label" | "role" | "aria-labelledby" | "children">,
-    VariantProps<typeof overlayStyles> {
+    Pick<DialogProps, "aria-label" | "role" | "aria-labelledby" | "children"> {
   closeButton?: boolean;
   isBlurred?: boolean;
   isFloat?: boolean;
@@ -111,13 +93,14 @@ const SheetContent = ({
   return (
     <ModalOverlay
       isDismissable={isDismissable}
-      className={composeRenderProps(overlay?.className, (className, renderProps) => {
-        return overlayStyles({
-          ...renderProps,
-          isBlurred,
-          className,
-        });
-      })}
+      className={({ isExiting, isEntering }) =>
+        twJoin(
+          "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-fg/15 dark:bg-bg/30",
+          isEntering && "fade-in animate-in duration-300",
+          isExiting && "fade-out animate-out duration-200",
+          isBlurred && "backdrop-blur-sm backdrop-filter",
+        )
+      }
       {...props}
     >
       <Modal
@@ -129,9 +112,8 @@ const SheetContent = ({
             className,
           }),
         )}
-        {...props}
       >
-        <Dialog role={role}>
+        <Dialog aria-label={props["aria-label"]} role={role}>
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}
@@ -164,4 +146,14 @@ Sheet.Close = SheetClose;
 Sheet.Content = SheetContent;
 
 export type { SheetProps, SheetContentProps, Sides };
-export { Sheet };
+export {
+  Sheet,
+  SheetTrigger,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetBody,
+  SheetClose,
+  SheetContent,
+};

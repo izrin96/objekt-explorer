@@ -27,7 +27,7 @@ import {
   SearchField,
   useFilter,
 } from "react-aria-components";
-import { twMerge } from "tailwind-merge";
+import { twJoin, twMerge } from "tailwind-merge";
 import { composeTailwindRenderProps } from "@/lib/primitive";
 import { DropdownKeyboard } from "./dropdown";
 import { Loader } from "./loader";
@@ -56,13 +56,25 @@ interface CommandMenuProps extends AutocompleteProps, MenuTriggerProps, CommandM
   shortcut?: string;
   isBlurred?: boolean;
   className?: string;
+  size?: keyof typeof sizes;
 }
+
+const sizes = {
+  xs: "sm:max-w-xs",
+  sm: "sm:max-w-sm",
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-xl",
+  "2xl": "sm:max-w-2xl",
+  "3xl": "sm:max-w-3xl",
+};
 
 const CommandMenu = ({
   onOpenChange,
   className,
   isDismissable = true,
   escapeButton = true,
+  size = "xl",
   isPending,
   isBlurred,
   shortcut,
@@ -87,20 +99,36 @@ const CommandMenu = ({
       <ModalContext value={{ isOpen: props.isOpen, onOpenChange: onOpenChange }}>
         <ModalOverlay
           isDismissable={isDismissable}
-          className={twMerge([
-            "fixed inset-0 z-50 max-h-(--visual-viewport-height) bg-black/15 dark:bg-black/40",
-            "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-in",
-            isBlurred && props.isOpen ? "backdrop-blur" : "",
-          ])}
+          className={({ isExiting, isEntering }) =>
+            twJoin(
+              "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-fg/15 dark:bg-bg/30",
+              "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
+              isEntering && "fade-in animate-in duration-300",
+              isExiting && "fade-out animate-out duration-200",
+              isBlurred &&
+                "bg-bg bg-clip-padding supports-backdrop-filter:bg-bg/15 supports-backdrop-filter:backdrop-blur dark:supports-backdrop-filter:bg-bg/40",
+            )
+          }
+          {...props}
         >
           <Modal
-            className={twMerge([
-              "fixed top-auto bottom-0 left-[50%] z-50 grid h-[calc(100vh-30%)] w-full max-w-full translate-x-[-50%] gap-4 overflow-hidden rounded-t-2xl bg-overlay text-overlay-fg shadow-lg ring-1 ring-fg/10 sm:top-[6rem] sm:bottom-auto sm:h-auto sm:w-full sm:max-w-xl sm:rounded-xl dark:ring-border forced-colors:border",
-              "entering:fade-in-0 entering:slide-in-from-bottom sm:entering:slide-in-from-bottom-0 sm:entering:zoom-in-95 entering:animate-in entering:duration-300 sm:entering:duration-300",
-              "exiting:fade-out sm:exiting:zoom-out-95 exiting:slide-out-to-bottom-56 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:duration-200",
-              className,
-            ])}
-            {...props}
+            className={({ isExiting, isEntering }) =>
+              twMerge(
+                "bg-overlay text-left text-overlay-fg shadow-lg outline-none ring ring-muted-fg/15 dark:ring-border",
+                "fixed top-[16%] max-h-[calc(var(--visual-viewport-height)*0.8)] w-full",
+                "rounded-t-2xl md:rounded-xl",
+                isEntering && [
+                  "slide-in-from-bottom animate-in duration-300 ease-out",
+                  "md:fade-in md:zoom-in-95 md:slide-in-from-bottom-0",
+                ],
+                isExiting && [
+                  "slide-out-to-bottom animate-out",
+                  "md:fade-out md:zoom-out-95 md:slide-out-to-bottom-0",
+                ],
+                sizes[size],
+                className,
+              )
+            }
           >
             <Dialog
               aria-label={props["aria-label"] ?? "Command Menu"}
@@ -117,7 +145,6 @@ const CommandMenu = ({
 
 interface CommandMenuSearchProps extends SearchFieldProps {
   placeholder?: string;
-  className?: string;
 }
 
 const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSearchProps) => {
@@ -212,10 +239,7 @@ interface CommandMenuDescriptionProps extends React.ComponentProps<typeof Menu.D
 const CommandMenuDescription = ({ className, ...props }: CommandMenuDescriptionProps) => {
   return (
     <Menu.Description
-      className={twMerge(
-        "col-start-2 row-start-2 sm:col-start-3 sm:row-start-1 sm:ml-auto",
-        className,
-      )}
+      className={twMerge("col-start-3 row-start-1 ml-auto", className)}
       {...props}
     />
   );
@@ -267,4 +291,15 @@ CommandMenu.Separator = CommandMenuSeparator;
 CommandMenu.Footer = CommandMenuFooter;
 
 export type { CommandMenuProps, CommandMenuSearchProps, CommandMenuDescriptionProps };
-export { CommandMenu };
+export {
+  CommandMenu,
+  CommandMenuSearch,
+  CommandMenuList,
+  CommandMenuItem,
+  CommandMenuLabel,
+  CommandMenuSection,
+  CommandMenuDescription,
+  CommandMenuKeyboard,
+  CommandMenuSeparator,
+  CommandMenuFooter,
+};

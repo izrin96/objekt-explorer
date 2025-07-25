@@ -21,7 +21,13 @@ import {
   Link,
   Loader,
   Modal,
-  Sheet,
+  SheetBody,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
 } from "@/components/ui";
 import { orpc } from "@/lib/orpc/client";
 import { mimeTypes } from "@/lib/utils";
@@ -174,14 +180,14 @@ export function EditProfileModal({
   }, [droppedImage]);
 
   return (
-    <Sheet.Content className={"max-w-sm"} isOpen={open} onOpenChange={setOpen}>
-      <Sheet.Header>
-        <Sheet.Title>Edit Profile</Sheet.Title>
-        <Sheet.Description>
+    <SheetContent className={"max-w-sm"} isOpen={open} onOpenChange={setOpen}>
+      <SheetHeader>
+        <SheetTitle>Edit Profile</SheetTitle>
+        <SheetDescription>
           Currently editing <span className="text-fg">{nickname}</span> Cosmo profile
-        </Sheet.Description>
-      </Sheet.Header>
-      <Sheet.Body>
+        </SheetDescription>
+      </SheetHeader>
+      <SheetBody>
         <Form
           ref={formRef}
           onSubmit={async (e) => {
@@ -258,9 +264,9 @@ export function EditProfileModal({
             )}
           </QueryErrorResetBoundary>
         </Form>
-      </Sheet.Body>
-      <Sheet.Footer>
-        <Sheet.Close>Cancel</Sheet.Close>
+      </SheetBody>
+      <SheetFooter>
+        <SheetClose>Cancel</SheetClose>
         <Button
           onClick={() => formRef.current.requestSubmit()}
           intent="primary"
@@ -269,8 +275,8 @@ export function EditProfileModal({
         >
           Save
         </Button>
-      </Sheet.Footer>
-    </Sheet.Content>
+      </SheetFooter>
+    </SheetContent>
   );
 }
 

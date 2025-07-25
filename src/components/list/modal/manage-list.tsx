@@ -10,7 +10,22 @@ import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
-import { Button, Checkbox, Form, Link, Loader, Modal, Sheet, TextField } from "@/components/ui";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Link,
+  Loader,
+  Modal,
+  SheetBody,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  TextField,
+} from "@/components/ui";
 import { orpc } from "@/lib/orpc/client";
 
 type CreateListModalProps = {
@@ -153,12 +168,12 @@ export function EditListModal({ slug, onComplete, open, setOpen }: EditListModal
     }),
   );
   return (
-    <Sheet.Content isOpen={open} onOpenChange={setOpen}>
-      <Sheet.Header>
-        <Sheet.Title>Edit list</Sheet.Title>
-        <Sheet.Description>Manage your list</Sheet.Description>
-      </Sheet.Header>
-      <Sheet.Body>
+    <SheetContent isOpen={open} onOpenChange={setOpen}>
+      <SheetHeader>
+        <SheetTitle>Edit list</SheetTitle>
+        <SheetDescription>Manage your list</SheetDescription>
+      </SheetHeader>
+      <SheetBody>
         <Form
           ref={formRef}
           onSubmit={async (e) => {
@@ -187,9 +202,9 @@ export function EditListModal({ slug, onComplete, open, setOpen }: EditListModal
             )}
           </QueryErrorResetBoundary>
         </Form>
-      </Sheet.Body>
-      <Sheet.Footer>
-        <Sheet.Close>Cancel</Sheet.Close>
+      </SheetBody>
+      <SheetFooter>
+        <SheetClose>Cancel</SheetClose>
         <Button
           onClick={() => formRef.current.requestSubmit()}
           type="submit"
@@ -197,8 +212,8 @@ export function EditListModal({ slug, onComplete, open, setOpen }: EditListModal
         >
           Save
         </Button>
-      </Sheet.Footer>
-    </Sheet.Content>
+      </SheetFooter>
+    </SheetContent>
   );
 }
 

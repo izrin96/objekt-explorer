@@ -11,7 +11,19 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
-import { Button, Checkbox, Form, Loader, Modal, Sheet, TextField } from "@/components/ui";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Loader,
+  Modal,
+  SheetBody,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  TextField,
+} from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import type { Session } from "@/lib/server/auth";
 import { ListAccounts } from "./link-account";
@@ -23,12 +35,12 @@ type Props = {
 
 export default function UserAccountModal({ open, setOpen }: Props) {
   return (
-    <Sheet.Content className={"max-w-md"} isOpen={open} onOpenChange={setOpen}>
-      <Sheet.Header>
-        <Sheet.Title>Account</Sheet.Title>
-        <Sheet.Description>Manage your account</Sheet.Description>
-      </Sheet.Header>
-      <Sheet.Body>
+    <SheetContent className={"max-w-md"} isOpen={open} onOpenChange={setOpen}>
+      <SheetHeader>
+        <SheetTitle>Account</SheetTitle>
+        <SheetDescription>Manage your account</SheetDescription>
+      </SheetHeader>
+      <SheetBody>
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
@@ -50,8 +62,8 @@ export default function UserAccountModal({ open, setOpen }: Props) {
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
-      </Sheet.Body>
-    </Sheet.Content>
+      </SheetBody>
+    </SheetContent>
   );
 }
 
