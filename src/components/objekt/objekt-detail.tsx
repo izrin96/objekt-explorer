@@ -1,6 +1,7 @@
 "use client";
 
-import { IconChevronLgLeft, IconChevronLgRight, IconOpenLink } from "@intentui/icons";
+import { IconOpenLink } from "@intentui/icons";
+import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import NextImage from "next/image";
@@ -209,7 +210,7 @@ function OwnedListPanel({
             isDisabled={currentPage <= 1}
             onClick={() => setCurrentPage(currentPage - 1)}
           >
-            <IconChevronLgLeft />
+            <CaretLeftIcon />
           </Button>
           <span>
             {currentPage} / {totalPages}
@@ -220,7 +221,7 @@ function OwnedListPanel({
             isDisabled={currentPage >= totalPages}
             onClick={() => setCurrentPage(currentPage + 1)}
           >
-            <IconChevronLgRight />
+            <CaretRightIcon />
           </Button>
         </div>
       )}

@@ -1,18 +1,26 @@
 "use client";
 
-import { IconArrowLeft, IconArrowRight, IconOpenLink } from "@intentui/icons";
-import { LockIcon, QuestionMarkIcon } from "@phosphor-icons/react/dist/ssr";
+import { IconOpenLink } from "@intentui/icons";
+import {
+  CaretLeftIcon,
+  CaretLineLeftIcon,
+  CaretLineRightIcon,
+  CaretRightIcon,
+  LockIcon,
+  QuestionMarkIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useState } from "react";
+import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import ErrorFallbackRender from "../error-boundary";
-import { Badge, Button, Card, Link, Loader, NumberField, Table } from "../ui";
+import { Badge, Button, Card, FieldGroup, Input, Link, Loader, Table } from "../ui";
 import UserLink from "../user-link";
 import type { ObjektSerial, ObjektTransferResponse } from "./common";
 
@@ -73,15 +81,22 @@ function Trades({
   const [serial, setSerial] = useState(initialSerial);
 
   const updateSerial = useCallback(
-    (mode: "prev" | "next") => {
+    (mode: "prev" | "next" | "first" | "last") => {
+      if (serials.length === 0) return;
       setSerial((prevSerial) => {
+        if (mode === "first") {
+          return serials[0] ?? prevSerial;
+        }
+        if (mode === "last") {
+          return serials[serials.length - 1] ?? prevSerial;
+        }
         if (mode === "prev") {
           const newSerial = serials.filter((serial) => serial < prevSerial).pop();
           return newSerial ?? prevSerial;
         }
 
         const newSerial = serials.filter((serial) => serial > prevSerial)?.[0];
-        return newSerial ?? prevSerial;
+        return newSerial ?? prevSerial + 1;
       });
     },
     [serials],
@@ -90,21 +105,33 @@ function Trades({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <NumberField
+        <NumberFieldPrimitive
           minValue={1}
-          className="grow"
           aria-label="Serial no."
           value={serial}
           onChange={setSerial}
           isWheelDisabled
-        />
+          className="grow"
+        >
+          <FieldGroup>
+            <Input className="tabular-nums" />
+          </FieldGroup>
+        </NumberFieldPrimitive>
+        <Button
+          size="sq-md"
+          intent="outline"
+          className="flex-none"
+          onClick={() => updateSerial("first")}
+        >
+          <CaretLineLeftIcon />
+        </Button>
         <Button
           size="sq-md"
           intent="outline"
           className="flex-none"
           onClick={() => updateSerial("prev")}
         >
-          <IconArrowLeft />
+          <CaretLeftIcon />
         </Button>
         <Button
           size="sq-md"
@@ -112,7 +139,15 @@ function Trades({
           className="flex-none"
           onClick={() => updateSerial("next")}
         >
-          <IconArrowRight />
+          <CaretRightIcon />
+        </Button>
+        <Button
+          size="sq-md"
+          intent="outline"
+          className="flex-none"
+          onClick={() => updateSerial("last")}
+        >
+          <CaretLineRightIcon />
         </Button>
       </div>
 
