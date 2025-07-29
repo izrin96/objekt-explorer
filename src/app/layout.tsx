@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
+import { Inter, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
@@ -14,13 +14,8 @@ import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
 import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
 
-const geistSans = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sans = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
@@ -70,7 +65,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${dotMatrix.variable} ${nunitoFont.variable}`}
+      className={`${sans.variable} ${dotMatrix.variable} ${nunitoFont.variable}`}
     >
       <body
         className={cn(

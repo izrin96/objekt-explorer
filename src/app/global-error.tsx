@@ -1,17 +1,18 @@
 "use client";
 
+import "./globals.css";
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
-import { Geist } from "next/font/google";
+import { Inter } from "next/font/google";
 import { Button } from "@/components/ui";
 
-const geistSans = Geist({
-  variable: "--font-geist",
+const sans = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
 export default function GlobalError() {
   return (
-    <html lang="en" className={`dark ${geistSans.variable}`}>
+    <html lang="en" className={`dark ${sans.variable}`}>
       <head>
         <title>Objekt Tracker</title>
       </head>
