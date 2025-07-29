@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo } from "react";
-import type { Selection } from "react-stately";
+import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";

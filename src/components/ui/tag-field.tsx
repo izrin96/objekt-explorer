@@ -1,10 +1,9 @@
 "use client";
 
+import type { ListData } from "@react-stately/data";
 import { useCallback, useState } from "react";
-
 import type { Key } from "react-aria-components";
 import { Group, TextField } from "react-aria-components";
-import type { ListData } from "react-stately";
 import { twJoin, twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
 

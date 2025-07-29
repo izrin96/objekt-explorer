@@ -9,6 +9,7 @@ import {
   LockIcon,
   QuestionMarkIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import { useAsyncList } from "@react-stately/data";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -16,7 +17,6 @@ import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
-import { useAsyncList } from "react-stately";
 import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
