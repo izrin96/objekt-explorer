@@ -218,14 +218,8 @@ function OwnedListPanel({
             <Table.Body>
               {currentItems.map((item) => (
                 <Table.Row key={item.id} id={item.id}>
-                  <Table.Cell>
-                    <span
-                      role="none"
-                      onClick={() => openTrades(item.serial)}
-                      className="cursor-pointer"
-                    >
-                      {item.serial}
-                    </span>
+                  <Table.Cell className="cursor-pointer" onClick={() => openTrades(item.serial)}>
+                    {item.serial}
                   </Table.Cell>
                   <Table.Cell>
                     <Link
