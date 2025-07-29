@@ -29,7 +29,7 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
       className={cn("hidden bg-bg/80 px-2 text-fg group-hover:block", isSelected && "block")}
       onClick={() => objektSelect(objekt)}
     >
-      <CheckIcon size={14} weight="bold" />
+      <CheckIcon size={12} weight="bold" />
     </Button>
   );
 }
@@ -82,7 +82,7 @@ export function ObjektTogglePin({
       }}
     >
       <span className="text-nowrap font-semibold text-xs">
-        {isPin ? <PushPinSlashIcon size={14} /> : <PushPinIcon size={14} />}
+        {isPin ? <PushPinSlashIcon size={12} /> : <PushPinIcon size={12} />}
       </span>
     </Button>
   );
@@ -119,7 +119,7 @@ export function ObjektToggleLock({
       }}
     >
       <span className="text-nowrap font-semibold text-xs">
-        {isLocked ? <LockSimpleOpenIcon size={14} /> : <LockSimpleIcon size={14} />}
+        {isLocked ? <LockSimpleOpenIcon size={12} /> : <LockSimpleIcon size={12} />}
       </span>
     </Button>
   );
@@ -133,7 +133,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
         intent="plain"
         className="hidden bg-bg/80 px-2 text-fg group-hover:block data-pressed:block"
       >
-        <DotsThreeVerticalIcon size={14} weight="bold" />
+        <DotsThreeVerticalIcon size={12} weight="bold" />
       </Button>
       <Menu.Content placement="bottom right">{children}</Menu.Content>
     </Menu>
