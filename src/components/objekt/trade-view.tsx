@@ -175,17 +175,15 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     async sort({ items, sortDescriptor }) {
       return {
         items: items.sort((a, b) => {
-          const first = a[sortDescriptor.column as keyof TransferItem] ?? "";
-          const second = b[sortDescriptor.column as keyof TransferItem] ?? "";
           let cmp = 0;
           if (sortDescriptor.column === "timestamp") {
-            cmp = new Date(first).getTime() < new Date(second).getTime() ? -1 : 1;
-          } else {
-            cmp = first.localeCompare(second) ? -1 : 1;
+            const aTime = new Date(a.timestamp).getTime();
+            const bTime = new Date(b.timestamp).getTime();
+            if (aTime < bTime) cmp = -1;
+            else if (aTime > bTime) cmp = 1;
+            else cmp = 0;
           }
-          if (sortDescriptor.direction === "descending") {
-            cmp *= -1;
-          }
+          if (sortDescriptor.direction === "descending") cmp *= -1;
           return cmp;
         }),
       };

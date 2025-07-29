@@ -155,10 +155,16 @@ function OwnedListPanel({
       return items.sort((a, b) => {
         let cmp = 0;
         if (sortDescriptor.column === "receivedAt") {
-          cmp = new Date(a.receivedAt).getTime() < new Date(b.receivedAt).getTime() ? -1 : 1;
+          const aTime = new Date(a.receivedAt).getTime();
+          const bTime = new Date(b.receivedAt).getTime();
+          if (aTime < bTime) cmp = -1;
+          else if (aTime > bTime) cmp = 1;
+          else cmp = 0;
         }
         if (sortDescriptor.column === "serial") {
-          cmp = a.serial < b.serial ? -1 : 1;
+          if (a.serial < b.serial) cmp = -1;
+          else if (a.serial > b.serial) cmp = 1;
+          else cmp = 0;
         }
         if (sortDescriptor.direction === "descending") cmp *= -1;
         return cmp;
