@@ -2,11 +2,13 @@
 
 import { IconOpenLink } from "@intentui/icons";
 import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { useAsyncList } from "@react-stately/data";
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import NextImage from "next/image";
 import { useTranslations } from "next-intl";
 import { type CSSProperties, useCallback, useState } from "react";
+import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
@@ -128,6 +130,8 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
   );
 }
 
+const ITEM_PAGE = 10;
+
 function OwnedListPanel({
   objekts,
   setSerial,
@@ -135,7 +139,9 @@ function OwnedListPanel({
   objekts: OwnedObjekt[];
   setSerial: (serial: number) => void;
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
+
   const openTrades = useCallback(
     (serial: number) => {
       setSerial(serial);
@@ -143,25 +149,64 @@ function OwnedListPanel({
     },
     [setCurrentTab, setSerial],
   );
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
 
-  const totalPages = Math.ceil(objekts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = objekts.slice(startIndex, endIndex);
+  const handleSort = useCallback(
+    ({ items, sortDescriptor }: { items: OwnedObjekt[]; sortDescriptor: SortDescriptor }) => {
+      return items.sort((a, b) => {
+        let cmp = 0;
+        if (sortDescriptor.column === "receivedAt") {
+          cmp = new Date(a.receivedAt).getTime() < new Date(b.receivedAt).getTime() ? -1 : 1;
+        }
+        if (sortDescriptor.column === "serial") {
+          cmp = a.serial < b.serial ? -1 : 1;
+        }
+        if (sortDescriptor.direction === "descending") cmp *= -1;
+        return cmp;
+      });
+    },
+    [],
+  );
+
+  const list = useAsyncList<OwnedObjekt>({
+    async load() {
+      return {
+        items: handleSort({
+          items: objekts,
+          sortDescriptor: { column: "receivedAt", direction: "descending" },
+        }),
+      };
+    },
+    async sort(params) {
+      return {
+        items: handleSort(params),
+      };
+    },
+  });
+
+  const totalPages = Math.ceil(list.items.length / ITEM_PAGE);
+  const startIndex = (currentPage - 1) * ITEM_PAGE;
+  const endIndex = startIndex + ITEM_PAGE;
+  const currentItems = list.items.slice(startIndex, endIndex);
 
   return (
     <div className="flex flex-col gap-2">
       <Card className="py-0">
         <Card.Content className="px-3">
-          <Table className="[--gutter:--spacing(3)]" bleed aria-label="Trades">
+          <Table
+            className="[--gutter:--spacing(3)]"
+            bleed
+            aria-label="Trades"
+            sortDescriptor={list.sortDescriptor}
+            onSortChange={list.sort}
+          >
             <Table.Header>
-              <Table.Column isRowHeader maxWidth={110}>
+              <Table.Column id="serial" allowsSorting isRowHeader maxWidth={110}>
                 Serial
               </Table.Column>
               <Table.Column>Token ID</Table.Column>
-              <Table.Column minWidth={200}>Received</Table.Column>
+              <Table.Column id="receivedAt" allowsSorting minWidth={200}>
+                Received
+              </Table.Column>
               <Table.Column>Transferable</Table.Column>
             </Table.Header>
             <Table.Body>
