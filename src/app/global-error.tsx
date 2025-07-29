@@ -5,14 +5,14 @@ import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { Inter } from "next/font/google";
 import { Button } from "@/components/ui";
 
-const sans = Inter({
-  variable: "--font-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export default function GlobalError() {
   return (
-    <html lang="en" className={`dark ${sans.variable}`}>
+    <html lang="en" className={`dark ${inter.variable}`}>
       <head>
         <title>Objekt Tracker</title>
       </head>

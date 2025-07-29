@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Nunito_Sans } from "next/font/google";
-import localFont from "next/font/local";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
@@ -14,8 +13,8 @@ import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
 import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
 
-const sans = Inter({
-  variable: "--font-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -23,11 +22,6 @@ const nunitoFont = Nunito_Sans({
   variable: "--font-nunito",
   weight: "700",
   subsets: ["latin"],
-});
-
-const dotMatrix = localFont({
-  src: "./fonts/dotmat.ttf",
-  variable: "--font-dot",
 });
 
 export const metadata: Metadata = {
@@ -65,7 +59,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${sans.variable} ${dotMatrix.variable} ${nunitoFont.variable}`}
+      className={`${inter.variable} ${nunitoFont.variable}`}
     >
       <body
         className={cn(
