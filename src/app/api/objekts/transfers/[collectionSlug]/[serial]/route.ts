@@ -1,9 +1,10 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { cachedSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { fetchUserProfiles } from "@/lib/server/profile";
+import type { ObjektTransferResult } from "@/lib/universal/objekts";
 
 type Params = {
   params: Promise<{
@@ -30,7 +31,7 @@ export async function GET(_: Request, props: Params) {
     .where(
       and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, parseInt(params.serial))),
     )
-    .orderBy(asc(transfers.timestamp), asc(transfers.id));
+    .orderBy(desc(transfers.timestamp), desc(transfers.id));
 
   const [result] = results;
 
@@ -91,5 +92,5 @@ export async function GET(_: Request, props: Params) {
       nickname: knownAddresses.find((a) => a.address.toLowerCase() === result.to.toLowerCase())
         ?.nickname,
     })),
-  });
+  } satisfies ObjektTransferResult);
 }

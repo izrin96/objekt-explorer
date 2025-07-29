@@ -235,3 +235,18 @@ const shortformMembers: Record<string, string> = {
 export function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
 }
+
+export type ObjektTransfer = {
+  id: string;
+  to: string;
+  timestamp: string;
+  nickname?: string;
+};
+
+export type ObjektTransferResult = {
+  hide?: boolean;
+  tokenId?: number;
+  owner?: string;
+  transferable?: boolean;
+  transfers: ObjektTransfer[];
+};

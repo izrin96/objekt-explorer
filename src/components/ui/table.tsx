@@ -1,6 +1,6 @@
 "use client";
 
-import { IconChevronLgDown, IconDotGrid2X3 } from "@intentui/icons";
+import { IconArrowDown, IconDotGrid2X3 } from "@intentui/icons";
 import { createContext, use } from "react";
 import type {
   CellProps,
@@ -117,19 +117,16 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
       )}
     >
       {(values) => (
-        <div className="flex items-center gap-2 **:data-[slot=icon]:shrink-0">
+        <div className="flex items-center gap-1 **:data-[slot=icon]:shrink-0">
           {typeof props.children === "function" ? props.children(values) : props.children}
           {values.allowsSorting && (
             <span
               className={twMerge(
-                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
-                values.isHovered ? "bg-secondary-fg/10" : "",
+                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-transparent text-fg *:data-[slot=icon]:size-3 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
                 className,
               )}
             >
-              <IconChevronLgDown
-                className={values.sortDirection === "ascending" ? "rotate-180" : ""}
-              />
+              <IconArrowDown className={values.sortDirection === "ascending" ? "rotate-180" : ""} />
             </span>
           )}
           {isResizable && <ColumnResizer />}

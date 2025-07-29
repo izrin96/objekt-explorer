@@ -13,16 +13,16 @@ import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/r
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
-import type { ValidObjekt } from "@/lib/universal/objekts";
+import { useAsyncList } from "react-stately";
+import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import ErrorFallbackRender from "../error-boundary";
 import { Badge, Button, Card, FieldGroup, Input, Link, Loader, Table } from "../ui";
 import UserLink from "../user-link";
-import type { ObjektSerial, ObjektTransferResponse } from "./common";
 
 type TradeViewProps = {
   objekt: ValidObjekt;
@@ -32,9 +32,7 @@ type TradeViewProps = {
 const fetchObjektsQuery = (slug: string) => ({
   queryKey: ["objekts", "list", slug],
   queryFn: async () =>
-    await ofetch<{ serials: ObjektSerial[] }>(`/api/objekts/list/${slug}`).then(
-      (res) => res.serials,
-    ),
+    await ofetch<{ serials: number[] }>(`/api/objekts/list/${slug}`).then((res) => res.serials),
 });
 
 export default function TradeView({ ...props }: TradeViewProps) {
@@ -74,7 +72,7 @@ function Trades({
   initialSerial,
   objekt,
 }: {
-  serials: ObjektSerial[];
+  serials: number[];
   initialSerial: number;
   objekt: ValidObjekt;
 }) {
@@ -156,15 +154,49 @@ function Trades({
   );
 }
 
+type TransferItem = ObjektTransferResult["transfers"][number];
+
 function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
   const t = useTranslations("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: async () =>
-      await ofetch<ObjektTransferResponse>(`/api/objekts/transfers/${objekt.slug}/${serial}`),
+      await ofetch<ObjektTransferResult>(`/api/objekts/transfers/${objekt.slug}/${serial}`),
     queryKey: ["objekts", "transfer", objekt.slug, serial],
     retry: 1,
     staleTime: 0,
   });
+
+  const list = useAsyncList<TransferItem>({
+    async load() {
+      return {
+        items: data?.transfers ?? [],
+      };
+    },
+    async sort({ items, sortDescriptor }) {
+      return {
+        items: items.sort((a, b) => {
+          const first = a[sortDescriptor.column as keyof TransferItem] ?? "";
+          const second = b[sortDescriptor.column as keyof TransferItem] ?? "";
+          let cmp = 0;
+          if (sortDescriptor.column === "timestamp") {
+            cmp = new Date(first).getTime() < new Date(second).getTime() ? -1 : 1;
+          } else {
+            cmp = first.localeCompare(second) ? -1 : 1;
+          }
+          if (sortDescriptor.direction === "descending") {
+            cmp *= -1;
+          }
+          return cmp;
+        }),
+      };
+    },
+  });
+
+  useEffect(() => {
+    if (data) {
+      list.reload();
+    }
+  }, [data]);
 
   if (status === "pending")
     return (
@@ -174,10 +206,6 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     );
 
   if (status === "error") return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
-
-  const ownerNickname = data.transfers.find(
-    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
-  )?.nickname;
 
   if (data.hide)
     return (
@@ -194,6 +222,10 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
         <p>Not found</p>
       </div>
     );
+
+  const ownerNickname = data.transfers.find(
+    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
+  )?.nickname;
 
   return (
     <>
@@ -231,13 +263,21 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
 
       <Card className="py-0">
         <Card.Content className="px-3">
-          <Table className="[--gutter:--spacing(3)]" bleed aria-label="Trades">
+          <Table
+            className="[--gutter:--spacing(3)]"
+            bleed
+            aria-label="Trades"
+            sortDescriptor={list.sortDescriptor}
+            onSortChange={list.sort}
+          >
             <Table.Header>
               <Table.Column isRowHeader>{t("owner")}</Table.Column>
-              <Table.Column minWidth={200}>{t("date")}</Table.Column>
+              <Table.Column id="timestamp" allowsSorting minWidth={200}>
+                {t("date")}
+              </Table.Column>
             </Table.Header>
             <Table.Body>
-              {data.transfers.map((item) => (
+              {list.items.map((item) => (
                 <Table.Row key={item.id} id={item.id}>
                   <Table.Cell>
                     <UserLink address={item.to} nickname={item.nickname} />

@@ -1,9 +1,9 @@
 "use client";
 
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import { parseColor } from "@react-stately/color";
 import { useTranslations } from "next-intl";
 import { type CSSProperties, useEffect, useState } from "react";
+import { parseColor } from "react-stately";
 import { useDebounceValue } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { cn } from "@/utils/classes";
