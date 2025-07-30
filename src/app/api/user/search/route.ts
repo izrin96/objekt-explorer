@@ -70,11 +70,13 @@ export async function GET(request: NextRequest) {
     .where(like(userAddress.nickname, `${query}%`));
 
   return Response.json({
+    hasNext: false,
+    nextStartAfter: null,
     results: users.map((a) => ({
       nickname: a.nickname,
       address: a.address,
       profileImageUrl: "",
-      profile: [],
+      userProfiles: [],
     })),
   } satisfies CosmoSearchResult);
 }

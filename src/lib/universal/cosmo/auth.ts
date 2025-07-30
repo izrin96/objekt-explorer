@@ -1,7 +1,8 @@
 import type { ValidArtist } from "./common";
 
 export type CosmoProfile = {
-  artistName: ValidArtist;
+  artistId: ValidArtist;
+  artistName: string;
   image: {
     original: string;
     thumbnail: string;
@@ -12,9 +13,11 @@ export type CosmoPublicUser = {
   nickname: string;
   profileImageUrl: string;
   address: string;
-  profile: CosmoProfile[];
+  userProfiles: CosmoProfile[];
 };
 
 export type CosmoSearchResult = {
+  hasNext: boolean;
+  nextStartAfter: string | null;
   results: CosmoPublicUser[];
 };
