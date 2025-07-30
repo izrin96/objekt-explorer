@@ -75,7 +75,7 @@ export default function UserSearch() {
                 href={`/@${user.nickname}`}
                 onAction={() => selectUser(user)}
                 key={user.nickname}
-                id={user.nickname}
+                id={`search-${user.nickname}`}
                 textValue={user.nickname}
               >
                 {user.nickname}
@@ -88,7 +88,7 @@ export default function UserSearch() {
                 href={`/@${user.nickname}`}
                 onAction={() => selectUser(user)}
                 key={user.nickname}
-                id={user.nickname}
+                id={`recent-${user.nickname}`}
                 textValue={user.nickname}
               >
                 {user.nickname}
