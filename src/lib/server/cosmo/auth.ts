@@ -1,13 +1,15 @@
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 import { cosmo } from "../http";
 
-export async function search(token: string, query: string) {
-  return await cosmo<CosmoSearchResult>("/user/v1/search", {
+export async function search(token: string, nickname: string) {
+  return await cosmo<CosmoSearchResult>("/bff/v3/users/search", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
     query: {
-      query,
+      nickname,
+      skip: 0,
+      take: 100,
     },
   });
 }
