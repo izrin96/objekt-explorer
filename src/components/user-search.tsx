@@ -20,7 +20,7 @@ export default function UserSearch() {
   const [result, setResult] = useState<CosmoPublicUser[]>([]);
   const [query, setQuery] = useState("");
   const [debouncedQuery] = useDebounceValue<string>(query, 250);
-  const enable = debouncedQuery.length > 3;
+  const enable = debouncedQuery.length > 0;
 
   const { data, isPending } = useQuery({
     queryKey: ["user-search", debouncedQuery],

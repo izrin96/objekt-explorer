@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = searchParams.get("query") ?? "";
 
-  if (query.length < 4) return Response.json({ results: [] });
+  if (query.length < 1) return Response.json({ results: [] });
 
   try {
     const accessToken = await getAccessToken();
@@ -67,7 +67,8 @@ export async function GET(request: NextRequest) {
       address: userAddress.address,
     })
     .from(userAddress)
-    .where(like(userAddress.nickname, `${query}%`));
+    .where(like(userAddress.nickname, `${query}%`))
+    .limit(50);
 
   return Response.json({
     hasNext: false,
