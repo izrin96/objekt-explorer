@@ -3,8 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
-import { createPresignedUrlToUpload, deleteFileFromBucket } from "../../minio";
 import { fetchUserProfiles } from "../../profile";
+import { createPresignedUrlToUpload, deleteFileFromBucket } from "../../s3";
 import { authed } from "../orpc";
 
 export const profileRouter = {
