@@ -5,6 +5,7 @@ import type { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 type UserSearchState = {
   users: CosmoPublicUser[];
   add: (user: CosmoPublicUser) => void;
+  clearAll: () => void;
 };
 
 const MAX_LENGTH = 7;
@@ -22,6 +23,10 @@ export const useUserSearchStore = create<UserSearchState>()(
             return state;
           }
           return { users: [user, ...state.users.slice(0, MAX_LENGTH - 1)] };
+        }),
+      clearAll: () =>
+        set({
+          users: [],
         }),
     }),
     {

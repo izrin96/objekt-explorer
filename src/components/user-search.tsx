@@ -15,6 +15,7 @@ export default function UserSearch() {
   const t = useTranslations("nav.search_user");
   const recentUsers = useUserSearchStore((a) => a.users);
   const addRecent = useUserSearchStore((a) => a.add);
+  const clearAll = useUserSearchStore((a) => a.clearAll);
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [result, setResult] = useState<CosmoPublicUser[]>([]);
@@ -94,6 +95,11 @@ export default function UserSearch() {
                 {user.nickname}
               </CommandMenu.Item>
             ))}
+            {recentUsers.length > 0 ? (
+              <CommandMenu.Item textValue="Clear all" onAction={() => clearAll()} isDanger>
+                Clear all
+              </CommandMenu.Item>
+            ) : undefined}
           </CommandMenu.Section>
         </CommandMenu.List>
       </CommandMenu>
