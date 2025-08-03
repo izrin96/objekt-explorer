@@ -25,7 +25,7 @@ type WebSocketMessage =
   | { type: "transfer"; data: ActivityData[] }
   | { type: "history"; data: ActivityData[] };
 
-const ROW_HEIGHT = 41;
+const ROW_HEIGHT = 42;
 
 export default function ActivityRender() {
   return (
@@ -266,7 +266,7 @@ const ActivityRow = memo(function ActivityRow({
     );
 
   return (
-    <div className="absolute top-0 left-0 grid w-full" style={style}>
+    <div className="absolute top-0 left-0 grid h-[42px] w-full" style={style}>
       <div
         className={`${
           isNew

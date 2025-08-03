@@ -189,7 +189,7 @@ function TradeRow({
   );
 
   return (
-    <div className="absolute top-0 left-0 w-full" style={style}>
+    <div className="absolute top-0 left-0 h-[42px] w-full" style={style}>
       <div className="inline-flex min-w-full items-center border-b">
         <div className="min-w-[210px] flex-1 px-3 py-2.5">
           {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}

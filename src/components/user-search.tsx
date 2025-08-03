@@ -84,22 +84,31 @@ export default function UserSearch() {
             ))}
           </CommandMenu.Section>
           <CommandMenu.Section title={t("recent_label")}>
-            {recentUsers.map((user) => (
-              <CommandMenu.Item
-                href={`/@${user.nickname}`}
-                onAction={() => selectUser(user)}
-                key={user.nickname}
-                id={`recent-${user.nickname}`}
-                textValue={user.nickname}
-              >
-                {user.nickname}
-              </CommandMenu.Item>
-            ))}
-            {recentUsers.length > 0 ? (
-              <CommandMenu.Item textValue="Clear all" onAction={() => clearAll()} isDanger>
-                Clear all
-              </CommandMenu.Item>
-            ) : undefined}
+            {[
+              ...recentUsers.map((user) => (
+                <CommandMenu.Item
+                  href={`/@${user.nickname}`}
+                  onAction={() => selectUser(user)}
+                  key={user.nickname}
+                  id={`recent-${user.nickname}`}
+                  textValue={user.nickname}
+                >
+                  {user.nickname}
+                </CommandMenu.Item>
+              )),
+              ...(recentUsers.length > 0
+                ? [
+                    <CommandMenu.Item
+                      key="clear"
+                      textValue="Clear all"
+                      onAction={() => clearAll()}
+                      isDanger
+                    >
+                      Clear history
+                    </CommandMenu.Item>,
+                  ]
+                : []),
+            ]}
           </CommandMenu.Section>
         </CommandMenu.List>
       </CommandMenu>
