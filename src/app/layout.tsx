@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Inter, Nunito_Sans } from "next/font/google";
+import { Inter, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
@@ -15,13 +16,28 @@ import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
 
 const inter = Inter({
   variable: "--font-inter",
+  display: "swap",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const pretendard = localFont({
+  variable: "--font-pretendard",
+  src: "./fonts/PretendardVariable.woff2",
+  display: "swap",
+});
+
+const notoSansSc = Noto_Sans_SC({
+  variable: "--font-noto-sans-sc",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const nunitoFont = Nunito_Sans({
   variable: "--font-nunito",
-  weight: "700",
+  display: "swap",
   subsets: ["latin"],
+  weight: ["700"],
 });
 
 export const metadata: Metadata = {
@@ -59,7 +75,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${nunitoFont.variable}`}
+      className={`${inter.variable} ${pretendard.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
     >
       <body
         className={cn(
