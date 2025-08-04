@@ -160,7 +160,9 @@ const ProgressCollapse = memo(function ProgressCollapse({
   }, [objekts, ownedSlugs]);
 
   const percentage =
-    filteredObjekts.length === 0 ? 100 : Math.floor((owned.length / filteredObjekts.length) * 100);
+    filteredObjekts.length > 0
+      ? Number(((owned.length / filteredObjekts.length) * 100).toFixed(1))
+      : 0;
 
   return (
     <div className="flex flex-col">
