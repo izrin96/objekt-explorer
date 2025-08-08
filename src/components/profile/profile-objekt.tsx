@@ -17,6 +17,7 @@ import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import type { ValidObjekt } from "@/lib/universal/objekts";
+import { SPIN_ADDRESS } from "@/lib/utils";
 import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
@@ -40,7 +41,7 @@ import {
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
-import { Loader } from "../ui";
+import { Link, Loader, Note } from "../ui";
 import Filter from "./filter";
 import { LockObjekt, UnlockObjekt } from "./form/lock-unlock";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
@@ -50,6 +51,7 @@ export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileO
 });
 
 function ProfileObjektRender() {
+  const profile = useTarget((a) => a.profile)!;
   return (
     <ObjektSelectProvider>
       <ObjektModalProvider initialTab="owned">
@@ -58,8 +60,18 @@ function ProfileObjektRender() {
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
               <Suspense
                 fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
+                  <div className="flex flex-col items-center gap-4">
+                    {profile.address.toLowerCase() === SPIN_ADDRESS && (
+                      <Note intent="danger" className="w-fit">
+                        Loading cosmo-spin objekts may take some time because it loads the entire
+                        collection at once. Please use{" "}
+                        <Link href="https://apollo.cafe/@cosmo-spin">Apollo</Link> for faster
+                        loading.
+                      </Note>
+                    )}
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
                   </div>
                 }
               >
