@@ -66,7 +66,6 @@ const ModalContent = ({
         twJoin(
           "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) bg-fg/15 md:p-4 dark:bg-bg/30",
           "flex items-center justify-center",
-          "[--visual-viewport-vertical-padding:0px]",
           isEntering && "fade-in animate-in duration-300",
           isExiting && "fade-out animate-out duration-200",
           isBlurred && "backdrop-blur-sm backdrop-filter",
@@ -79,7 +78,8 @@ const ModalContent = ({
         className={({ isExiting, isEntering }) =>
           twMerge(
             "max-h-full w-full text-left align-middle",
-            "relative overflow-hidden bg-overlay text-overlay-fg",
+            "[--visual-viewport-vertical-padding:16px] sm:[--visual-viewport-vertical-padding:32px]",
+            "relative bg-overlay text-overlay-fg",
             "shadow-lg ring ring-fg/5 dark:ring-border",
             "rounded-t-2xl md:rounded-xl",
             sizes[size],
@@ -124,4 +124,14 @@ Modal.Body = ModalBody;
 Modal.Close = ModalClose;
 Modal.Content = ModalContent;
 
-export { Modal };
+export {
+  Modal,
+  ModalTrigger,
+  ModalHeader,
+  ModalTitle,
+  ModalDescription,
+  ModalFooter,
+  ModalBody,
+  ModalClose,
+  ModalContent,
+};

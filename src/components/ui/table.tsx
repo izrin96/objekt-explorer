@@ -205,7 +205,7 @@ const TableRow = <T extends object>({
         className,
         (className, { isSelected, selectionMode, isFocusVisibleWithin, isDragging, isDisabled }) =>
           twMerge(
-            "group relative cursor-default border-b text-fg outline-transparent ring-primary last:border-b-0 ",
+            "group relative cursor-default border-b text-fg outline-transparent ring-primary last:border-b-0",
             isDragging && "outline outline-blue-500",
             isSelected && "bg-(--table-selected-bg) text-fg hover:bg-(--table-selected-bg)/50",
             (props.href || props.onAction || selectionMode === "multiple") &&
@@ -263,4 +263,4 @@ Table.Header = TableHeader;
 Table.Row = TableRow;
 
 export type { TableProps, TableColumnProps, TableRowProps };
-export { Table };
+export { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow };
