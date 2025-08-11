@@ -39,7 +39,7 @@ export default memo(function ObjektView({
     "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
     "--outline-width": `${width * 0.03}px`,
-    "--radius-width": `${width * 0.053}px`,
+    "--radius-width": `${width * 0.054}px`,
   } as CSSProperties;
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
@@ -52,7 +52,7 @@ export default memo(function ObjektView({
         role="none"
         className={cn(
           "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow transition-all duration-150 hover:scale-[1.01]",
-          isSelected && "outline-(length:--outline-width)",
+          isSelected && "outline-(length:--outline-width) bg-fg",
         )}
         onClick={open}
       >
