@@ -31,6 +31,7 @@ const notoSansSc = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
   display: "swap",
   weight: ["400", "500", "600", "700"],
+  preload: false,
 });
 
 const nunitoFont = Nunito_Sans({
