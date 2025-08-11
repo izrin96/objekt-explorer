@@ -115,15 +115,7 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
           )}
         </div>
         <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
-          {objekt.backImage ? (
-            <NextImage fill loading="eager" src={objekt.backImage} alt={objekt.collectionId} />
-          ) : (
-            <div className="@container flex h-full w-full items-center justify-center overflow-hidden rounded-[1rem] bg-(--objekt-bg-color) text-(--objekt-text-color)">
-              <span className="text-nowrap font-semibold text-[8cqw] opacity-60 [transform:rotate(-45deg)]">
-                Back image not available
-              </span>
-            </div>
-          )}
+          <NextImage fill loading="eager" src={objekt.backImage} alt={objekt.collectionId} />
         </div>
       </div>
     </div>

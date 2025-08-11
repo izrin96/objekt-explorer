@@ -1,6 +1,7 @@
 import NextImage from "next/image";
 import { type CSSProperties, memo, type PropsWithChildren } from "react";
-import { getCollectionShortId, type OwnedObjekt, type ValidObjekt } from "@/lib/universal/objekts";
+import { useElementSize } from "@/hooks/use-element-size";
+import { getCollectionShortId, type ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import { Badge } from "../ui";
@@ -19,6 +20,7 @@ type Props = PropsWithChildren<{
 }>;
 
 export default memo(function ObjektView({
+  objekts,
   priority = false,
   isFade = false,
   unobtainable = false,
@@ -28,28 +30,29 @@ export default memo(function ObjektView({
   hideLabel = false,
   open,
   children,
-  ...props
 }: Props) {
-  const objekts = props.objekts.toSorted(
-    (a, b) => (a as OwnedObjekt).serial - (b as OwnedObjekt).serial,
-  );
+  const [ref, { width }] = useElementSize();
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
 
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
+    "--outline-width": `${width * 0.03}px`,
+    "--radius-width": `${width * 0.053}px`,
   } as CSSProperties;
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
   return (
-    <div className={cn("@container flex flex-col gap-2", isFade && "opacity-35")} style={css}>
+    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")}>
       <div
+        style={css}
+        ref={ref}
         role="none"
         className={cn(
-          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-[4.5cqw] drop-shadow transition duration-150 hover:scale-[1.01]",
-          isSelected && "bg-fg ring-[3cqw]",
+          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow transition-all duration-150 hover:scale-[1.01]",
+          isSelected && "outline-(length:--outline-width)",
         )}
         onClick={open}
       >
