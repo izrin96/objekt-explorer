@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     })
     .from(userAddress)
     .where(like(userAddress.nickname, `${query}%`))
-    .limit(50);
+    .limit(100);
 
   return Response.json({
     hasNext: false,

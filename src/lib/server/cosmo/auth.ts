@@ -9,7 +9,7 @@ export async function search(token: string, nickname: string) {
     query: {
       nickname,
       skip: 0,
-      take: 50,
+      take: 100,
     },
   });
 }
