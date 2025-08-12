@@ -84,7 +84,6 @@ export default function ObjektDetail({ objekts, showOwned }: ObjektDetailProps) 
 
 function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts;
-  const isOwned = "serial" in objekt;
   const [flipped, setFlipped] = useState(false);
   const resizedUrl = replaceUrlSize(objekt.frontImage);
   const css = {
@@ -107,12 +106,7 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
           <NextImage fill loading="eager" src={resizedUrl} alt={objekt.collectionId} />
           {/* original image */}
           <NextImage fill loading="eager" src={objekt.frontImage} alt={objekt.collectionId} />
-          {objekt.artist !== "idntt" && (
-            <ObjektSidebar
-              collection={objekt.collectionNo}
-              serial={objekts.length < 2 && isOwned ? objekt.serial : undefined}
-            />
-          )}
+          <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
         <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
           <NextImage fill loading="eager" src={objekt.backImage} alt={objekt.collectionId} />

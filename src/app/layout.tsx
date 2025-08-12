@@ -18,7 +18,7 @@ const inter = Inter({
   variable: "--font-inter",
   display: "swap",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "variable",
 });
 
 const pretendard = localFont({
@@ -30,7 +30,7 @@ const pretendard = localFont({
 const notoSansSc = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: "variable",
   preload: false,
 });
 

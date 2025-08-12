@@ -33,7 +33,6 @@ export default memo(function ObjektView({
 }: Props) {
   const [ref, { width }] = useElementSize();
   const [objekt] = objekts;
-  const isOwned = "serial" in objekt;
 
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
@@ -57,12 +56,7 @@ export default memo(function ObjektView({
         onClick={open}
       >
         <NextImage fill priority={priority} src={resizedUrl} alt={objekt.collectionId} />
-        {objekt.artist !== "idntt" && (
-          <ObjektSidebar
-            collection={objekt.collectionNo}
-            serial={showSerial && isOwned ? objekt.serial : undefined}
-          />
-        )}
+        <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
           <div className="absolute bottom-1 left-1 flex rounded-full bg-bg px-2 py-1 font-bold text-fg text-xs">
             {objekts.length}
@@ -80,7 +74,7 @@ export default memo(function ObjektView({
             onClick={open}
           >
             {getCollectionShortId(objekt)}
-            {showSerial && isOwned && ` #${objekt.serial}`}
+            {showSerial && "serial" in objekt && ` #${objekt.serial}`}
           </Badge>
           {unobtainable && (
             <Badge intent="custom" isCircle={false} className="font-semibold text-xs">
