@@ -35,7 +35,7 @@ export default function SearchFilter() {
       aria-label="Search"
       suffix={
         query.length > 0 ? (
-          <Button intent="plain" onPress={() => setQuery("")}>
+          <Button intent="plain" onClick={() => setQuery("")}>
             <XIcon data-slot="icon" />
           </Button>
         ) : (

@@ -21,7 +21,7 @@ export default function GlobalError() {
         <div className="flex h-svh w-full flex-col items-center justify-center gap-3">
           <HeartBreakIcon size={64} weight="light" />
           <h2 className="text-lg">Something went wrong!</h2>
-          <Button intent="secondary" onPress={() => window.location.reload()}>
+          <Button intent="secondary" onClick={() => window.location.reload()}>
             Retry
           </Button>
         </div>

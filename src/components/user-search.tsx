@@ -56,7 +56,17 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button onPress={() => setIsOpen(true)} size="sm" intent="outline">
+      <Button
+        onClick={() => {
+          window.scrollTo({
+            top: 0,
+            behavior: "instant",
+          });
+          setIsOpen(true);
+        }}
+        size="sm"
+        intent="outline"
+      >
         <MagnifyingGlassIcon data-slot="icon" />
         <span className="hidden sm:block">{t("label")}</span>
       </Button>

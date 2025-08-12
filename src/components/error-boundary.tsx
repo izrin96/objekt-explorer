@@ -14,7 +14,7 @@ export function ErrorRender({ message, onRetry }: { message: string; onRetry: ()
     <div className="flex flex-col items-center justify-center gap-3">
       <HeartBreakIcon size={64} weight="light" />
       <p>{message}</p>
-      <Button intent="secondary" onPress={onRetry}>
+      <Button intent="secondary" onClick={onRetry}>
         Retry
       </Button>
     </div>

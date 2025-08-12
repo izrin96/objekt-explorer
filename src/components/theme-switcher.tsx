@@ -31,7 +31,7 @@ export function ThemeSwitcher({
   if (!mounted) return null;
 
   return (
-    <Button intent={intent} size="sq-sm" aria-label="Switch theme" onPress={toggleTheme} {...props}>
+    <Button intent={intent} size="sq-sm" aria-label="Switch theme" onClick={toggleTheme} {...props}>
       {theme === "light" ? (
         <IconSun />
       ) : theme === "dark" ? (
