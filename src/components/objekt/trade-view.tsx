@@ -89,15 +89,23 @@ function Trades({
           return serials[serials.length - 1] ?? prevSerial;
         }
         if (mode === "prev") {
+          if (objekt.onOffline === "online") {
+            return prevSerial - 1 > 0 ? prevSerial - 1 : 1;
+          }
           const newSerial = serials.filter((serial) => serial < prevSerial).pop();
           return newSerial ?? prevSerial;
         }
-
-        const newSerial = serials.filter((serial) => serial > prevSerial)?.[0];
-        return newSerial ?? prevSerial + 1;
+        if (mode === "next") {
+          if (objekt.onOffline === "online") {
+            return prevSerial + 1;
+          }
+          const newSerial = serials.filter((serial) => serial > prevSerial)?.[0];
+          return newSerial ?? prevSerial;
+        }
+        return prevSerial;
       });
     },
-    [serials],
+    [serials, objekt],
   );
 
   return (
