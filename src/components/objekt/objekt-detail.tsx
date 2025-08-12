@@ -32,7 +32,7 @@ export default function ObjektDetail({ objekts, showOwned }: ObjektDetailProps) 
   const [serial, setSerial] = useState("serial" in objekt ? objekt.serial : null);
 
   return (
-    <div className="flex h-full w-screen flex-col gap-2 p-2 sm:grid sm:h-[33.5rem] sm:min-h-[33.5rem] sm:grid-cols-3 sm:p-3">
+    <div className="flex h-full w-screen flex-col gap-2 p-2 sm:grid sm:h-[33.5rem] sm:min-h-[33.5rem] sm:w-full sm:grid-cols-3 sm:p-3">
       <ObjektCard objekts={objekts} />
       <div
         className="relative col-span-2 flex min-h-screen flex-col overflow-y-auto sm:min-h-full"
