@@ -35,7 +35,7 @@ type Props = {
 
 export default function UserAccountModal({ open, setOpen }: Props) {
   return (
-    <SheetContent className={"max-w-md"} isOpen={open} onOpenChange={setOpen}>
+    <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
         <SheetTitle>Account</SheetTitle>
         <SheetDescription>Manage your account</SheetDescription>

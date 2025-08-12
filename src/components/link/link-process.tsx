@@ -55,14 +55,17 @@ export default function LinkRender() {
             <p>
               You need to download the Cosmo app and sign in with the Cosmo ID you want to link
               before continuing. This linking process will <span className="font-bold">not</span>{" "}
-              allow Objekt Tracker to access your Cosmo, but only to verify ownership of it.
+              allow Objekt Tracker to access your Cosmo, but only to verify ownership of it. Objekt
+              Tracker does not store anything about your account other than wallet address and ID.
             </p>
           )}
           {locale === "ko" && (
             <p>
-              계속하려면 Cosmo 앱을 다운로드하고 연결하고자 하는 Cosmo ID로 로그인해야 합니다. 이
-              연결 과정은 Objekt Tracker가 사용자의 Cosmo에 <span className="font-bold">접근</span>
-              하는 것이 아니라, <span className="font-bold">소유 여부만 확인</span>합니다.
+              계속 진행하기 전에 Cosmo 앱을 다운로드하고 연결하려는 Cosmo ID로 로그인해야 합니다. 이
+              연결 과정에서 Objekt Tracker가 사용자의 Cosmo에 접근하는 것은{" "}
+              <span className="font-bold">전혀</span> 불가능하며, 단지 해당 Cosmo의 소유 여부만
+              확인합니다. Objekt Tracker는 지갑 주소와 ID를 제외하고는 계정에 대한 어떠한 정보도
+              저장하지 않습니다.
             </p>
           )}
           <Button

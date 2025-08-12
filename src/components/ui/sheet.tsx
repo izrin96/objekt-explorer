@@ -50,9 +50,9 @@ const sheetContentStyles = tv({
       top: "entering:slide-in-from-top exiting:slide-out-to-top inset-x-0 top-0 rounded-b-2xl border-b",
       bottom:
         "entering:slide-in-from-bottom exiting:slide-out-to-bottom inset-x-0 bottom-0 rounded-t-2xl border-t",
-      left: "entering:slide-in-from-left exiting:slide-out-to-left inset-y-0 left-0 h-auto w-full overflow-y-auto border-r sm:max-w-sm",
+      left: "entering:slide-in-from-left exiting:slide-out-to-left inset-y-0 left-0 h-auto w-[calc(100%-1em)] overflow-y-auto border-r sm:max-w-sm",
       right:
-        "entering:slide-in-from-right exiting:slide-out-to-right inset-y-0 right-0 h-auto w-full overflow-y-auto border-l sm:max-w-sm",
+        "entering:slide-in-from-right exiting:slide-out-to-right inset-y-0 right-0 h-auto w-[calc(100%-1em)] overflow-y-auto border-l sm:max-w-sm",
     },
     isFloat: {
       false: "border-fg/20 dark:border-border",

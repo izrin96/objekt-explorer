@@ -180,7 +180,7 @@ export function EditProfileModal({
   }, [droppedImage]);
 
   return (
-    <SheetContent className={"max-w-sm"} isOpen={open} onOpenChange={setOpen}>
+    <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
         <SheetTitle>Edit Profile</SheetTitle>
         <SheetDescription>
@@ -365,7 +365,7 @@ function EditProfileForm({
       <Checkbox
         label="Hide from Serial Lookup"
         name="privateSerial"
-        description="Prevent others from finding your objekt via its serial number. You will still be able to see it."
+        description="Prevent others from finding your objekt via serial number. Only you can see it."
         defaultSelected={data.privateSerial ?? false}
       />
       <Checkbox
@@ -377,13 +377,13 @@ function EditProfileForm({
       <Checkbox
         label="Hide Trade History"
         name="hideTransfer"
-        description="Hide your profile trade history. Only you will be able to view it."
+        description="Hide your profile trade history. Only you can see it."
         defaultSelected={data.hideTransfer ?? false}
       />
       <Checkbox
         label="Private Profile"
         name="privateProfile"
-        description="Make your Cosmo profile private. Only you will be able to view it."
+        description="Make your Cosmo profile private. Only you can see it."
         defaultSelected={data.privateProfile ?? false}
       />
       <div className="group flex flex-col gap-y-2">
