@@ -20,7 +20,7 @@ export default function UserSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [result, setResult] = useState<CosmoPublicUser[]>([]);
   const [query, setQuery] = useState("");
-  const [debouncedQuery] = useDebounceValue<string>(query, 250);
+  const [debouncedQuery] = useDebounceValue<string>(query, 350);
   const enable = debouncedQuery.length > 0;
 
   const { data, isPending } = useQuery({
@@ -56,17 +56,7 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button
-        onClick={() => {
-          window.scrollTo({
-            top: 0,
-            behavior: "instant",
-          });
-          setIsOpen(true);
-        }}
-        size="sm"
-        intent="outline"
-      >
+      <Button onClick={() => setIsOpen(true)} size="sm" intent="outline">
         <MagnifyingGlassIcon data-slot="icon" />
         <span className="hidden sm:block">{t("label")}</span>
       </Button>
