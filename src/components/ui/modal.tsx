@@ -65,7 +65,7 @@ const ModalContent = ({
       className={({ isExiting, isEntering }) =>
         twJoin(
           "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) bg-fg/15 md:p-4 dark:bg-bg/30",
-          "flex items-center justify-center",
+          "flex flex-col items-center justify-end sm:justify-center",
           isEntering && "fade-in animate-in duration-300",
           isExiting && "fade-out animate-out duration-200",
           isBlurred && "backdrop-blur-sm backdrop-filter",
