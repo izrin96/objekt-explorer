@@ -35,12 +35,11 @@ export default function UserSearch() {
 
   const selectUser = useCallback(
     (user: CosmoPublicUser) => {
-      setIsOpen(false);
       setQuery("");
       setResult([]);
       addRecent(user);
     },
-    [setIsOpen, addRecent],
+    [addRecent],
   );
 
   // set result after getting data
