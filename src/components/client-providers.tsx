@@ -1,5 +1,6 @@
 "use client";
 
+import { ProgressProvider } from "@bprogress/next/app";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useRouter } from "next/navigation";
@@ -40,22 +41,29 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
   prefetchDNS("https://umami.objekt.top");
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider navigate={router.push}>
-        <ThemeProvider
-          enableSystem
-          attribute="class"
-          defaultTheme="system"
-          themes={["light", "dark", "matsu"]}
-        >
-          <Toast />
-          <div className="texture"></div>
-          <NuqsAdapter>
-            <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>
-            <ReactQueryDevtools />
-          </NuqsAdapter>
-        </ThemeProvider>
-      </RouterProvider>
-    </QueryClientProvider>
+    <ProgressProvider
+      height="2px"
+      color="var(--primary)"
+      options={{ showSpinner: false }}
+      shallowRouting
+    >
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider navigate={router.push}>
+          <ThemeProvider
+            enableSystem
+            attribute="class"
+            defaultTheme="system"
+            themes={["light", "dark", "matsu"]}
+          >
+            <Toast />
+            <div className="texture"></div>
+            <NuqsAdapter>
+              <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>
+              <ReactQueryDevtools />
+            </NuqsAdapter>
+          </ThemeProvider>
+        </RouterProvider>
+      </QueryClientProvider>
+    </ProgressProvider>
   );
 }

@@ -17,6 +17,9 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.864.0
         version: 3.864.0
+      '@bprogress/next':
+        specifier: ^3.2.12
+        version: 3.2.12(next@15.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@intentui/icons':
         specifier: ^1.11.0
         version: 1.11.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -464,6 +467,22 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@bprogress/core@1.3.4':
+    resolution: {integrity: sha512-q/AqpurI/1uJzOrQROuZWixn/+ARekh+uvJGwLCP6HQ/EqAX4SkvNf618tSBxL4NysC0MwqAppb/mRw6Tzi61w==}
+
+  '@bprogress/next@3.2.12':
+    resolution: {integrity: sha512-/ZvNwbAd0ty9QiQwCfT2AfwWVdAaEyCPx5RUz3CfiiJS/OLBohhDz/IC/srhwK9GnXeXavvtiUrpKzN5GJDwlw==}
+    peerDependencies:
+      next: '>=13.0.0'
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
+
+  '@bprogress/react@1.2.7':
+    resolution: {integrity: sha512-MqJfHW+R5CQeWqyqrLxUjdBRHk24Xl63OkBLo5DMWqUqocUikRTfCIc/jtQQbPk7BRfdr5OP3Lx7YlfQ9QOZMQ==}
+    peerDependencies:
+      react: '>=18.0.0'
+      react-dom: '>=18.0.0'
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
@@ -4581,6 +4600,22 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.1.4':
     optional: true
+
+  '@bprogress/core@1.3.4': {}
+
+  '@bprogress/next@3.2.12(next@15.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+    dependencies:
+      '@bprogress/core': 1.3.4
+      '@bprogress/react': 1.2.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      next: 15.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
+
+  '@bprogress/react@1.2.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+    dependencies:
+      '@bprogress/core': 1.3.4
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
   '@drizzle-team/brocli@0.10.2': {}
 
