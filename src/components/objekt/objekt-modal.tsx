@@ -23,7 +23,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
         </Modal.Header>
         <Modal.Body className="p-0 sm:p-0">
           {menu}
-          <ObjektDetail objekts={objekts} showOwned={showOwned} />
+          <ObjektDetail objekts={objekts} showOwned={showOwned} onClose={() => setOpen(false)} />
         </Modal.Body>
       </Modal.Content>
       {children({ openObjekts: () => setOpen(true) })}

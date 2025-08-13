@@ -21,9 +21,10 @@ import TradeView from "./trade-view";
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
   showOwned?: boolean;
+  onClose: () => void;
 };
 
-export default function ObjektDetail({ objekts, showOwned }: ObjektDetailProps) {
+export default function ObjektDetail({ objekts, showOwned = false, onClose }: ObjektDetailProps) {
   const t = useTranslations("objekt");
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
@@ -77,6 +78,10 @@ export default function ObjektDetail({ objekts, showOwned }: ObjektDetailProps) 
             <TradeView objekt={objekt} serial={serial} />
           </TabPanel>
         </Tabs>
+        <div className="grow"></div>
+        <Button className="my-3 block sm:hidden" intent="outline" onClick={onClose}>
+          Close
+        </Button>
       </div>
     </div>
   );
