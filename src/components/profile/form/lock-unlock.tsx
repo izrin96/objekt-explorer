@@ -23,7 +23,10 @@ export function LockObjekt({ address, handleAction }: Props) {
           batchLock.mutate(
             {
               address: address,
-              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+              tokenIds: selected
+                .filter((objekt) => "serial" in objekt)
+                .map((a) => Number(a.id))
+                .filter(Boolean),
             },
             {
               onSuccess: () => {
@@ -52,7 +55,10 @@ export function UnlockObjekt({ address, handleAction }: Props) {
           batchUnlock.mutate(
             {
               address: address,
-              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+              tokenIds: selected
+                .filter((objekt) => "serial" in objekt)
+                .map((a) => Number(a.id))
+                .filter(Boolean),
             },
             {
               onSuccess: () => {

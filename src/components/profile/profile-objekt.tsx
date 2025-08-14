@@ -146,6 +146,7 @@ function ProfileObjekt() {
           >
             {({ item, index }) => {
               const [objekt] = item.item;
+              const isOwned = "serial" in objekt;
               return (
                 <ObjektModal
                   key={objekt.id}
@@ -155,7 +156,7 @@ function ProfileObjekt() {
                     authenticated && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
-                        {isProfileAuthed && (
+                        {isProfileAuthed && isOwned && (
                           <>
                             <TogglePinMenuItem
                               isPin={item.isPin}
@@ -186,13 +187,13 @@ function ProfileObjekt() {
                           // for profile
                           showCount
                           showSerial={!filters.grouped}
-                          isFade={!("serial" in objekt)}
+                          isFade={!isOwned}
                         >
                           {authenticated && (
                             <div className="absolute top-0 right-0 flex">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
-                                {isProfileAuthed && (
+                                {isProfileAuthed && isOwned && (
                                   <>
                                     <TogglePinMenuItem
                                       isPin={item.isPin}
@@ -211,7 +212,7 @@ function ProfileObjekt() {
                             </div>
                           )}
                           <ObjektOverlay isPin={item.isPin} isLocked={item.isLocked} />
-                          {isProfileAuthed && (
+                          {isProfileAuthed && isOwned && (
                             <div className="absolute top-0 left-0 hidden group-hover:flex">
                               <ObjektTogglePin
                                 isPin={item.isPin}
