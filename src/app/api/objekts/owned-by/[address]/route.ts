@@ -82,12 +82,17 @@ export async function GET(request: NextRequest, props: Params) {
               ),
             ]
           : []),
-        query.cursor
-          ? or(
-              lt(objekts.receivedAt, query.cursor.receivedAt),
-              and(eq(objekts.receivedAt, query.cursor.receivedAt), lt(objekts.id, query.cursor.id)),
-            )
-          : undefined,
+        ...(query.cursor
+          ? [
+              or(
+                lt(objekts.receivedAt, query.cursor.receivedAt),
+                and(
+                  eq(objekts.receivedAt, query.cursor.receivedAt),
+                  lt(objekts.id, query.cursor.id),
+                ),
+              ),
+            ]
+          : []),
       ),
     )
     .orderBy(desc(objekts.receivedAt), desc(objekts.id))

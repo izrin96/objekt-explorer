@@ -35,8 +35,6 @@ export default function UserSearch() {
 
   const selectUser = useCallback(
     (user: CosmoPublicUser) => {
-      setQuery("");
-      setResult([]);
       addRecent(user);
     },
     [addRecent],
@@ -51,6 +49,8 @@ export default function UserSearch() {
   // force close if pathname change
   useEffect(() => {
     setIsOpen(false);
+    setQuery("");
+    setResult([]);
   }, [pathname]);
 
   return (

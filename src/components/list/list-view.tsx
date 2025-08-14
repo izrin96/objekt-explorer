@@ -170,7 +170,7 @@ function ListView({ slug }: Props) {
       </div>
       <span className="font-semibold">
         {count.toLocaleString()} total
-        {filters.grouped ? ` (${groupCount} types)` : undefined}
+        {filters.grouped ? ` (${groupCount} types)` : ""}
       </span>
 
       <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
