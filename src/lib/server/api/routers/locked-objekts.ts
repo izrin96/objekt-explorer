@@ -32,6 +32,8 @@ export const lockedObjektsRouter = {
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
+      if (tokenIds.length === 0) return;
+
       await db
         .delete(lockedObjekts)
         .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
@@ -53,6 +55,8 @@ export const lockedObjektsRouter = {
     )
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
+
+      if (tokenIds.length === 0) return;
 
       await db
         .delete(lockedObjekts)

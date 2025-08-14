@@ -32,6 +32,8 @@ export const pinsRouter = {
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
+      if (tokenIds.length === 0) return;
+
       // unpin existing first then pin again
       await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
 
@@ -52,6 +54,8 @@ export const pinsRouter = {
     )
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
+
+      if (tokenIds.length === 0) return;
 
       await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
     }),
