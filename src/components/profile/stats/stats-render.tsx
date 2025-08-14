@@ -337,7 +337,7 @@ function MemberProgressChart({
                 <>
                   <Rectangle {...props} />
                   <text
-                    x={props.background.width + props.x - 20}
+                    x={props.background.width + props.x - 10}
                     y={props.y + 20}
                     textAnchor="end"
                     fill="var(--fg)"
