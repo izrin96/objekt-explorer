@@ -30,7 +30,7 @@ export const seasonColors = [
   "#FFCC00",
   // for idntt
   "#25347C",
-  "#25387C",
+  "#619AFF",
 ];
 export const validSeasons = [
   "Atom01",
