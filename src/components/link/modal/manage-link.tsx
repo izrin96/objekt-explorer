@@ -125,6 +125,7 @@ export function EditProfileModal({
       onError: () => {
         toast.error("Failed to upload image");
       },
+      retry: 2,
     }),
   );
 
