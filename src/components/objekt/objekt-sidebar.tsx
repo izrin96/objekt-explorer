@@ -26,9 +26,7 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
       {objekt.artist === "idntt" && (
         <div className="flex h-[88%] w-full items-center justify-between rounded-l-(--band-radius) bg-(--objekt-bg-color) px-(--band-spacing) font-bold [writing-mode:vertical-lr]">
           <span>{objekt.member}</span>
-          <div className="flex h-[12.5%] w-full items-center justify-center">
-            <IdnttLogo className="h-full w-[120%] rotate-90" />
-          </div>
+          <IdnttLogo className="h-[10%] w-[120%] rotate-90" />
         </div>
       )}
 
