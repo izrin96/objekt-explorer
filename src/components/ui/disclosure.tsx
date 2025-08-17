@@ -1,6 +1,7 @@
 "use client";
 
 import { IconChevronLeft } from "@intentui/icons";
+import { use, useMemo, useRef } from "react";
 import type {
   DisclosureGroupProps as AccordionProps,
   ButtonProps,
@@ -12,6 +13,7 @@ import {
   Button,
   Disclosure as Collapsible,
   DisclosurePanel as CollapsiblePanel,
+  DisclosureStateContext,
   Heading,
 } from "react-aria-components";
 import { composeTailwindRenderProps } from "@/lib/primitive";
@@ -50,7 +52,7 @@ const Disclosure = ({ className, ref, ...props }: DisclosureProps) => {
       {...props}
       className={composeTailwindRenderProps(
         className,
-        "peer group/disclosure w-full min-w-60 border-border border-b disabled:opacity-60",
+        "peer group/disclosure w-full min-w-60 border-b disabled:opacity-60",
       )}
     >
       {props.children}
@@ -90,20 +92,33 @@ const DisclosureTrigger = ({ className, ref, ...props }: DisclosureTriggerProps)
 interface DisclosurePanelProps extends DisclosurePanelPrimitiveProps {
   ref?: React.Ref<HTMLDivElement>;
 }
-const DisclosurePanel = ({ className, ref, ...props }: DisclosurePanelProps) => {
+const DisclosurePanel = ({ className, ref, style, ...props }: DisclosurePanelProps) => {
+  const { isExpanded } = use(DisclosureStateContext)!;
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const isSafari = useMemo(() => {
+    if (typeof navigator === "undefined") return false;
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  }, []);
+
   return (
     <CollapsiblePanel
       ref={ref}
       data-slot="disclosure-panel"
-      className={composeTailwindRenderProps(
-        className,
-        "overflow-hidden text-muted-fg text-sm transition-all **:data-[slot=disclosure-group]:border-t **:data-[slot=disclosure-group]:**:[.internal-chevron]:hidden has-data-[slot=disclosure-group]:**:[button]:px-4",
-      )}
+      style={{
+        height: !isSafari ? (isExpanded ? panelRef?.current?.scrollHeight : 0) : undefined,
+        ...style,
+      }}
+      className={composeTailwindRenderProps(className, [
+        "text-muted-fg **:data-[slot=disclosure-group]:border-t **:data-[slot=disclosure-group]:**:[.internal-chevron]:hidden has-data-[slot=disclosure-group]:**:[button]:px-4",
+        !isSafari && "overflow-hidden transition-[height] duration-200 ease-in-out",
+      ])}
       {...props}
     >
       <div
+        ref={panelRef}
         data-slot="disclosure-panel-content"
-        className="pt-0 not-has-data-[slot=disclosure-group]:group-data-expanded/disclosure:pb-3 [&:has([data-slot=disclosure-group])_&]:px-11"
+        className="text-pretty pt-0 pb-3 text-sm/6 not-has-data-[slot=disclosure-group]:group-data-expanded/disclosure:pb-3 [&:has([data-slot=disclosure-group])_&]:px-11"
       >
         {props.children}
       </div>
