@@ -78,10 +78,6 @@ export default function ObjektDetail({ objekts, showOwned = false, onClose }: Ob
             <TradeView objekt={objekt} serial={serial} />
           </TabPanel>
         </Tabs>
-        <div className="grow"></div>
-        <Button className="my-3 block sm:hidden" intent="outline" onClick={onClose}>
-          Close
-        </Button>
       </div>
     </div>
   );

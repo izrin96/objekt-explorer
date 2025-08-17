@@ -41,7 +41,8 @@
         "noUnusedImports": { "level": "error", "fix": "safe" },
         "useExhaustiveDependencies": "off",
         "useHookAtTopLevel": "error",
-        "noChildrenProp": "off"
+        "noChildrenProp": "off",
+        "useUniqueElementIds": "off"
       },
       "suspicious": {
         "noDocumentCookie": "off",
