@@ -16,13 +16,10 @@ export const useUserSearchStore = create<UserSearchState>()(
       users: [],
       add: (user: CosmoPublicUser) =>
         set((state) => {
-          const existing = state.users.findIndex(
-            (a) => a.nickname.toLowerCase() === user.nickname.toLowerCase(),
+          const existing = state.users.filter(
+            (a) => a.nickname.toLowerCase() !== user.nickname.toLowerCase(),
           );
-          if (existing !== -1) {
-            return state;
-          }
-          return { users: [user, ...state.users.slice(0, MAX_LENGTH - 1)] };
+          return { users: [user, ...existing].slice(0, MAX_LENGTH) };
         }),
       clearAll: () =>
         set({

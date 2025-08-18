@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
@@ -32,13 +32,6 @@ export default function UserSearch() {
     },
     enabled: enable,
   });
-
-  const selectUser = useCallback(
-    (user: CosmoPublicUser) => {
-      addRecent(user);
-    },
-    [addRecent],
-  );
 
   // set result after getting data
   useEffect(() => {
@@ -73,7 +66,7 @@ export default function UserSearch() {
             {result.map((user) => (
               <CommandMenu.Item
                 href={`/@${user.nickname}`}
-                onAction={() => selectUser(user)}
+                onAction={() => addRecent(user)}
                 key={user.nickname}
                 id={`search-${user.nickname}`}
                 textValue={user.nickname}
@@ -87,7 +80,7 @@ export default function UserSearch() {
               ...recentUsers.map((user) => (
                 <CommandMenu.Item
                   href={`/@${user.nickname}`}
-                  onAction={() => selectUser(user)}
+                  onAction={() => addRecent(user)}
                   key={user.nickname}
                   id={`recent-${user.nickname}`}
                   textValue={user.nickname}
