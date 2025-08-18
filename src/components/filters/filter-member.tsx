@@ -40,7 +40,9 @@ export default function MemberFilter() {
           <Menu.Section key={artist.name} title={artist.title} id={artist.name}>
             {artist.artistMembers.map((member) => (
               <Menu.Item key={member.name} id={member.name} textValue={member.name}>
-                <Menu.Label>{member.name}</Menu.Label>
+                <Menu.Label>
+                  {artist.name === "artms" ? member.name : `${member.alias} ${member.name}`}
+                </Menu.Label>
               </Menu.Item>
             ))}
           </Menu.Section>
