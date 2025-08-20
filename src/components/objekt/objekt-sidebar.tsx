@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import UnitBandGradient from "@/assets/unit-band-gradient.png";
+import UnitBandBg from "@/assets/unit-band-bg.png";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
@@ -35,8 +35,7 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
           )}
           style={
             {
-              "--band-bg-image":
-                objekt.class === "Unit" ? `url(${UnitBandGradient.src})` : undefined,
+              "--band-bg-image": objekt.class === "Unit" ? `url(${UnitBandBg.src})` : undefined,
             } as CSSProperties
           }
         >
