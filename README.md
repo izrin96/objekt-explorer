@@ -1,4 +1,4 @@
-## Objekt Explorer Web
+## Objekt Explorer Web (Objekt Tracker - formerly Lunar Cosmo)
 
 This project aims to build a simple explorer for Cosmo's Objekts, focusing on the client-side. Cosmo is an app developed by Modhaus Inc. that decentralizes K-pop using blockchain technology. Modhaus has introduced digital photocard NFTs called Objekts.
 
