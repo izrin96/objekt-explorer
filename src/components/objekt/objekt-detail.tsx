@@ -21,10 +21,9 @@ import TradeView from "./trade-view";
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
   showOwned?: boolean;
-  onClose: () => void;
 };
 
-export default function ObjektDetail({ objekts, showOwned = false, onClose }: ObjektDetailProps) {
+export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetailProps) {
   const t = useTranslations("objekt");
   const [objekt] = objekts;
   const isOwned = "serial" in objekt;
