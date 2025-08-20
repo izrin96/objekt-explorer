@@ -88,7 +88,7 @@ export default function LinkRender() {
 
 function TicketRender() {
   const t = useTranslations("link");
-  const { data, status, refetch, isRefetching, isLoading } = useQuery(
+  const { data, status, refetch, isFetching, isPending } = useQuery(
     orpc.cosmoLink.getTicket.queryOptions({
       staleTime: Infinity,
       retry: false,
@@ -96,7 +96,7 @@ function TicketRender() {
     }),
   );
 
-  if (isRefetching || isLoading)
+  if (isPending || isFetching)
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
@@ -285,7 +285,7 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
         onSubmit={(e) => {
           e.preventDefault();
           otpAndLink.mutate({
-            otp: parseInt(value),
+            otp: Number(value),
             ticket: ticketAuth.ticket,
           });
         }}

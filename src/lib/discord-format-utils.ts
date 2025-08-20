@@ -14,7 +14,7 @@ export function format(
       }
       const seasonCode = collection.season.charAt(0);
       const seasonNumber = collection.season.slice(-2);
-      const seasonFormat = seasonCode.repeat(parseInt(seasonNumber));
+      const seasonFormat = seasonCode.repeat(Number(seasonNumber));
 
       return `${seasonFormat}${collection.collectionNo}`;
     });

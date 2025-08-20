@@ -37,7 +37,7 @@ function parseSerial(value: string) {
   const expression = /\d+/;
   const match = value.match(expression);
   if (!match) return null;
-  return parseInt(match[0]);
+  return Number(match[0]);
 }
 
 function getObjektBreakdown(objekt: ValidObjekt) {

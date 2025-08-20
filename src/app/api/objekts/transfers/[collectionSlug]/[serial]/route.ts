@@ -29,7 +29,7 @@ export async function GET(_: Request, props: Params) {
     .leftJoin(objekts, eq(transfers.objektId, objekts.id))
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
     .where(
-      and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, parseInt(params.serial))),
+      and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, Number(params.serial))),
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id));
 

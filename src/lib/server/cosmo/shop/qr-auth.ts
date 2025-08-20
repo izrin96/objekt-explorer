@@ -21,6 +21,14 @@ export async function generateRecaptchaToken() {
   let result: string | null = null;
 
   try {
+    const apiKey = await page.evaluate(() => {
+      const script = document.querySelector<HTMLScriptElement>("#google-recaptcha-v3");
+      if (!script) return null;
+
+      const url = new URL(script.src);
+      return url.searchParams.get("render");
+    });
+
     const token = await page.evaluate((key) => {
       const grecaptcha = (window as any).grecaptcha;
       return new Promise<string>((resolve, reject) => {
@@ -33,7 +41,7 @@ export async function generateRecaptchaToken() {
             .catch(reject);
         });
       });
-    }, env.COSMO_SHOP_RECAPTCHA_KEY);
+    }, apiKey);
 
     result = token.toString();
   } catch (e) {

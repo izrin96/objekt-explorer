@@ -31,7 +31,7 @@ export function getCollectionShortId(objekt: ValidObjekt) {
   if (objekt.artist === "idntt") {
     return `${objekt.member} ${objekt.season} ${objekt.collectionNo}`;
   }
-  const seasonNumber = parseInt(objekt.season.slice(-2));
+  const seasonNumber = Number(objekt.season.slice(-2));
   if (seasonNumber <= 1) return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
   return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${objekt.collectionNo}`;
 }
@@ -40,7 +40,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
   // todo: serial support
   const seasonCode = objekt.season.charAt(0);
   const seasonNumber = objekt.season.slice(-2);
-  const seasonCodeRepeated = seasonCode.repeat(parseInt(seasonNumber));
+  const seasonCodeRepeated = seasonCode.repeat(Number(seasonNumber));
   const collectionNoSliced = objekt.collectionNo.slice(0, -1);
 
   return [
@@ -56,7 +56,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
     objekt.season, // atom01
     objekt.season.slice(0, -2), // atom
     seasonCode + seasonNumber, // a01
-    seasonCode + parseInt(seasonNumber), // a1
+    seasonCode + Number(seasonNumber), // a1
   ].map((a) => a.toLowerCase());
 }
 

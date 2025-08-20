@@ -95,7 +95,9 @@ function Activity() {
   const addNewTransferIds = useCallback((data: ActivityData[]) => {
     setNewTransferIds((prev) => {
       const newSet = new Set(prev);
-      data.forEach((data) => newSet.add(data.transfer.id));
+      for (const d of data) {
+        newSet.add(d.transfer.id);
+      }
       return newSet;
     });
   }, []);
