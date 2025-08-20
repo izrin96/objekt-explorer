@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useInterval } from "usehooks-ts";
 import AxolotlIcon from "@/assets/icon-axolotl.png";
 import BearIcon from "@/assets/icon-bear.png";
 import CarpenterIcon from "@/assets/icon-carpenter.png";
@@ -136,6 +137,8 @@ function TicketRender() {
 function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: () => void }) {
   const queryClient = useQueryClient();
   const t = useTranslations("link");
+  const [expired, setExpired] = useState(false);
+  const [remaining, setRemaining] = useState(0);
   const { data } = useQuery(
     orpc.cosmoLink.checkTicket.queryOptions({
       input: ticketAuth.ticket,
@@ -163,6 +166,21 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
     return icons[Math.floor(Math.random() * icons.length)];
   });
 
+  useInterval(
+    () => {
+      const now = Date.now();
+      const expireTime = new Date(ticketAuth.expireAt).getTime();
+      const difference = expireTime - now;
+
+      if (difference > 0) {
+        setRemaining(Math.floor(difference));
+      } else {
+        setExpired(true);
+      }
+    },
+    expired ? null : 1000,
+  );
+
   useEffect(() => {
     if (data?.status === "certified") {
       queryClient.invalidateQueries({
@@ -185,7 +203,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
         <div className="rounded bg-white p-3 shadow-lg">
           <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
         </div>
-        {data && <span className="text-sm">Remaining {msToCountdown(data.ticketRemainingMs)}</span>}
+        <span className="text-sm">Remaining {msToCountdown(remaining)}</span>
       </div>
     );
 
