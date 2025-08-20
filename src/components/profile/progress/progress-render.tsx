@@ -4,7 +4,7 @@ import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-que
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
-import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
@@ -55,7 +55,6 @@ function Progress() {
   const { artists, selectedArtists, selectedArtistIds, getArtist } = useCosmoArtist();
   const profile = useTarget((a) => a.profile)!;
   const [filters, setFilters] = useFilters();
-  const first = useRef(false);
 
   const [objektsQuery, ownedQuery] = useSuspenseQueries({
     queries: [
@@ -90,9 +89,6 @@ function Progress() {
   }, [selectedArtists, ownedQuery.data, objektsQuery.data]);
 
   useEffect(() => {
-    if (first.current || ownedQuery.isLoading || objektsQuery.isLoading) return;
-    first.current = true;
-
     const isFiltering = checkFiltering(filters);
     if (isFiltering) return;
 
@@ -105,14 +101,7 @@ function Progress() {
         });
       }
     }
-  }, [
-    ownedQuery.data,
-    calculateMemberRanks,
-    filters,
-    setFilters,
-    ownedQuery.isLoading,
-    objektsQuery.isLoading,
-  ]);
+  }, []);
 
   return (
     <div className="flex flex-col gap-8">
