@@ -1,13 +1,23 @@
 import type { CSSProperties } from "react";
+import SpecialBandBg from "@/assets/special-band-bg.png";
 import UnitBandBg from "@/assets/unit-band-bg.png";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { ValidObjekt } from "@/lib/universal/objekts";
-import { cn } from "@/utils/classes";
 import IdnttLogo from "../idntt-logo";
 
 type Props = {
   objekt: ValidObjekt;
   hideSerial?: boolean;
+};
+
+const getBandBackgroundStyle = (objektClass: string): CSSProperties => {
+  if (objektClass === "Unit") {
+    return { backgroundImage: `url(${UnitBandBg.src})` };
+  }
+  if (objektClass === "Special") {
+    return { backgroundImage: `url(${SpecialBandBg.src})` };
+  }
+  return {};
 };
 
 export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
@@ -27,17 +37,10 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
     >
       {objekt.artist === "idntt" && (
         <div
-          className={cn(
-            "flex h-[88%] w-full items-center justify-between rounded-l-(--band-radius) bg-(--objekt-bg-color) px-(--band-spacing) font-bold [writing-mode:vertical-lr]",
-            objekt.class === "Special" &&
-              "bg-[radial-gradient(circle_at_top_left,_#F9E7E3,_#CDD3ED,_#F3E0D1,_#F0E0E3,_#F3D7E5,_#EBD4E8,_#EBB7DD,_#D0B4EA)]",
-            objekt.class === "Unit" && "bg-(image:--band-bg-image) bg-cover",
-          )}
-          style={
-            {
-              "--band-bg-image": objekt.class === "Unit" ? `url(${UnitBandBg.src})` : undefined,
-            } as CSSProperties
+          className={
+            "flex h-[88%] w-full items-center justify-between rounded-l-(--band-radius) bg-(--objekt-bg-color) bg-cover px-(--band-spacing) font-bold [writing-mode:vertical-lr]"
           }
+          style={getBandBackgroundStyle(objekt.class)}
         >
           <span>{objekt.member}</span>
           <IdnttLogo className="h-[10%] w-[120%] rotate-90" />
