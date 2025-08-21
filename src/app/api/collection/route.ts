@@ -36,15 +36,17 @@ export async function GET(request: NextRequest) {
               ),
             ]
           : []),
-        query.cursor
-          ? or(
-              gt(collections.createdAt, query.cursor.createdAt),
-              and(
-                eq(collections.createdAt, query.cursor.createdAt),
-                gt(collections.collectionId, query.cursor.collectionId),
+        ...(query.cursor
+          ? [
+              or(
+                gt(collections.createdAt, query.cursor.createdAt),
+                and(
+                  eq(collections.createdAt, query.cursor.createdAt),
+                  gt(collections.collectionId, query.cursor.collectionId),
+                ),
               ),
-            )
-          : undefined,
+            ]
+          : []),
       ),
     )
     .orderBy(desc(collections.createdAt), desc(collections.collectionId));
