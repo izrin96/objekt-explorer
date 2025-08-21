@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import OmaBandBg from "@/assets/oma-band-bg.png";
 import SpecialBandBg from "@/assets/special-band-bg.png";
 import UnitBandBg from "@/assets/unit-band-bg.png";
 import { useElementSize } from "@/hooks/use-element-size";
@@ -10,51 +11,72 @@ type Props = {
   hideSerial?: boolean;
 };
 
-const getBandBackgroundStyle = (objektClass: string): CSSProperties => {
-  if (objektClass === "Unit") {
-    return { backgroundImage: `url(${UnitBandBg.src})` };
-  }
-  if (objektClass === "Special") {
-    return { backgroundImage: `url(${SpecialBandBg.src})` };
-  }
-  return {};
-};
-
 export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
   const [ref, { width }] = useElementSize();
   return (
     <div
-      className="absolute right-0 flex h-full w-[10.8%] select-none items-center text-(--objekt-text-color)"
+      className="absolute flex h-full w-full select-none items-center text-(--objekt-text-color) text-[calc(var(--width)*0.05)]"
       ref={ref}
       style={
         {
-          "--collection-font-size": `${0.55 * width}px`,
-          "--band-radius": `${0.3 * width}px`,
-          "--band-spacing": `${0.4 * width}px`,
-          fontSize: `${0.45 * width}px`,
+          "--width": `${width}px`,
         } as CSSProperties
       }
     >
+      {/* band background, only for idntt */}
       {objekt.artist === "idntt" && (
-        <div
-          className={
-            "flex h-[88%] w-full items-center justify-between rounded-l-(--band-radius) bg-(--objekt-bg-color) bg-cover px-(--band-spacing) font-bold [writing-mode:vertical-lr]"
-          }
-          style={getBandBackgroundStyle(objekt.class)}
-        >
-          <span>{objekt.member}</span>
-          <IdnttLogo className="h-[10%] w-[120%] rotate-90" />
-        </div>
+        <div className="absolute right-0 h-[88.2%] w-[10.8%] rounded-l-[calc(var(--width)*0.035)] bg-(--objekt-bg-color)"></div>
       )}
 
-      <div className="text-(size:--collection-font-size) absolute flex w-full items-center justify-center font-semibold [writing-mode:vertical-lr]">
-        <span>{objekt.collectionNo}</span>
-        {!hideSerial && "serial" in objekt && (
-          <div className="flex pt-[0.7em] tracking-wide">
-            <span className="pb-[.1em]">#</span>
-            <span>{objekt.serial}</span>
+      {/* custom band image, mostly for idntt */}
+      {/* special class */}
+      {objekt.artist === "idntt" && objekt.class === "Special" && (
+        <img
+          src={SpecialBandBg.src}
+          alt=""
+          className="absolute right-0 h-[88.2%] w-[10.8%] rounded-l-[calc(var(--width)*0.035)]"
+        />
+      )}
+
+      {/* unit class */}
+      {objekt.artist === "idntt" && objekt.class === "Unit" && (
+        <img
+          src={UnitBandBg.src}
+          alt=""
+          className="absolute right-0 h-[88.2%] w-[10.8%] rounded-l-[calc(var(--width)*0.035)]"
+        />
+      )}
+
+      {/* oma */}
+      {objekt.artist === "idntt" &&
+        objekt.onOffline === "offline" &&
+        objekt.backgroundColor === "#000000" && (
+          <img
+            src={OmaBandBg.src}
+            alt=""
+            className="absolute right-0 h-[90.5%] w-[12.8%] rounded-l-[calc(var(--width)*0.05)]"
+          />
+        )}
+
+      <div className="absolute right-0 flex h-[88.2%] w-[10.8%] items-center">
+        {/* band artist and member name, only for idntt */}
+        {objekt.artist === "idntt" && (
+          <div className="absolute flex h-full w-full items-center justify-between px-[calc(var(--width)*0.048)] font-bold [writing-mode:vertical-lr]">
+            <span>{objekt.member}</span>
+            <IdnttLogo className="h-[10%] w-[120%] rotate-90" />
           </div>
         )}
+
+        {/* band collection no. and serial */}
+        <div className="absolute flex w-full items-center font-semibold text-[calc(var(--width)*0.06)] [writing-mode:vertical-lr]">
+          <span>{objekt.collectionNo}</span>
+          {!hideSerial && "serial" in objekt && (
+            <div className="flex pt-[0.7em] tracking-wide">
+              <span className="pb-[.1em]">#</span>
+              <span>{objekt.serial}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
