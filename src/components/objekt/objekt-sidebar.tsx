@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import OmaBandBg from "@/assets/oma-band-bg.png";
 import SpecialBandBg from "@/assets/special-band-bg.png";
-import UnitBandBg from "@/assets/unit-band-bg.png";
+import UnitBandBg from "@/assets/unit-band-bg-v2.png";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import IdnttLogo from "../idntt-logo";
