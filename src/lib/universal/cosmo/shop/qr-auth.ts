@@ -3,20 +3,28 @@ export type TicketAuth = {
   ticket: string;
 };
 
+type TicketSuccess<T extends string> = {
+  status: T;
+  ticketRemainingMs: number;
+  ticketOtpRemainingMs: number;
+  profiles: {
+    artistName: string;
+    profileImageUrl: string;
+  }[];
+  user: {
+    id: number;
+    nickname: string;
+    profileImageUrl: string;
+  };
+};
+
 export type TicketCheck =
   | {
-      status: "wait_for_user_action" | "wait_for_certify" | "certified";
+      status: "wait_for_user_action";
       ticketRemainingMs: number;
-      profiles: {
-        artistName: string;
-        profileImageUrl: string;
-      }[];
-      user: {
-        id: number;
-        nickname: string;
-        profileImageUrl: string;
-      };
     }
+  | TicketSuccess<"wait_for_certify">
+  | TicketSuccess<"certified">
   | {
       status: "expired";
     };

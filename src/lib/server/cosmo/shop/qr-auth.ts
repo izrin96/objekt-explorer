@@ -71,7 +71,7 @@ export async function generateQrTicket(token: string) {
 export async function checkTicket(ticket: string) {
   return await cosmoShop<TicketCheck>(`/bff/v1/users/auth/login/native/qr/ticket`, {
     query: {
-      tid: crypto.randomUUID(),
+      tid: randomUUID(),
       ticket,
     },
   });
@@ -85,18 +85,15 @@ export async function certifyTicket(otp: number, ticket: string) {
       ticket,
     },
     query: {
-      tid: crypto.randomUUID(),
+      tid: randomUUID(),
     },
   });
 }
 
 export async function getUser(cookie: string) {
-  return await cosmoShop<CosmoShopUser>(`/bff/v1/users/me`, {
+  return await cosmoShop<CosmoShopUser>(`/bff/v4/users/me`, {
     headers: {
       Cookie: `user-session=${cookie}`,
-    },
-    query: {
-      tid: crypto.randomUUID(),
     },
   });
 }

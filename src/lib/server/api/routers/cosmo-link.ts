@@ -37,27 +37,27 @@ export const cosmoLinkRouter = {
     }
 
     try {
-      var result = await generateQrTicket(token);
+      const result = await generateQrTicket(token);
+      return result;
     } catch {
       throw new ORPCError("INTERNAL_SERVER_ERROR", {
         message: "Error getting ticket",
       });
     }
-
-    return result;
   }),
 
   // check the ticket with cosmo shop
   checkTicket: authed.input(z.string()).handler(async ({ input: ticket }) => {
     try {
-      var result = await checkQrTicket(ticket);
+      const result = await checkQrTicket(ticket);
+      return result;
     } catch {
       return {
         status: "expired",
       } satisfies TicketCheck;
     }
-    return result;
   }),
+
   // send otp and check the ticket
   // and then link cosmo id with user
   otpAndLink: authed
