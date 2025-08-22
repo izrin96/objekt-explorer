@@ -15,6 +15,7 @@ import { type CSSProperties, useEffect, useState } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
 import { Button, Popover, Slider } from "../ui";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
+import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";
 import LiveFooter from "./live-footer";
 
@@ -77,6 +78,7 @@ function LiveControl() {
   return (
     <>
       <LiveDuration />
+      <ParticipantCounter />
       <LiveVolumeControl />
       <Button intent="outline" size="sq-sm" onClick={toggleFullscreen}>
         <CornersOutIcon />

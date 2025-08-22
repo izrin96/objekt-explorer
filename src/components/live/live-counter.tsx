@@ -4,14 +4,12 @@ import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallStateHooks } from "@stream-io/video-react-sdk";
 
 export default function ParticipantCounter() {
-  const { useCallSession } = useCallStateHooks();
-  const session = useCallSession();
-  const cosmoUserCount = session?.participants_count_by_role.cosmo_user ?? 0;
-  const anonymousUserCount = session?.anonymous_participant_count ?? 0;
+  const { useParticipantCount } = useCallStateHooks();
+  const count = useParticipantCount();
   return (
-    <span className="flex items-center gap-1 font-semibold text-sm">
+    <span className="flex items-center gap-1 font-semibold text-red-400 text-sm tabular-nums">
       <UsersIcon size={16} />
-      {cosmoUserCount + anonymousUserCount}
+      {count}
     </span>
   );
 }
