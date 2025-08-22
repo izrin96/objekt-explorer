@@ -371,9 +371,8 @@ function compareMember(memberA: string, memberB: string, artists: CosmoArtistWit
 }
 
 function compareByArray<T>(valid: readonly T[], a: T, b: T) {
-  const posA = valid.findIndex((p) => p === a);
-  const posB = valid.findIndex((p) => p === b);
-
+  const posA = valid.indexOf(a);
+  const posB = valid.indexOf(b);
   return posA - posB;
 }
 
@@ -398,7 +397,7 @@ export function shapeProgressCollections<T extends ValidObjekt>(
   );
 
   const groupBys = filters.group_bys?.toSorted(
-    (a, b) => validGroupBy.findIndex((c) => c === a) - validGroupBy.findIndex((c) => c === b),
+    (a, b) => validGroupBy.indexOf(a) - validGroupBy.indexOf(b),
   ) ?? ["member", "season", "class"];
 
   const grouped = groupBy(objekts, (objekt) =>
