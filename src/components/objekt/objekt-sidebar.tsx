@@ -15,7 +15,7 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
   const [ref, { width }] = useElementSize();
   return (
     <div
-      className="absolute flex h-full w-full select-none items-center text-(--objekt-text-color) text-[calc(var(--width)*0.05)]"
+      className="pointer-events-none absolute flex h-full w-full select-none items-center text-(--objekt-text-color) text-[calc(var(--width)*0.05)]"
       ref={ref}
       style={
         {

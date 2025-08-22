@@ -32,8 +32,8 @@ export function getBaseURL() {
   return "http://localhost:3000";
 }
 
-export function replaceUrlSize(url: string, size: "2x" | "thumbnail" = "2x") {
-  return url.replace(/(4x|3x|original)$/i, size);
+export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
+  return url.replace(/(4x|3x|2x|thumbnail|original)$/i, size);
 }
 
 export function parseSelected<T>(keys: Selection, multiple?: false): T | null;

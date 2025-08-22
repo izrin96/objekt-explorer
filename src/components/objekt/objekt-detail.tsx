@@ -86,6 +86,7 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts;
   const [flipped, setFlipped] = useState(false);
   const resizedUrl = replaceUrlSize(objekt.frontImage);
+  const originalUrl = replaceUrlSize(objekt.frontImage, "original");
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
@@ -105,7 +106,7 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
           {/* smaller image */}
           <NextImage fill loading="eager" src={resizedUrl} alt={objekt.collectionId} />
           {/* original image */}
-          <NextImage fill loading="eager" src={objekt.frontImage} alt={objekt.collectionId} />
+          <NextImage fill loading="eager" src={originalUrl} alt={objekt.collectionId} />
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
         <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
