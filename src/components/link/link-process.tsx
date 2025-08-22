@@ -291,7 +291,13 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
     return (
       <div className="flex flex-col items-center gap-2">
         <span>{otpAndLink.error.message}</span>
-        <Button intent="secondary" onClick={() => otpAndLink.reset()}>
+        <Button
+          intent="secondary"
+          onClick={() => {
+            setValue("");
+            otpAndLink.reset();
+          }}
+        >
           Try again
         </Button>
       </div>
