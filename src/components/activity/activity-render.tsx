@@ -12,7 +12,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
-import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { InfiniteQueryNext } from "../infinite-query-pending";
 import ObjektModal from "../objekt/objekt-modal";
 import { Badge, Card } from "../ui";
@@ -58,7 +58,8 @@ function Activity() {
     useInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", type, filters, selectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
-        const response = await ofetch<ActivityResponse>(`/api/activity`, {
+        const url = new URL("/api/activity", getBaseURL());
+        const response = await ofetch<ActivityResponse>(url.toString(), {
           query: {
             cursor: pageParam ? JSON.stringify(pageParam) : undefined,
             type: type ?? undefined,

@@ -26,10 +26,10 @@ export function getEdition(collectionNo: string) {
 }
 
 export function getBaseURL() {
-  if (env.NEXT_PUBLIC_SITE_URL) {
-    return env.NEXT_PUBLIC_SITE_URL;
+  if (typeof window !== "undefined") {
+    return window.location.origin;
   }
-  return "http://localhost:3000";
+  return env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
 
 export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
