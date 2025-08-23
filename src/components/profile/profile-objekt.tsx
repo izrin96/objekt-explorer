@@ -242,7 +242,7 @@ function ProfileObjekt() {
       </div>
       <span className="font-semibold">
         {count.toLocaleString()} total
-        {filters.grouped ? ` (${groupCount} types)` : ""}
+        {filters.grouped ? ` (${groupCount.toLocaleString()} types)` : ""}
       </span>
 
       <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
