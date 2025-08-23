@@ -23,12 +23,50 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
         } as CSSProperties
       }
     >
+      {/* custom band image */}
+      {objekt.bandImageUrl && (
+        <img
+          className="absolute top-0 left-0 h-full w-full object-cover"
+          alt=""
+          src={objekt.bandImageUrl}
+        />
+      )}
+
       {/* band background, only for idntt */}
-      {objekt.artist === "idntt" && (
+      {!objekt.bandImageUrl && objekt.artist === "idntt" && (
         <div className="absolute right-0 h-[88.2%] w-[10.8%] rounded-l-[calc(var(--width)*0.035)] bg-(--objekt-bg-color)"></div>
       )}
 
-      {/* custom band image, mostly for idntt */}
+      {/* temporary custom band image, mostly for idntt */}
+      {!objekt.bandImageUrl && <TempCustomBand objekt={objekt} />}
+
+      <div className="absolute right-0 flex h-[88.2%] w-[10.8%] items-center">
+        {/* band artist and member name, only for idntt */}
+        {objekt.artist === "idntt" && (
+          <div className="absolute flex h-full w-full items-center justify-between px-[calc(var(--width)*0.048)] font-bold [writing-mode:vertical-lr]">
+            <span>{objekt.member}</span>
+            <IdnttLogo className="h-[10%] w-[120%] rotate-90" />
+          </div>
+        )}
+
+        {/* band collection no. and serial */}
+        <div className="absolute flex w-full items-center font-semibold text-[calc(var(--width)*0.06)] [writing-mode:vertical-lr]">
+          <span>{objekt.collectionNo}</span>
+          {!hideSerial && "serial" in objekt && (
+            <div className="flex pt-[0.7em] tracking-wide">
+              <span className="pb-[.1em]">#</span>
+              <span>{objekt.serial}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TempCustomBand({ objekt }: { objekt: ValidObjekt }) {
+  return (
+    <>
       {/* special class */}
       {objekt.artist === "idntt" && objekt.class === "Special" && (
         <img
@@ -57,27 +95,6 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
             className="absolute right-0 h-[90.5%] w-[12.8%] rounded-l-[calc(var(--width)*0.05)]"
           />
         )}
-
-      <div className="absolute right-0 flex h-[88.2%] w-[10.8%] items-center">
-        {/* band artist and member name, only for idntt */}
-        {objekt.artist === "idntt" && (
-          <div className="absolute flex h-full w-full items-center justify-between px-[calc(var(--width)*0.048)] font-bold [writing-mode:vertical-lr]">
-            <span>{objekt.member}</span>
-            <IdnttLogo className="h-[10%] w-[120%] rotate-90" />
-          </div>
-        )}
-
-        {/* band collection no. and serial */}
-        <div className="absolute flex w-full items-center font-semibold text-[calc(var(--width)*0.06)] [writing-mode:vertical-lr]">
-          <span>{objekt.collectionNo}</span>
-          {!hideSerial && "serial" in objekt && (
-            <div className="flex pt-[0.7em] tracking-wide">
-              <span className="pb-[.1em]">#</span>
-              <span>{objekt.serial}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
