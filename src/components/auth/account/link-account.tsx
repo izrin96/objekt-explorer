@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button, Label, Modal } from "@/components/ui";
@@ -21,6 +22,7 @@ export function ListAccounts() {
       }
       return result.data;
     },
+    gcTime: 0,
   });
 
   const linkedAccounts = query.data.filter((a) => a.provider !== "credential");
@@ -52,17 +54,13 @@ type LinkedAccountProps = {
 };
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
-  const queryClient = useQueryClient();
   const [pullOpen, setPullOpen] = useState(false);
-  const session = authClient.useSession();
+  const router = useRouter();
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
       onSuccess: () => {
+        router.refresh();
         toast.success(`${provider.label} unlinked`);
-        queryClient.invalidateQueries({
-          queryKey: ["accounts"],
-        });
-        session.refetch();
       },
       onError: () => {
         toast.error(`Error unlink from ${provider.label}`);

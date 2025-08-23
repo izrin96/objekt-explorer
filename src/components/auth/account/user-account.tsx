@@ -1,12 +1,8 @@
 "use client";
 
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import {
-  QueryErrorResetBoundary,
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
@@ -77,6 +73,7 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       }
       return result.data;
     },
+    gcTime: 0,
   });
 
   if (!session.data) return;
@@ -96,8 +93,7 @@ function UserAccountForm({
   user: Session["user"];
   setOpen: (val: boolean) => void;
 }) {
-  const queryClient = useQueryClient();
-  const session = authClient.useSession();
+  const router = useRouter();
 
   const mutation = useMutation({
     mutationFn: async (data: { showSocial: boolean; name: string }) => {
@@ -106,11 +102,8 @@ function UserAccountForm({
       return result.data;
     },
     onSuccess: () => {
-      session.refetch();
-      queryClient.invalidateQueries({
-        queryKey: ["session"],
-      });
       setOpen(false);
+      router.refresh();
       toast.success("Account updated");
     },
     onError: ({ message }) => {
