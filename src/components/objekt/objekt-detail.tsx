@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import NextImage from "next/image";
 import { useTranslations } from "next-intl";
-import { type CSSProperties, useCallback, useState } from "react";
+import { type CSSProperties, useCallback, useMemo, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
@@ -85,19 +85,27 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts;
   const [flipped, setFlipped] = useState(false);
-  const resizedUrl = replaceUrlSize(objekt.frontImage);
-  const originalUrl = replaceUrlSize(objekt.frontImage, "original");
-  const backUrl = replaceUrlSize(objekt.backImage, "original");
-  const css = {
-    "--objekt-bg-color": objekt.backgroundColor,
-    "--objekt-text-color": objekt.textColor,
-  } as CSSProperties;
+
+  const urls = useMemo(
+    () => ({
+      resizedUrl: replaceUrlSize(objekt.frontImage),
+      originalUrl: replaceUrlSize(objekt.frontImage, "original"),
+      backUrl: replaceUrlSize(objekt.backImage, "original"),
+    }),
+    [objekt.frontImage, objekt.backImage],
+  );
+
   return (
     <div
       role="none"
       onClick={() => setFlipped((prev) => !prev)}
       className="flex h-[21rem] select-none self-center sm:h-fit"
-      style={css}
+      style={
+        {
+          "--objekt-bg-color": objekt.backgroundColor,
+          "--objekt-text-color": objekt.textColor,
+        } as CSSProperties
+      }
     >
       <div
         data-flipped={flipped}
@@ -105,13 +113,13 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
       >
         <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
           {/* smaller image */}
-          <NextImage fill loading="eager" src={resizedUrl} alt={objekt.collectionId} />
+          <NextImage fill loading="eager" src={urls.resizedUrl} alt={objekt.collectionId} />
           {/* original image */}
-          <NextImage fill loading="eager" src={originalUrl} alt={objekt.collectionId} />
+          <NextImage fill loading="eager" src={urls.originalUrl} alt={objekt.collectionId} />
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
         <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
-          <NextImage fill loading="eager" src={backUrl} alt={objekt.collectionId} />
+          <NextImage fill loading="eager" src={urls.backUrl} alt={objekt.collectionId} />
         </div>
       </div>
     </div>
