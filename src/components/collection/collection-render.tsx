@@ -1,13 +1,13 @@
 import type { CSSProperties } from "react";
 
-export function ObjektsRender<T>({
+export function makeObjektRows<T>({
   items,
   columns,
-  children,
+  renderItem,
 }: {
   items: T[];
   columns: number;
-  children: (props: { items: T[]; rowIndex: number }) => React.ReactElement;
+  renderItem: (props: { items: T[]; rowIndex: number }) => React.ReactElement;
 }) {
   return Array.from({
     length: Math.ceil(items.length / columns),
@@ -15,7 +15,7 @@ export function ObjektsRender<T>({
     const start = rowIndex * columns;
     const end = start + columns;
 
-    return children({ items: items.slice(start, end), rowIndex });
+    return renderItem({ items: items.slice(start, end), rowIndex });
   });
 }
 

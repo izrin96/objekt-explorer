@@ -14,7 +14,7 @@ import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { SPIN_ADDRESS } from "@/lib/utils";
-import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
+import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
@@ -99,10 +99,10 @@ function ProfileObjekt() {
   const virtualList = useMemo(() => {
     return deferredObjekts.flatMap(([title, items]) => [
       ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
-      ...ObjektsRender({
+      ...makeObjektRows({
         items,
         columns,
-        children: ({ items, rowIndex }) => (
+        renderItem: ({ items, rowIndex }) => (
           <ObjektsRenderRow
             key={`${title}-${rowIndex}`}
             columns={columns}
