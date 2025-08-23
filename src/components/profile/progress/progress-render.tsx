@@ -4,7 +4,7 @@ import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-que
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
-import { memo, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, Suspense, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
@@ -13,7 +13,7 @@ import ObjektModal from "@/components/objekt/objekt-modal";
 import ObjektView from "@/components/objekt/objekt-view";
 import { Loader, ProgressBar } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { checkFiltering, useFilters } from "@/hooks/use-filters";
+import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useShapeProgress } from "@/hooks/use-shape-progress";
 import { useTarget } from "@/hooks/use-target";
@@ -52,9 +52,9 @@ function ProgressRender() {
 
 function Progress() {
   const { authenticated } = useUser();
-  const { selectedArtists, selectedArtistIds } = useCosmoArtist();
+  const { selectedArtistIds } = useCosmoArtist();
   const profile = useTarget((a) => a.profile)!;
-  const [filters, setFilters] = useFilters();
+  const [filters] = useFilters();
   const shape = useShapeProgress();
 
   const [objektsQuery, ownedQuery] = useSuspenseQueries({
@@ -71,38 +71,6 @@ function Progress() {
     const shaped = shape(joinedObjekts);
     return { ownedSlugs, shaped };
   }, [shape, ownedQuery.data, objektsQuery.data]);
-
-  const calculateMemberRanks = useCallback(() => {
-    const members = selectedArtists.flatMap((a) => a.artistMembers).map((a) => a.name);
-    const grouped = Object.values(groupBy(ownedQuery.data, (a) => a.collectionId));
-
-    return members
-      .map((member) => ({
-        name: member,
-        owned: grouped.filter(([objekt]) => objekt.member === member).length,
-        total: objektsQuery.data.filter((a) => a.member === member).length,
-      }))
-      .map((a) => ({
-        name: a.name,
-        progress: a.total === 0 ? 0 : (a.owned / a.total) * 100,
-      }))
-      .toSorted((a, b) => b.progress - a.progress);
-  }, [selectedArtists, ownedQuery.data, objektsQuery.data]);
-
-  useEffect(() => {
-    const isFiltering = checkFiltering(filters);
-    if (isFiltering) return;
-
-    const ranks = calculateMemberRanks();
-    if (ranks.length) {
-      const { name, progress } = ranks[0];
-      if (progress > 0) {
-        setFilters({
-          member: [name],
-        });
-      }
-    }
-  }, []);
 
   return (
     <div className="flex flex-col gap-8">

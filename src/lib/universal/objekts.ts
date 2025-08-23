@@ -60,7 +60,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
   ].map((a) => a.toLowerCase());
 }
 
-export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
+export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt): OwnedObjekt {
   return {
     ...collection,
     ...overrideCollection(collection),
@@ -69,10 +69,10 @@ export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
     receivedAt: objekt.receivedAt,
     mintedAt: objekt.mintedAt,
     transferable: objekt.transferable,
-  } satisfies OwnedObjekt;
+  };
 }
 
-export function mapObjektWithTag(objekt: ValidObjekt) {
+export function mapObjektWithTag(objekt: ValidObjekt): ValidObjekt {
   return {
     ...objekt,
     tags: makeCollectionTags(objekt),
