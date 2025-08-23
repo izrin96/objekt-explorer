@@ -52,6 +52,11 @@ export function useFilters() {
 
 export type Filters = ReturnType<typeof useFilters>[0];
 
+export function useIsFiltering() {
+  const [filters] = useFilters();
+  return checkFiltering(filters);
+}
+
 export function checkFiltering(filters: Filters) {
   return (
     filters.member !== null ||

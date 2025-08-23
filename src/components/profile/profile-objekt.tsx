@@ -1,22 +1,18 @@
 "use client";
 
-import { QueryErrorResetBoundary, useQuery, useSuspenseQueries } from "@tanstack/react-query";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Suspense, useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { useConfigStore } from "@/hooks/use-config";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
+import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
-import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { orpc } from "@/lib/orpc/client";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import type { ValidObjekt } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
 import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -89,50 +85,19 @@ function ProfileObjekt() {
   const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
   const profile = useTarget((a) => a.profile)!;
-  const { artists, selectedArtistIds, getArtist } = useCosmoArtist();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
-  const [count, setCount] = useState(0);
-  const [groupCount, setGroupCount] = useState(0);
+  const objekts = useProfileObjekts();
+  const deferredObjekts = useDeferredValue(objekts);
 
-  const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
-    [],
-  );
-  const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
-
-  const objektsQuery = useQuery({
-    ...collectionOptions(selectedArtistIds),
-    enabled: filters.unowned ?? false,
-  });
-
-  const [ownedQuery, pinsQuery, lockedObjektQuery] = useSuspenseQueries({
-    queries: [
-      ownedCollectionOptions(profile.address, selectedArtistIds),
-      orpc.pins.list.queryOptions({
-        input: profile.address,
-        refetchOnWindowFocus: false,
-        staleTime: 1000 * 60 * 5,
-      }),
-      orpc.lockedObjekt.list.queryOptions({
-        input: profile.address,
-        refetchOnWindowFocus: false,
-        staleTime: 1000 * 60 * 5,
-      }),
-    ],
-  });
-
-  const joinedObjekts = useMemo(() => {
-    if (filters.unowned) {
-      const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
-      const missingObjekts = (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug));
-      return [...ownedQuery.data, ...missingObjekts];
-    }
-    return ownedQuery.data;
-  }, [ownedQuery.data, filters.unowned, objektsQuery.data]);
+  const [groupCount, count] = useMemo(() => {
+    const groupedObjekts = deferredObjekts.flatMap(([, objekts]) => objekts);
+    return [groupedObjekts.length, groupedObjekts.flatMap((item) => item.item).length];
+  }, [deferredObjekts]);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([title, items]) => [
+    return deferredObjekts.flatMap(([title, items]) => [
       ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...ObjektsRender({
         items,
@@ -238,7 +203,7 @@ function ProfileObjekt() {
       }),
     ]);
   }, [
-    deferredObjektsFiltered,
+    deferredObjekts,
     filters.grouped,
     columns,
     authenticated,
@@ -246,29 +211,6 @@ function ProfileObjekt() {
     profile,
     hideLabel,
   ]);
-
-  useEffect(() => {
-    const shaped = shapeObjekts(
-      filters,
-      joinedObjekts,
-      artists,
-      getArtist,
-      pinsQuery.data,
-      lockedObjektQuery.data,
-    );
-    const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
-    const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
-    setGroupCount(allGroupedObjekts.length);
-    setCount(allObjekts.length);
-    setObjektsFiltered(shaped);
-  }, [filters, joinedObjekts, artists, pinsQuery.data, lockedObjektQuery.data]);
-
-  if (ownedQuery.isLoading)
-    return (
-      <div className="flex justify-center">
-        <Loader variant="ring" />
-      </div>
-    );
 
   return (
     <div className="flex flex-col gap-4">

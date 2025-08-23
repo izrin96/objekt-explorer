@@ -1,20 +1,16 @@
 "use client";
 
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Suspense, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { Suspense, useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
+import { useCollectionObjekts } from "@/hooks/use-collection-objekt";
 import { useConfigStore } from "@/hooks/use-config";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useUser } from "@/hooks/use-user";
-import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { collectionOptions } from "@/lib/query-options";
-import type { ValidObjekt } from "@/lib/universal/objekts";
 import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
@@ -59,20 +55,18 @@ function IndexRender() {
 
 function IndexView() {
   const { authenticated } = useUser();
-  const { artists, selectedArtistIds, getArtist } = useCosmoArtist();
-  const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
-  const [count, setCount] = useState(0);
-  const query = useSuspenseQuery(collectionOptions(selectedArtistIds));
+  const objekts = useCollectionObjekts();
+  const deferredObjekts = useDeferredValue(objekts);
 
-  const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
-    [],
+  const count = useMemo(
+    () => deferredObjekts.flatMap(([, objekts]) => objekts).length,
+    [deferredObjekts],
   );
-  const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([title, items]) => [
+    return deferredObjekts.flatMap(([title, items]) => [
       ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...ObjektsRender({
         items,
@@ -128,14 +122,7 @@ function IndexView() {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, authenticated, hideLabel]);
-
-  useEffect(() => {
-    const shaped = shapeObjekts(filters, query.data, artists, getArtist);
-    const allObjekts = shaped.flatMap(([, objekts]) => objekts);
-    setCount(allObjekts.length);
-    setObjektsFiltered(shaped);
-  }, [filters, query.data, artists]);
+  }, [deferredObjekts, columns, authenticated, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">

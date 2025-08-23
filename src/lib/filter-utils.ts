@@ -1,16 +1,13 @@
 import chroma from "chroma-js";
-import { groupBy } from "es-toolkit";
-import type { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { checkFiltering, type Filters } from "@/hooks/use-filters";
+import type { Filters } from "@/hooks/use-filters";
 import {
   type ValidClass,
   type ValidSeason,
   validClasses,
-  validGroupBy,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
 import type { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
-import type { PinObjekt, ValidObjekt } from "./universal/objekts";
+import type { ValidObjekt } from "./universal/objekts";
 import { getEdition } from "./utils";
 
 export type ObjektItem<T> = {
@@ -183,7 +180,7 @@ function defaultSortObjekts<T extends ValidObjekt>(
   return objekts;
 }
 
-function sortObjekts<T extends ValidObjekt>(
+export function sortObjekts<T extends ValidObjekt>(
   filters: Filters,
   data: T[],
   artists: CosmoArtistWithMembersBFF[],
@@ -235,7 +232,7 @@ function sortObjekts<T extends ValidObjekt>(
   return objekts;
 }
 
-function sortDuplicate<T extends ValidObjekt>(filters: Filters, data: T[][]) {
+export function sortDuplicate<T extends ValidObjekt>(filters: Filters, data: T[][]) {
   const sort = filters.sort ?? "date";
   const sortDir = filters.sort_dir ?? "desc";
 
@@ -249,116 +246,11 @@ function sortDuplicate<T extends ValidObjekt>(filters: Filters, data: T[][]) {
   return objekts;
 }
 
-export function shapeObjekts<T extends ValidObjekt>(
-  filters: Filters,
-  objekts: T[],
+export function compareMember(
+  memberA: string,
+  memberB: string,
   artists: CosmoArtistWithMembersBFF[],
-  getArtist: ReturnType<typeof useCosmoArtist>["getArtist"],
-  pins: PinObjekt[] = [],
-  lockedObjekts: PinObjekt[] = [],
-): [string, ObjektItem<T[]>[]][] {
-  // 1. filter all
-  // 2. group by key
-  // 3. sort the group
-  // 4. sort the items
-  // 5. group by duplicate
-  // 6. sort by duplicate
-  // 7. map to ObjektItem<T[]>
-  // 8. sort pin objekt
-
-  // filter objekts
-  const fliteredObjekts = filterObjekts(filters, objekts);
-
-  // group by key
-  let groupByKey: Record<string, T[]>;
-  if (filters.group_by) {
-    groupByKey = groupBy(fliteredObjekts, (objekt) => {
-      return filters.group_by === "seasonCollectionNo"
-        ? `${objekt.season} ${objekt.collectionNo}`
-        : filters.group_by === "artist"
-          ? (getArtist(objekt.artist)?.title ?? objekt.artist)
-          : objekt[filters.group_by!];
-    });
-  } else {
-    groupByKey = groupBy(fliteredObjekts, () => "");
-  }
-
-  // sort the group
-  const groupDir = filters.group_dir ?? "desc";
-  const groupByKeySorted = Object.entries(groupByKey).toSorted(([keyA], [keyB]) => {
-    if (filters.group_by === "member") {
-      return groupDir === "asc"
-        ? compareMember(keyA, keyB, artists)
-        : compareMember(keyB, keyA, artists);
-    }
-
-    if (filters.group_by === "class") {
-      return groupDir === "asc" ? classSort(keyA, keyB) : classSort(keyB, keyA);
-    }
-
-    if (filters.group_by === "season") {
-      return groupDir === "asc" ? seasonSort(keyA, keyB) : seasonSort(keyB, keyA);
-    }
-
-    if (groupDir === "desc") return keyB.localeCompare(keyA);
-    return keyA.localeCompare(keyB);
-  });
-
-  return groupByKeySorted.map(([key, keyObjekts]) => {
-    // sort objekts
-    const sortedObjekts = sortObjekts(filters, keyObjekts, artists);
-
-    // group by duplicate
-    let group: T[][];
-    if (filters.grouped) {
-      group = Object.values(groupBy(sortedObjekts, (a) => a.collectionId));
-    } else {
-      group = sortedObjekts.map((objekt) => [objekt]);
-    }
-
-    // sort duplicate objekts
-    const sortedDuplicateObjekts = sortDuplicate(filters, group);
-
-    // map T[] to ObjektItem<T[]>
-    let items: ObjektItem<T[]>[] = sortedDuplicateObjekts.map((objekts) => {
-      const [objekt] = objekts;
-      const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
-      const lockedObjekt = lockedObjekts.find((lock) => lock.tokenId === objekt.id);
-      const isPin = pinObjekt !== undefined;
-      const isLocked = lockedObjekt !== undefined;
-      return {
-        isPin: isPin,
-        isLocked: isLocked,
-        item: objekts,
-        order: isPin ? pinObjekt.order : null,
-      };
-    });
-
-    if (pins.length > 0) {
-      // if not filtering, pins should show first
-      const isFiltering = checkFiltering(filters);
-      if (!isFiltering && !filters.hidePin) {
-        items = [
-          ...items
-            .filter((item) => item.isPin === true)
-            .toSorted((a, b) => (a.order && b.order ? b.order - a.order : 0)),
-          ...items.filter((item) => item.isPin === false),
-        ];
-      }
-    }
-
-    // filter locked / unlocked
-    if (filters.locked !== null) {
-      items = items.filter((item) =>
-        filters.locked !== null ? item.isLocked === filters.locked : true,
-      );
-    }
-
-    return [key, items];
-  });
-}
-
-function compareMember(memberA: string, memberB: string, artists: CosmoArtistWithMembersBFF[]) {
+) {
   const memberOrderA =
     artists.flatMap((a) => a.artistMembers).find((member) => member.name === memberA)?.order ??
     Infinity;
@@ -370,65 +262,16 @@ function compareMember(memberA: string, memberB: string, artists: CosmoArtistWit
   return memberOrderA - memberOrderB;
 }
 
-function compareByArray<T>(valid: readonly T[], a: T, b: T) {
+export function compareByArray<T>(valid: readonly T[], a: T, b: T) {
   const posA = valid.indexOf(a);
   const posB = valid.indexOf(b);
   return posA - posB;
 }
 
-function seasonSort(a: string, b: string) {
+export function seasonSort(a: string, b: string) {
   return compareByArray(validSeasons, a, b);
 }
 
-function classSort(a: string, b: string) {
+export function classSort(a: string, b: string) {
   return compareByArray(validClasses, a, b);
-}
-
-export function shapeProgressCollections<T extends ValidObjekt>(
-  artists: CosmoArtistWithMembersBFF[],
-  filters: Filters,
-  data: T[],
-  getArtist: ReturnType<typeof useCosmoArtist>["getArtist"],
-): [string, T[]][] {
-  let objekts = data;
-
-  objekts = filterObjekts(filters, objekts).filter(
-    (a) => ["Welcome", "Zero"].includes(a.class) === false,
-  );
-
-  const groupBys = filters.group_bys?.toSorted(
-    (a, b) => validGroupBy.indexOf(a) - validGroupBy.indexOf(b),
-  ) ?? ["member", "season", "class"];
-
-  const grouped = groupBy(objekts, (objekt) =>
-    groupBys
-      .map((key) =>
-        key === "artist"
-          ? (getArtist(objekt.artist)?.title ?? objekt.artist)
-          : objekt[key as keyof typeof objekt],
-      )
-      .join(" "),
-  );
-
-  return (
-    Object.entries(grouped)
-      .filter(([, objekts]) => objekts.length > 0)
-      // sort by member -> season -> class
-      .toSorted(([, [objektA]], [, [objektB]]) =>
-        groupBys.includes("class") ? classSort(objektA.class, objektB.class) : 0,
-      )
-      .toSorted(([, [objektA]], [, [objektB]]) =>
-        groupBys.includes("season") ? seasonSort(objektB.season, objektA.season) : 0,
-      )
-      .toSorted(([, [objektA]], [, [objektB]]) =>
-        groupBys.includes("member") ? compareMember(objektA.member, objektB.member, artists) : 0,
-      )
-      .map(([key, objekts]) => [
-        key,
-        objekts
-          .toSorted((a, b) => compareMember(a.member, b.member, artists))
-          .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-          .toSorted((a, b) => seasonSort(b.season, a.season)),
-      ])
-  );
 }

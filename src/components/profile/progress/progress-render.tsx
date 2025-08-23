@@ -15,9 +15,9 @@ import { Loader, ProgressBar } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { checkFiltering, useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import { useShapeProgress } from "@/hooks/use-shape-progress";
 import { useTarget } from "@/hooks/use-target";
 import { useUser } from "@/hooks/use-user";
-import { shapeProgressCollections } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
@@ -52,9 +52,10 @@ function ProgressRender() {
 
 function Progress() {
   const { authenticated } = useUser();
-  const { artists, selectedArtists, selectedArtistIds, getArtist } = useCosmoArtist();
+  const { selectedArtists, selectedArtistIds } = useCosmoArtist();
   const profile = useTarget((a) => a.profile)!;
   const [filters, setFilters] = useFilters();
+  const shape = useShapeProgress();
 
   const [objektsQuery, ownedQuery] = useSuspenseQueries({
     queries: [
@@ -67,9 +68,9 @@ function Progress() {
     const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
     const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
     const joinedObjekts = [...ownedQuery.data, ...missingObjekts];
-    const shaped = shapeProgressCollections(artists, filters, joinedObjekts, getArtist);
+    const shaped = shape(joinedObjekts);
     return { ownedSlugs, shaped };
-  }, [ownedQuery.data, objektsQuery.data, artists, filters]);
+  }, [shape, ownedQuery.data, objektsQuery.data]);
 
   const calculateMemberRanks = useCallback(() => {
     const members = selectedArtists.flatMap((a) => a.artistMembers).map((a) => a.name);

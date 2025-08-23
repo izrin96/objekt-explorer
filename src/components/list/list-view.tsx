@@ -1,19 +1,16 @@
 "use client";
 
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { useConfigStore } from "@/hooks/use-config";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { useListObjekts } from "@/hooks/use-list-objekt";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useListAuthed, useUser } from "@/hooks/use-user";
-import { type ObjektItem, shapeObjekts } from "@/lib/filter-utils";
-import { orpc } from "@/lib/orpc/client";
-import { mapObjektWithTag, type ValidObjekt } from "@/lib/universal/objekts";
 import { ObjektsRender, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
@@ -51,29 +48,21 @@ export default function ListRender(props: Props) {
 }
 
 function ListView({ slug }: Props) {
-  const { getSelectedArtistIds } = useCosmoArtist();
   const { authenticated } = useUser();
   const isOwned = useListAuthed(slug);
-  const { artists, getArtist } = useCosmoArtist();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useBreakpointColumn();
-  const [count, setCount] = useState(0);
-  const [groupCount, setGroupCount] = useState(0);
-  const { data: objekts } = useSuspenseQuery(
-    orpc.list.listEntries.queryOptions({
-      input: slug,
-      select: (data) => data.map(mapObjektWithTag),
-    }),
-  );
+  const objekts = useListObjekts(slug);
+  const deferredObjekts = useDeferredValue(objekts);
 
-  const [objektsFiltered, setObjektsFiltered] = useState<[string, ObjektItem<ValidObjekt[]>[]][]>(
-    [],
-  );
-  const deferredObjektsFiltered = useDeferredValue(objektsFiltered);
+  const [groupCount, count] = useMemo(() => {
+    const groupedObjekts = deferredObjekts.flatMap(([, objekts]) => objekts);
+    return [groupedObjekts.length, groupedObjekts.flatMap((item) => item.item).length];
+  }, [deferredObjekts]);
 
   const virtualList = useMemo(() => {
-    return deferredObjektsFiltered.flatMap(([title, items]) => [
+    return deferredObjekts.flatMap(([title, items]) => [
       ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...ObjektsRender({
         items,
@@ -132,24 +121,7 @@ function ListView({ slug }: Props) {
         ),
       }),
     ]);
-  }, [deferredObjektsFiltered, columns, isOwned, slug, authenticated, hideLabel]);
-
-  useEffect(() => {
-    const shaped = shapeObjekts(
-      {
-        ...filters,
-        artist: getSelectedArtistIds(filters.artist),
-      },
-      objekts,
-      artists,
-      getArtist,
-    );
-    const allGroupedObjekts = shaped.flatMap(([, objekts]) => objekts);
-    const allObjekts = allGroupedObjekts.flatMap((item) => item.item);
-    setGroupCount(allGroupedObjekts.length);
-    setCount(allObjekts.length);
-    setObjektsFiltered(shaped);
-  }, [filters, objekts, artists, getSelectedArtistIds]);
+  }, [deferredObjekts, columns, isOwned, slug, authenticated, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">

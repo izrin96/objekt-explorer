@@ -3,6 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod/v4";
 import type { Outputs } from "@/lib/orpc/server";
+import { type ValidArtist, validArtists } from "@/lib/universal/cosmo/common";
 import { overrideCollection } from "@/lib/universal/objekts";
 import { mapPublicUser } from "../../auth";
 import { db } from "../../db";
@@ -27,25 +28,32 @@ export const listRouter = {
     return result;
   }),
 
-  listEntries: pub.input(z.string()).handler(async ({ input: slug }) => {
-    const result = await db.query.lists.findFirst({
-      with: {
-        entries: {
-          orderBy: (entries, { desc }) => [desc(entries.id)],
-          columns: {
-            id: true,
-            createdAt: true,
-            collectionSlug: true,
+  listEntries: pub
+    .input(
+      z.object({
+        slug: z.string(),
+        artists: z.array(z.enum(validArtists)),
+      }),
+    )
+    .handler(async ({ input: { slug, artists } }) => {
+      const result = await db.query.lists.findFirst({
+        with: {
+          entries: {
+            orderBy: (entries, { desc }) => [desc(entries.id)],
+            columns: {
+              id: true,
+              createdAt: true,
+              collectionSlug: true,
+            },
           },
         },
-      },
-      where: (lists, { eq }) => eq(lists.slug, slug),
-    });
+        where: (lists, { eq }) => eq(lists.slug, slug),
+      });
 
-    if (!result) throw new ORPCError("NOT_FOUND");
+      if (!result) throw new ORPCError("NOT_FOUND");
 
-    return mapEntriesCollection(result.entries);
-  }),
+      return mapEntriesCollection(result.entries, artists);
+    }),
 
   list: authed.handler(async ({ context: { session } }) => {
     const { user } = session;
@@ -308,7 +316,7 @@ async function findOwnedList(slug: string, userId: string) {
   return list;
 }
 
-async function fetchCollections(slugs: string[]) {
+async function fetchCollections(slugs: string[], artists: ValidArtist[]) {
   const uniqueSlugs = new Set(slugs);
 
   const result = await indexer
@@ -316,7 +324,19 @@ async function fetchCollections(slugs: string[]) {
       ...getCollectionColumns(),
     })
     .from(collections)
-    .where(inArray(collections.slug, Array.from(uniqueSlugs)));
+    .where(
+      and(
+        inArray(collections.slug, Array.from(uniqueSlugs)),
+        ...(artists.length
+          ? [
+              inArray(
+                collections.artist,
+                artists.map((a) => a.toLowerCase()),
+              ),
+            ]
+          : []),
+      ),
+    );
 
   return result.map((collection) => ({
     ...collection,
@@ -326,14 +346,17 @@ async function fetchCollections(slugs: string[]) {
 
 async function mapEntriesCollection(
   result: Pick<ListEntry, "collectionSlug" | "id" | "createdAt">[],
+  artists: ValidArtist[],
 ) {
   const slugs = result.map((a) => a.collectionSlug);
-  const collections = await fetchCollections(slugs);
+  const collections = await fetchCollections(slugs, artists);
   const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
 
-  return result.map(({ collectionSlug, id, createdAt }) => ({
-    ...collectionsMap.get(collectionSlug)!,
-    id: id.toString(),
-    createdAt: createdAt.toISOString(),
-  }));
+  return result
+    .filter((a) => collectionsMap.has(a.collectionSlug))
+    .map(({ collectionSlug, id, createdAt }) => ({
+      ...collectionsMap.get(collectionSlug)!,
+      id: id.toString(),
+      createdAt: createdAt.toISOString(),
+    }));
 }

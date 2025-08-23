@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
+import { getSelectedArtists } from "@/lib/client-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchList, fetchOwnedLists } from "@/lib/server/api/routers/list";
@@ -30,13 +31,16 @@ export default async function Page(props: Props) {
   const list = await fetchList(params.slug);
   if (!list) notFound();
 
-  const session = await cachedSession();
+  const [session, selectedArtistIds] = await Promise.all([cachedSession(), getSelectedArtists()]);
 
-  const [lists] = await Promise.all([session ? fetchOwnedLists(session.user.id) : undefined]);
+  const lists = session ? await fetchOwnedLists(session.user.id) : undefined;
 
   queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({
-      input: params.slug,
+      input: {
+        slug: params.slug,
+        artists: selectedArtistIds,
+      },
     }),
   );
 
