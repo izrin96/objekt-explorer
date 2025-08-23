@@ -46,7 +46,7 @@ function getObjektBreakdown(objekt: ValidObjekt) {
   };
 }
 
-const searchFilter = (keyword: string, objekt: ValidObjekt) => {
+function searchFilter(keyword: string, objekt: ValidObjekt) {
   // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && "serial" in objekt) {
     const [start, end] = keyword.split("-").map(parseSerial);
@@ -90,10 +90,13 @@ const searchFilter = (keyword: string, objekt: ValidObjekt) => {
   }
 
   return objekt.tags?.some((value) => value.toLowerCase() === keyword);
-};
+}
 
-const getSortDate = <T extends ValidObjekt>(obj: T) =>
-  "receivedAt" in obj ? new Date(obj.receivedAt).getTime() : new Date(obj.createdAt).getTime();
+function getSortDate<T extends ValidObjekt>(obj: T) {
+  return "receivedAt" in obj
+    ? new Date(obj.receivedAt).getTime()
+    : new Date(obj.createdAt).getTime();
+}
 
 export function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]): T[] {
   const queries = (filters.search ?? "")
