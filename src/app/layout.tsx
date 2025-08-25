@@ -10,7 +10,6 @@ import { Analytics } from "@/components/analytics";
 import Navbar from "@/components/navbar";
 import { cn } from "@/utils/classes";
 import "../lib/orpc/server";
-import NextAbstractWalletProvider from "@/components/NextAbstractWalletProvider";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
 import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
@@ -92,11 +91,9 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             season={seasonArtist}
             classes={classArtist}
           >
-            <NextAbstractWalletProvider>
-              <Navbar />
-              <main className="mx-auto w-full">{children}</main>
-              <Analytics />
-            </NextAbstractWalletProvider>
+            <Navbar />
+            <main className="mx-auto w-full">{children}</main>
+            <Analytics />
           </ClientProviders>
         </NextIntlClientProvider>
       </body>
