@@ -13,7 +13,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: production
+    environment: Production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,6 +31,8 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           secrets: |
             indexer_proxy_key=${{ secrets.INDEXER_PROXY_KEY }}
             indexer_proxy_url=${{ secrets.INDEXER_PROXY_URL }}
