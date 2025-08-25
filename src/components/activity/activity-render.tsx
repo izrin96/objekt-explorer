@@ -54,7 +54,7 @@ function Activity() {
   const scrollOffsetRef = useRef(0);
   const timeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isLoading } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", type, filters, selectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
@@ -139,7 +139,7 @@ function Activity() {
 
   // handle incoming message
   useEffect(() => {
-    if (isLoading) return;
+    if (!data) return;
 
     const ws = new ReconnectingWebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
 
@@ -149,7 +149,7 @@ function Activity() {
       setRealtimeTransfers([]);
       ws.close();
     };
-  }, [isLoading, handleWebSocketMessage]);
+  }, [data, handleWebSocketMessage]);
 
   // remove new transfer after animation completes
   useEffect(() => {

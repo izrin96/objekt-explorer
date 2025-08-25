@@ -36,9 +36,8 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 }
 
 export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
-  const { data, isLoading } = useQuery(orpc.list.list.queryOptions());
+  const { data } = useQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
-  const items = data ?? [];
 
   const handleAction = useCallback(
     (slug: string) => {
@@ -57,21 +56,21 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
         <Menu.Label>Add to list</Menu.Label>
       </Menu.Item>
       <Menu.Content placement="bottom right">
-        {isLoading && (
+        {!data && (
           <Menu.Item isDisabled>
             <Menu.Label>
               <Loader variant="ring" />
             </Menu.Label>
           </Menu.Item>
         )}
-        {!isLoading && items.length === 0 && (
+        {data && data.length === 0 && (
           <Menu.Item isDisabled>
             <Menu.Label>
               <span>No list found</span>
             </Menu.Label>
           </Menu.Item>
         )}
-        {items.map((a) => (
+        {data?.map((a) => (
           <Menu.Item key={a.slug} onAction={() => handleAction(a.slug)}>
             <Menu.Label>{a.name}</Menu.Label>
           </Menu.Item>

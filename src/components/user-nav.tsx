@@ -129,8 +129,7 @@ function MyListMenuItem({
   openCreateList: () => void;
   openDiscordFormat: () => void;
 }) {
-  const { data, isLoading } = useQuery(orpc.list.list.queryOptions());
-  const items = data ?? [];
+  const { data } = useQuery(orpc.list.list.queryOptions());
   return (
     <Menu.Submenu>
       <Menu.Item>
@@ -138,21 +137,21 @@ function MyListMenuItem({
         <Menu.Label>My List</Menu.Label>
       </Menu.Item>
       <Menu.Content>
-        {isLoading && (
+        {!data && (
           <Menu.Item isDisabled>
             <Menu.Label>
               <Loader variant="ring" />
             </Menu.Label>
           </Menu.Item>
         )}
-        {!isLoading && items.length === 0 && (
+        {data && data.length === 0 && (
           <Menu.Item isDisabled>
             <Menu.Label>
               <span>No list found</span>
             </Menu.Label>
           </Menu.Item>
         )}
-        {items.map((a) => (
+        {data?.map((a) => (
           <Menu.Item key={a.slug} href={`/list/${a.slug}`}>
             <Menu.Label>{a.name}</Menu.Label>
           </Menu.Item>
@@ -176,8 +175,7 @@ function MyListMenuItem({
 
 function MyCosmoProfileMenuItem() {
   const t = useTranslations("nav");
-  const { data, isLoading } = useQuery(orpc.profile.list.queryOptions());
-  const items = data ?? [];
+  const { data } = useQuery(orpc.profile.list.queryOptions());
   return (
     <Menu.Submenu>
       <Menu.Item>
@@ -185,21 +183,21 @@ function MyCosmoProfileMenuItem() {
         <Menu.Label>{t("my_cosmo_link")}</Menu.Label>
       </Menu.Item>
       <Menu.Content>
-        {isLoading && (
+        {!data && (
           <Menu.Item isDisabled>
             <Menu.Label>
               <Loader variant="ring" />
             </Menu.Label>
           </Menu.Item>
         )}
-        {!isLoading && items.length === 0 && (
+        {data && data.length === 0 && (
           <Menu.Item isDisabled>
             <Menu.Label>
               <span>{t("no_cosmo_found")}</span>
             </Menu.Label>
           </Menu.Item>
         )}
-        {items.map((a) => (
+        {data?.map((a) => (
           <Menu.Item key={a.address} href={`/@${a.nickname}`}>
             <Menu.Label>{a.nickname}</Menu.Label>
           </Menu.Item>
