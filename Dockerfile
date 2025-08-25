@@ -26,72 +26,70 @@ COPY . .
 
 # Environment variables must be present at build time
 # https://github.com/vercel/next.js/discussions/14030
-ARG INDEXER_PROXY_KEY
-ENV INDEXER_PROXY_KEY=${INDEXER_PROXY_KEY}
-ARG INDEXER_PROXY_URL
-ENV INDEXER_PROXY_URL=${INDEXER_PROXY_URL}
-ARG NEXT_PUBLIC_UMAMI_SCRIPT_URL
-ENV NEXT_PUBLIC_UMAMI_SCRIPT_URL=${NEXT_PUBLIC_UMAMI_SCRIPT_URL}
-ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID
-ENV NEXT_PUBLIC_UMAMI_WEBSITE_ID=${NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-ARG NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
-ENV NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL=${NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL}
-ARG BETTER_AUTH_SECRET
-ENV BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-ARG DISCORD_CLIENT_ID
-ENV DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
-ARG DISCORD_CLIENT_SECRET
-ENV DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
-ARG TWITTER_CLIENT_ID
-ENV TWITTER_CLIENT_ID=${TWITTER_CLIENT_ID}
-ARG TWITTER_CLIENT_SECRET
-ENV TWITTER_CLIENT_SECRET=${TWITTER_CLIENT_SECRET}
-ARG BROWSER_CDP_URL
-ENV BROWSER_CDP_URL=${BROWSER_CDP_URL}
-ARG NEXT_PUBLIC_SITE_URL
-ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
-ARG S3_ENDPOINT
-ENV S3_ENDPOINT=${S3_ENDPOINT}
-ARG S3_ACCESS_KEY
-ENV S3_ACCESS_KEY=${S3_ACCESS_KEY}
-ARG S3_SECRET_KEY
-ENV S3_SECRET_KEY=${S3_SECRET_KEY}
-ARG SES_REGION
-ENV SES_REGION=${SES_REGION}
-ARG SES_ACCESS_KEY
-ENV SES_ACCESS_KEY=${SES_ACCESS_KEY}
-ARG SES_SECRET_KEY
-ENV SES_SECRET_KEY=${SES_SECRET_KEY}
-ARG SES_MAIL_FROM
-ENV SES_MAIL_FROM=${SES_MAIL_FROM}
-ARG NEXT_PUBLIC_LIVE_API_KEY
-ENV NEXT_PUBLIC_LIVE_API_KEY=${NEXT_PUBLIC_LIVE_API_KEY}
-ARG BYPASS_LIVE_KEY
-ENV BYPASS_LIVE_KEY=${BYPASS_LIVE_KEY}
-ARG UPSTASH_REDIS_REST_URL
-ENV UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
-ARG UPSTASH_REDIS_REST_TOKEN
-ENV UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
-ARG NEXT_PUBLIC_PRIVY_APP_ID
-ENV NEXT_PUBLIC_PRIVY_APP_ID=${NEXT_PUBLIC_PRIVY_APP_ID}
-ARG PRIVY_APP_SECRET
-ENV PRIVY_APP_SECRET=${PRIVY_APP_SECRET}
-ARG PRIVY_ABS_APP_ID
-ENV PRIVY_ABS_APP_ID=${PRIVY_ABS_APP_ID}
+
+RUN --mount=type=secret,id=indexer_proxy_key \
+    --mount=type=secret,id=indexer_proxy_url \
+    --mount=type=secret,id=umami_script_url \
+    --mount=type=secret,id=umami_website_id \
+    --mount=type=secret,id=activity_websocket_url \
+    --mount=type=secret,id=better_auth_secret \
+    --mount=type=secret,id=discord_client_id \
+    --mount=type=secret,id=discord_client_secret \
+    --mount=type=secret,id=twitter_client_id \
+    --mount=type=secret,id=twitter_client_secret \
+    --mount=type=secret,id=browser_cdp_url \
+    --mount=type=secret,id=site_url \
+    --mount=type=secret,id=database_url \
+    --mount=type=secret,id=s3_endpoint \
+    --mount=type=secret,id=s3_access_key \
+    --mount=type=secret,id=s3_secret_key \
+    --mount=type=secret,id=ses_region \
+    --mount=type=secret,id=ses_access_key \
+    --mount=type=secret,id=ses_secret_key \
+    --mount=type=secret,id=ses_mail_from \
+    --mount=type=secret,id=live_api_key \
+    --mount=type=secret,id=bypass_live_key \
+    --mount=type=secret,id=upstash_redis_rest_url \
+    --mount=type=secret,id=upstash_redis_rest_token \
+    --mount=type=secret,id=privy_app_id \
+    --mount=type=secret,id=privy_app_secret \
+    --mount=type=secret,id=privy_abs_app_id \
+    export INDEXER_PROXY_KEY=$(cat /run/secrets/indexer_proxy_key) && \
+    export INDEXER_PROXY_URL=$(cat /run/secrets/indexer_proxy_url) && \
+    export NEXT_PUBLIC_UMAMI_SCRIPT_URL=$(cat /run/secrets/umami_script_url) && \
+    export NEXT_PUBLIC_UMAMI_WEBSITE_ID=$(cat /run/secrets/umami_website_id) && \
+    export NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL=$(cat /run/secrets/activity_websocket_url) && \
+    export BETTER_AUTH_SECRET=$(cat /run/secrets/better_auth_secret) && \
+    export DISCORD_CLIENT_ID=$(cat /run/secrets/discord_client_id) && \
+    export DISCORD_CLIENT_SECRET=$(cat /run/secrets/discord_client_secret) && \
+    export TWITTER_CLIENT_ID=$(cat /run/secrets/twitter_client_id) && \
+    export TWITTER_CLIENT_SECRET=$(cat /run/secrets/twitter_client_secret) && \
+    export BROWSER_CDP_URL=$(cat /run/secrets/browser_cdp_url) && \
+    export NEXT_PUBLIC_SITE_URL=$(cat /run/secrets/site_url) && \
+    export DATABASE_URL=$(cat /run/secrets/database_url) && \
+    export S3_ENDPOINT=$(cat /run/secrets/s3_endpoint) && \
+    export S3_ACCESS_KEY=$(cat /run/secrets/s3_access_key) && \
+    export S3_SECRET_KEY=$(cat /run/secrets/s3_secret_key) && \
+    export SES_REGION=$(cat /run/secrets/ses_region) && \
+    export SES_ACCESS_KEY=$(cat /run/secrets/ses_access_key) && \
+    export SES_SECRET_KEY=$(cat /run/secrets/ses_secret_key) && \
+    export SES_MAIL_FROM=$(cat /run/secrets/ses_mail_from) && \
+    export NEXT_PUBLIC_LIVE_API_KEY=$(cat /run/secrets/live_api_key) && \
+    export BYPASS_LIVE_KEY=$(cat /run/secrets/bypass_live_key) && \
+    export UPSTASH_REDIS_REST_URL=$(cat /run/secrets/upstash_redis_rest_url) && \
+    export UPSTASH_REDIS_REST_TOKEN=$(cat /run/secrets/upstash_redis_rest_token) && \
+    export NEXT_PUBLIC_PRIVY_APP_ID=$(cat /run/secrets/privy_app_id) && \
+    export PRIVY_APP_SECRET=$(cat /run/secrets/privy_app_secret) && \
+    export PRIVY_ABS_APP_ID=$(cat /run/secrets/privy_abs_app_id) && \
+    if [ -f yarn.lock ]; then yarn build; \
+    elif [ -f package-lock.json ]; then npm run build; \
+    elif [ -f pnpm-lock.yaml ]; then pnpm build; \
+    else npm run build; \
+    fi
 
 # Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line to disable telemetry at build time
 # ENV NEXT_TELEMETRY_DISABLED 1
-
-# Build Next.js based on the preferred package manager
-RUN \
-  if [ -f yarn.lock ]; then yarn build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  elif [ -f pnpm-lock.yaml ]; then pnpm build; \
-  else npm run build; \
-  fi
 
 # Note: It is not necessary to add an intermediate step that does a full copy of `node_modules` here
 
