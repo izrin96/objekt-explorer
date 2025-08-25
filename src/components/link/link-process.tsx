@@ -251,6 +251,7 @@ function RenderOtp({
 }) {
   const t = useTranslations("link");
   const [value, setValue] = useState("");
+  const [remaining, setRemaining] = useState(ticketStatus.ticketOtpRemainingMs);
 
   const [randomIcon] = useState(() => {
     const icons = [
@@ -265,6 +266,10 @@ function RenderOtp({
     ];
     return icons[Math.floor(Math.random() * icons.length)];
   });
+
+  useInterval(() => {
+    setRemaining((prev) => Math.max(prev - 1000, 0));
+  }, 1000);
 
   const otpAndLink = useMutation(
     orpc.cosmoLink.otpAndLink.mutationOptions({
@@ -362,6 +367,7 @@ function RenderOtp({
           Submit
         </Button>
       </Form>
+      <span className="text-sm">Remaining {msToCountdown(remaining)}</span>
     </div>
   );
 }
