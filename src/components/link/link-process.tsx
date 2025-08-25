@@ -283,7 +283,7 @@ function RenderOtp({
         <Image
           priority
           src={IconError.src}
-          alt="Carpenter"
+          alt="Error"
           width={220}
           height={220}
           className="fade-in zoom-in animate-in duration-200"
@@ -339,7 +339,7 @@ function RenderOtp({
         height={220}
         className="fade-in zoom-in animate-in duration-200"
       />
-      <span>Detected Cosmo &apos;{ticketStatus.user.nickname}&apos;</span>
+      <span>Detected Cosmo {ticketStatus.user.nickname}</span>
       <span>Enter the verification code</span>
       <Form
         onSubmit={(e) => {
