@@ -65,10 +65,10 @@ function LinkCard({ link }: LinkCardProps) {
       <Card.Content className="flex justify-between">
         <Link
           href={`/@${link.nickname ?? link.address}`}
-          className="flex min-w-0 flex-1 flex-col gap-1 font-semibold text-base"
+          className="flex min-w-0 flex-1 flex-col gap-1 text-base"
         >
-          <span className="truncate text-lg">{link.nickname ?? link.address}</span>
-          <span className="truncate text-muted-fg text-xs">{link.address}</span>
+          <span className="truncate font-semibold text-lg">{link.nickname ?? link.address}</span>
+          <span className="truncate font-mono text-muted-fg text-xs">{link.address}</span>
         </Link>
 
         <RemoveLinkModal address={link.address} open={removeOpen} setOpen={setRemoveOpen} />

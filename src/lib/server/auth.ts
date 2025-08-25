@@ -175,7 +175,7 @@ export async function fetchUserByIdentifier(identifier: string): Promise<PublicP
   if (identifierIsAddress) {
     return {
       address: identifier,
-      nickname: identifier.substring(0, 6),
+      nickname: `${identifier.substring(0, 8)}...`,
       isAddress: true,
     };
   }

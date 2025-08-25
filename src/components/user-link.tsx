@@ -6,7 +6,9 @@ export default function UserLink({ address, nickname }: { address: string; nickn
     <div className="inline-flex gap-2">
       {address ? (
         <>
-          <Link href={`/@${nickname ?? address}`}>{nickname ?? address.substring(0, 6)}</Link>
+          <Link href={`/@${nickname ?? address}`}>
+            {nickname ?? `${address.substring(0, 8)}...`}
+          </Link>
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
               <Tooltip.Trigger aria-label="Preview">
