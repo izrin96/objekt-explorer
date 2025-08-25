@@ -1,7 +1,4 @@
 import type { CSSProperties } from "react";
-import OmaBandBg from "@/assets/oma-band-bg.png";
-import SpecialBandBg from "@/assets/special-band-bg.png";
-import UnitBandBg from "@/assets/unit-band-bg-v2.png";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import IdnttLogo from "../idntt-logo";
@@ -70,18 +67,18 @@ function TempCustomBand({ objekt }: { objekt: ValidObjekt }) {
       {/* special class */}
       {objekt.artist === "idntt" && objekt.class === "Special" && (
         <img
-          src={SpecialBandBg.src}
+          src="https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/86207a80d354439cada0ec6c45e076ee20250814061643330.png"
           alt=""
-          className="absolute right-0 h-[88.2%] w-[10.8%] rounded-l-[calc(var(--width)*0.035)]"
+          className="absolute top-0 left-0 h-full w-full object-cover"
         />
       )}
 
       {/* unit class */}
       {objekt.artist === "idntt" && objekt.class === "Unit" && (
         <img
-          src={UnitBandBg.src}
+          src="https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/e0e4fdd950bc4ca8ba49a98b053756f620250814065358420.png"
           alt=""
-          className="absolute right-0 h-[88.2%] w-[10.8%] rounded-l-[calc(var(--width)*0.035)]"
+          className="absolute top-0 left-0 h-full w-full object-cover"
         />
       )}
 
@@ -90,9 +87,9 @@ function TempCustomBand({ objekt }: { objekt: ValidObjekt }) {
         objekt.onOffline === "offline" &&
         objekt.backgroundColor === "#000000" && (
           <img
-            src={OmaBandBg.src}
+            src="https://resources.cosmo.fans/images/collection-band/2025/07/12/04/raw/fab4f9ec98d24a00a7c417e012a493cd20250712042141653.png"
             alt=""
-            className="absolute right-0 h-[90.5%] w-[12.8%] rounded-l-[calc(var(--width)*0.05)]"
+            className="absolute top-0 left-0 h-full w-full object-cover"
           />
         )}
     </>
