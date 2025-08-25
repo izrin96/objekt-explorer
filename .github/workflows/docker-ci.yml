@@ -30,9 +30,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/${{ github.repository }}:latest
           secrets: |
             indexer_proxy_key=${{ secrets.INDEXER_PROXY_KEY }}
             indexer_proxy_url=${{ secrets.INDEXER_PROXY_URL }}
