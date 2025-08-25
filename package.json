@@ -17,6 +17,7 @@
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {
+    "@abstract-foundation/agw-react": "^1.9.0",
     "@aws-sdk/client-s3": "^3.873.0",
     "@aws-sdk/client-ses": "^3.873.0",
     "@aws-sdk/s3-request-presigner": "^3.873.0",
@@ -26,6 +27,8 @@
     "@orpc/server": "^1.8.3",
     "@orpc/tanstack-query": "^1.8.3",
     "@phosphor-icons/react": "^2.1.10",
+    "@privy-io/react-auth": "^2.21.4",
+    "@privy-io/server-auth": "^1.31.1",
     "@radix-ui/react-avatar": "^1.1.10",
     "@react-stately/color": "^3.9.0",
     "@react-stately/data": "^3.13.2",
@@ -72,6 +75,7 @@
     "usehooks-ts": "^3.1.1",
     "viem": "^2.34.0",
     "virtua": "^0.41.5",
+    "wagmi": "^2.16.5",
     "zod": "^4.0.17",
     "zustand": "^5.0.8"
   },

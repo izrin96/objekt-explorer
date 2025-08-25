@@ -21,6 +21,8 @@ export const env = createEnv({
     BYPASS_LIVE_KEY: z.string().optional(),
     UPSTASH_REDIS_REST_URL: z.string(),
     UPSTASH_REDIS_REST_TOKEN: z.string(),
+    PRIVY_APP_SECRET: z.string(),
+    PRIVY_ABS_APP_ID: z.string(),
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.string().optional(),
@@ -28,6 +30,7 @@ export const env = createEnv({
     NEXT_PUBLIC_UMAMI_WEBSITE_ID: z.string().optional(),
     NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: z.string().optional(),
     NEXT_PUBLIC_LIVE_API_KEY: z.string(),
+    NEXT_PUBLIC_PRIVY_APP_ID: z.string(),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -35,5 +38,6 @@ export const env = createEnv({
     NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
     NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: process.env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL,
     NEXT_PUBLIC_LIVE_API_KEY: process.env.NEXT_PUBLIC_LIVE_API_KEY,
+    NEXT_PUBLIC_PRIVY_APP_ID: process.env.NEXT_PUBLIC_PRIVY_APP_ID,
   },
 });

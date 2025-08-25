@@ -12,6 +12,7 @@ import BearIcon from "@/assets/icon-bear.png";
 import CarpenterIcon from "@/assets/icon-carpenter.png";
 import CatIcon from "@/assets/icon-cat.png";
 import DeerIcon from "@/assets/icon-deer.png";
+import IconError from "@/assets/icon-error.png";
 import GiraffeIcon from "@/assets/icon-giraffe.png";
 import PandaIcon from "@/assets/icon-panda.png";
 import QRCodeIcon from "@/assets/icon-qrcode.png";
@@ -21,10 +22,11 @@ import TrashIcon from "@/assets/icon-trash.png";
 import WelcomeIcon from "@/assets/icon-welcome.png";
 import WhiteFoxIcon from "@/assets/icon-white-fox.png";
 import { orpc } from "@/lib/orpc/client";
-import type { TicketAuth } from "@/lib/universal/cosmo/shop/qr-auth";
+import type { TicketAuth, TicketSuccess } from "@/lib/universal/cosmo/shop/qr-auth";
 import { msToCountdown } from "@/lib/utils";
 import { Button, buttonStyles, Form, Link, Loader } from "../ui";
 import { InputOTP } from "../ui/input-otp";
+import AbstractProcess from "./link-abstract";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -32,7 +34,6 @@ function generateQrCode(ticket: string) {
 
 export default function LinkRender() {
   const queryClient = useQueryClient();
-  const t = useTranslations("link");
   const locale = useLocale();
   const [step, setStep] = useState(0);
 
@@ -56,7 +57,7 @@ export default function LinkRender() {
             <div className="flex flex-col gap-2">
               <p>
                 You need to download the Cosmo app and sign in with the Cosmo ID you want to link
-                before continuing. Abstract account is not supported.
+                before continuing.
               </p>
               <p>
                 This linking process will <span className="font-bold">not</span> allow Objekt
@@ -69,7 +70,6 @@ export default function LinkRender() {
             <div className="flex flex-col gap-2">
               <p>
                 계속 진행하기 전에 Cosmo 앱을 다운로드하고 연결하려는 Cosmo ID로 로그인해야 합니다.
-                Abstract 계정은 지원되지 않습니다.
               </p>
               <p>
                 이 연결 과정에서 Objekt Tracker가 사용자의 Cosmo에 접근하는 것은{" "}
@@ -80,8 +80,8 @@ export default function LinkRender() {
             </div>
           )}
           <Button
-            size="lg"
-            intent="secondary"
+            size="md"
+            intent="outline"
             onClick={() => {
               queryClient.invalidateQueries({
                 queryKey: orpc.cosmoLink.getTicket.key(),
@@ -89,11 +89,31 @@ export default function LinkRender() {
               setStep(1);
             }}
           >
-            {t("continue")}
+            Continue with Cosmo app
+          </Button>
+
+          <div className="relative my-2 flex w-full items-center justify-center text-sm">
+            <div className="absolute inset-0 flex items-center">
+              <div className="h-px w-full shrink-0 bg-border"></div>
+            </div>
+            <span className="relative bg-bg px-3 text-muted-fg text-xs">OR</span>
+          </div>
+
+          <Button size="sm" intent="plain" onClick={() => setStep(2)}>
+            Continue with{" "}
+            <Image
+              className="invert dark:invert-0"
+              src="/abs.svg"
+              alt="Abstract logomark"
+              width={20}
+              height={20}
+            />{" "}
+            Abstract
           </Button>
         </div>
       )}
       {step === 1 && <TicketRender />}
+      {step === 2 && <AbstractProcess />}
     </div>
   );
 }
@@ -136,7 +156,7 @@ function TicketRender() {
           className="fade-in zoom-in animate-in duration-200"
         />
         <span>{t("error_generating_qr")}</span>
-        <Button intent="secondary" onClick={() => refetch()}>
+        <Button intent="outline" onClick={() => refetch()}>
           {t("try_again")}
         </Button>
       </div>
@@ -147,7 +167,6 @@ function TicketRender() {
 
 function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: () => void }) {
   const queryClient = useQueryClient();
-  const t = useTranslations("link");
   const [expired, setExpired] = useState(false);
   const [remaining, setRemaining] = useState(0);
   const { data } = useQuery(
@@ -156,26 +175,10 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
       retry: false,
       refetchInterval: 2000,
       enabled: (query) => {
-        return !(
-          query.state.data?.status === "expired" || query.state.data?.status === "certified"
-        );
+        return query.state.data?.status !== "expired" && query.state.data?.status !== "certified";
       },
     }),
   );
-
-  const [randomIcon] = useState(() => {
-    const icons = [
-      { src: AxolotlIcon.src, alt: "Axolotl" },
-      { src: DeerIcon.src, alt: "Deer" },
-      { src: PandaIcon.src, alt: "Panda" },
-      { src: SquirrelIcon.src, alt: "Squirrel" },
-      { src: BearIcon.src, alt: "Bear" },
-      { src: CatIcon.src, alt: "Cat" },
-      { src: GiraffeIcon.src, alt: "Giraffe" },
-      { src: WhiteFoxIcon.src, alt: "White Fox" },
-    ];
-    return icons[Math.floor(Math.random() * icons.length)];
-  });
 
   useInterval(
     () => {
@@ -218,23 +221,6 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
       </div>
     );
 
-  if (data.status === "wait_for_certify")
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <Image
-          priority
-          src={randomIcon.src}
-          alt={randomIcon.alt}
-          width={220}
-          height={220}
-          className="fade-in zoom-in animate-in duration-200"
-        />
-        <span>Detected Cosmo &apos;{data.user.nickname}&apos;</span>
-        <span>Enter the verification code</span>
-        <RenderOtp ticketAuth={ticketAuth} />
-      </div>
-    );
-
   if (data.status === "expired")
     return (
       <div className="flex flex-col items-center gap-2">
@@ -247,50 +233,43 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
           className="fade-in zoom-in animate-in duration-200"
         />
         <span>QR expired</span>
-        <Button intent="secondary" onClick={refetch}>
+        <Button intent="outline" onClick={refetch}>
           Regenerate
         </Button>
       </div>
     );
 
-  if (data.status === "certified")
-    return (
-      <div className="flex flex-col items-center gap-2">
-        <Image
-          priority
-          src={WelcomeIcon.src}
-          width={220}
-          height={220}
-          alt="Welcome"
-          className="fade-in zoom-in animate-in duration-200"
-        />
-        <span>{t("success", { nickname: data.user.nickname })}</span>
-        <div>
-          <Link
-            className={(renderProps) =>
-              buttonStyles({
-                ...renderProps,
-                intent: "secondary",
-              })
-            }
-            href={`/@${data.user.nickname}`}
-          >
-            {t("go_to_cosmo")}
-          </Link>
-        </div>
-      </div>
-    );
+  return <RenderOtp ticketAuth={ticketAuth} ticketStatus={data} />;
 }
 
-function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
+function RenderOtp({
+  ticketAuth,
+  ticketStatus,
+}: {
+  ticketAuth: TicketAuth;
+  ticketStatus: TicketSuccess<"wait_for_certify" | "certified">;
+}) {
+  const t = useTranslations("link");
   const [value, setValue] = useState("");
-  const [wait, setWait] = useState(false);
+
+  const [randomIcon] = useState(() => {
+    const icons = [
+      { src: AxolotlIcon.src, alt: "Axolotl" },
+      { src: DeerIcon.src, alt: "Deer" },
+      { src: PandaIcon.src, alt: "Panda" },
+      { src: SquirrelIcon.src, alt: "Squirrel" },
+      { src: BearIcon.src, alt: "Bear" },
+      { src: CatIcon.src, alt: "Cat" },
+      { src: GiraffeIcon.src, alt: "Giraffe" },
+      { src: WhiteFoxIcon.src, alt: "White Fox" },
+    ];
+    return icons[Math.floor(Math.random() * icons.length)];
+  });
 
   const otpAndLink = useMutation(
     orpc.cosmoLink.otpAndLink.mutationOptions({
       onSuccess: () => {
         toast.success("Successfully linked your Cosmo profile");
-        setWait(true);
       },
       onError: ({ message }) => {
         toast.error(message || "Error sending OTP");
@@ -301,9 +280,17 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
   if (otpAndLink.isError)
     return (
       <div className="flex flex-col items-center gap-2">
+        <Image
+          priority
+          src={IconError.src}
+          alt="Carpenter"
+          width={220}
+          height={220}
+          className="fade-in zoom-in animate-in duration-200"
+        />
         <span>{otpAndLink.error.message}</span>
         <Button
-          intent="secondary"
+          intent="outline"
           onClick={() => {
             setValue("");
             otpAndLink.reset();
@@ -314,8 +301,46 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
       </div>
     );
 
+  if (otpAndLink.isSuccess)
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Image
+          priority
+          src={WelcomeIcon.src}
+          width={220}
+          height={220}
+          alt="Welcome"
+          className="fade-in zoom-in animate-in duration-200"
+        />
+        <span>{t("success", { nickname: ticketStatus.user.nickname })}</span>
+        <div>
+          <Link
+            className={(renderProps) =>
+              buttonStyles({
+                ...renderProps,
+                intent: "outline",
+              })
+            }
+            href={`/@${ticketStatus.user.nickname}`}
+          >
+            {t("go_to_cosmo")}
+          </Link>
+        </div>
+      </div>
+    );
+
   return (
     <div className="flex flex-col items-center gap-2">
+      <Image
+        priority
+        src={randomIcon.src}
+        alt={randomIcon.alt}
+        width={220}
+        height={220}
+        className="fade-in zoom-in animate-in duration-200"
+      />
+      <span>Detected Cosmo &apos;{ticketStatus.user.nickname}&apos;</span>
+      <span>Enter the verification code</span>
       <Form
         onSubmit={(e) => {
           e.preventDefault();
@@ -333,7 +358,7 @@ function RenderOtp({ ticketAuth }: { ticketAuth: TicketAuth }) {
             ))}
           </InputOTP.Group>
         </InputOTP>
-        <Button type="submit" isPending={otpAndLink.isPending || wait}>
+        <Button type="submit" isPending={otpAndLink.isPending}>
           Submit
         </Button>
       </Form>

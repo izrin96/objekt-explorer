@@ -16,7 +16,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
       <div className="flex w-full flex-col md:w-auto">
         <div className="font-semibold text-xl">{user.nickname}</div>
-        <div className="truncate text-muted-fg text-xs">{user.address}</div>
+        <div className="truncate font-mono text-muted-fg text-xs">{user.address}</div>
       </div>
 
       <Link

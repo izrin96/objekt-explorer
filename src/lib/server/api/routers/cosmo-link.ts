@@ -2,7 +2,9 @@
 
 import { ORPCError } from "@orpc/server";
 import { and, eq, sql } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { z } from "zod/v4";
+import { env } from "@/env";
 import type { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import {
   certifyTicket,
@@ -13,6 +15,7 @@ import {
 } from "../../cosmo/shop/qr-auth";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
+import { privy } from "../../privy";
 import { authed } from "../orpc";
 
 export const cosmoLinkRouter = {
@@ -111,7 +114,48 @@ export const cosmoLinkRouter = {
           hideUser: true,
         })
         .where(eq(userAddress.address, user.address));
-
-      return true;
     }),
+
+  linkAbs: authed.handler(async ({ context: { session } }) => {
+    const cookieStore = await cookies();
+    const idToken = cookieStore.get("privy-id-token")?.value;
+
+    if (!idToken)
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Missing identity token",
+      });
+
+    const user = await privy.getUser({
+      idToken: idToken,
+    });
+
+    const linkedAccount = user.linkedAccounts.find(
+      (a) => a.type === "cross_app" && a.providerApp.id === env.PRIVY_ABS_APP_ID,
+    );
+
+    if (!linkedAccount || linkedAccount.type !== "cross_app") {
+      throw new ORPCError("BAD_REQUEST", {
+        message: "No Abstract account found",
+      });
+    }
+
+    if (linkedAccount.smartWallets.length === 0)
+      throw new ORPCError("BAD_REQUEST", {
+        message: "No Abstract wallet found",
+      });
+
+    const address = linkedAccount.smartWallets[0].address;
+
+    // link cosmo id with user
+    await db
+      .update(userAddress)
+      .set({
+        linkedAt: sql`'now'`,
+        userId: session.user.id,
+        hideUser: true,
+      })
+      .where(eq(userAddress.address, address));
+
+    return address;
+  }),
 };

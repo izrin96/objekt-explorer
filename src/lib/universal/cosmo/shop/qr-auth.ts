@@ -3,7 +3,7 @@ export type TicketAuth = {
   ticket: string;
 };
 
-type TicketSuccess<T extends string> = {
+export type TicketSuccess<T extends string> = {
   status: T;
   ticketRemainingMs: number;
   ticketOtpRemainingMs: number;
