@@ -42,7 +42,7 @@ export default function Changelog() {
                     <li>
                       &quot;Hide Activity&quot; setting in Edit Profile has been replaced with a new
                       &quot;Hide Cosmo ID&quot; setting. This change ensures that transfers will
-                      always be shown on the Activity page for better clarity.
+                      always be shown on the Activity page.
                     </li>
                   </ul>
                 </div>
