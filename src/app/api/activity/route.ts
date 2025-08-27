@@ -85,28 +85,24 @@ export async function GET(request: NextRequest) {
 
   const knownAddresses = await fetchKnownAddresses(addressesUnique);
 
-  const items = slicedResults
-    .map((t) => {
-      const from = knownAddresses.find(
-        (a) => a.address.toLowerCase() === t.transfer.from.toLowerCase(),
-      );
-      const to = knownAddresses.find(
-        (a) => a.address.toLowerCase() === t.transfer.to.toLowerCase(),
-      );
+  const items = slicedResults.map((t) => {
+    const from = knownAddresses.find(
+      (a) => a.address.toLowerCase() === t.transfer.from.toLowerCase(),
+    );
+    const to = knownAddresses.find((a) => a.address.toLowerCase() === t.transfer.to.toLowerCase());
 
-      return {
-        user: {
-          from: {
-            address: t.transfer.from,
-            nickname: from?.hideNickname ? undefined : from?.nickname,
-          },
-          to: { address: t.transfer.to, nickname: to?.hideNickname ? undefined : to?.nickname },
+    return {
+      user: {
+        from: {
+          address: t.transfer.from,
+          nickname: from?.hideNickname ? undefined : from?.nickname,
         },
-        transfer: t.transfer,
-        objekt: mapOwnedObjekt(t.objekt, t.collection),
-      };
-    })
-    .filter((t) => t !== null);
+        to: { address: t.transfer.to, nickname: to?.hideNickname ? undefined : to?.nickname },
+      },
+      transfer: t.transfer,
+      objekt: mapOwnedObjekt(t.objekt, t.collection),
+    };
+  });
 
   const hasNextPage = transferResults.length > PAGE_SIZE;
   const nextCursor = hasNextPage
