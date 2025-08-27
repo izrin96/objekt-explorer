@@ -169,6 +169,13 @@
       "when": 1751443149030,
       "tag": "0023_brief_strong_guy",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1756282727503,
+      "tag": "0024_huge_metal_master",
+      "breakpoints": true
     }
   ]
 }

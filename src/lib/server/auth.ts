@@ -146,6 +146,7 @@ export async function fetchUserByIdentifier(identifier: string): Promise<PublicP
       bannerImgType: true,
       hideUser: true,
       privateProfile: true,
+      hideNickname: true,
     },
     with: {
       user: {
@@ -166,6 +167,10 @@ export async function fetchUserByIdentifier(identifier: string): Promise<PublicP
   if (cachedUser) {
     return {
       ...cachedUser,
+      nickname: cachedUser.hideNickname
+        ? `${cachedUser.address.substring(0, 8)}...`
+        : cachedUser.nickname,
+      isAddress: true,
       user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
     };
   }

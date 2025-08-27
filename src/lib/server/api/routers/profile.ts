@@ -26,7 +26,7 @@ export const profileRouter = {
         bannerImgType: z.string().optional().nullable(),
         privateSerial: z.boolean().optional(),
         privateProfile: z.boolean().optional(),
-        hideActivity: z.boolean().optional(),
+        hideNickname: z.boolean().optional(),
         hideTransfer: z.boolean().optional(),
       }),
     )
@@ -94,7 +94,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
       bannerImgType: true,
       privateSerial: true,
       privateProfile: true,
-      hideActivity: true,
+      hideNickname: true,
       hideTransfer: true,
     },
     where: (q, { eq, and }) => and(eq(q.address, address), eq(q.userId, userId)),

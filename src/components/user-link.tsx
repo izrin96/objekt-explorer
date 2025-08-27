@@ -1,7 +1,7 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { Link, Tooltip } from "./ui";
 
-export default function UserLink({ address, nickname }: { address: string; nickname?: string }) {
+export default function UserLink({ address, nickname }: { address?: string; nickname?: string }) {
   return (
     <div className="inline-flex gap-2">
       {address ? (
@@ -14,9 +14,7 @@ export default function UserLink({ address, nickname }: { address: string; nickn
               <Tooltip.Trigger aria-label="Preview">
                 <InfoIcon size={16} />
               </Tooltip.Trigger>
-              <Tooltip.Content>
-                Displayed as a wallet address. Nickname not yet available.
-              </Tooltip.Content>
+              <Tooltip.Content>Nickname not available.</Tooltip.Content>
             </Tooltip>
           )}
         </>

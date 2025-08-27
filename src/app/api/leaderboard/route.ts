@@ -1,10 +1,9 @@
 import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
-import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
-import { userAddress } from "@/lib/server/db/schema";
+import { fetchKnownAddresses } from "@/lib/server/profile";
 import { validArtists, validOnlineTypes, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
@@ -71,10 +70,7 @@ export async function GET(request: NextRequest) {
   const addresses = Array.from(new Set(query.map((a) => a.owner)));
 
   // fetch known address
-  const knownAddresses = await db
-    .select()
-    .from(userAddress)
-    .where(inArray(userAddress.address, addresses));
+  const knownAddresses = await fetchKnownAddresses(addresses);
 
   // map nickname from known address
   const results = query.map((q, i) => {
@@ -82,8 +78,9 @@ export async function GET(request: NextRequest) {
       rank: i + 1,
       count: q.count,
       address: q.owner,
-      nickname: knownAddresses.find((a) => a.address.toLowerCase() === q.owner.toLowerCase())
-        ?.nickname,
+      nickname: knownAddresses.find(
+        (a) => a.address.toLowerCase() === q.owner.toLowerCase() && !a.hideNickname,
+      )?.nickname,
     };
   });
 

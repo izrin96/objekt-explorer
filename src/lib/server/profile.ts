@@ -4,7 +4,11 @@ import { userAddress } from "./db/schema";
 
 export async function fetchKnownAddresses(addresses: string[]) {
   const result = await db
-    .select({ address: userAddress.address, nickname: userAddress.nickname })
+    .select({
+      address: userAddress.address,
+      nickname: userAddress.nickname,
+      hideNickname: userAddress.hideNickname,
+    })
     .from(userAddress)
     .where(
       inArray(

@@ -198,7 +198,7 @@ export function EditProfileModal({
             const removeBanner = formData.get("removeBanner") === "on";
             const privateSerial = formData.get("privateSerial") === "on";
             const privateProfile = formData.get("privateProfile") === "on";
-            const hideActivity = formData.get("hideActivity") === "on";
+            const hideNickname = formData.get("hideNickname") === "on";
             const hideTransfer = formData.get("hideTransfer") === "on";
 
             if (droppedImage && !removeBanner) {
@@ -221,7 +221,7 @@ export function EditProfileModal({
                         bannerImgType: droppedImage.type,
                         privateSerial,
                         privateProfile,
-                        hideActivity,
+                        hideNickname,
                         hideTransfer,
                       });
                     });
@@ -238,7 +238,7 @@ export function EditProfileModal({
               bannerImgType: removeBanner ? null : undefined,
               privateSerial,
               privateProfile,
-              hideActivity,
+              hideNickname,
               hideTransfer,
             });
           }}
@@ -364,16 +364,16 @@ function EditProfileForm({
         defaultSelected={data.hideUser ?? false}
       />
       <Checkbox
+        label="Hide Cosmo ID"
+        name="hideNickname"
+        description="Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile."
+        defaultSelected={data.hideNickname ?? false}
+      />
+      <Checkbox
         label="Hide from Serial Lookup"
         name="privateSerial"
         description="Prevent others from finding your objekt via serial number. Only you can see it."
         defaultSelected={data.privateSerial ?? false}
-      />
-      <Checkbox
-        label="Hide from Activity"
-        name="hideActivity"
-        description="Hide from live activity transfer. This include all spin, mint, sent and received event."
-        defaultSelected={data.hideActivity ?? false}
       />
       <Checkbox
         label="Hide Trade History"

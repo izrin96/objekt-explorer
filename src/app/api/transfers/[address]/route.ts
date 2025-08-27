@@ -6,7 +6,7 @@ import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { fetchUserProfiles } from "@/lib/server/profile";
+import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import {
   type TransferParams,
@@ -141,13 +141,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
 
   const addressesUnique = Array.from(new Set(addresses));
 
-  const knownAddresses = await db.query.userAddress.findMany({
-    columns: {
-      address: true,
-      nickname: true,
-    },
-    where: (userAddress, { inArray }) => inArray(userAddress.address, addressesUnique),
-  });
+  const knownAddresses = await fetchKnownAddresses(addressesUnique);
 
   return Response.json({
     nextCursor,
@@ -156,10 +150,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       objekt: mapOwnedObjekt(row.objekt, row.collection),
       nickname: {
         from: knownAddresses.find(
-          (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase(),
+          (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
         )?.nickname,
-        to: knownAddresses.find((a) => row.transfer.to.toLowerCase() === a.address.toLowerCase())
-          ?.nickname,
+        to: knownAddresses.find(
+          (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
+        )?.nickname,
       },
     })),
   } satisfies TransferResult);

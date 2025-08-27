@@ -3,7 +3,7 @@ import { cachedSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
-import { fetchUserProfiles } from "@/lib/server/profile";
+import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 import type { ObjektTransferResult } from "@/lib/universal/objekts";
 
 type Params = {
@@ -73,13 +73,7 @@ export async function GET(_: Request, props: Params) {
 
   const addresses = Array.from(new Set(results.map((r) => r.to)));
 
-  const knownAddresses = await db.query.userAddress.findMany({
-    columns: {
-      address: true,
-      nickname: true,
-    },
-    where: (userAddress, { inArray }) => inArray(userAddress.address, addresses),
-  });
+  const knownAddresses = await fetchKnownAddresses(addresses);
 
   return Response.json({
     tokenId: result.tokenId ?? undefined,
@@ -89,8 +83,9 @@ export async function GET(_: Request, props: Params) {
       id: result.id,
       to: result.to,
       timestamp: result.timestamp,
-      nickname: knownAddresses.find((a) => a.address.toLowerCase() === result.to.toLowerCase())
-        ?.nickname,
+      nickname: knownAddresses.find(
+        (a) => a.address.toLowerCase() === result.to.toLowerCase() && !a.hideNickname,
+      )?.nickname,
     })),
   } satisfies ObjektTransferResult);
 }

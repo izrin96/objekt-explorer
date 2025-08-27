@@ -1,10 +1,10 @@
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
-import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
+import { fetchKnownAddresses } from "@/lib/server/profile";
 import { type ActivityParams, activitySchema } from "@/lib/universal/activity";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
@@ -83,14 +83,7 @@ export async function GET(request: NextRequest) {
 
   const addressesUnique = Array.from(new Set(addresses));
 
-  const knownAddresses = await db.query.userAddress.findMany({
-    where: (userAddress, { inArray }) => inArray(userAddress.address, addressesUnique),
-    columns: {
-      address: true,
-      nickname: true,
-      hideActivity: true,
-    },
-  });
+  const knownAddresses = await fetchKnownAddresses(addressesUnique);
 
   const items = slicedResults
     .map((t) => {
@@ -101,12 +94,13 @@ export async function GET(request: NextRequest) {
         (a) => a.address.toLowerCase() === t.transfer.to.toLowerCase(),
       );
 
-      if (from?.hideActivity === true || to?.hideActivity === true) return null;
-
       return {
         user: {
-          from: from ? { address: from.address, nickname: from.nickname } : undefined,
-          to: to ? { address: to.address, nickname: to.nickname } : undefined,
+          from: {
+            address: t.transfer.from,
+            nickname: from?.hideNickname ? undefined : from?.nickname,
+          },
+          to: { address: t.transfer.to, nickname: to?.hideNickname ? undefined : to?.nickname },
         },
         transfer: t.transfer,
         objekt: mapOwnedObjekt(t.objekt, t.collection),
