@@ -167,8 +167,6 @@ function TicketRender() {
 
 function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: () => void }) {
   const queryClient = useQueryClient();
-  const [expired, setExpired] = useState(false);
-  const [remaining, setRemaining] = useState(0);
   const { data } = useQuery(
     orpc.cosmoLink.checkTicket.queryOptions({
       input: ticketAuth.ticket,
@@ -178,21 +176,6 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
         return query.state.data?.status !== "expired" && query.state.data?.status !== "certified";
       },
     }),
-  );
-
-  useInterval(
-    () => {
-      const now = Date.now();
-      const expireTime = new Date(ticketAuth.expireAt).getTime();
-      const difference = expireTime - now;
-
-      if (difference > 0) {
-        setRemaining(Math.floor(difference));
-      } else {
-        setExpired(true);
-      }
-    },
-    expired ? null : 1000,
   );
 
   useEffect(() => {
@@ -217,7 +200,9 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
         <div className="rounded bg-white p-3 shadow-lg">
           <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
         </div>
-        <span className="text-sm">Remaining {msToCountdown(remaining)}</span>
+        {data?.status === "wait_for_user_action" && (
+          <Countdown ticketRemainingMs={data?.ticketRemainingMs} />
+        )}
       </div>
     );
 
@@ -242,6 +227,16 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
   return <RenderOtp ticketAuth={ticketAuth} ticketStatus={data} />;
 }
 
+function Countdown({ ticketRemainingMs }: { ticketRemainingMs: number }) {
+  const [remaining, setRemaining] = useState(ticketRemainingMs);
+
+  useInterval(() => {
+    setRemaining((prev) => Math.max(prev - 1000, 0));
+  }, 1000);
+
+  return <span className="text-sm">Remaining {msToCountdown(remaining)}</span>;
+}
+
 function RenderOtp({
   ticketAuth,
   ticketStatus,
@@ -251,7 +246,6 @@ function RenderOtp({
 }) {
   const t = useTranslations("link");
   const [value, setValue] = useState("");
-  const [remaining, setRemaining] = useState(ticketStatus.ticketOtpRemainingMs);
 
   const [randomIcon] = useState(() => {
     const icons = [
@@ -266,10 +260,6 @@ function RenderOtp({
     ];
     return icons[Math.floor(Math.random() * icons.length)];
   });
-
-  useInterval(() => {
-    setRemaining((prev) => Math.max(prev - 1000, 0));
-  }, 1000);
 
   const otpAndLink = useMutation(
     orpc.cosmoLink.otpAndLink.mutationOptions({
@@ -367,7 +357,7 @@ function RenderOtp({
           Submit
         </Button>
       </Form>
-      <span className="text-sm">Remaining {msToCountdown(remaining)}</span>
+      <Countdown ticketRemainingMs={ticketStatus.ticketOtpRemainingMs} />
     </div>
   );
 }
