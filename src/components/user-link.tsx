@@ -1,4 +1,5 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
+import { parseNickname } from "@/lib/utils";
 import { Link, Tooltip } from "./ui";
 
 export default function UserLink({ address, nickname }: { address?: string; nickname?: string }) {
@@ -6,9 +7,7 @@ export default function UserLink({ address, nickname }: { address?: string; nick
     <div className="inline-flex gap-2">
       {address ? (
         <>
-          <Link href={`/@${nickname ?? address}`}>
-            {nickname ?? `${address.substring(0, 8)}...`}
-          </Link>
+          <Link href={`/@${nickname ?? address}`}>{parseNickname(address, nickname)}</Link>
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
               <Tooltip.Trigger aria-label="Preview">

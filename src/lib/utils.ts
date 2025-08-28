@@ -25,6 +25,10 @@ export function getEdition(collectionNo: string) {
   return null;
 }
 
+export function parseNickname(address: string, nickname?: string) {
+  return nickname ?? `${address.substring(0, 8)}...`;
+}
+
 export function getBaseURL() {
   if (typeof window !== "undefined") {
     return window.location.origin;

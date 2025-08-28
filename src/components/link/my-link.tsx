@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { orpc } from "@/lib/orpc/client";
+import { parseNickname } from "@/lib/utils";
 import ErrorFallbackRender from "../error-boundary";
 import { Button, buttonStyles, Card, Link, Menu } from "../ui";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
@@ -60,6 +61,7 @@ type LinkCardProps = {
 function LinkCard({ link }: LinkCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
+  const nickname = parseNickname(link.address, link.nickname);
   return (
     <Card key={link.address} className="bg-secondary/20">
       <Card.Content className="flex justify-between">
@@ -67,7 +69,7 @@ function LinkCard({ link }: LinkCardProps) {
           href={`/@${link.nickname ?? link.address}`}
           className="flex min-w-0 flex-1 flex-col gap-1 text-base"
         >
-          <span className="truncate font-semibold text-lg">{link.nickname ?? link.address}</span>
+          <span className="truncate font-semibold text-lg">{nickname}</span>
           <span className="truncate font-mono text-muted-fg text-xs">{link.address}</span>
         </Link>
 
@@ -75,7 +77,7 @@ function LinkCard({ link }: LinkCardProps) {
 
         <EditProfileModal
           address={link.address}
-          nickname={link.nickname}
+          nickname={nickname}
           open={editOpen}
           setOpen={setEditOpen}
         />
