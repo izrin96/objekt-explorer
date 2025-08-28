@@ -1,5 +1,6 @@
-import { like, sql } from "drizzle-orm";
+import { like } from "drizzle-orm";
 import { after, type NextRequest } from "next/server";
+import { cacheUsers } from "@/lib/server/auth";
 import { search } from "@/lib/server/cosmo/auth";
 import { db } from "@/lib/server/db";
 import { userAddress } from "@/lib/server/db/schema";
@@ -37,21 +38,7 @@ export async function GET(request: NextRequest) {
           (a) => !users.some((b) => b.address === a.address && b.nickname === a.nickname),
         );
 
-        if (newAddressFiltered.length > 0) {
-          try {
-            await db
-              .insert(userAddress)
-              .values(newAddressFiltered)
-              .onConflictDoUpdate({
-                target: userAddress.address,
-                set: {
-                  nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
-                },
-              });
-          } catch (err) {
-            console.error("Bulk user caching failed:", err);
-          }
-        }
+        await cacheUsers(newAddressFiltered);
       });
     }
 

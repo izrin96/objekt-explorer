@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins/username";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { cache } from "react";
@@ -12,7 +12,7 @@ import { getBaseURL } from "../utils";
 import { fetchByNickname } from "./cosmo/auth";
 import { db } from "./db";
 import * as authSchema from "./db/auth-schema";
-import { userAddress } from "./db/schema";
+import { type UserAddress, userAddress } from "./db/schema";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({
@@ -194,24 +194,37 @@ export async function fetchUserByIdentifier(
   }
 
   after(async () => {
-    await db
-      .insert(userAddress)
-      .values({
+    await cacheUsers([
+      {
         address: user.address,
         nickname: user.nickname,
-      })
-      .onConflictDoUpdate({
-        target: userAddress.address,
-        set: {
-          nickname: user.nickname,
-        },
-      });
+      },
+    ]);
   });
 
   return {
     nickname: user.nickname,
     address: user.address,
   };
+}
+
+export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "address">[]) {
+  const uniqueAddresses = Array.from(new Set(newAddresses));
+  if (uniqueAddresses.length > 0) {
+    try {
+      await db
+        .insert(userAddress)
+        .values(uniqueAddresses)
+        .onConflictDoUpdate({
+          target: userAddress.address,
+          set: {
+            nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
+          },
+        });
+    } catch (err) {
+      console.error("Bulk user caching failed:", err);
+    }
+  }
 }
 
 export type Session = typeof auth.$Infer.Session;
