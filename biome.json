@@ -38,6 +38,8 @@
         "useSemanticElements": "off"
       },
       "correctness": {
+        "useParseIntRadix": "off",
+        "noNestedComponentDefinitions": "off",
         "noUnusedImports": { "level": "error", "fix": "safe" },
         "useExhaustiveDependencies": "off",
         "useHookAtTopLevel": "error",

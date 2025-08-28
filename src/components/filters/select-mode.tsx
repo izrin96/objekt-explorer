@@ -85,7 +85,7 @@ export function FloatingSelectMode({ children }: Props) {
               <Button size="sq-sm" intent="outline" onClick={reset}>
                 <XIcon size={18} weight="regular" />
               </Button>
-              <Tooltip.Content>Clear selection</Tooltip.Content>
+              <Tooltip.Content inverse>Clear selection</Tooltip.Content>
             </Tooltip>
             <Tooltip delay={0} closeDelay={0}>
               <Toggle
@@ -97,7 +97,7 @@ export function FloatingSelectMode({ children }: Props) {
               >
                 <ChecksIcon weight="regular" size={18} />
               </Toggle>
-              <Tooltip.Content>Toggle select mode</Tooltip.Content>
+              <Tooltip.Content inverse>Toggle select mode</Tooltip.Content>
             </Tooltip>
             {children?.({ handleAction })}
             <span className="px-1 py-2 font-semibold text-sm">{selected.length} selected</span>

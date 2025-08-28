@@ -14,7 +14,7 @@ export default function UserLink({ address, nickname }: { address?: string; nick
               <Tooltip.Trigger aria-label="Preview">
                 <InfoIcon size={16} />
               </Tooltip.Trigger>
-              <Tooltip.Content>Nickname not available.</Tooltip.Content>
+              <Tooltip.Content inverse>Nickname not available.</Tooltip.Content>
             </Tooltip>
           )}
         </>
