@@ -19,6 +19,7 @@ import UserAccountModal from "@/components/auth/account/user-account";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth";
+import { parseNickname } from "@/lib/utils";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
 import { Avatar, buttonStyles, Link, Loader, Menu } from "./ui";
@@ -198,8 +199,8 @@ function MyCosmoProfileMenuItem() {
           </Menu.Item>
         )}
         {data?.map((a) => (
-          <Menu.Item key={a.address} href={`/@${a.nickname}`}>
-            <Menu.Label>{a.nickname}</Menu.Label>
+          <Menu.Item key={a.address} href={`/@${a.nickname ?? a.address}`}>
+            <Menu.Label>{parseNickname(a.address, a.nickname)}</Menu.Label>
           </Menu.Item>
         ))}
         <Menu.Item href={`/link`}>
