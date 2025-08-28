@@ -138,6 +138,8 @@ export const cachedSession = cache(async () =>
 );
 
 export async function fetchUserByIdentifier(identifier: string): Promise<PublicProfile> {
+  const identifierIsAddress = isAddress(identifier);
+
   const cachedUser = await db.query.userAddress.findFirst({
     columns: {
       nickname: true,
@@ -161,7 +163,8 @@ export async function fetchUserByIdentifier(identifier: string): Promise<PublicP
         },
       },
     },
-    where: (t, { eq, or }) => or(eq(t.nickname, identifier), eq(t.address, identifier)),
+    where: (t, { eq }) =>
+      eq(identifierIsAddress ? t.address : t.nickname, decodeURIComponent(identifier)),
   });
 
   if (cachedUser) {
@@ -170,12 +173,10 @@ export async function fetchUserByIdentifier(identifier: string): Promise<PublicP
       nickname: cachedUser.hideNickname
         ? `${cachedUser.address.substring(0, 8)}...`
         : cachedUser.nickname,
-      isAddress: true,
+      isAddress: !!cachedUser.hideNickname,
       user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
     };
   }
-
-  const identifierIsAddress = isAddress(identifier);
 
   if (identifierIsAddress) {
     return {
