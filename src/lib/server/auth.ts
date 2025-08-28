@@ -8,7 +8,7 @@ import { cache } from "react";
 import { isAddress } from "viem";
 import { env } from "@/env";
 import type { PublicProfile, PublicUser } from "../universal/user";
-import { getBaseURL } from "../utils";
+import { getBaseURL, parseNickname } from "../utils";
 import { fetchByNickname } from "./cosmo/auth";
 import { db } from "./db";
 import * as authSchema from "./db/auth-schema";
@@ -172,9 +172,7 @@ export async function fetchUserByIdentifier(
   if (cachedUser) {
     return {
       ...cachedUser,
-      nickname: cachedUser.hideNickname
-        ? `${cachedUser.address.substring(0, 8)}...`
-        : cachedUser.nickname,
+      nickname: cachedUser.hideNickname ? parseNickname(cachedUser.address) : cachedUser.nickname,
       isAddress: !!cachedUser.hideNickname,
       user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
     };
@@ -183,7 +181,7 @@ export async function fetchUserByIdentifier(
   if (identifierIsAddress) {
     return {
       address: identifier,
-      nickname: `${identifier.substring(0, 8)}...`,
+      nickname: parseNickname(identifier),
       isAddress: true,
     };
   }
