@@ -3,13 +3,13 @@
 import { usePathname } from "next/navigation";
 import { Tab, TabList, Tabs } from "../ui";
 
-export default function ProfileTabs({ nickname }: { nickname: string }) {
+export default function ProfileTabs({ path }: { path: string }) {
   const pathname = usePathname();
   const items = [
-    { url: `/@${nickname}`, label: "Collection" },
-    { url: `/@${nickname}/trades`, label: "Trade History" },
-    { url: `/@${nickname}/progress`, label: "Progress" },
-    { url: `/@${nickname}/stats`, label: "Statistics" },
+    { url: `/@${path}`, label: "Collection" },
+    { url: `/@${path}/trades`, label: "Trade History" },
+    { url: `/@${path}/progress`, label: "Progress" },
+    { url: `/@${path}/stats`, label: "Statistics" },
   ];
   return (
     <div className="overflow-x-auto">

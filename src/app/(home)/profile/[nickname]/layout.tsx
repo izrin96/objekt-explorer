@@ -43,7 +43,7 @@ export default async function UserCollectionLayout(props: Props) {
         {targetUser.bannerImgUrl && <ProfileBannerClearance />}
         <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
           <ProfileHeader user={targetUser} />
-          <ProfileTabs nickname={targetUser.isAddress ? targetUser.address : targetUser.nickname} />
+          <ProfileTabs path={targetUser.isAddress ? targetUser.address : targetUser.nickname} />
           {props.children}
         </div>
       </Container>

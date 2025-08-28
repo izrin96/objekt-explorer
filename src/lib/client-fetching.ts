@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
 import { cache } from "react";
 import { fetchUserByIdentifier } from "./server/auth";
 import { fetchLiveSession } from "./server/cosmo/live";
@@ -6,7 +7,9 @@ import { getAccessToken } from "./server/token";
 import type { ValidArtist } from "./universal/cosmo/common";
 
 export const getUserByIdentifier = cache(async (identifier: string) => {
-  return await fetchUserByIdentifier(identifier);
+  const user = await fetchUserByIdentifier(identifier);
+  if (!user) notFound();
+  return user;
 });
 
 export const getLiveSession = cache(async (id: string) => {

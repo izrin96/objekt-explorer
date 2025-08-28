@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins/username";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { cache } from "react";
 import { isAddress } from "viem";
 import { env } from "@/env";
@@ -137,7 +137,9 @@ export const cachedSession = cache(async () =>
   }),
 );
 
-export async function fetchUserByIdentifier(identifier: string): Promise<PublicProfile> {
+export async function fetchUserByIdentifier(
+  identifier: string,
+): Promise<PublicProfile | undefined> {
   const identifierIsAddress = isAddress(identifier);
 
   const cachedUser = await db.query.userAddress.findFirst({
@@ -188,21 +190,23 @@ export async function fetchUserByIdentifier(identifier: string): Promise<PublicP
 
   const user = await fetchByNickname(identifier);
   if (!user) {
-    notFound();
+    return undefined;
   }
 
-  await db
-    .insert(userAddress)
-    .values({
-      address: user.address,
-      nickname: user.nickname,
-    })
-    .onConflictDoUpdate({
-      target: userAddress.address,
-      set: {
+  after(async () => {
+    await db
+      .insert(userAddress)
+      .values({
+        address: user.address,
         nickname: user.nickname,
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: userAddress.address,
+        set: {
+          nickname: user.nickname,
+        },
+      });
+  });
 
   return {
     nickname: user.nickname,
