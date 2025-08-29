@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ProfileObjektRenderDynamic } from "@/components/profile/profile-objekt";
 import { getUserByIdentifier } from "@/lib/client-fetching";
+import { parseNickname } from "@/lib/utils";
 
 type Props = {
   params: Promise<{
@@ -13,7 +14,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const profile = await getUserByIdentifier(params.nickname);
 
   return {
-    title: `${profile.nickname}'s Collection`,
+    title: `${parseNickname(profile.address, profile.nickname)}'s Collection`,
   };
 }
 
