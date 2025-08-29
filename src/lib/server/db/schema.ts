@@ -26,7 +26,7 @@ export const userAddress = pgTable(
   {
     id: serial("id").primaryKey(),
     address: citext("address", { length: 42 }).notNull(),
-    nickname: citext("nickname", { length: 24 }).notNull(),
+    nickname: citext("nickname", { length: 24 }),
     userId: text("user_id").references(() => user.id, {
       onDelete: "set null",
     }),

@@ -67,8 +67,8 @@ export default function UserSearch() {
               <CommandMenu.Item
                 href={`/@${user.nickname}`}
                 onAction={() => addRecent(user)}
-                key={user.nickname}
-                id={`search-${user.nickname}`}
+                key={`search-${user.address}`}
+                id={`search-${user.address}`}
                 textValue={user.nickname}
               >
                 {user.nickname}
@@ -81,8 +81,8 @@ export default function UserSearch() {
                 <CommandMenu.Item
                   href={`/@${user.nickname}`}
                   onAction={() => addRecent(user)}
-                  key={user.nickname}
-                  id={`recent-${user.nickname}`}
+                  key={`recent-${user.address}`}
+                  id={`recent-${user.address}`}
                   textValue={user.nickname}
                 >
                   {user.nickname}

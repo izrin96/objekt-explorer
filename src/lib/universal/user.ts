@@ -1,10 +1,11 @@
 import type { Session } from "../server/auth";
 import type { List, UserAddress } from "../server/db/schema";
 
-export type PublicProfile = Pick<UserAddress, "nickname" | "address"> &
+export type ProfileAddress = Pick<UserAddress, "address"> & Partial<Pick<UserAddress, "nickname">>;
+
+export type PublicProfile = ProfileAddress &
   Partial<Pick<UserAddress, "bannerImgUrl" | "bannerImgType" | "privateProfile">> & {
     user?: PublicUser | null;
-    isAddress?: boolean;
   };
 
 export type PublicUser = Pick<

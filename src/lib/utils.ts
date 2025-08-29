@@ -25,7 +25,7 @@ export function getEdition(collectionNo: string) {
   return null;
 }
 
-export function parseNickname(address: string, nickname?: string) {
+export function parseNickname(address: string, nickname?: string | null) {
   return nickname ?? `${address.substring(0, 8)}...`;
 }
 

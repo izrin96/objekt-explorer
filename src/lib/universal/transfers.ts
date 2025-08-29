@@ -7,8 +7,8 @@ export type AggregatedTransfer = {
   transfer: Pick<Transfer, "id" | "from" | "to" | "timestamp">;
   objekt: OwnedObjekt;
   nickname: {
-    from: string | undefined;
-    to: string | undefined;
+    from?: string | null;
+    to?: string | null;
   };
 };
 

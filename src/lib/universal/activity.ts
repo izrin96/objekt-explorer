@@ -1,15 +1,16 @@
 import { z } from "zod/v4";
 import type { Transfer } from "../server/db/indexer/schema";
-import type { UserAddress } from "../server/db/schema";
 import { validArtists, validClasses, validOnlineTypes, validSeasons } from "./cosmo/common";
 import type { OwnedObjekt } from "./objekts";
 
+export type PartialTransfer = Pick<Transfer, "id" | "from" | "to" | "timestamp" | "hash">;
+
 export type ActivityData = {
-  transfer: Transfer;
+  transfer: PartialTransfer;
   objekt: OwnedObjekt;
-  user: {
-    from: Pick<UserAddress, "address" | "nickname"> | undefined;
-    to: Pick<UserAddress, "address" | "nickname"> | undefined;
+  nickname: {
+    from?: string | null;
+    to?: string | null;
   };
 };
 

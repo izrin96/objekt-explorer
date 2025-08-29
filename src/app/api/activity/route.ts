@@ -5,7 +5,11 @@ import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses } from "@/lib/server/profile";
-import { type ActivityParams, activitySchema } from "@/lib/universal/activity";
+import {
+  type ActivityParams,
+  type ActivityResponse,
+  activitySchema,
+} from "@/lib/universal/activity";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
@@ -92,12 +96,9 @@ export async function GET(request: NextRequest) {
     const to = knownAddresses.find((a) => a.address.toLowerCase() === t.transfer.to.toLowerCase());
 
     return {
-      user: {
-        from: {
-          address: t.transfer.from,
-          nickname: from?.hideNickname ? undefined : from?.nickname,
-        },
-        to: { address: t.transfer.to, nickname: to?.hideNickname ? undefined : to?.nickname },
+      nickname: {
+        from: from?.hideNickname ? undefined : from?.nickname,
+        to: to?.hideNickname ? undefined : to?.nickname,
       },
       transfer: t.transfer,
       objekt: mapOwnedObjekt(t.objekt, t.collection),
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     items,
     nextCursor,
-  });
+  } satisfies ActivityResponse);
 }
 
 function parseParams(params: URLSearchParams): ActivityParams {

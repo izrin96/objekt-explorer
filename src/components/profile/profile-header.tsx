@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useProfileAuthed } from "@/hooks/use-user";
 import type { PublicProfile } from "@/lib/universal/user";
+import { parseNickname } from "@/lib/utils";
 import { EditProfileModal } from "../link/modal/manage-link";
 import { Avatar, Button, buttonStyles, Link } from "../ui";
 
@@ -12,10 +13,11 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const router = useRouter();
+  const nickname = parseNickname(user.address, user.nickname);
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
       <div className="flex w-full flex-col md:w-auto">
-        <div className="font-semibold text-xl">{user.nickname}</div>
+        <div className="font-semibold text-xl">{nickname}</div>
         <div className="truncate font-mono text-muted-fg text-xs">{user.address}</div>
       </div>
 
@@ -28,7 +30,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             intent: "outline",
           })
         }
-        href={`https://apollo.cafe/@${user.isAddress ? user.address : user.nickname}`}
+        href={`https://apollo.cafe/@${user.nickname ?? user.address}`}
         target="_blank"
       >
         View in Apollo
@@ -38,7 +40,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         <>
           <EditProfileModal
             address={user.address}
-            nickname={user.nickname}
+            nickname={nickname}
             onComplete={() => {
               router.refresh();
             }}

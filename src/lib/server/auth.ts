@@ -8,7 +8,7 @@ import { cache } from "react";
 import { isAddress } from "viem";
 import { env } from "@/env";
 import type { PublicProfile, PublicUser } from "../universal/user";
-import { getBaseURL, parseNickname } from "../utils";
+import { getBaseURL } from "../utils";
 import { fetchByNickname } from "./cosmo/auth";
 import { db } from "./db";
 import * as authSchema from "./db/auth-schema";
@@ -172,8 +172,7 @@ export async function fetchUserByIdentifier(
   if (cachedUser) {
     return {
       ...cachedUser,
-      nickname: cachedUser.hideNickname ? parseNickname(cachedUser.address) : cachedUser.nickname,
-      isAddress: !!cachedUser.hideNickname,
+      nickname: cachedUser.hideNickname ? null : cachedUser.nickname,
       user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
     };
   }
@@ -181,8 +180,7 @@ export async function fetchUserByIdentifier(
   if (identifierIsAddress) {
     return {
       address: identifier,
-      nickname: parseNickname(identifier),
-      isAddress: true,
+      nickname: null,
     };
   }
 
@@ -207,17 +205,17 @@ export async function fetchUserByIdentifier(
 }
 
 export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "address">[]) {
-  const uniqueAddresses = Array.from(new Set(newAddresses));
-  if (uniqueAddresses.length > 0) {
+  if (newAddresses.length > 0) {
     try {
       await db
         .insert(userAddress)
-        .values(uniqueAddresses)
+        .values(newAddresses)
         .onConflictDoUpdate({
           target: userAddress.address,
           set: {
             nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
           },
+          setWhere: sql`${userAddress.nickname} is distinct from excluded.${sql.raw(userAddress.nickname.name)}`,
         });
     } catch (err) {
       console.error("Bulk user caching failed:", err);

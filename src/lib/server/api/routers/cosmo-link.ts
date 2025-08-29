@@ -107,13 +107,25 @@ export const cosmoLinkRouter = {
 
       // link cosmo id with user
       await db
-        .update(userAddress)
-        .set({
-          linkedAt: sql`'now'`,
-          userId: session.user.id,
-          hideUser: true,
-        })
-        .where(eq(userAddress.address, user.address));
+        .insert(userAddress)
+        .values([
+          {
+            address: user.address,
+            nickname: user.nickname,
+            linkedAt: sql`'now'`,
+            userId: session.user.id,
+            hideUser: true,
+          },
+        ])
+        .onConflictDoUpdate({
+          target: userAddress.address,
+          set: {
+            nickname: user.nickname,
+            linkedAt: sql`'now'`,
+            userId: session.user.id,
+            hideUser: true,
+          },
+        });
     }),
 
   linkAbs: authed.handler(async ({ context: { session } }) => {
@@ -148,13 +160,23 @@ export const cosmoLinkRouter = {
 
     // link cosmo id with user
     await db
-      .update(userAddress)
-      .set({
-        linkedAt: sql`'now'`,
-        userId: session.user.id,
-        hideUser: true,
-      })
-      .where(eq(userAddress.address, address));
+      .insert(userAddress)
+      .values([
+        {
+          address: address,
+          linkedAt: sql`'now'`,
+          userId: session.user.id,
+          hideUser: true,
+        },
+      ])
+      .onConflictDoUpdate({
+        target: userAddress.address,
+        set: {
+          linkedAt: sql`'now'`,
+          userId: session.user.id,
+          hideUser: true,
+        },
+      });
 
     return address;
   }),

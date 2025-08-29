@@ -240,7 +240,7 @@ export type ObjektTransfer = {
   id: string;
   to: string;
   timestamp: string;
-  nickname?: string;
+  nickname?: string | null;
 };
 
 export type ObjektTransferResult = {

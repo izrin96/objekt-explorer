@@ -258,14 +258,14 @@ const ActivityRow = memo(function ActivityRow({
     event === "mint" ? (
       <span className="font-mono text-muted-fg">COSMO</span>
     ) : (
-      <UserLink address={item.transfer.from} nickname={item.user.from?.nickname} />
+      <UserLink address={item.transfer.from} nickname={item.nickname.from} />
     );
 
   const to =
     event === "spin" ? (
       <span className="font-mono text-muted-fg">COSMO Spin</span>
     ) : (
-      <UserLink address={item.transfer.to} nickname={item.user.to?.nickname} />
+      <UserLink address={item.transfer.to} nickname={item.nickname.to} />
     );
 
   return (

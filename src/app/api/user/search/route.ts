@@ -21,24 +21,7 @@ export async function GET(request: NextRequest) {
     // caching user address
     if (results.results.length > 0) {
       after(async () => {
-        const users = await db
-          .select({
-            nickname: userAddress.nickname,
-            address: userAddress.address,
-          })
-          .from(userAddress)
-          .where(like(userAddress.nickname, `${query}%`));
-
-        const newAddress = results.results.map((r) => ({
-          nickname: r.nickname,
-          address: r.address,
-        }));
-
-        const newAddressFiltered = newAddress.filter(
-          (a) => !users.some((b) => b.address === a.address && b.nickname === a.nickname),
-        );
-
-        await cacheUsers(newAddressFiltered);
+        await cacheUsers(results.results);
       });
     }
 
@@ -61,7 +44,7 @@ export async function GET(request: NextRequest) {
     hasNext: false,
     nextStartAfter: null,
     results: users.map((a) => ({
-      nickname: a.nickname,
+      nickname: a.nickname!,
       address: a.address,
       profileImageUrl: "",
       userProfiles: [],
