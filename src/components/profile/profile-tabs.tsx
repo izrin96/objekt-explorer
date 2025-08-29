@@ -13,7 +13,7 @@ export default function ProfileTabs({ path }: { path: string }) {
   ];
   return (
     <div className="overflow-x-auto">
-      <Tabs aria-label="Navbar" className="w-min" selectedKey={pathname}>
+      <Tabs aria-label="Navbar" className="w-min" selectedKey={decodeURIComponent(pathname)}>
         <TabList>
           {items.map((item) => (
             <Tab key={item.url} id={item.url} href={item.url}>
