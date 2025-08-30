@@ -34,7 +34,7 @@ import { PopoverContent, type PopoverContentProps } from "./popover";
 
 const Menu = (props: MenuTriggerPrimitiveProps) => <MenuTriggerPrimitive {...props} />;
 
-const MenuSubMenu = ({ delay = 0, ...props }) => (
+const MenuSubmenu = ({ delay = 0, ...props }) => (
   <SubmenuTriggerPrimitive {...props} delay={delay}>
     {props.children}
   </SubmenuTriggerPrimitive>
@@ -73,7 +73,6 @@ interface MenuContentProps<T>
     | "onOpenChange"
     | "shouldFlip"
   >;
-  showArrow?: boolean;
 }
 
 const MenuContent = <T extends object>({
@@ -92,7 +91,7 @@ const MenuContent = <T extends object>({
         data-slot="menu-content"
         className={composeTailwindRenderProps(
           className,
-          "grid max-h-[inherit] grid-cols-[auto_1fr] p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+          "grid max-h-[inherit] grid-cols-[auto_1fr] overflow-y-auto overscroll-contain p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-lg)-2px))] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
         )}
         {...props}
       />
@@ -198,7 +197,7 @@ Menu.Separator = MenuSeparator;
 Menu.Label = MenuLabel;
 Menu.Description = MenuDescription;
 Menu.Trigger = MenuTrigger;
-Menu.Submenu = MenuSubMenu;
+Menu.Submenu = MenuSubmenu;
 
 export type { MenuContentProps, MenuTriggerProps, MenuItemProps, MenuSectionProps };
 export {
@@ -212,5 +211,5 @@ export {
   MenuLabel,
   MenuDescription,
   MenuTrigger,
-  MenuSubMenu,
+  MenuSubmenu,
 };
