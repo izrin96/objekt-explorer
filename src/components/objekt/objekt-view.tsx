@@ -45,20 +45,15 @@ export default function ObjektView({
   const resizedUrl = useMemo(() => replaceUrlSize(objekt.frontImage), [objekt.frontImage]);
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-2 transition-all",
-        isFade && "opacity-35",
-        !loaded && "opacity-0",
-      )}
-    >
+    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")}>
       <div
         style={css}
         ref={ref}
         role="none"
         className={cn(
-          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow",
+          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow transition-all",
           isSelected && "outline-(length:--outline-width) bg-fg",
+          !loaded && "opacity-0",
         )}
         onClick={open}
       >

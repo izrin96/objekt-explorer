@@ -245,7 +245,9 @@ function ProfileObjekt() {
         {filters.grouped ? ` (${groupCount.toLocaleString()} types)` : ""}
       </span>
 
-      <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
+      <div className="[&>div]:!overflow-visible">
+        <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
+      </div>
     </div>
   );
 }
