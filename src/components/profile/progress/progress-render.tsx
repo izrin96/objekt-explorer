@@ -148,7 +148,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
           >
             <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 lg:gap-3">
               {Object.values(groupBy(objekts, (a) => a.collectionId)).map((objekts) => {

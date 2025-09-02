@@ -1,5 +1,5 @@
 import NextImage from "next/image";
-import { type CSSProperties, memo, type PropsWithChildren } from "react";
+import { type CSSProperties, type PropsWithChildren, useMemo, useState } from "react";
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, type ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
@@ -19,7 +19,7 @@ type Props = PropsWithChildren<{
   open: () => void;
 }>;
 
-export default memo(function ObjektView({
+export default function ObjektView({
   objekts,
   priority = false,
   isFade = false,
@@ -32,6 +32,7 @@ export default memo(function ObjektView({
   children,
 }: Props) {
   const [ref, { width }] = useElementSize();
+  const [loaded, setLoaded] = useState(false);
   const [objekt] = objekts;
 
   const css = {
@@ -41,21 +42,33 @@ export default memo(function ObjektView({
     "--radius-width": `${width * 0.054}px`,
   } as CSSProperties;
 
-  const resizedUrl = replaceUrlSize(objekt.frontImage);
+  const resizedUrl = useMemo(() => replaceUrlSize(objekt.frontImage), [objekt.frontImage]);
 
   return (
-    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")}>
+    <div
+      className={cn(
+        "flex flex-col gap-2 transition-all",
+        isFade && "opacity-35",
+        !loaded && "opacity-0",
+      )}
+    >
       <div
         style={css}
         ref={ref}
         role="none"
         className={cn(
-          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow transition-all duration-150 hover:scale-[1.01]",
+          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow",
           isSelected && "outline-(length:--outline-width) bg-fg",
         )}
         onClick={open}
       >
-        <NextImage fill priority={priority} src={resizedUrl} alt={objekt.collectionId} />
+        <NextImage
+          fill
+          priority={priority}
+          src={resizedUrl}
+          alt={objekt.collectionId}
+          onLoad={() => setLoaded(true)}
+        />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
           <div className="absolute bottom-1 left-1 flex rounded-full bg-bg px-2 py-1 font-bold text-fg text-xs">
@@ -85,4 +98,4 @@ export default memo(function ObjektView({
       )}
     </div>
   );
-});
+}
