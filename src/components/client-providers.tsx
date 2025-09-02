@@ -39,8 +39,8 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
   prefetchDNS("https://cdn.discordapp.com");
   preconnect("https://umami.objekt.top");
   prefetchDNS("https://umami.objekt.top");
-  preconnect("htthttps://resources.cosmo.fans");
-  prefetchDNS("htthttps://resources.cosmo.fans");
+  preconnect("https://resources.cosmo.fans");
+  prefetchDNS("https://resources.cosmo.fans");
 
   return (
     <ProgressProvider
