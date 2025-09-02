@@ -49,15 +49,15 @@ export default function ObjektView({
       <div
         style={css}
         ref={ref}
-        role="none"
         className={cn(
           "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow transition-all",
           isSelected && "outline-(length:--outline-width) bg-fg",
           !loaded && "opacity-0",
         )}
-        onClick={open}
       >
         <NextImage
+          draggable={false}
+          onClick={open}
           fill
           priority={priority}
           src={resizedUrl}
@@ -66,7 +66,7 @@ export default function ObjektView({
         />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
-          <div className="absolute bottom-1 left-1 flex rounded-full bg-bg px-2 py-1 font-bold text-fg text-xs">
+          <div className="pointer-events-none absolute bottom-1 left-1 flex rounded-full bg-bg px-2 py-1 font-bold text-fg text-xs">
             {objekts.length}
           </div>
         )}
