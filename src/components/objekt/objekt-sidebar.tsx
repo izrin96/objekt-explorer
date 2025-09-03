@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { ValidObjekt } from "@/lib/universal/objekts";
@@ -22,11 +23,7 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
     >
       {/* custom band image */}
       {objekt.bandImageUrl && (
-        <img
-          className="absolute top-0 left-0 h-full w-full object-cover"
-          alt=""
-          src={objekt.bandImageUrl}
-        />
+        <Image className="object-cover" alt="band image" src={objekt.bandImageUrl} fill />
       )}
 
       {/* band background, only for idntt */}
@@ -66,19 +63,21 @@ function TempCustomBand({ objekt }: { objekt: ValidObjekt }) {
     <>
       {/* special class */}
       {objekt.artist === "idntt" && objekt.class === "Special" && (
-        <img
+        <Image
           src="https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/86207a80d354439cada0ec6c45e076ee20250814061643330.png"
-          alt=""
-          className="absolute top-0 left-0 h-full w-full object-cover"
+          alt="band image"
+          className="object-cover"
+          fill
         />
       )}
 
       {/* unit class */}
       {objekt.artist === "idntt" && objekt.class === "Unit" && (
-        <img
+        <Image
           src="https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/e0e4fdd950bc4ca8ba49a98b053756f620250814065358420.png"
-          alt=""
-          className="absolute top-0 left-0 h-full w-full object-cover"
+          alt="band image"
+          className="object-cover"
+          fill
         />
       )}
 
@@ -86,10 +85,11 @@ function TempCustomBand({ objekt }: { objekt: ValidObjekt }) {
       {objekt.artist === "idntt" &&
         objekt.onOffline === "offline" &&
         objekt.backgroundColor === "#000000" && (
-          <img
+          <Image
             src="https://resources.cosmo.fans/images/collection-band/2025/07/12/04/raw/fab4f9ec98d24a00a7c417e012a493cd20250712042141653.png"
-            alt=""
-            className="absolute top-0 left-0 h-full w-full object-cover"
+            alt="band image"
+            className="object-cover"
+            fill
           />
         )}
     </>
