@@ -1,11 +1,12 @@
 "use client";
 
+import { useRouter } from "@bprogress/next/app";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
@@ -17,6 +18,7 @@ export default function UserSearch() {
   const addRecent = useUserSearchStore((a) => a.add);
   const clearAll = useUserSearchStore((a) => a.clearAll);
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [result, setResult] = useState<CosmoPublicUser[]>([]);
   const [query, setQuery] = useState("");
@@ -32,6 +34,11 @@ export default function UserSearch() {
     },
     enabled: enable,
   });
+
+  const handleAction = useCallback((user: CosmoPublicUser) => {
+    addRecent(user);
+    router.push(`/@${user.nickname}`);
+  }, []);
 
   // set result after getting data
   useEffect(() => {
@@ -65,8 +72,7 @@ export default function UserSearch() {
           <CommandMenu.Section title={t("result_label")}>
             {result.map((user) => (
               <CommandMenu.Item
-                href={`/@${user.nickname}`}
-                onAction={() => addRecent(user)}
+                onAction={() => handleAction(user)}
                 key={`search-${user.address}`}
                 id={`search-${user.address}`}
                 textValue={user.nickname}
@@ -79,8 +85,7 @@ export default function UserSearch() {
             {[
               ...recentUsers.map((user) => (
                 <CommandMenu.Item
-                  href={`/@${user.nickname}`}
-                  onAction={() => addRecent(user)}
+                  onAction={() => handleAction(user)}
                   key={`recent-${user.address}`}
                   id={`recent-${user.address}`}
                   textValue={user.nickname}

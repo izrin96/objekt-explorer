@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "@bprogress/next/app";
 import {
   DiscordLogoIcon,
   EnvelopeSimpleIcon,
@@ -7,7 +8,6 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";

@@ -1,8 +1,8 @@
 "use client";
 
+import { useRouter } from "@bprogress/next/app";
 import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button, Label, Modal } from "@/components/ui";

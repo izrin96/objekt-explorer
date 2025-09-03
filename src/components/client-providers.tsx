@@ -1,9 +1,8 @@
 "use client";
 
-import { ProgressProvider } from "@bprogress/next/app";
+import { ProgressProvider, useRouter } from "@bprogress/next/app";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useRouter } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type PropsWithChildren, useState } from "react";
 import { RouterProvider } from "react-aria-components";
@@ -31,7 +30,6 @@ type Props = {
 
 export default function ClientProviders({ children, ...props }: PropsWithChildren<Props>) {
   const [queryClient] = useState(() => createQueryClient());
-  const router = useRouter();
 
   preconnect("https://imagedelivery.net");
   prefetchDNS("https://imagedelivery.net");
@@ -50,7 +48,7 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
       shallowRouting
     >
       <QueryClientProvider client={queryClient}>
-        <RouterProvider navigate={router.push}>
+        <AppRouterProvider>
           <ThemeProvider
             enableSystem
             attribute="class"
@@ -64,8 +62,13 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
               <ReactQueryDevtools />
             </NuqsAdapter>
           </ThemeProvider>
-        </RouterProvider>
+        </AppRouterProvider>
       </QueryClientProvider>
     </ProgressProvider>
   );
+}
+
+function AppRouterProvider({ children }: PropsWithChildren) {
+  const router = useRouter();
+  return <RouterProvider navigate={router.push}>{children}</RouterProvider>;
 }

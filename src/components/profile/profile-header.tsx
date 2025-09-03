@@ -1,7 +1,7 @@
 "use client";
 
+import { useRouter } from "@bprogress/next/app";
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useProfileAuthed } from "@/hooks/use-user";
 import type { PublicProfile } from "@/lib/universal/user";
