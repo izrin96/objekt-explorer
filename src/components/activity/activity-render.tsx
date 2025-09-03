@@ -1,21 +1,25 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
-import { type InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
 import ObjektModal from "../objekt/objekt-modal";
-import { Badge, Card } from "../ui";
+import { Badge, Card, Loader } from "../ui";
 import UserLink from "../user-link";
 import ActivityFilter from "./activity-filter";
 import { useTypeFilter } from "./filter-type";
@@ -26,6 +30,10 @@ type WebSocketMessage =
   | { type: "history"; data: ActivityData[] };
 
 const ROW_HEIGHT = 42;
+
+export const ActivityRenderDynamic = dynamic(() => Promise.resolve(ActivityRender), {
+  ssr: false,
+});
 
 export default function ActivityRender() {
   return (
@@ -38,7 +46,23 @@ export default function ActivityRender() {
         <p className="text-muted-fg text-sm">Latest objekt activity in realtime</p>
       </div>
       <ObjektModalProvider initialTab="trades">
-        <Activity />
+        <ActivityFilter />
+
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center py-2">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <Activity />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </ObjektModalProvider>
     </div>
   );
@@ -50,12 +74,15 @@ function Activity() {
   const [type] = useTypeFilter();
   const [realtimeTransfers, setRealtimeTransfers] = useState<ActivityData[]>([]);
   const [newTransferIds, setNewTransferIds] = useState<Set<string>>(new Set());
+  const [isHovering, setIsHovering] = useState(false);
+  const [queuedTransfers, setQueuedTransfers] = useState<ActivityData[]>([]);
   const parentRef = useRef<HTMLDivElement>(null);
-  const scrollOffsetRef = useRef(0);
   const timeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const isHoveringRef = useRef(false);
+  const [currentObjekt, setCurrentObjekt] = useState<ValidObjekt[]>([]);
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
-    useInfiniteQuery<ActivityResponse>({
+    useSuspenseInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", type, filters, selectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
         const url = new URL("/api/activity", getBaseURL());
@@ -82,8 +109,8 @@ function Activity() {
     });
 
   const allTransfers = useMemo(
-    () => [...realtimeTransfers, ...(data?.pages.flatMap((page) => page.items) ?? [])],
-    [realtimeTransfers, data?.pages],
+    () => [...realtimeTransfers, ...(data.pages.flatMap((page) => page.items) ?? [])],
+    [realtimeTransfers, data.pages],
   );
 
   const rowVirtualizer = useWindowVirtualizer({
@@ -104,52 +131,54 @@ function Activity() {
   }, []);
 
   const handleWebSocketMessage = useCallback(
-    (event: MessageEvent, data: InfiniteData<ActivityResponse> | undefined) => {
+    (event: MessageEvent) => {
       const message = JSON.parse(event.data) as WebSocketMessage;
-
-      // store current scroll position before update
-      scrollOffsetRef.current = window.scrollY;
 
       const filtered = filterData(message.data, type ?? "all", {
         ...filters,
         artist: getSelectedArtistIds(filters.artist),
       });
-      addNewTransferIds(filtered);
 
       if (message.type === "transfer") {
-        setRealtimeTransfers((prev) => [...filtered, ...prev]);
+        if (isHoveringRef.current) {
+          // Queue transfers when hovering
+          setQueuedTransfers((prev) => [...filtered, ...prev]);
+        } else {
+          // Apply transfers immediately when not hovering
+          addNewTransferIds(filtered);
+          setRealtimeTransfers((prev) => [...filtered, ...prev]);
+        }
       }
 
       if (message.type === "history") {
-        const existing = data?.pages[0].items ?? [];
+        const existing = data.pages[0].items ?? [];
         const existHash = new Set(existing.map((a) => a.transfer.hash));
-        setRealtimeTransfers(filtered.filter((a) => existHash.has(a.transfer.hash) === false));
-      }
+        const historyFiltered = filtered.filter((a) => existHash.has(a.transfer.hash) === false);
 
-      // restore scroll position after state updates
-      if (scrollOffsetRef.current > 0 && !rowVirtualizer.isScrolling) {
-        window.scrollTo({
-          top: scrollOffsetRef.current + ROW_HEIGHT * filtered.length,
-          behavior: "instant",
-        });
+        if (isHoveringRef.current) {
+          // Queue history updates when hovering
+          setQueuedTransfers((prev) => [...historyFiltered, ...prev]);
+        } else {
+          // Apply history updates immediately when not hovering
+          addNewTransferIds(historyFiltered);
+          setRealtimeTransfers((prev) => [...historyFiltered, ...prev]);
+        }
       }
     },
-    [type, filters, getSelectedArtistIds],
+    [type, filters, getSelectedArtistIds, addNewTransferIds],
   );
 
   // handle incoming message
   useEffect(() => {
-    if (!data) return;
-
     const ws = new ReconnectingWebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
 
-    ws.onmessage = (e) => handleWebSocketMessage(e, data);
+    ws.onmessage = (e) => handleWebSocketMessage(e);
 
     return () => {
       setRealtimeTransfers([]);
       ws.close();
     };
-  }, [data, handleWebSocketMessage]);
+  }, [handleWebSocketMessage]);
 
   // remove new transfer after animation completes
   useEffect(() => {
@@ -181,9 +210,17 @@ function Activity() {
     };
   }, [newTransferIds]);
 
+  // flush queued transfers when hover ends
+  useEffect(() => {
+    if (!isHovering && queuedTransfers.length > 0) {
+      addNewTransferIds(queuedTransfers);
+      setRealtimeTransfers((prev) => [...queuedTransfers, ...prev]);
+      setQueuedTransfers([]);
+    }
+  }, [isHovering, queuedTransfers, addNewTransferIds]);
+
   return (
     <>
-      <ActivityFilter />
       <Card className="py-0">
         <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
           <div className="flex min-w-fit border-b">
@@ -195,21 +232,35 @@ function Activity() {
             <div className="min-w-[280px] flex-1 px-3 py-2.5">Time</div>
           </div>
 
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-            }}
-            className="relative w-full will-change-transform"
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const item = allTransfers[virtualRow.index];
-              const isNew = newTransferIds.has(item.transfer.id);
-              return (
-                <ObjektModal key={item.transfer.id} objekts={[item.objekt]}>
-                  {({ openObjekts }) => (
+          <ObjektModal objekts={currentObjekt}>
+            {({ openObjekts }) => (
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                }}
+                className="relative w-full will-change-transform"
+                role="region"
+                aria-label="Activity list"
+                onMouseEnter={() => {
+                  setIsHovering(true);
+                  isHoveringRef.current = true;
+                }}
+                onMouseLeave={() => {
+                  setIsHovering(false);
+                  isHoveringRef.current = false;
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const item = allTransfers[virtualRow.index];
+                  const isNew = newTransferIds.has(item.transfer.id);
+                  return (
                     <ActivityRow
+                      key={item.transfer.id}
                       item={item}
-                      open={openObjekts}
+                      open={() => {
+                        setCurrentObjekt([item.objekt]);
+                        openObjekts();
+                      }}
                       isNew={isNew}
                       style={{
                         transform: `translateY(${
@@ -217,11 +268,19 @@ function Activity() {
                         }px)`,
                       }}
                     />
-                  )}
-                </ObjektModal>
-              );
-            })}
-          </div>
+                  );
+                })}
+              </div>
+            )}
+          </ObjektModal>
+
+          {isHovering && (
+            <div className="pointer-events-none fixed right-0 bottom-0 left-0 flex h-12 w-full flex-col justify-center bg-fg/10 px-2 py-3 backdrop-blur-md">
+              <span className="text-center font-mono text-sm uppercase leading-tight">
+                Paused on hover
+              </span>
+            </div>
+          )}
         </div>
       </Card>
       <InfiniteQueryNext
