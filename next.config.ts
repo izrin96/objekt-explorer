@@ -3,6 +3,9 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    reactCompiler: true,
+  },
   async rewrites() {
     return [
       {
