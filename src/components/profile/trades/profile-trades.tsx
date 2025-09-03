@@ -176,12 +176,12 @@ function TradeRow({
 
   const user = isReceiver ? (
     row.transfer.from === NULL_ADDRESS ? (
-      <span>COSMO</span>
+      <span className="font-mono text-muted-fg">COSMO</span>
     ) : (
       <UserLink address={row.transfer.from} nickname={row.nickname.from} />
     )
   ) : row.transfer.to === SPIN_ADDRESS ? (
-    <span>COSMO Spin</span>
+    <span className="font-mono text-muted-fg">COSMO Spin</span>
   ) : (
     <UserLink address={row.transfer.to} nickname={row.nickname.to} />
   );

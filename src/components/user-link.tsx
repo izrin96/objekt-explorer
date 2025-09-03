@@ -24,7 +24,7 @@ export default function UserLink({
           )}
         </>
       ) : (
-        <span>(deleted)</span>
+        <span className="font-mono text-muted-fg">(deleted)</span>
       )}
     </div>
   );
