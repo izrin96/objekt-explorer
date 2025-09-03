@@ -50,7 +50,6 @@ export default function Navbar() {
 function Activity() {
   return (
     <Link href="/activity" className="flex items-center gap-2 px-1.5 py-1.5 font-medium text-sm">
-      {/* <RadioTowerIcon size={18} /> */}
       <span className="text-xs">Activity</span>
     </Link>
   );

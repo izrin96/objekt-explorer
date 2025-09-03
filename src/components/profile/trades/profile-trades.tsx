@@ -105,7 +105,6 @@ function ProfileTrades() {
     <>
       <Card className="py-0">
         <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
-          {/* Header */}
           <div className="flex min-w-fit border-b">
             <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
             <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
@@ -114,12 +113,11 @@ function ProfileTrades() {
             <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
           </div>
 
-          {/* Virtualized Rows */}
           <div
             style={{
               height: `${rowVirtualizer.getTotalSize()}px`,
             }}
-            className="relative w-full"
+            className="relative w-full will-change-transform"
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const row = rows[virtualRow.index];

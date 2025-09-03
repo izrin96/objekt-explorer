@@ -186,7 +186,6 @@ function Activity() {
       <ActivityFilter />
       <Card className="py-0">
         <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
-          {/* Header */}
           <div className="flex min-w-fit border-b">
             <div className="min-w-[120px] flex-1 px-3 py-2.5">Event</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">Objekt</div>
@@ -196,12 +195,11 @@ function Activity() {
             <div className="min-w-[280px] flex-1 px-3 py-2.5">Time</div>
           </div>
 
-          {/* Virtualized Rows */}
           <div
             style={{
               height: `${rowVirtualizer.getTotalSize()}px`,
             }}
-            className="relative w-full"
+            className="relative w-full will-change-transform"
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const item = allTransfers[virtualRow.index];
