@@ -29,11 +29,9 @@ const schema = z.object({
 });
 
 export async function GET(request: NextRequest, props: Params) {
-  const params = await props.params;
+  const [session, params] = await Promise.all([cachedSession(), props.params]);
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
-
-  const session = await cachedSession();
 
   const owner = await db.query.userAddress.findFirst({
     where: (q, { eq }) => eq(q.address, params.address),

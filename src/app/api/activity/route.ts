@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     searchParams.get("cursor") ? JSON.parse(searchParams.get("cursor")!) : undefined,
   );
 
-  const transfersQuery = indexer
+  const transferResults = await indexer
     .select({
       transfer: {
         id: transfers.id,
@@ -78,8 +78,6 @@ export async function GET(request: NextRequest) {
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PAGE_SIZE + 1);
-
-  const transferResults = await transfersQuery;
 
   const slicedResults = transferResults.slice(0, PAGE_SIZE);
 

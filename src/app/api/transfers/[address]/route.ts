@@ -25,14 +25,12 @@ const cursorSchema = z
   .optional();
 
 export async function GET(request: NextRequest, props: { params: Promise<{ address: string }> }) {
-  const params = await props.params;
+  const [session, params] = await Promise.all([cachedSession(), props.params]);
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
   const cursor = cursorSchema.parse(
     searchParams.get("cursor") ? JSON.parse(searchParams.get("cursor")!) : undefined,
   );
-
-  const session = await cachedSession();
 
   const owner = await db.query.userAddress.findFirst({
     where: (q, { eq }) => eq(q.address, params.address),

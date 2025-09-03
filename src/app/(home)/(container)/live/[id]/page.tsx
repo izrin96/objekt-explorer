@@ -41,13 +41,12 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function Page(props: Props) {
-  const searchParams = await props.searchParams;
+  const [searchParams, params] = await Promise.all([props.searchParams, props.params]);
 
   if (env.BYPASS_LIVE_KEY === undefined || searchParams?.token !== env.BYPASS_LIVE_KEY) {
     onRedirect();
   }
 
-  const params = await props.params;
   const live = await getLiveSession(params.id);
 
   if (!live) notFound();

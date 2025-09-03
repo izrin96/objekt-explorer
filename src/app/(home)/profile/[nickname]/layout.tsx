@@ -16,10 +16,7 @@ type Props = PropsWithChildren<{
 }>;
 
 export default async function UserCollectionLayout(props: Props) {
-  const params = await props.params;
-
-  const session = await cachedSession();
-
+  const [session, params] = await Promise.all([cachedSession(), props.params]);
   const [targetUser, profiles] = await Promise.all([
     getUserByIdentifier(params.nickname),
     session ? fetchUserProfiles(session.user.id) : undefined,

@@ -14,7 +14,7 @@ type Params = {
 };
 
 export async function GET(_: Request, props: Params) {
-  const params = await props.params;
+  const [session, params] = await Promise.all([cachedSession(), props.params]);
 
   const results = await indexer
     .select({
@@ -39,8 +39,6 @@ export async function GET(_: Request, props: Params) {
     return Response.json({
       transfers: [],
     });
-
-  const session = await cachedSession();
 
   const owner = await db.query.userAddress.findFirst({
     where: (q, { eq }) => eq(q.address, result.owner!),

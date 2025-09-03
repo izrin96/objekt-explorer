@@ -14,8 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const queryClient = getQueryClient();
-  const t = await getTranslations("link");
-  const session = await cachedSession();
+  const [session, t] = await Promise.all([cachedSession(), getTranslations("link")]);
 
   if (!session) redirect("/");
 
