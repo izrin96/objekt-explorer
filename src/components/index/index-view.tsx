@@ -138,7 +138,7 @@ function IndexView() {
       </div>
       <span className="font-semibold">{count.toLocaleString()} total</span>
 
-      <div className="[&>div]:!overflow-visible">
+      <div className="[&>div]:!overflow-visible will-change-transform">
         <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
       </div>
     </div>

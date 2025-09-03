@@ -109,7 +109,7 @@ function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
     >
       <div
         data-flipped={flipped}
-        className="transform-3d relative aspect-photocard h-full w-full transform-gpu cursor-pointer touch-manipulation transition-transform duration-300 data-[flipped=true]:rotate-y-180"
+        className="transform-3d relative aspect-photocard h-full w-full transform-gpu cursor-pointer touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
       >
         <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
           {/* smaller image */}
