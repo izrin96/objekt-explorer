@@ -96,7 +96,7 @@ function UserAccountForm({
   const router = useRouter();
 
   const mutation = useMutation({
-    mutationFn: async (data: { showSocial: boolean; name: string }) => {
+    mutationFn: async (data: { showSocial: boolean; name: string; image: undefined | null }) => {
       const result = await authClient.updateUser(data);
       if (result.error) throw new Error(result.error.message);
       return result.data;
@@ -118,10 +118,12 @@ function UserAccountForm({
         const formData = new FormData(e.currentTarget);
         const name = formData.get("name") as string;
         const showSocial = formData.get("showSocial") === "on";
+        const removePic = formData.get("removePic") === "on";
 
         mutation.mutate({
           name,
           showSocial,
+          image: removePic ? null : undefined,
         });
       }}
     >
@@ -140,6 +142,13 @@ function UserAccountForm({
           description="Display your social account such as Discord username in List and Cosmo profile"
           defaultSelected={user.showSocial ?? false}
         />
+
+        <Checkbox label="Remove Profile Picture" name="removePic" />
+
+        <span className="text-muted-fg text-xs">
+          Profile picture can only be set by pulling from X or Discord in the Social Link section
+          below by clicking Refresh.
+        </span>
 
         <div className="flex">
           <Button size="md" intent="outline" type="submit" isPending={mutation.isPending}>
