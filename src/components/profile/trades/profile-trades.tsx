@@ -117,7 +117,7 @@ function ProfileTrades() {
             style={{
               height: `${rowVirtualizer.getTotalSize()}px`,
             }}
-            className="relative w-full will-change-transform"
+            className="relative w-full [&>*]:will-change-transform"
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const row = rows[virtualRow.index];

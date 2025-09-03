@@ -238,7 +238,7 @@ function Activity() {
                 style={{
                   height: `${rowVirtualizer.getTotalSize()}px`,
                 }}
-                className="relative w-full will-change-transform"
+                className="relative w-full [&>*]:will-change-transform"
                 role="region"
                 aria-label="Activity list"
                 onMouseEnter={() => {
