@@ -245,7 +245,7 @@ function ProfileObjekt() {
         {filters.grouped ? ` (${groupCount.toLocaleString()} types)` : ""}
       </span>
 
-      <div className="[&>div]:!overflow-visible will-change-transform">
+      <div className="[&>div]:!overflow-visible [&>div]:will-change-transform">
         <WindowVirtualizer key={`${columns}-${hideLabel}`}>{virtualList}</WindowVirtualizer>
       </div>
     </div>
