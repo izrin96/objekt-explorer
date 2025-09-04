@@ -13,6 +13,7 @@ export const collectionOptions = (artistIds: ValidArtist[]) =>
     queryFn: async () => {
       const url = new URL("/api/collection", getBaseURL());
       const result = await ofetch<CollectionResult>(url.toString(), {
+        cache: "no-cache",
         query: {
           artist: artistIds,
         },
