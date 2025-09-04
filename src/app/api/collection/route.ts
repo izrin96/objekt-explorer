@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
     } satisfies CollectionResult);
 
   // check for etag
-  const etag = crypto.createHash("md5").update(JSON.stringify(singleResult[0])).digest("hex");
+  const etag = `W/"${crypto.createHash("md5").update(JSON.stringify(singleResult[0])).digest("hex")}"`;
   const ifNoneMatch = request.headers.get("if-none-match");
   if (ifNoneMatch === etag) {
     return new NextResponse(null, {
       status: 304,
       headers: {
-        ETag: `W/"${etag}"`,
+        ETag: etag,
       },
     });
   }
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      ETag: `W/"${etag}"`,
+      ETag: etag,
       "Cache-Control": "private, max-age=0, must-revalidate",
     },
   });
