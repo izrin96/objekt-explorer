@@ -7,6 +7,7 @@ import { collections } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { validArtists } from "@/lib/universal/cosmo/common";
 import { type CollectionResult, overrideCollection } from "@/lib/universal/objekts";
+import { cacheHeaders } from "../common";
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
     headers: {
       "Content-Type": "application/json",
       ETag: etag,
-      "Cache-Control": "private, max-age=0, must-revalidate",
+      ...cacheHeaders(),
     },
   });
 }

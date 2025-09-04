@@ -1,6 +1,6 @@
-export function cacheHeaders(cdn = 15) {
+export function cacheHeaders(cdn = 10) {
   return {
-    "Cache-Control": `public, max-age=${10}`,
-    "CDN-Cache-Control": `public, max-age=${cdn}`,
+    "Cache-Control": `public, max-age=0`,
+    "CDN-Cache-Control": `public, s-maxage=${cdn}, stale-while-revalidate=30`,
   };
 }
