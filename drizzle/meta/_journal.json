@@ -183,6 +183,13 @@
       "when": 1756434172993,
       "tag": "0025_lethal_shotgun",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1756967053944,
+      "tag": "0026_perpetual_mariko_yashida",
+      "breakpoints": true
     }
   ]
 }

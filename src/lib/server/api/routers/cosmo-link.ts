@@ -167,6 +167,7 @@ export const cosmoLinkRouter = {
           linkedAt: sql`'now'`,
           userId: session.user.id,
           hideUser: true,
+          isAbstract: true,
         },
       ])
       .onConflictDoUpdate({
@@ -175,6 +176,7 @@ export const cosmoLinkRouter = {
           linkedAt: sql`'now'`,
           userId: session.user.id,
           hideUser: true,
+          isAbstract: true,
         },
       });
 
