@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(null, {
       status: 304,
       headers: {
-        ETag: etag,
+        ETag: `W/"${etag}"`,
       },
     });
   }
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      ETag: etag,
+      ETag: `W/"${etag}"`,
       "Cache-Control": "private, max-age=0, must-revalidate",
     },
   });
