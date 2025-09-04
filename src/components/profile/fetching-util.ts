@@ -1,15 +1,7 @@
 import { ofetch } from "ofetch";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
-import type { OwnedObjekt } from "@/lib/universal/objekts";
+import type { OwnedObjekt, OwnedObjektsResult } from "@/lib/universal/objekts";
 import { getBaseURL } from "@/lib/utils";
-
-type OwnedObjektsResult = {
-  nextCursor?: {
-    receivedAt: string;
-    id: number;
-  };
-  objekts: OwnedObjekt[];
-};
 
 export async function fetchOwnedObjektsByCursor(
   address: string,

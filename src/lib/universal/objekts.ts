@@ -250,3 +250,11 @@ export type ObjektTransferResult = {
   transferable?: boolean;
   transfers: ObjektTransfer[];
 };
+
+export type OwnedObjektsResult = {
+  nextCursor?: {
+    receivedAt: string;
+    id: number;
+  };
+  objekts: OwnedObjekt[];
+};

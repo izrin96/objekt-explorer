@@ -2,6 +2,7 @@ import { count, eq, sql } from "drizzle-orm";
 import { cacheHeaders } from "@/app/api/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
+import type { CollectionMetadata } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
 
 type Params = {
@@ -34,15 +35,14 @@ export async function GET(_: Request, props: Params) {
         total: 0,
         spin: 0,
         transferable: 0,
-      },
+        createdAt: new Date(0).toISOString(),
+      } satisfies CollectionMetadata,
       {
         headers: cacheHeaders(),
       },
     );
 
-  const [result] = results;
-
-  return Response.json(result, {
+  return Response.json(results[0], {
     headers: cacheHeaders(),
   });
 }

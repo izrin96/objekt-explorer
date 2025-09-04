@@ -8,7 +8,7 @@ import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { validArtists } from "@/lib/universal/cosmo/common";
-import { mapOwnedObjekt } from "@/lib/universal/objekts";
+import { mapOwnedObjekt, type OwnedObjektsResult } from "@/lib/universal/objekts";
 
 type Params = {
   params: Promise<{
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, props: Params) {
   if (!session && isPrivate)
     return Response.json({
       objekts: [],
-    });
+    } satisfies OwnedObjektsResult);
 
   if (session && isPrivate) {
     const profiles = await fetchUserProfiles(session.user.id);
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest, props: Params) {
     if (!isProfileAuthed)
       return Response.json({
         objekts: [],
-      });
+      } satisfies OwnedObjektsResult);
   }
 
   const results = await indexer
@@ -107,7 +107,7 @@ export async function GET(request: NextRequest, props: Params) {
   return Response.json({
     nextCursor,
     objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
-  });
+  } satisfies OwnedObjektsResult);
 }
 
 function parseParams(params: URLSearchParams): z.infer<typeof schema> {

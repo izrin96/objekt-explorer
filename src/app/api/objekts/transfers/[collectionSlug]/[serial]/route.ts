@@ -33,12 +33,12 @@ export async function GET(_: Request, props: Params) {
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id));
 
-  const [result] = results;
-
-  if (!result)
+  if (!results.length)
     return Response.json({
       transfers: [],
-    });
+    } satisfies ObjektTransferResult);
+
+  const [result] = results;
 
   const owner = await db.query.userAddress.findFirst({
     where: (q, { eq }) => eq(q.address, result.owner!),
@@ -53,7 +53,7 @@ export async function GET(_: Request, props: Params) {
     return Response.json({
       hide: true,
       transfers: [],
-    });
+    } satisfies ObjektTransferResult);
 
   if (session && isPrivate) {
     const profiles = await fetchUserProfiles(session.user.id);
@@ -66,7 +66,7 @@ export async function GET(_: Request, props: Params) {
       return Response.json({
         hide: true,
         transfers: [],
-      });
+      } satisfies ObjektTransferResult);
   }
 
   const addresses = Array.from(new Set(results.map((r) => r.to)));
