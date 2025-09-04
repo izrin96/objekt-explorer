@@ -258,3 +258,7 @@ export type OwnedObjektsResult = {
   };
   objekts: OwnedObjekt[];
 };
+
+export type CollectionResult = {
+  collections: IndexedObjekt[];
+};
