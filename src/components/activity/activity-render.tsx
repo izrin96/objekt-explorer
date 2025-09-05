@@ -62,7 +62,7 @@ export default function ActivityRender() {
                   </div>
                 }
               >
-                <Activity key={`${type}-${filters}-${selectedArtistIds}`} />
+                <Activity key={JSON.stringify({ selectedArtistIds, filters, type })} />
               </Suspense>
             </ErrorBoundary>
           )}
