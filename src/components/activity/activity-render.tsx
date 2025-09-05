@@ -1,7 +1,11 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
-import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useQueryClient,
+  useSuspenseInfiniteQuery,
+} from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
@@ -36,9 +40,18 @@ export const ActivityRenderDynamic = dynamic(() => Promise.resolve(ActivityRende
 });
 
 export default function ActivityRender() {
+  const queryClient = useQueryClient();
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const [type] = useTypeFilter();
+
+  useEffect(() => {
+    queryClient.removeQueries({
+      queryKey: ["activity"],
+      exact: false,
+      type: "active",
+    });
+  }, [type, filters, selectedArtistIds]);
 
   return (
     <div className="flex flex-col gap-6 pt-2">
@@ -62,7 +75,9 @@ export default function ActivityRender() {
                   </div>
                 }
               >
-                <Activity key={JSON.stringify({ selectedArtistIds, filters, type })} />
+                <Activity
+                  key={`${type}-${JSON.stringify(selectedArtistIds)}-${JSON.stringify(filters)}`}
+                />
               </Suspense>
             </ErrorBoundary>
           )}
