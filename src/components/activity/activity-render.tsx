@@ -109,7 +109,7 @@ function Activity() {
     });
 
   const allTransfers = useMemo(
-    () => [...realtimeTransfers, ...(data.pages.flatMap((page) => page.items) ?? [])],
+    () => [...realtimeTransfers, ...data.pages.flatMap((page) => page.items)],
     [realtimeTransfers, data.pages],
   );
 
@@ -151,7 +151,7 @@ function Activity() {
       }
 
       if (message.type === "history") {
-        const existing = data.pages[0].items ?? [];
+        const existing = data.pages[0].items;
         const existHash = new Set(existing.map((a) => a.transfer.hash));
         const historyFiltered = filtered.filter((a) => existHash.has(a.transfer.hash) === false);
 

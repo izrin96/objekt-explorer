@@ -9,7 +9,7 @@ export async function GET() {
   return NextResponse.json(
     { collections },
     {
-      headers: cacheHeaders(10 * 60),
+      headers: cacheHeaders(3600),
     },
   );
 }

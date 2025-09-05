@@ -26,7 +26,7 @@ export async function GET(_: Request, props: Params) {
       serials: results.map((a) => a.serial),
     },
     {
-      headers: cacheHeaders(),
+      headers: cacheHeaders(60),
     },
   );
 }
