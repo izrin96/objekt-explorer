@@ -15,7 +15,6 @@ export const collectionOptions = (artistIds: ValidArtist[]) =>
       const result = await ofetch<CollectionResult>(url.toString(), {
         query: {
           artist: artistIds,
-          v: 1,
         },
       }).then((a) => a.collections);
 
