@@ -25,9 +25,9 @@ export function ListAccounts() {
     gcTime: 0,
   });
 
-  const linkedAccounts = query.data.filter((a) => a.provider !== "credential");
+  const linkedAccounts = query.data.filter((a) => a.providerId !== "credential");
   const unlinkedProviders = providers.filter(
-    (a) => !linkedAccounts.some((b) => b.provider === a.id),
+    (a) => !linkedAccounts.some((b) => b.providerId === a.id),
   );
 
   return (
@@ -36,7 +36,7 @@ export function ListAccounts() {
       {linkedAccounts.map((a) => (
         <LinkedAccount
           key={a.id}
-          provider={providersMap[a.provider as ProviderId]}
+          provider={providersMap[a.providerId as ProviderId]}
           accountId={a.accountId}
         />
       ))}
