@@ -36,6 +36,10 @@ export const ActivityRenderDynamic = dynamic(() => Promise.resolve(ActivityRende
 });
 
 export default function ActivityRender() {
+  const { selectedArtistIds } = useCosmoArtist();
+  const [filters] = useFilters();
+  const [type] = useTypeFilter();
+
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
@@ -58,7 +62,7 @@ export default function ActivityRender() {
                   </div>
                 }
               >
-                <Activity />
+                <Activity key={`${type}-${filters}-${selectedArtistIds}`} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -180,12 +184,7 @@ function Activity() {
     if (lastJsonMessage) {
       handleWebSocketMessage(lastJsonMessage);
     }
-  }, [lastJsonMessage]);
-
-  // reset realtime transfers if data changes
-  useEffect(() => {
-    setRealtimeTransfers([]);
-  }, [data.pages[0]]);
+  }, [lastJsonMessage, handleWebSocketMessage]);
 
   // remove new transfer after animation completes
   useEffect(() => {
