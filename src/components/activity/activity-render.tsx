@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import ReconnectingWebSocket from "reconnecting-websocket";
+import useWebSocket from "react-use-websocket";
 import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -108,6 +108,15 @@ function Activity() {
       refetchOnWindowFocus: false,
     });
 
+  const { lastJsonMessage } = useWebSocket<WebSocketMessage>(
+    env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!,
+    {
+      shouldReconnect: () => true,
+      reconnectAttempts: Infinity,
+      reconnectInterval: 3000,
+    },
+  );
+
   const allTransfers = useMemo(
     () => [...realtimeTransfers, ...data.pages.flatMap((page) => page.items)],
     [realtimeTransfers, data.pages],
@@ -131,9 +140,7 @@ function Activity() {
   }, []);
 
   const handleWebSocketMessage = useCallback(
-    (event: MessageEvent) => {
-      const message = JSON.parse(event.data) as WebSocketMessage;
-
+    (message: WebSocketMessage) => {
       const filtered = filterData(message.data, type ?? "all", {
         ...filters,
         artist: getSelectedArtistIds(filters.artist),
@@ -157,11 +164,11 @@ function Activity() {
 
         if (isHoveringRef.current) {
           // Queue history updates when hovering
-          setQueuedTransfers((prev) => [...historyFiltered, ...prev]);
+          setQueuedTransfers((prev) => [...prev, ...historyFiltered]);
         } else {
           // Apply history updates immediately when not hovering
           addNewTransferIds(historyFiltered);
-          setRealtimeTransfers((prev) => [...historyFiltered, ...prev]);
+          setRealtimeTransfers((prev) => [...prev, ...historyFiltered]);
         }
       }
     },
@@ -170,15 +177,15 @@ function Activity() {
 
   // handle incoming message
   useEffect(() => {
-    const ws = new ReconnectingWebSocket(env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!);
+    if (lastJsonMessage) {
+      handleWebSocketMessage(lastJsonMessage);
+    }
+  }, [lastJsonMessage]);
 
-    ws.onmessage = (e) => handleWebSocketMessage(e);
-
-    return () => {
-      setRealtimeTransfers([]);
-      ws.close();
-    };
-  }, [handleWebSocketMessage]);
+  // reset realtime transfers if data changes
+  useEffect(() => {
+    setRealtimeTransfers([]);
+  }, [data.pages[0]]);
 
   // remove new transfer after animation completes
   useEffect(() => {

@@ -22,19 +22,19 @@ importers:
         version: 3.879.0
       '@bprogress/next':
         specifier: ^3.2.12
-        version: 3.2.12(next@15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 3.2.12(next@15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@intentui/icons':
         specifier: ^1.11.0
         version: 1.11.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@orpc/client':
         specifier: ^1.8.6
-        version: 1.8.6
+        version: 1.8.6(@opentelemetry/api@1.9.0)
       '@orpc/server':
         specifier: ^1.8.6
-        version: 1.8.6(crossws@0.3.5)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        version: 1.8.6(@opentelemetry/api@1.9.0)(crossws@0.3.5)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@orpc/tanstack-query':
         specifier: ^1.8.6
-        version: 1.8.6(@orpc/client@1.8.6)(@tanstack/query-core@5.85.9)
+        version: 1.8.6(@opentelemetry/api@1.9.0)(@orpc/client@1.8.6(@opentelemetry/api@1.9.0))(@tanstack/query-core@5.85.9)
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -88,7 +88,7 @@ importers:
         version: 4.1.0
       drizzle-orm:
         specifier: ^0.44.5
-        version: 0.44.5(@types/pg@8.15.5)(@upstash/redis@1.35.3)(bun-types@1.2.13)(kysely@0.28.5)(pg@8.16.3)(sqlite3@5.1.7)
+        version: 0.44.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(@upstash/redis@1.35.3)(bun-types@1.2.13)(kysely@0.28.5)(pg@8.16.3)(sqlite3@5.1.7)
       es-toolkit:
         specifier: ^1.39.10
         version: 1.39.10
@@ -109,16 +109,16 @@ importers:
         version: 5.1.5
       next:
         specifier: ^15.5.2
-        version: 15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       next-intl:
         specifier: ^4.3.5
-        version: 4.3.5(next@15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2)
+        version: 4.3.5(next@15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       nuqs:
         specifier: ^2.5.2
-        version: 2.5.2(next@15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)
+        version: 2.5.2(next@15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)
       ofetch:
         specifier: ^1.4.1
         version: 1.4.1
@@ -152,12 +152,12 @@ importers:
       react-intersection-observer:
         specifier: ^9.16.0
         version: 9.16.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      react-use-websocket:
+        specifier: ^4.13.0
+        version: 4.13.0
       recharts:
         specifier: ^3.1.2
         version: 3.1.2(@types/react@19.1.12)(react-dom@19.1.1(react@19.1.1))(react-is@18.3.1)(react@19.1.1)(redux@5.0.1)
-      reconnecting-websocket:
-        specifier: ^4.4.0
-        version: 4.4.0
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -1419,6 +1419,10 @@ packages:
     resolution: {integrity: sha512-1SUf/Cg2GzGDyaf15aR9St9TWlb+XvbZXWpDx8YKs7MLzMH/BCeopv+y9vzrzgkfykCGuWOlSu3mZhj2+FQcrg==}
     engines: {node: '>=10'}
     deprecated: This functionality has been moved to @npmcli/fs
+
+  '@opentelemetry/api@1.9.0':
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
 
   '@orpc/client@1.8.6':
     resolution: {integrity: sha512-DsQnmyh1tARlIdQfotasZYFnuYiOkohA3sZo3EpEYifAC4d0w7W/ctE1yDqX9U0Pb5zfTci+Y1B/6PURQvefXQ==}
@@ -5002,6 +5006,9 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1
 
+  react-use-websocket@4.13.0:
+    resolution: {integrity: sha512-anMuVoV//g2N76Wxqvqjjo1X48r9Np3y1/gMl7arX84tAPXdy5R7sB5lO5hvCzQRYjqXwV8XMAiEBOUbyrZFrw==}
+
   react@19.1.1:
     resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
     engines: {node: '>=0.10.0'}
@@ -5032,9 +5039,6 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-is: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
-  reconnecting-websocket@4.4.0:
-    resolution: {integrity: sha512-D2E33ceRPga0NvTDhJmphEgJ7FUYF0v4lr1ki0csq06OdlxKfugGzN0dSkxM/NfqCxYELK4KcaTOUOjTV6Dcng==}
 
   redaxios@0.5.1:
     resolution: {integrity: sha512-FSD2AmfdbkYwl7KDExYQlVvIrFz6Yd83pGfaGjBzM9F6rpq8g652Q4Yq5QD4c+nf4g2AgeElv1y+8ajUPiOYMg==}
@@ -6495,11 +6499,11 @@ snapshots:
 
   '@bprogress/core@1.3.4': {}
 
-  '@bprogress/next@3.2.12(next@15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@bprogress/next@3.2.12(next@15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
       '@bprogress/core': 1.3.4
       '@bprogress/react': 1.2.7(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      next: 15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      next: 15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
@@ -7465,19 +7469,22 @@ snapshots:
       rimraf: 3.0.2
     optional: true
 
-  '@orpc/client@1.8.6':
+  '@opentelemetry/api@1.9.0':
+    optional: true
+
+  '@orpc/client@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@orpc/shared': 1.8.6
-      '@orpc/standard-server': 1.8.6
-      '@orpc/standard-server-fetch': 1.8.6
-      '@orpc/standard-server-peer': 1.8.6
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-fetch': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-peer': 1.8.6(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/contract@1.8.6':
+  '@orpc/contract@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@orpc/client': 1.8.6
-      '@orpc/shared': 1.8.6
+      '@orpc/client': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
       '@standard-schema/spec': 1.0.0
       openapi-types: 12.1.3
     transitivePeerDependencies:
@@ -7485,17 +7492,17 @@ snapshots:
 
   '@orpc/interop@1.8.6': {}
 
-  '@orpc/server@1.8.6(crossws@0.3.5)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
+  '@orpc/server@1.8.6(@opentelemetry/api@1.9.0)(crossws@0.3.5)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
     dependencies:
-      '@orpc/client': 1.8.6
-      '@orpc/contract': 1.8.6
+      '@orpc/client': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/contract': 1.8.6(@opentelemetry/api@1.9.0)
       '@orpc/interop': 1.8.6
-      '@orpc/shared': 1.8.6
-      '@orpc/standard-server': 1.8.6
-      '@orpc/standard-server-aws-lambda': 1.8.6
-      '@orpc/standard-server-fetch': 1.8.6
-      '@orpc/standard-server-node': 1.8.6
-      '@orpc/standard-server-peer': 1.8.6
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-aws-lambda': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-fetch': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-node': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-peer': 1.8.6(@opentelemetry/api@1.9.0)
       cookie: 1.0.2
     optionalDependencies:
       crossws: 0.3.5
@@ -7503,52 +7510,54 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/shared@1.8.6':
+  '@orpc/shared@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
       radash: 12.1.1
       type-fest: 4.41.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.0
 
-  '@orpc/standard-server-aws-lambda@1.8.6':
+  '@orpc/standard-server-aws-lambda@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@orpc/shared': 1.8.6
-      '@orpc/standard-server': 1.8.6
-      '@orpc/standard-server-fetch': 1.8.6
-      '@orpc/standard-server-node': 1.8.6
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-fetch': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-node': 1.8.6(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/standard-server-fetch@1.8.6':
+  '@orpc/standard-server-fetch@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@orpc/shared': 1.8.6
-      '@orpc/standard-server': 1.8.6
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server': 1.8.6(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/standard-server-node@1.8.6':
+  '@orpc/standard-server-node@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@orpc/shared': 1.8.6
-      '@orpc/standard-server': 1.8.6
-      '@orpc/standard-server-fetch': 1.8.6
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server-fetch': 1.8.6(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/standard-server-peer@1.8.6':
+  '@orpc/standard-server-peer@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@orpc/shared': 1.8.6
-      '@orpc/standard-server': 1.8.6
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/standard-server': 1.8.6(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/standard-server@1.8.6':
+  '@orpc/standard-server@1.8.6(@opentelemetry/api@1.9.0)':
     dependencies:
-      '@orpc/shared': 1.8.6
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/tanstack-query@1.8.6(@orpc/client@1.8.6)(@tanstack/query-core@5.85.9)':
+  '@orpc/tanstack-query@1.8.6(@opentelemetry/api@1.9.0)(@orpc/client@1.8.6(@opentelemetry/api@1.9.0))(@tanstack/query-core@5.85.9)':
     dependencies:
-      '@orpc/client': 1.8.6
-      '@orpc/shared': 1.8.6
+      '@orpc/client': 1.8.6(@opentelemetry/api@1.9.0)
+      '@orpc/shared': 1.8.6(@opentelemetry/api@1.9.0)
       '@tanstack/query-core': 5.85.9
     transitivePeerDependencies:
       - '@opentelemetry/api'
@@ -11586,8 +11595,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.5(@types/pg@8.15.5)(@upstash/redis@1.35.3)(bun-types@1.2.13)(kysely@0.28.5)(pg@8.16.3)(sqlite3@5.1.7):
+  drizzle-orm@0.44.5(@opentelemetry/api@1.9.0)(@types/pg@8.15.5)(@upstash/redis@1.35.3)(bun-types@1.2.13)(kysely@0.28.5)(pg@8.16.3)(sqlite3@5.1.7):
     optionalDependencies:
+      '@opentelemetry/api': 1.9.0
       '@types/pg': 8.15.5
       '@upstash/redis': 1.35.3
       bun-types: 1.2.13
@@ -12479,11 +12489,11 @@ snapshots:
 
   netmask@2.0.2: {}
 
-  next-intl@4.3.5(next@15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2):
+  next-intl@4.3.5(next@15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)(typescript@5.9.2):
     dependencies:
       '@formatjs/intl-localematcher': 0.5.10
       negotiator: 1.0.0
-      next: 15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      next: 15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       use-intl: 4.3.5(react@19.1.1)
     optionalDependencies:
@@ -12494,7 +12504,7 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  next@15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  next@15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@next/env': 15.5.2
       '@swc/helpers': 0.5.15
@@ -12512,6 +12522,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 15.5.2
       '@next/swc-win32-arm64-msvc': 15.5.2
       '@next/swc-win32-x64-msvc': 15.5.2
+      '@opentelemetry/api': 1.9.0
       babel-plugin-react-compiler: 19.1.0-rc.3
       sharp: 0.34.3
     transitivePeerDependencies:
@@ -12576,12 +12587,12 @@ snapshots:
       set-blocking: 2.0.0
     optional: true
 
-  nuqs@2.5.2(next@15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1):
+  nuqs@2.5.2(next@15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1):
     dependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.1.1
     optionalDependencies:
-      next: 15.5.2(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      next: 15.5.2(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.1.0-rc.3)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
 
   obj-multiplex@1.0.0:
     dependencies:
@@ -13137,6 +13148,8 @@ snapshots:
       '@react-types/shared': 3.32.0(react@19.1.1)
       react: 19.1.1
 
+  react-use-websocket@4.13.0: {}
+
   react@19.1.1: {}
 
   readable-stream@2.3.8:
@@ -13186,8 +13199,6 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
       - redux
-
-  reconnecting-websocket@4.4.0: {}
 
   redaxios@0.5.1: {}
 
