@@ -1,7 +1,7 @@
 "use client";
 
 import { IconChevronLeft } from "@intentui/icons";
-import { use, useMemo, useRef } from "react";
+import { use, useEffect, useRef } from "react";
 import type {
   DisclosureGroupProps as AccordionProps,
   ButtonProps,
@@ -92,31 +92,36 @@ const DisclosureTrigger = ({ className, ref, ...props }: DisclosureTriggerProps)
 interface DisclosurePanelProps extends DisclosurePanelPrimitiveProps {
   ref?: React.Ref<HTMLDivElement>;
 }
-const DisclosurePanel = ({ className, ref, style, ...props }: DisclosurePanelProps) => {
+const DisclosurePanel = ({ className, ref, ...props }: DisclosurePanelProps) => {
   const { isExpanded } = use(DisclosureStateContext)!;
-  const panelRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-  const isSafari = useMemo(() => {
-    if (typeof navigator === "undefined") return false;
-    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        el.parentElement?.style.setProperty(
+          "--disclosure-height",
+          `${entry.target.clientHeight}px`,
+        );
+      }
+    });
+    ro.observe(el);
+    return () => ro.unobserve(el);
   }, []);
-
   return (
     <CollapsiblePanel
       ref={ref}
       data-slot="disclosure-panel"
-      style={{
-        height: !isSafari ? (isExpanded ? panelRef?.current?.scrollHeight : 0) : undefined,
-        ...style,
-      }}
       className={composeTailwindRenderProps(className, [
-        "text-muted-fg **:data-[slot=disclosure-group]:border-t **:data-[slot=disclosure-group]:**:[.internal-chevron]:hidden has-data-[slot=disclosure-group]:**:[button]:px-4",
-        !isSafari && "overflow-hidden transition-[height] duration-200 ease-in-out",
+        "overflow-hidden text-muted-fg **:data-[slot=disclosure-group]:border-t **:data-[slot=disclosure-group]:**:[.internal-chevron]:hidden has-data-[slot=disclosure-group]:**:[button]:px-4",
+        isExpanded ? "animate-disclosure-expanded" : "animate-disclosure-collapsed",
       ])}
       {...props}
     >
       <div
-        ref={panelRef}
+        ref={contentRef}
         data-slot="disclosure-panel-content"
         className="text-pretty pt-0 pb-3 text-sm/6 not-has-data-[slot=disclosure-group]:group-data-expanded/disclosure:pb-3 [&:has([data-slot=disclosure-group])_&]:px-11"
       >

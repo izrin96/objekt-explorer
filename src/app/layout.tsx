@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
+import { Geist_Mono, Inter, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import ClientProviders from "@/components/client-providers";
 import "./globals.css";
@@ -16,6 +16,13 @@ import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
 
 const inter = Inter({
   variable: "--font-inter",
+  display: "swap",
+  subsets: ["latin"],
+  weight: "variable",
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   display: "swap",
   subsets: ["latin"],
   weight: "variable",
@@ -76,7 +83,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${pretendard.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
+      className={`${inter.variable} ${geistMono.variable} ${pretendard.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
     >
       <body
         className={cn(
