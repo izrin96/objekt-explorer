@@ -10,7 +10,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
-import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 import { env } from "@/env";
@@ -20,6 +20,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import { cn } from "@/utils/classes";
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
 import ObjektModal from "../objekt/objekt-modal";
@@ -314,7 +315,7 @@ function Activity() {
   );
 }
 
-const ActivityRow = memo(function ActivityRow({
+function ActivityRow({
   item,
   open,
   style,
@@ -349,11 +350,10 @@ const ActivityRow = memo(function ActivityRow({
   return (
     <div className="absolute top-0 left-0 grid h-[42px] w-full" style={style}>
       <div
-        className={`${
-          isNew
-            ? "slide-in-from-top animate-in duration-200 ease-out-quint *:animate-live-animation-bg"
-            : ""
-        }`}
+        className={cn(
+          isNew &&
+            "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
+        )}
       >
         <div className="flex w-full items-center border-b">
           <div className="min-w-[120px] flex-1 px-3 py-2.5">
@@ -393,4 +393,4 @@ const ActivityRow = memo(function ActivityRow({
       </div>
     </div>
   );
-});
+}

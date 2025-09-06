@@ -110,7 +110,7 @@
 
   @keyframes live-animation-bg {
     0% {
-      background-color: var(--muted);
+      background-color: var(--secondary);
     }
     to {
       background-color: initial;
