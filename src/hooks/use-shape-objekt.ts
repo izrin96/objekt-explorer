@@ -2,27 +2,29 @@ import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 import {
   classSort,
-  compareMember,
   filterObjekts,
   type ObjektItem,
   seasonSort,
   sortDuplicate,
-  sortObjekts,
 } from "@/lib/filter-utils";
 import type { PinObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { checkFiltering, useFilters } from "./use-filters";
+import { useCompareMember } from "./use-objekt-compare-member";
+import { useObjektSort } from "./use-objekt-sort";
 
-export function useShapeObjekts<T extends ValidObjekt>() {
+export function useShapeObjekts() {
   const [filters] = useFilters();
   const { artists, getArtist } = useCosmoArtist();
+  const compareMember = useCompareMember();
+  const sortObjekts = useObjektSort();
 
   return useCallback(
     (
-      objekts: T[],
+      objekts: ValidObjekt[],
       pins: PinObjekt[] = [],
       lockedObjekts: PinObjekt[] = [],
-    ): [string, ObjektItem<T[]>[]][] => {
+    ): [string, ObjektItem<ValidObjekt[]>[]][] => {
       // 1. filter all
       // 2. group by key
       // 3. sort the group
@@ -36,7 +38,7 @@ export function useShapeObjekts<T extends ValidObjekt>() {
       const fliteredObjekts = filterObjekts(filters, objekts);
 
       // group by key
-      let groupByKey: Record<string, T[]>;
+      let groupByKey: Record<string, ValidObjekt[]>;
       if (filters.group_by) {
         groupByKey = groupBy(fliteredObjekts, (objekt) => {
           return filters.group_by === "seasonCollectionNo"
@@ -53,9 +55,7 @@ export function useShapeObjekts<T extends ValidObjekt>() {
       const groupDir = filters.group_dir ?? "desc";
       const groupByKeySorted = Object.entries(groupByKey).toSorted(([keyA], [keyB]) => {
         if (filters.group_by === "member") {
-          return groupDir === "asc"
-            ? compareMember(keyA, keyB, artists)
-            : compareMember(keyB, keyA, artists);
+          return groupDir === "asc" ? compareMember(keyA, keyB) : compareMember(keyB, keyA);
         }
 
         if (filters.group_by === "class") {
@@ -72,10 +72,10 @@ export function useShapeObjekts<T extends ValidObjekt>() {
 
       return groupByKeySorted.map(([key, keyObjekts]) => {
         // sort objekts
-        const sortedObjekts = sortObjekts(filters, keyObjekts, artists);
+        const sortedObjekts = sortObjekts(keyObjekts);
 
         // group by duplicate
-        let group: T[][];
+        let group: ValidObjekt[][];
         if (filters.grouped) {
           group = Object.values(groupBy(sortedObjekts, (a) => a.collectionId));
         } else {
@@ -86,7 +86,7 @@ export function useShapeObjekts<T extends ValidObjekt>() {
         const sortedDuplicateObjekts = sortDuplicate(filters, group);
 
         // map T[] to ObjektItem<T[]>
-        let items: ObjektItem<T[]>[] = sortedDuplicateObjekts.map((objekts) => {
+        let items: ObjektItem<ValidObjekt[]>[] = sortedDuplicateObjekts.map((objekts) => {
           const [objekt] = objekts;
           const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
           const lockedObjekt = lockedObjekts.find((lock) => lock.tokenId === objekt.id);
@@ -123,6 +123,6 @@ export function useShapeObjekts<T extends ValidObjekt>() {
         return [key, items];
       });
     },
-    [filters, artists, getArtist],
+    [filters, artists, getArtist, compareMember, sortObjekts],
   );
 }

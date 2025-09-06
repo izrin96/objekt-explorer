@@ -1,17 +1,19 @@
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
-import { classSort, compareMember, filterObjekts, seasonSort } from "@/lib/filter-utils";
+import { classSort, filterObjekts, seasonSort } from "@/lib/filter-utils";
 import { validGroupBy } from "@/lib/universal/cosmo/common";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
+import { useCompareMember } from "./use-objekt-compare-member";
 
-export function useShapeProgress<T extends ValidObjekt>() {
+export function useShapeProgress() {
   const [filters] = useFilters();
   const { artists, getArtist } = useCosmoArtist();
+  const compareMember = useCompareMember();
 
   return useCallback(
-    (data: T[]): [string, T[]][] => {
+    (data: ValidObjekt[]): [string, ValidObjekt[]][] => {
       let objekts = data;
 
       objekts = filterObjekts(filters, objekts).filter(
@@ -43,19 +45,17 @@ export function useShapeProgress<T extends ValidObjekt>() {
             groupBys.includes("season") ? seasonSort(objektB.season, objektA.season) : 0,
           )
           .toSorted(([, [objektA]], [, [objektB]]) =>
-            groupBys.includes("member")
-              ? compareMember(objektA.member, objektB.member, artists)
-              : 0,
+            groupBys.includes("member") ? compareMember(objektA.member, objektB.member) : 0,
           )
           .map(([key, objekts]) => [
             key,
             objekts
-              .toSorted((a, b) => compareMember(a.member, b.member, artists))
+              .toSorted((a, b) => compareMember(a.member, b.member))
               .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
               .toSorted((a, b) => seasonSort(b.season, a.season)),
           ])
       );
     },
-    [filters, artists, getArtist],
+    [filters, artists, getArtist, compareMember],
   );
 }

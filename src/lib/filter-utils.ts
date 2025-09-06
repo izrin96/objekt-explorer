@@ -6,7 +6,6 @@ import {
   validClasses,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import type { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import type { ValidObjekt } from "./universal/objekts";
 import { getEdition } from "./utils";
 
@@ -92,13 +91,13 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
   return objekt.tags?.some((value) => value.toLowerCase() === keyword);
 }
 
-function getSortDate<T extends ValidObjekt>(obj: T) {
+export function getSortDate(obj: ValidObjekt) {
   return "receivedAt" in obj
     ? new Date(obj.receivedAt).getTime()
     : new Date(obj.createdAt).getTime();
 }
 
-export function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: T[]): T[] {
+export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidObjekt[] {
   const queries = (filters.search ?? "")
     .toLowerCase()
     .split(",")
@@ -169,73 +168,7 @@ export function filterObjekts<T extends ValidObjekt>(filters: Filters, objekts: 
   });
 }
 
-function defaultSortObjekts<T extends ValidObjekt>(
-  data: T[],
-  artists: CosmoArtistWithMembersBFF[],
-) {
-  let objekts = data;
-
-  // default sort and season sort
-  objekts = objekts
-    .toSorted((a, b) => compareMember(a.member, b.member, artists))
-    .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
-    .toSorted((a, b) => seasonSort(b.season, a.season));
-  return objekts;
-}
-
-export function sortObjekts<T extends ValidObjekt>(
-  filters: Filters,
-  data: T[],
-  artists: CosmoArtistWithMembersBFF[],
-) {
-  // default sort and season sort
-  let objekts = defaultSortObjekts(data, artists);
-
-  const sort = filters.sort ?? "date";
-  const sortDir = filters.sort_dir ?? "desc";
-
-  if (sort === "date") {
-    if (sortDir === "desc") {
-      objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
-    } else {
-      objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
-    }
-  } else if (sort === "season") {
-    // for desc, use default
-    if (sortDir === "asc") {
-      // sort by season -> collectionNo
-      objekts = objekts
-        .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-        .toSorted((a, b) => seasonSort(a.season, b.season));
-    }
-  } else if (sort === "collectionNo") {
-    if (sortDir === "desc") {
-      objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
-    } else {
-      objekts = objekts.toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo));
-    }
-  } else if (sort === "serial") {
-    if (sortDir === "desc") {
-      objekts = objekts.toSorted((a, b) =>
-        "serial" in a && "serial" in b ? b.serial - a.serial : 0,
-      );
-    } else {
-      objekts = objekts.toSorted((a, b) =>
-        "serial" in a && "serial" in b ? a.serial - b.serial : 0,
-      );
-    }
-  } else if (sort === "member") {
-    objekts = objekts.toSorted((a, b) => {
-      return sortDir === "asc"
-        ? compareMember(a.member, b.member, artists)
-        : compareMember(b.member, a.member, artists);
-    });
-  }
-
-  return objekts;
-}
-
-export function sortDuplicate<T extends ValidObjekt>(filters: Filters, data: T[][]) {
+export function sortDuplicate(filters: Filters, data: ValidObjekt[][]) {
   const sort = filters.sort ?? "date";
   const sortDir = filters.sort_dir ?? "desc";
 
@@ -247,22 +180,6 @@ export function sortDuplicate<T extends ValidObjekt>(filters: Filters, data: T[]
   }
 
   return objekts;
-}
-
-export function compareMember(
-  memberA: string,
-  memberB: string,
-  artists: CosmoArtistWithMembersBFF[],
-) {
-  const memberOrderA =
-    artists.flatMap((a) => a.artistMembers).find((member) => member.name === memberA)?.order ??
-    Infinity;
-
-  const memberOrderB =
-    artists.flatMap((a) => a.artistMembers).find((member) => member.name === memberB)?.order ??
-    Infinity;
-
-  return memberOrderA - memberOrderB;
 }
 
 export function compareByArray<T>(valid: readonly T[], a: T, b: T) {
