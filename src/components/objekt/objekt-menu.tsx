@@ -27,7 +27,7 @@ import { Button, Loader, Menu } from "../ui";
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
     <Menu>
-      <Button className="absolute top-1 right-10 z-50 p-2 sm:top-2" size="sq-xs" intent="outline">
+      <Button className="absolute top-1 right-10 z-50 p-2 sm:top-2" size="xs" intent="outline">
         <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
       <Menu.Content placement="bottom right">{children}</Menu.Content>

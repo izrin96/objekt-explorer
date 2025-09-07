@@ -38,8 +38,7 @@ export default function ObjektView({
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
-    "--outline-width": `${width * 0.03}px`,
-    "--radius-width": `${width * 0.054}px`,
+    "--width": `${width}px`,
   } as CSSProperties;
 
   const resizedUrl = useMemo(() => replaceUrlSize(objekt.frontImage), [objekt.frontImage]);
@@ -50,8 +49,8 @@ export default function ObjektView({
         style={css}
         ref={ref}
         className={cn(
-          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-(--radius-width) drop-shadow transition-all",
-          isSelected && "outline-(length:--outline-width) bg-fg",
+          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] drop-shadow transition-all",
+          isSelected && "bg-fg outline-[calc(var(--width)*0.03)]",
           !loaded && "opacity-0",
         )}
       >

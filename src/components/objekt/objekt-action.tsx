@@ -24,7 +24,7 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   const objektSelect = useObjektSelect((a) => a.select);
   return (
     <Button
-      size="sq-xs"
+      size="xs"
       intent="plain"
       className={cn("hidden bg-bg/80 px-2 text-fg group-hover:block", isSelected && "block")}
       onClick={() => objektSelect(objekt)}
@@ -64,7 +64,7 @@ export function ObjektTogglePin({
   const unpin = useBatchUnpin();
   return (
     <Button
-      size="sq-xs"
+      size="xs"
       intent="plain"
       className="bg-bg/80"
       onClick={() => {
@@ -101,7 +101,7 @@ export function ObjektToggleLock({
   const unlock = useBatchUnlock();
   return (
     <Button
-      size="sq-xs"
+      size="xs"
       intent="plain"
       className="bg-bg/80"
       onClick={() => {
@@ -129,7 +129,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
   return (
     <Menu>
       <Button
-        size="sq-xs"
+        size="xs"
         intent="plain"
         className="hidden bg-bg/80 px-2 text-fg group-hover:block data-pressed:block"
       >

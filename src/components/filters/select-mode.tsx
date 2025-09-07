@@ -82,7 +82,7 @@ export function FloatingSelectMode({ children }: Props) {
         >
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Tooltip delay={0} closeDelay={0}>
-              <Button size="sq-sm" intent="outline" onClick={reset}>
+              <Button size="sm" intent="outline" onClick={reset}>
                 <XIcon size={18} weight="regular" />
               </Button>
               <Tooltip.Content inverse>Clear selection</Tooltip.Content>
@@ -90,7 +90,7 @@ export function FloatingSelectMode({ children }: Props) {
             <Tooltip delay={0} closeDelay={0}>
               <Toggle
                 isSelected={mode}
-                size="sq-sm"
+                size="sm"
                 intent="outline"
                 onClick={toggleMode}
                 className={mode ? "!inset-ring-primary" : ""}

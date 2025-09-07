@@ -405,7 +405,7 @@
   --font-sans: var(--font-nunito);
 }
 
-@utility touch-target {
+/* @utility touch-target {
   position: relative;
   &::before {
     content: "";
@@ -420,7 +420,7 @@
     min-width: 44px;
     z-index: 9999;
   }
-}
+} */
 
 @layer base {
   *,

@@ -20,13 +20,7 @@ import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { AddToList } from "../list/modal/manage-objekt";
-import {
-  ObjektHoverMenu,
-  ObjektOverlay,
-  ObjektSelect,
-  ObjektToggleLock,
-  ObjektTogglePin,
-} from "../objekt/objekt-action";
+import { ObjektHoverMenu, ObjektOverlay, ObjektSelect } from "../objekt/objekt-action";
 import {
   AddToListMenu,
   ObjektStaticMenu,
@@ -177,7 +171,7 @@ function ProfileObjekt() {
                             </div>
                           )}
                           <ObjektOverlay isPin={item.isPin} isLocked={item.isLocked} />
-                          {isProfileAuthed && isOwned && (
+                          {/* {isProfileAuthed && isOwned && (
                             <div className="absolute top-0 left-0 hidden group-hover:flex">
                               <ObjektTogglePin
                                 isPin={item.isPin}
@@ -190,7 +184,7 @@ function ProfileObjekt() {
                                 tokenId={objekt.id}
                               />
                             </div>
-                          )}
+                          )} */}
                         </ObjektView>
                       )}
                     </ObjektViewSelectable>

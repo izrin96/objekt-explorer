@@ -33,8 +33,22 @@ export default function Changelog() {
           </Modal.Description>
         </Modal.Header>
         <Modal.Body>
-          <DisclosureGroup defaultExpandedKeys="1">
-            <Disclosure id="1">
+          <DisclosureGroup defaultExpandedKeys="3">
+            <Disclosure id="3">
+              <DisclosureTrigger>2025-09-08</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>Improve scroll performance</li>
+                    <li>
+                      Remove objekt action (pin/lock) when hover an objekt in your linked profile to
+                      prevent accidental click for desktop user. Use 'triple dots' menu instead.
+                    </li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
+            <Disclosure id="2">
               <DisclosureTrigger>2025-08-27</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
@@ -48,7 +62,7 @@ export default function Changelog() {
                 </div>
               </DisclosurePanel>
             </Disclosure>
-            <Disclosure id="2">
+            <Disclosure id="1">
               <DisclosureTrigger>2025-08-25</DisclosureTrigger>
               <DisclosurePanel>
                 <div className="prose text-fg text-sm">
