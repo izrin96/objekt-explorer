@@ -405,7 +405,7 @@
   --font-sans: var(--font-nunito);
 }
 
-@utility touch-hitbox {
+@utility touch-target {
   position: relative;
   &::before {
     content: "";
