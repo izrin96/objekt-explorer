@@ -84,7 +84,7 @@ function LinkCard({ link }: LinkCardProps) {
 
         <div className="flex items-center">
           <Menu>
-            <Button intent="outline" size="xs">
+            <Button intent="outline" size="sq-xs">
               <IconDotsVertical />
             </Button>
             <Menu.Content className="sm:min-w-56">

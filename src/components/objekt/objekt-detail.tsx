@@ -246,7 +246,7 @@ function OwnedListPanel({
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
           <Button
-            size="md"
+            size="sq-md"
             intent="outline"
             isDisabled={currentPage <= 1}
             onClick={() => setCurrentPage(currentPage - 1)}
@@ -257,7 +257,7 @@ function OwnedListPanel({
             {currentPage} / {totalPages}
           </span>
           <Button
-            size="md"
+            size="sq-md"
             intent="outline"
             isDisabled={currentPage >= totalPages}
             onClick={() => setCurrentPage(currentPage + 1)}

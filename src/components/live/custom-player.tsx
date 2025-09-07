@@ -80,7 +80,7 @@ function LiveControl() {
       <LiveDuration />
       <ParticipantCounter />
       <LiveVolumeControl />
-      <Button intent="outline" size="sm" onClick={toggleFullscreen}>
+      <Button intent="outline" size="sq-sm" onClick={toggleFullscreen}>
         <CornersOutIcon />
       </Button>
     </>
@@ -93,7 +93,7 @@ function LiveVolumeControl() {
   const { speaker } = useSpeakerState();
   return (
     <Popover>
-      <Button size="sm" intent="outline">
+      <Button size="sq-sm" intent="outline">
         <SpeakerHighIcon />
       </Button>
       <Popover.Content className="m-4 min-w-0 p-4">

@@ -124,7 +124,7 @@ function Trades({
           </FieldGroup>
         </NumberFieldPrimitive>
         <Button
-          size="md"
+          size="sq-md"
           intent="outline"
           className="flex-none"
           onClick={() => updateSerial("first")}
@@ -132,7 +132,7 @@ function Trades({
           <CaretLineLeftIcon />
         </Button>
         <Button
-          size="md"
+          size="sq-md"
           intent="outline"
           className="flex-none"
           onClick={() => updateSerial("prev")}
@@ -140,7 +140,7 @@ function Trades({
           <CaretLeftIcon />
         </Button>
         <Button
-          size="md"
+          size="sq-md"
           intent="outline"
           className="flex-none"
           onClick={() => updateSerial("next")}
@@ -148,7 +148,7 @@ function Trades({
           <CaretRightIcon />
         </Button>
         <Button
-          size="md"
+          size="sq-md"
           intent="outline"
           className="flex-none"
           onClick={() => updateSerial("last")}
