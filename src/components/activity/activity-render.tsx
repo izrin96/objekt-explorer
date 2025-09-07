@@ -249,9 +249,9 @@ function Activity() {
             <div className="min-w-[120px] flex-1 px-3 py-2.5">Event</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">Objekt</div>
             <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
-            <div className="min-w-[200px] flex-1 px-3 py-2.5">From</div>
-            <div className="min-w-[200px] flex-1 px-3 py-2.5">To</div>
-            <div className="min-w-[280px] flex-1 px-3 py-2.5">Time</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">From</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">To</div>
+            <div className="min-w-[250px] flex-1 px-3 py-2.5">Time</div>
           </div>
 
           <ObjektModal objekts={currentObjekt}>
@@ -384,9 +384,9 @@ function ActivityRow({
             {item.objekt.collectionId}
           </div>
           <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
-          <div className="min-w-[200px] flex-1 px-3 py-2.5">{from}</div>
-          <div className="min-w-[200px] flex-1 px-3 py-2.5">{to}</div>
-          <div className="min-w-[280px] flex-1 px-3 py-2.5">
+          <div className="min-w-[300px] flex-1 px-3 py-2.5">{from}</div>
+          <div className="min-w-[300px] flex-1 px-3 py-2.5">{to}</div>
+          <div className="min-w-[250px] flex-1 px-3 py-2.5">
             {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
           </div>
         </div>
