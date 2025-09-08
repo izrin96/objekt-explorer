@@ -115,9 +115,9 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
           data={chartData}
           dataKey="count"
           config={{} satisfies ChartConfig}
-          className="mx-auto aspect-square max-h-[450px]"
+          className="aspect-square h-full max-h-[450px] w-full"
         >
-          <PieChart>
+          <PieChart className="aspect-square h-full max-h-[450px] w-full">
             <ChartTooltip
               cursor={false}
               content={
@@ -198,9 +198,9 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
           data={chartData}
           dataKey="count"
           config={{} satisfies ChartConfig}
-          className="mx-auto aspect-square max-h-[450px]"
+          className="aspect-square h-full max-h-[450px] w-full"
         >
-          <PieChart>
+          <PieChart className="aspect-square h-full max-h-[450px] w-full">
             <ChartTooltip
               cursor={false}
               content={
