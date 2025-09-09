@@ -27,6 +27,7 @@ COPY public ./public
 COPY messages ./messages
 COPY drizzle ./drizzle
 COPY tsconfig.json postcss.config.mjs next.config.ts .
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
 
 # Next.js collects completely anonymous telemetry data about general usage.
 # Learn more here: https://nextjs.org/telemetry
