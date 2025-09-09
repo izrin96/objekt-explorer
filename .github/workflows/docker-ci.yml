@@ -33,6 +33,7 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64
           tags: ghcr.io/${{ github.repository }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -76,3 +77,4 @@ jobs:
           package-type: container
           min-versions-to-keep: 0
           delete-only-untagged-versions: true
+          num-old-versions-to-delete: 100
