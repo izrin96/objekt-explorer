@@ -75,4 +75,5 @@ jobs:
         with:
           package-name: ${{ github.event.repository.name }}
           package-type: container
-          num-old-versions-to-delete: 100
+          min-versions-to-keep: 0
+          delete-only-untagged-versions: true
