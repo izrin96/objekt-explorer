@@ -66,14 +66,14 @@ jobs:
             privy_app_secret=${{ secrets.PRIVY_APP_SECRET }}
             privy_abs_app_id=${{ secrets.PRIVY_ABS_APP_ID }}
 
-  # cleanup:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #     - name: Delete untagged images from GHCR
-  #       uses: actions/delete-package-versions@v5
-  #       with:
-  #         package-name: ${{ github.event.repository.name }}
-  #         package-type: container
-  #         min-versions-to-keep: 0
-  #         delete-only-untagged-versions: true
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Delete untagged images from GHCR
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.event.repository.name }}
+          package-type: container
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: true
