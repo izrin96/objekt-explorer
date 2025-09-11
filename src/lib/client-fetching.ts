@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { fetchList } from "./server/api/routers/list";
 import { fetchUserByIdentifier } from "./server/auth";
 import { fetchLiveSession } from "./server/cosmo/live";
 import { getAccessToken } from "./server/token";
@@ -30,4 +31,4 @@ export const getSelectedArtists = cache(async () => {
   }
 });
 
-export const setSelectedArtists = cache(async () => {});
+export const getList = cache(fetchList);

@@ -6,7 +6,7 @@ import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/components/profile-provider";
 import { Container } from "@/components/ui";
 import { getUserByIdentifier } from "@/lib/client-fetching";
-import { cachedSession, toPublicUser } from "@/lib/server/auth";
+import { getSession, toPublicUser } from "@/lib/server/auth";
 import { fetchUserProfiles } from "@/lib/server/profile";
 
 type Props = PropsWithChildren<{
@@ -16,7 +16,7 @@ type Props = PropsWithChildren<{
 }>;
 
 export default async function UserCollectionLayout(props: Props) {
-  const [session, params] = await Promise.all([cachedSession(), props.params]);
+  const [session, params] = await Promise.all([getSession(), props.params]);
   const [targetUser, profiles] = await Promise.all([
     getUserByIdentifier(params.nickname),
     session ? fetchUserProfiles(session.user.id) : undefined,

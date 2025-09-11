@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import LinkRender from "@/components/link/link-process";
 import NextAbstractWalletProvider from "@/components/NextAbstractWalletProvider";
-import { cachedSession } from "@/lib/server/auth";
+import { getSession } from "@/lib/server/auth";
 
 export default async function Page() {
-  const session = await cachedSession();
+  const session = await getSession();
 
   if (!session) redirect("/");
 

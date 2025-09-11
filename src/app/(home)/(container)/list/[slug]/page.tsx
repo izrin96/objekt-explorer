@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
-import { getSelectedArtists } from "@/lib/client-fetching";
+import { getList, getSelectedArtists } from "@/lib/client-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
-import { fetchList, fetchOwnedLists } from "@/lib/server/api/routers/list";
-import { cachedSession, toPublicUser } from "@/lib/server/auth";
+import { fetchOwnedLists } from "@/lib/server/api/routers/list";
+import { getSession, toPublicUser } from "@/lib/server/auth";
 
 type Props = {
   params: Promise<{
@@ -17,7 +17,7 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const data = await fetchList(params.slug);
+  const data = await getList(params.slug);
   if (!data) notFound();
   return {
     title: `${data.name}${data.user ? ` · ${data.user.name}'s` : ""} List`,
@@ -28,10 +28,10 @@ export default async function Page(props: Props) {
   const queryClient = getQueryClient();
   const params = await props.params;
 
-  const list = await fetchList(params.slug);
+  const list = await getList(params.slug);
   if (!list) notFound();
 
-  const [session, selectedArtistIds] = await Promise.all([cachedSession(), getSelectedArtists()]);
+  const [session, selectedArtistIds] = await Promise.all([getSession(), getSelectedArtists()]);
 
   const lists = session ? await fetchOwnedLists(session.user.id) : undefined;
 

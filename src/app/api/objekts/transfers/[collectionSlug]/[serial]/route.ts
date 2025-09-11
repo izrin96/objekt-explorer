@@ -1,5 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
-import { cachedSession } from "@/lib/server/auth";
+import { getSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
@@ -14,7 +14,7 @@ type Params = {
 };
 
 export async function GET(_: Request, props: Params) {
-  const [session, params] = await Promise.all([cachedSession(), props.params]);
+  const [session, params] = await Promise.all([getSession(), props.params]);
 
   const results = await indexer
     .select({

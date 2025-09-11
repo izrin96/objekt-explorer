@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
-import { cachedSession } from "@/lib/server/auth";
+import { getSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
@@ -25,7 +25,7 @@ const cursorSchema = z
   .optional();
 
 export async function GET(request: NextRequest, props: { params: Promise<{ address: string }> }) {
-  const [session, params] = await Promise.all([cachedSession(), props.params]);
+  const [session, params] = await Promise.all([getSession(), props.params]);
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
   const cursor = cursorSchema.parse(

@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import MyLinkRender from "@/components/link/my-link";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
-import { cachedSession } from "@/lib/server/auth";
+import { getSession } from "@/lib/server/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const queryClient = getQueryClient();
-  const [session, t] = await Promise.all([cachedSession(), getTranslations("link")]);
+  const [session, t] = await Promise.all([getSession(), getTranslations("link")]);
 
   if (!session) redirect("/");
 

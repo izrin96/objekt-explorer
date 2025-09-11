@@ -131,7 +131,7 @@ export const auth = betterAuth({
   },
 });
 
-export const cachedSession = cache(async () =>
+export const getSession = cache(async () =>
   auth.api.getSession({
     headers: await headers(),
   }),
