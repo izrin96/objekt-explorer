@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useMediaQuery } from "usehooks-ts";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -37,23 +37,29 @@ export const useBreakpointColumnStore = create<BreakpointColumnState>()(
 );
 
 export function useBreakpointColumn() {
-  const { columns, _hasHydrated, setColumns, initial } = useBreakpointColumnStore();
+  const _hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
+  const setColumns = useBreakpointColumnStore((a) => a.setColumns);
+  const initial = useBreakpointColumnStore((a) => a.initial);
   const isTablet = useMediaQuery("(min-width: 640px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const isFirst = useRef(true);
 
+  const newColumns = useMemo(() => {
+    return isDesktop ? GRID_COLUMNS : isTablet ? GRID_COLUMNS_TABLET : GRID_COLUMNS_MOBILE;
+  }, [isDesktop, isTablet]);
+
+  // listen to window size
+  useEffect(() => {
+    if (isFirst.current) {
+      isFirst.current = false;
+      return;
+    }
+    setColumns(newColumns);
+  }, [newColumns, setColumns]);
+
+  // set columns for first time user
   useEffect(() => {
     if (!_hasHydrated || !initial) return;
-
-    const newColumns = isDesktop
-      ? GRID_COLUMNS
-      : isTablet
-        ? GRID_COLUMNS_TABLET
-        : GRID_COLUMNS_MOBILE;
     setColumns(newColumns);
-  }, [isDesktop, isTablet, setColumns, _hasHydrated, initial]);
-
-  return {
-    columns,
-    setColumns,
-  };
+  }, [initial, setColumns, newColumns, _hasHydrated]);
 }

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Suspense, useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
-import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
+import { useBreakpointColumnStore } from "@/hooks/use-breakpoint-column";
 import { useCollectionObjekts } from "@/hooks/use-collection-objekt";
 import { useConfigStore } from "@/hooks/use-config";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
@@ -56,7 +56,7 @@ function IndexRender() {
 function IndexView() {
   const { authenticated } = useUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { columns } = useBreakpointColumn();
+  const columns = useBreakpointColumnStore((a) => a.columns);
   const objekts = useCollectionObjekts();
   const deferredObjekts = useDeferredValue(objekts);
 

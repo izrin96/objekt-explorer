@@ -4,7 +4,7 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
-import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
+import { useBreakpointColumnStore } from "@/hooks/use-breakpoint-column";
 import { useConfigStore } from "@/hooks/use-config";
 import { useFilters } from "@/hooks/use-filters";
 import { useListObjekts } from "@/hooks/use-list-objekt";
@@ -52,7 +52,7 @@ function ListView({ slug }: Props) {
   const isOwned = useListAuthed(slug);
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { columns } = useBreakpointColumn();
+  const columns = useBreakpointColumnStore((a) => a.columns);
   const objekts = useListObjekts(slug);
   const deferredObjekts = useDeferredValue(objekts);
 

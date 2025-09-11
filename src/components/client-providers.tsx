@@ -8,6 +8,7 @@ import { type PropsWithChildren, useState } from "react";
 import { RouterProvider } from "react-aria-components";
 import { preconnect, prefetchDNS } from "react-dom";
 import { ThemeProvider } from "@/components/theme-provider";
+import { useBreakpointColumn } from "@/hooks/use-breakpoint-column";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { createQueryClient } from "@/lib/query/client";
 import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
@@ -39,6 +40,8 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
   prefetchDNS("https://umami.objekt.top");
   preconnect("https://resources.cosmo.fans");
   prefetchDNS("https://resources.cosmo.fans");
+
+  useBreakpointColumn();
 
   return (
     <ProgressProvider
