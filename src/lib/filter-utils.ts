@@ -168,20 +168,6 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
   });
 }
 
-export function sortDuplicate(filters: Filters, data: ValidObjekt[][]) {
-  const sort = filters.sort ?? "date";
-  const sortDir = filters.sort_dir ?? "desc";
-
-  let objekts = data;
-
-  if (sort === "duplicate") {
-    if (sortDir === "desc") objekts = objekts.toSorted((a, b) => b.length - a.length);
-    else objekts = objekts.toSorted((a, b) => a.length - b.length);
-  }
-
-  return objekts;
-}
-
 export function compareByArray<T>(valid: readonly T[], a: T, b: T) {
   const posA = valid.indexOf(a);
   const posB = valid.indexOf(b);

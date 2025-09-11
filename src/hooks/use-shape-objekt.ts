@@ -1,12 +1,6 @@
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
-import {
-  classSort,
-  filterObjekts,
-  type ObjektItem,
-  seasonSort,
-  sortDuplicate,
-} from "@/lib/filter-utils";
+import { classSort, filterObjekts, type ObjektItem, seasonSort } from "@/lib/filter-utils";
 import type { PinObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { checkFiltering, useFilters } from "./use-filters";
@@ -83,10 +77,16 @@ export function useShapeObjekts() {
         }
 
         // sort duplicate objekts
-        const sortedDuplicateObjekts = sortDuplicate(filters, group);
+        if (filters.sort === "duplicate") {
+          if (filters.sort_dir === "asc") {
+            group = group.toSorted((a, b) => a.length - b.length);
+          } else {
+            group = group.toSorted((a, b) => b.length - a.length);
+          }
+        }
 
         // map T[] to ObjektItem<T[]>
-        let items: ObjektItem<ValidObjekt[]>[] = sortedDuplicateObjekts.map((objekts) => {
+        let items: ObjektItem<ValidObjekt[]>[] = group.map((objekts) => {
           const [objekt] = objekts;
           const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
           const lockedObjekt = lockedObjekts.find((lock) => lock.tokenId === objekt.id);

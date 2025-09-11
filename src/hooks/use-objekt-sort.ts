@@ -10,11 +10,7 @@ export function useObjektSort() {
 
   return useCallback(
     (data: ValidObjekt[]) => {
-      // default sort and season sort
-      let objekts = data
-        .toSorted((a, b) => compareMember(a.member, b.member))
-        .toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo))
-        .toSorted((a, b) => seasonSort(b.season, a.season));
+      let objekts = data;
 
       const sort = filters.sort ?? "date";
       const sortDir = filters.sort_dir ?? "desc";
@@ -25,19 +21,20 @@ export function useObjektSort() {
         } else {
           objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
         }
-      } else if (sort === "season") {
-        // for desc, use default
+      } else if (sort === "season" || sort === "collectionNo") {
+        // default to member sort (ascending)
+        objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
+
         if (sortDir === "asc") {
-          // sort by season -> collectionNo
-          objekts = objekts
-            .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-            .toSorted((a, b) => seasonSort(a.season, b.season));
-        }
-      } else if (sort === "collectionNo") {
-        if (sortDir === "desc") {
-          objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
-        } else {
           objekts = objekts.toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo));
+          if (sort === "season") {
+            objekts = objekts.toSorted((a, b) => seasonSort(a.season, b.season));
+          }
+        } else {
+          objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
+          if (sort === "season") {
+            objekts = objekts.toSorted((a, b) => seasonSort(b.season, a.season));
+          }
         }
       } else if (sort === "serial") {
         if (sortDir === "desc") {
@@ -50,11 +47,16 @@ export function useObjektSort() {
           );
         }
       } else if (sort === "member") {
-        objekts = objekts.toSorted((a, b) => {
-          return sortDir === "asc"
-            ? compareMember(a.member, b.member)
-            : compareMember(b.member, a.member);
-        });
+        // default to season sort (ascending)
+        objekts = objekts
+          .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+          .toSorted((a, b) => seasonSort(a.season, b.season));
+
+        if (sortDir === "asc") {
+          objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
+        } else {
+          objekts = objekts.toSorted((a, b) => compareMember(b.member, a.member));
+        }
       }
 
       return objekts;
