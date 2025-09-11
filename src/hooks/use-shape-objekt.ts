@@ -3,12 +3,13 @@ import { useCallback } from "react";
 import { classSort, filterObjekts, type ObjektItem, seasonSort } from "@/lib/filter-utils";
 import type { PinObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
-import { checkFiltering, useFilters } from "./use-filters";
+import { useFilters, useIsFiltering } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
 import { useObjektSort } from "./use-objekt-sort";
 
 export function useShapeObjekts() {
   const [filters] = useFilters();
+  const isFiltering = useIsFiltering();
   const { artists, getArtist } = useCosmoArtist();
   const compareMember = useCompareMember();
   const sortObjekts = useObjektSort();
@@ -102,7 +103,6 @@ export function useShapeObjekts() {
 
         if (pins.length > 0) {
           // if not filtering, pins should show first
-          const isFiltering = checkFiltering(filters);
           if (!isFiltering && !filters.hidePin) {
             items = [
               ...items
@@ -123,6 +123,6 @@ export function useShapeObjekts() {
         return [key, items];
       });
     },
-    [filters, artists, getArtist, compareMember, sortObjekts],
+    [filters, isFiltering, artists, getArtist, compareMember, sortObjekts],
   );
 }

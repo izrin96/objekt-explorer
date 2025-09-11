@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { checkFiltering, useFilters } from "@/hooks/use-filters";
+import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
@@ -28,8 +28,7 @@ import { GenerateDiscordFormatModal } from "./modal/generate-discord";
 
 export default function Filter() {
   const reset = useResetFilters();
-  const [filters] = useFilters();
-  const isFiltering = checkFiltering(filters);
+  const isFiltering = useIsFiltering();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">

@@ -37,15 +37,12 @@ export const useBreakpointColumnStore = create<BreakpointColumnState>()(
 );
 
 export function useBreakpointColumn() {
-  const columns = useBreakpointColumnStore((a) => a.columns);
-  const hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
-  const setColumns = useBreakpointColumnStore((a) => a.setColumns);
-  const initial = useBreakpointColumnStore((a) => a.initial);
+  const { columns, _hasHydrated, setColumns, initial } = useBreakpointColumnStore();
   const isTablet = useMediaQuery("(min-width: 640px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   useEffect(() => {
-    if (!hasHydrated || !initial) return;
+    if (!_hasHydrated || !initial) return;
 
     const newColumns = isDesktop
       ? GRID_COLUMNS
@@ -53,7 +50,7 @@ export function useBreakpointColumn() {
         ? GRID_COLUMNS_TABLET
         : GRID_COLUMNS_MOBILE;
     setColumns(newColumns);
-  }, [isDesktop, isTablet, setColumns, hasHydrated, initial]);
+  }, [isDesktop, isTablet, setColumns, _hasHydrated, initial]);
 
   return {
     columns,

@@ -54,10 +54,10 @@ export type Filters = ReturnType<typeof useFilters>[0];
 
 export function useIsFiltering() {
   const [filters] = useFilters();
-  return checkFiltering(filters);
+  return isFiltering(filters);
 }
 
-export function checkFiltering(filters: Filters) {
+function isFiltering(filters: Filters) {
   return (
     filters.member !== null ||
     filters.artist !== null ||
