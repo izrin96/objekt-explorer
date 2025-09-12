@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "@bprogress/next/app";
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { useTarget } from "@/hooks/use-target";
@@ -56,18 +55,10 @@ export default function ListHeader() {
 }
 
 function EditList({ slug }: { slug: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   return (
     <>
-      <EditListModal
-        slug={slug}
-        onComplete={() => {
-          router.refresh();
-        }}
-        open={open}
-        setOpen={setOpen}
-      />
+      <EditListModal slug={slug} open={open} setOpen={setOpen} />
       <Button
         size="sm"
         intent="outline"

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type PropsWithChildren, useContext, useRef } from "react";
+import { createContext, type PropsWithChildren, useContext, useEffect, useRef } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import type { PublicList, PublicProfile } from "@/lib/universal/user";
 
@@ -32,6 +32,11 @@ export function TargetProvider({ children, ...props }: ProviderProps) {
   if (!storeRef.current) {
     storeRef.current = createTargetStore(props);
   }
+
+  useEffect(() => {
+    storeRef.current?.setState(props);
+  }, [props]);
+
   return <TargetContext value={storeRef.current}>{children}</TargetContext>;
 }
 

@@ -13,6 +13,7 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
+import type { PublicProfile } from "@/lib/universal/user";
 import { SPIN_ADDRESS } from "@/lib/utils";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -43,7 +44,7 @@ export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileO
 function ProfileObjektRender() {
   const profile = useTarget((a) => a.profile)!;
   return (
-    <ObjektColumnProvider>
+    <ObjektColumnProvider initialColumn={profile.gridColumns}>
       <ObjektSelectProvider>
         <ObjektModalProvider initialTab="owned">
           <QueryErrorResetBoundary>
@@ -66,7 +67,7 @@ function ProfileObjektRender() {
                     </div>
                   }
                 >
-                  <ProfileObjekt />
+                  <ProfileObjekt profile={profile} />
                 </Suspense>
               </ErrorBoundary>
             )}
@@ -77,10 +78,9 @@ function ProfileObjektRender() {
   );
 }
 
-function ProfileObjekt() {
+function ProfileObjekt({ profile }: { profile: PublicProfile }) {
   const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
-  const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();

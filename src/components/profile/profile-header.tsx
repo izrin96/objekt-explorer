@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "@bprogress/next/app";
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { useProfileAuthed } from "@/hooks/use-user";
@@ -12,7 +11,6 @@ import { Avatar, Button, buttonStyles, Link } from "../ui";
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
-  const router = useRouter();
   const nickname = parseNickname(user.address, user.nickname);
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
@@ -41,9 +39,6 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           <EditProfileModal
             address={user.address}
             nickname={nickname}
-            onComplete={() => {
-              router.refresh();
-            }}
             open={editOpen}
             setOpen={setEditOpen}
           />

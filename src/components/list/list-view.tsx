@@ -12,6 +12,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed, useUser } from "@/hooks/use-user";
+import type { PublicList } from "@/lib/universal/user";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
@@ -31,14 +32,15 @@ import Filter from "./filter";
 import { AddToList, RemoveFromList } from "./modal/manage-objekt";
 
 export default function ListRender() {
+  const list = useTarget((a) => a.list)!;
   return (
-    <ObjektColumnProvider>
+    <ObjektColumnProvider initialColumn={list.gridColumns}>
       <ObjektSelectProvider>
         <ObjektModalProvider initialTab="trades">
           <QueryErrorResetBoundary>
             {({ reset }) => (
               <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <ListView />
+                <ListView list={list} />
               </ErrorBoundary>
             )}
           </QueryErrorResetBoundary>
@@ -48,8 +50,7 @@ export default function ListRender() {
   );
 }
 
-function ListView() {
-  const list = useTarget((a) => a.list)!;
+function ListView({ list }: { list: PublicList }) {
   const { authenticated } = useUser();
   const isOwned = useListAuthed(list.slug);
   const [filters] = useFilters();

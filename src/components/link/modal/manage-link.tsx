@@ -21,6 +21,7 @@ import {
   Link,
   Loader,
   Modal,
+  Select,
   SheetBody,
   SheetClose,
   SheetContent,
@@ -30,8 +31,9 @@ import {
   SheetTitle,
 } from "@/components/ui";
 import { orpc } from "@/lib/orpc/client";
-import { mimeTypes } from "@/lib/utils";
+import { mimeTypes, validColumns } from "@/lib/utils";
 import "react-advanced-cropper/dist/style.css";
+import { useRouter } from "next/navigation";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -83,36 +85,24 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
 type EditProfileModalProps = {
   nickname: string;
   address: string;
-  onComplete?: () => void;
   open: boolean;
   setOpen: (val: boolean) => void;
 };
 
-export function EditProfileModal({
-  nickname,
-  address,
-  onComplete,
-  open,
-  setOpen,
-}: EditProfileModalProps) {
-  const queryClient = useQueryClient();
+export function EditProfileModal({ nickname, address, open, setOpen }: EditProfileModalProps) {
   const formRef = useRef<HTMLFormElement>(null!);
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
+  const router = useRouter();
 
   const edit = useMutation(
     orpc.profile.edit.mutationOptions({
       onSuccess: () => {
         setOpen(false);
         setDroppedImage(null);
-        queryClient.invalidateQueries({
-          queryKey: orpc.profile.find.key({
-            input: address,
-          }),
-        });
-        onComplete?.();
         toast.success("Cosmo profile updated");
+        router.refresh();
       },
       onError: () => {
         toast.error("Error edit Cosmo profile");
@@ -200,6 +190,7 @@ export function EditProfileModal({
             const privateProfile = formData.get("privateProfile") === "on";
             const hideNickname = formData.get("hideNickname") === "on";
             const hideTransfer = formData.get("hideTransfer") === "on";
+            const gridColumns = Number(formData.get("gridColumns") as string);
 
             if (droppedImage && !removeBanner) {
               const croppedFile = await generateCroppedImage();
@@ -223,6 +214,7 @@ export function EditProfileModal({
                         privateProfile,
                         hideNickname,
                         hideTransfer,
+                        gridColumns: gridColumns === 0 ? null : gridColumns,
                       });
                     });
                   },
@@ -240,6 +232,7 @@ export function EditProfileModal({
               privateProfile,
               hideNickname,
               hideTransfer,
+              gridColumns: gridColumns === 0 ? null : gridColumns,
             });
           }}
         >
@@ -387,6 +380,28 @@ function EditProfileForm({
         description="Make your Cosmo profile private. Only you can see it."
         defaultSelected={data.privateProfile ?? false}
       />
+
+      <Select
+        aria-label="Objekt Columns"
+        placeholder="Objekt Columns"
+        label="Objekt Columns"
+        description="Number of columns to use on visit. Only apply for screen size >640px. Visitor are still allowed to change to any columns they want. Pro tips: can also override using query params (?column=)."
+        defaultSelectedKey={`${data.gridColumns ?? 0}`}
+        name="gridColumns"
+      >
+        <Select.Trigger className="w-[150px]" />
+        <Select.List>
+          {[
+            { id: 0, name: "Not set" },
+            ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
+          ].map((item) => (
+            <Select.Option key={item.id} id={`${item.id}`} textValue={item.name}>
+              {item.name}
+            </Select.Option>
+          ))}
+        </Select.List>
+      </Select>
+
       <div className="group flex flex-col gap-y-2">
         <Label>Banner Image</Label>
         <FileTrigger

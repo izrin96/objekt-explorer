@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { useMediaQuery } from "usehooks-ts";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET } from "@/lib/utils";
+import { GRID_COLUMNS } from "@/lib/utils";
 
 type BreakpointColumnState = {
   columns: number;
@@ -35,32 +33,3 @@ export const useBreakpointColumnStore = create<BreakpointColumnState>()(
     },
   ),
 );
-
-export function useBreakpointColumnEffect() {
-  const _hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
-  const setColumns = useBreakpointColumnStore((a) => a.setColumns);
-  const initial = useBreakpointColumnStore((a) => a.initial);
-  const isTablet = useMediaQuery("(min-width: 640px)");
-  const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const isFirst = useRef(true);
-
-  const responsiveColumn = useMemo(() => {
-    return isDesktop ? GRID_COLUMNS : isTablet ? GRID_COLUMNS_TABLET : GRID_COLUMNS_MOBILE;
-  }, [isDesktop, isTablet]);
-
-  return useEffect(() => {
-    if (!_hasHydrated) return;
-
-    if (isFirst.current) {
-      // first time user or force by user decision
-      if (initial) {
-        setColumns(responsiveColumn);
-      }
-      isFirst.current = false;
-      return;
-    }
-
-    // apply based on responsive
-    setColumns(responsiveColumn);
-  }, [_hasHydrated, initial, responsiveColumn, setColumns]);
-}

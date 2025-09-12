@@ -20,6 +20,7 @@ export const listRouter = {
       columns: {
         name: true,
         hideUser: true,
+        gridColumns: true,
       },
       where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
     });
@@ -146,13 +147,14 @@ export const listRouter = {
     .input(
       z.object({
         slug: z.string(),
-        name: z.string().min(1),
-        hideUser: z.boolean(),
+        name: z.string().min(1).optional(),
+        hideUser: z.boolean().optional(),
+        gridColumns: z.number().min(2).max(12).optional().nullable(),
       }),
     )
     .handler(
       async ({
-        input: { slug, name, hideUser },
+        input: { slug, ...rest },
         context: {
           session: { user },
         },
@@ -162,8 +164,7 @@ export const listRouter = {
         await db
           .update(lists)
           .set({
-            name: name,
-            hideUser: hideUser,
+            ...rest,
           })
           .where(eq(lists.id, list.id));
       },

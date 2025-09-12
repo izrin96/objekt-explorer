@@ -33,7 +33,17 @@ export default function Changelog() {
           </Modal.Description>
         </Modal.Header>
         <Modal.Body>
-          <DisclosureGroup defaultExpandedKeys="3">
+          <DisclosureGroup defaultExpandedKeys="4">
+            <Disclosure id="4">
+              <DisclosureTrigger>2025-09-13</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="prose text-fg text-sm">
+                  <ul>
+                    <li>Added Objekt Columns setting in Edit List and Edit Profile.</li>
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
             <Disclosure id="3">
               <DisclosureTrigger>2025-09-08</DisclosureTrigger>
               <DisclosurePanel>

@@ -28,6 +28,7 @@ export const profileRouter = {
         privateProfile: z.boolean().optional(),
         hideNickname: z.boolean().optional(),
         hideTransfer: z.boolean().optional(),
+        gridColumns: z.number().min(2).max(12).optional().nullable(),
       }),
     )
     .handler(async ({ input: { address, ...rest }, context: { session } }) => {
@@ -96,6 +97,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
       privateProfile: true,
       hideNickname: true,
       hideTransfer: true,
+      gridColumns: true,
     },
     where: (q, { eq, and }) => and(eq(q.address, address), eq(q.userId, userId)),
   });

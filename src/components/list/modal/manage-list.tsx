@@ -6,6 +6,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
@@ -17,6 +18,7 @@ import {
   Link,
   Loader,
   Modal,
+  Select,
   SheetBody,
   SheetClose,
   SheetContent,
@@ -27,6 +29,7 @@ import {
   TextField,
 } from "@/components/ui";
 import { orpc } from "@/lib/orpc/client";
+import { validColumns } from "@/lib/utils";
 
 type CreateListModalProps = {
   open: boolean;
@@ -139,28 +142,19 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
 
 type EditListModalProps = {
   slug: string;
-  onComplete?: () => void;
   open: boolean;
   setOpen: (val: boolean) => void;
 };
 
-export function EditListModal({ slug, onComplete, open, setOpen }: EditListModalProps) {
-  const queryClient = useQueryClient();
+export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
+  const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null!);
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
       onSuccess: () => {
         setOpen(false);
         toast.success("List updated");
-        queryClient.invalidateQueries({
-          queryKey: orpc.list.list.key(),
-        });
-        queryClient.invalidateQueries({
-          queryKey: orpc.list.find.key({
-            input: slug,
-          }),
-        });
-        onComplete?.();
+        router.refresh();
       },
       onError: () => {
         toast.error("Error editing list");
@@ -179,10 +173,12 @@ export function EditListModal({ slug, onComplete, open, setOpen }: EditListModal
           onSubmit={async (e) => {
             e.preventDefault();
             const formData = new FormData(e.currentTarget);
+            const gridColumns = Number(formData.get("gridColumns") as string);
             editList.mutate({
               slug,
               name: formData.get("name") as string,
               hideUser: formData.get("hideUser") === "on",
+              gridColumns: gridColumns === 0 ? null : gridColumns,
             });
           }}
         >
@@ -240,6 +236,28 @@ function EditListForm({ slug }: { slug: string }) {
         description="Hide Objekt Tracker account from this list"
         defaultSelected={data.hideUser ?? false}
       />
+
+      <Select
+        aria-label="Objekt Columns"
+        placeholder="Objekt Columns"
+        label="Objekt Columns"
+        description="Number of columns to use on visit. Only apply for screen size >640px. Visitor are still allowed to change to any columns they want. Pro tips: can also override using query params (?column=)."
+        defaultSelectedKey={`${data.gridColumns ?? 0}`}
+        name="gridColumns"
+      >
+        <Select.Trigger className="w-[150px]" />
+        <Select.List>
+          {[
+            { id: 0, name: "Not set" },
+            ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
+          ].map((item) => (
+            <Select.Option key={item.id} id={`${item.id}`} textValue={item.name}>
+              {item.name}
+            </Select.Option>
+          ))}
+        </Select.List>
+      </Select>
+
       <span className="text-muted-fg text-sm">
         To delete this list, visit{" "}
         <Link href="/list" className="underline">
