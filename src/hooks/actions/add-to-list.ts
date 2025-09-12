@@ -15,12 +15,10 @@ export function useAddToList() {
         //   }),
         // });
 
-        queryClient.setQueryData(
-          orpc.list.listEntries.queryKey({ input: { slug } }),
-          (old = []) => {
-            return [...rows, ...old];
-          },
-        );
+        queryClient.setQueryData(orpc.list.listEntries.queryKey({ input: { slug } }), (old) => {
+          if (old === undefined) return;
+          return [...rows, ...old];
+        });
 
         toast.success(`${rows.length} objekt added to the list`, {
           duration: 1300,
