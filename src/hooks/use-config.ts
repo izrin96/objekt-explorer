@@ -6,6 +6,8 @@ import { persist } from "zustand/middleware";
 type ConfigState = {
   hideLabel: boolean;
   setHideLabel: (value: boolean) => void;
+  wide: boolean;
+  setWide: (value: boolean) => void;
 };
 
 export const useConfigStore = create<ConfigState>()(
@@ -16,6 +18,8 @@ export const useConfigStore = create<ConfigState>()(
         set({
           hideLabel: value,
         }),
+      wide: false,
+      setWide: (value: boolean) => set({ wide: value }),
     }),
     {
       name: "config",

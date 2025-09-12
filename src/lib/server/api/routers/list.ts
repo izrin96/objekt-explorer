@@ -149,7 +149,7 @@ export const listRouter = {
         slug: z.string(),
         name: z.string().min(1).optional(),
         hideUser: z.boolean().optional(),
-        gridColumns: z.number().min(2).max(12).optional().nullable(),
+        gridColumns: z.number().min(2).max(18).optional().nullable(),
       }),
     )
     .handler(

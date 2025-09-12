@@ -385,7 +385,7 @@ function EditProfileForm({
         aria-label="Objekt Columns"
         placeholder="Objekt Columns"
         label="Objekt Columns"
-        description="Number of columns to use on visit. Only apply for screen size >640px. Visitor are still allowed to change to any columns they want. Pro tips: can also override using query params (?column=)."
+        description="Number of columns to use on visit. Only apply for screen size >640px. Visitor are still allowed to change to any columns they want. Pro tips: can also override using query params (?column=7)."
         defaultSelectedKey={`${data.gridColumns ?? 0}`}
         name="gridColumns"
       >

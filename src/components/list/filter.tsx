@@ -17,6 +17,7 @@ import SearchFilter from "../filters/filter-search";
 import SeasonFilter from "../filters/filter-season";
 import SortFilter from "../filters/filter-sort";
 import SortDirectionFilter from "../filters/filter-sort-direction";
+import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
 
 export default function Filter() {
@@ -40,6 +41,7 @@ export default function Filter() {
       </div>
       <div className="flex flex-wrap gap-2">
         <HideLabelFilter />
+        <WideFilter />
         <ColumnFilter />
         <SearchFilter />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />

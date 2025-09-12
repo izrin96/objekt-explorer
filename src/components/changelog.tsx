@@ -40,6 +40,7 @@ export default function Changelog() {
                 <div className="prose text-fg text-sm">
                   <ul>
                     <li>Added Objekt Columns setting in Edit List and Edit Profile.</li>
+                    <li>Added Wide/Compact layout toggle button.</li>
                   </ul>
                 </div>
               </DisclosurePanel>

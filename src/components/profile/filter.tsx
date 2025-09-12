@@ -22,6 +22,7 @@ import SortFilter from "../filters/filter-sort";
 import SortDirectionFilter from "../filters/filter-sort-direction";
 import TransferableFilter from "../filters/filter-transferable";
 import UnownedFilter from "../filters/filter-unowned";
+import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
 import { Button } from "../ui";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
@@ -51,6 +52,7 @@ export default function Filter() {
         <LockedFilter />
         <UnownedFilter />
         <HideLabelFilter />
+        <WideFilter />
         <ColumnFilter />
         <SearchFilter />
         <GenerateDiscordFormat />

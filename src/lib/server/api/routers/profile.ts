@@ -28,7 +28,7 @@ export const profileRouter = {
         privateProfile: z.boolean().optional(),
         hideNickname: z.boolean().optional(),
         hideTransfer: z.boolean().optional(),
-        gridColumns: z.number().min(2).max(12).optional().nullable(),
+        gridColumns: z.number().min(2).max(18).optional().nullable(),
       }),
     )
     .handler(async ({ input: { address, ...rest }, context: { session } }) => {
