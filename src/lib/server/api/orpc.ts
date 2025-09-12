@@ -1,6 +1,7 @@
 import { os } from "@orpc/server";
 import { headers } from "next/headers";
 import { auth, type Session } from "../auth";
+import { parseSelectedArtists } from "../cookie";
 
 const requiredAuthMiddleware = os
   .$context<{ session?: Session; headers?: Headers }>()
@@ -22,6 +23,13 @@ const requiredAuthMiddleware = os
     });
   });
 
-export const pub = os;
+const selectedArtistsMiddleware = os.middleware(async ({ next }) => {
+  const artists = await parseSelectedArtists();
+  return next({
+    context: { artists },
+  });
+});
+
+export const pub = os.use(selectedArtistsMiddleware);
 
 export const authed = pub.use(requiredAuthMiddleware);

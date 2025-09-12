@@ -1,11 +1,10 @@
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { fetchList } from "./server/api/routers/list";
 import { fetchUserByIdentifier } from "./server/auth";
+import { parseSelectedArtists } from "./server/cookie";
 import { fetchLiveSession } from "./server/cosmo/live";
 import { getAccessToken } from "./server/token";
-import type { ValidArtist } from "./universal/cosmo/common";
 
 export const getUserByIdentifier = cache(async (identifier: string) => {
   const user = await fetchUserByIdentifier(identifier);
@@ -18,17 +17,6 @@ export const getLiveSession = cache(async (id: string) => {
   return await fetchLiveSession(accessToken.accessToken, id);
 });
 
-export const getSelectedArtists = cache(async () => {
-  const cookie = await cookies();
-  const value = cookie.get("artists")?.value;
-
-  if (value === undefined) return [];
-
-  try {
-    return JSON.parse(value) as ValidArtist[];
-  } catch {
-    return [];
-  }
-});
+export const getSelectedArtists = cache(parseSelectedArtists);
 
 export const getList = cache(fetchList);

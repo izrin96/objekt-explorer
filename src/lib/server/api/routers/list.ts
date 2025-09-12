@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod/v4";
 import type { Outputs } from "@/lib/orpc/server";
-import { type ValidArtist, validArtists } from "@/lib/universal/cosmo/common";
+import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { overrideCollection } from "@/lib/universal/objekts";
 import type { PublicList } from "@/lib/universal/user";
 import { mapPublicUser } from "../../auth";
@@ -34,10 +34,9 @@ export const listRouter = {
     .input(
       z.object({
         slug: z.string(),
-        artists: z.array(z.enum(validArtists)),
       }),
     )
-    .handler(async ({ input: { slug, artists } }) => {
+    .handler(async ({ input: { slug }, context: { artists } }) => {
       const result = await db.query.lists.findFirst({
         with: {
           entries: {
@@ -76,6 +75,7 @@ export const listRouter = {
         input: { slug, skipDups, collectionSlugs },
         context: {
           session: { user },
+          artists,
         },
       }) => {
         const list = await findOwnedList(slug, user.id);
@@ -94,28 +94,40 @@ export const listRouter = {
           const existingSlugs = new Set(entries.map((a) => a.slug));
           const filtered = uniqueCollectionSlugs.filter((slug) => !existingSlugs.has(slug));
 
-          if (filtered.length === 0) return 0;
+          if (filtered.length === 0) return [];
 
-          const result = await db.insert(listEntries).values(
-            filtered.map((collectionSlug) => ({
+          const result = await db
+            .insert(listEntries)
+            .values(
+              filtered.map((collectionSlug) => ({
+                listId: list.id,
+                collectionSlug: collectionSlug,
+              })),
+            )
+            .returning();
+
+          return mapEntriesCollection(
+            result.toSorted((a, b) => b.id - a.id),
+            artists,
+          );
+        }
+
+        if (collectionSlugs.length === 0) return [];
+
+        const result = await db
+          .insert(listEntries)
+          .values(
+            collectionSlugs.map((collectionSlug) => ({
               listId: list.id,
               collectionSlug: collectionSlug,
             })),
-          );
+          )
+          .returning();
 
-          return result.rowCount ?? 0;
-        }
-
-        if (collectionSlugs.length === 0) return 0;
-
-        const result = await db.insert(listEntries).values(
-          collectionSlugs.map((collectionSlug) => ({
-            listId: list.id,
-            collectionSlug: collectionSlug,
-          })),
+        return mapEntriesCollection(
+          result.toSorted((a, b) => b.id - a.id),
+          artists,
         );
-
-        return result.rowCount ?? 0;
       },
     ),
 

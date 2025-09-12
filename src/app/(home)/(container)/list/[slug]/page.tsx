@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
-import { getList, getSelectedArtists } from "@/lib/client-fetching";
+import { getList } from "@/lib/client-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchOwnedLists } from "@/lib/server/api/routers/list";
@@ -31,7 +31,7 @@ export default async function Page(props: Props) {
   const list = await getList(params.slug);
   if (!list) notFound();
 
-  const [session, selectedArtistIds] = await Promise.all([getSession(), getSelectedArtists()]);
+  const session = await getSession();
 
   const lists = session ? await fetchOwnedLists(session.user.id) : undefined;
 
@@ -39,7 +39,6 @@ export default async function Page(props: Props) {
     orpc.list.listEntries.queryOptions({
       input: {
         slug: params.slug,
-        artists: selectedArtistIds,
       },
     }),
   );
