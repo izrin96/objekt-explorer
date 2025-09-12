@@ -21,7 +21,7 @@ import {
   TextField,
 } from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
-import type { Session } from "@/lib/server/auth";
+import type { User } from "@/lib/server/auth";
 import { ListAccounts } from "./link-account";
 
 type Props = {
@@ -86,13 +86,7 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
   );
 }
 
-function UserAccountForm({
-  user,
-  setOpen,
-}: {
-  user: Session["user"];
-  setOpen: (val: boolean) => void;
-}) {
+function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean) => void }) {
   const router = useRouter();
 
   const mutation = useMutation({

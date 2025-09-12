@@ -60,17 +60,20 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         returned: true,
+        input: false,
       },
       twitter: {
         type: "string",
         required: false,
         returned: true,
+        input: false,
       },
       showSocial: {
         type: "boolean",
         required: false,
         defaultValue: false,
         returned: true,
+        input: true,
       },
     },
     deleteUser: {
@@ -151,6 +154,7 @@ export async function fetchUserByIdentifier(
       hideUser: true,
       privateProfile: true,
       hideNickname: true,
+      gridColumns: true,
     },
     with: {
       user: {
@@ -171,8 +175,12 @@ export async function fetchUserByIdentifier(
 
   if (cachedUser) {
     return {
-      ...cachedUser,
+      address: cachedUser.address,
       nickname: cachedUser.hideNickname ? null : cachedUser.nickname,
+      bannerImgType: cachedUser.bannerImgType,
+      bannerImgUrl: cachedUser.bannerImgUrl,
+      privateProfile: cachedUser.privateProfile,
+      gridColumns: cachedUser.gridColumns,
       user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
     };
   }

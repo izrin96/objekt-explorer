@@ -5,6 +5,7 @@ import { z } from "zod/v4";
 import type { Outputs } from "@/lib/orpc/server";
 import { type ValidArtist, validArtists } from "@/lib/universal/cosmo/common";
 import { overrideCollection } from "@/lib/universal/objekts";
+import type { PublicList } from "@/lib/universal/user";
 import { mapPublicUser } from "../../auth";
 import { db } from "../../db";
 import { indexer } from "../../db/indexer";
@@ -260,12 +261,13 @@ export const listRouter = {
 
 export type ListEntriesOutput = Outputs["list"]["listEntries"];
 
-export async function fetchList(slug: string) {
+export async function fetchList(slug: string): Promise<PublicList | null> {
   const result = await db.query.lists.findFirst({
     columns: {
       slug: true,
       name: true,
       hideUser: true,
+      gridColumns: true,
     },
     with: {
       user: {
@@ -286,7 +288,9 @@ export async function fetchList(slug: string) {
   if (!result) return null;
 
   return {
-    ...result,
+    name: result.name,
+    slug: result.slug,
+    gridColumns: result.gridColumns,
     user: result.hideUser ? null : mapPublicUser(result.user),
   };
 }

@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 import { Suspense, useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
-import { useBreakpointColumnStore } from "@/hooks/use-breakpoint-column";
 import { useConfigStore } from "@/hooks/use-config";
 import { useFilters } from "@/hooks/use-filters";
+import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
@@ -43,35 +43,37 @@ export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileO
 function ProfileObjektRender() {
   const profile = useTarget((a) => a.profile)!;
   return (
-    <ObjektSelectProvider>
-      <ObjektModalProvider initialTab="owned">
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex flex-col items-center gap-4">
-                    {profile.address.toLowerCase() === SPIN_ADDRESS && (
-                      <Note intent="danger" className="w-fit">
-                        Loading cosmo-spin objekts may take some time because it loads the entire
-                        collection at once. Please use{" "}
-                        <Link href="https://apollo.cafe/@cosmo-spin">Apollo</Link> for faster
-                        loading.
-                      </Note>
-                    )}
-                    <div className="flex justify-center">
-                      <Loader variant="ring" />
+    <ObjektColumnProvider>
+      <ObjektSelectProvider>
+        <ObjektModalProvider initialTab="owned">
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                <Suspense
+                  fallback={
+                    <div className="flex flex-col items-center gap-4">
+                      {profile.address.toLowerCase() === SPIN_ADDRESS && (
+                        <Note intent="danger" className="w-fit">
+                          Loading cosmo-spin objekts may take some time because it loads the entire
+                          collection at once. Please use{" "}
+                          <Link href="https://apollo.cafe/@cosmo-spin">Apollo</Link> for faster
+                          loading.
+                        </Note>
+                      )}
+                      <div className="flex justify-center">
+                        <Loader variant="ring" />
+                      </div>
                     </div>
-                  </div>
-                }
-              >
-                <ProfileObjekt />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
-      </ObjektModalProvider>
-    </ObjektSelectProvider>
+                  }
+                >
+                  <ProfileObjekt />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        </ObjektModalProvider>
+      </ObjektSelectProvider>
+    </ObjektColumnProvider>
   );
 }
 
@@ -81,7 +83,7 @@ function ProfileObjekt() {
   const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const columns = useBreakpointColumnStore((a) => a.columns);
+  const { columns } = useObjektColumn();
   const objekts = useProfileObjekts();
   const deferredObjekts = useDeferredValue(objekts);
 

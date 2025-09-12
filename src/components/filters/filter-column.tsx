@@ -1,14 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useBreakpointColumnStore } from "@/hooks/use-breakpoint-column";
+import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { validColumns } from "@/lib/utils";
 import { Select } from "../ui";
 
 export default function ColumnFilter() {
   const t = useTranslations("filter");
-  const columns = useBreakpointColumnStore((a) => a.columns);
-  const setColumns = useBreakpointColumnStore((a) => a.setColumns);
+  const { columns, setColumns } = useObjektColumn();
 
   return (
     <Select

@@ -1,15 +1,17 @@
-import type { Session } from "../server/auth";
-import type { List, UserAddress } from "../server/db/schema";
+import type { User } from "../server/auth";
 
-export type ProfileAddress = Pick<UserAddress, "address"> & Partial<Pick<UserAddress, "nickname">>;
-
-export type PublicProfile = ProfileAddress &
-  Partial<Pick<UserAddress, "bannerImgUrl" | "bannerImgType" | "privateProfile">> & {
-    user?: PublicUser | null;
-  };
+export type PublicProfile = {
+  address: string;
+  nickname?: string | null;
+  bannerImgUrl?: string | null;
+  bannerImgType?: string | null;
+  privateProfile?: boolean | null;
+  gridColumns?: number | null;
+  user?: PublicUser | null;
+};
 
 export type PublicUser = Pick<
-  Session["user"],
+  User,
   "name" | "image" | "username" | "discord" | "twitter" | "displayUsername" | "showSocial"
 >;
 
@@ -30,6 +32,9 @@ export const providersMap: Record<ProviderId, Provider> = {
   },
 };
 
-export type PublicList = Pick<List, "slug" | "name"> & {
+export type PublicList = {
+  slug: string;
+  name: string;
+  gridColumns?: number | null;
   user?: PublicUser | null;
 };

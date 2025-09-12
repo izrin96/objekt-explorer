@@ -36,7 +36,7 @@ export const useBreakpointColumnStore = create<BreakpointColumnState>()(
   ),
 );
 
-export function useBreakpointColumn() {
+export function useBreakpointColumnEffect() {
   const _hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
   const setColumns = useBreakpointColumnStore((a) => a.setColumns);
   const initial = useBreakpointColumnStore((a) => a.initial);
@@ -44,22 +44,23 @@ export function useBreakpointColumn() {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const isFirst = useRef(true);
 
-  const newColumns = useMemo(() => {
+  const responsiveColumn = useMemo(() => {
     return isDesktop ? GRID_COLUMNS : isTablet ? GRID_COLUMNS_TABLET : GRID_COLUMNS_MOBILE;
   }, [isDesktop, isTablet]);
 
-  // listen to window size
-  useEffect(() => {
+  return useEffect(() => {
+    if (!_hasHydrated) return;
+
     if (isFirst.current) {
+      // first time user or force by user decision
+      if (initial) {
+        setColumns(responsiveColumn);
+      }
       isFirst.current = false;
       return;
     }
-    setColumns(newColumns);
-  }, [newColumns, setColumns]);
 
-  // set columns for first time user
-  useEffect(() => {
-    if (!_hasHydrated || !initial) return;
-    setColumns(newColumns);
-  }, [initial, setColumns, newColumns, _hasHydrated]);
+    // apply based on responsive
+    setColumns(responsiveColumn);
+  }, [_hasHydrated, initial, responsiveColumn, setColumns]);
 }

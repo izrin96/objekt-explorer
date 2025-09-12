@@ -4,12 +4,13 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
-import { useBreakpointColumnStore } from "@/hooks/use-breakpoint-column";
 import { useConfigStore } from "@/hooks/use-config";
 import { useFilters } from "@/hooks/use-filters";
 import { useListObjekts } from "@/hooks/use-list-objekt";
+import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
+import { useTarget } from "@/hooks/use-target";
 import { useListAuthed, useUser } from "@/hooks/use-user";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -29,31 +30,32 @@ import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
 import { AddToList, RemoveFromList } from "./modal/manage-objekt";
 
-type Props = { slug: string };
-
-export default function ListRender(props: Props) {
+export default function ListRender() {
   return (
-    <ObjektSelectProvider>
-      <ObjektModalProvider initialTab="trades">
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <ListView {...props} />
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
-      </ObjektModalProvider>
-    </ObjektSelectProvider>
+    <ObjektColumnProvider>
+      <ObjektSelectProvider>
+        <ObjektModalProvider initialTab="trades">
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                <ListView />
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        </ObjektModalProvider>
+      </ObjektSelectProvider>
+    </ObjektColumnProvider>
   );
 }
 
-function ListView({ slug }: Props) {
+function ListView() {
+  const list = useTarget((a) => a.list)!;
   const { authenticated } = useUser();
-  const isOwned = useListAuthed(slug);
+  const isOwned = useListAuthed(list.slug);
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const columns = useBreakpointColumnStore((a) => a.columns);
-  const objekts = useListObjekts(slug);
+  const { columns } = useObjektColumn();
+  const objekts = useListObjekts(list.slug);
   const deferredObjekts = useDeferredValue(objekts);
 
   const [groupCount, count] = useMemo(() => {
@@ -84,7 +86,7 @@ function ListView({ slug }: Props) {
                     authenticated && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
-                        {isOwned && <RemoveFromListMenu slug={slug} objekt={objekt} />}
+                        {isOwned && <RemoveFromListMenu slug={list.slug} objekt={objekt} />}
                         <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
                     )
@@ -105,7 +107,7 @@ function ListView({ slug }: Props) {
                             <div className="absolute top-0 right-0 flex">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
-                                {isOwned && <RemoveFromListMenu slug={slug} objekt={objekt} />}
+                                {isOwned && <RemoveFromListMenu slug={list.slug} objekt={objekt} />}
                                 <AddToListMenu objekt={objekt} />
                               </ObjektHoverMenu>
                             </div>
@@ -121,7 +123,7 @@ function ListView({ slug }: Props) {
         ),
       }),
     ]);
-  }, [deferredObjekts, columns, isOwned, slug, authenticated, hideLabel]);
+  }, [deferredObjekts, columns, isOwned, list.slug, authenticated, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -130,14 +132,14 @@ function ListView({ slug }: Props) {
           <FloatingSelectMode>
             {({ handleAction }) => (
               <>
-                {isOwned && <RemoveFromList slug={slug} handleAction={handleAction} />}
+                {isOwned && <RemoveFromList slug={list.slug} handleAction={handleAction} />}
                 <AddToList handleAction={handleAction} />
               </>
             )}
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} isOwned={isOwned} slug={slug} />
+          <Filters authenticated={authenticated} isOwned={isOwned} slug={list.slug} />
         </FilterContainer>
       </div>
       <span className="font-semibold">

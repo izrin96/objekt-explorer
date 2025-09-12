@@ -47,10 +47,9 @@ export default async function Page(props: Props) {
   return (
     <ProfileProvider targetList={list} lists={lists} user={toPublicUser(session)}>
       <div className="flex flex-col gap-4 pt-2 pb-36">
-        <ListHeader list={list} />
-
+        <ListHeader />
         <HydrateClient client={queryClient}>
-          <ListRender slug={params.slug} />
+          <ListRender />
         </HydrateClient>
       </div>
     </ProfileProvider>

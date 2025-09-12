@@ -3,12 +3,13 @@
 import { useRouter } from "@bprogress/next/app";
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
+import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
-import type { PublicList } from "@/lib/universal/user";
 import { Avatar, Button } from "../ui";
 import { EditListModal } from "./modal/manage-list";
 
-export default function ListHeader({ list }: { list: PublicList }) {
+export default function ListHeader() {
+  const list = useTarget((a) => a.list)!;
   const isListAuthed = useListAuthed(list.slug);
   const { user, name } = list;
   return (

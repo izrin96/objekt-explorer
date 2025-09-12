@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 import { Suspense, useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
-import { useBreakpointColumnStore } from "@/hooks/use-breakpoint-column";
 import { useCollectionObjekts } from "@/hooks/use-collection-objekt";
 import { useConfigStore } from "@/hooks/use-config";
+import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useUser } from "@/hooks/use-user";
@@ -31,32 +31,34 @@ export const IndexRenderDynamic = dynamic(() => Promise.resolve(IndexRender), {
 
 function IndexRender() {
   return (
-    <ObjektSelectProvider>
-      <ObjektModalProvider initialTab="trades">
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <IndexView />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
-      </ObjektModalProvider>
-    </ObjektSelectProvider>
+    <ObjektColumnProvider>
+      <ObjektSelectProvider>
+        <ObjektModalProvider initialTab="trades">
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
+                  }
+                >
+                  <IndexView />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        </ObjektModalProvider>
+      </ObjektSelectProvider>
+    </ObjektColumnProvider>
   );
 }
 
 function IndexView() {
   const { authenticated } = useUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const columns = useBreakpointColumnStore((a) => a.columns);
+  const { columns } = useObjektColumn();
   const objekts = useCollectionObjekts();
   const deferredObjekts = useDeferredValue(objekts);
 

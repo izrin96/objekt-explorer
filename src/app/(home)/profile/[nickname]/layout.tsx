@@ -17,14 +17,14 @@ type Props = PropsWithChildren<{
 
 export default async function UserCollectionLayout(props: Props) {
   const [session, params] = await Promise.all([getSession(), props.params]);
-  const [targetUser, profiles] = await Promise.all([
+  const [targetProfile, profiles] = await Promise.all([
     getUserByIdentifier(params.nickname),
     session ? fetchUserProfiles(session.user.id) : undefined,
   ]);
 
   if (
-    targetUser.privateProfile &&
-    !(profiles?.some((a) => a.address === targetUser.address) ?? false)
+    targetProfile.privateProfile &&
+    !(profiles?.some((a) => a.address === targetProfile.address) ?? false)
   )
     return (
       <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
@@ -34,13 +34,13 @@ export default async function UserCollectionLayout(props: Props) {
     );
 
   return (
-    <ProfileProvider profiles={profiles} targetProfile={targetUser} user={toPublicUser(session)}>
-      <ProfileBanner profile={targetUser} />
+    <ProfileProvider profiles={profiles} targetProfile={targetProfile} user={toPublicUser(session)}>
+      <ProfileBanner profile={targetProfile} />
       <Container>
-        {targetUser.bannerImgUrl && <ProfileBannerClearance />}
+        {targetProfile.bannerImgUrl && <ProfileBannerClearance />}
         <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
-          <ProfileHeader user={targetUser} />
-          <ProfileTabs path={targetUser.nickname ?? targetUser.address} />
+          <ProfileHeader user={targetProfile} />
+          <ProfileTabs path={targetProfile.nickname ?? targetProfile.address} />
           {props.children}
         </div>
       </Container>

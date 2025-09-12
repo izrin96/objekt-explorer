@@ -40,6 +40,7 @@ export const userAddress = pgTable(
     hideTransfer: boolean("hide_transfer").default(false),
     hideNickname: boolean("hide_nickname").default(false),
     isAbstract: boolean("is_abstract").default(false),
+    gridColumns: integer("grid_columns"),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),
@@ -67,6 +68,7 @@ export const lists = pgTable(
     name: text("name").notNull(),
     hideUser: boolean("hide_user").default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    gridColumns: integer("grid_columns"),
   },
   (t) => [uniqueIndex("lists_slug_idx").on(t.slug)],
 );
