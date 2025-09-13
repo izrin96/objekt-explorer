@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "@bprogress/next/app";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useCallback, useMemo, useTransition } from "react";
 import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";

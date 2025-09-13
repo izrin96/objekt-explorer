@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "@bprogress/next/app";
 import {
   DeviceMobileIcon,
   DiscordLogoIcon,
@@ -12,6 +11,7 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";

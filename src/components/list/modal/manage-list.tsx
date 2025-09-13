@@ -1,12 +1,12 @@
 "use client";
 
-import { useRouter } from "@bprogress/next/app";
 import {
   QueryErrorResetBoundary,
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";

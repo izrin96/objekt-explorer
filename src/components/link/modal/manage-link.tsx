@@ -33,7 +33,7 @@ import {
 import { orpc } from "@/lib/orpc/client";
 import { mimeTypes, validColumns } from "@/lib/utils";
 import "react-advanced-cropper/dist/style.css";
-import { useRouter } from "@bprogress/next/app";
+import { useRouter } from "next/navigation";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
