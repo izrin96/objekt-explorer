@@ -1,6 +1,6 @@
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 import type { PropsWithChildren } from "react";
-import { DynamicContainerClient } from "@/components/dynamic-container";
+import DynamicContainer from "@/components/dynamic-container";
 import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
@@ -42,13 +42,13 @@ export default async function UserCollectionLayout(props: Props) {
           <ProfileBannerClearance />
         </Container>
       )}
-      <DynamicContainerClient>
+      <DynamicContainer>
         <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
           <ProfileHeader user={targetProfile} />
           <ProfileTabs path={targetProfile.nickname ?? targetProfile.address} />
           {props.children}
         </div>
-      </DynamicContainerClient>
+      </DynamicContainer>
     </ProfileProvider>
   );
 }
