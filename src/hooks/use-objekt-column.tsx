@@ -30,7 +30,7 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [queryColumn] = useColumnFilter();
   const [overrideColumn, setOverrideColumn] = useState(queryColumn ?? initialColumn);
-  const _hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
+  const hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
   const initial = useBreakpointColumnStore((a) => a.initial);
   const setColumnStore = useBreakpointColumnStore((a) => a.setColumns);
   const columnStore = useBreakpointColumnStore((a) => a.columns);
@@ -63,7 +63,7 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
 
   // responsive effect
   useEffect(() => {
-    if (!_hasHydrated) return;
+    if (!hasHydrated) return;
 
     if (isFirst.current) {
       // first time user
@@ -76,7 +76,7 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
 
     // apply based on responsive
     setColumnStore(responsiveColumn);
-  }, [_hasHydrated, initial, responsiveColumn, setColumnStore]);
+  }, [hasHydrated, initial, responsiveColumn, setColumnStore]);
 
   return (
     <ObjektColumnContext
