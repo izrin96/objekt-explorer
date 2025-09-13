@@ -1,7 +1,6 @@
 "use client";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import dynamic from "next/dynamic";
 import { Suspense, useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -37,11 +36,7 @@ import Filter from "./filter";
 import { LockObjekt, UnlockObjekt } from "./form/lock-unlock";
 import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 
-export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileObjektRender), {
-  ssr: false,
-});
-
-function ProfileObjektRender() {
+export default function ProfileObjektRender() {
   const profile = useTarget((a) => a.profile)!;
   return (
     <ObjektColumnProvider initialColumn={profile.gridColumns}>

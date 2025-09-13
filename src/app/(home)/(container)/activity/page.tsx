@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ActivityRenderDynamic } from "@/components/activity/activity-render";
+import ActivityRender from "@/components/activity/activity-render";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -8,5 +8,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function Page() {
-  return <ActivityRenderDynamic />;
+  return <ActivityRender />;
 }

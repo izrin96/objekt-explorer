@@ -2,7 +2,6 @@
 
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import dynamic from "next/dynamic";
 import type React from "react";
 import { type CSSProperties, Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -26,11 +25,7 @@ import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
 import StatsFilter from "./stats-filter";
 
-export const ProfileStatsRenderDynamic = dynamic(() => Promise.resolve(ProfileStatsRender), {
-  ssr: false,
-});
-
-function ProfileStatsRender() {
+export default function ProfileStatsRender() {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
