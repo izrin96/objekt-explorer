@@ -61,7 +61,6 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
     setOverrideColumn(queryColumn ?? initialColumn);
   }, [initialColumn, queryColumn, setOverrideColumn]);
 
-  // responsive effect
   useEffect(() => {
     if (!hasHydrated) return;
 
@@ -73,9 +72,6 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
       isFirst.current = false;
       return;
     }
-
-    // apply based on responsive
-    setColumnStore(responsiveColumn);
   }, [hasHydrated, initial, responsiveColumn, setColumnStore]);
 
   return (
