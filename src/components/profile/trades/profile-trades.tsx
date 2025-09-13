@@ -5,6 +5,7 @@ import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import type React from "react";
 import { Suspense, useRef } from "react";
@@ -22,6 +23,10 @@ import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfe
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { useTypeFilter } from "./filter-type";
 import TradesFilter from "./trades-filter";
+
+export const ProfileTradesRenderDynamic = dynamic(() => Promise.resolve(ProfileTradesRender), {
+  ssr: false,
+});
 
 export default function ProfileTradesRender() {
   return (
