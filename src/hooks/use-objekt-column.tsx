@@ -50,15 +50,18 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
     (column: number) => {
       if (overrideColumn) {
         setOverrideColumn(null);
+      }
+      if (queryColumn) {
         setQueryColumn(null);
       }
       setColumnStore(column);
     },
-    [overrideColumn, setOverrideColumn, setColumnStore, setQueryColumn],
+    [overrideColumn, queryColumn, setOverrideColumn, setColumnStore, setQueryColumn],
   );
 
   // monitor props change
   useEffect(() => {
+    if (isFirst.current) return;
     setOverrideColumn(initialColumn);
   }, [initialColumn]);
 
