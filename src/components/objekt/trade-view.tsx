@@ -228,88 +228,88 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
 
   if (status === "error") return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
 
-  if (data.hide)
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-3">
-        <LockIcon size={64} weight="light" />
-        <p>Objekt Private</p>
-      </div>
-    );
-
-  if (!data.owner)
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-3">
-        <QuestionMarkIcon size={64} weight="light" />
-        <p>Not found</p>
-      </div>
-    );
-
   const ownerNickname = data.transfers.find(
     (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
   )?.nickname;
 
   return (
     <>
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">{t("owner")}</span>
-          <span>
-            <UserLink address={data.owner} nickname={ownerNickname} />
-          </span>
+      {data.hide && !data.owner && (
+        <div className="flex flex-col items-center justify-center gap-3 py-3">
+          <LockIcon size={64} weight="light" />
+          <p>Objekt Private</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">{t("token_id")}</span>
-          <span>
-            <Link
-              href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
-              className="inline-flex cursor-pointer items-center gap-2"
-              target="_blank"
-            >
-              {data.tokenId}
-              <IconOpenLink />
-            </Link>
-          </span>
+      )}
+      {!data.hide && !data.owner && (
+        <div className="flex flex-col items-center justify-center gap-3 py-3">
+          <QuestionMarkIcon size={64} weight="light" />
+          <p>Not found</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">{t("transferable")}</span>
-          <Badge
-            className={cn("text-xs")}
-            intent={!data.transferable ? "custom" : "info"}
-            isCircle={false}
-          >
-            {data.transferable ? "Yes" : "No"}
-          </Badge>
-        </div>
-      </div>
+      )}
+      {!data.hide && data.owner && (
+        <>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-sm">{t("owner")}</span>
+              <span>
+                <UserLink address={data.owner} nickname={ownerNickname} />
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-sm">{t("token_id")}</span>
+              <span>
+                <Link
+                  href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
+                  className="inline-flex cursor-pointer items-center gap-2"
+                  target="_blank"
+                >
+                  {data.tokenId}
+                  <IconOpenLink />
+                </Link>
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-semibold text-sm">{t("transferable")}</span>
+              <Badge
+                className={cn("text-xs")}
+                intent={!data.transferable ? "custom" : "info"}
+                isCircle={false}
+              >
+                {data.transferable ? "Yes" : "No"}
+              </Badge>
+            </div>
+          </div>
 
-      <Card className="py-0">
-        <CardContent className="px-3">
-          <Table
-            className="[--gutter:--spacing(3)]"
-            bleed
-            aria-label="Trades"
-            sortDescriptor={list.sortDescriptor}
-            onSortChange={list.sort}
-          >
-            <TableHeader>
-              <TableColumn isRowHeader>{t("owner")}</TableColumn>
-              <TableColumn id="timestamp" allowsSorting minWidth={200}>
-                {t("date")}
-              </TableColumn>
-            </TableHeader>
-            <TableBody>
-              {list.items.map((item) => (
-                <TableRow key={item.id} id={item.id}>
-                  <TableCell>
-                    <UserLink address={item.to} nickname={item.nickname} />
-                  </TableCell>
-                  <TableCell>{format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          <Card className="py-0">
+            <CardContent className="px-3">
+              <Table
+                className="[--gutter:--spacing(3)]"
+                bleed
+                aria-label="Trades"
+                sortDescriptor={list.sortDescriptor}
+                onSortChange={list.sort}
+              >
+                <TableHeader>
+                  <TableColumn isRowHeader>{t("owner")}</TableColumn>
+                  <TableColumn id="timestamp" allowsSorting minWidth={200}>
+                    {t("date")}
+                  </TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {list.items.map((item) => (
+                    <TableRow key={item.id} id={item.id}>
+                      <TableCell>
+                        <UserLink address={item.to} nickname={item.nickname} />
+                      </TableCell>
+                      <TableCell>{format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </>
   );
 }

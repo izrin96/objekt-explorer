@@ -88,60 +88,61 @@ function ProfileTrades() {
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
 
-  if (query.data.pages[0].hide)
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 py-3">
-        <LockIcon size={64} weight="light" />
-        <p>Trade History Private</p>
-      </div>
-    );
-
   return (
     <>
-      <Card className="py-0">
-        <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
-          <div className="flex min-w-fit border-b">
-            <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
-            <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
-            <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
-            <div className="min-w-[130px] flex-1 px-3 py-2.5">Action</div>
-            <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
-          </div>
-
-          <div
-            style={{
-              height: `${rowVirtualizer.getTotalSize()}px`,
-            }}
-            className="relative w-full [&>*]:will-change-transform"
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index];
-              return (
-                <ObjektModal key={row.transfer.id} objekts={[row.objekt]}>
-                  {({ openObjekts }) => (
-                    <TradeRow
-                      row={row}
-                      address={address}
-                      open={openObjekts}
-                      style={{
-                        transform: `translateY(${
-                          virtualRow.start - rowVirtualizer.options.scrollMargin
-                        }px)`,
-                      }}
-                    />
-                  )}
-                </ObjektModal>
-              );
-            })}
-          </div>
+      {query.data.pages[0].hide ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-3">
+          <LockIcon size={64} weight="light" />
+          <p>Trade History Private</p>
         </div>
-      </Card>
-      <InfiniteQueryNext
-        status={query.status}
-        hasNextPage={query.hasNextPage}
-        isFetchingNextPage={query.isFetchingNextPage}
-        fetchNextPage={query.fetchNextPage}
-      />
+      ) : (
+        <>
+          <Card className="py-0">
+            <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
+              <div className="flex min-w-fit border-b">
+                <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
+                <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
+                <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
+                <div className="min-w-[130px] flex-1 px-3 py-2.5">Action</div>
+                <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
+              </div>
+
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                }}
+                className="relative w-full [&>*]:will-change-transform"
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const row = rows[virtualRow.index];
+                  return (
+                    <ObjektModal key={row.transfer.id} objekts={[row.objekt]}>
+                      {({ openObjekts }) => (
+                        <TradeRow
+                          row={row}
+                          address={address}
+                          open={openObjekts}
+                          style={{
+                            transform: `translateY(${
+                              virtualRow.start - rowVirtualizer.options.scrollMargin
+                            }px)`,
+                          }}
+                        />
+                      )}
+                    </ObjektModal>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
+          <InfiniteQueryNext
+            status={query.status}
+            hasNextPage={query.hasNextPage}
+            isFetchingNextPage={query.isFetchingNextPage}
+            fetchNextPage={query.fetchNextPage}
+          />
+        </>
+      )}
     </>
   );
 }
