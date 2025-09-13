@@ -63,7 +63,7 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   useEffect(() => {
     if (isFirst.current) return;
     setOverrideColumn(initialColumn);
-  }, [initialColumn]);
+  }, [initialColumn, setOverrideColumn]);
 
   // responsive effect
   useEffect(() => {
