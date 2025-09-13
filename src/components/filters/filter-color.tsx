@@ -31,7 +31,7 @@ export default function ColorFilter() {
       <div style={{ "--objekt-color": color } as CSSProperties}>
         <ColorPicker
           eyeDropper
-          buttonClassName={cn(color && "inset-ring-(--objekt-color)")}
+          className={cn(color && "[&>*]:inset-ring-(--objekt-color)")}
           label={t("color")}
           value={color ? parseColor(color) : "#000"}
           onChange={(color) => setColor(color.toString("hsl"))}

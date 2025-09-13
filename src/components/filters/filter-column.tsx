@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { validColumns } from "@/lib/utils";
-import { Select } from "../ui";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui";
 
 export default function ColumnFilter() {
   const t = useTranslations("filter");
@@ -18,16 +18,16 @@ export default function ColumnFilter() {
       }}
       aria-label={t("column")}
     >
-      <Select.Trigger />
-      <Select.List className="min-w-[160px]">
+      <SelectTrigger />
+      <SelectContent className="min-w-[160px]">
         {validColumns
           .map((a) => ({ id: a, name: `${a} ${t("column").toLowerCase()}` }))
           .map((item) => (
-            <Select.Option key={item.id} id={item.id} textValue={item.name}>
+            <SelectItem key={item.id} id={item.id} textValue={item.name}>
               {item.name}
-            </Select.Option>
+            </SelectItem>
           ))}
-      </Select.List>
+      </SelectContent>
     </Select>
   );
 }

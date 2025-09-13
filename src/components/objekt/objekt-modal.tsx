@@ -3,7 +3,7 @@
 import type React from "react";
 import { useState } from "react";
 import type { ValidObjekt } from "@/lib/universal/objekts";
-import { Modal } from "../ui";
+import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "../ui";
 import ObjektDetail from "./objekt-detail";
 
 type Props = {
@@ -17,18 +17,18 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Modal.Content isOpen={open} onOpenChange={setOpen} size="5xl">
-        <Modal.Header className="hidden">
-          <Modal.Title>Objekt display</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0 sm:p-0">
+      <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
+        <ModalHeader className="hidden">
+          <ModalTitle>Objekt display</ModalTitle>
+        </ModalHeader>
+        <ModalBody className="p-0 sm:p-0">
           {menu}
           <ObjektDetail objekts={objekts} showOwned={showOwned} />
-        </Modal.Body>
-        <Modal.Footer className="sm:hidden">
-          <Modal.Close>Close</Modal.Close>
-        </Modal.Footer>
-      </Modal.Content>
+        </ModalBody>
+        <ModalFooter className="sm:hidden">
+          <ModalClose>Close</ModalClose>
+        </ModalFooter>
+      </ModalContent>
       {children({ openObjekts: () => setOpen(true) })}
     </>
   );

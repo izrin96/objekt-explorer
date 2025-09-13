@@ -5,7 +5,16 @@ import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button, Label, Modal } from "@/components/ui";
+import {
+  Button,
+  Label,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/ui";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";
@@ -145,15 +154,15 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
     }),
   );
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
-      <Modal.Header>
-        <Modal.Title>Update Profile from {provider.label}</Modal.Title>
-        <Modal.Description>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>Update Profile from {provider.label}</ModalTitle>
+        <ModalDescription>
           This will update your {provider.label} username and profile picture. Continue?
-        </Modal.Description>
-      </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
+        </ModalDescription>
+      </ModalHeader>
+      <ModalFooter>
+        <ModalClose>Cancel</ModalClose>
         <Button
           intent="primary"
           type="submit"
@@ -162,7 +171,7 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
         >
           Continue
         </Button>
-      </Modal.Footer>
-    </Modal.Content>
+      </ModalFooter>
+    </ModalContent>
   );
 }

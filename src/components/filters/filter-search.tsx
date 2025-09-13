@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
-import { Button, Popover, TextField } from "../ui";
+import { Button, Popover, PopoverContent, TextField } from "../ui";
 
 export default function SearchFilter() {
   const t = useTranslations("filter");
@@ -43,7 +43,7 @@ export default function SearchFilter() {
             <Button intent="plain">
               <QuestionMarkIcon data-slot="icon" />
             </Button>
-            <Popover.Content className="prose max-w-sm p-4">
+            <PopoverContent className="prose max-w-sm overflow-auto p-4">
               {locale === "en" && (
                 <>
                   <span>This quick search supports:</span>
@@ -85,7 +85,7 @@ export default function SearchFilter() {
                   <span>예시: yy c201-204 !c202 #1-200, jw 201z, yb sco divine</span>
                 </>
               )}
-            </Popover.Content>
+            </PopoverContent>
           </Popover>
         )
       }

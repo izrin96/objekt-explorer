@@ -8,7 +8,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 import ErrorFallbackRender from "../error-boundary";
-import { Button, buttonStyles, Card, Link, Menu } from "../ui";
+import { Button, buttonStyles, Card, CardContent, Link, Menu, MenuContent, MenuItem } from "../ui";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
 
 export default function MyLinkRender() {
@@ -64,7 +64,7 @@ function LinkCard({ link }: LinkCardProps) {
   const nickname = parseNickname(link.address, link.nickname);
   return (
     <Card className="bg-secondary/20">
-      <Card.Content className="flex justify-between">
+      <CardContent className="flex justify-between">
         <Link
           href={`/@${link.nickname ?? link.address}`}
           className="flex min-w-0 flex-1 flex-col gap-1 text-base"
@@ -87,16 +87,16 @@ function LinkCard({ link }: LinkCardProps) {
             <Button intent="outline" size="sq-xs">
               <IconDotsVertical />
             </Button>
-            <Menu.Content className="sm:min-w-56">
-              <Menu.Item href={`/@${link.nickname ?? link.address}`}>Open</Menu.Item>
-              <Menu.Item onAction={() => setEditOpen(true)}>Edit</Menu.Item>
-              <Menu.Item isDanger onAction={() => setRemoveOpen(true)}>
+            <MenuContent className="sm:min-w-56">
+              <MenuItem href={`/@${link.nickname ?? link.address}`}>Open</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>Edit</MenuItem>
+              <MenuItem isDanger onAction={() => setRemoveOpen(true)}>
                 Unlink
-              </Menu.Item>
-            </Menu.Content>
+              </MenuItem>
+            </MenuContent>
           </Menu>
         </div>
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 }

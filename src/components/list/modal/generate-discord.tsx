@@ -6,7 +6,22 @@ import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/copy-button";
 import ErrorFallbackRender from "@/components/error-boundary";
-import { Button, Checkbox, Form, Loader, Modal, Select, Textarea } from "@/components/ui";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Loader,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  Textarea,
+} from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { format, makeMemberOrderedList, mapCollectionByMember } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
@@ -19,7 +34,7 @@ type Props = {
 
 export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
@@ -35,7 +50,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </Modal.Content>
+    </ModalContent>
   );
 }
 
@@ -55,10 +70,10 @@ function Content() {
 
   return (
     <>
-      <Modal.Header>
-        <Modal.Title>Generate Discord Format</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
+      <ModalHeader>
+        <ModalTitle>Generate Discord Format</ModalTitle>
+      </ModalHeader>
+      <ModalBody>
         <Form
           className="flex flex-col gap-2"
           ref={formRef}
@@ -112,35 +127,40 @@ function Content() {
           }}
         >
           <Select label="Have list" name="haveSlug" placeholder="Select a list" isRequired>
-            <Select.Trigger />
-            <Select.List>
+            <SelectTrigger />
+            <SelectContent>
               {data.map((item) => (
-                <Select.Option key={item.slug} id={item.slug} textValue={item.slug}>
+                <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                   {item.name}
-                </Select.Option>
+                </SelectItem>
               ))}
-            </Select.List>
+            </SelectContent>
           </Select>
           <Select label="Want list" name="wantSlug" placeholder="Select a list" isRequired>
-            <Select.Trigger />
-            <Select.List>
+            <SelectTrigger />
+            <SelectContent>
               {data.map((item) => (
-                <Select.Option key={item.slug} id={item.slug} textValue={item.slug}>
+                <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                   {item.name}
-                </Select.Option>
+                </SelectItem>
               ))}
-            </Select.List>
+            </SelectContent>
           </Select>
           <Checkbox label="Show count" name="showCount" />
           <Checkbox label="Include link" name="includeLink" />
           <Checkbox label="Lower case" name="lowercase" />
-          <Textarea label="Formatted discord text" value={formatText} onChange={setFormatText} />
+          <Textarea
+            label="Formatted discord text"
+            value={formatText}
+            onChange={setFormatText}
+            className="max-h-64 min-h-32"
+          />
           <div className="flex">
             <CopyButton text={formatText} />
           </div>
         </Form>
-      </Modal.Body>
-      <Modal.Footer className="flex justify-end">
+      </ModalBody>
+      <ModalFooter className="flex justify-end">
         <Button
           type="submit"
           isPending={generateDiscordFormat.isPending}
@@ -148,7 +168,7 @@ function Content() {
         >
           Generate
         </Button>
-      </Modal.Footer>
+      </ModalFooter>
     </>
   );
 }

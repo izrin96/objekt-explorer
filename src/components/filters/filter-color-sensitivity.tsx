@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { type CSSProperties, useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
-import { Button, Popover, Slider } from "../ui";
+import { Button, Popover, PopoverContent, Slider } from "../ui";
 
 export default function ColorSensitivityFilter() {
   const t = useTranslations("filter");
@@ -27,7 +27,7 @@ export default function ColorSensitivityFilter() {
   return (
     <Popover>
       <Button intent="outline">{t("color_sensitivity")}</Button>
-      <Popover.Content className="p-3">
+      <PopoverContent className="p-3">
         <Slider
           label={t("color_sensitivity")}
           className="pb-2"
@@ -42,7 +42,7 @@ export default function ColorSensitivityFilter() {
             } as CSSProperties
           }
         />
-      </Popover.Content>
+      </PopoverContent>
     </Popover>
   );
 }

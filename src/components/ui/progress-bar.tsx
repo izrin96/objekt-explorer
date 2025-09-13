@@ -5,7 +5,7 @@ import {
   ProgressBar as ProgressBarPrimitive,
   type ProgressBarProps as ProgressBarPrimitiveProps,
 } from "react-aria-components";
-import { composeTailwindRenderProps } from "@/lib/primitive";
+import { cx } from "@/lib/primitive";
 import { Label } from "./field";
 
 interface ProgressBarProps extends ProgressBarPrimitiveProps {
@@ -15,11 +15,7 @@ interface ProgressBarProps extends ProgressBarPrimitiveProps {
 
 const ProgressBar = ({ label, ref, className, ...props }: ProgressBarProps) => {
   return (
-    <ProgressBarPrimitive
-      ref={ref}
-      className={composeTailwindRenderProps(className, "flex flex-col")}
-      {...props}
-    >
+    <ProgressBarPrimitive ref={ref} className={cx("flex flex-col", className)} {...props}>
       {({ percentage, valueText, isIndeterminate }) => (
         <div className="flex items-center gap-3">
           <div className="-outline-offset-1 relative h-2 min-w-32 overflow-hidden rounded-full bg-secondary outline-1 outline-transparent">

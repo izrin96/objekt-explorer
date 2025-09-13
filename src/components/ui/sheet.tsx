@@ -38,21 +38,24 @@ const generateCompoundVariants = (sides: Array<Sides>) => {
 };
 
 const sheetContentStyles = tv({
-  base: "fixed z-50 grid gap-4 border-muted-fg/20 bg-overlay text-overlay-fg shadow-lg transition ease-in-out dark:border-border",
+  base: [
+    "fixed z-50 grid gap-4 border-muted-fg/20 bg-overlay text-overlay-fg shadow-lg dark:border-border",
+    "transform-gpu transition ease-in-out will-change-transform",
+  ],
   variants: {
     isEntering: {
-      true: "fade-in animate-in duration-300",
+      true: "animate-in duration-500",
     },
     isExiting: {
-      true: "fade-out animate-out",
+      true: "animate-out duration-300",
     },
     side: {
       top: "entering:slide-in-from-top exiting:slide-out-to-top inset-x-0 top-0 rounded-b-2xl border-b",
       bottom:
         "entering:slide-in-from-bottom exiting:slide-out-to-bottom inset-x-0 bottom-0 rounded-t-2xl border-t",
-      left: "entering:slide-in-from-left exiting:slide-out-to-left inset-y-0 left-0 h-auto w-[calc(100%-1em)] overflow-y-auto border-r sm:max-w-sm",
+      left: "entering:slide-in-from-left exiting:slide-out-to-left inset-y-0 left-0 h-auto w-3/4 overflow-y-auto border-r sm:max-w-sm",
       right:
-        "entering:slide-in-from-right exiting:slide-out-to-right inset-y-0 right-0 h-auto w-[calc(100%-1em)] overflow-y-auto border-l sm:max-w-sm",
+        "entering:slide-in-from-right exiting:slide-out-to-right inset-y-0 right-0 h-auto w-3/4 overflow-y-auto border-l sm:max-w-sm",
     },
     isFloat: {
       false: "border-fg/20 dark:border-border",
@@ -93,14 +96,12 @@ const SheetContent = ({
   return (
     <ModalOverlay
       isDismissable={isDismissable}
-      className={({ isExiting, isEntering }) =>
-        twJoin(
-          "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-fg/15 dark:bg-bg/30",
-          isEntering && "fade-in animate-in duration-300",
-          isExiting && "fade-out animate-out duration-200",
-          isBlurred && "backdrop-blur-sm backdrop-filter",
-        )
-      }
+      className={twJoin(
+        "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-black/15",
+        "entering:fade-in-0 entering:animate-in entering:duration-500",
+        "exiting:fade-out-0 exiting:animate-out exiting:duration-300",
+        isBlurred && "backdrop-blur-sm backdrop-filter",
+      )}
       {...props}
     >
       <Modal

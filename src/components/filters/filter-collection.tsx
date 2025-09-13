@@ -5,7 +5,7 @@ import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
-import { MultipleSelect } from "../ui";
+import { MultipleSelect, MultipleSelectItem } from "../ui";
 
 export default function CollectionFilter() {
   const t = useTranslations("filter");
@@ -33,9 +33,9 @@ export default function CollectionFilter() {
       onSelectionChange={(set) => update(set as any, selected)}
     >
       {collections.map((item) => (
-        <MultipleSelect.Item key={item} id={item} textValue={item}>
+        <MultipleSelectItem key={item} id={item} textValue={item}>
           {item}
-        </MultipleSelect.Item>
+        </MultipleSelectItem>
       ))}
     </MultipleSelect>
   );

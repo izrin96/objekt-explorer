@@ -10,7 +10,25 @@ import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../../error-boundary";
-import { Button, Checkbox, Form, Link, Loader, Modal, Note, Select } from "../../ui";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Link,
+  Loader,
+  ModalBody,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  Note,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "../../ui";
 
 type AddProps = {
   handleAction: (open: () => void) => void;
@@ -41,11 +59,11 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
   const reset = useObjektSelect((a) => a.reset);
   const addToList = useAddToList();
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
-      <Modal.Header>
-        <Modal.Title>Add to list</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>Add to list</ModalTitle>
+      </ModalHeader>
+      <ModalBody>
         <Form
           ref={formRef}
           onSubmit={async (e) => {
@@ -82,9 +100,9 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
             )}
           </QueryErrorResetBoundary>
         </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
+      </ModalBody>
+      <ModalFooter>
+        <ModalClose>Cancel</ModalClose>
         <Button
           type="submit"
           isPending={addToList.isPending}
@@ -92,8 +110,8 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
         >
           Add
         </Button>
-      </Modal.Footer>
-    </Modal.Content>
+      </ModalFooter>
+    </ModalContent>
   );
 }
 
@@ -114,14 +132,14 @@ function AddToListForm() {
   return (
     <div className="flex flex-col gap-4">
       <Select label="My List" placeholder="Select a list" name="slug" isRequired>
-        <Select.Trigger />
-        <Select.List>
+        <SelectTrigger />
+        <SelectContent>
           {data.map((item) => (
-            <Select.Option key={item.slug} id={item.slug} textValue={item.slug}>
+            <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
               {item.name}
-            </Select.Option>
+            </SelectItem>
           ))}
-        </Select.List>
+        </SelectContent>
       </Select>
       <Checkbox
         defaultSelected={true}
@@ -163,15 +181,15 @@ export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModal
   const reset = useObjektSelect((a) => a.reset);
   const removeObjektsFromList = useRemoveFromList();
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
-      <Modal.Header>
-        <Modal.Title>Remove objekt</Modal.Title>
-        <Modal.Description>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>Remove objekt</ModalTitle>
+        <ModalDescription>
           This will permanently remove the selected objekt from the list. Continue?
-        </Modal.Description>
-      </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
+        </ModalDescription>
+      </ModalHeader>
+      <ModalFooter>
+        <ModalClose>Cancel</ModalClose>
 
         <Button
           intent="danger"
@@ -194,7 +212,7 @@ export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModal
         >
           Continue
         </Button>
-      </Modal.Footer>
-    </Modal.Content>
+      </ModalFooter>
+    </ModalContent>
   );
 }

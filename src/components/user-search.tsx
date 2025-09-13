@@ -10,7 +10,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
-import { Button, CommandMenu } from "./ui";
+import {
+  Button,
+  CommandMenu,
+  CommandMenuItem,
+  CommandMenuList,
+  CommandMenuSearch,
+  CommandMenuSection,
+} from "./ui";
 
 export default function UserSearch() {
   const t = useTranslations("nav.search_user");
@@ -67,47 +74,47 @@ export default function UserSearch() {
         isOpen={isOpen}
         onOpenChange={setIsOpen}
       >
-        <CommandMenu.Search placeholder={t("placeholder")} />
-        <CommandMenu.List autoFocus="first" shouldFocusWrap>
-          <CommandMenu.Section title={t("result_label")}>
+        <CommandMenuSearch placeholder={t("placeholder")} />
+        <CommandMenuList autoFocus="first" shouldFocusWrap>
+          <CommandMenuSection title={t("result_label")}>
             {result.map((user) => (
-              <CommandMenu.Item
+              <CommandMenuItem
                 onAction={() => handleAction(user)}
                 key={`search-${user.address}`}
                 id={`search-${user.address}`}
                 textValue={user.nickname}
               >
                 {user.nickname}
-              </CommandMenu.Item>
+              </CommandMenuItem>
             ))}
-          </CommandMenu.Section>
-          <CommandMenu.Section title={t("recent_label")}>
+          </CommandMenuSection>
+          <CommandMenuSection title={t("recent_label")}>
             {[
               ...recentUsers.map((user) => (
-                <CommandMenu.Item
+                <CommandMenuItem
                   onAction={() => handleAction(user)}
                   key={`recent-${user.address}`}
                   id={`recent-${user.address}`}
                   textValue={user.nickname}
                 >
                   {user.nickname}
-                </CommandMenu.Item>
+                </CommandMenuItem>
               )),
               ...(recentUsers.length > 0
                 ? [
-                    <CommandMenu.Item
+                    <CommandMenuItem
                       key="clear"
                       textValue="Clear all"
                       onAction={() => clearAll()}
                       isDanger
                     >
                       Clear history
-                    </CommandMenu.Item>,
+                    </CommandMenuItem>,
                   ]
                 : []),
             ]}
-          </CommandMenu.Section>
-        </CommandMenu.List>
+          </CommandMenuSection>
+        </CommandMenuList>
       </CommandMenu>
     </>
   );

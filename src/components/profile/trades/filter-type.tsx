@@ -3,7 +3,7 @@
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
-import { Button, Menu } from "@/components/ui";
+import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui";
 import { type ValidType, validType } from "@/lib/universal/transfers";
 import { parseSelected } from "@/lib/utils";
 
@@ -36,13 +36,13 @@ export default function TypeFilter() {
       <Button intent="outline" className={type ? "!inset-ring-primary" : ""}>
         Event
       </Button>
-      <Menu.Content selectionMode="single" selectedKeys={selected} onSelectionChange={update}>
+      <MenuContent selectionMode="single" selectedKeys={selected} onSelectionChange={update}>
         {validType.map((item) => (
-          <Menu.Item key={item} id={item} textValue={map[item]}>
-            <Menu.Label>{map[item]}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={item} id={item} textValue={map[item]}>
+            <MenuLabel>{map[item]}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

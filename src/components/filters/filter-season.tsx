@@ -7,7 +7,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidSeason } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
-import { Button, Menu } from "../ui";
+import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function SeasonFilter() {
   const { selectedSeason } = useCosmoArtist();
@@ -30,13 +30,13 @@ export default function SeasonFilter() {
       <Button intent="outline" className={filters.season?.length ? "!inset-ring-primary" : ""}>
         {t("season")}
       </Button>
-      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+      <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {selectedSeason.map((item) => (
-          <Menu.Item key={item} id={item} textValue={item}>
-            <Menu.Label>{item}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={item} id={item} textValue={item}>
+            <MenuLabel>{item}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

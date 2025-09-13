@@ -6,7 +6,7 @@ import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidGroupBy, validGroupBy } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
-import { Button, Menu } from "../ui";
+import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function GroupByFilter() {
   const t = useTranslations("filter.group_by");
@@ -45,18 +45,18 @@ export default function GroupByFilter() {
       <Button intent="outline" className={filters.group_by ? "!inset-ring-primary" : ""}>
         {t("label")}
       </Button>
-      <Menu.Content
+      <MenuContent
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}
         className="min-w-52"
       >
         {Object.values(validGroupBy).map((item) => (
-          <Menu.Item key={item} id={item} textValue={map[item]}>
-            <Menu.Label>{map[item]}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={item} id={item} textValue={map[item]}>
+            <MenuLabel>{map[item]}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

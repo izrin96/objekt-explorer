@@ -6,7 +6,7 @@ import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidOnlineType, validOnlineTypes } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
-import { Button, Menu } from "../ui";
+import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function OnlineFilter() {
   const t = useTranslations("filter");
@@ -36,13 +36,13 @@ export default function OnlineFilter() {
       <Button intent="outline" className={filters.on_offline?.length ? "!inset-ring-primary" : ""}>
         {t("physical")}
       </Button>
-      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+      <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {Object.values(validOnlineTypes).map((item) => (
-          <Menu.Item key={item} id={item} textValue={item}>
-            <Menu.Label>{map[item]}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={item} id={item} textValue={item}>
+            <MenuLabel>{map[item]}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

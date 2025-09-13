@@ -6,7 +6,7 @@ import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidSort, validSorts } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
-import { Button, Menu } from "../ui";
+import { Button, Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../ui";
 
 type Props = {
   allowDuplicateSort?: boolean;
@@ -51,7 +51,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
       <Button intent="outline" className={filters.sort ? "!inset-ring-primary" : ""}>
         {t("label")}
       </Button>
-      <Menu.Content
+      <MenuContent
         selectionMode="single"
         selectedKeys={selected}
         onSelectionChange={update}
@@ -60,13 +60,13 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
         {availableSorts.map((item) => {
           const i = map[item];
           return (
-            <Menu.Item key={item} id={item} textValue={i.label}>
-              <Menu.Label>{i.label}</Menu.Label>
-              <Menu.Description>{i.desc}</Menu.Description>
-            </Menu.Item>
+            <MenuItem key={item} id={item} textValue={i.label}>
+              <MenuLabel>{i.label}</MenuLabel>
+              <MenuDescription>{i.desc}</MenuDescription>
+            </MenuItem>
           );
         })}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

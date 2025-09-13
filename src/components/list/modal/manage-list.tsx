@@ -17,8 +17,17 @@ import {
   Form,
   Link,
   Loader,
-  Modal,
+  ModalBody,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
   Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
   SheetBody,
   SheetClose,
   SheetContent,
@@ -54,11 +63,11 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
     }),
   );
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
-      <Modal.Header>
-        <Modal.Title>Create list</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>Create list</ModalTitle>
+      </ModalHeader>
+      <ModalBody>
         <Form
           ref={formRef}
           onSubmit={async (e) => {
@@ -80,9 +89,9 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
             />
           </div>
         </Form>
-      </Modal.Body>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
+      </ModalBody>
+      <ModalFooter>
+        <ModalClose>Cancel</ModalClose>
         <Button
           type="submit"
           isPending={createList.isPending}
@@ -90,8 +99,8 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
         >
           Create
         </Button>
-      </Modal.Footer>
-    </Modal.Content>
+      </ModalFooter>
+    </ModalContent>
   );
 }
 
@@ -118,15 +127,15 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
     }),
   );
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
-      <Modal.Header>
-        <Modal.Title>Delete list</Modal.Title>
-        <Modal.Description>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>Delete list</ModalTitle>
+        <ModalDescription>
           This will permanently delete the selected list. Continue?
-        </Modal.Description>
-      </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
+        </ModalDescription>
+      </ModalHeader>
+      <ModalFooter>
+        <ModalClose>Cancel</ModalClose>
         <Button
           intent="danger"
           type="submit"
@@ -135,8 +144,8 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
         >
           Continue
         </Button>
-      </Modal.Footer>
-    </Modal.Content>
+      </ModalFooter>
+    </ModalContent>
   );
 }
 
@@ -245,17 +254,17 @@ function EditListForm({ slug }: { slug: string }) {
         defaultSelectedKey={`${data.gridColumns ?? 0}`}
         name="gridColumns"
       >
-        <Select.Trigger className="w-[150px]" />
-        <Select.List>
+        <SelectTrigger className="w-[150px]" />
+        <SelectContent>
           {[
             { id: 0, name: "Not set" },
             ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
           ].map((item) => (
-            <Select.Option key={item.id} id={`${item.id}`} textValue={item.name}>
+            <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
               {item.name}
-            </Select.Option>
+            </SelectItem>
           ))}
-        </Select.List>
+        </SelectContent>
       </Select>
 
       <span className="text-muted-fg text-sm">

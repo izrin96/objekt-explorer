@@ -13,7 +13,7 @@ import {
 import Image from "next/image";
 import { type CSSProperties, useEffect, useState } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
-import { Button, Popover, Slider } from "../ui";
+import { Button, Popover, PopoverContent, Slider } from "../ui";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";
@@ -96,7 +96,7 @@ function LiveVolumeControl() {
       <Button size="sq-sm" intent="outline">
         <SpeakerHighIcon />
       </Button>
-      <Popover.Content className="m-4 min-w-0 p-4">
+      <PopoverContent className="m-4 min-w-0 p-4">
         <Slider
           className="min-h-24 gap-y-0"
           defaultValue={currentSpeaker.audioVolume ?? 1}
@@ -110,7 +110,7 @@ function LiveVolumeControl() {
             speaker.setParticipantVolume(currentSpeaker.sessionId, value as number);
           }}
         />
-      </Popover.Content>
+      </PopoverContent>
     </Popover>
   );
 }

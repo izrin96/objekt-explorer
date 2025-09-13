@@ -21,7 +21,22 @@ import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts"
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import ErrorFallbackRender from "../error-boundary";
-import { Badge, Button, Card, FieldGroup, Input, Link, Loader, Table } from "../ui";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  FieldGroup,
+  Input,
+  Link,
+  Loader,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from "../ui";
 import UserLink from "../user-link";
 
 type TradeViewProps = {
@@ -268,7 +283,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
       </div>
 
       <Card className="py-0">
-        <Card.Content className="px-3">
+        <CardContent className="px-3">
           <Table
             className="[--gutter:--spacing(3)]"
             bleed
@@ -276,24 +291,24 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
             sortDescriptor={list.sortDescriptor}
             onSortChange={list.sort}
           >
-            <Table.Header>
-              <Table.Column isRowHeader>{t("owner")}</Table.Column>
-              <Table.Column id="timestamp" allowsSorting minWidth={200}>
+            <TableHeader>
+              <TableColumn isRowHeader>{t("owner")}</TableColumn>
+              <TableColumn id="timestamp" allowsSorting minWidth={200}>
                 {t("date")}
-              </Table.Column>
-            </Table.Header>
-            <Table.Body>
+              </TableColumn>
+            </TableHeader>
+            <TableBody>
               {list.items.map((item) => (
-                <Table.Row key={item.id} id={item.id}>
-                  <Table.Cell>
+                <TableRow key={item.id} id={item.id}>
+                  <TableCell>
                     <UserLink address={item.to} nickname={item.nickname} />
-                  </Table.Cell>
-                  <Table.Cell>{format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}</Table.Cell>
-                </Table.Row>
+                  </TableCell>
+                  <TableCell>{format(item.timestamp, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
+                </TableRow>
               ))}
-            </Table.Body>
+            </TableBody>
           </Table>
-        </Card.Content>
+        </CardContent>
       </Card>
     </>
   );

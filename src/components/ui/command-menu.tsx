@@ -28,7 +28,7 @@ import {
   useFilter,
 } from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
-import { composeTailwindRenderProps } from "@/lib/primitive";
+import { cx } from "@/lib/primitive";
 import { DropdownKeyboard } from "./dropdown";
 import { Loader } from "./loader";
 import { MenuDescription, MenuItem, MenuLabel, type MenuSectionProps, MenuSeparator } from "./menu";
@@ -101,7 +101,7 @@ const CommandMenu = ({
           isDismissable={isDismissable}
           className={({ isExiting, isEntering }) =>
             twJoin(
-              "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-fg/15 dark:bg-bg/30",
+              "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-black/15",
               "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
               isEntering && "fade-in animate-in duration-300",
               isExiting && "fade-out animate-out duration-200",
@@ -154,10 +154,7 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
     <SearchField
       aria-label="Quick search"
       autoFocus
-      className={composeTailwindRenderProps(
-        className,
-        "flex w-full items-center border-b px-2.5 py-1",
-      )}
+      className={cx("flex w-full items-center border-b px-2.5 py-1", className)}
       {...props}
     >
       {isPending ? (
@@ -188,9 +185,9 @@ const CommandMenuList = <T extends object>({ className, ...props }: MenuProps<T>
   return (
     <CollectionRendererContext.Provider value={renderer}>
       <MenuPrimitive
-        className={composeTailwindRenderProps(
-          className,
+        className={cx(
           "grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
+          className,
         )}
         {...props}
       />
@@ -229,7 +226,7 @@ const CommandMenuItem = ({ className, ...props }: React.ComponentProps<typeof Me
     <MenuItem
       {...props}
       textValue={textValue}
-      className={composeTailwindRenderProps(className, "items-center gap-y-0.5")}
+      className={cx("items-center gap-y-0.5", className)}
     />
   );
 };

@@ -4,9 +4,22 @@ import { IconDotsVertical } from "@intentui/icons";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { Button, Card, Link, Menu, Note, Tab, TabList, TabPanel, Tabs } from "@/components/ui";
 import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../error-boundary";
+import {
+  Button,
+  Card,
+  CardContent,
+  Link,
+  Menu,
+  MenuContent,
+  MenuItem,
+  Note,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+} from "../ui";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
 import { CreateListModal, DeleteListModal, EditListModal } from "./modal/manage-list";
 
@@ -76,7 +89,7 @@ function ListCard({ list }: ListCardProps) {
       <EditListModal slug={list.slug} open={editOpen} setOpen={setEditOpen} />
       <DeleteListModal slug={list.slug} open={deleteOpen} setOpen={setDeleteOpen} />
       <Card key={list.slug} className="bg-secondary/20">
-        <Card.Content className="flex justify-between">
+        <CardContent className="flex justify-between">
           <Link href={`/list/${list.slug}`} className="flex-1 font-semibold text-base">
             {list.name}
           </Link>
@@ -85,16 +98,16 @@ function ListCard({ list }: ListCardProps) {
               <Button intent="outline" size="sq-xs">
                 <IconDotsVertical />
               </Button>
-              <Menu.Content className="sm:min-w-56">
-                <Menu.Item href={`/list/${list.slug}`}>Open</Menu.Item>
-                <Menu.Item onAction={() => setEditOpen(true)}>Edit</Menu.Item>
-                <Menu.Item isDanger onAction={() => setDeleteOpen(true)}>
+              <MenuContent className="sm:min-w-56">
+                <MenuItem href={`/list/${list.slug}`}>Open</MenuItem>
+                <MenuItem onAction={() => setEditOpen(true)}>Edit</MenuItem>
+                <MenuItem isDanger onAction={() => setDeleteOpen(true)}>
                   Delete
-                </Menu.Item>
-              </Menu.Content>
+                </MenuItem>
+              </MenuContent>
             </Menu>
           </div>
-        </Card.Content>
+        </CardContent>
       </Card>
     </>
   );

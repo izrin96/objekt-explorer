@@ -22,7 +22,21 @@ import type { User } from "@/lib/server/auth";
 import { parseNickname } from "@/lib/utils";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
-import { Avatar, buttonStyles, Link, Loader, Menu } from "./ui";
+import {
+  Avatar,
+  buttonStyles,
+  Link,
+  Loader,
+  Menu,
+  MenuContent,
+  MenuHeader,
+  MenuItem,
+  MenuLabel,
+  MenuSection,
+  MenuSeparator,
+  MenuSubmenu,
+  MenuTrigger,
+} from "./ui";
 
 export default function UserNav() {
   const t = useTranslations("nav");
@@ -56,7 +70,7 @@ function UserMenu({ user }: { user: User }) {
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
 
       <Menu>
-        <Menu.Trigger aria-label="Open Menu">
+        <MenuTrigger aria-label="Open Menu">
           <Avatar
             alt={user.name}
             initials={user.name.charAt(0)}
@@ -64,10 +78,10 @@ function UserMenu({ user }: { user: User }) {
             isSquare
             src={user.image}
           />
-        </Menu.Trigger>
-        <Menu.Content className="sm:min-w-56">
-          <Menu.Section>
-            <Menu.Header separator>
+        </MenuTrigger>
+        <MenuContent className="sm:min-w-56">
+          <MenuSection>
+            <MenuHeader separator>
               <div className="flex flex-col">
                 <span>{user.name}</span>
                 <div className="flex gap-2">
@@ -85,8 +99,8 @@ function UserMenu({ user }: { user: User }) {
                   )}
                 </div>
               </div>
-            </Menu.Header>
-          </Menu.Section>
+            </MenuHeader>
+          </MenuSection>
 
           <MyListMenuItem
             openCreateList={() => setCreateListOpen(true)}
@@ -95,14 +109,14 @@ function UserMenu({ user }: { user: User }) {
 
           <MyCosmoProfileMenuItem />
 
-          <Menu.Item onAction={() => setAccountOpen(true)}>
+          <MenuItem onAction={() => setAccountOpen(true)}>
             <UserIcon data-slot="icon" />
-            <Menu.Label>Account</Menu.Label>
-          </Menu.Item>
+            <MenuLabel>Account</MenuLabel>
+          </MenuItem>
 
-          <Menu.Separator />
+          <MenuSeparator />
 
-          <Menu.Item
+          <MenuItem
             onAction={() => {
               authClient.signOut({
                 fetchOptions: {
@@ -115,9 +129,9 @@ function UserMenu({ user }: { user: User }) {
             }}
           >
             <SignOutIcon data-slot="icon" />
-            <Menu.Label>{t("sign_out")}</Menu.Label>
-          </Menu.Item>
-        </Menu.Content>
+            <MenuLabel>{t("sign_out")}</MenuLabel>
+          </MenuItem>
+        </MenuContent>
       </Menu>
     </>
   );
@@ -132,45 +146,45 @@ function MyListMenuItem({
 }) {
   const { data } = useQuery(orpc.list.list.queryOptions());
   return (
-    <Menu.Submenu>
-      <Menu.Item>
+    <MenuSubmenu>
+      <MenuItem>
         <HeartIcon data-slot="icon" />
-        <Menu.Label>My List</Menu.Label>
-      </Menu.Item>
-      <Menu.Content>
+        <MenuLabel>My List</MenuLabel>
+      </MenuItem>
+      <MenuContent>
         {!data && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
+          <MenuItem isDisabled>
+            <MenuLabel>
               <Loader variant="ring" />
-            </Menu.Label>
-          </Menu.Item>
+            </MenuLabel>
+          </MenuItem>
         )}
         {data && data.length === 0 && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
+          <MenuItem isDisabled>
+            <MenuLabel>
               <span>No list found</span>
-            </Menu.Label>
-          </Menu.Item>
+            </MenuLabel>
+          </MenuItem>
         )}
         {data?.map((a) => (
-          <Menu.Item key={a.slug} href={`/list/${a.slug}`}>
-            <Menu.Label>{a.name}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={a.slug} href={`/list/${a.slug}`}>
+            <MenuLabel>{a.name}</MenuLabel>
+          </MenuItem>
         ))}
-        <Menu.Item onAction={openCreateList}>
+        <MenuItem onAction={openCreateList}>
           <PlusIcon data-slot="icon" />
-          <Menu.Label>Create list</Menu.Label>
-        </Menu.Item>
-        <Menu.Item onAction={openDiscordFormat}>
+          <MenuLabel>Create list</MenuLabel>
+        </MenuItem>
+        <MenuItem onAction={openDiscordFormat}>
           <DiscordLogoIcon data-slot="icon" />
-          <Menu.Label>Discord format</Menu.Label>
-        </Menu.Item>
-        <Menu.Item href={`/list`}>
+          <MenuLabel>Discord format</MenuLabel>
+        </MenuItem>
+        <MenuItem href={`/list`}>
           <GearSixIcon data-slot="icon" />
-          <Menu.Label>Manage list</Menu.Label>
-        </Menu.Item>
-      </Menu.Content>
-    </Menu.Submenu>
+          <MenuLabel>Manage list</MenuLabel>
+        </MenuItem>
+      </MenuContent>
+    </MenuSubmenu>
   );
 }
 
@@ -178,36 +192,36 @@ function MyCosmoProfileMenuItem() {
   const t = useTranslations("nav");
   const { data } = useQuery(orpc.profile.list.queryOptions());
   return (
-    <Menu.Submenu>
-      <Menu.Item>
+    <MenuSubmenu>
+      <MenuItem>
         <DeviceMobileIcon data-slot="icon" />
-        <Menu.Label>{t("my_cosmo_link")}</Menu.Label>
-      </Menu.Item>
-      <Menu.Content>
+        <MenuLabel>{t("my_cosmo_link")}</MenuLabel>
+      </MenuItem>
+      <MenuContent>
         {!data && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
+          <MenuItem isDisabled>
+            <MenuLabel>
               <Loader variant="ring" />
-            </Menu.Label>
-          </Menu.Item>
+            </MenuLabel>
+          </MenuItem>
         )}
         {data && data.length === 0 && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
+          <MenuItem isDisabled>
+            <MenuLabel>
               <span>{t("no_cosmo_found")}</span>
-            </Menu.Label>
-          </Menu.Item>
+            </MenuLabel>
+          </MenuItem>
         )}
         {data?.map((a) => (
-          <Menu.Item key={a.address} href={`/@${a.nickname ?? a.address}`}>
-            <Menu.Label>{parseNickname(a.address, a.nickname)}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={a.address} href={`/@${a.nickname ?? a.address}`}>
+            <MenuLabel>{parseNickname(a.address, a.nickname)}</MenuLabel>
+          </MenuItem>
         ))}
-        <Menu.Item href={`/link`}>
+        <MenuItem href={`/link`}>
           <GearSixIcon data-slot="icon" />
-          <Menu.Label>{t("manage_cosmo_link")}</Menu.Label>
-        </Menu.Item>
-      </Menu.Content>
-    </Menu.Submenu>
+          <MenuLabel>{t("manage_cosmo_link")}</MenuLabel>
+        </MenuItem>
+      </MenuContent>
+    </MenuSubmenu>
   );
 }

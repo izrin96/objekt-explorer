@@ -1,6 +1,6 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { parseNickname } from "@/lib/utils";
-import { Link, Tooltip } from "./ui";
+import { Link, Tooltip, TooltipContent, TooltipTrigger } from "./ui";
 
 export default function UserLink({
   address,
@@ -16,10 +16,10 @@ export default function UserLink({
           <Link href={`/@${nickname ?? address}`}>{parseNickname(address, nickname)}</Link>
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
-              <Tooltip.Trigger aria-label="Preview">
+              <TooltipTrigger aria-label="Preview">
                 <InfoIcon size={16} />
-              </Tooltip.Trigger>
-              <Tooltip.Content inverse>Nickname not available.</Tooltip.Content>
+              </TooltipTrigger>
+              <TooltipContent inverse>Nickname not available.</TooltipContent>
             </Tooltip>
           )}
         </>

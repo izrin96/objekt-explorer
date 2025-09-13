@@ -37,8 +37,8 @@ import type {
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
 import type { ContentType as TooltipContentType } from "recharts/types/component/Tooltip";
-import { twJoin, twMerge } from "tailwind-merge";
-import { composeTailwindRenderProps } from "@/lib/primitive";
+import { twMerge } from "tailwind-merge";
+import { cx } from "@/lib/primitive";
 
 // #region Chart Types
 type ChartType = "default" | "stacked" | "percent";
@@ -456,7 +456,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
     <div
       ref={ref}
       className={twMerge(
-        "inset-ring inset-ring-border grid min-w-[12rem] items-start rounded-lg bg-overlay p-3 py-2.5 text-overlay-fg text-xs",
+        "grid min-w-[12rem] items-start rounded-lg bg-overlay/70 p-3 py-2 text-overlay-fg text-xs ring ring-current/10 backdrop-blur-lg",
         className,
       )}
     >
@@ -560,13 +560,11 @@ const ChartLegendContent = ({
   return (
     <ToggleButtonGroup
       ref={ref}
-      className={composeTailwindRenderProps(
+      className={cx(
+        "flex flex-wrap items-center gap-x-1",
+        verticalAlign === "top" ? "pb-3" : "pt-3",
+        align === "right" ? "justify-end" : align === "left" ? "justify-start" : "justify-center",
         className,
-        twJoin(
-          "flex flex-wrap items-center gap-x-1",
-          verticalAlign === "top" ? "pb-3" : "pt-3",
-          align === "right" ? "justify-end" : align === "left" ? "justify-start" : "justify-center",
-        ),
       )}
       selectedKeys={selectedLegend ? [selectedLegend] : undefined}
       onSelectionChange={(v) => {

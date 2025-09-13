@@ -9,6 +9,10 @@ import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts"
 import ErrorFallbackRender from "@/components/error-boundary";
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
   Chart,
   type ChartConfig,
   ChartTooltip,
@@ -100,11 +104,11 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
 
   return (
     <Card>
-      <Card.Header className="items-center pb-0">
-        <Card.Title>Objekt Breakdown By Member</Card.Title>
-        <Card.Description>Total objekt by member</Card.Description>
-      </Card.Header>
-      <Card.Content>
+      <CardHeader className="items-center pb-0">
+        <CardTitle>Objekt Breakdown By Member</CardTitle>
+        <CardDescription>Total objekt by member</CardDescription>
+      </CardHeader>
+      <CardContent>
         <Chart
           layout="radial"
           data={chartData}
@@ -160,7 +164,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
             />
           </PieChart>
         </Chart>
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 }
@@ -183,11 +187,11 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
 
   return (
     <Card>
-      <Card.Header className="items-center pb-0">
-        <Card.Title>Objekt Breakdown By Season</Card.Title>
-        <Card.Description>Total objekt by season</Card.Description>
-      </Card.Header>
-      <Card.Content>
+      <CardHeader className="items-center pb-0">
+        <CardTitle>Objekt Breakdown By Season</CardTitle>
+        <CardDescription>Total objekt by season</CardDescription>
+      </CardHeader>
+      <CardContent>
         <Chart
           layout="radial"
           data={chartData}
@@ -243,7 +247,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
             />
           </PieChart>
         </Chart>
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 }
@@ -303,11 +307,11 @@ function MemberProgressChart({
 
   return (
     <Card>
-      <Card.Header>
-        <Card.Title>Member Progress</Card.Title>
-        <Card.Description>Progress by member</Card.Description>
-      </Card.Header>
-      <Card.Content>
+      <CardHeader>
+        <CardTitle>Member Progress</CardTitle>
+        <CardDescription>Progress by member</CardDescription>
+      </CardHeader>
+      <CardContent>
         <Chart
           layout="vertical"
           data={chartData}
@@ -383,7 +387,7 @@ function MemberProgressChart({
             />
           </BarChart>
         </Chart>
-      </Card.Content>
+      </CardContent>
     </Card>
   );
 }

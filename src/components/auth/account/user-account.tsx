@@ -12,7 +12,12 @@ import {
   Checkbox,
   Form,
   Loader,
-  Modal,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
   SheetBody,
   SheetContent,
   SheetDescription,
@@ -232,15 +237,15 @@ function DeleteAccount() {
         <TrashSimpleIcon data-slot="icon" />
         Delete Account
       </Button>
-      <Modal.Content isOpen={open} onOpenChange={setOpen}>
-        <Modal.Header>
-          <Modal.Title>Delete Account</Modal.Title>
-          <Modal.Description>
+      <ModalContent isOpen={open} onOpenChange={setOpen}>
+        <ModalHeader>
+          <ModalTitle>Delete Account</ModalTitle>
+          <ModalDescription>
             You will be sent a verification email for confirmation. Continue?
-          </Modal.Description>
-        </Modal.Header>
-        <Modal.Footer>
-          <Modal.Close>Cancel</Modal.Close>
+          </ModalDescription>
+        </ModalHeader>
+        <ModalFooter>
+          <ModalClose>Cancel</ModalClose>
           <Button
             intent="danger"
             type="submit"
@@ -249,8 +254,8 @@ function DeleteAccount() {
           >
             Continue
           </Button>
-        </Modal.Footer>
-      </Modal.Content>
+        </ModalFooter>
+      </ModalContent>
     </>
   );
 }

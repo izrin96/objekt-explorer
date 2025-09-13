@@ -17,7 +17,7 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicProfile } from "@/lib/universal/user";
 import { cn } from "@/utils/classes";
-import { Button, Menu } from "../ui";
+import { Button, Menu, MenuContent } from "../ui";
 
 export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
@@ -135,7 +135,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
       >
         <DotsThreeVerticalIcon size={12} weight="bold" />
       </Button>
-      <Menu.Content placement="bottom right">{children}</Menu.Content>
+      <MenuContent placement="bottom right">{children}</MenuContent>
     </Menu>
   );
 }

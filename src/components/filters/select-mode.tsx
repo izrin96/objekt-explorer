@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { Button, Toggle, Tooltip } from "../ui";
+import { Button, Toggle, Tooltip, TooltipContent } from "../ui";
 
 type Props = {
   children?: ({ handleAction }: { handleAction: (open: () => void) => void }) => ReactNode;
@@ -85,7 +85,7 @@ export function FloatingSelectMode({ children }: Props) {
               <Button size="sq-sm" intent="outline" onClick={reset}>
                 <XIcon size={18} weight="regular" />
               </Button>
-              <Tooltip.Content inverse>Clear selection</Tooltip.Content>
+              <TooltipContent inverse>Clear selection</TooltipContent>
             </Tooltip>
             <Tooltip delay={0} closeDelay={0}>
               <Toggle
@@ -97,7 +97,7 @@ export function FloatingSelectMode({ children }: Props) {
               >
                 <ChecksIcon weight="regular" size={18} />
               </Toggle>
-              <Tooltip.Content inverse>Toggle select mode</Tooltip.Content>
+              <TooltipContent inverse>Toggle select mode</TooltipContent>
             </Tooltip>
             {children?.({ handleAction })}
             <span className="px-1 py-2 font-semibold text-sm">{selected.length} selected</span>

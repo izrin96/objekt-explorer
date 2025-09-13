@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
-import { Button, Menu } from "@/components/ui";
+import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidGroupBy } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
@@ -31,18 +31,18 @@ export default function GroupBysFilter() {
   return (
     <Menu>
       <Button intent="outline">Group By</Button>
-      <Menu.Content
+      <MenuContent
         selectionMode="multiple"
         selectedKeys={selected}
         onSelectionChange={update}
         className="min-w-52"
       >
         {Object.keys(map).map((item) => (
-          <Menu.Item key={item} id={item} textValue={map[item]}>
-            <Menu.Label>{map[item]}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={item} id={item} textValue={map[item]}>
+            <MenuLabel>{map[item]}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

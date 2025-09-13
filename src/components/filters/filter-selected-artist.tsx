@@ -8,7 +8,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
-import { Avatar, Button, Menu } from "../ui";
+import { Avatar, Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function SelectedArtistFilter() {
   const router = useRouter();
@@ -38,13 +38,13 @@ export default function SelectedArtistFilter() {
           ))}
         </div>
       </Button>
-      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+      <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {artists.map((item) => (
-          <Menu.Item key={item.name} isDisabled={isPending} id={item.name} textValue={item.title}>
-            <Menu.Label>{item.title}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={item.name} isDisabled={isPending} id={item.name} textValue={item.title}>
+            <MenuLabel>{item.title}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

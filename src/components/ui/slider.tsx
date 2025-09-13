@@ -133,9 +133,6 @@ const SliderTrack = ({ className, ...props }: SliderTrackProps) => {
           "[--slider:color-mix(in_oklab,var(--color-muted)_90%,black_10%)] dark:[--slider:color-mix(in_oklab,var(--color-muted)_90%,white_10%)]",
           "group/track relative cursor-default rounded-full bg-(--slider) disabled:cursor-default disabled:opacity-60",
           "grow group-data-[orientation=horizontal]:h-1.5 group-data-[orientation=horizontal]:w-full group-data-[orientation=vertical]:w-1.5 group-data-[orientation=vertical]:flex-1",
-          // expanding clickable area
-          "before:-translate-y-1/2 before:absolute before:inset-x-0 before:top-1/2 before:h-10 group-data-[orientation=horizontal]:before:h-10 group-data-[orientation=horizontal]:before:w-full",
-          "before:pointer-events-auto before:content-['']",
         ]),
       )}
     />
@@ -155,8 +152,14 @@ const SliderFiller = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
     }
 
     return orientation === "horizontal"
-      ? { left: `${percent0}%`, width: `${Math.abs(percent0 - percent1)}%` }
-      : { bottom: `${percent0}%`, height: `${Math.abs(percent0 - percent1)}%` };
+      ? {
+          left: `${percent0}%`,
+          width: `${Math.abs(percent0 - percent1)}%`,
+        }
+      : {
+          bottom: `${percent0}%`,
+          height: `${Math.abs(percent0 - percent1)}%`,
+        };
   };
 
   return (

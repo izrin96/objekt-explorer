@@ -22,7 +22,7 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicProfile } from "@/lib/universal/user";
-import { Button, Loader, Menu } from "../ui";
+import { Button, Loader, Menu, MenuContent, MenuItem, MenuLabel, MenuSubmenu } from "../ui";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
@@ -30,7 +30,7 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
       <Button className="absolute top-1 right-10 z-50 p-2 sm:top-2" size="sq-xs" intent="outline">
         <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
-      <Menu.Content placement="bottom right">{children}</Menu.Content>
+      <MenuContent placement="bottom right">{children}</MenuContent>
     </Menu>
   );
 }
@@ -50,33 +50,33 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
     [objekt, addToList],
   );
   return (
-    <Menu.Submenu>
-      <Menu.Item>
+    <MenuSubmenu>
+      <MenuItem>
         <PlusIcon data-slot="icon" />
-        <Menu.Label>Add to list</Menu.Label>
-      </Menu.Item>
-      <Menu.Content placement="bottom right">
+        <MenuLabel>Add to list</MenuLabel>
+      </MenuItem>
+      <MenuContent placement="bottom right">
         {!data && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
+          <MenuItem isDisabled>
+            <MenuLabel>
               <Loader variant="ring" />
-            </Menu.Label>
-          </Menu.Item>
+            </MenuLabel>
+          </MenuItem>
         )}
         {data && data.length === 0 && (
-          <Menu.Item isDisabled>
-            <Menu.Label>
+          <MenuItem isDisabled>
+            <MenuLabel>
               <span>No list found</span>
-            </Menu.Label>
-          </Menu.Item>
+            </MenuLabel>
+          </MenuItem>
         )}
         {data?.map((a) => (
-          <Menu.Item key={a.slug} onAction={() => handleAction(a.slug)}>
-            <Menu.Label>{a.name}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={a.slug} onAction={() => handleAction(a.slug)}>
+            <MenuLabel>{a.name}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
-    </Menu.Submenu>
+      </MenuContent>
+    </MenuSubmenu>
   );
 }
 
@@ -84,7 +84,7 @@ export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: Val
   const removeObjektsFromList = useRemoveFromList();
 
   return (
-    <Menu.Item
+    <MenuItem
       onAction={() =>
         removeObjektsFromList.mutate({
           slug: slug,
@@ -94,8 +94,8 @@ export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: Val
       isDanger
     >
       <TrashSimpleIcon data-slot="icon" />
-      <Menu.Label>Remove from list</Menu.Label>
-    </Menu.Item>
+      <MenuLabel>Remove from list</MenuLabel>
+    </MenuItem>
   );
 }
 
@@ -111,7 +111,7 @@ export function TogglePinMenuItem({
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
   return (
-    <Menu.Item
+    <MenuItem
       onAction={() => {
         if (isPin) {
           unpin.mutate({
@@ -127,8 +127,8 @@ export function TogglePinMenuItem({
       }}
     >
       {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
-      <Menu.Label>{isPin ? "Unpin" : "Pin"}</Menu.Label>
-    </Menu.Item>
+      <MenuLabel>{isPin ? "Unpin" : "Pin"}</MenuLabel>
+    </MenuItem>
   );
 }
 
@@ -144,7 +144,7 @@ export function ToggleLockMenuItem({
   const lock = useBatchLock();
   const unlock = useBatchUnlock();
   return (
-    <Menu.Item
+    <MenuItem
       onAction={() => {
         if (isLocked) {
           unlock.mutate({
@@ -160,8 +160,8 @@ export function ToggleLockMenuItem({
       }}
     >
       {isLocked ? <LockSimpleOpenIcon data-slot="icon" /> : <LockSimpleIcon data-slot="icon" />}
-      <Menu.Label>{isLocked ? "Unlock" : "Lock"}</Menu.Label>
-    </Menu.Item>
+      <MenuLabel>{isLocked ? "Unlock" : "Lock"}</MenuLabel>
+    </MenuItem>
   );
 }
 
@@ -169,9 +169,9 @@ export function SelectMenuItem({ objekt }: { objekt: ValidObjekt }) {
   const objektSelect = useObjektSelect((a) => a.select);
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
   return (
-    <Menu.Item onAction={() => objektSelect(objekt)}>
+    <MenuItem onAction={() => objektSelect(objekt)}>
       <CheckIcon data-slot="icon" />
-      <Menu.Label>{isSelected ? "Unselect" : "Select"}</Menu.Label>
-    </Menu.Item>
+      <MenuLabel>{isSelected ? "Unselect" : "Select"}</MenuLabel>
+    </MenuItem>
   );
 }

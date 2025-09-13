@@ -20,8 +20,16 @@ import {
   Label,
   Link,
   Loader,
-  Modal,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
   Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
   SheetBody,
   SheetClose,
   SheetContent,
@@ -60,15 +68,15 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
     }),
   );
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
-      <Modal.Header>
-        <Modal.Title>Unlink Cosmo</Modal.Title>
-        <Modal.Description>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>Unlink Cosmo</ModalTitle>
+        <ModalDescription>
           This will unlink your Cosmo from this account. You can link it again later. Continue?
-        </Modal.Description>
-      </Modal.Header>
-      <Modal.Footer>
-        <Modal.Close>Cancel</Modal.Close>
+        </ModalDescription>
+      </ModalHeader>
+      <ModalFooter>
+        <ModalClose>Cancel</ModalClose>
         <Button
           intent="danger"
           type="submit"
@@ -77,8 +85,8 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
         >
           Continue
         </Button>
-      </Modal.Footer>
-    </Modal.Content>
+      </ModalFooter>
+    </ModalContent>
   );
 }
 
@@ -389,17 +397,17 @@ function EditProfileForm({
         defaultSelectedKey={`${data.gridColumns ?? 0}`}
         name="gridColumns"
       >
-        <Select.Trigger className="w-[150px]" />
-        <Select.List>
+        <SelectTrigger className="w-[150px]" />
+        <SelectContent>
           {[
             { id: 0, name: "Not set" },
             ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
           ].map((item) => (
-            <Select.Option key={item.id} id={`${item.id}`} textValue={item.name}>
+            <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
               {item.name}
-            </Select.Option>
+            </SelectItem>
           ))}
-        </Select.List>
+        </SelectContent>
       </Select>
 
       <div className="group flex flex-col gap-y-2">

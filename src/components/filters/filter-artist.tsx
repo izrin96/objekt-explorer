@@ -7,7 +7,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { parseSelected } from "@/lib/utils";
-import { Button, Menu } from "../ui";
+import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function ArtistFilter() {
   const { selectedArtists } = useCosmoArtist();
@@ -31,13 +31,13 @@ export default function ArtistFilter() {
       <Button intent="outline" className={filters.artist ? "!inset-ring-primary" : ""}>
         {t("artist")}
       </Button>
-      <Menu.Content selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+      <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {selectedArtists.map((item) => (
-          <Menu.Item key={item.name} id={item.name} textValue={item.title}>
-            <Menu.Label>{item.title}</Menu.Label>
-          </Menu.Item>
+          <MenuItem key={item.name} id={item.name} textValue={item.title}>
+            <MenuLabel>{item.title}</MenuLabel>
+          </MenuItem>
         ))}
-      </Menu.Content>
+      </MenuContent>
     </Menu>
   );
 }

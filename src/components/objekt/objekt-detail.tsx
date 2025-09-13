@@ -13,7 +13,23 @@ import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
-import { Badge, Button, Card, Link, Tab, TabList, Table, TabPanel, Tabs } from "../ui";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  Link,
+  Tab,
+  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+  TabPanel,
+  Tabs,
+} from "../ui";
 import { AttributePanel } from "./objekt-attribute";
 import ObjektSidebar from "./objekt-sidebar";
 import TradeView from "./trade-view";
@@ -193,7 +209,7 @@ function OwnedListPanel({
   return (
     <div className="flex flex-col gap-2">
       <Card className="py-0">
-        <Card.Content className="px-3">
+        <CardContent className="px-3">
           <Table
             className="[--gutter:--spacing(3)]"
             bleed
@@ -201,23 +217,23 @@ function OwnedListPanel({
             sortDescriptor={list.sortDescriptor}
             onSortChange={list.sort}
           >
-            <Table.Header>
-              <Table.Column id="serial" allowsSorting isRowHeader maxWidth={110}>
+            <TableHeader>
+              <TableColumn id="serial" allowsSorting isRowHeader maxWidth={110}>
                 Serial
-              </Table.Column>
-              <Table.Column>Token ID</Table.Column>
-              <Table.Column id="receivedAt" allowsSorting minWidth={200}>
+              </TableColumn>
+              <TableColumn>Token ID</TableColumn>
+              <TableColumn id="receivedAt" allowsSorting minWidth={200}>
                 Received
-              </Table.Column>
-              <Table.Column>Transferable</Table.Column>
-            </Table.Header>
-            <Table.Body>
+              </TableColumn>
+              <TableColumn>Transferable</TableColumn>
+            </TableHeader>
+            <TableBody>
               {currentItems.map((item) => (
-                <Table.Row key={item.id} id={item.id}>
-                  <Table.Cell className="cursor-pointer" onClick={() => openTrades(item.serial)}>
+                <TableRow key={item.id} id={item.id}>
+                  <TableCell className="cursor-pointer" onClick={() => openTrades(item.serial)}>
                     {item.serial}
-                  </Table.Cell>
-                  <Table.Cell>
+                  </TableCell>
+                  <TableCell>
                     <Link
                       href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${item.id}`}
                       className="inline-flex cursor-pointer items-center gap-2"
@@ -226,9 +242,9 @@ function OwnedListPanel({
                       {item.id}
                       <IconOpenLink />
                     </Link>
-                  </Table.Cell>
-                  <Table.Cell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</Table.Cell>
-                  <Table.Cell>
+                  </TableCell>
+                  <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
+                  <TableCell>
                     <Badge
                       className={cn("text-xs")}
                       intent={!item.transferable ? "custom" : "info"}
@@ -236,12 +252,12 @@ function OwnedListPanel({
                     >
                       {item.transferable ? "Yes" : "No"}
                     </Badge>
-                  </Table.Cell>
-                </Table.Row>
+                  </TableCell>
+                </TableRow>
               ))}
-            </Table.Body>
+            </TableBody>
           </Table>
-        </Card.Content>
+        </CardContent>
       </Card>
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">

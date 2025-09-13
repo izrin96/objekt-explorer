@@ -27,7 +27,6 @@ interface ColorPickerProps
   isDisabled?: boolean;
   description?: string;
   eyeDropper?: boolean;
-  buttonClassName?: string;
 }
 
 const ColorPicker = ({
@@ -39,7 +38,6 @@ const ColorPicker = ({
   description,
   eyeDropper,
   className,
-  buttonClassName,
   ...props
 }: ColorPickerProps) => {
   return (
@@ -53,7 +51,6 @@ const ColorPicker = ({
             className={twJoin(
               "*:data-[slot=color-swatch]:-mx-0.5 w-auto px-2.5 *:data-[slot=color-swatch]:size-5",
               !label && "size-10",
-              buttonClassName,
             )}
           >
             <ColorSwatch />
@@ -86,7 +83,9 @@ const ColorPicker = ({
 
 declare global {
   interface Window {
-    EyeDropper?: new () => { open: () => Promise<{ sRGBHex: string }> };
+    EyeDropper?: new () => {
+      open: () => Promise<{ sRGBHex: string }>;
+    };
   }
 }
 

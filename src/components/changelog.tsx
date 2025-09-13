@@ -9,6 +9,13 @@ import {
   DisclosureTrigger,
   Link,
   Modal,
+  ModalBody,
+  ModalClose,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
 } from "./ui";
 
 export default function Changelog() {
@@ -17,10 +24,10 @@ export default function Changelog() {
       <Button size="xs" intent="plain">
         <MegaphoneIcon size={16} weight="light" />
       </Button>
-      <Modal.Content>
-        <Modal.Header>
-          <Modal.Title>Changelog</Modal.Title>
-          <Modal.Description>
+      <ModalContent>
+        <ModalHeader>
+          <ModalTitle>Changelog</ModalTitle>
+          <ModalDescription>
             Objekt Tracker is open source. Github link{" "}
             <Link
               className="underline"
@@ -30,9 +37,9 @@ export default function Changelog() {
               available here
             </Link>
             .
-          </Modal.Description>
-        </Modal.Header>
-        <Modal.Body>
+          </ModalDescription>
+        </ModalHeader>
+        <ModalBody>
           <DisclosureGroup defaultExpandedKeys="4">
             <Disclosure id="4">
               <DisclosureTrigger>2025-09-13</DisclosureTrigger>
@@ -84,11 +91,11 @@ export default function Changelog() {
               </DisclosurePanel>
             </Disclosure>
           </DisclosureGroup>
-        </Modal.Body>
-        <Modal.Footer>
-          <Modal.Close>Close</Modal.Close>
-        </Modal.Footer>
-      </Modal.Content>
+        </ModalBody>
+        <ModalFooter>
+          <ModalClose>Close</ModalClose>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   );
 }

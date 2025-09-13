@@ -5,7 +5,19 @@ import { Suspense, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { CopyButton } from "@/components/copy-button";
 import ErrorFallbackRender from "@/components/error-boundary";
-import { Button, Checkbox, Form, Loader, Modal, Textarea } from "@/components/ui";
+import {
+  Button,
+  Checkbox,
+  Form,
+  Loader,
+  ModalBody,
+  ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  Textarea,
+} from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { useTarget } from "@/hooks/use-target";
@@ -20,7 +32,7 @@ type Props = {
 
 export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
   return (
-    <Modal.Content isOpen={open} onOpenChange={setOpen}>
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
@@ -36,7 +48,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
-    </Modal.Content>
+    </ModalContent>
   );
 }
 
@@ -55,11 +67,11 @@ function Content() {
 
   return (
     <>
-      <Modal.Header>
-        <Modal.Title>Generate Discord Format</Modal.Title>
-        <Modal.Description>List of objekt is based on current filter.</Modal.Description>
-      </Modal.Header>
-      <Modal.Body>
+      <ModalHeader>
+        <ModalTitle>Generate Discord Format</ModalTitle>
+        <ModalDescription>List of objekt is based on current filter.</ModalDescription>
+      </ModalHeader>
+      <ModalBody>
         <Form
           className="flex flex-col gap-2"
           ref={formRef}
@@ -78,17 +90,22 @@ function Content() {
         >
           <Checkbox label="Show count" name="showCount" />
           <Checkbox label="Lower case" name="lowercase" />
-          <Textarea label="Formatted discord text" value={formatText} onChange={setFormatText} />
+          <Textarea
+            label="Formatted discord text"
+            value={formatText}
+            onChange={setFormatText}
+            className="max-h-64 min-h-32"
+          />
           <div className="flex">
             <CopyButton text={formatText} />
           </div>
         </Form>
-      </Modal.Body>
-      <Modal.Footer className="flex justify-end">
+      </ModalBody>
+      <ModalFooter className="flex justify-end">
         <Button type="submit" onClick={() => formRef.current.requestSubmit()}>
           Generate
         </Button>
-      </Modal.Footer>
+      </ModalFooter>
     </>
   );
 }
