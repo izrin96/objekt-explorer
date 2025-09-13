@@ -59,12 +59,8 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
 
   // monitor props change
   useEffect(() => {
-    if (isFirst.current) {
-      isFirst.current = false;
-      return;
-    }
     setOverrideColumn(initialColumn);
-  }, [initialColumn, setOverrideColumn]);
+  }, [initialColumn]);
 
   // responsive effect
   useEffect(() => {
