@@ -54,13 +54,13 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
       }
       setColumnStore(column);
     },
-    [overrideColumn, setOverrideColumn, setColumnStore, setQueryColumn],
+    [overrideColumn, setOverrideColumn, setColumnStore],
   );
 
   // monitor props change
   useEffect(() => {
-    setOverrideColumn(queryColumn ?? initialColumn);
-  }, [queryColumn, initialColumn]);
+    setOverrideColumn(initialColumn);
+  }, [initialColumn]);
 
   // responsive effect
   useEffect(() => {
