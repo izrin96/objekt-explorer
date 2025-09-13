@@ -49,9 +49,9 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   const setColumns = useCallback(
     (column: number) => {
       if (overrideColumn) {
-        return setOverrideColumn(column);
+        setOverrideColumn(null);
       }
-      return setColumnStore(column);
+      setColumnStore(column);
     },
     [overrideColumn, setOverrideColumn, setColumnStore],
   );
