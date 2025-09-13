@@ -28,7 +28,7 @@ type ProviderProps = PropsWithChildren<{
 export function ObjektColumnProvider({ children, initialColumn = null }: ProviderProps) {
   const isTablet = useMediaQuery("(min-width: 640px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const [queryColumn, setQueryColumn] = useColumnFilter();
+  const [queryColumn] = useColumnFilter();
   const [overrideColumn, setOverrideColumn] = useState(queryColumn ?? initialColumn);
   const _hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
   const initial = useBreakpointColumnStore((a) => a.initial);
@@ -49,28 +49,24 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   const setColumns = useCallback(
     (column: number) => {
       if (overrideColumn) {
-        setOverrideColumn(null);
+        return setOverrideColumn(column);
       }
-      if (queryColumn) {
-        setQueryColumn(null);
-      }
-      setColumnStore(column);
+      return setColumnStore(column);
     },
-    [overrideColumn, queryColumn, setOverrideColumn, setColumnStore, setQueryColumn],
+    [overrideColumn, setOverrideColumn, setColumnStore],
   );
 
   // monitor props change
   useEffect(() => {
-    if (isFirst.current) return;
-    setOverrideColumn(initialColumn);
-  }, [initialColumn, setOverrideColumn]);
+    setOverrideColumn(queryColumn ?? initialColumn);
+  }, [initialColumn, queryColumn, setOverrideColumn]);
 
   // responsive effect
   useEffect(() => {
     if (!_hasHydrated) return;
 
     if (isFirst.current) {
-      // first time user or force by user decision
+      // first time user
       if (initial) {
         setColumnStore(responsiveColumn);
       }
