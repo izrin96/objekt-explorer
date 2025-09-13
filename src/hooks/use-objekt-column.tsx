@@ -50,11 +50,10 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
     (column: number) => {
       if (overrideColumn) {
         setOverrideColumn(null);
-        setQueryColumn(null);
       }
       setColumnStore(column);
     },
-    [overrideColumn, setOverrideColumn, setColumnStore, setQueryColumn],
+    [overrideColumn, setOverrideColumn, setColumnStore],
   );
 
   // monitor props change
