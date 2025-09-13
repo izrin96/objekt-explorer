@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from "react";
-import DynamicContainer from "@/components/dynamic-container";
+import { DynamicContainerClient } from "@/components/dynamic-container";
 
 export default async function Layout(props: PropsWithChildren) {
-  return <DynamicContainer>{props.children}</DynamicContainer>;
+  return <DynamicContainerClient>{props.children}</DynamicContainerClient>;
 }
