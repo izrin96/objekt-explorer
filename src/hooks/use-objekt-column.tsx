@@ -28,7 +28,7 @@ type ProviderProps = PropsWithChildren<{
 export function ObjektColumnProvider({ children, initialColumn = null }: ProviderProps) {
   const isTablet = useMediaQuery("(min-width: 640px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const [queryColumn, setQueryColumn] = useColumnFilter();
+  const [queryColumn] = useColumnFilter();
   const [overrideColumn, setOverrideColumn] = useState(queryColumn ?? initialColumn);
   const _hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
   const initial = useBreakpointColumnStore((a) => a.initial);
