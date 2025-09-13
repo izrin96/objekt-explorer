@@ -148,7 +148,7 @@ function ListView({ list }: { list: PublicList }) {
         {filters.grouped ? ` (${groupCount.toLocaleString()} types)` : ""}
       </span>
 
-      <div className="[&>*]:!overflow-visible [&>*>*]:will-change-transform">
+      <div className="[&>*]:!overflow-visible [&>*]:!contain-[inherit] [&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </div>
     </div>
