@@ -43,8 +43,8 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
 
   const columns = useMemo(() => {
     if (!overrideColumn) return columnStore;
-    return isDesktop || isTablet ? overrideColumn : GRID_COLUMNS_MOBILE;
-  }, [isDesktop, isTablet, overrideColumn, columnStore]);
+    return overrideColumn;
+  }, [overrideColumn, columnStore]);
 
   const setColumns = useCallback(
     (column: number) => {
