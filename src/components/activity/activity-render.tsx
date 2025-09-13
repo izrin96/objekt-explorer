@@ -5,7 +5,7 @@ import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 import { env } from "@/env";
@@ -47,15 +47,7 @@ export default function ActivityRender() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center py-2">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <Activity />
-              </Suspense>
+              <Activity />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -223,6 +215,14 @@ function Activity() {
       setQueuedTransfers([]);
     }
   }, [isHovering, queuedTransfers, addNewTransferIds]);
+
+  if (status === "pending") {
+    return (
+      <div className="flex justify-center py-2">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <>
