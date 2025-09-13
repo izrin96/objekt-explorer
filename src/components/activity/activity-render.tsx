@@ -1,11 +1,7 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
-import {
-  QueryErrorResetBoundary,
-  useQueryClient,
-  useSuspenseInfiniteQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
@@ -36,19 +32,6 @@ type WebSocketMessage =
 const ROW_HEIGHT = 42;
 
 export default function ActivityRender() {
-  const queryClient = useQueryClient();
-  const { selectedArtistIds } = useCosmoArtist();
-  const [filters] = useFilters();
-  const [type] = useTypeFilter();
-
-  useEffect(() => {
-    queryClient.removeQueries({
-      queryKey: ["activity"],
-      exact: false,
-      type: "active",
-    });
-  }, [type, filters, selectedArtistIds]);
-
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
@@ -71,9 +54,7 @@ export default function ActivityRender() {
                   </div>
                 }
               >
-                <Activity
-                  key={`${type}-${JSON.stringify(selectedArtistIds)}-${JSON.stringify(filters)}`}
-                />
+                <Activity />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -84,7 +65,7 @@ export default function ActivityRender() {
 }
 
 function Activity() {
-  const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
+  const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const [type] = useTypeFilter();
   const [realtimeTransfers, setRealtimeTransfers] = useState<ActivityData[]>([]);
@@ -96,16 +77,18 @@ function Activity() {
   const isHoveringRef = useRef(false);
   const [currentObjekt, setCurrentObjekt] = useState<ValidObjekt[]>([]);
 
+  const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
-    useSuspenseInfiniteQuery<ActivityResponse>({
-      queryKey: ["activity", type, filters, selectedArtistIds],
+    useInfiniteQuery<ActivityResponse>({
+      queryKey: ["activity", type, filters, parsedSelectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
         const url = new URL("/api/activity", getBaseURL());
         const response = await ofetch<ActivityResponse>(url.toString(), {
           query: {
             cursor: pageParam ? JSON.stringify(pageParam) : undefined,
             type: type ?? undefined,
-            artist: getSelectedArtistIds(filters.artist) ?? [],
+            artist: parsedSelectedArtistIds ?? [],
             member: filters.member ?? [],
             season: filters.season ?? [],
             class: filters.class ?? [],
@@ -124,7 +107,7 @@ function Activity() {
     });
 
   const { lastJsonMessage } = useWebSocket<WebSocketMessage>(
-    env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!,
+    status === "success" ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL! : null,
     {
       shouldReconnect: () => true,
       reconnectAttempts: Infinity,
@@ -133,8 +116,8 @@ function Activity() {
   );
 
   const allTransfers = useMemo(
-    () => [...realtimeTransfers, ...data.pages.flatMap((page) => page.items)],
-    [realtimeTransfers, data.pages],
+    () => [...realtimeTransfers, ...(data?.pages ?? []).flatMap((page) => page.items)],
+    [realtimeTransfers, data?.pages],
   );
 
   const rowVirtualizer = useWindowVirtualizer({
@@ -158,7 +141,7 @@ function Activity() {
     (message: WebSocketMessage) => {
       const filtered = filterData(message.data, type ?? "all", {
         ...filters,
-        artist: getSelectedArtistIds(filters.artist),
+        artist: parsedSelectedArtistIds,
       });
 
       if (message.type === "transfer") {
@@ -173,7 +156,7 @@ function Activity() {
       }
 
       if (message.type === "history") {
-        const existing = data.pages[0].items;
+        const existing = data?.pages[0].items ?? [];
         const existHash = new Set(existing.map((a) => a.transfer.hash));
         const historyFiltered = filtered.filter((a) => existHash.has(a.transfer.hash) === false);
 
@@ -187,7 +170,7 @@ function Activity() {
         }
       }
     },
-    [type, filters, getSelectedArtistIds, addNewTransferIds],
+    [type, filters, parsedSelectedArtistIds, addNewTransferIds, data?.pages[0]],
   );
 
   // handle incoming message
@@ -196,6 +179,11 @@ function Activity() {
       handleWebSocketMessage(lastJsonMessage);
     }
   }, [lastJsonMessage, handleWebSocketMessage]);
+
+  // clear realtime on query key change
+  useEffect(() => {
+    setRealtimeTransfers([]);
+  }, [type, filters, parsedSelectedArtistIds]);
 
   // remove new transfer after animation completes
   useEffect(() => {
