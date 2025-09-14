@@ -1,14 +1,14 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
-import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import useWebSocket from "react-use-websocket";
+import useWebSocket, { ReadyState } from "react-use-websocket";
 import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -62,6 +62,7 @@ export default function ActivityRender() {
 }
 
 function Activity() {
+  const queryClient = useQueryClient();
   const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const [type] = useTypeFilter();
@@ -76,7 +77,7 @@ function Activity() {
 
   const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending } =
     useInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", type, filters, parsedSelectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
@@ -104,8 +105,8 @@ function Activity() {
       refetchOnReconnect: false,
     });
 
-  const { lastJsonMessage } = useWebSocket<WebSocketMessage>(
-    status === "success" ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL! : null,
+  const { lastJsonMessage, readyState } = useWebSocket<WebSocketMessage>(
+    isPending ? null : env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!,
     {
       shouldReconnect: () => true,
       reconnectAttempts: Infinity,
@@ -178,12 +179,21 @@ function Activity() {
     }
   }, [lastJsonMessage, handleWebSocketMessage]);
 
-  // clear realtime on query key change
+  // clear realtime on query pending
   useEffect(() => {
-    setRealtimeTransfers([]);
-    setNewTransferIds(new Set());
-    setQueuedTransfers([]);
-  }, [type, filters, parsedSelectedArtistIds]);
+    if (isPending) {
+      setRealtimeTransfers([]);
+      setNewTransferIds(new Set());
+      setQueuedTransfers([]);
+    }
+  }, [isPending]);
+
+  // reset query if websocket closed
+  useEffect(() => {
+    if (readyState === ReadyState.CLOSED) {
+      queryClient.resetQueries({ queryKey: ["activity"], exact: false });
+    }
+  }, [readyState]);
 
   // remove new transfer after animation completes
   useEffect(() => {
