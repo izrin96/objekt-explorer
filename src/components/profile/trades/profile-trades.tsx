@@ -57,13 +57,12 @@ function ProfileTrades() {
   const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
   const [type] = useTypeFilter();
-  const address = profile.address;
   const parentRef = useRef<HTMLDivElement>(null);
 
   const query = useSuspenseInfiniteQuery({
-    queryKey: ["transfers", address, type, filters, selectedArtistIds],
+    queryKey: ["transfers", profile.address, type, filters, selectedArtistIds],
     queryFn: async ({ pageParam }: { pageParam?: { timestamp: string; id: string } }) => {
-      const url = new URL(`/api/transfers/${address}`, getBaseURL());
+      const url = new URL(`/api/transfers/${profile.address}`, getBaseURL());
       return await ofetch<TransferResult>(url.toString(), {
         query: {
           cursor: pageParam ? JSON.stringify(pageParam) : undefined,
@@ -125,7 +124,7 @@ function ProfileTrades() {
                       {({ openObjekts }) => (
                         <TradeRow
                           row={row}
-                          address={address}
+                          address={profile.address}
                           open={openObjekts}
                           style={{
                             transform: `translateY(${
