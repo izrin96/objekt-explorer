@@ -101,6 +101,7 @@ function Activity() {
       staleTime: 0,
       gcTime: 0,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     });
 
   const { lastJsonMessage } = useWebSocket<WebSocketMessage>(
@@ -180,6 +181,8 @@ function Activity() {
   // clear realtime on query key change
   useEffect(() => {
     setRealtimeTransfers([]);
+    setNewTransferIds(new Set());
+    setQueuedTransfers([]);
   }, [type, filters, parsedSelectedArtistIds]);
 
   // remove new transfer after animation completes
@@ -349,17 +352,23 @@ function ActivityRow({
               {event === "mint" ? (
                 <>
                   <LeafIcon size={18} weight="light" />
-                  <span>Mint</span>
+                  <Badge className="text-xs [--badge-bg:var(--color-yellow-500)]/15 [--badge-fg:var(--color-yellow-700)] [--badge-overlay:var(--color-yellow-500)]/20 dark:[--badge-fg:var(--color-yellow-300)]">
+                    Mint
+                  </Badge>
                 </>
               ) : event === "spin" ? (
                 <>
                   <ArrowsClockwiseIcon size={18} weight="light" />
-                  <span>Spin</span>
+                  <Badge className="text-xs [--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]">
+                    Spin
+                  </Badge>
                 </>
               ) : (
                 <>
                   <PaperPlaneTiltIcon size={18} weight="light" />
-                  <span>Transfer</span>
+                  <Badge className="text-xs [--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]">
+                    Transfer
+                  </Badge>
                 </>
               )}
             </div>
