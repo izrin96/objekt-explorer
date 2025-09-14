@@ -3,6 +3,7 @@
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
+import dynamic from "next/dynamic";
 import { memo, Suspense, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -22,6 +23,10 @@ import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
 import ProgressFilter from "./progress-filter";
+
+export const ProgressRenderDynamic = dynamic(() => Promise.resolve(ProgressRender), {
+  ssr: false,
+});
 
 export default function ProgressRender() {
   return (

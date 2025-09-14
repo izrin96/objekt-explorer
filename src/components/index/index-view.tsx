@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { Suspense, useDeferredValue, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -23,6 +24,10 @@ import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import { Loader } from "../ui";
 import Filter from "./filter";
+
+export const IndexRenderDynamic = dynamic(() => Promise.resolve(IndexRender), {
+  ssr: false,
+});
 
 export default function IndexRender() {
   return (

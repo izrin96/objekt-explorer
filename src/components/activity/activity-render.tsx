@@ -4,6 +4,7 @@ import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-ico
 import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -30,6 +31,10 @@ type WebSocketMessage =
   | { type: "history"; data: ActivityData[] };
 
 const ROW_HEIGHT = 42;
+
+export const ActivityRenderDynamic = dynamic(() => Promise.resolve(ActivityRender), {
+  ssr: false,
+});
 
 export default function ActivityRender() {
   return (
