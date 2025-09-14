@@ -82,7 +82,7 @@ function Activity() {
 
   const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", type, filters, parsedSelectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
@@ -111,7 +111,7 @@ function Activity() {
     });
 
   const { lastJsonMessage, readyState } = useWebSocket<WebSocketMessage>(
-    isPending ? null : env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL!,
+    status === "success" ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL! : null,
     {
       shouldReconnect: () => true,
       reconnectAttempts: Infinity,
@@ -193,17 +193,17 @@ function Activity() {
 
   // clear realtime on query pending
   useEffect(() => {
-    if (isPending) {
+    if (status === "pending") {
       setRealtimeTransfers([]);
       setNewTransferIds(new Set());
       setQueuedTransfers([]);
     }
-  }, [isPending]);
+  }, [status]);
 
   // reset query if websocket closed
   useEffect(() => {
     if (readyState === ReadyState.CLOSED) {
-      queryClient.resetQueries({ queryKey: ["activity"], exact: false });
+      queryClient.resetQueries({ queryKey: ["activity"], exact: false, fetchStatus: "idle" });
     }
   }, [readyState]);
 
