@@ -13,7 +13,7 @@ import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import useWebSocket, { ReadyState } from "react-use-websocket";
+import useWebSocket from "react-use-websocket";
 import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -82,7 +82,7 @@ function Activity() {
 
   const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending } =
     useInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", type, filters, parsedSelectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
@@ -110,7 +110,7 @@ function Activity() {
       refetchOnReconnect: false,
     });
 
-  const { lastJsonMessage, readyState } = useWebSocket<WebSocketMessage>(
+  const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
     status === "success" ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL! : null,
     {
       shouldReconnect: () => true,
@@ -193,19 +193,21 @@ function Activity() {
 
   // clear realtime on query pending
   useEffect(() => {
-    if (status === "pending") {
+    if (isPending) {
       setRealtimeTransfers([]);
       setNewTransferIds(new Set());
       setQueuedTransfers([]);
     }
-  }, [status]);
+  }, [isPending]);
 
-  // reset query if websocket closed
+  // send history request to websocket on query success
   useEffect(() => {
-    if (readyState === ReadyState.CLOSED) {
-      queryClient.resetQueries({ queryKey: ["activity"], exact: false, fetchStatus: "idle" });
+    if (status === "success") {
+      sendJsonMessage({
+        type: "request_history",
+      });
     }
-  }, [readyState]);
+  }, [status]);
 
   // remove new transfer after animation completes
   useEffect(() => {
@@ -246,7 +248,7 @@ function Activity() {
     }
   }, [isHovering, queuedTransfers, addNewTransferIds]);
 
-  if (status === "pending") {
+  if (isPending) {
     return (
       <div className="flex justify-center py-2">
         <Loader variant="ring" />
