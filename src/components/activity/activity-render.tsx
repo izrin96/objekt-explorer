@@ -138,6 +138,13 @@ function Activity() {
 
   const handleWebSocketMessage = useCallback(
     (message: WebSocketMessage) => {
+      const latestData = queryClient.getQueryData<InfiniteData<ActivityResponse>>([
+        "activity",
+        type,
+        filters,
+        parsedSelectedArtistIds,
+      ]);
+
       const filtered = filterData(message.data, type ?? "all", {
         ...filters,
         artist: parsedSelectedArtistIds,
@@ -155,7 +162,7 @@ function Activity() {
       }
 
       if (message.type === "history") {
-        const existing = data?.pages[0].items ?? [];
+        const existing = latestData?.pages[0].items ?? [];
         const existHash = new Set(existing.map((a) => a.transfer.hash));
         const historyFiltered = filtered.filter((a) => existHash.has(a.transfer.hash) === false);
 
