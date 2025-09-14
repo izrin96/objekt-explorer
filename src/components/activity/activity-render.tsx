@@ -169,7 +169,7 @@ function Activity() {
         }
       }
     },
-    [type, filters, parsedSelectedArtistIds, addNewTransferIds, data?.pages[0]],
+    [type, filters, parsedSelectedArtistIds, addNewTransferIds],
   );
 
   // handle incoming message
