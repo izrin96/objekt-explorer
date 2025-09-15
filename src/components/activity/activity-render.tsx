@@ -191,23 +191,21 @@ function Activity() {
     }
   }, [lastJsonMessage, handleWebSocketMessage]);
 
-  // clear realtime on query pending
+  // clear realtime on query key changes
   useEffect(() => {
-    if (isPending) {
-      setRealtimeTransfers([]);
-      setNewTransferIds(new Set());
-      setQueuedTransfers([]);
-    }
-  }, [isPending]);
+    setRealtimeTransfers([]);
+    setNewTransferIds(new Set());
+    setQueuedTransfers([]);
+  }, [type, filters, parsedSelectedArtistIds]);
 
   // send history request to websocket on query success
   useEffect(() => {
-    if (status === "success") {
+    if (status === "success" && data?.pages[0]) {
       sendJsonMessage({
         type: "request_history",
       });
     }
-  }, [status]);
+  }, [status, data?.pages[0]]);
 
   // remove new transfer after animation completes
   useEffect(() => {
