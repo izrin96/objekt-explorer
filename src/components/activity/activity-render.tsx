@@ -173,11 +173,11 @@ function Activity() {
 
         if (isHoveringRef.current) {
           // Queue history updates when hovering
-          setQueuedTransfers((prev) => [...prev, ...historyFiltered]);
+          setQueuedTransfers(historyFiltered);
         } else {
           // Apply history updates immediately when not hovering
           addNewTransferIds(historyFiltered);
-          setRealtimeTransfers((prev) => [...prev, ...historyFiltered]);
+          setRealtimeTransfers(historyFiltered);
         }
       }
     },
@@ -200,12 +200,12 @@ function Activity() {
 
   // send history request to websocket on query success
   useEffect(() => {
-    if (status === "success" && data?.pages[0]) {
+    if (status === "success") {
       sendJsonMessage({
         type: "request_history",
       });
     }
-  }, [status, data?.pages[0]]);
+  }, [status]);
 
   // remove new transfer after animation completes
   useEffect(() => {
