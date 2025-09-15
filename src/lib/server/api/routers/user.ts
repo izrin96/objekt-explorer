@@ -1,8 +1,10 @@
 import { ORPCError } from "@orpc/server";
+import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { providersMap } from "@/lib/universal/user";
 import { auth } from "../../auth";
 import { db } from "../../db";
+import { user as userSchema } from "../../db/auth-schema";
 import { authed } from "../orpc";
 
 export const userRouter = {
@@ -11,7 +13,6 @@ export const userRouter = {
       input: providerId,
       context: {
         session: { user },
-        headers,
       },
     }) => {
       // get accessToken from account
@@ -46,13 +47,13 @@ export const userRouter = {
         });
 
       // update user
-      await auth.api.updateUser({
-        headers,
-        body: {
+      await db
+        .update(userSchema)
+        .set({
           [providerId]: providerId === "discord" ? info.data.username : info.data.data?.username,
           image: info.user.image,
-        },
-      });
+        })
+        .where(eq(userSchema.id, user.id));
     },
   ),
 
@@ -63,24 +64,32 @@ export const userRouter = {
         accountId: z.string(),
       }),
     )
-    .handler(async ({ input: { providerId, accountId }, context: { headers } }) => {
-      // unlink using auth api
-      const result = await auth.api.unlinkAccount({
-        headers: headers,
-        body: {
-          providerId: providerId,
-          accountId: accountId,
+    .handler(
+      async ({
+        input: { providerId, accountId },
+        context: {
+          headers,
+          session: { user },
         },
-      });
+      }) => {
+        // unlink using auth api
+        const result = await auth.api.unlinkAccount({
+          headers: headers,
+          body: {
+            providerId: providerId,
+            accountId: accountId,
+          },
+        });
 
-      if (!result.status) throw new ORPCError("INTERNAL_SERVER_ERROR");
+        if (!result.status) throw new ORPCError("INTERNAL_SERVER_ERROR");
 
-      // remove username
-      await auth.api.updateUser({
-        headers,
-        body: {
-          [providerId]: null,
-        },
-      });
-    }),
+        // remove username
+        await db
+          .update(userSchema)
+          .set({
+            [providerId]: null,
+          })
+          .where(eq(userSchema.id, user.id));
+      },
+    ),
 };
