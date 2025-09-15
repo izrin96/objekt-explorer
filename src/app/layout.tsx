@@ -84,6 +84,9 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       lang={locale}
       suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} ${pretendard.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
+      style={{
+        scrollbarGutter: "stable",
+      }}
     >
       <body
         className={cn(
