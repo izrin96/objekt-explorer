@@ -61,6 +61,7 @@ RUN --mount=type=secret,id=indexer_proxy_key \
     --mount=type=secret,id=privy_app_id \
     --mount=type=secret,id=privy_app_secret \
     --mount=type=secret,id=privy_abs_app_id \
+    --mount=type=secret,id=redis_url \
     export INDEXER_PROXY_KEY=$(cat /run/secrets/indexer_proxy_key) && \
     export INDEXER_PROXY_URL=$(cat /run/secrets/indexer_proxy_url) && \
     export NEXT_PUBLIC_UMAMI_SCRIPT_URL=$(cat /run/secrets/umami_script_url) && \
@@ -88,6 +89,7 @@ RUN --mount=type=secret,id=indexer_proxy_key \
     export NEXT_PUBLIC_PRIVY_APP_ID=$(cat /run/secrets/privy_app_id) && \
     export PRIVY_APP_SECRET=$(cat /run/secrets/privy_app_secret) && \
     export PRIVY_ABS_APP_ID=$(cat /run/secrets/privy_abs_app_id) && \
+    export REDIS_URL=$(cat /run/secrets/redis_url) && \
     if [ -f yarn.lock ]; then yarn build; \
     elif [ -f package-lock.json ]; then npm run build; \
     elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \

@@ -65,6 +65,7 @@ jobs:
             privy_app_id=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
             privy_app_secret=${{ secrets.PRIVY_APP_SECRET }}
             privy_abs_app_id=${{ secrets.PRIVY_ABS_APP_ID }}
+            redis_url=${{ secrets.REDIS_URL }}
 
   cleanup:
     runs-on: ubuntu-latest

@@ -23,6 +23,7 @@ export const env = createEnv({
     UPSTASH_REDIS_REST_TOKEN: z.string(),
     PRIVY_APP_SECRET: z.string(),
     PRIVY_ABS_APP_ID: z.string(),
+    REDIS_URL: z.string(),
   },
   client: {
     NEXT_PUBLIC_SITE_URL: z.string().optional(),

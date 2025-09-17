@@ -55,6 +55,7 @@ services:
       - NEXT_PUBLIC_PRIVY_APP_ID
       - PRIVY_APP_SECRET
       - PRIVY_ABS_APP_ID
+      - REDIS_URL
   minio:
     restart: always
     image: minio/minio:latest
@@ -80,6 +81,15 @@ services:
       - AUTH_TYPE=scram-sha-256
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
+  redis:
+    restart: always
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # command: redis-server --appendonly yes
 volumes:
   db_data:
   minio_data:
+  redis_data:

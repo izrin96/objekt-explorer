@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ProfileTradesRenderDynamic } from "@/components/profile/trades/profile-trades";
 import { getUserByIdentifier } from "@/lib/client-fetching";
+import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
+import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 import { parseNickname } from "@/lib/utils";
 
 type Props = {
@@ -19,5 +21,16 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function UserTransfersPage() {
-  return <ProfileTradesRenderDynamic />;
+  const queryClient = getQueryClient();
+
+  queryClient.prefetchQuery({
+    queryKey: ["filter-data"],
+    queryFn: fetchFilterData,
+  });
+
+  return (
+    <HydrateClient client={queryClient}>
+      <ProfileTradesRenderDynamic />
+    </HydrateClient>
+  );
 }
