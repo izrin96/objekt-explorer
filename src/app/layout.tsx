@@ -10,6 +10,7 @@ import { Analytics } from "@/components/analytics";
 import Navbar from "@/components/navbar";
 import { cn } from "@/utils/classes";
 import "../lib/orpc/server";
+import { preconnect } from "react-dom";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
 import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
@@ -79,6 +80,11 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const [locale, selectedArtistIds] = await Promise.all([getLocale(), getSelectedArtists()]);
+
+  preconnect("https://imagedelivery.net");
+  preconnect("https://resources.cosmo.fans");
+  preconnect("https://static.cosmo.fans");
+
   return (
     <html
       lang={locale}
