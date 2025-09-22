@@ -40,7 +40,7 @@ export default function SearchFilter() {
           </Button>
         ) : (
           <Popover>
-            <Button intent="plain">
+            <Button intent="plain" size="sq-xs">
               <QuestionMarkIcon data-slot="icon" />
             </Button>
             <PopoverContent className="prose max-w-sm overflow-auto p-4">
