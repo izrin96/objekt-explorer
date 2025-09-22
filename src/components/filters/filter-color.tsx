@@ -1,10 +1,10 @@
 "use client";
 
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import { parseColor } from "@react-stately/color";
+import { type Color, parseColor } from "@react-stately/color";
 import { useTranslations } from "next-intl";
-import { type CSSProperties, useEffect, useState } from "react";
-import { useDebounceValue } from "usehooks-ts";
+import { type CSSProperties, useState } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { cn } from "@/utils/classes";
 import { Button, ColorPicker } from "../ui";
@@ -13,31 +13,14 @@ import ColorSensitivityFilter from "./filter-color-sensitivity";
 export default function ColorFilter() {
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
-  const [color, setColor] = useState(filters.color);
-  const [debouncedColor] = useDebounceValue(color, 60);
-
-  useEffect(() => {
-    setFilters({ color: debouncedColor });
-  }, [debouncedColor, setFilters]);
-
-  useEffect(() => {
-    if (!filters.color) {
-      setColor(null);
-    }
-  }, [filters.color]);
 
   return (
     <>
-      <div style={{ "--objekt-color": color } as CSSProperties}>
-        <ColorPicker
-          eyeDropper
-          className={cn(color && "[&>*]:inset-ring-(--objekt-color)")}
-          label={t("color")}
-          value={color ? parseColor(color) : "#000"}
-          onChange={(color) => setColor(color.toString("hsl"))}
-        />
-      </div>
-      {color && (
+      <ColorPickerControl
+        initialValue={filters.color}
+        onCommit={(value) => setFilters({ color: value })}
+      />
+      {filters.color && (
         <>
           <ColorSensitivityFilter />
           <Button
@@ -55,5 +38,39 @@ export default function ColorFilter() {
         </>
       )}
     </>
+  );
+}
+
+interface ColorPickerControlProps {
+  initialValue: string | null;
+  onCommit: (value: string | null) => void;
+}
+
+function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps) {
+  const [localColor, setLocalColor] = useState(initialValue);
+  const [color, setColor] = useState(initialValue);
+  const debouncedCommit = useDebounceCallback(onCommit, 60);
+
+  if (initialValue !== localColor) {
+    setLocalColor(initialValue);
+    setColor(initialValue);
+  }
+
+  const handleChange = (c: Color) => {
+    const hsl = c.toString("hsl");
+    setColor(hsl);
+    debouncedCommit(hsl);
+  };
+
+  return (
+    <div style={{ "--objekt-color": color } as CSSProperties}>
+      <ColorPicker
+        eyeDropper
+        className={cn(color && "[&>*]:inset-ring-(--objekt-color)")}
+        label="Color"
+        value={color ? parseColor(color) : "#000"}
+        onChange={handleChange}
+      />
+    </div>
   );
 }

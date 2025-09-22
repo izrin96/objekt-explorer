@@ -2,34 +2,47 @@
 
 import { QuestionMarkIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
-import { useDebounceValue } from "usehooks-ts";
+import { useState } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { Button, Popover, PopoverContent, TextField } from "../ui";
 
 export default function SearchFilter() {
-  const t = useTranslations("filter");
-  const locale = useLocale();
   const [filters, setFilters] = useFilters();
-  const [query, setQuery] = useState(filters.search ?? "");
+  return (
+    <SearchFilterField
+      initialValue={filters.search ?? ""}
+      onCommit={(value) => setFilters({ search: value === "" ? null : value })}
+    />
+  );
+}
 
-  const [debounced] = useDebounceValue(query, 250);
+interface SearchFilterFieldProps {
+  initialValue: string;
+  onCommit: (value: string) => void;
+}
 
-  useEffect(() => {
-    setFilters({ search: debounced === "" ? null : debounced });
-  }, [debounced, setFilters]);
+function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
+  const [localQuery, setLocalQuery] = useState(initialValue);
+  const locale = useLocale();
+  const t = useTranslations("filter");
+  const [query, setQuery] = useState(initialValue);
+  const debouncedCommit = useDebounceCallback(onCommit, 250);
 
-  useEffect(() => {
-    // clear the text if reset
-    if (!filters.search) {
-      setQuery("");
-    }
-  }, [filters.search]);
+  if (initialValue !== localQuery) {
+    setLocalQuery(initialValue);
+    setQuery(initialValue);
+  }
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+    debouncedCommit(value);
+  };
 
   return (
     <TextField
       placeholder={t("quick_search")}
-      onChange={setQuery}
+      onChange={handleChange}
       className="w-full min-w-50 max-w-72"
       value={query}
       aria-label="Search"
