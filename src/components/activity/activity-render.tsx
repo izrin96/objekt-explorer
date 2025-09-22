@@ -82,9 +82,11 @@ function Activity() {
 
   const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
 
+  const queryKey = [type, filters, parsedSelectedArtistIds];
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending } =
     useInfiniteQuery<ActivityResponse>({
-      queryKey: ["activity", type, filters, parsedSelectedArtistIds],
+      queryKey: ["activity", ...queryKey],
       queryFn: async ({ pageParam, signal }) => {
         const url = new URL("/api/activity", getBaseURL());
         const response = await ofetch<ActivityResponse>(url.toString(), {
@@ -181,7 +183,7 @@ function Activity() {
         }
       }
     },
-    [type, filters, parsedSelectedArtistIds, addNewTransferIds],
+    [...queryKey, addNewTransferIds],
   );
 
   // handle incoming message
@@ -196,7 +198,7 @@ function Activity() {
     setRealtimeTransfers([]);
     setNewTransferIds(new Set());
     setQueuedTransfers([]);
-  }, [type, filters, parsedSelectedArtistIds]);
+  }, [...queryKey]);
 
   // send history request to websocket on query success
   useEffect(() => {

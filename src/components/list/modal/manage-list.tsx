@@ -7,7 +7,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Suspense, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -156,6 +156,7 @@ type EditListModalProps = {
 };
 
 export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null!);
   const editList = useMutation(
@@ -170,6 +171,17 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
       },
     }),
   );
+
+  useEffect(() => {
+    if (!open) {
+      queryClient.removeQueries({
+        queryKey: orpc.list.find.key({
+          input: slug,
+        }),
+      });
+    }
+  }, [open]);
+
   return (
     <SheetContent isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
@@ -226,7 +238,6 @@ function EditListForm({ slug }: { slug: string }) {
   const { data } = useSuspenseQuery(
     orpc.list.find.queryOptions({
       input: slug,
-      gcTime: 0,
     }),
   );
   return (

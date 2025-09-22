@@ -98,6 +98,7 @@ type EditProfileModalProps = {
 };
 
 export function EditProfileModal({ nickname, address, open, setOpen }: EditProfileModalProps) {
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null!);
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
@@ -177,6 +178,16 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
       }, droppedImage.type);
     });
   }, [droppedImage]);
+
+  useEffect(() => {
+    if (!open) {
+      queryClient.removeQueries({
+        queryKey: orpc.profile.find.key({
+          input: address,
+        }),
+      });
+    }
+  }, [open]);
 
   return (
     <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
@@ -352,7 +363,6 @@ function EditProfileForm({
   const { data } = useSuspenseQuery(
     orpc.profile.find.queryOptions({
       input: address,
-      gcTime: 0,
     }),
   );
 

@@ -30,7 +30,6 @@ export function ListAccounts() {
       }
       return result.data;
     },
-    gcTime: 0,
   });
 
   const linkedAccounts = query.data.filter((a) => a.providerId !== "credential");

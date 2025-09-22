@@ -1,9 +1,14 @@
 "use client";
 
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -35,6 +40,16 @@ type Props = {
 };
 
 export default function UserAccountModal({ open, setOpen }: Props) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!open) {
+      queryClient.removeQueries({
+        queryKey: ["session"],
+      });
+    }
+  }, [open]);
+
   return (
     <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
@@ -78,7 +93,6 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       }
       return result.data;
     },
-    gcTime: 0,
   });
 
   if (!session.data) return;
