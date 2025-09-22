@@ -2,7 +2,6 @@
 
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { motion } from "motion/react";
-import Changelog from "./changelog";
 import SelectedArtistFilter from "./filters/filter-selected-artist";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Container, Link } from "./ui";
@@ -32,7 +31,6 @@ export default function Navbar() {
             </motion.div>
           </Link>
           <div className="flex items-center">
-            <Changelog />
             <Activity />
           </div>
         </div>
