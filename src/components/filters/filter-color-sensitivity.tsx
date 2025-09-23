@@ -31,12 +31,13 @@ interface ColorSensitivitySliderProps {
 }
 
 function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitivitySliderProps) {
+  const t = useTranslations("filter");
   const [value, setValue] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 150);
 
   return (
     <Slider
-      label="Color Sensitivity"
+      label={t("color_sensitivity")}
       className="pb-2"
       minValue={0}
       maxValue={30}

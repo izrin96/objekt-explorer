@@ -47,6 +47,7 @@ interface ColorPickerControlProps {
 }
 
 function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps) {
+  const t = useTranslations("filter");
   const [localColor, setLocalColor] = useState(initialValue);
   const [color, setColor] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 60);
@@ -67,7 +68,7 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
       <ColorPicker
         eyeDropper
         className={cn(color && "[&>*]:inset-ring-(--objekt-color)")}
-        label="Color"
+        label={t("color")}
         value={color ? parseColor(color) : "#000"}
         onChange={handleChange}
       />
