@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
 import { memo, Suspense, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
 import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
@@ -14,6 +15,7 @@ import ObjektView from "@/components/objekt/objekt-view";
 import { Loader, ProgressBar } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useShapeProgress } from "@/hooks/use-shape-progress";
 import { useTarget } from "@/hooks/use-target";
@@ -30,29 +32,32 @@ export const ProgressRenderDynamic = dynamic(() => Promise.resolve(ProgressRende
 
 export default function ProgressRender() {
   return (
-    <ObjektModalProvider initialTab="owned">
-      <QueryErrorResetBoundary>
-        {({ reset }) => (
-          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Suspense
-              fallback={
-                <div className="flex justify-center">
-                  <Loader variant="ring" />
-                </div>
-              }
-            >
-              <Progress />
-            </Suspense>
-          </ErrorBoundary>
-        )}
-      </QueryErrorResetBoundary>
-    </ObjektModalProvider>
+    <ObjektColumnProvider>
+      <ObjektModalProvider initialTab="owned">
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <Progress />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </ObjektModalProvider>
+    </ObjektColumnProvider>
   );
 }
 
 function Progress() {
   const { authenticated } = useUser();
   const { selectedArtistIds } = useCosmoArtist();
+  const { columns } = useObjektColumn();
   const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
   const shape = useShapeProgress();
@@ -87,6 +92,7 @@ function Progress() {
             objekts={objekts}
             ownedSlugs={ownedSlugs}
             authenticated={authenticated}
+            columns={columns}
           />
         ))
       )}
@@ -99,11 +105,13 @@ const ProgressCollapse = memo(function ProgressCollapse({
   objekts,
   ownedSlugs,
   authenticated,
+  columns,
 }: {
   title: string;
   objekts: ValidObjekt[];
   ownedSlugs: Set<string>;
   authenticated: boolean;
+  columns: number;
 }) {
   const [show, setShow] = useState(false);
   const [showCount] = useShowCount();
@@ -149,44 +157,56 @@ const ProgressCollapse = memo(function ProgressCollapse({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15, ease: "easeInOut" }}
+            className="mt-4 flex flex-col"
           >
-            <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 lg:gap-3">
-              {Object.values(groupBy(objekts, (a) => a.collectionId)).map((objekts) => {
-                const [objekt] = objekts;
-                return (
-                  <ObjektModal
-                    key={objekt.id}
-                    objekts={objekts}
-                    showOwned
-                    menu={
-                      authenticated && (
-                        <ObjektStaticMenu>
-                          <AddToListMenu objekt={objekt} />
-                        </ObjektStaticMenu>
-                      )
-                    }
-                  >
-                    {({ openObjekts }) => (
-                      <ObjektView
+            {makeObjektRows({
+              items: Object.values(groupBy(objekts, (a) => a.collectionId)),
+              columns,
+              renderItem: ({ items, rowIndex }) => (
+                <ObjektsRenderRow
+                  key={`${title}-${rowIndex}`}
+                  columns={columns}
+                  rowIndex={rowIndex}
+                  items={items}
+                >
+                  {({ item: objekts }) => {
+                    const [objekt] = objekts;
+                    return (
+                      <ObjektModal
+                        key={objekt.id}
                         objekts={objekts}
-                        isFade={!ownedSlugs.has(objekt.slug)}
-                        unobtainable={unobtainables.includes(objekt.slug)}
-                        showCount={showCount}
-                        open={openObjekts}
-                      >
-                        {authenticated && (
-                          <div className="absolute top-0 right-0 flex">
-                            <ObjektHoverMenu>
+                        showOwned
+                        menu={
+                          authenticated && (
+                            <ObjektStaticMenu>
                               <AddToListMenu objekt={objekt} />
-                            </ObjektHoverMenu>
-                          </div>
+                            </ObjektStaticMenu>
+                          )
+                        }
+                      >
+                        {({ openObjekts }) => (
+                          <ObjektView
+                            objekts={objekts}
+                            isFade={!ownedSlugs.has(objekt.slug)}
+                            unobtainable={unobtainables.includes(objekt.slug)}
+                            showCount={showCount}
+                            open={openObjekts}
+                          >
+                            {authenticated && (
+                              <div className="absolute top-0 right-0 flex">
+                                <ObjektHoverMenu>
+                                  <AddToListMenu objekt={objekt} />
+                                </ObjektHoverMenu>
+                              </div>
+                            )}
+                          </ObjektView>
                         )}
-                      </ObjektView>
-                    )}
-                  </ObjektModal>
-                );
-              })}
-            </div>
+                      </ObjektModal>
+                    );
+                  }}
+                </ObjektsRenderRow>
+              ),
+            })}
           </motion.div>
         )}
       </AnimatePresence>
