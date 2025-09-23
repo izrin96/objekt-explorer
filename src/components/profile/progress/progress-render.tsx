@@ -13,6 +13,7 @@ import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu
 import ObjektModal from "@/components/objekt/objekt-modal";
 import ObjektView from "@/components/objekt/objekt-view";
 import { Loader, ProgressBar } from "@/components/ui";
+import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
@@ -113,6 +114,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
   authenticated: boolean;
   columns: number;
 }) {
+  const hideLabel = useConfigStore((a) => a.hideLabel);
   const [show, setShow] = useState(false);
   const [showCount] = useShowCount();
 
@@ -190,6 +192,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
                             isFade={!ownedSlugs.has(objekt.slug)}
                             unobtainable={unobtainables.includes(objekt.slug)}
                             showCount={showCount}
+                            hideLabel={hideLabel}
                             open={openObjekts}
                           >
                             {authenticated && (
