@@ -6,7 +6,6 @@ import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function ArtistFilter() {
@@ -17,9 +16,9 @@ export default function ArtistFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidArtist>(key, true);
+      const values = Array.from((key as Set<ValidArtist>).values());
       setFilters({
-        artist: value,
+        artist: values.length ? values : null,
         member: null,
       });
     },

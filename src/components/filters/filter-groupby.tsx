@@ -5,7 +5,6 @@ import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidGroupBy, validGroupBy } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function GroupByFilter() {
@@ -31,7 +30,7 @@ export default function GroupByFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidGroupBy>(key);
+      const value = Array.from((key as Set<ValidGroupBy>).values()).at(0) ?? null;
       setFilters({
         group_by: value,
         group_dir: ["member", "class"].includes(value ?? "") ? "asc" : null,

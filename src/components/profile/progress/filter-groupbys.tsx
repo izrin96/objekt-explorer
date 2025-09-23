@@ -5,7 +5,6 @@ import type { Selection } from "react-aria-components";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidGroupBy } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 
 const map: Record<string, string> = {
   artist: "Artist",
@@ -20,9 +19,9 @@ export default function GroupBysFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidGroupBy>(key, true);
+      const values = Array.from((key as Set<ValidGroupBy>).values());
       setFilters({
-        group_bys: value,
+        group_bys: values.length ? values : null,
       });
     },
     [setFilters],

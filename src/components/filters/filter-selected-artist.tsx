@@ -7,7 +7,6 @@ import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Avatar, Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function SelectedArtistFilter() {
@@ -19,8 +18,8 @@ export default function SelectedArtistFilter() {
 
   const update = useCallback((key: Selection) => {
     startTransition(async () => {
-      const value = parseSelected<ValidArtist>(key, true);
-      await setArtists.mutateAsync(value ?? []);
+      const values = Array.from((key as Set<ValidArtist>).values());
+      await setArtists.mutateAsync(values);
       router.refresh();
     });
   }, []);

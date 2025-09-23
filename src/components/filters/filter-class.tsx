@@ -6,7 +6,6 @@ import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidClass } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 type Props = {
@@ -21,9 +20,9 @@ export default function ClassFilter({ hideEtc = false }: Props) {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidClass>(key, true);
+      const values = Array.from((key as Set<ValidClass>).values());
       setFilters({
-        class: value,
+        class: values.length ? values : null,
       });
     },
     [setFilters],

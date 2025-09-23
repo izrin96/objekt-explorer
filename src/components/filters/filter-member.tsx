@@ -5,7 +5,6 @@ import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel, MenuSection } from "../ui";
 
 export default function MemberFilter() {
@@ -16,9 +15,9 @@ export default function MemberFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<string>(key, true);
+      const values = Array.from((key as Set<string>).values());
       setFilters({
-        member: value,
+        member: values.length ? values : null,
         artist: null,
       });
     },

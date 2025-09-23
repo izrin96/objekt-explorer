@@ -5,7 +5,6 @@ import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function EditionFilter() {
@@ -15,9 +14,9 @@ export default function EditionFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidEdition>(key, true);
+      const values = Array.from((key as Set<ValidEdition>).values());
       setFilters({
-        edition: value,
+        edition: values.length ? values : null,
       });
     },
     [setFilters],

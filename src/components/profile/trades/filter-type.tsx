@@ -5,7 +5,6 @@ import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui";
 import { type ValidType, validType } from "@/lib/universal/transfers";
-import { parseSelected } from "@/lib/utils";
 
 const map: Record<ValidType, string> = {
   all: "All",
@@ -25,7 +24,7 @@ export default function TypeFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidType>(key) ?? "all";
+      const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
       setType(value === "all" ? null : value);
     },
     [setType],

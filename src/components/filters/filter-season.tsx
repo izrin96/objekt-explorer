@@ -6,7 +6,6 @@ import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidSeason } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function SeasonFilter() {
@@ -17,9 +16,9 @@ export default function SeasonFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidSeason>(key, true);
+      const values = Array.from((key as Set<ValidSeason>).values());
       setFilters({
-        season: value,
+        season: values.length ? values : null,
       });
     },
     [setFilters],

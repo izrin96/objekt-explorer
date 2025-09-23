@@ -5,7 +5,6 @@ import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidOnlineType, validOnlineTypes } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function OnlineFilter() {
@@ -23,9 +22,9 @@ export default function OnlineFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidOnlineType>(key, true);
+      const values = Array.from((key as Set<ValidOnlineType>).values());
       setFilters({
-        on_offline: value,
+        on_offline: values.length ? values : null,
       });
     },
     [setFilters],

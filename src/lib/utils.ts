@@ -1,4 +1,3 @@
-import type { Selection } from "react-aria-components";
 import { env } from "@/env";
 
 export const GRID_COLUMNS = 7;
@@ -40,14 +39,6 @@ export function getBaseURL() {
 
 export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
   return url.replace(/(4x|3x|2x|thumbnail|original)$/i, size);
-}
-
-export function parseSelected<T>(keys: Selection, multiple?: false): T | null;
-export function parseSelected<T>(keys: Selection, multiple: true): T[] | null;
-export function parseSelected<T>(keys: Selection, multiple = false) {
-  const result = [...keys] as T[];
-  if (result.length === 0) return null;
-  return multiple ? result : result[0];
 }
 
 export function msToCountdown(ms: number) {

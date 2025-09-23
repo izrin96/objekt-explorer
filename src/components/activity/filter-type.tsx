@@ -5,7 +5,6 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useCallback, useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { type ValidType, validType } from "@/lib/universal/activity";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export function useTypeFilter() {
@@ -29,7 +28,7 @@ export default function TypeFilter() {
 
   const update = useCallback(
     (key: Selection) => {
-      const value = parseSelected<ValidType>(key) ?? "all";
+      const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
       setType(value === "all" ? null : value);
     },
     [setType],

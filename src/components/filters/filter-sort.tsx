@@ -5,7 +5,6 @@ import { useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidSort, validSorts } from "@/lib/universal/cosmo/common";
-import { parseSelected } from "@/lib/utils";
 import { Button, Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../ui";
 
 type Props = {
@@ -31,7 +30,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
   );
 
   function update(key: Selection) {
-    const value = parseSelected<ValidSort>(key) ?? "date";
+    const value = Array.from((key as Set<ValidSort>).values()).at(0) ?? "date";
 
     setFilters((current) => ({
       sort: value === "date" ? null : value,
