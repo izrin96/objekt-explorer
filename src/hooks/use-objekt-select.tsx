@@ -7,12 +7,12 @@ import type { ValidObjekt } from "@/lib/universal/objekts";
 type ObjektSelectedState = {
   mode: boolean;
   toggleMode: () => void;
-  selected: ValidObjekt[];
+  selected: Map<string, ValidObjekt>;
+  getSelected: () => ValidObjekt[];
   select: (selected: ValidObjekt) => void;
   batchSelect: (selected: ValidObjekt[]) => void;
   isSelected: (selected: ValidObjekt) => boolean;
   reset: () => void;
-  remove: (selected: ValidObjekt) => void;
 };
 
 const createObjektSelectStore = () =>
@@ -21,40 +21,34 @@ const createObjektSelectStore = () =>
 
     toggleMode: () =>
       set((state) => ({
-        ...state,
         mode: !state.mode,
       })),
 
-    selected: [],
+    selected: new Map(),
+
+    getSelected: () => Array.from(get().selected.values()),
 
     select: (selected) =>
       set((state) => {
-        const exists = state.selected.some((a) => a.id === selected.id);
-        return {
-          ...state,
-          selected: exists
-            ? state.selected.filter((a) => a.id !== selected.id)
-            : [...state.selected, selected],
-        };
+        const map = new Map(state.selected);
+        if (map.has(selected.id)) {
+          map.delete(selected.id);
+        } else {
+          map.set(selected.id, selected);
+        }
+        return { selected: map };
       }),
 
     batchSelect: (selected) =>
-      set((state) => {
+      set(() => {
         return {
-          ...state,
-          selected,
+          selected: new Map(selected.map((a) => [a.id, a])),
         };
       }),
 
-    isSelected: (selected) => get().selected.some((a) => a.id === selected.id),
+    isSelected: (selected) => get().selected.has(selected.id),
 
-    reset: () => set((state) => ({ ...state, selected: [] })),
-
-    remove: (selected) =>
-      set((state) => ({
-        ...state,
-        selected: state.selected.filter((a) => a.id !== selected.id),
-      })),
+    reset: () => set(() => ({ selected: new Map() })),
   }));
 
 const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(null);

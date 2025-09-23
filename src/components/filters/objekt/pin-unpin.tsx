@@ -1,6 +1,7 @@
 "use client";
 
 import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
+import { useShallow } from "zustand/react/shallow";
 import type { ObjektActionProps } from "@/components/filters/objekt/common";
 import { Button } from "@/components/ui";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
@@ -10,7 +11,7 @@ import { useTarget } from "@/hooks/use-target";
 
 export function PinObjekt({ handleAction, size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const batchPin = useBatchPin();
   return (
     <Button
@@ -20,7 +21,10 @@ export function PinObjekt({ handleAction, size }: ObjektActionProps) {
         handleAction(() => {
           batchPin.mutate({
             address: target.address,
-            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+            tokenIds: selected
+              .filter((objekt) => "serial" in objekt)
+              .map((a) => Number(a.id))
+              .filter(Boolean),
           });
         })
       }
@@ -33,7 +37,7 @@ export function PinObjekt({ handleAction, size }: ObjektActionProps) {
 
 export function UnpinObjekt({ handleAction }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const batchUnpin = useBatchUnpin();
   return (
     <Button
@@ -42,7 +46,10 @@ export function UnpinObjekt({ handleAction }: ObjektActionProps) {
         handleAction(() => {
           batchUnpin.mutate({
             address: target.address,
-            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+            tokenIds: selected
+              .filter((objekt) => "serial" in objekt)
+              .map((a) => Number(a.id))
+              .filter(Boolean),
           });
         });
       }}

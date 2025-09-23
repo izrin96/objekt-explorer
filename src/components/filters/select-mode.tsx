@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback } from "react";
 import { toast } from "sonner";
+import { useShallow } from "zustand/react/shallow";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { Button, Toggle, Tooltip, TooltipContent } from "../ui";
@@ -20,7 +21,7 @@ export function SelectMode({ children, objekts }: Props) {
   const batchSelect = useObjektSelect((a) => a.batchSelect);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
 
   const handleAction = useCallback(
     (open: () => void) => {
@@ -63,7 +64,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
   const batchSelect = useObjektSelect((a) => a.batchSelect);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
 
   const handleAction = useCallback(
     (open: () => void) => {

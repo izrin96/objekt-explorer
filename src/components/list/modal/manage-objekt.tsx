@@ -3,6 +3,7 @@
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { useShallow } from "zustand/react/shallow";
 import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
@@ -32,7 +33,7 @@ import {
 
 export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
   const formRef = useRef<HTMLFormElement>(null!);
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const addToList = useAddToList();
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
@@ -128,7 +129,7 @@ function AddToListForm() {
 
 export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
   const target = useTarget((a) => a.list)!;
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>

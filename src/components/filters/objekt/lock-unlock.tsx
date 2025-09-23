@@ -1,6 +1,7 @@
 "use client";
 
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/ssr";
+import { useShallow } from "zustand/react/shallow";
 import type { ObjektActionProps } from "@/components/filters/objekt/common";
 import { Button } from "@/components/ui";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
@@ -10,7 +11,7 @@ import { useTarget } from "@/hooks/use-target";
 
 export function LockObjekt({ handleAction, size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const batchLock = useBatchLock();
   return (
     <Button
@@ -36,7 +37,7 @@ export function LockObjekt({ handleAction, size }: ObjektActionProps) {
 
 export function UnlockObjekt({ handleAction, size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
-  const selected = useObjektSelect((a) => a.selected);
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const batchUnlock = useBatchUnlock();
   return (
     <Button
