@@ -19,9 +19,9 @@ import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
-import type { PublicProfile } from "@/lib/universal/user";
 import { Button, Loader, Menu, MenuContent, MenuItem, MenuLabel, MenuSubmenu } from "../ui";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
@@ -80,14 +80,15 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   );
 }
 
-export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: ValidObjekt }) {
+export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
+  const target = useTarget((a) => a.list)!;
   const removeObjektsFromList = useRemoveFromList();
 
   return (
     <MenuItem
       onAction={() =>
         removeObjektsFromList.mutate({
-          slug: slug,
+          slug: target.slug,
           ids: [Number(objekt.id)],
         })
       }
@@ -99,15 +100,8 @@ export function RemoveFromListMenu({ slug, objekt }: { slug: string; objekt: Val
   );
 }
 
-export function TogglePinMenuItem({
-  profile,
-  isPin,
-  tokenId,
-}: {
-  profile: PublicProfile;
-  isPin: boolean;
-  tokenId: string;
-}) {
+export function TogglePinMenuItem({ isPin, tokenId }: { isPin: boolean; tokenId: string }) {
+  const profile = useTarget((a) => a.profile)!;
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
   return (
@@ -132,15 +126,8 @@ export function TogglePinMenuItem({
   );
 }
 
-export function ToggleLockMenuItem({
-  profile,
-  isLocked,
-  tokenId,
-}: {
-  profile: PublicProfile;
-  isLocked: boolean;
-  tokenId: string;
-}) {
+export function ToggleLockMenuItem({ isLocked, tokenId }: { isLocked: boolean; tokenId: string }) {
+  const profile = useTarget((a) => a.profile)!;
   const lock = useBatchLock();
   const unlock = useBatchUnlock();
   return (

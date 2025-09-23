@@ -1,6 +1,6 @@
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
-import { classSort, filterObjekts, type ObjektItem, seasonSort } from "@/lib/filter-utils";
+import { classSort, type ObjektItem, seasonSort } from "@/lib/filter-utils";
 import type { PinObjekt, ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters, useIsFiltering } from "./use-filters";
@@ -29,13 +29,10 @@ export function useShapeObjekts() {
       // 7. map to ObjektItem<T[]>
       // 8. sort pin objekt
 
-      // filter objekts
-      const fliteredObjekts = filterObjekts(filters, objekts);
-
       // group by key
       let groupByKey: Record<string, ValidObjekt[]>;
       if (filters.group_by) {
-        groupByKey = groupBy(fliteredObjekts, (objekt) => {
+        groupByKey = groupBy(objekts, (objekt) => {
           return filters.group_by === "seasonCollectionNo"
             ? `${objekt.season} ${objekt.collectionNo}`
             : filters.group_by === "artist"
@@ -43,7 +40,7 @@ export function useShapeObjekts() {
               : objekt[filters.group_by!];
         });
       } else {
-        groupByKey = groupBy(fliteredObjekts, () => "");
+        groupByKey = groupBy(objekts, () => "");
       }
 
       // sort the group

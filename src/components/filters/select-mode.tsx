@@ -6,15 +6,18 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { Button, Toggle, Tooltip, TooltipContent } from "../ui";
 
 type Props = {
   children?: ({ handleAction }: { handleAction: (open: () => void) => void }) => ReactNode;
+  objekts: ValidObjekt[];
 };
 
-export function SelectMode({ children }: Props) {
+export function SelectMode({ children, objekts }: Props) {
   const t = useTranslations("filter");
   const mode = useObjektSelect((a) => a.mode);
+  const batchSelect = useObjektSelect((a) => a.batchSelect);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
   const selected = useObjektSelect((a) => a.selected);
@@ -47,13 +50,17 @@ export function SelectMode({ children }: Props) {
         <XIcon weight="regular" data-slot="icon" />
         {t("clear")}
       </Button>
+      <Button intent="outline" onClick={() => batchSelect(objekts)}>
+        Select all
+      </Button>
       {children?.({ handleAction })}
     </div>
   );
 }
 
-export function FloatingSelectMode({ children }: Props) {
+export function FloatingSelectMode({ children, objekts }: Props) {
   const mode = useObjektSelect((a) => a.mode);
+  const batchSelect = useObjektSelect((a) => a.batchSelect);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
   const selected = useObjektSelect((a) => a.selected);
@@ -75,18 +82,12 @@ export function FloatingSelectMode({ children }: Props) {
     <AnimatePresence>
       {selected.length > 0 && (
         <motion.div
-          className="fixed inset-x-0 bottom-2 z-10 mx-auto w-fit rounded border bg-bg/80 px-2 py-1 shadow backdrop-blur"
+          className="fixed inset-x-0 bottom-2 z-10 mx-auto w-fit rounded border bg-bg/80 px-1.5 py-1 shadow backdrop-blur"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
         >
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <Tooltip delay={0} closeDelay={0}>
-              <Button size="sq-sm" intent="outline" onClick={reset}>
-                <XIcon size={18} weight="regular" />
-              </Button>
-              <TooltipContent inverse>Clear selection</TooltipContent>
-            </Tooltip>
             <Tooltip delay={0} closeDelay={0}>
               <Toggle
                 isSelected={mode}
@@ -99,7 +100,18 @@ export function FloatingSelectMode({ children }: Props) {
               </Toggle>
               <TooltipContent inverse>Toggle select mode</TooltipContent>
             </Tooltip>
+            <Tooltip delay={0} closeDelay={0}>
+              <Button size="sq-sm" intent="outline" onClick={reset}>
+                <XIcon size={18} weight="regular" />
+              </Button>
+              <TooltipContent inverse>Clear selection</TooltipContent>
+            </Tooltip>
+            <Button size="sm" intent="outline" onClick={() => batchSelect(objekts)}>
+              Select all
+            </Button>
+
             {children?.({ handleAction })}
+
             <span className="px-1 py-2 font-semibold text-sm">{selected.length} selected</span>
           </div>
         </motion.div>

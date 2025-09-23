@@ -12,11 +12,13 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed, useUser } from "@/hooks/use-user";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicList } from "@/lib/universal/user";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
+import { AddToList, RemoveFromList } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 import {
@@ -29,7 +31,6 @@ import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import Filter from "./filter";
-import { AddToList, RemoveFromList } from "./modal/manage-objekt";
 
 export default function ListRender() {
   const list = useTarget((a) => a.list)!;
@@ -56,13 +57,13 @@ function ListView({ list }: { list: PublicList }) {
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const objekts = useListObjekts(list.slug);
-  const deferredObjekts = useDeferredValue(objekts);
+  const { shaped, filtered } = useListObjekts(list.slug);
+  const deferredObjekts = useDeferredValue(shaped);
 
   const [groupCount, count] = useMemo(() => {
-    const groupedObjekts = deferredObjekts.flatMap(([, objekts]) => objekts);
-    return [groupedObjekts.length, groupedObjekts.flatMap((item) => item.item).length];
-  }, [deferredObjekts]);
+    const groupedObjekts = shaped.flatMap(([, objekts]) => objekts);
+    return [groupedObjekts.length, filtered.length];
+  }, [shaped, filtered]);
 
   const virtualList = useMemo(() => {
     return deferredObjekts.flatMap(([title, items]) => [
@@ -87,7 +88,7 @@ function ListView({ list }: { list: PublicList }) {
                     authenticated && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
-                        {isOwned && <RemoveFromListMenu slug={list.slug} objekt={objekt} />}
+                        {isOwned && <RemoveFromListMenu objekt={objekt} />}
                         <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
                     )
@@ -108,7 +109,7 @@ function ListView({ list }: { list: PublicList }) {
                             <div className="absolute top-0 right-0 flex">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
-                                {isOwned && <RemoveFromListMenu slug={list.slug} objekt={objekt} />}
+                                {isOwned && <RemoveFromListMenu objekt={objekt} />}
                                 <AddToListMenu objekt={objekt} />
                               </ObjektHoverMenu>
                             </div>
@@ -124,23 +125,23 @@ function ListView({ list }: { list: PublicList }) {
         ),
       }),
     ]);
-  }, [deferredObjekts, columns, isOwned, list.slug, authenticated, hideLabel]);
+  }, [deferredObjekts, columns, isOwned, authenticated, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         {authenticated && (
-          <FloatingSelectMode>
+          <FloatingSelectMode objekts={filtered}>
             {({ handleAction }) => (
               <>
-                {isOwned && <RemoveFromList slug={list.slug} handleAction={handleAction} />}
-                <AddToList handleAction={handleAction} />
+                {isOwned && <RemoveFromList handleAction={handleAction} size="sm" />}
+                <AddToList handleAction={handleAction} size="sm" />
               </>
             )}
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} isOwned={isOwned} slug={list.slug} />
+          <Filters authenticated={authenticated} isOwned={isOwned} objekts={filtered} />
         </FilterContainer>
       </div>
       <span className="font-semibold">
@@ -158,20 +159,20 @@ function ListView({ list }: { list: PublicList }) {
 function Filters({
   authenticated,
   isOwned,
-  slug,
+  objekts,
 }: {
   authenticated: boolean;
   isOwned: boolean;
-  slug: string;
+  objekts: ValidObjekt[];
 }) {
   return (
     <div className="flex w-full flex-col gap-6">
       <Filter />
       {authenticated && (
-        <SelectMode>
+        <SelectMode objekts={objekts}>
           {({ handleAction }) => (
             <>
-              {isOwned && <RemoveFromList slug={slug} handleAction={handleAction} />}
+              {isOwned && <RemoveFromList handleAction={handleAction} />}
               <AddToList handleAction={handleAction} />
             </>
           )}

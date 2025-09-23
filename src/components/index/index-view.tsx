@@ -11,12 +11,13 @@ import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useUser } from "@/hooks/use-user";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
+import { AddToList } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
-import { AddToList } from "../list/modal/manage-objekt";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objekt-menu";
 import ObjektModal from "../objekt/objekt-modal";
@@ -59,13 +60,8 @@ function IndexView() {
   const { authenticated } = useUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const objekts = useCollectionObjekts();
-  const deferredObjekts = useDeferredValue(objekts);
-
-  const count = useMemo(
-    () => deferredObjekts.flatMap(([, objekts]) => objekts).length,
-    [deferredObjekts],
-  );
+  const { shaped, filtered } = useCollectionObjekts();
+  const deferredObjekts = useDeferredValue(shaped);
 
   const virtualList = useMemo(() => {
     return deferredObjekts.flatMap(([title, items]) => [
@@ -130,15 +126,19 @@ function IndexView() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         {authenticated && (
-          <FloatingSelectMode>
-            {({ handleAction }) => <AddToList handleAction={handleAction} />}
+          <FloatingSelectMode objekts={filtered}>
+            {({ handleAction }) => (
+              <>
+                <AddToList handleAction={handleAction} size="sm" />
+              </>
+            )}
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} />
+          <Filters authenticated={authenticated} objekts={filtered} />
         </FilterContainer>
       </div>
-      <span className="font-semibold">{count.toLocaleString()} total</span>
+      <span className="font-semibold">{filtered.length.toLocaleString()} total</span>
 
       <div className="[&>*]:!overflow-visible [&>*]:!contain-[inherit] [&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
@@ -147,12 +147,18 @@ function IndexView() {
   );
 }
 
-function Filters({ authenticated }: { authenticated: boolean }) {
+function Filters({ authenticated, objekts }: { authenticated: boolean; objekts: ValidObjekt[] }) {
   return (
     <div className="flex w-full flex-col gap-6">
       <Filter />
       {authenticated && (
-        <SelectMode>{({ handleAction }) => <AddToList handleAction={handleAction} />}</SelectMode>
+        <SelectMode objekts={objekts}>
+          {({ handleAction }) => (
+            <>
+              <AddToList handleAction={handleAction} />
+            </>
+          )}
+        </SelectMode>
       )}
     </div>
   );

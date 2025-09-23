@@ -13,14 +13,16 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
-import type { PublicProfile } from "@/lib/universal/user";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
+import { AddToList } from "../filters/objekt/add-remove-list";
+import { LockObjekt, UnlockObjekt } from "../filters/objekt/lock-unlock";
+import { PinObjekt, UnpinObjekt } from "../filters/objekt/pin-unpin";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
-import { AddToList } from "../list/modal/manage-objekt";
 import { ObjektHoverMenu, ObjektOverlay, ObjektSelect } from "../objekt/objekt-action";
 import {
   AddToListMenu,
@@ -34,8 +36,6 @@ import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import { Link, Loader, Note } from "../ui";
 import Filter from "./filter";
-import { LockObjekt, UnlockObjekt } from "./form/lock-unlock";
-import { PinObjekt, UnpinObjekt } from "./form/pin-unpin";
 
 export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileObjektRender), {
   ssr: false,
@@ -67,7 +67,7 @@ export default function ProfileObjektRender() {
                     </div>
                   }
                 >
-                  <ProfileObjekt profile={profile} />
+                  <ProfileObjekt />
                 </Suspense>
               </ErrorBoundary>
             )}
@@ -78,19 +78,19 @@ export default function ProfileObjektRender() {
   );
 }
 
-function ProfileObjekt({ profile }: { profile: PublicProfile }) {
+function ProfileObjekt() {
   const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const objekts = useProfileObjekts();
-  const deferredObjekts = useDeferredValue(objekts);
+  const { shaped, filtered } = useProfileObjekts();
+  const deferredObjekts = useDeferredValue(shaped);
 
   const [groupCount, count] = useMemo(() => {
-    const groupedObjekts = deferredObjekts.flatMap(([, objekts]) => objekts);
-    return [groupedObjekts.length, groupedObjekts.flatMap((item) => item.item).length];
-  }, [deferredObjekts]);
+    const groupedObjekts = shaped.flatMap(([, objekts]) => objekts);
+    return [groupedObjekts.length, filtered.length];
+  }, [shaped, filtered]);
 
   const virtualList = useMemo(() => {
     return deferredObjekts.flatMap(([title, items]) => [
@@ -119,16 +119,8 @@ function ProfileObjekt({ profile }: { profile: PublicProfile }) {
                         <SelectMenuItem objekt={objekt} />
                         {isProfileAuthed && isOwned && (
                           <>
-                            <TogglePinMenuItem
-                              isPin={item.isPin}
-                              profile={profile}
-                              tokenId={objekt.id}
-                            />
-                            <ToggleLockMenuItem
-                              isLocked={item.isLocked}
-                              profile={profile}
-                              tokenId={objekt.id}
-                            />
+                            <TogglePinMenuItem isPin={item.isPin} tokenId={objekt.id} />
+                            <ToggleLockMenuItem isLocked={item.isLocked} tokenId={objekt.id} />
                           </>
                         )}
                         <AddToListMenu objekt={objekt} />
@@ -156,14 +148,9 @@ function ProfileObjekt({ profile }: { profile: PublicProfile }) {
                               <ObjektHoverMenu>
                                 {isProfileAuthed && isOwned && (
                                   <>
-                                    <TogglePinMenuItem
-                                      isPin={item.isPin}
-                                      profile={profile}
-                                      tokenId={objekt.id}
-                                    />
+                                    <TogglePinMenuItem isPin={item.isPin} tokenId={objekt.id} />
                                     <ToggleLockMenuItem
                                       isLocked={item.isLocked}
-                                      profile={profile}
                                       tokenId={objekt.id}
                                     />
                                   </>
@@ -173,20 +160,6 @@ function ProfileObjekt({ profile }: { profile: PublicProfile }) {
                             </div>
                           )}
                           <ObjektOverlay isPin={item.isPin} isLocked={item.isLocked} />
-                          {/* {isProfileAuthed && isOwned && (
-                            <div className="absolute top-0 left-0 hidden group-hover:flex">
-                              <ObjektTogglePin
-                                isPin={item.isPin}
-                                profile={profile}
-                                tokenId={objekt.id}
-                              />
-                              <ObjektToggleLock
-                                isLocked={item.isLocked}
-                                profile={profile}
-                                tokenId={objekt.id}
-                              />
-                            </div>
-                          )} */}
                         </ObjektView>
                       )}
                     </ObjektViewSelectable>
@@ -198,30 +171,22 @@ function ProfileObjekt({ profile }: { profile: PublicProfile }) {
         ),
       }),
     ]);
-  }, [
-    deferredObjekts,
-    filters.grouped,
-    columns,
-    authenticated,
-    isProfileAuthed,
-    profile,
-    hideLabel,
-  ]);
+  }, [deferredObjekts, filters.grouped, columns, authenticated, isProfileAuthed, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
         {authenticated && (
-          <FloatingSelectMode>
+          <FloatingSelectMode objekts={filtered}>
             {({ handleAction }) => (
               <>
-                <AddToList handleAction={handleAction} />
+                <AddToList handleAction={handleAction} size="sm" />
                 {isProfileAuthed && (
                   <>
-                    <PinObjekt address={profile.address} handleAction={handleAction} />
-                    <UnpinObjekt address={profile.address} handleAction={handleAction} />
-                    <LockObjekt address={profile.address} handleAction={handleAction} />
-                    <UnlockObjekt address={profile.address} handleAction={handleAction} />
+                    <PinObjekt handleAction={handleAction} size="sm" />
+                    <UnpinObjekt handleAction={handleAction} size="sm" />
+                    <LockObjekt handleAction={handleAction} size="sm" />
+                    <UnlockObjekt handleAction={handleAction} size="sm" />
                   </>
                 )}
               </>
@@ -229,11 +194,7 @@ function ProfileObjekt({ profile }: { profile: PublicProfile }) {
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters
-            address={profile.address}
-            authenticated={authenticated}
-            isOwned={isProfileAuthed}
-          />
+          <Filters authenticated={authenticated} isOwned={isProfileAuthed} objekts={filtered} />
         </FilterContainer>
       </div>
       <span className="font-semibold">
@@ -249,28 +210,28 @@ function ProfileObjekt({ profile }: { profile: PublicProfile }) {
 }
 
 function Filters({
-  address,
   authenticated,
   isOwned,
+  objekts,
 }: {
-  address: string;
   authenticated: boolean;
   isOwned: boolean;
+  objekts: ValidObjekt[];
 }) {
   return (
     <div className="flex w-full flex-col gap-6">
       <Filter />
       {authenticated && (
-        <SelectMode>
+        <SelectMode objekts={objekts}>
           {({ handleAction }) => (
             <>
               <AddToList handleAction={handleAction} />
               {isOwned && (
                 <>
-                  <PinObjekt address={address} handleAction={handleAction} />
-                  <UnpinObjekt address={address} handleAction={handleAction} />
-                  <LockObjekt address={address} handleAction={handleAction} />
-                  <UnlockObjekt address={address} handleAction={handleAction} />
+                  <PinObjekt handleAction={handleAction} />
+                  <UnpinObjekt handleAction={handleAction} />
+                  <LockObjekt handleAction={handleAction} />
+                  <UnlockObjekt handleAction={handleAction} />
                 </>
               )}
             </>

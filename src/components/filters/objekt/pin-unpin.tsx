@@ -1,36 +1,27 @@
 "use client";
 
 import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
+import type { ObjektActionProps } from "@/components/filters/objekt/common";
 import { Button } from "@/components/ui";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { useTarget } from "@/hooks/use-target";
 
-type Props = {
-  address: string;
-  handleAction: (open: () => void) => void;
-};
-
-export function PinObjekt({ address, handleAction }: Props) {
+export function PinObjekt({ handleAction, size }: ObjektActionProps) {
+  const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect((a) => a.selected);
-  const reset = useObjektSelect((a) => a.reset);
   const batchPin = useBatchPin();
   return (
     <Button
+      size={size}
       intent="outline"
       onClick={() =>
         handleAction(() => {
-          batchPin.mutate(
-            {
-              address: address,
-              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
-            },
-            {
-              onSuccess: () => {
-                reset();
-              },
-            },
-          );
+          batchPin.mutate({
+            address: target.address,
+            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+          });
         })
       }
     >
@@ -40,26 +31,19 @@ export function PinObjekt({ address, handleAction }: Props) {
   );
 }
 
-export function UnpinObjekt({ address, handleAction }: Props) {
+export function UnpinObjekt({ handleAction }: ObjektActionProps) {
+  const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect((a) => a.selected);
-  const reset = useObjektSelect((a) => a.reset);
   const batchUnpin = useBatchUnpin();
   return (
     <Button
       intent="outline"
       onClick={() => {
         handleAction(() => {
-          batchUnpin.mutate(
-            {
-              address: address,
-              tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
-            },
-            {
-              onSuccess: () => {
-                reset();
-              },
-            },
-          );
+          batchUnpin.mutate({
+            address: target.address,
+            tokenIds: selected.map((a) => Number(a.id)).filter(Boolean),
+          });
         });
       }}
     >

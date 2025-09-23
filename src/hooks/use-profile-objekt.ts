@@ -4,10 +4,12 @@ import { orpc } from "@/lib/orpc/client";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
+import { useObjektFilter } from "./use-objekt-filter";
 import { useShapeObjekts } from "./use-shape-objekt";
 import { useTarget } from "./use-target";
 
 export function useProfileObjekts() {
+  const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const profile = useTarget((a) => a.profile)!;
   const { selectedArtistIds } = useCosmoArtist();
@@ -43,8 +45,11 @@ export function useProfileObjekts() {
     return ownedQuery.data;
   }, [ownedQuery.data, filters.unowned, objektsQuery.data]);
 
-  return useMemo(
-    () => shape(joinedObjekts, pinsQuery.data, lockedObjektQuery.data),
-    [shape, joinedObjekts, pinsQuery.data, lockedObjektQuery.data],
-  );
+  return useMemo(() => {
+    const filtered = filter(joinedObjekts);
+    return {
+      shaped: shape(filtered, pinsQuery.data, lockedObjektQuery.data),
+      filtered,
+    };
+  }, [shape, filter, joinedObjekts, pinsQuery.data, lockedObjektQuery.data]);
 }

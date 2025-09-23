@@ -1,13 +1,13 @@
 "use client";
 
-import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../../error-boundary";
 import {
@@ -30,33 +30,9 @@ import {
   SelectTrigger,
 } from "../../ui";
 
-type AddProps = {
-  handleAction: (open: () => void) => void;
-};
-
-export function AddToList({ handleAction }: AddProps) {
-  const t = useTranslations("filter");
-  const [addOpen, setAddOpen] = useState(false);
-  return (
-    <>
-      <AddToListModal open={addOpen} setOpen={setAddOpen} />
-      <Button intent="outline" onClick={() => handleAction(() => setAddOpen(true))}>
-        <PlusIcon weight="regular" data-slot="icon" />
-        {t("add_to_list")}
-      </Button>
-    </>
-  );
-}
-
-type AddToListModalProps = {
-  open: boolean;
-  setOpen: (val: boolean) => void;
-};
-
-export function AddToListModal({ open, setOpen }: AddToListModalProps) {
+export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
   const formRef = useRef<HTMLFormElement>(null!);
   const selected = useObjektSelect((a) => a.selected);
-  const reset = useObjektSelect((a) => a.reset);
   const addToList = useAddToList();
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
@@ -78,7 +54,6 @@ export function AddToListModal({ open, setOpen }: AddToListModalProps) {
               {
                 onSuccess: () => {
                   setOpen(false);
-                  reset();
                 },
               },
             );
@@ -151,34 +126,9 @@ function AddToListForm() {
   );
 }
 
-type RemoveProps = {
-  slug: string;
-  handleAction: (open: () => void) => void;
-};
-
-export function RemoveFromList({ slug, handleAction }: RemoveProps) {
-  const t = useTranslations("filter");
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <RemoveFromListModal slug={slug} open={open} setOpen={setOpen} />
-      <Button intent="outline" onClick={() => handleAction(() => setOpen(true))}>
-        <TrashSimpleIcon weight="regular" data-slot="icon" />
-        {t("remove_from_list")}
-      </Button>
-    </>
-  );
-}
-
-type RemoveFromListModalProps = {
-  slug: string;
-  open: boolean;
-  setOpen: (val: boolean) => void;
-};
-
-export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModalProps) {
+export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
+  const target = useTarget((a) => a.list)!;
   const selected = useObjektSelect((a) => a.selected);
-  const reset = useObjektSelect((a) => a.reset);
   const removeObjektsFromList = useRemoveFromList();
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
@@ -198,13 +148,12 @@ export function RemoveFromListModal({ slug, open, setOpen }: RemoveFromListModal
           onClick={() => {
             removeObjektsFromList.mutate(
               {
-                slug: slug.toString(),
+                slug: target.slug,
                 ids: selected.map((a) => Number(a.id)),
               },
               {
                 onSuccess: () => {
                   setOpen(false);
-                  reset();
                 },
               },
             );

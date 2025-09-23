@@ -9,6 +9,7 @@ type ObjektSelectedState = {
   toggleMode: () => void;
   selected: ValidObjekt[];
   select: (selected: ValidObjekt) => void;
+  batchSelect: (selected: ValidObjekt[]) => void;
   isSelected: (selected: ValidObjekt) => boolean;
   reset: () => void;
   remove: (selected: ValidObjekt) => void;
@@ -34,6 +35,14 @@ const createObjektSelectStore = () =>
           selected: exists
             ? state.selected.filter((a) => a.id !== selected.id)
             : [...state.selected, selected],
+        };
+      }),
+
+    batchSelect: (selected) =>
+      set((state) => {
+        return {
+          ...state,
+          selected,
         };
       }),
 
