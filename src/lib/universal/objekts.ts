@@ -110,9 +110,6 @@ const overrideFonts: Record<string, string> = {
   "atom01-heejin-324z": "#FFFFFF",
   "atom01-heejin-325z": "#FFFFFF",
   "ever01-seoyeon-338z": "#07328D",
-  "atom02-lynn-361z": "#000000",
-  "atom02-joobin-361z": "#000000",
-  "atom02-yeonji-361z": "#000000",
 };
 
 // list taken from teamreflex/cosmo-web
