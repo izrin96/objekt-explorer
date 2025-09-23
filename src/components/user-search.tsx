@@ -1,12 +1,11 @@
 "use client";
 
-import { useRouter } from "@bprogress/next/app";
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
@@ -24,41 +23,27 @@ export default function UserSearch() {
   const recentUsers = useUserSearchStore((a) => a.users);
   const addRecent = useUserSearchStore((a) => a.add);
   const clearAll = useUserSearchStore((a) => a.clearAll);
-  const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [result, setResult] = useState<CosmoPublicUser[]>([]);
-  const [query, setQuery] = useState("");
-  const [debouncedQuery] = useDebounceValue<string>(query, 350);
+  const [debouncedQuery, setQuery] = useDebounceValue<string>("", 350);
   const enable = debouncedQuery.length > 0;
 
   const { data, isPending } = useQuery({
     queryKey: ["user-search", debouncedQuery],
     queryFn: () => {
       return ofetch<CosmoSearchResult>(`/api/user/search`, {
-        query: { query: query },
+        query: { query: debouncedQuery },
       }).then((res) => res.results);
     },
     enabled: enable,
   });
 
-  const handleAction = useCallback((user: CosmoPublicUser) => {
+  const handleAction = (user: CosmoPublicUser) => {
+    setQuery("");
+    setIsOpen(false);
     addRecent(user);
     router.push(`/@${user.nickname}`);
-  }, []);
-
-  // set result after getting data
-  useEffect(() => {
-    if (isPending) return;
-    setResult(data ?? []);
-  }, [isPending, data]);
-
-  // force close if pathname change
-  useEffect(() => {
-    setIsOpen(false);
-    setQuery("");
-    setResult([]);
-  }, [pathname]);
+  };
 
   return (
     <>
@@ -70,14 +55,13 @@ export default function UserSearch() {
         shortcut="k"
         isPending={enable && isPending}
         onInputChange={setQuery}
-        inputValue={query}
         isOpen={isOpen}
         onOpenChange={setIsOpen}
       >
         <CommandMenuSearch placeholder={t("placeholder")} />
         <CommandMenuList autoFocus="first" shouldFocusWrap>
           <CommandMenuSection title={t("result_label")}>
-            {result.map((user) => (
+            {data?.map((user) => (
               <CommandMenuItem
                 onAction={() => handleAction(user)}
                 key={`search-${user.address}`}

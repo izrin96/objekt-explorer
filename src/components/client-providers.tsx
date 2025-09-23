@@ -1,8 +1,8 @@
 "use client";
 
-import { ProgressProvider, useRouter } from "@bprogress/next/app";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useRouter } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type PropsWithChildren, useState } from "react";
 import { RouterProvider } from "react-aria-components";
@@ -31,30 +31,23 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
   const [queryClient] = useState(() => createQueryClient());
 
   return (
-    <ProgressProvider
-      height="2px"
-      color="var(--primary)"
-      options={{ showSpinner: false }}
-      shallowRouting
-    >
-      <QueryClientProvider client={queryClient}>
-        <AppRouterProvider>
-          <ThemeProvider
-            enableSystem
-            attribute="class"
-            defaultTheme="system"
-            themes={["light", "dark", "matsu"]}
-          >
-            <Toast />
-            <div className="texture"></div>
-            <NuqsAdapter>
-              <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>
-              <ReactQueryDevtools />
-            </NuqsAdapter>
-          </ThemeProvider>
-        </AppRouterProvider>
-      </QueryClientProvider>
-    </ProgressProvider>
+    <QueryClientProvider client={queryClient}>
+      <AppRouterProvider>
+        <ThemeProvider
+          enableSystem
+          attribute="class"
+          defaultTheme="system"
+          themes={["light", "dark", "matsu"]}
+        >
+          <Toast />
+          <div className="texture"></div>
+          <NuqsAdapter>
+            <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>
+            <ReactQueryDevtools />
+          </NuqsAdapter>
+        </ThemeProvider>
+      </AppRouterProvider>
+    </QueryClientProvider>
   );
 }
 
