@@ -5,6 +5,6 @@ import { cacheHeaders } from "../common";
 export async function GET() {
   const result = await fetchFilterData();
   return NextResponse.json(result, {
-    headers: cacheHeaders(60 * 60 * 12),
+    headers: cacheHeaders(60 * 30),
   });
 }

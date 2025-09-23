@@ -14,7 +14,7 @@ export async function fetchUniqueCollections() {
 }
 
 export async function fetchFilterData() {
-  return getCache("filter-data", 60 * 60 * 24, async () => {
+  return getCache("filter-data", 60 * 60, async () => {
     const [collections] = await Promise.all([fetchUniqueCollections()]);
     return {
       collections,
