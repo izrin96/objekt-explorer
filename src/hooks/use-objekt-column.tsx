@@ -41,25 +41,19 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
     return isDesktop ? GRID_COLUMNS : isTablet ? GRID_COLUMNS_TABLET : GRID_COLUMNS_MOBILE;
   }, [isDesktop, isTablet]);
 
-  const columns = useMemo(() => {
-    if (!overrideColumn) return columnStore;
-    return overrideColumn;
-  }, [overrideColumn, columnStore]);
+  const columns = useMemo(() => overrideColumn ?? columnStore, [overrideColumn, columnStore]);
 
   const setColumns = useCallback(
     (column: number) => {
-      if (overrideColumn) {
-        setOverrideColumn(null);
-      }
+      setOverrideColumn(null);
       setColumnStore(column);
     },
-    [overrideColumn, setOverrideColumn, setColumnStore],
+    [setColumnStore],
   );
 
-  // monitor props change
   useEffect(() => {
-    setOverrideColumn(queryColumn ?? initialColumn);
-  }, [initialColumn, queryColumn, setOverrideColumn]);
+    setOverrideColumn(initialColumn);
+  }, [initialColumn]);
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -70,7 +64,6 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
         setColumnStore(responsiveColumn);
       }
       isFirst.current = false;
-      return;
     }
   }, [hasHydrated, initial, responsiveColumn, setColumnStore]);
 
