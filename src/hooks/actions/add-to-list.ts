@@ -20,7 +20,7 @@ export function useAddToList() {
           return [...rows, ...old];
         });
 
-        toast.success(`${rows.length} objekt added to the list`, {
+        toast.success(`${rows.length.toLocaleString()} objekt added to the list`, {
           duration: 1300,
         });
       },

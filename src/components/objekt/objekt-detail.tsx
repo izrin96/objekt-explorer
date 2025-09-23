@@ -68,7 +68,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
             {showOwned && (
               <Tab id="owned">
                 {t("owned")}
-                {objekts.length > 1 ? ` (${objekts.length})` : ""}
+                {objekts.length > 1 ? ` (${objekts.length.toLocaleString()})` : ""}
               </Tab>
             )}
             <Tab id="trades">{t("trades")}</Tab>

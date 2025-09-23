@@ -30,7 +30,9 @@ export function useBatchUnlock() {
         //   }),
         // });
         toast.success(
-          tokenIds.length > 1 ? `${tokenIds.length} objekts unlocked` : "Objekt unlocked",
+          tokenIds.length > 1
+            ? `${tokenIds.length.toLocaleString()} objekts unlocked`
+            : "Objekt unlocked",
         );
       },
       onError: (_err, { tokenIds, address }, context) => {
@@ -41,7 +43,9 @@ export function useBatchUnlock() {
           );
         }
         toast.error(
-          tokenIds.length > 1 ? `Error unlock ${tokenIds.length} objekts` : "Error unlock objekt",
+          tokenIds.length > 1
+            ? `Error unlock ${tokenIds.length.toLocaleString()} objekts`
+            : "Error unlock objekt",
         );
       },
     }),

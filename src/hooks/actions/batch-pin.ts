@@ -32,7 +32,11 @@ export function useBatchPin() {
         //     input: address,
         //   }),
         // });
-        toast.success(tokenIds.length > 1 ? `${tokenIds.length} objekts pinned` : "Objekt pinned");
+        toast.success(
+          tokenIds.length > 1
+            ? `${tokenIds.length.toLocaleString()} objekts pinned`
+            : "Objekt pinned",
+        );
       },
       onError: (_err, { tokenIds, address }, context) => {
         if (context?.previousPins) {
@@ -42,7 +46,9 @@ export function useBatchPin() {
           );
         }
         toast.error(
-          tokenIds.length > 1 ? `Error pin ${tokenIds.length} objekts` : "Error pin objekt",
+          tokenIds.length > 1
+            ? `Error pin ${tokenIds.length.toLocaleString()} objekts`
+            : "Error pin objekt",
         );
       },
     }),

@@ -32,7 +32,11 @@ export function useBatchLock() {
         //     input: address,
         //   }),
         // });
-        toast.success(tokenIds.length > 1 ? `${tokenIds.length} objekts locked` : "Objekt locked");
+        toast.success(
+          tokenIds.length > 1
+            ? `${tokenIds.length.toLocaleString()} objekts locked`
+            : "Objekt locked",
+        );
       },
       onError: (_err, { tokenIds, address }, context) => {
         if (context?.previousLocks) {
@@ -42,7 +46,9 @@ export function useBatchLock() {
           );
         }
         toast.error(
-          tokenIds.length > 1 ? `Error lock ${tokenIds.length} objekts` : "Error lock objekt",
+          tokenIds.length > 1
+            ? `Error lock ${tokenIds.length.toLocaleString()} objekts`
+            : "Error lock objekt",
         );
       },
     }),

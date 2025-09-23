@@ -30,7 +30,9 @@ export function useBatchUnpin() {
         //   }),
         // });
         toast.success(
-          tokenIds.length > 1 ? `${tokenIds.length} objekts unpinned` : "Objekt unpinned",
+          tokenIds.length > 1
+            ? `${tokenIds.length.toLocaleString()} objekts unpinned`
+            : "Objekt unpinned",
         );
       },
       onError: (_err, { tokenIds, address }, context) => {
@@ -41,7 +43,9 @@ export function useBatchUnpin() {
           );
         }
         toast.error(
-          tokenIds.length > 1 ? `Error unpin ${tokenIds.length} objekts` : "Error unpin objekt",
+          tokenIds.length > 1
+            ? `Error unpin ${tokenIds.length.toLocaleString()} objekts`
+            : "Error unpin objekt",
         );
       },
     }),

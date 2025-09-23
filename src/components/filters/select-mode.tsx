@@ -112,7 +112,9 @@ export function FloatingSelectMode({ children, objekts }: Props) {
 
             {children?.({ handleAction })}
 
-            <span className="px-1 py-2 font-semibold text-sm">{selected.length} selected</span>
+            <span className="px-1 py-2 font-semibold text-sm">
+              {selected.length.toLocaleString()} selected
+            </span>
           </div>
         </motion.div>
       )}
