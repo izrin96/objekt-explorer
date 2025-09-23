@@ -52,8 +52,8 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   );
 
   useEffect(() => {
-    setOverrideColumn(initialColumn);
-  }, [initialColumn]);
+    setOverrideColumn(queryColumn ?? initialColumn);
+  }, [initialColumn, queryColumn]);
 
   useEffect(() => {
     if (!hasHydrated) return;
