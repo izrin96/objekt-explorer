@@ -57,13 +57,8 @@ function ListView({ list }: { list: PublicList }) {
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const { shaped, filtered } = useListObjekts(list.slug);
+  const { shaped, filtered, grouped } = useListObjekts(list.slug);
   const deferredObjekts = useDeferredValue(shaped);
-
-  const [groupCount, count] = useMemo(() => {
-    const groupedObjekts = shaped.flatMap(([, objekts]) => objekts);
-    return [groupedObjekts.length, filtered.length];
-  }, [shaped, filtered]);
 
   const virtualList = useMemo(() => {
     return deferredObjekts.flatMap(([title, items]) => [
@@ -145,8 +140,8 @@ function ListView({ list }: { list: PublicList }) {
         </FilterContainer>
       </div>
       <span className="font-semibold">
-        {count.toLocaleString()} total
-        {filters.grouped ? ` (${groupCount.toLocaleString()} types)` : ""}
+        {filtered.length.toLocaleString()} total
+        {filters.grouped ? ` (${grouped.length.toLocaleString()} types)` : ""}
       </span>
 
       <div className="[&>*]:!overflow-visible [&>*]:!contain-[inherit] [&>*>*]:will-change-transform">

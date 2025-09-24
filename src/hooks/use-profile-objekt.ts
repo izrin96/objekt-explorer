@@ -1,4 +1,5 @@
 import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
+import { groupBy } from "es-toolkit";
 import { useMemo } from "react";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
@@ -50,6 +51,7 @@ export function useProfileObjekts() {
     return {
       shaped: shape(filtered, pinsQuery.data, lockedObjektQuery.data),
       filtered,
+      grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
     };
   }, [shape, filter, joinedObjekts, pinsQuery.data, lockedObjektQuery.data]);
 }

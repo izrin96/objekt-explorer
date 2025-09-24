@@ -84,13 +84,8 @@ function ProfileObjekt() {
   const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const { shaped, filtered } = useProfileObjekts();
+  const { shaped, filtered, grouped } = useProfileObjekts();
   const deferredObjekts = useDeferredValue(shaped);
-
-  const [groupCount, count] = useMemo(() => {
-    const groupedObjekts = shaped.flatMap(([, objekts]) => objekts);
-    return [groupedObjekts.length, filtered.length];
-  }, [shaped, filtered]);
 
   const virtualList = useMemo(() => {
     return deferredObjekts.flatMap(([title, items]) => [
@@ -198,8 +193,8 @@ function ProfileObjekt() {
         </FilterContainer>
       </div>
       <span className="font-semibold">
-        {count.toLocaleString()} total
-        {filters.grouped ? ` (${groupCount.toLocaleString()} types)` : ""}
+        {filtered.length.toLocaleString()} total
+        {filters.grouped ? ` (${grouped.length.toLocaleString()} types)` : ""}
       </span>
 
       <div className="[&>*]:!overflow-visible [&>*]:!contain-[inherit] [&>*>*]:will-change-transform">

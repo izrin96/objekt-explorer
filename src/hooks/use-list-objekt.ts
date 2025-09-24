@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { groupBy } from "es-toolkit";
 import { useMemo } from "react";
 import { orpc } from "@/lib/orpc/client";
 import { mapObjektWithTag } from "@/lib/universal/objekts";
@@ -18,6 +19,10 @@ export function useListObjekts(slug: string) {
   );
   return useMemo(() => {
     const filtered = filter(query.data);
-    return { shaped: shape(filtered), filtered };
+    return {
+      shaped: shape(filtered),
+      filtered,
+      grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
+    };
   }, [shape, filter, query.data]);
 }
