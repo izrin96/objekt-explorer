@@ -131,6 +131,7 @@ export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
   const target = useTarget((a) => a.list)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
+  const reset = useObjektSelect((a) => a.reset);
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
@@ -155,6 +156,7 @@ export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
               {
                 onSuccess: () => {
                   setOpen(false);
+                  reset();
                 },
               },
             );
