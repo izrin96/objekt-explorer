@@ -51,7 +51,7 @@ export function SelectMode({ children, objekts }: Props) {
         <XIcon weight="regular" data-slot="icon" />
         {t("clear")}
       </Button>
-      <Button intent="outline" onClick={() => batchSelect(objekts)}>
+      <Button intent="outline" onClick={() => batchSelect(objekts.toReversed())}>
         Select all
       </Button>
       {children?.({ handleAction })}
@@ -107,7 +107,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
               </Button>
               <TooltipContent inverse>Clear selection</TooltipContent>
             </Tooltip>
-            <Button size="sm" intent="outline" onClick={() => batchSelect(objekts)}>
+            <Button size="sm" intent="outline" onClick={() => batchSelect(objekts.toReversed())}>
               Select all
             </Button>
 
