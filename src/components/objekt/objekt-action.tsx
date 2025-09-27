@@ -38,12 +38,12 @@ export function ObjektOverlay({ isPin, isLocked }: { isPin: boolean; isLocked: b
   return (
     <div className="absolute top-0 left-0 flex">
       {isPin && (
-        <div className="rounded bg-bg p-1 text-fg">
+        <div className="rounded-lg bg-bg p-1 text-fg">
           <PushPinIcon weight="bold" size={12} />
         </div>
       )}
       {isLocked && (
-        <div className="rounded bg-bg p-1 text-fg">
+        <div className="rounded-lg bg-bg p-1 text-fg">
           <LockSimpleIcon weight="bold" size={12} />
         </div>
       )}

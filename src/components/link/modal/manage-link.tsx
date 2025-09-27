@@ -326,7 +326,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
       {droppedImage.type.startsWith("video") ? (
         <video
           src={imageUrl}
-          className="aspect-[2.3/1] rounded object-cover"
+          className="aspect-[2.3/1] rounded-lg object-cover"
           autoPlay
           loop
           muted
@@ -336,7 +336,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         <img
           src={imageUrl}
           alt="Selected banner preview"
-          className="aspect-[2.3/1] rounded object-cover"
+          className="aspect-[2.3/1] rounded-lg object-cover"
         />
       ) : (
         <div className="h-52">

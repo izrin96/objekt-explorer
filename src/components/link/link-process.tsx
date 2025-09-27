@@ -198,7 +198,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
             </Link>{" "}
             if you are on mobile.
           </span>
-          <div className="rounded bg-white p-3 shadow-lg">
+          <div className="rounded-lg bg-white p-3 shadow-lg">
             <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
           </div>
           {data?.status === "wait_for_user_action" && (

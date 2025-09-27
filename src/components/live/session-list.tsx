@@ -100,7 +100,7 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
             alt={live.title}
           />
           {live.status === "in_progress" && (
-            <div className="absolute top-2 left-2 rounded bg-rose-500 px-1.5 py-0.5 font-semibold text-sm text-white shadow">
+            <div className="absolute top-2 left-2 rounded-lg bg-rose-500 px-1.5 py-0.5 font-semibold text-sm text-white shadow">
               Live
             </div>
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChecksIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChecksIcon, HandPointingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback } from "react";
@@ -44,15 +44,16 @@ export function SelectMode({ children, objekts }: Props) {
         intent="outline"
         onClick={toggleMode}
       >
-        <ChecksIcon weight="regular" data-slot="icon" />
+        <HandPointingIcon weight="regular" data-slot="icon" />
         {t("select_mode")}
       </Toggle>
+      <Button intent="outline" onClick={() => batchSelect(objekts.toReversed())}>
+        <ChecksIcon weight="regular" data-slot="icon" />
+        Select all
+      </Button>
       <Button intent="outline" onClick={reset}>
         <XIcon weight="regular" data-slot="icon" />
-        {t("clear")}
-      </Button>
-      <Button intent="outline" onClick={() => batchSelect(objekts.toReversed())}>
-        Select all
+        Deselect
       </Button>
       {children?.({ handleAction })}
     </div>
@@ -83,7 +84,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
     <AnimatePresence>
       {selected.length > 0 && (
         <motion.div
-          className="fixed inset-x-0 bottom-2 z-10 mx-auto w-fit rounded border bg-bg/80 px-1.5 py-1 shadow backdrop-blur"
+          className="fixed inset-x-0 bottom-2 z-10 mx-auto w-fit rounded-lg border bg-bg/80 px-1.5 py-1 shadow backdrop-blur"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
@@ -97,18 +98,17 @@ export function FloatingSelectMode({ children, objekts }: Props) {
                 onClick={toggleMode}
                 className={mode ? "!inset-ring-primary" : ""}
               >
-                <ChecksIcon weight="regular" size={18} />
+                <HandPointingIcon weight="regular" data-slot="icon" />
               </Toggle>
               <TooltipContent inverse>Toggle select mode</TooltipContent>
             </Tooltip>
-            <Tooltip delay={0} closeDelay={0}>
-              <Button size="sq-sm" intent="outline" onClick={reset}>
-                <XIcon size={18} weight="regular" />
-              </Button>
-              <TooltipContent inverse>Clear selection</TooltipContent>
-            </Tooltip>
             <Button size="sm" intent="outline" onClick={() => batchSelect(objekts.toReversed())}>
+              <ChecksIcon weight="regular" data-slot="icon" />
               Select all
+            </Button>
+            <Button size="sm" intent="outline" onClick={reset}>
+              <XIcon weight="regular" data-slot="icon" />
+              Deselect
             </Button>
 
             {children?.({ handleAction })}
