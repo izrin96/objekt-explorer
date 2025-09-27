@@ -48,7 +48,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       aria-label="Search"
       suffix={
         query.length > 0 ? (
-          <Button intent="plain" onClick={() => setQuery("")}>
+          <Button intent="plain" size="sq-xs" onClick={() => handleChange("")}>
             <XIcon data-slot="icon" />
           </Button>
         ) : (
