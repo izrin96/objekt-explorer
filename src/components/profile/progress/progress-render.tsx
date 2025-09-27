@@ -1,7 +1,6 @@
 "use client";
 
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
-import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
 import { memo, Suspense, useMemo, useState } from "react";
@@ -88,11 +87,11 @@ function Progress() {
           Select at least 1 artist or 1 member
         </div>
       ) : (
-        shaped.map(([key, objekts]) => (
+        shaped.map(([key, grouped]) => (
           <ProgressCollapse
             key={key}
             title={key}
-            objekts={objekts}
+            grouped={grouped}
             ownedSlugs={ownedSlugs}
             authenticated={authenticated}
             columns={columns}
@@ -105,13 +104,13 @@ function Progress() {
 
 const ProgressCollapse = memo(function ProgressCollapse({
   title,
-  objekts,
+  grouped,
   ownedSlugs,
   authenticated,
   columns,
 }: {
   title: string;
-  objekts: ValidObjekt[];
+  grouped: ValidObjekt[][];
   ownedSlugs: Set<string>;
   authenticated: boolean;
   columns: number;
@@ -121,13 +120,12 @@ const ProgressCollapse = memo(function ProgressCollapse({
   const [showCount] = useShowCount();
 
   const { filteredObjekts, owned } = useMemo(() => {
-    const groupObjekts = Object.values(groupBy(objekts, (a) => a.collectionId));
-    const filtered = groupObjekts
+    const filtered = grouped
       .map(([objekt]) => objekt)
       .filter((a) => unobtainables.includes(a.slug) === false);
     const owned = filtered.filter((a) => ownedSlugs.has(a.slug));
     return { filteredObjekts: filtered, owned };
-  }, [objekts, ownedSlugs]);
+  }, [grouped, ownedSlugs]);
 
   const percentage =
     filteredObjekts.length > 0
@@ -164,7 +162,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
             className="mt-4 flex flex-col"
           >
             {makeObjektRows({
-              items: Object.values(groupBy(objekts, (a) => a.collectionId)),
+              items: grouped,
               columns,
               renderItem: ({ items, rowIndex }) => (
                 <ObjektsRenderRow

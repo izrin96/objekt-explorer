@@ -13,7 +13,7 @@ export function useShapeProgress() {
   const compareMember = useCompareMember();
 
   return useCallback(
-    (data: ValidObjekt[]): [string, ValidObjekt[]][] => {
+    (data: ValidObjekt[]): [string, ValidObjekt[][]][] => {
       const objekts = data.filter((a) => ["Welcome", "Zero"].includes(a.class) === false);
 
       const groupBys = filters.group_bys?.toSorted(
@@ -43,13 +43,17 @@ export function useShapeProgress() {
           .toSorted(([, [objektA]], [, [objektB]]) =>
             groupBys.includes("member") ? compareMember(objektA.member, objektB.member) : 0,
           )
-          .map(([key, objekts]) => [
-            key,
-            objekts
-              .toSorted((a, b) => compareMember(a.member, b.member))
-              .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-              .toSorted((a, b) => seasonSort(b.season, a.season)),
-          ])
+          .map(
+            ([key, objekts]) =>
+              [
+                key,
+                objekts
+                  .toSorted((a, b) => compareMember(a.member, b.member))
+                  .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+                  .toSorted((a, b) => seasonSort(b.season, a.season)),
+              ] as const,
+          )
+          .map(([key, objekts]) => [key, Object.values(groupBy(objekts, (a) => a.collectionId))])
       );
     },
     [filters, getArtist, compareMember],
