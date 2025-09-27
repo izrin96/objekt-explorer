@@ -376,7 +376,7 @@ function ActivityRow({
               {event === "mint" ? (
                 <>
                   <LeafIcon size={18} weight="light" />
-                  <Badge className="text-xs [--badge-bg:var(--color-yellow-500)]/15 [--badge-fg:var(--color-yellow-700)] [--badge-overlay:var(--color-yellow-500)]/20 dark:[--badge-fg:var(--color-yellow-300)]">
+                  <Badge className="text-xs [--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]">
                     Mint
                   </Badge>
                 </>
