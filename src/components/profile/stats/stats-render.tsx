@@ -269,12 +269,11 @@ function MemberProgressChart({
       .flatMap((a) => a.artistMembers)
       .map((a) => ({ color: a.primaryColorHex, name: a.name }));
 
-    const grouped = Object.values(groupBy(objekts, (a: ValidObjekt) => a.collectionId));
+    const grouped = Object.values(groupBy(objekts, (a) => a.collectionId));
 
     return members
       .map((member) => {
-        const owned = grouped.filter((group: ValidObjekt[]) => {
-          const [objekt] = group;
+        const owned = grouped.filter(([objekt]) => {
           return (
             objekt.member === member.name &&
             unobtainables.includes(objekt.slug) === false &&
@@ -282,7 +281,7 @@ function MemberProgressChart({
           );
         }).length;
         const total = collections.filter(
-          (a: ValidObjekt) =>
+          (a) =>
             a.member === member.name &&
             unobtainables.includes(a.slug) === false &&
             ["Welcome", "Zero"].includes(a.class) === false,
