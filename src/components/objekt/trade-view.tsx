@@ -270,11 +270,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
             </div>
             <div className="flex items-center gap-3">
               <span className="font-semibold text-sm">{t("transferable")}</span>
-              <Badge
-                className={cn("text-xs")}
-                intent={!data.transferable ? "custom" : "info"}
-                isCircle={false}
-              >
+              <Badge className={cn("text-xs")} intent={!data.transferable ? "custom" : "info"}>
                 {data.transferable ? "Yes" : "No"}
               </Badge>
             </div>

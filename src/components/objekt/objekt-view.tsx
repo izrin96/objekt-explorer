@@ -74,17 +74,12 @@ export default function ObjektView({
       </div>
       {!hideLabel && (
         <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
-          <Badge
-            intent="secondary"
-            className="cursor-pointer font-semibold"
-            isCircle={false}
-            onClick={open}
-          >
+          <Badge intent="secondary" className="cursor-pointer font-semibold" onClick={open}>
             {getCollectionShortId(objekt)}
             {showSerial && "serial" in objekt && ` #${objekt.serial}`}
           </Badge>
           {unobtainable && (
-            <Badge intent="custom" isCircle={false} className="font-semibold text-xs">
+            <Badge intent="custom" className="font-semibold text-xs">
               Unobtainable
             </Badge>
           )}

@@ -11,22 +11,22 @@ const badgeStyles = tv({
   variants: {
     intent: {
       primary:
-        "[--badge-bg:var(--color-primary-subtle)] [--badge-fg:var(--color-primary-subtle-fg)] [--badge-overlay:var(--color-primary)]/20",
+        "[--badge-bg:var(--primary-subtle)] [--badge-fg:var(--primary-subtle-fg)] [--badge-overlay:var(--primary)]/20",
       secondary:
-        "[--badge-bg:var(--color-secondary)] [--badge-fg:var(--color-secondary-fg)] [--badge-overlay:var(--color-muted-fg)]/25",
+        "[--badge-bg:var(--secondary)] [--badge-fg:var(--secondary-fg)] [--badge-overlay:var(--muted-fg)]/25",
       success:
-        "[--badge-bg:var(--color-success-subtle)] [--badge-fg:var(--color-success-subtle-fg)] [--badge-overlay:var(--color-success)]/20",
-      info: "[--badge-bg:var(--color-info-subtle)] [--badge-fg:var(--color-info-subtle-fg)] [--badge-overlay:var(--color-sky-500)]/20",
+        "[--badge-bg:var(--success-subtle)] [--badge-fg:var(--success-subtle-fg)] [--badge-overlay:var(--success)]/20",
+      info: "[--badge-bg:var(--info-subtle)] [--badge-fg:var(--info-subtle-fg)] [--badge-overlay:var(--sky-500)]/20",
       warning:
-        "[--badge-bg:var(--color-warning-subtle)] [--badge-fg:var(--color-warning-subtle-fg)] [--badge-overlay:var(--color-warning)]/20",
+        "[--badge-bg:var(--warning-subtle)] [--badge-fg:var(--warning-subtle-fg)] [--badge-overlay:var(--warning)]/20",
       danger:
-        "[--badge-bg:var(--color-danger-subtle)] [--badge-fg:var(--color-danger-subtle-fg)] [--badge-overlay:var(--color-danger)]/20",
-      outline: "[--badge-overlay:var(--color-secondary)]/20 [--badge-ring:var(--color-border)]",
+        "[--badge-bg:var(--danger-subtle)] [--badge-fg:var(--danger-subtle-fg)] [--badge-overlay:var(--danger)]/20",
+      outline: "[--badge-overlay:var(--secondary)]/20 [--badge-ring:var(--border)]",
       custom:
         "[--badge-bg:var(--color-pink-500)]/15 [--badge-fg:var(--color-pink-700)] [--badge-overlay:var(--color-pink-500)]/20 dark:[--badge-fg:var(--color-pink-300)]",
     },
     isCircle: {
-      true: "rounded-full px-2",
+      true: "rounded-lg px-2",
       false: "rounded-sm px-1.5",
     },
   },

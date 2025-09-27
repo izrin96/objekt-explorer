@@ -130,7 +130,7 @@ const SliderTrack = ({ className, ...props }: SliderTrackProps) => {
       className={composeTailwindRenderProps(
         className,
         twJoin([
-          "[--slider:color-mix(in_oklab,var(--color-muted)_90%,black_10%)] dark:[--slider:color-mix(in_oklab,var(--color-muted)_90%,white_10%)]",
+          "[--slider:color-mix(in_oklab,var(--muted)_90%,black_10%)] dark:[--slider:color-mix(in_oklab,var(--muted)_90%,white_10%)]",
           "group/track relative cursor-default rounded-full bg-(--slider) disabled:cursor-default disabled:opacity-60",
           "grow group-data-[orientation=horizontal]:h-1.5 group-data-[orientation=horizontal]:w-full group-data-[orientation=vertical]:w-1.5 group-data-[orientation=vertical]:flex-1",
         ]),

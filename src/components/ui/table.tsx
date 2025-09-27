@@ -45,7 +45,7 @@ const useTableContext = () => use(TableContext);
 const Root = (props: TableProps) => {
   return (
     <TablePrimitive
-      className="w-full min-w-full caption-bottom text-sm/6 outline-hidden [--table-selected-bg:var(--color-secondary)]/50"
+      className="w-full min-w-full caption-bottom text-sm/6 outline-hidden [--table-selected-bg:var(--secondary)]/50"
       {...props}
     />
   );

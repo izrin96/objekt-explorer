@@ -95,7 +95,7 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
   return (
     <Button
       className={cx(
-        "inset-ring inset-ring-input flex w-full min-w-0 cursor-default items-center gap-x-2 rounded-lg px-3.5 py-2 text-start text-fg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] outline-hidden transition duration-200 sm:py-1.5 sm:pr-2 sm:pl-3 sm:text-sm/6 sm:*:text-sm/6 dark:shadow-none",
+        "inset-ring inset-ring-border flex w-full min-w-0 cursor-default items-center gap-x-2 rounded-lg px-3.5 py-2 text-start text-fg shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] outline-hidden transition duration-200 sm:py-1.5 sm:pr-2 sm:pl-3 sm:text-sm/6 sm:*:text-sm/6 dark:shadow-none",
         "group-open/select:inset-ring-ring/70 group-open/select:ring-3 group-open/select:ring-ring/20",
         className,
       )}

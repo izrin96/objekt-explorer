@@ -19,17 +19,17 @@ const buttonStyles = tv({
   variants: {
     intent: {
       primary:
-        "[--btn-bg:var(--color-primary)] [--btn-fg:var(--color-primary-fg)] [--btn-icon:color-mix(in_oklab,var(--primary-fg)_60%,var(--primary))] [--btn-overlay:var(--color-primary)]/85",
+        "[--btn-bg:var(--primary)] [--btn-fg:var(--primary-fg)] [--btn-icon:color-mix(in_oklab,var(--primary-fg)_60%,var(--primary))] [--btn-overlay:var(--primary)]/85",
       secondary:
-        "[--btn-bg:var(--color-secondary)] [--btn-fg:var(--color-secondary-fg)] [--btn-icon:var(--color-muted-fg)] [--btn-outline:var(--color-secondary-fg)] [--btn-overlay:var(--color-secondary)]/85 [--btn-ring:var(--color-muted-fg)]/20",
+        "[--btn-bg:var(--secondary)] [--btn-fg:var(--secondary-fg)] [--btn-icon:var(--muted-fg)] [--btn-outline:var(--secondary-fg)] [--btn-overlay:var(--secondary)]/85 [--btn-ring:var(--muted-fg)]/20",
       warning:
-        "[--btn-bg:var(--color-warning)] [--btn-fg:var(--color-warning-fg)] [--btn-icon:color-mix(in_oklab,var(--warning-fg)_60%,var(--warning))] [--btn-overlay:var(--color-warning)]/85",
+        "[--btn-bg:var(--warning)] [--btn-fg:var(--warning-fg)] [--btn-icon:color-mix(in_oklab,var(--warning-fg)_60%,var(--warning))] [--btn-overlay:var(--warning)]/85",
       danger:
-        "[--btn-bg:var(--color-danger)] [--btn-fg:var(--color-danger-fg)] [--btn-icon:color-mix(in_oklab,var(--danger-fg)_60%,var(--danger))] [--btn-overlay:var(--color-danger)]/85",
+        "[--btn-bg:var(--danger)] [--btn-fg:var(--danger-fg)] [--btn-icon:color-mix(in_oklab,var(--danger-fg)_60%,var(--danger))] [--btn-overlay:var(--danger)]/85",
       outline:
-        "[--btn-bg:transparent] [--btn-icon:var(--color-muted-fg)] [--btn-outline:var(--color-ring)] [--btn-overlay:var(--color-muted)] [--btn-ring:var(--color-ring)]/20",
+        "[--btn-bg:transparent] [--btn-icon:var(--muted-fg)] [--btn-outline:var(--ring)] [--btn-overlay:var(--muted)] [--btn-ring:var(--ring)]/20",
       plain:
-        "inset-ring-transparent [--btn-bg:transparent] [--btn-icon:var(--color-muted-fg)] [--btn-outline:var(--color-ring)] [--btn-overlay:var(--color-muted)] [--btn-ring:var(--color-ring)]/20",
+        "inset-ring-transparent [--btn-bg:transparent] [--btn-icon:var(--muted-fg)] [--btn-outline:var(--ring)] [--btn-overlay:var(--muted)] [--btn-ring:var(--ring)]/20",
     },
     size: {
       xs: [

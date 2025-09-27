@@ -14,11 +14,11 @@ const toggleStyles = tv({
   variants: {
     intent: {
       outline: [
-        "bg-transparent outline-secondary-fg ring-secondary-fg/25 hover:bg-secondary",
+        "bg-transparent outline-secondary-fg ring-secondary-fg/25 hover:bg-muted",
         "[--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))] pressed:[--toggle-icon:var(--secondary-fg)] selected:[--toggle-icon:var(--secondary-fg)] hover:[--toggle-icon:var(--secondary-fg)]",
       ],
       plain: [
-        "inset-ring-transparent bg-transparent outline-secondary-fg ring-secondary-fg/25 hover:bg-secondary",
+        "inset-ring-transparent bg-transparent outline-secondary-fg ring-secondary-fg/25 hover:bg-muted",
         "[--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))] pressed:[--toggle-icon:var(--secondary-fg)] selected:[--toggle-icon:var(--secondary-fg)] hover:[--toggle-icon:var(--secondary-fg)]",
       ],
     },

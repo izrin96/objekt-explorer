@@ -4,10 +4,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useRouter } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { type PropsWithChildren, useState } from "react";
+import { type PropsWithChildren, useLayoutEffect, useState } from "react";
 import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import { useThemeStyle } from "@/hooks/use-theme-style";
 import { createQueryClient } from "@/lib/query/client";
 import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
@@ -37,18 +38,38 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
           enableSystem
           attribute="class"
           defaultTheme="system"
-          themes={["light", "dark", "matsu"]}
+          themes={["light", "dark"]}
         >
-          <Toast />
-          <div className="texture"></div>
-          <NuqsAdapter>
-            <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>
-            <ReactQueryDevtools />
-          </NuqsAdapter>
+          <ThemeStyleProvider>
+            <Toast />
+            <div className="texture"></div>
+            <NuqsAdapter>
+              <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>
+              <ReactQueryDevtools />
+            </NuqsAdapter>
+          </ThemeStyleProvider>
         </ThemeProvider>
       </AppRouterProvider>
     </QueryClientProvider>
   );
+}
+
+export function ThemeStyleProvider({ children }: { children: React.ReactNode }) {
+  const { themeStyle } = useThemeStyle();
+  const [mounted, setMounted] = useState(false);
+
+  useLayoutEffect(() => {
+    if (document.body.getAttribute("data-theme") !== themeStyle) {
+      document.body.setAttribute("data-theme", themeStyle);
+    }
+    setMounted(true);
+  }, [themeStyle]);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return children;
 }
 
 function AppRouterProvider({ children }: PropsWithChildren) {

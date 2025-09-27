@@ -89,14 +89,14 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} ${pretendard.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
       style={{
         scrollbarGutter: "stable",
       }}
     >
       <body
         className={cn(
-          "min-h-svh antialiased",
+          "min-h-svh font-sans antialiased",
+          `${inter.variable} ${geistMono.variable} ${pretendard.variable} ${notoSansSc.variable} ${nunitoFont.variable}`,
           process.env.NODE_ENV === "development" ? "debug-screens" : "",
         )}
       >

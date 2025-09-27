@@ -73,7 +73,7 @@ const FieldGroup = ({ className, ref, ...props }: FieldGroupProps) => {
       className={composeTailwindRenderProps(className, [
         "[--gutter-inset:--spacing(6)] [--gutter-x:--spacing(2.5)]",
         "*:text-base/6 *:sm:text-sm/6",
-        "group relative inset-ring inset-ring-input flex items-center overflow-hidden rounded-lg shadow-xs transition duration-200 ease-out",
+        "group relative inset-ring inset-ring-border flex items-center overflow-hidden rounded-lg shadow-xs transition duration-200 ease-out",
         "[&>[role=progressbar]:first-child]:ml-(--gutter-x) [&>[role=progressbar]:last-child]:mr-(--gutter-x)",
         "*:data-[slot=icon]:z-10 **:data-[slot=icon]:size-4 **:data-[slot=icon]:shrink-0 **:[button]:shrink-0",
         "[&>button:has([data-slot=icon]):first-child]:left-0 [&>button:has([data-slot=icon]):last-child]:right-0 [&>button:has([data-slot=icon])]:absolute",
@@ -84,7 +84,7 @@ const FieldGroup = ({ className, ref, ...props }: FieldGroupProps) => {
         "has-[[data-slot=icon]:last-child]:[&_input]:pr-[calc(var(--gutter-inset)+1)]",
         "*:[button]:rounded-[calc(var(--radius-lg)-2.5px)] *:[button]:px-(--gutter-x) *:[button]:py-[calc(--spacing(1)-1px)]",
         "*:[button]:first:ml-[--spacing(0.7)] *:[button]:last:mr-[--spacing(0.7)]",
-        "hover:inset-ring-[color-mix(in_oklab,var(--color-input)_50%,var(--color-muted-fg)_25%)] focus-within:hover:inset-ring-ring/70 has-invalid:hover:inset-ring-danger/70",
+        "hover:inset-ring-[color-mix(in_oklab,var(--input)_50%,var(--muted-fg)_25%)] focus-within:hover:inset-ring-ring/70 has-invalid:hover:inset-ring-danger/70",
         "invalid:inset-ring-danger/70 focus-within:invalid:inset-ring-danger/70 focus-within:invalid:ring-danger/20 group-invalid:inset-ring-danger/70 group-invalid:focus-within:inset-ring-danger/70 group-invalid:focus-within:ring-danger/20",
         "focus-within:inset-ring-ring/70 focus-within:ring-3 focus-within:ring-ring/20",
       ])}

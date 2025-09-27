@@ -248,7 +248,6 @@ function OwnedListPanel({
                     <Badge
                       className={cn("text-xs")}
                       intent={!item.transferable ? "custom" : "info"}
-                      isCircle={false}
                     >
                       {item.transferable ? "Yes" : "No"}
                     </Badge>

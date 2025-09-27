@@ -47,7 +47,7 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} size="sm" intent="outline">
+      <Button onClick={() => setIsOpen(true)} size="sm" intent="primary">
         <MagnifyingGlassIcon data-slot="icon" />
         <span className="hidden sm:block">{t("label")}</span>
       </Button>
