@@ -96,7 +96,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     >
       <body
         className={cn(
-          "min-h-svh antialiased",
+          "min-h-svh font-sans antialiased",
           process.env.NODE_ENV === "development" ? "debug-screens" : "",
         )}
       >
