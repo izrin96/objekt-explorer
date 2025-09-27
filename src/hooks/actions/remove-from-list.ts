@@ -29,9 +29,7 @@ export function useRemoveFromList() {
         //     input: slug,
         //   }),
         // });
-        toast.success("Objekt removed from the list", {
-          duration: 1300,
-        });
+        toast.success("Objekt removed from the list");
       },
       onError: (_err, { slug }, context) => {
         if (context?.previousEntries) {

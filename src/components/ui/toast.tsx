@@ -10,8 +10,8 @@ const Toast = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       richColors
-      duration={2000}
-      position="bottom-center"
+      duration={2500}
+      position="bottom-right"
       toastOptions={{
         className:
           "*:data-icon:self-start font-sans has-data-description:*:data-icon:mt-1 *:data-icon:mt-0.5 backdrop-blur-2xl",

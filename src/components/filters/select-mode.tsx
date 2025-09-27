@@ -26,9 +26,7 @@ export function SelectMode({ children, objekts }: Props) {
   const handleAction = useCallback(
     (open: () => void) => {
       if (selected.length === 0) {
-        toast.error("Must select at least one objekt", {
-          duration: 1300,
-        });
+        toast.error("Must select at least one objekt");
       } else {
         open();
       }
@@ -70,9 +68,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
   const handleAction = useCallback(
     (open: () => void) => {
       if (selected.length === 0) {
-        toast.error("Must select at least one objekt", {
-          duration: 1300,
-        });
+        toast.error("Must select at least one objekt");
       } else {
         open();
       }
