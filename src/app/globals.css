@@ -10,10 +10,8 @@
 @variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-sans), var(--font-pretendard), var(--font-noto-sans-sc), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: var(--font-geist-mono), "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas",
-    '"Liberation Mono"', '"Courier New"', "monospace";
+  --font-sans: var(--font-sans), var(--font-pretendard), var(--font-noto-sans-sc);
+  --font-mono: var(--font-mono);
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -238,6 +236,7 @@
   --tracking-normal: 0em;
 
   --font-sans: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
 }
 
 .light {
