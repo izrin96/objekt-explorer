@@ -1,6 +1,6 @@
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
-import { classSort, filterObjekts, seasonSort } from "@/lib/filter-utils";
+import { classSort, seasonSort } from "@/lib/filter-utils";
 import { validGroupBy } from "@/lib/universal/cosmo/common";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
@@ -9,16 +9,12 @@ import { useCompareMember } from "./use-objekt-compare-member";
 
 export function useShapeProgress() {
   const [filters] = useFilters();
-  const { artists, getArtist } = useCosmoArtist();
+  const { getArtist } = useCosmoArtist();
   const compareMember = useCompareMember();
 
   return useCallback(
     (data: ValidObjekt[]): [string, ValidObjekt[]][] => {
-      let objekts = data;
-
-      objekts = filterObjekts(filters, objekts).filter(
-        (a) => ["Welcome", "Zero"].includes(a.class) === false,
-      );
+      const objekts = data.filter((a) => ["Welcome", "Zero"].includes(a.class) === false);
 
       const groupBys = filters.group_bys?.toSorted(
         (a, b) => validGroupBy.indexOf(a) - validGroupBy.indexOf(b),
@@ -56,6 +52,6 @@ export function useShapeProgress() {
           ])
       );
     },
-    [filters, artists, getArtist, compareMember],
+    [filters, getArtist, compareMember],
   );
 }

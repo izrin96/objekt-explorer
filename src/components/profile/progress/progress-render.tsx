@@ -17,6 +17,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
+import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useShapeProgress } from "@/hooks/use-shape-progress";
 import { useTarget } from "@/hooks/use-target";
@@ -61,6 +62,7 @@ function Progress() {
   const { columns } = useObjektColumn();
   const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
+  const filter = useObjektFilter();
   const shape = useShapeProgress();
 
   const [objektsQuery, ownedQuery] = useSuspenseQueries({
@@ -73,10 +75,10 @@ function Progress() {
   const { ownedSlugs, shaped } = useMemo(() => {
     const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
     const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
-    const joinedObjekts = [...ownedQuery.data, ...missingObjekts];
-    const shaped = shape(joinedObjekts);
+    const filtered = filter([...ownedQuery.data, ...missingObjekts]);
+    const shaped = shape(filtered);
     return { ownedSlugs, shaped };
-  }, [shape, ownedQuery.data, objektsQuery.data]);
+  }, [shape, filter, ownedQuery.data, objektsQuery.data]);
 
   return (
     <div className="flex flex-col gap-8">

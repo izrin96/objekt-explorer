@@ -22,8 +22,8 @@ import {
 } from "@/components/ui";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useTarget } from "@/hooks/use-target";
-import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
@@ -56,7 +56,7 @@ export default function ProfileStatsRender() {
 
 function ProfileStats() {
   const profile = useTarget((a) => a.profile)!;
-  const [filters] = useFilters();
+  const filter = useObjektFilter();
   const { selectedArtistIds } = useCosmoArtist();
 
   const [query, collectionQuery] = useSuspenseQueries({
@@ -66,12 +66,9 @@ function ProfileStats() {
     ],
   });
 
-  const objekts = useMemo(() => filterObjekts(filters, query.data), [filters, query.data]);
+  const objekts = useMemo(() => filter(query.data), [filter, query.data]);
 
-  const collections = useMemo(
-    () => filterObjekts(filters, collectionQuery.data),
-    [filters, collectionQuery.data],
-  );
+  const collections = useMemo(() => filter(collectionQuery.data), [filter, collectionQuery.data]);
 
   return (
     <div className="flex flex-col gap-4">

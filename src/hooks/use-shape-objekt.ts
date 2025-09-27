@@ -10,7 +10,7 @@ import { useObjektSort } from "./use-objekt-sort";
 export function useShapeObjekts() {
   const [filters] = useFilters();
   const isFiltering = useIsFiltering();
-  const { artists, getArtist } = useCosmoArtist();
+  const { getArtist } = useCosmoArtist();
   const compareMember = useCompareMember();
   const sortObjekts = useObjektSort();
 
@@ -120,6 +120,6 @@ export function useShapeObjekts() {
         return [key, items];
       });
     },
-    [filters, isFiltering, artists, getArtist, compareMember, sortObjekts],
+    [filters, isFiltering, getArtist, compareMember, sortObjekts],
   );
 }

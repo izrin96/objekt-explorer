@@ -35,12 +35,15 @@ type Props = {
 export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>Generate Discord Format</ModalTitle>
+      </ModalHeader>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
             <Suspense
               fallback={
-                <div className="flex justify-center py-2">
+                <div className="flex justify-center pt-2 pb-8">
                   <Loader variant="ring" />
                 </div>
               }
@@ -70,9 +73,6 @@ function Content() {
 
   return (
     <>
-      <ModalHeader>
-        <ModalTitle>Generate Discord Format</ModalTitle>
-      </ModalHeader>
       <ModalBody>
         <Form
           className="flex flex-col gap-2"

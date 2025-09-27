@@ -215,7 +215,7 @@ function Filters({
 }) {
   return (
     <div className="flex w-full flex-col gap-6">
-      <Filter />
+      <Filter objekts={objekts} />
       {authenticated && (
         <SelectMode objekts={objekts}>
           {({ handleAction }) => (

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
 import ColorFilter from "../filters/filter-color";
@@ -25,9 +26,9 @@ import UnownedFilter from "../filters/filter-unowned";
 import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
 import { Button } from "../ui";
-import { GenerateDiscordFormatModal } from "./modal/generate-discord";
+import GenerateDiscordFormatModalProfile from "./modal/generate-discord";
 
-export default function Filter() {
+export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
   return (
@@ -55,18 +56,18 @@ export default function Filter() {
         <WideFilter />
         <ColumnFilter />
         <SearchFilter />
-        <GenerateDiscordFormat />
+        <GenerateDiscordFormat objekts={objekts} />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>
   );
 }
 
-function GenerateDiscordFormat() {
+function GenerateDiscordFormat({ objekts }: { objekts: ValidObjekt[] }) {
   const [genOpen, setGenOpen] = useState(false);
   return (
     <>
-      <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
+      <GenerateDiscordFormatModalProfile objekts={objekts} open={genOpen} setOpen={setGenOpen} />
       <Button intent="outline" onClick={() => setGenOpen(true)}>
         Discord format
       </Button>
