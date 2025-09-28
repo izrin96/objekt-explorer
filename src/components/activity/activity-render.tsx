@@ -125,6 +125,7 @@ function Activity() {
 
   const rowVirtualizer = useWindowVirtualizer({
     count: transfers.length,
+    getItemKey: (index) => transfers[index].transfer.id,
     estimateSize: () => ROW_HEIGHT,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,

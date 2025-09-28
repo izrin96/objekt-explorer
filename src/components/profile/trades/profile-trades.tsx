@@ -117,6 +117,7 @@ function ProfileTradesVirtualizer({
   const parentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
+    getItemKey: (index) => rows[index].transfer.id,
     estimateSize: () => 42,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
