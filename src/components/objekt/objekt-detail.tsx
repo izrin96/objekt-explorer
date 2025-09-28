@@ -7,11 +7,16 @@ import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import NextImage from "next/image";
 import { useTranslations } from "next-intl";
-import { type CSSProperties, useCallback, useMemo, useState } from "react";
+import { type CSSProperties, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
-import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
-import { OBJEKT_CONTRACT, replaceUrlSize } from "@/lib/utils";
+import {
+  getObjektImageUrls,
+  type OwnedObjekt,
+  unobtainables,
+  type ValidObjekt,
+} from "@/lib/universal/objekts";
+import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import {
   Badge,
@@ -40,16 +45,20 @@ type ObjektDetailProps = {
 };
 
 export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetailProps) {
-  const t = useTranslations("objekt");
   const [objekt] = objekts;
-  const isOwned = "serial" in objekt;
-  const currentTab = useObjektModal((a) => a.currentTab);
-  const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
-  const [serial, setSerial] = useState("serial" in objekt ? objekt.serial : null);
+  const urls = getObjektImageUrls(objekt);
 
   return (
-    <div className="flex h-full w-screen flex-col gap-2 p-2 sm:grid sm:h-[33.5rem] sm:min-h-[33.5rem] sm:w-full sm:grid-cols-3 sm:p-3">
-      <ObjektCard objekts={objekts} />
+    <div
+      className="flex h-full w-screen flex-col gap-2 p-2 sm:grid sm:h-[33.5rem] sm:min-h-[33.5rem] sm:w-full sm:grid-cols-3 sm:p-3"
+      style={
+        {
+          "--objekt-bg-color": objekt.backgroundColor,
+          "--objekt-text-color": objekt.textColor,
+        } as CSSProperties
+      }
+    >
+      <ObjektCard urls={urls} objekts={objekts} />
       <div
         className="relative col-span-2 flex min-h-screen flex-col overflow-y-auto sm:min-h-full"
         style={{
@@ -58,70 +67,74 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
       >
         <div className="px-2 font-semibold">{objekt.collectionId}</div>
         <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
-        <Tabs
-          aria-label="Objekt tab"
-          selectedKey={currentTab}
-          onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
-          className="p-2"
-        >
-          <TabList>
-            {showOwned && (
-              <Tab id="owned">
-                {t("owned")}
-                {objekts.length > 1 ? ` (${objekts.length.toLocaleString()})` : ""}
-              </Tab>
-            )}
-            <Tab id="trades">{t("trades")}</Tab>
-            <Tab id="apollo" href={`https://apollo.cafe/objekts?id=${objekt.slug}`} target="_blank">
-              <IconOpenLink />
-              {t("view_in_apollo")}
-            </Tab>
-          </TabList>
-          {showOwned && (
-            <TabPanel id="owned">
-              {isOwned ? (
-                <OwnedListPanel setSerial={setSerial} objekts={objekts as OwnedObjekt[]} />
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-3">
-                  <ArchiveXIcon strokeWidth={1} size={64} />
-                  <p>Not owned</p>
-                </div>
-              )}
-            </TabPanel>
-          )}
-          <TabPanel id="trades">
-            <TradeView objekt={objekt} serial={serial} />
-          </TabPanel>
-        </Tabs>
+        <ObjektPanel objekts={objekts} showOwned={showOwned} />
       </div>
     </div>
   );
 }
 
-function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
+function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
+  const [objekt] = objekts;
+  const t = useTranslations("objekt");
+  const isOwned = "serial" in objekt;
+  const currentTab = useObjektModal((a) => a.currentTab);
+  const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
+  const [serial, setSerial] = useState("serial" in objekt ? objekt.serial : null);
+
+  return (
+    <Tabs
+      aria-label="Objekt tab"
+      selectedKey={currentTab}
+      onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
+      className="p-2"
+    >
+      <TabList>
+        {showOwned && (
+          <Tab id="owned">
+            {t("owned")}
+            {objekts.length > 1 ? ` (${objekts.length.toLocaleString()})` : ""}
+          </Tab>
+        )}
+        <Tab id="trades">{t("trades")}</Tab>
+        <Tab id="apollo" href={`https://apollo.cafe/objekts?id=${objekt.slug}`} target="_blank">
+          <IconOpenLink />
+          {t("view_in_apollo")}
+        </Tab>
+      </TabList>
+      {showOwned && (
+        <TabPanel id="owned">
+          {isOwned ? (
+            <OwnedListPanel setSerial={setSerial} objekts={objekts as OwnedObjekt[]} />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3">
+              <ArchiveXIcon strokeWidth={1} size={64} />
+              <p>Not owned</p>
+            </div>
+          )}
+        </TabPanel>
+      )}
+      <TabPanel id="trades">
+        <TradeView objekt={objekt} serial={serial} />
+      </TabPanel>
+    </Tabs>
+  );
+}
+
+function ObjektCard({
+  objekts,
+  urls,
+}: {
+  objekts: ValidObjekt[];
+  urls: ReturnType<typeof getObjektImageUrls>;
+}) {
   const [objekt] = objekts;
   const [flipped, setFlipped] = useState(false);
-
-  const urls = useMemo(
-    () => ({
-      resizedUrl: replaceUrlSize(objekt.frontImage),
-      originalUrl: replaceUrlSize(objekt.frontImage, "original"),
-      backUrl: replaceUrlSize(objekt.backImage, "original"),
-    }),
-    [objekt.frontImage, objekt.backImage],
-  );
 
   return (
     <div
       role="none"
       onClick={() => setFlipped((prev) => !prev)}
       className="flex h-[21rem] select-none self-center sm:h-fit"
-      style={
-        {
-          "--objekt-bg-color": objekt.backgroundColor,
-          "--objekt-text-color": objekt.textColor,
-        } as CSSProperties
-      }
     >
       <div
         data-flipped={flipped}

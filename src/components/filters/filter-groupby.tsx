@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidGroupBy, validGroupBy } from "@/lib/universal/cosmo/common";
@@ -11,17 +11,14 @@ export default function GroupByFilter() {
   const t = useTranslations("filter.group_by");
   const [filters, setFilters] = useFilters();
 
-  const map = useMemo<Record<ValidGroupBy, string>>(
-    () => ({
-      artist: t("artist"),
-      class: t("class"),
-      collectionNo: t("collection_no"),
-      member: t("member"),
-      season: t("season"),
-      seasonCollectionNo: t("season_collection_no"),
-    }),
-    [t],
-  );
+  const map = {
+    artist: t("artist"),
+    class: t("class"),
+    collectionNo: t("collection_no"),
+    member: t("member"),
+    season: t("season"),
+    seasonCollectionNo: t("season_collection_no"),
+  };
 
   const selected = new Set(filters.group_by ? [filters.group_by] : []);
 

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { type ValidType, validType } from "@/lib/universal/activity";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
@@ -16,15 +16,12 @@ export default function TypeFilter() {
   const [type, setType] = useTypeFilter();
   const selected = new Set(type ? [type] : ["all"]);
 
-  const map = useMemo<Record<ValidType, string>>(
-    () => ({
-      all: t("all"),
-      mint: t("mint"),
-      transfer: t("transfer"),
-      spin: t("spin"),
-    }),
-    [t],
-  );
+  const map = {
+    all: t("all"),
+    mint: t("mint"),
+    transfer: t("transfer"),
+    spin: t("spin"),
+  };
 
   const update = useCallback(
     (key: Selection) => {

@@ -7,8 +7,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
-import type React from "react";
-import { Suspense, useRef } from "react";
+import { memo, Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
@@ -57,13 +56,12 @@ function ProfileTrades() {
   const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
   const [type] = useTypeFilter();
-  const parentRef = useRef<HTMLDivElement>(null);
 
   const query = useSuspenseInfiniteQuery({
     queryKey: ["transfers", profile.address, type, filters, selectedArtistIds],
-    queryFn: async ({ pageParam }: { pageParam?: { timestamp: string; id: string } }) => {
+    queryFn: ({ pageParam }: { pageParam?: { timestamp: string; id: string } }) => {
       const url = new URL(`/api/transfers/${profile.address}`, getBaseURL());
-      return await ofetch<TransferResult>(url.toString(), {
+      return ofetch<TransferResult>(url.toString(), {
         query: {
           cursor: pageParam ? JSON.stringify(pageParam) : undefined,
           type: type ?? undefined,
@@ -85,6 +83,38 @@ function ProfileTrades() {
 
   const rows = query.data.pages.flatMap((p) => p.results);
 
+  if (query.data.pages[0].hide) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-3">
+        <LockIcon size={64} weight="light" />
+        <p>Trade History Private</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Card className="py-0">
+        <ProfileTradesVirtualizer rows={rows} address={profile.address} />
+      </Card>
+      <InfiniteQueryNext
+        status={query.status}
+        hasNextPage={query.hasNextPage}
+        isFetchingNextPage={query.isFetchingNextPage}
+        fetchNextPage={query.fetchNextPage}
+      />
+    </>
+  );
+}
+
+function ProfileTradesVirtualizer({
+  rows,
+  address,
+}: {
+  rows: AggregatedTransfer[];
+  address: string;
+}) {
+  const parentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
     estimateSize: () => 42,
@@ -93,74 +123,63 @@ function ProfileTrades() {
   });
 
   return (
-    <>
-      {query.data.pages[0].hide ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-3">
-          <LockIcon size={64} weight="light" />
-          <p>Trade History Private</p>
-        </div>
-      ) : (
-        <>
-          <Card className="py-0">
-            <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
-              <div className="flex min-w-fit border-b">
-                <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
-                <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
-                <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
-                <div className="min-w-[130px] flex-1 px-3 py-2.5">Action</div>
-                <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
-              </div>
+    <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
+      <div className="flex min-w-fit border-b">
+        <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
+        <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
+        <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
+        <div className="min-w-[130px] flex-1 px-3 py-2.5">Action</div>
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
+      </div>
 
-              <div
-                style={{
-                  height: `${rowVirtualizer.getTotalSize()}px`,
-                }}
-                className="relative w-full [&>*]:will-change-transform"
-              >
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const row = rows[virtualRow.index];
-                  return (
-                    <ObjektModal key={row.transfer.id} objekts={[row.objekt]}>
-                      {({ openObjekts }) => (
-                        <TradeRow
-                          row={row}
-                          address={profile.address}
-                          open={openObjekts}
-                          style={{
-                            transform: `translateY(${
-                              virtualRow.start - rowVirtualizer.options.scrollMargin
-                            }px)`,
-                          }}
-                        />
-                      )}
-                    </ObjektModal>
-                  );
-                })}
-              </div>
+      <div
+        style={{
+          height: `${rowVirtualizer.getTotalSize()}px`,
+        }}
+        className="relative w-full [&>*]:will-change-transform"
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          const row = rows[virtualRow.index];
+          return (
+            <div
+              className="absolute top-0 left-0 w-full"
+              key={virtualRow.key}
+              style={{
+                height: `${virtualRow.size}px`,
+                transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
+              }}
+            >
+              <RowsRender address={address} item={row} />
             </div>
-          </Card>
-          <InfiniteQueryNext
-            status={query.status}
-            hasNextPage={query.hasNextPage}
-            isFetchingNextPage={query.isFetchingNextPage}
-            fetchNextPage={query.fetchNextPage}
-          />
-        </>
-      )}
-    </>
+          );
+        })}
+      </div>
+    </div>
   );
 }
+
+const RowsRender = memo(function RowsRender({
+  address,
+  item,
+}: {
+  address: string;
+  item: AggregatedTransfer;
+}) {
+  return (
+    <ObjektModal objekts={[item.objekt]}>
+      {({ openObjekts }) => <TradeRow row={item} address={address} open={openObjekts} />}
+    </ObjektModal>
+  );
+});
 
 function TradeRow({
   row,
   address,
   open,
-  style,
 }: {
   row: AggregatedTransfer;
   address: string;
   open: () => void;
-  style?: React.CSSProperties;
 }) {
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
@@ -187,21 +206,19 @@ function TradeRow({
   );
 
   return (
-    <div className="absolute top-0 left-0 h-[42px] w-full" style={style}>
-      <div className="inline-flex min-w-full items-center border-b">
-        <div className="min-w-[210px] flex-1 px-3 py-2.5">
-          {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
-        </div>
-        <div role="none" className="min-w-[240px] flex-1 cursor-pointer px-3 py-2.5" onClick={open}>
-          <div className="inline-flex items-center gap-2">
-            {row.objekt.collectionId}
-            <IconOpenLink />
-          </div>
-        </div>
-        <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
-        <div className="min-w-[130px] flex-1 px-3 py-2.5">{action}</div>
-        <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>
+    <div className="inline-flex min-w-full items-center border-b">
+      <div className="min-w-[210px] flex-1 px-3 py-2.5">
+        {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </div>
+      <div role="none" className="min-w-[240px] flex-1 cursor-pointer px-3 py-2.5" onClick={open}>
+        <div className="inline-flex items-center gap-2">
+          {row.objekt.collectionId}
+          <IconOpenLink />
+        </div>
+      </div>
+      <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
+      <div className="min-w-[130px] flex-1 px-3 py-2.5">{action}</div>
+      <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>
     </div>
   );
 }

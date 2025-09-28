@@ -4,9 +4,9 @@ import { getBaseURL } from "@/lib/utils";
 
 export const filterDataQuery = queryOptions({
   queryKey: ["filter-data"],
-  queryFn: async () => {
+  queryFn: () => {
     const url = new URL("/api/filter-data", getBaseURL());
-    return await ofetch<FilterData>(url.toString());
+    return ofetch<FilterData>(url.toString());
   },
   staleTime: Infinity,
   refetchOnWindowFocus: false,

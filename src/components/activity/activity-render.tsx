@@ -11,7 +11,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 import { env } from "@/env";
@@ -121,10 +121,10 @@ function Activity() {
     },
   );
 
-  const allTransfers = [...realtimeTransfers, ...(data?.pages ?? []).flatMap((page) => page.items)];
+  const transfers = [...realtimeTransfers, ...(data?.pages ?? []).flatMap((page) => page.items)];
 
   const rowVirtualizer = useWindowVirtualizer({
-    count: allTransfers.length,
+    count: transfers.length,
     estimateSize: () => ROW_HEIGHT,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
@@ -285,23 +285,32 @@ function Activity() {
                 }}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const item = allTransfers[virtualRow.index];
+                  const item = transfers[virtualRow.index];
                   const isNew = newTransferIds.has(item.transfer.id);
                   return (
-                    <ActivityRow
-                      key={item.transfer.id}
-                      item={item}
-                      open={() => {
-                        setCurrentObjekt([item.objekt]);
-                        openObjekts();
-                      }}
-                      isNew={isNew}
+                    <div
+                      className="absolute top-0 left-0 grid w-full"
+                      key={virtualRow.key}
                       style={{
+                        height: `${virtualRow.size}px`,
                         transform: `translateY(${
                           virtualRow.start - rowVirtualizer.options.scrollMargin
                         }px)`,
                       }}
-                    />
+                    >
+                      <div
+                        className={cn(
+                          isNew &&
+                            "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
+                        )}
+                      >
+                        <ActivityRow
+                          item={item}
+                          setCurrentObjekt={setCurrentObjekt}
+                          open={openObjekts}
+                        />
+                      </div>
+                    </div>
                   );
                 })}
               </div>
@@ -327,17 +336,20 @@ function Activity() {
   );
 }
 
-function ActivityRow({
+const ActivityRow = memo(function ActivityRow({
   item,
   open,
-  style,
-  isNew = false,
+  setCurrentObjekt,
 }: {
   item: ActivityData;
   open: () => void;
-  style?: React.CSSProperties;
-  isNew?: boolean;
+  setCurrentObjekt: (objekts: ValidObjekt[]) => void;
 }) {
+  const openObjekt = () => {
+    setCurrentObjekt([item.objekt]);
+    open();
+  };
+
   const event =
     item.transfer.from === NULL_ADDRESS
       ? "mint"
@@ -360,55 +372,46 @@ function ActivityRow({
     );
 
   return (
-    <div className="absolute top-0 left-0 grid h-[42px] w-full" style={style}>
-      <div
-        className={cn(
-          isNew &&
-            "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
-        )}
-      >
-        <div className="flex w-full items-center border-b">
-          <div className="min-w-[120px] flex-1 px-3 py-2.5">
-            <div className="flex items-center gap-2 font-semibold">
-              {event === "mint" ? (
-                <>
-                  <LeafIcon size={18} weight="light" />
-                  <Badge className="text-xs [--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]">
-                    Mint
-                  </Badge>
-                </>
-              ) : event === "spin" ? (
-                <>
-                  <ArrowsClockwiseIcon size={18} weight="light" />
-                  <Badge className="text-xs [--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]">
-                    Spin
-                  </Badge>
-                </>
-              ) : (
-                <>
-                  <PaperPlaneTiltIcon size={18} weight="light" />
-                  <Badge className="text-xs [--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]">
-                    Transfer
-                  </Badge>
-                </>
-              )}
-            </div>
-          </div>
-          <div
-            role="none"
-            className="min-w-[250px] flex-1 cursor-pointer px-3 py-2.5"
-            onClick={open}
-          >
-            {item.objekt.collectionId}
-          </div>
-          <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
-          <div className="min-w-[300px] flex-1 px-3 py-2.5">{from}</div>
-          <div className="min-w-[300px] flex-1 px-3 py-2.5">{to}</div>
-          <div className="min-w-[250px] flex-1 px-3 py-2.5">
-            {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
-          </div>
+    <div className="flex w-full items-center border-b">
+      <div className="min-w-[120px] flex-1 px-3 py-2.5">
+        <div className="flex items-center gap-2 font-semibold">
+          {event === "mint" ? (
+            <>
+              <LeafIcon size={18} weight="light" />
+              <Badge className="text-xs [--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]">
+                Mint
+              </Badge>
+            </>
+          ) : event === "spin" ? (
+            <>
+              <ArrowsClockwiseIcon size={18} weight="light" />
+              <Badge className="text-xs [--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]">
+                Spin
+              </Badge>
+            </>
+          ) : (
+            <>
+              <PaperPlaneTiltIcon size={18} weight="light" />
+              <Badge className="text-xs [--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]">
+                Transfer
+              </Badge>
+            </>
+          )}
         </div>
+      </div>
+      <div
+        role="none"
+        className="min-w-[250px] flex-1 cursor-pointer px-3 py-2.5"
+        onClick={openObjekt}
+      >
+        {item.objekt.collectionId}
+      </div>
+      <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
+      <div className="min-w-[300px] flex-1 px-3 py-2.5">{from}</div>
+      <div className="min-w-[300px] flex-1 px-3 py-2.5">{to}</div>
+      <div className="min-w-[250px] flex-1 px-3 py-2.5">
+        {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </div>
     </div>
   );
-}
+});

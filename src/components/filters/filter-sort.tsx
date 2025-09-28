@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidSort, validSorts } from "@/lib/universal/cosmo/common";
@@ -17,17 +16,14 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.sort ? [filters.sort] : ["date"]);
 
-  const map = useMemo<Record<ValidSort, { label: string; desc: string }>>(
-    () => ({
-      date: { label: t("date.label"), desc: t("date.desc") },
-      season: { label: t("season.label"), desc: t("season.desc") },
-      collectionNo: { label: t("collection_no.label"), desc: t("collection_no.desc") },
-      serial: { label: t("serial.label"), desc: t("serial.desc") },
-      duplicate: { label: t("dups.label"), desc: t("dups.desc") },
-      member: { label: t("member.label"), desc: t("member.desc") },
-    }),
-    [t],
-  );
+  const map = {
+    date: { label: t("date.label"), desc: t("date.desc") },
+    season: { label: t("season.label"), desc: t("season.desc") },
+    collectionNo: { label: t("collection_no.label"), desc: t("collection_no.desc") },
+    serial: { label: t("serial.label"), desc: t("serial.desc") },
+    duplicate: { label: t("dups.label"), desc: t("dups.desc") },
+    member: { label: t("member.label"), desc: t("member.desc") },
+  };
 
   function update(key: Selection) {
     const value = Array.from((key as Set<ValidSort>).values()).at(0) ?? "date";

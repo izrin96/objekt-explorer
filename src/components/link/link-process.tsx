@@ -128,41 +128,45 @@ function TicketRender() {
     }),
   );
 
-  return (
-    <>
-      {isFetching && (
-        <div className="flex flex-col items-center gap-2">
-          <Image
-            priority
-            src={QRCodeIcon.src}
-            alt="Loading"
-            width={220}
-            height={220}
-            className="fade-in zoom-in animate-in duration-200"
-          />
-          <span>{t("generating_qr")}</span>
-          <Loader variant="ring" />
-        </div>
-      )}
-      {!isFetching && status === "error" && (
-        <div className="flex flex-col items-center gap-2">
-          <Image
-            priority
-            src={CarpenterIcon.src}
-            alt="Carpenter"
-            width={220}
-            height={220}
-            className="fade-in zoom-in animate-in duration-200"
-          />
-          <span>{t("error_generating_qr")}</span>
-          <Button intent="outline" onClick={() => refetch()}>
-            {t("try_again")}
-          </Button>
-        </div>
-      )}
-      {!isFetching && status === "success" && <StepRender ticketAuth={data} refetch={refetch} />}
-    </>
-  );
+  if (isFetching) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Image
+          priority
+          src={QRCodeIcon.src}
+          alt="Loading"
+          width={220}
+          height={220}
+          className="fade-in zoom-in animate-in duration-200"
+        />
+        <span>{t("generating_qr")}</span>
+        <Loader variant="ring" />
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Image
+          priority
+          src={CarpenterIcon.src}
+          alt="Carpenter"
+          width={220}
+          height={220}
+          className="fade-in zoom-in animate-in duration-200"
+        />
+        <span>{t("error_generating_qr")}</span>
+        <Button intent="outline" onClick={() => refetch()}>
+          {t("try_again")}
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === "success") {
+    return <StepRender ticketAuth={data} refetch={refetch} />;
+  }
 }
 
 function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: () => void }) {
@@ -186,45 +190,47 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
     }
   }, [data?.status]);
 
-  return (
-    <>
-      {!data || data.status === "wait_for_user_action" ? (
-        <div className="flex flex-col items-center gap-2">
-          <span>Scan this QR and click &apos;Continue&apos; in Cosmo app.</span>
-          <span>
-            Or{" "}
-            <Link href={generateQrCode(ticketAuth.ticket)} className="underline">
-              click here
-            </Link>{" "}
-            if you are on mobile.
-          </span>
-          <div className="rounded-lg bg-white p-3 shadow-lg">
-            <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
-          </div>
-          {data?.status === "wait_for_user_action" && (
-            <Countdown ticketRemainingMs={data?.ticketRemainingMs} />
-          )}
+  if (!data || data.status === "wait_for_user_action") {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <span>Scan this QR and click &apos;Continue&apos; in Cosmo app.</span>
+        <span>
+          Or{" "}
+          <Link href={generateQrCode(ticketAuth.ticket)} className="underline">
+            click here
+          </Link>{" "}
+          if you are on mobile.
+        </span>
+        <div className="rounded-lg bg-white p-3 shadow-lg">
+          <QRCodeSVG size={200} value={generateQrCode(ticketAuth.ticket)} />
         </div>
-      ) : data.status === "expired" ? (
-        <div className="flex flex-col items-center gap-2">
-          <Image
-            priority
-            src={TrashIcon.src}
-            alt="Trash"
-            width={220}
-            height={220}
-            className="fade-in zoom-in animate-in duration-200"
-          />
-          <span>QR expired</span>
-          <Button intent="outline" onClick={refetch}>
-            Regenerate
-          </Button>
-        </div>
-      ) : (
-        <RenderOtp ticketAuth={ticketAuth} ticketStatus={data} />
-      )}
-    </>
-  );
+        {data?.status === "wait_for_user_action" && (
+          <Countdown ticketRemainingMs={data?.ticketRemainingMs} />
+        )}
+      </div>
+    );
+  }
+
+  if (data.status === "expired") {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Image
+          priority
+          src={TrashIcon.src}
+          alt="Trash"
+          width={220}
+          height={220}
+          className="fade-in zoom-in animate-in duration-200"
+        />
+        <span>QR expired</span>
+        <Button intent="outline" onClick={refetch}>
+          Regenerate
+        </Button>
+      </div>
+    );
+  }
+
+  return <RenderOtp ticketAuth={ticketAuth} ticketStatus={data} />;
 }
 
 function Countdown({ ticketRemainingMs }: { ticketRemainingMs: number }) {
@@ -272,92 +278,94 @@ function RenderOtp({
     }),
   );
 
+  if (otpAndLink.isError) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Image
+          priority
+          src={IconError.src}
+          alt="Error"
+          width={220}
+          height={220}
+          className="fade-in zoom-in animate-in duration-200"
+        />
+        <span>{otpAndLink.error.message}</span>
+        <Button
+          intent="outline"
+          onClick={() => {
+            setValue("");
+            otpAndLink.reset();
+          }}
+        >
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
+  if (otpAndLink.isSuccess) {
+    return (
+      <div className="flex flex-col items-center gap-2">
+        <Image
+          priority
+          src={WelcomeIcon.src}
+          width={220}
+          height={220}
+          alt="Welcome"
+          className="fade-in zoom-in animate-in duration-200"
+        />
+        <span>{t("success", { nickname: ticketStatus.user.nickname })}</span>
+        <div>
+          <Link
+            className={(renderProps) =>
+              buttonStyles({
+                ...renderProps,
+                intent: "outline",
+              })
+            }
+            href={`/@${ticketStatus.user.nickname}`}
+          >
+            {t("go_to_cosmo")}
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <>
-      {otpAndLink.isError && !otpAndLink.isSuccess && (
-        <div className="flex flex-col items-center gap-2">
-          <Image
-            priority
-            src={IconError.src}
-            alt="Error"
-            width={220}
-            height={220}
-            className="fade-in zoom-in animate-in duration-200"
-          />
-          <span>{otpAndLink.error.message}</span>
-          <Button
-            intent="outline"
-            onClick={() => {
-              setValue("");
-              otpAndLink.reset();
-            }}
-          >
-            Try again
-          </Button>
-        </div>
-      )}
-      {!otpAndLink.isError && otpAndLink.isSuccess && (
-        <div className="flex flex-col items-center gap-2">
-          <Image
-            priority
-            src={WelcomeIcon.src}
-            width={220}
-            height={220}
-            alt="Welcome"
-            className="fade-in zoom-in animate-in duration-200"
-          />
-          <span>{t("success", { nickname: ticketStatus.user.nickname })}</span>
-          <div>
-            <Link
-              className={(renderProps) =>
-                buttonStyles({
-                  ...renderProps,
-                  intent: "outline",
-                })
-              }
-              href={`/@${ticketStatus.user.nickname}`}
-            >
-              {t("go_to_cosmo")}
-            </Link>
-          </div>
-        </div>
-      )}
-      {!otpAndLink.isError && !otpAndLink.isSuccess && (
-        <div className="flex flex-col items-center gap-2">
-          <Image
-            priority
-            src={randomIcon.src}
-            alt={randomIcon.alt}
-            width={220}
-            height={220}
-            className="fade-in zoom-in animate-in duration-200"
-          />
-          <span>Detected Cosmo {ticketStatus.user.nickname}</span>
-          <span>Enter the verification code</span>
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-              otpAndLink.mutate({
-                otp: Number(value),
-                ticket: ticketAuth.ticket,
-              });
-            }}
-            className="flex flex-col items-center gap-2"
-          >
-            <InputOTP minLength={2} maxLength={2} required value={value} onChange={setValue}>
-              <InputOTP.Group>
-                {[...Array(2)].map((_, index) => (
-                  <InputOTP.Slot key={index} index={index} />
-                ))}
-              </InputOTP.Group>
-            </InputOTP>
-            <Button type="submit" isPending={otpAndLink.isPending}>
-              Submit
-            </Button>
-          </Form>
-          <Countdown ticketRemainingMs={ticketStatus.ticketOtpRemainingMs} />
-        </div>
-      )}
-    </>
+    <div className="flex flex-col items-center gap-2">
+      <Image
+        priority
+        src={randomIcon.src}
+        alt={randomIcon.alt}
+        width={220}
+        height={220}
+        className="fade-in zoom-in animate-in duration-200"
+      />
+      <span>Detected Cosmo {ticketStatus.user.nickname}</span>
+      <span>Enter the verification code</span>
+      <Form
+        onSubmit={(e) => {
+          e.preventDefault();
+          otpAndLink.mutate({
+            otp: Number(value),
+            ticket: ticketAuth.ticket,
+          });
+        }}
+        className="flex flex-col items-center gap-2"
+      >
+        <InputOTP minLength={2} maxLength={2} required value={value} onChange={setValue}>
+          <InputOTP.Group>
+            {[...Array(2)].map((_, index) => (
+              <InputOTP.Slot key={index} index={index} />
+            ))}
+          </InputOTP.Group>
+        </InputOTP>
+        <Button type="submit" isPending={otpAndLink.isPending}>
+          Submit
+        </Button>
+      </Form>
+      <Countdown ticketRemainingMs={ticketStatus.ticketOtpRemainingMs} />
+    </div>
   );
 }

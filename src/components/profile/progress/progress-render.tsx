@@ -3,7 +3,7 @@
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -85,7 +85,7 @@ function Progress() {
         </div>
       ) : (
         shaped.map(([key, grouped]) => (
-          <ProgressCollapse
+          <ProgressGroup
             key={key}
             title={key}
             grouped={grouped}
@@ -99,33 +99,45 @@ function Progress() {
   );
 }
 
-function ProgressCollapse({
-  title,
-  grouped,
-  ownedSlugs,
-  authenticated,
-  columns,
-}: {
+type ProgressGroupProps = {
   title: string;
   grouped: ValidObjekt[][];
   ownedSlugs: Set<string>;
   authenticated: boolean;
   columns: number;
-}) {
-  const hideLabel = useConfigStore((a) => a.hideLabel);
-  const [show, setShow] = useState(false);
-  const [showCount] = useShowCount();
+};
 
-  const { filtered, owned } = useMemo(() => {
-    const filtered = grouped
-      .map(([objekt]) => objekt)
-      .filter((a) => unobtainables.includes(a.slug) === false);
-    const owned = filtered.filter((a) => ownedSlugs.has(a.slug));
-    return { filtered, owned };
-  }, [grouped, ownedSlugs]);
+function ProgressGroup(props: ProgressGroupProps) {
+  const filtered = props.grouped
+    .map(([objekt]) => objekt)
+    .filter((a) => unobtainables.includes(a.slug) === false);
+
+  const owned = filtered.filter((a) => props.ownedSlugs.has(a.slug));
 
   const percentage =
     filtered.length > 0 ? Number(((owned.length / filtered.length) * 100).toFixed(1)) : 0;
+
+  const collapseProps = {
+    ...props,
+    percentage,
+    owned,
+    filtered,
+  };
+
+  return <ProgressCollapse {...collapseProps} />;
+}
+
+interface ProgressCollapseProps extends ProgressGroupProps {
+  percentage: number;
+  owned: ValidObjekt[];
+  filtered: ValidObjekt[];
+}
+
+function ProgressCollapse(props: ProgressCollapseProps) {
+  const { title, columns, grouped, percentage, ownedSlugs, owned, filtered, authenticated } = props;
+  const hideLabel = useConfigStore((a) => a.hideLabel);
+  const [showCount] = useShowCount();
+  const [show, setShow] = useState(false);
 
   return (
     <div className="flex flex-col">

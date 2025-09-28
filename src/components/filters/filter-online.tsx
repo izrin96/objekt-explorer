@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidOnlineType, validOnlineTypes } from "@/lib/universal/cosmo/common";
@@ -12,13 +12,10 @@ export default function OnlineFilter() {
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.on_offline);
 
-  const map = useMemo<Record<ValidOnlineType, string>>(
-    () => ({
-      online: t("digital"),
-      offline: t("physical"),
-    }),
-    [t],
-  );
+  const map = {
+    online: t("digital"),
+    offline: t("physical"),
+  };
 
   const update = useCallback(
     (key: Selection) => {

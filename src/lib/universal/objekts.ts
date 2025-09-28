@@ -1,4 +1,5 @@
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
+import { replaceUrlSize } from "../utils";
 
 export type IndexedObjekt = Omit<
   Collection,
@@ -87,6 +88,14 @@ export function overrideCollection(objekt: ValidObjekt) {
   return {
     backgroundColor: accentColor ?? objekt.backgroundColor,
     textColor: fontColor ?? objekt.textColor,
+  };
+}
+
+export function getObjektImageUrls(objekt: ValidObjekt) {
+  return {
+    resizedUrl: replaceUrlSize(objekt.frontImage),
+    originalUrl: replaceUrlSize(objekt.frontImage, "original"),
+    backUrl: replaceUrlSize(objekt.backImage, "original"),
   };
 }
 
