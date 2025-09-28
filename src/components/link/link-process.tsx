@@ -193,7 +193,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
           <span>Scan this QR and click &apos;Continue&apos; in Cosmo app.</span>
           <span>
             Or{" "}
-            <Link href={generateQrCode(ticketAuth.ticket)} intent="primary">
+            <Link href={generateQrCode(ticketAuth.ticket)} className="underline">
               click here
             </Link>{" "}
             if you are on mobile.
