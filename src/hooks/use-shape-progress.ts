@@ -30,31 +30,40 @@ export function useShapeProgress() {
           .join(" "),
       );
 
-      return (
-        Object.entries(grouped)
-          .filter(([, objekts]) => objekts.length > 0)
-          // sort by member -> season -> class
-          .toSorted(([, [objektA]], [, [objektB]]) =>
-            groupBys.includes("class") ? classSort(objektA.class, objektB.class) : 0,
-          )
-          .toSorted(([, [objektA]], [, [objektB]]) =>
-            groupBys.includes("season") ? seasonSort(objektB.season, objektA.season) : 0,
-          )
-          .toSorted(([, [objektA]], [, [objektB]]) =>
-            groupBys.includes("member") ? compareMember(objektA.member, objektB.member) : 0,
-          )
-          .map(
-            ([key, objekts]) =>
-              [
-                key,
-                objekts
-                  .toSorted((a, b) => compareMember(a.member, b.member))
-                  .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-                  .toSorted((a, b) => seasonSort(b.season, a.season)),
-              ] as const,
-          )
-          .map(([key, objekts]) => [key, Object.values(groupBy(objekts, (a) => a.collectionId))])
-      );
+      // group sorting
+      let entries = Object.entries(grouped).filter(([, objekts]) => objekts.length > 0);
+
+      if (groupBys.includes("class")) {
+        entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
+          classSort(objektA.class, objektB.class),
+        );
+      }
+
+      if (groupBys.includes("season")) {
+        entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
+          seasonSort(objektB.season, objektA.season),
+        );
+      }
+
+      if (groupBys.includes("member")) {
+        entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
+          compareMember(objektA.member, objektB.member),
+        );
+      }
+
+      // objekt sorting
+      return entries
+        .map(
+          ([key, objekts]) =>
+            [
+              key,
+              objekts
+                .toSorted((a, b) => compareMember(a.member, b.member))
+                .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+                .toSorted((a, b) => seasonSort(a.season, b.season)),
+            ] as const,
+        )
+        .map(([key, objekts]) => [key, Object.values(groupBy(objekts, (a) => a.collectionId))]);
     },
     [filters, getArtist, compareMember],
   );
