@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -11,7 +11,7 @@ export default function MemberFilter() {
   const { selectedArtists } = useCosmoArtist();
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(() => new Set(filters.member), [filters.member]);
+  const selected = new Set(filters.member);
 
   const update = useCallback(
     (key: Selection) => {

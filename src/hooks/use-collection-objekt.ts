@@ -1,5 +1,4 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { collectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useObjektFilter } from "./use-objekt-filter";
@@ -10,8 +9,6 @@ export function useCollectionObjekts() {
   const shape = useShapeObjekts();
   const { selectedArtistIds } = useCosmoArtist();
   const query = useSuspenseQuery(collectionOptions(selectedArtistIds));
-  return useMemo(() => {
-    const filtered = filter(query.data);
-    return { shaped: shape(filtered), filtered };
-  }, [shape, filter, query.data]);
+  const filtered = filter(query.data);
+  return { shaped: shape(filtered), filtered };
 }

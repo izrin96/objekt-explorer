@@ -1,7 +1,7 @@
 "use client";
 
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui";
 import { type ValidType, validType } from "@/lib/universal/transfers";
@@ -20,7 +20,7 @@ export function useTypeFilter() {
 
 export default function TypeFilter() {
   const [type, setType] = useTypeFilter();
-  const selected = useMemo(() => new Set(type ? [type] : ["all"]), [type]);
+  const selected = new Set(type ? [type] : ["all"]);
 
   const update = useCallback(
     (key: Selection) => {

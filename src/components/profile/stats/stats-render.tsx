@@ -66,9 +66,9 @@ function ProfileStats() {
     ],
   });
 
-  const objekts = useMemo(() => filter(query.data), [filter, query.data]);
+  const objekts = filter(query.data);
 
-  const collections = useMemo(() => filter(collectionQuery.data), [filter, collectionQuery.data]);
+  const collections = filter(collectionQuery.data);
 
   return (
     <div className="flex flex-col gap-4">

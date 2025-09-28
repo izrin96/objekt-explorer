@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -16,7 +16,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
   const { selectedClass } = useCosmoArtist();
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(() => new Set(filters.class), [filters.class]);
+  const selected = new Set(filters.class);
 
   const update = useCallback(
     (key: Selection) => {

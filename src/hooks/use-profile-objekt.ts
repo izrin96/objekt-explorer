@@ -46,12 +46,11 @@ export function useProfileObjekts() {
     return ownedQuery.data;
   }, [ownedQuery.data, filters.unowned, objektsQuery.data]);
 
-  return useMemo(() => {
-    const filtered = filter(joinedObjekts);
-    return {
-      shaped: shape(filtered, pinsQuery.data, lockedObjektQuery.data),
-      filtered,
-      grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
-    };
-  }, [shape, filter, joinedObjekts, pinsQuery.data, lockedObjektQuery.data]);
+  const filtered = filter(joinedObjekts);
+
+  return {
+    shaped: shape(filtered, pinsQuery.data, lockedObjektQuery.data),
+    filtered,
+    grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
+  };
 }

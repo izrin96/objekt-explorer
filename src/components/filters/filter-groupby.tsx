@@ -23,10 +23,7 @@ export default function GroupByFilter() {
     [t],
   );
 
-  const selected = useMemo(
-    () => new Set(filters.group_by ? [filters.group_by] : []),
-    [filters.group_by],
-  );
+  const selected = new Set(filters.group_by ? [filters.group_by] : []);
 
   const update = useCallback(
     (key: Selection) => {

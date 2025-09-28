@@ -11,7 +11,7 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 import { env } from "@/env";
@@ -121,10 +121,7 @@ function Activity() {
     },
   );
 
-  const allTransfers = useMemo(
-    () => [...realtimeTransfers, ...(data?.pages ?? []).flatMap((page) => page.items)],
-    [realtimeTransfers, data?.pages],
-  );
+  const allTransfers = [...realtimeTransfers, ...(data?.pages ?? []).flatMap((page) => page.items)];
 
   const rowVirtualizer = useWindowVirtualizer({
     count: allTransfers.length,

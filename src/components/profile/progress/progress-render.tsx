@@ -3,7 +3,7 @@
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
-import { memo, Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -71,13 +71,10 @@ function Progress() {
     ],
   });
 
-  const { ownedSlugs, shaped } = useMemo(() => {
-    const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
-    const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
-    const filtered = filter([...ownedQuery.data, ...missingObjekts]);
-    const shaped = shape(filtered);
-    return { ownedSlugs, shaped };
-  }, [shape, filter, ownedQuery.data, objektsQuery.data]);
+  const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
+  const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
+  const filtered = filter([...ownedQuery.data, ...missingObjekts]);
+  const shaped = shape(filtered);
 
   return (
     <div className="flex flex-col gap-8">
@@ -102,7 +99,7 @@ function Progress() {
   );
 }
 
-const ProgressCollapse = memo(function ProgressCollapse({
+function ProgressCollapse({
   title,
   grouped,
   ownedSlugs,
@@ -119,18 +116,16 @@ const ProgressCollapse = memo(function ProgressCollapse({
   const [show, setShow] = useState(false);
   const [showCount] = useShowCount();
 
-  const { filteredObjekts, owned } = useMemo(() => {
+  const { filtered, owned } = useMemo(() => {
     const filtered = grouped
       .map(([objekt]) => objekt)
       .filter((a) => unobtainables.includes(a.slug) === false);
     const owned = filtered.filter((a) => ownedSlugs.has(a.slug));
-    return { filteredObjekts: filtered, owned };
+    return { filtered, owned };
   }, [grouped, ownedSlugs]);
 
   const percentage =
-    filteredObjekts.length > 0
-      ? Number(((owned.length / filteredObjekts.length) * 100).toFixed(1))
-      : 0;
+    filtered.length > 0 ? Number(((owned.length / filtered.length) * 100).toFixed(1)) : 0;
 
   return (
     <div className="flex flex-col">
@@ -148,7 +143,7 @@ const ProgressCollapse = memo(function ProgressCollapse({
         <ProgressBar
           aria-label="Progress Bar"
           className="min-w-[240px]"
-          valueLabel={`${owned.length}/${filteredObjekts.length} (${percentage}%)`}
+          valueLabel={`${owned.length}/${filtered.length} (${percentage}%)`}
           value={percentage}
         />
       </div>
@@ -215,4 +210,4 @@ const ProgressCollapse = memo(function ProgressCollapse({
       </AnimatePresence>
     </div>
   );
-});
+}

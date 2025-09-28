@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
@@ -11,7 +11,7 @@ export default function CollectionFilter() {
   const t = useTranslations("filter");
   const { collections } = useFilterData();
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(() => new Set(filters.collection), [filters.collection]);
+  const selected = new Set(filters.collection);
 
   const update = useCallback(
     (updater: (prev: Selection) => Selection, currentSelection: Set<string>) => {

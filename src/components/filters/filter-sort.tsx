@@ -15,7 +15,7 @@ type Props = {
 export default function SortFilter({ allowDuplicateSort = false, allowSerialSort = false }: Props) {
   const t = useTranslations("filter.sort_by");
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(() => new Set(filters.sort ? [filters.sort] : ["date"]), [filters.sort]);
+  const selected = new Set(filters.sort ? [filters.sort] : ["date"]);
 
   const map = useMemo<Record<ValidSort, { label: string; desc: string }>>(
     () => ({

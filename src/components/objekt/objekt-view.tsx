@@ -1,5 +1,5 @@
 import NextImage from "next/image";
-import { type CSSProperties, type PropsWithChildren, useMemo, useState } from "react";
+import { type CSSProperties, type PropsWithChildren, useState } from "react";
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, type ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
@@ -41,7 +41,7 @@ export default function ObjektView({
     "--width": `${width}px`,
   } as CSSProperties;
 
-  const resizedUrl = useMemo(() => replaceUrlSize(objekt.frontImage), [objekt.frontImage]);
+  const resizedUrl = replaceUrlSize(objekt.frontImage);
 
   return (
     <div className={cn("flex flex-col gap-2", isFade && "opacity-35")}>

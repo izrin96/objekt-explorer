@@ -10,7 +10,7 @@ import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 export default function OnlineFilter() {
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(() => new Set(filters.on_offline), [filters.on_offline]);
+  const selected = new Set(filters.on_offline);
 
   const map = useMemo<Record<ValidOnlineType, string>>(
     () => ({

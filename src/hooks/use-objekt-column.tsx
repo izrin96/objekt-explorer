@@ -7,7 +7,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -37,11 +36,13 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   const isFirst = useRef(true);
 
   // responsive value
-  const responsiveColumn = useMemo(() => {
-    return isDesktop ? GRID_COLUMNS : isTablet ? GRID_COLUMNS_TABLET : GRID_COLUMNS_MOBILE;
-  }, [isDesktop, isTablet]);
+  const responsiveColumn = isDesktop
+    ? GRID_COLUMNS
+    : isTablet
+      ? GRID_COLUMNS_TABLET
+      : GRID_COLUMNS_MOBILE;
 
-  const columns = useMemo(() => overrideColumn ?? columnStore, [overrideColumn, columnStore]);
+  const columns = overrideColumn ?? columnStore;
 
   const setColumns = useCallback(
     (column: number) => {

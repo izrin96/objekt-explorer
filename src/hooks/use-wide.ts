@@ -1,5 +1,5 @@
 import { parseAsBoolean, useQueryState } from "nuqs";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useConfigStore } from "./use-config";
 
 export function useWideFilter() {
@@ -10,8 +10,6 @@ export function useWide() {
   const [queryWide, setQueryWide] = useWideFilter();
   const wideStore = useConfigStore((a) => a.wide);
   const setWideStore = useConfigStore((a) => a.setWide);
-
-  const wide = useMemo(() => queryWide ?? wideStore, [queryWide, wideStore]);
 
   const setWide = useCallback(
     (value: boolean) => {
@@ -24,7 +22,7 @@ export function useWide() {
   );
 
   return {
-    wide,
+    wide: queryWide ?? wideStore,
     setWide,
   };
 }

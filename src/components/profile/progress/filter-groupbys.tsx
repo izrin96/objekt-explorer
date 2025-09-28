@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui";
 import { useFilters } from "@/hooks/use-filters";
@@ -15,7 +15,7 @@ const map: Record<string, string> = {
 
 export default function GroupBysFilter() {
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(() => new Set(filters.group_bys ?? []), [filters.group_bys]);
+  const selected = new Set(filters.group_bys ?? []);
 
   const update = useCallback(
     (key: Selection) => {

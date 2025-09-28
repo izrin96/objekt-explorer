@@ -14,7 +14,7 @@ export function useTypeFilter() {
 export default function TypeFilter() {
   const t = useTranslations("filter.event");
   const [type, setType] = useTypeFilter();
-  const selected = useMemo(() => new Set(type ? [type] : ["all"]), [type]);
+  const selected = new Set(type ? [type] : ["all"]);
 
   const map = useMemo<Record<ValidType, string>>(
     () => ({

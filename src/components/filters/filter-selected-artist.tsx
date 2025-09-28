@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useTransition } from "react";
 import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
@@ -13,7 +13,7 @@ export default function SelectedArtistFilter() {
   const router = useRouter();
   const { artists, selectedArtistIds, selectedArtists } = useCosmoArtist();
   const [isPending, startTransition] = useTransition();
-  const selected = useMemo(() => new Set(selectedArtistIds), [selectedArtistIds]);
+  const selected = new Set(selectedArtistIds);
   const setArtists = useMutation(orpc.config.setArtists.mutationOptions());
 
   const update = useCallback((key: Selection) => {

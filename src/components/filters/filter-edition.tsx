@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
@@ -10,7 +10,7 @@ import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 export default function EditionFilter() {
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
-  const selected = useMemo(() => new Set(filters.edition), [filters.edition]);
+  const selected = new Set(filters.edition);
 
   const update = useCallback(
     (key: Selection) => {
