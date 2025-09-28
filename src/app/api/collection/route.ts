@@ -5,7 +5,6 @@ import { z } from "zod/v4";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { redis } from "@/lib/server/redis";
 import { validArtists } from "@/lib/universal/cosmo/common";
 import { type CollectionResult, overrideCollection } from "@/lib/universal/objekts";
 
@@ -24,18 +23,15 @@ export async function GET(request: NextRequest) {
       )
     : undefined;
 
-  const [singleResult, lastDate] = await Promise.all([
-    indexer
-      .select({
-        createdAt: collections.createdAt,
-        collectionId: collections.collectionId,
-      })
-      .from(collections)
-      .where(whereQuery)
-      .orderBy(desc(collections.createdAt), desc(collections.collectionId))
-      .limit(1),
-    redis.get("collection-last-date"),
-  ]);
+  const singleResult = await indexer
+    .select({
+      createdAt: collections.createdAt,
+      collectionId: collections.collectionId,
+    })
+    .from(collections)
+    .where(whereQuery)
+    .orderBy(desc(collections.createdAt), desc(collections.collectionId))
+    .limit(1);
 
   if (!singleResult.length)
     return Response.json({
@@ -43,10 +39,6 @@ export async function GET(request: NextRequest) {
     } satisfies CollectionResult);
 
   const latestInfo = singleResult[0];
-
-  if (lastDate && new Date(lastDate) > new Date(latestInfo.createdAt)) {
-    latestInfo.createdAt = lastDate;
-  }
 
   // check for etag
   const etag = `W/"${crypto.createHash("md5").update(JSON.stringify(latestInfo)).digest("hex")}"`;
