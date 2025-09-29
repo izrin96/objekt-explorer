@@ -10,6 +10,7 @@ import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Cropper, type CropperRef } from "react-advanced-cropper";
 import { ErrorBoundary } from "react-error-boundary";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 import {
@@ -42,6 +43,7 @@ import { orpc } from "@/lib/orpc/client";
 import { mimeTypes, validColumns } from "@/lib/utils";
 import "react-advanced-cropper/dist/style.css";
 import { useRouter } from "next/navigation";
+import Portal from "@/components/portal";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -98,12 +100,123 @@ type EditProfileModalProps = {
 };
 
 export function EditProfileModal({ nickname, address, open, setOpen }: EditProfileModalProps) {
-  const queryClient = useQueryClient();
-  const formRef = useRef<HTMLFormElement>(null!);
+  return (
+    <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
+      <SheetHeader>
+        <SheetTitle>Edit Profile</SheetTitle>
+        <SheetDescription>
+          Currently editing <span className="text-fg">{nickname}</span> Cosmo profile
+        </SheetDescription>
+      </SheetHeader>
+      <SheetBody>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <EditProfileForm address={address} setOpen={setOpen} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </SheetBody>
+      <SheetFooter>
+        <SheetClose>Cancel</SheetClose>
+        <div id="submit-form"></div>
+      </SheetFooter>
+    </SheetContent>
+  );
+}
+
+type EditProfileProps = {
+  address: string;
+  setOpen: (val: boolean) => void;
+};
+
+type BannerImageProps = {
+  droppedImage: File | null;
+  cropperRef: React.RefObject<CropperRef | null>;
+  onClear: () => void;
+};
+
+function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (droppedImage) {
+      const url = URL.createObjectURL(droppedImage);
+      setImageUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    return undefined;
+  }, [droppedImage]);
+
+  if (!droppedImage || !imageUrl) return null;
+
+  return (
+    <>
+      {droppedImage.type.startsWith("video") ? (
+        <video
+          src={imageUrl}
+          className="aspect-[2.3/1] rounded-lg object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      ) : ["image/gif"].includes(droppedImage.type) ? (
+        <img
+          src={imageUrl}
+          alt="Selected banner preview"
+          className="aspect-[2.3/1] rounded-lg object-cover"
+        />
+      ) : (
+        <div className="h-52">
+          <Cropper ref={cropperRef} src={imageUrl} aspectRatio={() => 2.3} />
+        </div>
+      )}
+      <div className="flex items-center justify-between">
+        <span className="truncate text-muted-fg text-sm">Selected file: {droppedImage.name}</span>
+        <Button size="xs" intent="outline" onClick={onClear}>
+          Clear
+        </Button>
+      </div>
+    </>
+  );
+}
+
+function EditProfileForm({ address, setOpen }: EditProfileProps) {
+  const router = useRouter();
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const [isUploading, startUploadTransition] = useTransition();
-  const router = useRouter();
+
+  const { data } = useSuspenseQuery(
+    orpc.profile.find.queryOptions({
+      input: address,
+      staleTime: 0,
+    }),
+  );
+
+  const values = {
+    hideUser: data.hideUser ?? false,
+    hideNickname: data.hideNickname ?? false,
+    privateSerial: data.privateSerial ?? false,
+    hideTransfer: data.hideTransfer ?? false,
+    privateProfile: data.privateProfile ?? false,
+    gridColumns: data.gridColumns ?? 0,
+    removeBanner: false,
+  };
+
+  const { handleSubmit, control } = useForm({
+    defaultValues: values,
+    values: values,
+  });
 
   const edit = useMutation(
     orpc.profile.edit.mutationOptions({
@@ -179,268 +292,198 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
     });
   }, [droppedImage]);
 
-  useEffect(() => {
-    if (!open) {
-      queryClient.removeQueries({
-        queryKey: orpc.profile.find.key({
-          input: address,
-        }),
-      });
-    }
-  }, [open]);
+  const onSubmit = handleSubmit(async (data) => {
+    if (droppedImage && !data.removeBanner) {
+      const croppedFile = await generateCroppedImage();
+      getPresignedUrl.mutate(
+        {
+          address,
+          fileName: droppedImage.name,
+        },
+        {
+          onSuccess: async (url) => {
+            startUploadTransition(async () => {
+              await handleUpload(url, croppedFile ?? droppedImage);
 
-  return (
-    <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
-      <SheetHeader>
-        <SheetTitle>Edit Profile</SheetTitle>
-        <SheetDescription>
-          Currently editing <span className="text-fg">{nickname}</span> Cosmo profile
-        </SheetDescription>
-      </SheetHeader>
-      <SheetBody>
-        <Form
-          ref={formRef}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const hideUser = formData.get("hideUser") === "on";
-            const removeBanner = formData.get("removeBanner") === "on";
-            const privateSerial = formData.get("privateSerial") === "on";
-            const privateProfile = formData.get("privateProfile") === "on";
-            const hideNickname = formData.get("hideNickname") === "on";
-            const hideTransfer = formData.get("hideTransfer") === "on";
-            const gridColumns = Number(formData.get("gridColumns") as string);
-
-            if (droppedImage && !removeBanner) {
-              const croppedFile = await generateCroppedImage();
-              getPresignedUrl.mutate(
-                {
-                  address,
-                  fileName: droppedImage.name,
-                },
-                {
-                  onSuccess: async (url) => {
-                    startUploadTransition(async () => {
-                      await handleUpload(url, croppedFile ?? droppedImage);
-
-                      const fileUrl = url.split("?")[0];
-                      edit.mutate({
-                        address: address,
-                        hideUser,
-                        bannerImgUrl: fileUrl,
-                        bannerImgType: droppedImage.type,
-                        privateSerial,
-                        privateProfile,
-                        hideNickname,
-                        hideTransfer,
-                        gridColumns: gridColumns === 0 ? null : gridColumns,
-                      });
-                    });
-                  },
-                },
-              );
-              return;
-            }
-
-            edit.mutate({
-              address: address,
-              hideUser,
-              bannerImgUrl: removeBanner ? null : undefined,
-              bannerImgType: removeBanner ? null : undefined,
-              privateSerial,
-              privateProfile,
-              hideNickname,
-              hideTransfer,
-              gridColumns: gridColumns === 0 ? null : gridColumns,
+              const fileUrl = url.split("?")[0];
+              edit.mutate({
+                address: address,
+                hideUser: data.hideUser,
+                bannerImgUrl: fileUrl,
+                bannerImgType: droppedImage.type,
+                privateSerial: data.privateSerial,
+                privateProfile: data.privateProfile,
+                hideNickname: data.hideNickname,
+                hideTransfer: data.hideTransfer,
+                gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
+              });
             });
-          }}
-        >
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center">
-                      <Loader variant="ring" />
-                    </div>
-                  }
-                >
-                  <EditProfileForm
-                    address={address}
-                    droppedImage={droppedImage}
-                    handleSelectImage={handleSelectImage}
-                    cropperRef={cropperRef}
-                    setDroppedImage={setDroppedImage}
-                  />
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
-        </Form>
-      </SheetBody>
-      <SheetFooter>
-        <SheetClose>Cancel</SheetClose>
-        <Button
-          onClick={() => formRef.current.requestSubmit()}
-          intent="primary"
-          type="submit"
-          isPending={edit.isPending || getPresignedUrl.isPending || isUploading}
-        >
-          Save
-        </Button>
-      </SheetFooter>
-    </SheetContent>
-  );
-}
-
-type EditProfileProps = {
-  address: string;
-  droppedImage: File | null;
-  handleSelectImage: (files: FileList | null) => void;
-  cropperRef: React.RefObject<CropperRef | null>;
-  setDroppedImage: (file: File | null) => void;
-};
-
-type BannerImageProps = {
-  droppedImage: File | null;
-  cropperRef: React.RefObject<CropperRef | null>;
-  onClear: () => void;
-};
-
-function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (droppedImage) {
-      const url = URL.createObjectURL(droppedImage);
-      setImageUrl(url);
-      return () => URL.revokeObjectURL(url);
+          },
+        },
+      );
+      return;
     }
-    return undefined;
-  }, [droppedImage]);
 
-  if (!droppedImage || !imageUrl) return null;
+    edit.mutate({
+      address: address,
+      hideUser: data.hideUser,
+      bannerImgUrl: data.removeBanner ? null : undefined,
+      bannerImgType: data.removeBanner ? null : undefined,
+      privateSerial: data.privateSerial,
+      privateProfile: data.privateProfile,
+      hideNickname: data.hideNickname,
+      hideTransfer: data.hideTransfer,
+      gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
+    });
+  });
 
   return (
-    <>
-      {droppedImage.type.startsWith("video") ? (
-        <video
-          src={imageUrl}
-          className="aspect-[2.3/1] rounded-lg object-cover"
-          autoPlay
-          loop
-          muted
-          playsInline
+    <Form onSubmit={onSubmit}>
+      <div className="flex flex-col gap-6">
+        <Controller
+          control={control}
+          name="hideUser"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              label="Hide User"
+              name={name}
+              description="Hide Objekt Tracker account from Cosmo profile"
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+            />
+          )}
         />
-      ) : ["image/gif"].includes(droppedImage.type) ? (
-        <img
-          src={imageUrl}
-          alt="Selected banner preview"
-          className="aspect-[2.3/1] rounded-lg object-cover"
+        <Controller
+          control={control}
+          name="hideNickname"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              label="Hide Cosmo ID"
+              name={name}
+              description="Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile."
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+            />
+          )}
         />
-      ) : (
-        <div className="h-52">
-          <Cropper ref={cropperRef} src={imageUrl} aspectRatio={() => 2.3} />
+        <Controller
+          control={control}
+          name="privateSerial"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              label="Hide from Serial Lookup"
+              name={name}
+              description="Prevent others from finding your objekt via serial number. Only you can see it."
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="hideTransfer"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              label="Hide Trade History"
+              name={name}
+              description="Hide your profile trade history. Only you can see it."
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="privateProfile"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              label="Private Profile"
+              name={name}
+              description="Make your Cosmo profile private. Only you can see it."
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="gridColumns"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Select
+              aria-label="Objekt Columns"
+              placeholder="Objekt Columns"
+              label="Objekt Columns"
+              description="Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=)."
+              name={name}
+              selectedKey={`${value}`}
+              onSelectionChange={(key) => onChange(Number(key))}
+              onBlur={onBlur}
+            >
+              <SelectTrigger className="w-[150px]" />
+              <SelectContent>
+                {[
+                  { id: 0, name: "Not set" },
+                  ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
+                ].map((item) => (
+                  <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+
+        <div className="group flex flex-col gap-y-2">
+          <Label>Banner Image</Label>
+          <FileTrigger
+            acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
+            onSelect={handleSelectImage}
+          />
+          <BannerImage
+            droppedImage={droppedImage}
+            cropperRef={cropperRef}
+            onClear={() => setDroppedImage(null)}
+          />
+          <span className="text-muted-fg text-sm">Recommended aspect ratio is 2.3:1</span>
         </div>
-      )}
-      <div className="flex items-center justify-between">
-        <span className="truncate text-muted-fg text-sm">Selected file: {droppedImage.name}</span>
-        <Button size="xs" intent="outline" onClick={onClear}>
-          Clear
-        </Button>
-      </div>
-    </>
-  );
-}
-
-function EditProfileForm({
-  address,
-  droppedImage,
-  handleSelectImage,
-  cropperRef,
-  setDroppedImage,
-}: EditProfileProps) {
-  const { data } = useSuspenseQuery(
-    orpc.profile.find.queryOptions({
-      input: address,
-    }),
-  );
-
-  return (
-    <div className="flex flex-col gap-6">
-      <Checkbox
-        label="Hide User"
-        name="hideUser"
-        description="Hide Objekt Tracker account from Cosmo profile"
-        defaultSelected={data.hideUser ?? false}
-      />
-      <Checkbox
-        label="Hide Cosmo ID"
-        name="hideNickname"
-        description="Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile."
-        defaultSelected={data.hideNickname ?? false}
-      />
-      <Checkbox
-        label="Hide from Serial Lookup"
-        name="privateSerial"
-        description="Prevent others from finding your objekt via serial number. Only you can see it."
-        defaultSelected={data.privateSerial ?? false}
-      />
-      <Checkbox
-        label="Hide Trade History"
-        name="hideTransfer"
-        description="Hide your profile trade history. Only you can see it."
-        defaultSelected={data.hideTransfer ?? false}
-      />
-      <Checkbox
-        label="Private Profile"
-        name="privateProfile"
-        description="Make your Cosmo profile private. Only you can see it."
-        defaultSelected={data.privateProfile ?? false}
-      />
-
-      <Select
-        aria-label="Objekt Columns"
-        placeholder="Objekt Columns"
-        label="Objekt Columns"
-        description="Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=)."
-        defaultSelectedKey={`${data.gridColumns ?? 0}`}
-        name="gridColumns"
-      >
-        <SelectTrigger className="w-[150px]" />
-        <SelectContent>
-          {[
-            { id: 0, name: "Not set" },
-            ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
-          ].map((item) => (
-            <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
-              {item.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <div className="group flex flex-col gap-y-2">
-        <Label>Banner Image</Label>
-        <FileTrigger
-          acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
-          onSelect={handleSelectImage}
+        <Controller
+          control={control}
+          name="removeBanner"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              label="Remove Banner"
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+            />
+          )}
         />
-        <BannerImage
-          droppedImage={droppedImage}
-          cropperRef={cropperRef}
-          onClear={() => setDroppedImage(null)}
-        />
-        <span className="text-muted-fg text-sm">Recommended aspect ratio is 2.3:1</span>
+        <span className="text-muted-fg text-sm">
+          To unlink this Cosmo profile from your account, visit{" "}
+          <Link href="/link" className="underline">
+            Manage Cosmo link
+          </Link>{" "}
+          page.
+        </span>
+
+        <Portal to="#submit-form">
+          <Button
+            intent="primary"
+            isPending={edit.isPending || getPresignedUrl.isPending || isUploading}
+            onClick={onSubmit}
+          >
+            Save
+          </Button>
+        </Portal>
       </div>
-      <Checkbox label="Remove Banner" name="removeBanner" />
-      <span className="text-muted-fg text-sm">
-        To unlink this Cosmo profile from your account, visit{" "}
-        <Link href="/link" className="underline">
-          Manage Cosmo link
-        </Link>{" "}
-        page.
-      </span>
-    </div>
+    </Form>
   );
 }

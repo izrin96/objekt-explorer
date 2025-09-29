@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useInterval } from "usehooks-ts";
 import AxolotlIcon from "@/assets/icon-axolotl.png";
@@ -251,7 +252,12 @@ function RenderOtp({
   ticketStatus: TicketSuccess<"wait_for_certify" | "certified">;
 }) {
   const t = useTranslations("link");
-  const [value, setValue] = useState("");
+
+  const { handleSubmit, control, reset } = useForm({
+    defaultValues: {
+      otp: "",
+    },
+  });
 
   const [randomIcon] = useState(() => {
     const icons = [
@@ -278,6 +284,13 @@ function RenderOtp({
     }),
   );
 
+  const onSubmit = handleSubmit((data) => {
+    otpAndLink.mutate({
+      otp: Number(data.otp),
+      ticket: ticketAuth.ticket,
+    });
+  });
+
   if (otpAndLink.isError) {
     return (
       <div className="flex flex-col items-center gap-2">
@@ -293,7 +306,7 @@ function RenderOtp({
         <Button
           intent="outline"
           onClick={() => {
-            setValue("");
+            reset();
             otpAndLink.reset();
           }}
         >
@@ -344,23 +357,25 @@ function RenderOtp({
       />
       <span>Detected Cosmo {ticketStatus.user.nickname}</span>
       <span>Enter the verification code</span>
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          otpAndLink.mutate({
-            otp: Number(value),
-            ticket: ticketAuth.ticket,
-          });
-        }}
-        className="flex flex-col items-center gap-2"
-      >
-        <InputOTP minLength={2} maxLength={2} required value={value} onChange={setValue}>
-          <InputOTP.Group>
-            {[...Array(2)].map((_, index) => (
-              <InputOTP.Slot key={index} index={index} />
-            ))}
-          </InputOTP.Group>
-        </InputOTP>
+      <Form onSubmit={onSubmit} className="flex flex-col items-center gap-2">
+        <Controller
+          control={control}
+          name="otp"
+          rules={{
+            required: "OTP code is required.",
+            minLength: 2,
+            maxLength: 2,
+          }}
+          render={({ field: { value, onChange } }) => (
+            <InputOTP minLength={2} maxLength={2} required value={value} onChange={onChange}>
+              <InputOTP.Group>
+                {[...Array(2)].map((_, index) => (
+                  <InputOTP.Slot key={index} index={index} />
+                ))}
+              </InputOTP.Group>
+            </InputOTP>
+          )}
+        />
         <Button type="submit" isPending={otpAndLink.isPending}>
           Submit
         </Button>

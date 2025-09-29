@@ -28,7 +28,7 @@ importers:
         version: 1.9.1(@opentelemetry/api@1.9.0)
       '@orpc/server':
         specifier: ^1.9.1
-        version: 1.9.1(@opentelemetry/api@1.9.0)(crossws@0.3.5)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        version: 1.9.1(@opentelemetry/api@1.9.0)(crossws@0.3.5)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@orpc/tanstack-query':
         specifier: ^1.9.1
         version: 1.9.1(@opentelemetry/api@1.9.0)(@orpc/client@1.9.1(@opentelemetry/api@1.9.0))(@tanstack/query-core@5.90.2)
@@ -149,6 +149,9 @@ importers:
       react-error-boundary:
         specifier: ^6.0.0
         version: 6.0.0(react@19.1.1)
+      react-hook-form:
+        specifier: ^7.63.0
+        version: 7.63.0(react@19.1.1)
       react-intersection-observer:
         specifier: ^9.16.0
         version: 9.16.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -4977,6 +4980,12 @@ packages:
     peerDependencies:
       react: '>=16.13.1'
 
+  react-hook-form@7.63.0:
+    resolution: {integrity: sha512-ZwueDMvUeucovM2VjkCf7zIHcs1aAlDimZu2Hvel5C5907gUzMpm4xCrQXtRzCvsBqFjonB4m3x4LzCFI1ZKWA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+
   react-intersection-observer@9.16.0:
     resolution: {integrity: sha512-w9nJSEp+DrW9KmQmeWHQyfaP6b03v+TdXynaoA964Wxt7mdR3An11z4NNCQgL4gKSK7y1ver2Fq+JKH6CWEzUA==}
     peerDependencies:
@@ -7491,7 +7500,7 @@ snapshots:
 
   '@orpc/interop@1.9.1': {}
 
-  '@orpc/server@1.9.1(@opentelemetry/api@1.9.0)(crossws@0.3.5)(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
+  '@orpc/server@1.9.1(@opentelemetry/api@1.9.0)(crossws@0.3.5)(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
     dependencies:
       '@orpc/client': 1.9.1(@opentelemetry/api@1.9.0)
       '@orpc/contract': 1.9.1(@opentelemetry/api@1.9.0)
@@ -7505,7 +7514,7 @@ snapshots:
       cookie: 1.0.2
     optionalDependencies:
       crossws: 0.3.5
-      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
@@ -12829,6 +12838,10 @@ snapshots:
   react-error-boundary@6.0.0(react@19.1.1):
     dependencies:
       '@babel/runtime': 7.27.1
+      react: 19.1.1
+
+  react-hook-form@7.63.0(react@19.1.1):
+    dependencies:
       react: 19.1.1
 
   react-intersection-observer@9.16.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1):

@@ -9,6 +9,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Button, Form, TextField } from "../ui";
@@ -33,6 +34,14 @@ function SignInForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
+
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
   const mutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       const result = await authClient.signIn.email({
@@ -51,6 +60,10 @@ function SignInForm({
     },
   });
 
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({ email: data.email, password: data.password });
+  });
+
   return (
     <>
       <div className="flex flex-col">
@@ -59,30 +72,55 @@ function SignInForm({
           Please enter your credentials to access your account.
         </span>
       </div>
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const formData = new FormData(e.currentTarget);
-          const email = formData.get("email") as string;
-          const password = formData.get("password") as string;
-          mutation.mutate({ email, password });
-        }}
-        className="flex flex-col gap-4"
-      >
-        <TextField
-          label="Email"
-          type="email"
+      <Form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <Controller
+          control={control}
           name="email"
-          isRequired
-          placeholder="your@email.com"
+          rules={{
+            required: "Email is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              label="Email"
+              type="email"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isRequired
+              placeholder="your@email.com"
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
         />
-        <TextField
-          label="Password"
-          type="password"
+        <Controller
+          control={control}
           name="password"
-          isRequired
-          isRevealable
-          placeholder="•••••••"
+          rules={{
+            required: "Password is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              label="Password"
+              type="password"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isRequired
+              isRevealable
+              placeholder="•••••••"
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
         />
         <Button type="submit" intent="primary" isDisabled={mutation.isPending}>
           Sign in with Email
@@ -162,6 +200,14 @@ function SignUpForm({
 }: {
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+  });
+
   const mutation = useMutation({
     mutationFn: async (data: { email: string; password: string; name: string }) => {
       const result = await authClient.signUp.email({
@@ -182,27 +228,85 @@ function SignUpForm({
     },
   });
 
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({ email: data.email, password: data.password, name: data.name });
+  });
+
   return (
-    <Form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get("email") as string;
-        const password = formData.get("password") as string;
-        const name = formData.get("name") as string;
-        mutation.mutate({ email, password, name });
-      }}
-    >
+    <Form onSubmit={onSubmit}>
       <div className="flex flex-col gap-4">
-        <TextField label="Name" type="text" name="name" isRequired placeholder="Your name" />
-        <TextField
-          label="Email"
-          type="email"
-          name="email"
-          isRequired
-          placeholder="your@email.com"
+        <Controller
+          control={control}
+          name="name"
+          rules={{
+            required: "Name is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              label="Name"
+              type="text"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isRequired
+              placeholder="Your name"
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
         />
-        <TextField label="Password" type="password" name="password" isRequired isRevealable />
+        <Controller
+          control={control}
+          name="email"
+          rules={{
+            required: "Email is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              label="Email"
+              type="email"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isRequired
+              placeholder="your@email.com"
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
+        />
+        <Controller
+          control={control}
+          name="password"
+          rules={{
+            required: "Password is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              label="Password"
+              type="password"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isRequired
+              isRevealable
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
+        />
         <Button type="submit" isDisabled={mutation.isPending}>
           Create Account
         </Button>
@@ -219,6 +323,12 @@ function ForgotPassword({
 }: {
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      email: "",
+    },
+  });
+
   const mutation = useMutation({
     mutationFn: async (email: string) => {
       const result = await authClient.forgetPassword({
@@ -239,22 +349,36 @@ function ForgotPassword({
     },
   });
 
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate(data.email);
+  });
+
   return (
-    <Form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get("email") as string;
-        mutation.mutate(email);
-      }}
-    >
+    <Form onSubmit={onSubmit}>
       <div className="flex flex-col gap-4">
-        <TextField
-          label="Email"
-          type="email"
+        <Controller
+          control={control}
           name="email"
-          isRequired
-          placeholder="your@email.com"
+          rules={{
+            required: "Email is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              label="Email"
+              type="email"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isRequired
+              placeholder="your@email.com"
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
         />
         <Button type="submit" isDisabled={mutation.isPending}>
           Send reset password email

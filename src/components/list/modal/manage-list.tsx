@@ -7,10 +7,12 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
+import Portal from "@/components/portal";
 import {
   Button,
   Checkbox,
@@ -47,7 +49,14 @@ type CreateListModalProps = {
 
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
   const queryClient = useQueryClient();
-  const formRef = useRef<HTMLFormElement>(null!);
+
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      name: "",
+      hideUser: true,
+    },
+  });
+
   const createList = useMutation(
     orpc.list.create.mutationOptions({
       onSuccess: () => {
@@ -62,41 +71,66 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       },
     }),
   );
+
+  const onSubmit = handleSubmit((data) => {
+    createList.mutate({
+      name: data.name,
+      hideUser: data.hideUser,
+    });
+  });
+
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
         <ModalTitle>Create list</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <Form
-          ref={formRef}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            createList.mutate({
-              name: formData.get("name") as string,
-              hideUser: formData.get("hideUser") === "on",
-            });
-          }}
-        >
+        <Form onSubmit={onSubmit}>
           <div className="flex flex-col gap-6">
-            <TextField isRequired autoFocus label="Name" placeholder="My list" name="name" />
-            <Checkbox
-              label="Hide User"
+            <Controller
+              control={control}
+              name="name"
+              rules={{
+                required: "Name is required.",
+              }}
+              render={({
+                field: { name, value, onChange, onBlur },
+                fieldState: { invalid, error },
+              }) => (
+                <TextField
+                  isRequired
+                  autoFocus
+                  label="Name"
+                  placeholder="My list"
+                  name={name}
+                  value={value}
+                  onChange={onChange}
+                  onBlur={onBlur}
+                  isInvalid={invalid}
+                  errorMessage={error?.message}
+                />
+              )}
+            />
+            <Controller
+              control={control}
               name="hideUser"
-              description="Hide Objekt Tracker account from this list"
-              defaultSelected={true}
+              render={({ field: { name, value, onChange, onBlur } }) => (
+                <Checkbox
+                  label="Hide User"
+                  name={name}
+                  description="Hide Objekt Tracker account from this list"
+                  isSelected={value}
+                  onChange={onChange}
+                  onBlur={onBlur}
+                />
+              )}
             />
           </div>
         </Form>
       </ModalBody>
       <ModalFooter>
         <ModalClose>Cancel</ModalClose>
-        <Button
-          type="submit"
-          isPending={createList.isPending}
-          onClick={() => formRef.current.requestSubmit()}
-        >
+        <Button type="submit" isPending={createList.isPending} onClick={onSubmit}>
           Create
         </Button>
       </ModalFooter>
@@ -156,9 +190,45 @@ type EditListModalProps = {
 };
 
 export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
-  const queryClient = useQueryClient();
+  return (
+    <SheetContent isOpen={open} onOpenChange={setOpen}>
+      <SheetHeader>
+        <SheetTitle>Edit list</SheetTitle>
+        <SheetDescription>Manage your list</SheetDescription>
+      </SheetHeader>
+      <SheetBody>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <EditListForm slug={slug} setOpen={setOpen} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </SheetBody>
+      <SheetFooter>
+        <SheetClose>Cancel</SheetClose>
+        <div id="submit-form"></div>
+      </SheetFooter>
+    </SheetContent>
+  );
+}
+
+function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
   const router = useRouter();
-  const formRef = useRef<HTMLFormElement>(null!);
+  const { data } = useSuspenseQuery(
+    orpc.list.find.queryOptions({
+      input: slug,
+      staleTime: 0,
+    }),
+  );
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
       onSuccess: () => {
@@ -172,119 +242,117 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
     }),
   );
 
-  useEffect(() => {
-    if (!open) {
-      queryClient.removeQueries({
-        queryKey: orpc.list.find.key({
-          input: slug,
-        }),
-      });
-    }
-  }, [open]);
+  const values = {
+    name: data.name,
+    hideUser: data.hideUser ?? false,
+    gridColumns: data.gridColumns ?? 0,
+  };
+
+  const { handleSubmit, control } = useForm({
+    defaultValues: values,
+    values: values,
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    editList.mutate({
+      slug,
+      name: data.name,
+      hideUser: data.hideUser,
+      gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
+    });
+  });
 
   return (
-    <SheetContent isOpen={open} onOpenChange={setOpen}>
-      <SheetHeader>
-        <SheetTitle>Edit list</SheetTitle>
-        <SheetDescription>Manage your list</SheetDescription>
-      </SheetHeader>
-      <SheetBody>
-        <Form
-          ref={formRef}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const gridColumns = Number(formData.get("gridColumns") as string);
-            editList.mutate({
-              slug,
-              name: formData.get("name") as string,
-              hideUser: formData.get("hideUser") === "on",
-              gridColumns: gridColumns === 0 ? null : gridColumns,
-            });
+    <Form onSubmit={onSubmit}>
+      <div className="flex flex-col gap-6">
+        <Controller
+          control={control}
+          name="name"
+          rules={{
+            required: "Name is required.",
           }}
-        >
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center">
-                      <Loader variant="ring" />
-                    </div>
-                  }
-                >
-                  <EditListForm slug={slug} />
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
-        </Form>
-      </SheetBody>
-      <SheetFooter>
-        <SheetClose>Cancel</SheetClose>
-        <Button
-          onClick={() => formRef.current.requestSubmit()}
-          type="submit"
-          isPending={editList.isPending}
-        >
-          Save
-        </Button>
-      </SheetFooter>
-    </SheetContent>
-  );
-}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              isRequired
+              autoFocus
+              label="Name"
+              placeholder="My list"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
+        />
 
-function EditListForm({ slug }: { slug: string }) {
-  const { data } = useSuspenseQuery(
-    orpc.list.find.queryOptions({
-      input: slug,
-    }),
-  );
-  return (
-    <div className="flex flex-col gap-6">
-      <TextField
-        isRequired
-        autoFocus
-        label="Name"
-        placeholder="My list"
-        name="name"
-        defaultValue={data.name}
-      />
-      <Checkbox
-        label="Hide User"
-        name="hideUser"
-        description="Hide Objekt Tracker account from this list"
-        defaultSelected={data.hideUser ?? false}
-      />
+        <Controller
+          control={control}
+          name="hideUser"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              label="Hide User"
+              name={name}
+              description="Hide Objekt Tracker account from this list"
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+            />
+          )}
+        />
 
-      <Select
-        aria-label="Objekt Columns"
-        placeholder="Objekt Columns"
-        label="Objekt Columns"
-        description="Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=)."
-        defaultSelectedKey={`${data.gridColumns ?? 0}`}
-        name="gridColumns"
-      >
-        <SelectTrigger className="w-[150px]" />
-        <SelectContent>
-          {[
-            { id: 0, name: "Not set" },
-            ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
-          ].map((item) => (
-            <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
-              {item.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        <Controller
+          control={control}
+          name="gridColumns"
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <Select
+              aria-label="Objekt Columns"
+              placeholder="Objekt Columns"
+              label="Objekt Columns"
+              description="Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=)."
+              name={name}
+              selectedKey={`${value}`}
+              onSelectionChange={(key) => onChange(Number(key))}
+              onBlur={onBlur}
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            >
+              <SelectTrigger className="w-[150px]" />
+              <SelectContent>
+                {[
+                  { id: 0, name: "Not set" },
+                  ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
+                ].map((item) => (
+                  <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
 
-      <span className="text-muted-fg text-sm">
-        To delete this list, visit{" "}
-        <Link href="/list" className="underline">
-          Manage list
-        </Link>{" "}
-        page.
-      </span>
-    </div>
+        <span className="text-muted-fg text-sm">
+          To delete this list, visit{" "}
+          <Link href="/list" className="underline">
+            Manage list
+          </Link>{" "}
+          page.
+        </span>
+
+        <Portal to="#submit-form">
+          <Button isPending={editList.isPending} onClick={onSubmit}>
+            Save
+          </Button>
+        </Portal>
+      </div>
+    </Form>
   );
 }

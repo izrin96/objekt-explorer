@@ -1,10 +1,12 @@
 "use client";
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useRef } from "react";
+import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
+import Portal from "@/components/portal";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
@@ -32,67 +34,62 @@ import {
 } from "../../ui";
 
 export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
-  const formRef = useRef<HTMLFormElement>(null!);
-  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
-  const addToList = useAddToList();
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
         <ModalTitle>Add to list</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <Form
-          ref={formRef}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            addToList.mutate(
-              {
-                slug: formData.get("slug") as string,
-                skipDups: formData.get("skipDups") === "on",
-                collectionSlugs: selected.map((a) => a.slug),
-              },
-              {
-                onSuccess: () => {
-                  setOpen(false);
-                },
-              },
-            );
-          }}
-        >
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center">
-                      <Loader variant="ring" />
-                    </div>
-                  }
-                >
-                  <AddToListForm />
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
-        </Form>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <AddToListForm setOpen={setOpen} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </ModalBody>
       <ModalFooter>
         <ModalClose>Cancel</ModalClose>
-        <Button
-          type="submit"
-          isPending={addToList.isPending}
-          onClick={() => formRef.current.requestSubmit()}
-        >
-          Add
-        </Button>
+        <div id="submit-form"></div>
       </ModalFooter>
     </ModalContent>
   );
 }
 
-function AddToListForm() {
+function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
+  const addToList = useAddToList();
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      slug: "",
+      skipDups: true,
+    },
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    addToList.mutate(
+      {
+        slug: data.slug,
+        skipDups: data.skipDups,
+        collectionSlugs: selected.map((a) => a.slug),
+      },
+      {
+        onSuccess: () => {
+          setOpen(false);
+        },
+      },
+    );
+  });
 
   if (data.length === 0)
     return (
@@ -106,24 +103,61 @@ function AddToListForm() {
     );
 
   return (
-    <div className="flex flex-col gap-4">
-      <Select label="My List" placeholder="Select a list" name="slug" isRequired>
-        <SelectTrigger />
-        <SelectContent>
-          {data.map((item) => (
-            <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
-              {item.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Checkbox
-        defaultSelected={true}
-        name="skipDups"
-        label="Prevent duplicate"
-        description="Skip the same objekt when adding"
-      />
-    </div>
+    <Form onSubmit={onSubmit}>
+      <div className="flex flex-col gap-4">
+        <Controller
+          control={control}
+          name="slug"
+          rules={{
+            required: "List is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <Select
+              label="My List"
+              placeholder="Select a list"
+              name={name}
+              selectedKey={value}
+              onSelectionChange={onChange}
+              onBlur={onBlur}
+              isRequired
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            >
+              <SelectTrigger />
+              <SelectContent>
+                {data.map((item) => (
+                  <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
+                    {item.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <Controller
+          control={control}
+          name="skipDups"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox
+              name={name}
+              onChange={onChange}
+              onBlur={onBlur}
+              isSelected={value}
+              label="Prevent duplicate"
+              description="Skip the same objekt when adding"
+            />
+          )}
+        />
+        <Portal to="#submit-form">
+          <Button isPending={addToList.isPending} onClick={onSubmit}>
+            Add
+          </Button>
+        </Portal>
+      </div>
+    </Form>
   );
 }
 

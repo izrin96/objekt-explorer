@@ -1,15 +1,11 @@
 "use client";
 
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import {
-  QueryErrorResetBoundary,
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 import {
@@ -40,16 +36,6 @@ type Props = {
 };
 
 export default function UserAccountModal({ open, setOpen }: Props) {
-  const queryClient = useQueryClient();
-
-  useEffect(() => {
-    if (!open) {
-      queryClient.removeQueries({
-        queryKey: ["session"],
-      });
-    }
-  }, [open]);
-
   return (
     <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
@@ -93,6 +79,7 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       }
       return result.data;
     },
+    staleTime: 0,
   });
 
   if (!session.data) return;
@@ -107,6 +94,17 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
 
 function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean) => void }) {
   const router = useRouter();
+
+  const values = {
+    name: user.name,
+    showSocial: user.showSocial ?? false,
+    removePic: false,
+  };
+
+  const { handleSubmit, control } = useForm({
+    defaultValues: values,
+    values: values,
+  });
 
   const mutation = useMutation({
     mutationFn: async (data: { showSocial: boolean; name: string; image: undefined | null }) => {
@@ -124,39 +122,71 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
     },
   });
 
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({
+      name: data.name,
+      showSocial: data.showSocial,
+      image: data.removePic ? null : undefined,
+    });
+  });
+
   return (
-    <Form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const name = formData.get("name") as string;
-        const showSocial = formData.get("showSocial") === "on";
-        const removePic = formData.get("removePic") === "on";
-
-        mutation.mutate({
-          name,
-          showSocial,
-          image: removePic ? null : undefined,
-        });
-      }}
-    >
+    <Form onSubmit={onSubmit}>
       <div className="flex flex-col gap-6">
-        <TextField
-          isRequired
-          label="Name"
-          placeholder="Your name"
+        <Controller
+          control={control}
           name="name"
-          defaultValue={user.name}
+          rules={{
+            required: "Name is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              isRequired
+              label="Name"
+              placeholder="Your name"
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
         />
 
-        <Checkbox
-          label="Show Social"
+        <Controller
+          control={control}
           name="showSocial"
-          description="Display your social account such as Discord username in List and Cosmo profile"
-          defaultSelected={user.showSocial ?? false}
+          render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+            <Checkbox
+              label="Show Social"
+              name={name}
+              onChange={onChange}
+              onBlur={onBlur}
+              description="Display your social account such as Discord username in List and Cosmo profile"
+              isSelected={value}
+              isInvalid={invalid}
+            />
+          )}
         />
 
-        <Checkbox label="Remove Profile Picture" name="removePic" />
+        <Controller
+          control={control}
+          name="removePic"
+          render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+            <Checkbox
+              label="Remove Profile Picture"
+              name={name}
+              onChange={onChange}
+              onBlur={onBlur}
+              isSelected={value}
+              isInvalid={invalid}
+            />
+          )}
+        />
 
         <span className="text-muted-fg text-xs">
           Profile picture can only be set by pulling from X or Discord in the Social Link section
@@ -174,6 +204,15 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
 }
 
 function ChangeEmail({ email }: { email: string }) {
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      email,
+    },
+    values: {
+      email,
+    },
+  });
+
   const mutation = useMutation({
     mutationFn: async (data: { newEmail: string }) => {
       const result = await authClient.changeEmail(data);
@@ -188,28 +227,42 @@ function ChangeEmail({ email }: { email: string }) {
     },
   });
 
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({
+      newEmail: data.email,
+    });
+  });
+
   return (
-    <Form
-      onSubmit={(e) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const email = formData.get("email") as string;
-        mutation.mutate({
-          newEmail: email,
-        });
-      }}
-    >
+    <Form onSubmit={onSubmit}>
       <div className="flex flex-col gap-3">
-        <TextField
-          className="w-full"
-          isRequired
-          label="Email"
-          placeholder="Your email"
+        <Controller
+          control={control}
           name="email"
-          type="email"
-          description="Verification email will be sent to verify your new email address"
-          defaultValue={email}
+          rules={{
+            required: "Email is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              className="w-full"
+              isRequired
+              label="Email"
+              placeholder="Your email"
+              name={name}
+              type="email"
+              description="Verification email will be sent to verify your new email address"
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+              errorMessage={error?.message}
+            />
+          )}
         />
+
         <div className="flex">
           <Button
             isDisabled={mutation.isPending}

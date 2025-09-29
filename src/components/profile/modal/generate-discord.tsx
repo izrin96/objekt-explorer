@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { CopyButton } from "@/components/copy-button";
 import {
   Button,
@@ -25,9 +26,22 @@ type Props = {
 };
 
 export default function GenerateDiscordFormatModalProfile({ open, setOpen, objekts }: Props) {
-  const formRef = useRef<HTMLFormElement>(null!);
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      showCount: false,
+      lowercase: false,
+    },
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    const members = makeMemberOrderedList(objekts, artists);
+    const haveCollections = mapByMember(objekts, members);
+    setFormatText(
+      ["## Have", ...format(haveCollections, data.showCount, data.lowercase)].join("\n"),
+    );
+  });
 
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
@@ -36,24 +50,36 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
         <ModalDescription>List of objekt is based on current filter.</ModalDescription>
       </ModalHeader>
       <ModalBody>
-        <Form
-          className="flex flex-col gap-2"
-          ref={formRef}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const showCount = formData.get("showCount") === "on";
-            const lowercase = formData.get("lowercase") === "on";
+        <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
+          <Controller
+            control={control}
+            name="showCount"
+            render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+              <Checkbox
+                label="Show count"
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="lowercase"
+            render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+              <Checkbox
+                label="Lower case"
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+              />
+            )}
+          />
 
-            const members = makeMemberOrderedList(objekts, artists);
-
-            const haveCollections = mapByMember(objekts, members);
-
-            setFormatText(["## Have", ...format(haveCollections, showCount, lowercase)].join("\n"));
-          }}
-        >
-          <Checkbox label="Show count" name="showCount" />
-          <Checkbox label="Lower case" name="lowercase" />
           <Textarea
             label="Formatted discord text"
             value={formatText}
@@ -66,7 +92,7 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
         </Form>
       </ModalBody>
       <ModalFooter className="flex justify-end">
-        <Button type="submit" onClick={() => formRef.current.requestSubmit()}>
+        <Button type="submit" onClick={onSubmit}>
           Generate
         </Button>
       </ModalFooter>

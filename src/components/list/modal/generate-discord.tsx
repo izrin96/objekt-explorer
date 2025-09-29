@@ -1,11 +1,13 @@
 "use client";
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { CopyButton } from "@/components/copy-button";
 import ErrorFallbackRender from "@/components/error-boundary";
+import Portal from "@/components/portal";
 import {
   Button,
   Checkbox,
@@ -38,30 +40,44 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
       <ModalHeader>
         <ModalTitle>Generate Discord Format</ModalTitle>
       </ModalHeader>
-      <QueryErrorResetBoundary>
-        {({ reset }) => (
-          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Suspense
-              fallback={
-                <div className="flex justify-center pt-2 pb-8">
-                  <Loader variant="ring" />
-                </div>
-              }
-            >
-              <Content />
-            </Suspense>
-          </ErrorBoundary>
-        )}
-      </QueryErrorResetBoundary>
+      <ModalBody>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center pt-2 pb-8">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <Content />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </ModalBody>
+      <ModalFooter className="flex justify-end">
+        <div id="submit-form"></div>
+      </ModalFooter>
     </ModalContent>
   );
 }
 
 function Content() {
-  const formRef = useRef<HTMLFormElement>(null!);
   const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
+
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      haveSlug: "",
+      wantSlug: "",
+      includeLink: false,
+      showCount: false,
+      lowercase: false,
+    },
+  });
 
   const generateDiscordFormat = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
@@ -71,62 +87,67 @@ function Content() {
     }),
   );
 
+  const onSubmit = handleSubmit((formData) => {
+    generateDiscordFormat.mutate(
+      {
+        haveSlug: formData.haveSlug,
+        wantSlug: formData.wantSlug,
+      },
+      {
+        onSuccess: async (data) => {
+          const { have, want, collections } = data;
+
+          // collections map for faster search
+          const collectionsMap = new Map(collections.map((a) => [a.slug, a]));
+
+          const members = makeMemberOrderedList(collections, artists);
+
+          const haveCollections = mapCollectionByMember(collectionsMap, have, members);
+          const wantCollections = mapCollectionByMember(collectionsMap, want, members);
+
+          setFormatText(
+            [
+              "## Have",
+              ...format(haveCollections, formData.showCount, formData.lowercase),
+              ...(formData.includeLink
+                ? [
+                    "",
+                    `[View this list](<${getBaseURL()}/list/${formData.haveSlug}>)`,
+                    "", // give a little bit of spacing
+                  ]
+                : []),
+              "## Want",
+              ...format(wantCollections, formData.showCount, formData.lowercase),
+              ...(formData.includeLink
+                ? ["", `[View this list](<${getBaseURL()}/list/${formData.wantSlug}>)`]
+                : []),
+            ].join("\n"),
+          );
+        },
+      },
+    );
+  });
+
   return (
-    <>
-      <ModalBody>
-        <Form
-          className="flex flex-col gap-2"
-          ref={formRef}
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            const haveSlug = formData.get("haveSlug") as string;
-            const wantSlug = formData.get("wantSlug") as string;
-            const includeLink = formData.get("includeLink") === "on";
-            const showCount = formData.get("showCount") === "on";
-            const lowercase = formData.get("lowercase") === "on";
-
-            generateDiscordFormat.mutate(
-              {
-                haveSlug,
-                wantSlug,
-              },
-              {
-                onSuccess: async (data) => {
-                  const { have, want, collections } = data;
-
-                  // collections map for faster search
-                  const collectionsMap = new Map(collections.map((a) => [a.slug, a]));
-
-                  const members = makeMemberOrderedList(collections, artists);
-
-                  const haveCollections = mapCollectionByMember(collectionsMap, have, members);
-                  const wantCollections = mapCollectionByMember(collectionsMap, want, members);
-
-                  setFormatText(
-                    [
-                      "## Have",
-                      ...format(haveCollections, showCount, lowercase),
-                      ...(includeLink
-                        ? [
-                            "",
-                            `[View this list](<${getBaseURL()}/list/${haveSlug}>)`,
-                            "", // give a little bit of spacing
-                          ]
-                        : []),
-                      "## Want",
-                      ...format(wantCollections, showCount, lowercase),
-                      ...(includeLink
-                        ? ["", `[View this list](<${getBaseURL()}/list/${wantSlug}>)`]
-                        : []),
-                    ].join("\n"),
-                  );
-                },
-              },
-            );
-          }}
-        >
-          <Select label="Have list" name="haveSlug" placeholder="Select a list" isRequired>
+    <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
+      <Controller
+        control={control}
+        name="haveSlug"
+        rules={{
+          required: "Have list is required.",
+        }}
+        render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
+          <Select
+            label="Have list"
+            placeholder="Select a list"
+            name={name}
+            selectedKey={value}
+            onSelectionChange={onChange}
+            onBlur={onBlur}
+            isRequired
+            isInvalid={invalid}
+            errorMessage={error?.message}
+          >
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -136,7 +157,26 @@ function Content() {
               ))}
             </SelectContent>
           </Select>
-          <Select label="Want list" name="wantSlug" placeholder="Select a list" isRequired>
+        )}
+      />
+      <Controller
+        control={control}
+        name="wantSlug"
+        rules={{
+          required: "Want list is required.",
+        }}
+        render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
+          <Select
+            label="Want list"
+            placeholder="Select a list"
+            name={name}
+            selectedKey={value}
+            onSelectionChange={onChange}
+            onBlur={onBlur}
+            isRequired
+            isInvalid={invalid}
+            errorMessage={error?.message}
+          >
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -146,29 +186,62 @@ function Content() {
               ))}
             </SelectContent>
           </Select>
-          <Checkbox label="Show count" name="showCount" />
-          <Checkbox label="Include link" name="includeLink" />
-          <Checkbox label="Lower case" name="lowercase" />
-          <Textarea
-            label="Formatted discord text"
-            value={formatText}
-            onChange={setFormatText}
-            className="max-h-64 min-h-32"
+        )}
+      />
+      <Controller
+        control={control}
+        name="showCount"
+        render={({ field: { name, value, onChange, onBlur } }) => (
+          <Checkbox
+            label="Show count"
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
           />
-          <div className="flex">
-            <CopyButton text={formatText} />
-          </div>
-        </Form>
-      </ModalBody>
-      <ModalFooter className="flex justify-end">
-        <Button
-          type="submit"
-          isPending={generateDiscordFormat.isPending}
-          onClick={() => formRef.current.requestSubmit()}
-        >
+        )}
+      />
+      <Controller
+        control={control}
+        name="includeLink"
+        render={({ field: { name, value, onChange, onBlur } }) => (
+          <Checkbox
+            label="Include link"
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="lowercase"
+        render={({ field: { name, value, onChange, onBlur } }) => (
+          <Checkbox
+            label="Lower case"
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+          />
+        )}
+      />
+      <Textarea
+        label="Formatted discord text"
+        value={formatText}
+        onChange={setFormatText}
+        className="max-h-64 min-h-32"
+      />
+      <div className="flex">
+        <CopyButton text={formatText} />
+      </div>
+
+      <Portal to="#submit-form">
+        <Button isPending={generateDiscordFormat.isPending} onClick={onSubmit}>
           Generate
         </Button>
-      </ModalFooter>
-    </>
+      </Portal>
+    </Form>
   );
 }
