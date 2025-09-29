@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -63,12 +63,11 @@ type LinkedAccountProps = {
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
   const session = authClient.useSession();
   const [pullOpen, setPullOpen] = useState(false);
-  const queryClient = useQueryClient();
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_, _v, _o, { client }) => {
         session.refetch();
-        queryClient.invalidateQueries({
+        client.invalidateQueries({
           queryKey: ["accounts"],
         });
         toast.success(`${provider.label} unlinked`);

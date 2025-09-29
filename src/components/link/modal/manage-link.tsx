@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  QueryErrorResetBoundary,
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Cropper, type CropperRef } from "react-advanced-cropper";
@@ -54,13 +49,12 @@ type RemoveLinkModalProps = {
 };
 
 export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps) {
-  const queryClient = useQueryClient();
   const removeLink = useMutation(
     orpc.cosmoLink.removeLink.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
         toast.success("Cosmo unlinked");
-        queryClient.invalidateQueries({
+        client.invalidateQueries({
           queryKey: orpc.profile.list.key(),
         });
       },

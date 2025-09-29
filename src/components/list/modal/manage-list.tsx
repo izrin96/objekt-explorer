@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  QueryErrorResetBoundary,
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -48,8 +43,6 @@ type CreateListModalProps = {
 };
 
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
-  const queryClient = useQueryClient();
-
   const { handleSubmit, control } = useForm({
     defaultValues: {
       name: "",
@@ -59,10 +52,10 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
 
   const createList = useMutation(
     orpc.list.create.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
         toast.success("List created");
-        queryClient.invalidateQueries({
+        client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
@@ -145,13 +138,12 @@ type DeleteListModalProps = {
 };
 
 export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
-  const queryClient = useQueryClient();
   const deleteList = useMutation(
     orpc.list.delete.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
         toast.success("List deleted");
-        queryClient.invalidateQueries({
+        client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
