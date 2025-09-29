@@ -57,9 +57,9 @@ function ProfileTrades() {
   const [filters] = useFilters();
   const [type] = useTypeFilter();
 
-  const query = useSuspenseInfiniteQuery({
+  const query = useSuspenseInfiniteQuery<TransferResult>({
     queryKey: ["transfers", profile.address, type, filters, selectedArtistIds],
-    queryFn: ({ pageParam }: { pageParam?: { timestamp: string; id: string } }) => {
+    queryFn: ({ pageParam }) => {
       const url = new URL(`/api/transfers/${profile.address}`, getBaseURL());
       return ofetch<TransferResult>(url.toString(), {
         query: {

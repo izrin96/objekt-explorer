@@ -1,12 +1,12 @@
 import { ofetch } from "ofetch";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
-import type { OwnedObjekt, OwnedObjektsResult } from "@/lib/universal/objekts";
+import type { OwnedObjekt, OwnedObjektsCursor, OwnedObjektsResult } from "@/lib/universal/objekts";
 import { getBaseURL } from "@/lib/utils";
 
 export async function fetchOwnedObjektsByCursor(
   address: string,
   artistIds: ValidArtist[],
-  cursor?: { receivedAt: string; id: number },
+  cursor?: OwnedObjektsCursor,
 ) {
   const url = new URL(`/api/objekts/owned-by/${address}`, getBaseURL());
   const result = await ofetch<OwnedObjektsResult>(url.toString(), {
@@ -20,7 +20,7 @@ export async function fetchOwnedObjektsByCursor(
 
 export async function fetchOwnedObjekts(address: string, artistIds: ValidArtist[]) {
   let allObjekts: OwnedObjekt[] = [];
-  let cursor: { receivedAt: string; id: number } | undefined;
+  let cursor: OwnedObjektsCursor | undefined;
 
   // Loop until there are no more pages
   while (true) {

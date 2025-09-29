@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import type { Transfer } from "../server/db/indexer/schema";
+import type { Cursor } from "./common";
 import { validArtists, validClasses, validOnlineTypes, validSeasons } from "./cosmo/common";
 import type { OwnedObjekt } from "./objekts";
 
@@ -16,15 +17,8 @@ export type ActivityData = {
 
 export type ActivityResponse = {
   items: ActivityData[];
-  nextCursor: z.infer<typeof cursorSchema>;
+  nextCursor?: Cursor;
 };
-
-const cursorSchema = z
-  .object({
-    timestamp: z.string(),
-    id: z.string(),
-  })
-  .optional();
 
 export const validType = ["all", "mint", "transfer", "spin"] as const;
 export type ValidType = (typeof validType)[number];

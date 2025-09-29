@@ -8,7 +8,11 @@ import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { validArtists } from "@/lib/universal/cosmo/common";
-import { mapOwnedObjekt, type OwnedObjektsResult } from "@/lib/universal/objekts";
+import {
+  mapOwnedObjekt,
+  type OwnedObjektsResult,
+  ownedObjektCursorSchema,
+} from "@/lib/universal/objekts";
 
 type Params = {
   params: Promise<{
@@ -20,12 +24,7 @@ const PER_PAGE = 10000;
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),
-  cursor: z
-    .object({
-      receivedAt: z.string(),
-      id: z.number(),
-    })
-    .optional(),
+  cursor: ownedObjektCursorSchema,
 });
 
 export async function GET(request: NextRequest, props: Params) {
@@ -83,10 +82,10 @@ export async function GET(request: NextRequest, props: Params) {
         ...(query.cursor
           ? [
               or(
-                lt(objekts.receivedAt, query.cursor.receivedAt),
+                lt(objekts.receivedAt, new Date(query.cursor.receivedAt)),
                 and(
-                  eq(objekts.receivedAt, query.cursor.receivedAt),
-                  lt(objekts.id, query.cursor.id),
+                  eq(objekts.receivedAt, new Date(query.cursor.receivedAt)),
+                  lt(objekts.id, Number(query.cursor.id)),
                 ),
               ),
             ]
@@ -100,7 +99,7 @@ export async function GET(request: NextRequest, props: Params) {
   const nextCursor = hasNext
     ? {
         receivedAt: results[PER_PAGE - 1].objekt.receivedAt,
-        id: Number(results[PER_PAGE - 1].objekt.id),
+        id: results[PER_PAGE - 1].objekt.id.toString(),
       }
     : undefined;
 

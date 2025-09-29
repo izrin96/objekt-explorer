@@ -10,13 +10,14 @@ import {
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+import type { ParsedDate } from "@/lib/universal/common";
 
 export const collections = pgTable(
   "collection",
   {
     id: uuid("id").primaryKey(),
     contract: varchar("contract", { length: 42 }).notNull(),
-    createdAt: timestamp("created_at", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at").notNull(),
     slug: varchar("slug", { length: 255 }).notNull(),
     collectionId: varchar("collection_id", { length: 255 }).notNull(),
     season: varchar("season", { length: 32 }).notNull(),
@@ -55,8 +56,8 @@ export const objekts = pgTable(
   {
     id: serial("id").primaryKey(),
     owner: varchar("owner", { length: 42 }).notNull(),
-    mintedAt: timestamp("minted_at", { mode: "string" }).notNull(),
-    receivedAt: timestamp("received_at", { mode: "string" }).notNull(),
+    mintedAt: timestamp("minted_at").notNull(),
+    receivedAt: timestamp("received_at").notNull(),
     serial: integer("serial").notNull(),
     transferable: boolean("transferable").notNull(),
     collectionId: varchar("collection_id", { length: 36 })
@@ -84,7 +85,7 @@ export const transfers = pgTable(
     hash: varchar("hash", { length: 255 }).notNull(),
     from: varchar("from", { length: 42 }).notNull(),
     to: varchar("to", { length: 42 }).notNull(),
-    timestamp: timestamp("timestamp", { mode: "string" }).notNull(),
+    timestamp: timestamp("timestamp").notNull(),
     tokenId: integer("token_id").notNull(),
     objektId: varchar("objekt_id", { length: 12 })
       .notNull()
@@ -128,7 +129,7 @@ export const votes = pgTable(
   {
     id: uuid("id").primaryKey(),
     from: varchar("from", { length: 42 }).notNull(),
-    createdAt: timestamp("created_at", { mode: "string" }).notNull(),
+    createdAt: timestamp("created_at").notNull(),
     contract: varchar("contract", { length: 42 }).notNull(),
     pollId: integer("poll_id").notNull(),
     candidateId: integer("candidate_id"),
@@ -142,8 +143,25 @@ export const votes = pgTable(
   ],
 );
 
-export type Transfer = typeof transfers.$inferSelect;
-export type Objekt = typeof objekts.$inferSelect;
-export type Collection = typeof collections.$inferSelect;
+export type TransferSelect = typeof transfers.$inferSelect;
+export type ObjektSelect = typeof objekts.$inferSelect;
+export type CollectionSelect = typeof collections.$inferSelect;
 export type ComoBalance = typeof comoBalances.$inferSelect;
-export type Vote = typeof votes.$inferSelect;
+export type VoteSelect = typeof votes.$inferSelect;
+
+export type Objekt<T = ParsedDate> = Omit<ObjektSelect, "mintedAt" | "receivedAt"> & {
+  mintedAt: T;
+  receivedAt: T;
+};
+
+export type Collection<T = ParsedDate> = Omit<CollectionSelect, "createdAt"> & {
+  createdAt: T;
+};
+
+export type Transfer<T = ParsedDate> = Omit<TransferSelect, "timestamp"> & {
+  timestamp: T;
+};
+
+export type Vote<T = ParsedDate> = Omit<VoteSelect, "createdAt"> & {
+  createdAt: T;
+};

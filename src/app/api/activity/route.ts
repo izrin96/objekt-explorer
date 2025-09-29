@@ -51,8 +51,11 @@ export async function GET(request: NextRequest) {
         ...(cursor
           ? [
               or(
-                lt(transfers.timestamp, cursor.timestamp),
-                and(eq(transfers.timestamp, cursor.timestamp), lt(transfers.id, cursor.id)),
+                lt(transfers.timestamp, new Date(cursor.timestamp)),
+                and(
+                  eq(transfers.timestamp, new Date(cursor.timestamp)),
+                  lt(transfers.id, cursor.id),
+                ),
               ),
             ]
           : []),

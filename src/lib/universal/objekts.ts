@@ -1,5 +1,7 @@
+import z from "zod/v4";
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
 import { replaceUrlSize } from "../utils";
+import type { ParsedDate } from "./common";
 
 export type IndexedObjekt = Omit<
   Collection,
@@ -80,14 +82,14 @@ export function mapObjektWithTag(objekt: ValidObjekt): ValidObjekt {
   };
 }
 
-export function overrideCollection(objekt: ValidObjekt) {
+export function overrideCollection(collection: IndexedObjekt) {
   // temporary fix accent color for some collection
-  const accentColor = overrideAccents[objekt.slug];
-  const fontColor = overrideFonts[objekt.slug];
+  const accentColor = overrideAccents[collection.slug];
+  const fontColor = overrideFonts[collection.slug];
 
   return {
-    backgroundColor: accentColor ?? objekt.backgroundColor,
-    textColor: fontColor ?? objekt.textColor,
+    backgroundColor: accentColor ?? collection.backgroundColor,
+    textColor: fontColor ?? collection.textColor,
   };
 }
 
@@ -239,6 +241,10 @@ const shortformMembers: Record<string, string> = {
   ham: "SeoYeon",
   ssaem: "SoHyun",
   park: "SoHyun",
+  mg: "MinGyeol",
+  hh: "HwanHee",
+  jh: "JuHo",
+  ti: "TaeIn",
 };
 
 export function getMemberShortKeys(value: string) {
@@ -248,7 +254,7 @@ export function getMemberShortKeys(value: string) {
 export type ObjektTransfer = {
   id: string;
   to: string;
-  timestamp: string;
+  timestamp: ParsedDate;
   nickname?: string | null;
 };
 
@@ -260,11 +266,17 @@ export type ObjektTransferResult = {
   transfers: ObjektTransfer[];
 };
 
+export const ownedObjektCursorSchema = z
+  .object({
+    receivedAt: z.string().or(z.date()),
+    id: z.string(),
+  })
+  .optional();
+
+export type OwnedObjektsCursor = z.infer<typeof ownedObjektCursorSchema>;
+
 export type OwnedObjektsResult = {
-  nextCursor?: {
-    receivedAt: string;
-    id: number;
-  };
+  nextCursor?: OwnedObjektsCursor;
   objekts: OwnedObjekt[];
 };
 
