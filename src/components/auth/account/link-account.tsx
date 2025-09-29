@@ -79,29 +79,31 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
   );
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex flex-1 items-center gap-2 text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2 text-sm">
         <span>{provider.label}</span>
         <span className="text-muted-fg text-xs">{accountId}</span>
       </div>
       <PullProfileModal provider={provider} open={pullOpen} setOpen={setPullOpen} />
-      <Button intent="outline" size="xs" onClick={() => setPullOpen(true)}>
-        <ArrowsClockwiseIcon data-slot="icon" />
-        Refresh
-      </Button>
-      <Button
-        intent="danger"
-        size="xs"
-        onClick={() =>
-          unlinkAccount.mutate({
-            providerId: provider.id,
-            accountId: accountId,
-          })
-        }
-      >
-        <LinkBreakIcon data-slot="icon" />
-        Unlink
-      </Button>
+      <div className="flex gap-2">
+        <Button intent="outline" size="xs" onClick={() => setPullOpen(true)}>
+          <ArrowsClockwiseIcon data-slot="icon" />
+          Refresh
+        </Button>
+        <Button
+          intent="danger"
+          size="xs"
+          onClick={() =>
+            unlinkAccount.mutate({
+              providerId: provider.id,
+              accountId: accountId,
+            })
+          }
+        >
+          <LinkBreakIcon data-slot="icon" />
+          Unlink
+        </Button>
+      </div>
     </div>
   );
 }
@@ -124,7 +126,7 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
   });
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <span className="text-sm">{provider.label}</span>
       <Button intent="outline" size="xs" onClick={() => linkAccount.mutate()}>
         <LinkIcon data-slot="icon" />

@@ -119,9 +119,8 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
           )}
         </QueryErrorResetBoundary>
       </SheetBody>
-      <SheetFooter>
+      <SheetFooter id="submit-form">
         <SheetClose>Cancel</SheetClose>
-        <div id="submit-form"></div>
       </SheetFooter>
     </SheetContent>
   );

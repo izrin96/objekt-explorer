@@ -183,7 +183,7 @@ type EditListModalProps = {
 
 export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
   return (
-    <SheetContent isOpen={open} onOpenChange={setOpen}>
+    <SheetContent className="sm:max-w-sm" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
         <SheetTitle>Edit list</SheetTitle>
         <SheetDescription>Manage your list</SheetDescription>
@@ -205,9 +205,8 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
           )}
         </QueryErrorResetBoundary>
       </SheetBody>
-      <SheetFooter>
+      <SheetFooter id="submit-form">
         <SheetClose>Cancel</SheetClose>
-        <div id="submit-form"></div>
       </SheetFooter>
     </SheetContent>
   );

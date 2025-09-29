@@ -56,9 +56,8 @@ export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
           )}
         </QueryErrorResetBoundary>
       </ModalBody>
-      <ModalFooter>
+      <ModalFooter id="submit-form">
         <ModalClose>Cancel</ModalClose>
-        <div id="submit-form"></div>
       </ModalFooter>
     </ModalContent>
   );

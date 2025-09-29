@@ -57,9 +57,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
           )}
         </QueryErrorResetBoundary>
       </ModalBody>
-      <ModalFooter className="flex justify-end">
-        <div id="submit-form"></div>
-      </ModalFooter>
+      <ModalFooter className="flex justify-end" id="submit-form"></ModalFooter>
     </ModalContent>
   );
 }
