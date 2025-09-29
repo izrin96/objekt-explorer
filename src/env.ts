@@ -3,9 +3,8 @@ import * as z from "zod/v4";
 
 export const env = createEnv({
   server: {
-    INDEXER_PROXY_KEY: z.string(),
-    INDEXER_PROXY_URL: z.string(),
     DATABASE_URL: z.string(),
+    INDEXER_DATABASE_URL: z.string(),
     DISCORD_CLIENT_ID: z.string(),
     DISCORD_CLIENT_SECRET: z.string(),
     TWITTER_CLIENT_ID: z.string(),

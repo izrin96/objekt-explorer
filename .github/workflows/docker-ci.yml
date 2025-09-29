@@ -38,8 +38,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           secrets: |
-            indexer_proxy_key=${{ secrets.INDEXER_PROXY_KEY }}
-            indexer_proxy_url=${{ secrets.INDEXER_PROXY_URL }}
             umami_script_url=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
             umami_website_id=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
             activity_websocket_url=${{ secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL }}
@@ -51,6 +49,7 @@ jobs:
             browser_cdp_url=${{ secrets.BROWSER_CDP_URL }}
             site_url=${{ secrets.NEXT_PUBLIC_SITE_URL }}
             database_url=${{ secrets.DATABASE_URL }}
+            indexer_database_url=${{ secrets.INDEXER_DATABASE_URL }}
             s3_endpoint=${{ secrets.S3_ENDPOINT }}
             s3_access_key=${{ secrets.S3_ACCESS_KEY }}
             s3_secret_key=${{ secrets.S3_SECRET_KEY }}

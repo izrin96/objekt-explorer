@@ -34,9 +34,7 @@ COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN --mount=type=secret,id=indexer_proxy_key \
-    --mount=type=secret,id=indexer_proxy_url \
-    --mount=type=secret,id=umami_script_url \
+RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=umami_website_id \
     --mount=type=secret,id=activity_websocket_url \
     --mount=type=secret,id=better_auth_secret \
@@ -47,6 +45,7 @@ RUN --mount=type=secret,id=indexer_proxy_key \
     --mount=type=secret,id=browser_cdp_url \
     --mount=type=secret,id=site_url \
     --mount=type=secret,id=database_url \
+    --mount=type=secret,id=indexer_database_url \
     --mount=type=secret,id=s3_endpoint \
     --mount=type=secret,id=s3_access_key \
     --mount=type=secret,id=s3_secret_key \
@@ -62,8 +61,6 @@ RUN --mount=type=secret,id=indexer_proxy_key \
     --mount=type=secret,id=privy_app_secret \
     --mount=type=secret,id=privy_abs_app_id \
     --mount=type=secret,id=redis_url \
-    export INDEXER_PROXY_KEY=$(cat /run/secrets/indexer_proxy_key) && \
-    export INDEXER_PROXY_URL=$(cat /run/secrets/indexer_proxy_url) && \
     export NEXT_PUBLIC_UMAMI_SCRIPT_URL=$(cat /run/secrets/umami_script_url) && \
     export NEXT_PUBLIC_UMAMI_WEBSITE_ID=$(cat /run/secrets/umami_website_id) && \
     export NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL=$(cat /run/secrets/activity_websocket_url) && \
@@ -75,6 +72,7 @@ RUN --mount=type=secret,id=indexer_proxy_key \
     export BROWSER_CDP_URL=$(cat /run/secrets/browser_cdp_url) && \
     export NEXT_PUBLIC_SITE_URL=$(cat /run/secrets/site_url) && \
     export DATABASE_URL=$(cat /run/secrets/database_url) && \
+    export INDEXER_DATABASE_URL=$(cat /run/secrets/indexer_database_url) && \
     export S3_ENDPOINT=$(cat /run/secrets/s3_endpoint) && \
     export S3_ACCESS_KEY=$(cat /run/secrets/s3_access_key) && \
     export S3_SECRET_KEY=$(cat /run/secrets/s3_secret_key) && \
