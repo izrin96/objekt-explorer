@@ -125,6 +125,8 @@ const overrideFonts: Record<string, string> = {
 
 // list taken from teamreflex/cosmo-web
 export const unobtainables = [
+  // streaming event
+  "divine01-haseul-331z",
   // artms burn release celebration
   "cream01-heejin-333z",
   "cream01-haseul-333z",
