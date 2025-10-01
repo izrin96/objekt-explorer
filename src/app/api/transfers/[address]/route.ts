@@ -124,6 +124,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         ...(query.class.length ? [inArray(collections.class, query.class)] : []),
         ...(query.on_offline.length ? [inArray(collections.onOffline, query.on_offline)] : []),
         ...(query.collection.length ? [inArray(collections.collectionNo, query.collection)] : []),
+        ne(collections.slug, "empty-collection"),
       ),
     )
     .orderBy(desc(transfers.timestamp), desc(transfers.id))

@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, lt, or } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
 import { getSession } from "@/lib/server/auth";
@@ -90,6 +90,7 @@ export async function GET(request: NextRequest, props: Params) {
               ),
             ]
           : []),
+        ne(collections.slug, "empty-collection"),
       ),
     )
     .orderBy(desc(objekts.receivedAt), desc(objekts.id))

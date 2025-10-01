@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { desc, inArray } from "drizzle-orm";
+import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { indexer } from "@/lib/server/db/indexer";
@@ -16,12 +16,17 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
 
-  const whereQuery = query.artist.length
-    ? inArray(
-        collections.artist,
-        query.artist.map((a) => a.toLowerCase()),
-      )
-    : undefined;
+  const whereQuery = and(
+    ...(query.artist.length
+      ? [
+          inArray(
+            collections.artist,
+            query.artist.map((a) => a.toLowerCase()),
+          ),
+        ]
+      : []),
+    ne(collections.slug, "empty-collection"),
+  );
 
   const singleResult = await indexer
     .select({
