@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
 import localFont from "next/font/local";
-import ClientProviders from "@/components/client-providers";
+import ClientProviders, { ClientArtistProvider } from "@/components/client-providers";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
@@ -13,7 +13,6 @@ import "../lib/orpc/server";
 import { preconnect } from "react-dom";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
-import { classArtist, seasonArtist } from "@/lib/universal/cosmo/filter-data";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -101,15 +100,12 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         )}
       >
         <NextIntlClientProvider>
-          <ClientProviders
-            artists={artists}
-            selectedArtistIds={selectedArtistIds}
-            season={seasonArtist}
-            classes={classArtist}
-          >
-            <Navbar />
-            <main className="mx-auto w-full">{children}</main>
-            <Analytics />
+          <ClientProviders>
+            <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>
+              <Navbar />
+              <main className="mx-auto w-full">{children}</main>
+              <Analytics />
+            </ClientArtistProvider>
           </ClientProviders>
         </NextIntlClientProvider>
       </body>

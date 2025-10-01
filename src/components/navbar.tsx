@@ -1,7 +1,4 @@
-"use client";
-
-import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
-import { motion } from "motion/react";
+import AppLogo from "./app-logo";
 import SelectedArtistFilter from "./filters/filter-selected-artist";
 import { ThemeStyleSwitcher } from "./theme-style-select";
 import { Container, Link } from "./ui";
@@ -14,22 +11,7 @@ export default function Navbar() {
       <div className="-z-1 mask-b-from-40% absolute size-full backdrop-blur-lg"></div>
       <Container className="flex justify-center">
         <div className="flex h-14 grow items-center gap-2">
-          <Link href="/">
-            <motion.div className="flex items-center gap-2" whileHover="hover">
-              <motion.div
-                variants={{
-                  initial: { rotate: 0 },
-                  hover: { rotate: 360 },
-                }}
-                transition={{ duration: 0.4, ease: [0.39, 0.24, 0.3, 1] }}
-              >
-                <CubeIcon size={24} weight="fill" />
-              </motion.div>
-              <span className="hidden select-none truncate font-semibold text-lg sm:block">
-                Objekt Tracker
-              </span>
-            </motion.div>
-          </Link>
+          <AppLogo />
           <div className="flex items-center">
             <Activity />
           </div>

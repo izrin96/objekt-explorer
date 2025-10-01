@@ -8,6 +8,7 @@ import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchOwnedLists } from "@/lib/server/api/routers/list";
 import { getSession, toPublicUser } from "@/lib/server/auth";
+import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 
 type Props = {
   params: Promise<{
@@ -26,14 +27,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function Page(props: Props) {
   const queryClient = getQueryClient();
-  const params = await props.params;
+  const [params, session] = await Promise.all([props.params, getSession()]);
 
-  const list = await getList(params.slug);
+  const [list, lists] = await Promise.all([
+    getList(params.slug),
+    session ? fetchOwnedLists(session.user.id) : undefined,
+  ]);
+
   if (!list) notFound();
-
-  const session = await getSession();
-
-  const lists = session ? await fetchOwnedLists(session.user.id) : undefined;
 
   queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({
@@ -42,6 +43,11 @@ export default async function Page(props: Props) {
       },
     }),
   );
+
+  queryClient.prefetchQuery({
+    queryKey: ["filter-data"],
+    queryFn: fetchFilterData,
+  });
 
   return (
     <ProfileProvider targetList={list} lists={lists} user={toPublicUser(session)}>

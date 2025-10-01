@@ -7,7 +7,9 @@ import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/components/profile-provider";
 import { Container } from "@/components/ui";
 import { getUserByIdentifier } from "@/lib/client-fetching";
+import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession, toPublicUser } from "@/lib/server/auth";
+import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 import { fetchUserProfiles } from "@/lib/server/profile";
 
 type Props = PropsWithChildren<{
@@ -17,16 +19,21 @@ type Props = PropsWithChildren<{
 }>;
 
 export default async function UserCollectionLayout(props: Props) {
+  const queryClient = getQueryClient();
   const [session, params] = await Promise.all([getSession(), props.params]);
   const [targetProfile, profiles] = await Promise.all([
     getUserByIdentifier(params.nickname),
     session ? fetchUserProfiles(session.user.id) : undefined,
   ]);
 
-  if (
-    targetProfile.privateProfile &&
-    !(profiles?.some((a) => a.address === targetProfile.address) ?? false)
-  )
+  queryClient.prefetchQuery({
+    queryKey: ["filter-data"],
+    queryFn: fetchFilterData,
+  });
+
+  const isOwned = profiles?.some((a) => a.address === targetProfile.address) ?? false;
+
+  if (targetProfile.privateProfile && !isOwned)
     return (
       <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
         <LockIcon size={72} weight="thin" />
@@ -46,7 +53,7 @@ export default async function UserCollectionLayout(props: Props) {
         <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
           <ProfileHeader user={targetProfile} />
           <ProfileTabs path={targetProfile.nickname ?? targetProfile.address} />
-          {props.children}
+          <HydrateClient client={queryClient}>{props.children}</HydrateClient>
         </div>
       </DynamicContainer>
     </ProfileProvider>

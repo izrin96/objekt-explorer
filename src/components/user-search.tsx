@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+import { getBaseURL } from "@/lib/utils";
 import {
   Button,
   CommandMenu,
@@ -31,7 +32,8 @@ export default function UserSearch() {
   const { data, isPending } = useQuery({
     queryKey: ["user-search", debouncedQuery],
     queryFn: () => {
-      return ofetch<CosmoSearchResult>(`/api/user/search`, {
+      const url = new URL("/api/user/search", getBaseURL());
+      return ofetch<CosmoSearchResult>(url.toString(), {
         query: { query: debouncedQuery },
       }).then((res) => res.results);
     },

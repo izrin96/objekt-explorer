@@ -18,7 +18,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
-import { OBJEKT_CONTRACT } from "@/lib/utils";
+import { getBaseURL, OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import ErrorFallbackRender from "../error-boundary";
 import {
@@ -46,8 +46,10 @@ type TradeViewProps = {
 
 const fetchObjektsQuery = (slug: string) => ({
   queryKey: ["objekts", "list", slug],
-  queryFn: async () =>
-    await ofetch<{ serials: number[] }>(`/api/objekts/list/${slug}`).then((res) => res.serials),
+  queryFn: () => {
+    const url = new URL(`/api/objekts/list/${slug}`, getBaseURL());
+    return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
+  },
 });
 
 export default function TradeView({ ...props }: TradeViewProps) {
@@ -182,8 +184,10 @@ type TransferItem = ObjektTransferResult["transfers"][number];
 function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
   const t = useTranslations("objekt");
   const { data, status, refetch } = useQuery({
-    queryFn: async () =>
-      await ofetch<ObjektTransferResult>(`/api/objekts/transfers/${objekt.slug}/${serial}`),
+    queryFn: () => {
+      const url = new URL(`/api/objekts/transfers/${objekt.slug}/${serial}`, getBaseURL());
+      return ofetch<ObjektTransferResult>(url.toString());
+    },
     queryKey: ["objekts", "transfer", objekt.slug, serial],
     retry: 1,
     staleTime: 0,

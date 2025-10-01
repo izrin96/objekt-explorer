@@ -20,7 +20,7 @@ export const validSortDirection = ["desc", "asc"] as const;
 export type ValidSortDirection = (typeof validSortDirection)[number];
 
 // seasons
-// todo: fetch from db
+// todo: reorganize
 export const seasonColors = [
   "#FFDD00",
   "#75FB4C",
@@ -31,7 +31,8 @@ export const seasonColors = [
   // for idntt
   "#25347C",
   "#619AFF",
-];
+  "#B5315A",
+] as const;
 export const validSeasons = [
   "Atom01",
   "Binary01",
@@ -42,8 +43,12 @@ export const validSeasons = [
   // for idntt
   "Spring25",
   "Summer25",
+  "Autumn25",
 ] as const;
 export type ValidSeason = (typeof validSeasons)[number];
+
+export const validFourSeason = ["Spring", "Summer", "Autumn", "Winter"] as const;
+export type ValidFourSeason = (typeof validFourSeason)[number];
 
 // classes
 export const validClasses = [

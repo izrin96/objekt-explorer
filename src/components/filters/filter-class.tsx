@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidClass } from "@/lib/universal/cosmo/common";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
@@ -13,7 +13,7 @@ type Props = {
 };
 
 export default function ClassFilter({ hideEtc = false }: Props) {
-  const { selectedClass } = useCosmoArtist();
+  const { classes } = useFilterData();
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.class);
@@ -28,7 +28,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
     [setFilters],
   );
 
-  const availableClasses = selectedClass.filter((s) =>
+  const availableClasses = classes.filter((s) =>
     hideEtc ? ["Zero", "Welcome"].includes(s) === false : true,
   );
 

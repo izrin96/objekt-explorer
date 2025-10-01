@@ -7,12 +7,9 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type PropsWithChildren, useLayoutEffect, useState } from "react";
 import { RouterProvider } from "react-aria-components";
 import { ThemeProvider } from "@/components/theme-provider";
-import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import { CosmoArtistProvider, type CosmoArtistProviderProps } from "@/hooks/use-cosmo-artist";
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { createQueryClient } from "@/lib/query/client";
-import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
-import type { ValidArtist } from "@/lib/universal/cosmo/common";
-import type { ClassArtist, SeasonArtist } from "@/lib/universal/cosmo/filter-data";
 import { Toast } from "./ui";
 
 declare module "react-aria-components" {
@@ -21,14 +18,7 @@ declare module "react-aria-components" {
   }
 }
 
-type Props = {
-  artists: CosmoArtistWithMembersBFF[];
-  selectedArtistIds: ValidArtist[];
-  season: SeasonArtist[];
-  classes: ClassArtist[];
-};
-
-export default function ClientProviders({ children, ...props }: PropsWithChildren<Props>) {
+export default function ClientProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => createQueryClient());
 
   return (
@@ -44,7 +34,7 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
             <Toast />
             <div className="texture"></div>
             <NuqsAdapter>
-              <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>
+              {children}
               <ReactQueryDevtools />
             </NuqsAdapter>
           </ThemeStyleProvider>
@@ -54,7 +44,7 @@ export default function ClientProviders({ children, ...props }: PropsWithChildre
   );
 }
 
-export function ThemeStyleProvider({ children }: { children: React.ReactNode }) {
+export function ThemeStyleProvider({ children }: PropsWithChildren) {
   const { themeStyle } = useThemeStyle();
   const [mounted, setMounted] = useState(false);
 
@@ -70,6 +60,13 @@ export function ThemeStyleProvider({ children }: { children: React.ReactNode }) 
   }
 
   return children;
+}
+
+export function ClientArtistProvider({
+  children,
+  ...props
+}: PropsWithChildren<CosmoArtistProviderProps>) {
+  return <CosmoArtistProvider {...props}>{children}</CosmoArtistProvider>;
 }
 
 function AppRouterProvider({ children }: PropsWithChildren) {

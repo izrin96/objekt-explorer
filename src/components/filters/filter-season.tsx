@@ -3,13 +3,13 @@
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidSeason } from "@/lib/universal/cosmo/common";
 import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
 
 export default function SeasonFilter() {
-  const { selectedSeason } = useCosmoArtist();
+  const { seasons } = useFilterData();
   const t = useTranslations("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.season);
@@ -30,7 +30,7 @@ export default function SeasonFilter() {
         {t("season")}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
-        {selectedSeason.map((item) => (
+        {seasons.map((item) => (
           <MenuItem key={item} id={item} textValue={item}>
             <MenuLabel>{item}</MenuLabel>
           </MenuItem>
