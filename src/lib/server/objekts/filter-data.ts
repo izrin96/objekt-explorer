@@ -27,9 +27,9 @@ export async function fetchSeasonMap() {
   for (const artist of validArtists) {
     const items = result.filter((a) => a.artist === artist.toLowerCase());
     for (const item of items) {
-      const artistMap = seasonArtistMap.get(item.artist);
+      const artistMap = seasonArtistMap.get(artist);
       if (!artistMap) {
-        seasonArtistMap.set(item.artist, [item.season]);
+        seasonArtistMap.set(artist, [item.season]);
       } else {
         artistMap.push(item.season);
       }
