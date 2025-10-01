@@ -31,7 +31,7 @@ export async function GET(_: Request, props: Params) {
     .where(
       and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, Number(params.serial))),
     )
-    .orderBy(desc(transfers.timestamp), desc(transfers.id));
+    .orderBy(desc(transfers.id));
 
   if (!results.length)
     return Response.json({

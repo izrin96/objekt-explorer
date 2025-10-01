@@ -2,7 +2,6 @@ import z from "zod/v4";
 
 export const cursorSchema = z
   .object({
-    timestamp: z.string().or(z.date()),
     id: z.string(),
   })
   .optional();

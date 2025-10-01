@@ -1,6 +1,5 @@
-import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import { z } from "zod/v4";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
@@ -10,17 +9,11 @@ import {
   type ActivityResponse,
   activitySchema,
 } from "@/lib/universal/activity";
+import { cursorSchema } from "@/lib/universal/common";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PAGE_SIZE = 300;
-
-const cursorSchema = z
-  .object({
-    timestamp: z.string(),
-    id: z.string(),
-  })
-  .optional();
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -48,17 +41,7 @@ export async function GET(request: NextRequest) {
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .where(
       and(
-        ...(cursor
-          ? [
-              or(
-                lt(transfers.timestamp, new Date(cursor.timestamp)),
-                and(
-                  eq(transfers.timestamp, new Date(cursor.timestamp)),
-                  lt(transfers.id, cursor.id),
-                ),
-              ),
-            ]
-          : []),
+        ...(cursor ? [lt(transfers.id, cursor.id)] : []),
         ...(query.type === "mint" ? [eq(transfers.from, NULL_ADDRESS)] : []),
         ...(query.type === "transfer"
           ? [and(ne(transfers.from, NULL_ADDRESS), ne(transfers.to, SPIN_ADDRESS))]
@@ -80,7 +63,7 @@ export async function GET(request: NextRequest) {
         ne(collections.slug, "empty-collection"),
       ),
     )
-    .orderBy(desc(transfers.timestamp), desc(transfers.id))
+    .orderBy(desc(transfers.id))
     .limit(PAGE_SIZE + 1);
 
   const slicedResults = transferResults.slice(0, PAGE_SIZE);
@@ -110,7 +93,6 @@ export async function GET(request: NextRequest) {
   const hasNextPage = transferResults.length > PAGE_SIZE;
   const nextCursor = hasNextPage
     ? {
-        timestamp: transferResults[PAGE_SIZE - 1].transfer.timestamp,
         id: transferResults[PAGE_SIZE - 1].transfer.id,
       }
     : undefined;

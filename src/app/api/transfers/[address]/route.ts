@@ -1,12 +1,12 @@
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
-import { z } from "zod/v4";
 import { getSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
+import { cursorSchema } from "@/lib/universal/common";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import {
   type TransferParams,
@@ -16,13 +16,6 @@ import {
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PER_PAGE = 150;
-
-const cursorSchema = z
-  .object({
-    timestamp: z.string(),
-    id: z.string(),
-  })
-  .optional();
 
 export async function GET(request: NextRequest, props: { params: Promise<{ address: string }> }) {
   const [session, params] = await Promise.all([getSession(), props.params]);
@@ -100,17 +93,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         ...(query.type === "spin"
           ? [and(eq(transfers.from, params.address.toLowerCase()), eq(transfers.to, SPIN_ADDRESS))]
           : []),
-        ...(cursor
-          ? [
-              or(
-                lt(transfers.timestamp, new Date(cursor.timestamp)),
-                and(
-                  eq(transfers.timestamp, new Date(cursor.timestamp)),
-                  lt(transfers.id, cursor.id),
-                ),
-              ),
-            ]
-          : []),
+        ...(cursor ? [lt(transfers.id, cursor.id)] : []),
         ...(query.artist.length
           ? [
               inArray(
@@ -127,13 +110,12 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         ne(collections.slug, "empty-collection"),
       ),
     )
-    .orderBy(desc(transfers.timestamp), desc(transfers.id))
+    .orderBy(desc(transfers.id))
     .limit(PER_PAGE + 1);
 
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
     ? {
-        timestamp: results[PER_PAGE - 1].transfer.timestamp,
         id: results[PER_PAGE - 1].transfer.id,
       }
     : undefined;
