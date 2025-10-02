@@ -59,8 +59,6 @@ jobs:
             ses_mail_from=${{ secrets.SES_MAIL_FROM }}
             live_api_key=${{ secrets.NEXT_PUBLIC_LIVE_API_KEY }}
             bypass_live_key=${{ secrets.BYPASS_LIVE_KEY }}
-            upstash_redis_rest_url=${{ secrets.UPSTASH_REDIS_REST_URL }}
-            upstash_redis_rest_token=${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
             privy_app_id=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
             privy_app_secret=${{ secrets.PRIVY_APP_SECRET }}
             privy_abs_app_id=${{ secrets.PRIVY_ABS_APP_ID }}

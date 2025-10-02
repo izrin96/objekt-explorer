@@ -55,8 +55,6 @@ RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=ses_mail_from \
     --mount=type=secret,id=live_api_key \
     --mount=type=secret,id=bypass_live_key \
-    --mount=type=secret,id=upstash_redis_rest_url \
-    --mount=type=secret,id=upstash_redis_rest_token \
     --mount=type=secret,id=privy_app_id \
     --mount=type=secret,id=privy_app_secret \
     --mount=type=secret,id=privy_abs_app_id \
@@ -82,8 +80,6 @@ RUN --mount=type=secret,id=umami_script_url \
     export SES_MAIL_FROM=$(cat /run/secrets/ses_mail_from) && \
     export NEXT_PUBLIC_LIVE_API_KEY=$(cat /run/secrets/live_api_key) && \
     export BYPASS_LIVE_KEY=$(cat /run/secrets/bypass_live_key) && \
-    export UPSTASH_REDIS_REST_URL=$(cat /run/secrets/upstash_redis_rest_url) && \
-    export UPSTASH_REDIS_REST_TOKEN=$(cat /run/secrets/upstash_redis_rest_token) && \
     export NEXT_PUBLIC_PRIVY_APP_ID=$(cat /run/secrets/privy_app_id) && \
     export PRIVY_APP_SECRET=$(cat /run/secrets/privy_app_secret) && \
     export PRIVY_ABS_APP_ID=$(cat /run/secrets/privy_abs_app_id) && \

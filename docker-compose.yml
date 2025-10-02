@@ -1,11 +1,11 @@
 services:
   postgres:
     restart: always
-    image: postgres:latest
+    image: postgres:18
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -49,8 +49,6 @@ services:
       - SES_MAIL_FROM
       - NEXT_PUBLIC_LIVE_API_KEY
       - BYPASS_LIVE_KEY
-      - UPSTASH_REDIS_REST_URL
-      - UPSTASH_REDIS_REST_TOKEN
       - NEXT_PUBLIC_PRIVY_APP_ID
       - PRIVY_APP_SECRET
       - PRIVY_ABS_APP_ID

@@ -18,8 +18,6 @@ export const env = createEnv({
     SES_SECRET_KEY: z.string(),
     SES_MAIL_FROM: z.string(),
     BYPASS_LIVE_KEY: z.string().optional(),
-    UPSTASH_REDIS_REST_URL: z.string(),
-    UPSTASH_REDIS_REST_TOKEN: z.string(),
     PRIVY_APP_SECRET: z.string(),
     PRIVY_ABS_APP_ID: z.string(),
     REDIS_URL: z.string(),
