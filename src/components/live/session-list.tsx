@@ -10,7 +10,11 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import type { LiveSession } from "@/lib/universal/cosmo/live";
 import { getBaseURL } from "@/lib/utils";
 import ErrorFallbackRender from "../error-boundary";
-import { Avatar, Badge, Link, Loader, Tab, TabList, TabPanel, Tabs } from "../ui";
+import { Avatar } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { Link } from "../ui/link";
+import { Loader } from "../ui/loader";
+import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
 
 export default function LiveSessionListRender() {
   const { selectedArtists } = useCosmoArtist();

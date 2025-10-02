@@ -8,24 +8,28 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
+import { orpc } from "@/lib/orpc/client";
+import { mimeTypes, validColumns } from "@/lib/utils";
+import "react-advanced-cropper/dist/style.css";
+import { useRouter } from "next/navigation";
+import Portal from "@/components/portal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/field";
+import { FileTrigger } from "@/components/ui/file-trigger";
+import { Form } from "@/components/ui/form";
+import { Link } from "@/components/ui/link";
+import { Loader } from "@/components/ui/loader";
 import {
-  Button,
-  Checkbox,
-  FileTrigger,
-  Form,
-  Label,
-  Link,
-  Loader,
   ModalClose,
   ModalContent,
   ModalDescription,
   ModalFooter,
   ModalHeader,
   ModalTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
+} from "@/components/ui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
   SheetBody,
   SheetClose,
   SheetContent,
@@ -33,12 +37,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui";
-import { orpc } from "@/lib/orpc/client";
-import { mimeTypes, validColumns } from "@/lib/utils";
-import "react-advanced-cropper/dist/style.css";
-import { useRouter } from "next/navigation";
-import Portal from "@/components/portal";
+} from "@/components/ui/sheet";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 

@@ -5,7 +5,8 @@ import { ofetch } from "ofetch";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import type { CollectionMetadata, ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, getEdition } from "@/lib/utils";
-import { Badge, Skeleton } from "../ui";
+import { Badge } from "../ui/badge";
+import { Skeleton } from "../ui/skeleton";
 
 type PillProps = {
   label: string;

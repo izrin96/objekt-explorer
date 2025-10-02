@@ -4,7 +4,9 @@ import { useTranslations } from "next-intl";
 import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
-import { Button, Popover, PopoverContent, Slider } from "../ui";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent } from "../ui/popover";
+import { Slider } from "../ui/slider";
 
 export default function ColorSensitivityFilter() {
   const t = useTranslations("filter");

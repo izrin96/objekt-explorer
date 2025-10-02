@@ -1,7 +1,8 @@
 import AppLogo from "./app-logo";
 import SelectedArtistFilter from "./filters/filter-selected-artist";
 import { ThemeStyleSwitcher } from "./theme-style-select";
-import { Container, Link } from "./ui";
+import { Container } from "./ui/container";
+import { Link } from "./ui/link";
 import UserNav from "./user-nav";
 import UserSearch from "./user-search";
 

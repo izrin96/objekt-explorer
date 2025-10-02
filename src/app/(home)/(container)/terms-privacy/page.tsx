@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Link } from "@/components/ui";
+import { Link } from "@/components/ui/link";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

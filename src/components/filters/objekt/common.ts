@@ -1,4 +1,4 @@
-import type { ButtonProps } from "@/components/ui";
+import type { ButtonProps } from "@/components/ui/button";
 
 export type ObjektActionProps = {
   handleAction: (open: () => void) => void;

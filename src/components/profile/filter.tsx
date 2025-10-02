@@ -25,7 +25,7 @@ import TransferableFilter from "../filters/filter-transferable";
 import UnownedFilter from "../filters/filter-unowned";
 import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
-import { Button } from "../ui";
+import { Button } from "../ui/button";
 import GenerateDiscordFormatModalProfile from "./modal/generate-discord";
 
 export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {

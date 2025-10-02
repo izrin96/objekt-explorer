@@ -2,7 +2,7 @@
 
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { motion } from "motion/react";
-import { Link } from "./ui";
+import { Link } from "./ui/link";
 
 export default function AppLogo() {
   return (

@@ -6,7 +6,9 @@ import { useProfileAuthed } from "@/hooks/use-user";
 import type { PublicProfile } from "@/lib/universal/user";
 import { parseNickname } from "@/lib/utils";
 import { EditProfileModal } from "../link/modal/manage-link";
-import { Avatar, Button, buttonStyles, Link } from "../ui";
+import { Avatar } from "../ui/avatar";
+import { Button, buttonStyles } from "../ui/button";
+import { Link } from "../ui/link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const [editOpen, setEditOpen] = useState(false);

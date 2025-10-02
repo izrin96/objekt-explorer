@@ -10,7 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { CosmoArtistProvider, type CosmoArtistProviderProps } from "@/hooks/use-cosmo-artist";
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { createQueryClient } from "@/lib/query/client";
-import { Toast } from "./ui";
+import { Toast } from "./ui/toast";
 
 declare module "react-aria-components" {
   interface RouterConfig {

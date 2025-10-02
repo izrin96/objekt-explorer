@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
-import { Button, Form, TextField } from "../ui";
+import { Button } from "../ui/button";
+import { Form } from "../ui/form";
+import { TextField } from "../ui/text-field";
 
 export default function ResetPassword({ token }: { token: string }) {
   const router = useRouter();

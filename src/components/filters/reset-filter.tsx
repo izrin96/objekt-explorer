@@ -2,7 +2,7 @@
 
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
-import { Button } from "../ui";
+import { Button } from "../ui/button";
 
 export default function ResetFilter({
   onReset,

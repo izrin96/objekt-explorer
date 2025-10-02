@@ -5,7 +5,7 @@ import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/prof
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/components/profile-provider";
-import { Container } from "@/components/ui";
+import { Container } from "@/components/ui/container";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession, toPublicUser } from "@/lib/server/auth";

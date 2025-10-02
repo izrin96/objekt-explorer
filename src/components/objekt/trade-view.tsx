@@ -21,22 +21,13 @@ import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts"
 import { getBaseURL, OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import ErrorFallbackRender from "../error-boundary";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  FieldGroup,
-  Input,
-  Link,
-  Loader,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-} from "../ui";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { FieldGroup, Input } from "../ui/field";
+import { Link } from "../ui/link";
+import { Loader } from "../ui/loader";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../ui/table";
 import UserLink from "../user-link";
 
 type TradeViewProps = {

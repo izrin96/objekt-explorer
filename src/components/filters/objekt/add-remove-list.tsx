@@ -2,7 +2,7 @@ import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AddToListModal, RemoveFromListModal } from "@/components/list/modal/manage-objekt";
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import type { ObjektActionProps } from "./common";
 
 export function AddToList({ handleAction, size }: ObjektActionProps) {

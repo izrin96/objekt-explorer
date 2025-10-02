@@ -1,7 +1,7 @@
 "use client";
 
 import { useConfigStore } from "@/hooks/use-config";
-import { Toggle } from "../ui";
+import { Toggle } from "../ui/toggle";
 
 export default function HideLabelFilter() {
   const hideLabel = useConfigStore((a) => a.hideLabel);

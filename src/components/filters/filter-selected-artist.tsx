@@ -7,7 +7,9 @@ import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
-import { Avatar, Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
+import { Avatar } from "../ui/avatar";
+import { Button } from "../ui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
 export default function SelectedArtistFilter() {
   const router = useRouter();

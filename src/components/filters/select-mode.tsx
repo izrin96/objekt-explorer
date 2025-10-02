@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
-import { Button, Toggle, Tooltip, TooltipContent } from "../ui";
+import { Button } from "../ui/button";
+import { Toggle } from "../ui/toggle";
+import { Tooltip, TooltipContent } from "../ui/tooltip";
 
 type Props = {
   children?: ({ handleAction }: { handleAction: (open: () => void) => void }) => ReactNode;

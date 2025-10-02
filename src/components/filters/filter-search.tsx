@@ -5,7 +5,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
-import { Button, Popover, PopoverContent, TextField } from "../ui";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent } from "../ui/popover";
+import { TextField } from "../ui/text-field";
 
 export default function SearchFilter() {
   const [filters, setFilters] = useFilters();

@@ -4,16 +4,16 @@ import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/re
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/field";
 import {
-  Button,
-  Label,
   ModalClose,
   ModalContent,
   ModalDescription,
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui";
+} from "@/components/ui/modal";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";

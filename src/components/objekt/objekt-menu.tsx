@@ -22,7 +22,9 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
-import { Button, Loader, Menu, MenuContent, MenuItem, MenuLabel, MenuSubmenu } from "../ui";
+import { Button } from "../ui/button";
+import { Loader } from "../ui/loader";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSubmenu } from "../ui/menu";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (

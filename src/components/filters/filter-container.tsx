@@ -3,7 +3,7 @@
 import { IconFilter } from "@intentui/icons";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Button } from "../ui";
+import { Button } from "../ui/button";
 
 export function FilterContainer({ children }: React.PropsWithChildren) {
   const t = useTranslations("filter");

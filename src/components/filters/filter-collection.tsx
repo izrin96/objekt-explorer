@@ -5,7 +5,7 @@ import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
-import { MultipleSelect, MultipleSelectItem } from "../ui";
+import { MultipleSelect, MultipleSelectItem } from "../ui/multiple-select";
 
 export default function CollectionFilter() {
   const t = useTranslations("filter");

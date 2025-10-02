@@ -3,18 +3,18 @@
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { CopyButton } from "@/components/copy-button";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
 import {
-  Button,
-  Checkbox,
-  Form,
   ModalBody,
   ModalContent,
   ModalDescription,
   ModalFooter,
   ModalHeader,
   ModalTitle,
-  Textarea,
-} from "@/components/ui";
+} from "@/components/ui/modal";
+import { Textarea } from "@/components/ui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { format, makeMemberOrderedList, mapByMember } from "@/lib/discord-format-utils";
 import type { ValidObjekt } from "@/lib/universal/objekts";

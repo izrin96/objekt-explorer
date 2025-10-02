@@ -8,7 +8,10 @@ import { ErrorBoundary } from "react-error-boundary";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 import ErrorFallbackRender from "../error-boundary";
-import { Button, buttonStyles, Card, CardContent, Link, Menu, MenuContent, MenuItem } from "../ui";
+import { Button, buttonStyles } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Link } from "../ui/link";
+import { Menu, MenuContent, MenuItem } from "../ui/menu";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
 
 export default function MyLinkRender() {

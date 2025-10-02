@@ -2,7 +2,7 @@
 
 import { useIsClient } from "usehooks-ts";
 import { useWide } from "@/hooks/use-wide";
-import { Toggle } from "../ui";
+import { Toggle } from "../ui/toggle";
 
 export default function WideFilter() {
   const { wide, setWide } = useWide();

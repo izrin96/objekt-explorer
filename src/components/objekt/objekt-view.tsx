@@ -4,7 +4,7 @@ import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, type ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
-import { Badge } from "../ui";
+import { Badge } from "../ui/badge";
 import ObjektSidebar from "./objekt-sidebar";
 
 type Props = PropsWithChildren<{

@@ -7,7 +7,8 @@ import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { cn } from "@/utils/classes";
-import { Button, ColorPicker } from "../ui";
+import { Button } from "../ui/button";
+import { ColorPicker } from "../ui/color-picker";
 import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {

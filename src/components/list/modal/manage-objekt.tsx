@@ -7,18 +7,12 @@ import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
 import Portal from "@/components/portal";
-import { useAddToList } from "@/hooks/actions/add-to-list";
-import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
-import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { useTarget } from "@/hooks/use-target";
-import { orpc } from "@/lib/orpc/client";
-import ErrorFallbackRender from "../../error-boundary";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
+import { Link } from "@/components/ui/link";
+import { Loader } from "@/components/ui/loader";
 import {
-  Button,
-  Checkbox,
-  Form,
-  Link,
-  Loader,
   ModalBody,
   ModalClose,
   ModalContent,
@@ -26,12 +20,15 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-  Note,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from "../../ui";
+} from "@/components/ui/modal";
+import { Note } from "@/components/ui/note";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { useAddToList } from "@/hooks/actions/add-to-list";
+import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
+import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { useTarget } from "@/hooks/use-target";
+import { orpc } from "@/lib/orpc/client";
+import ErrorFallbackRender from "../../error-boundary";
 
 export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
   return (

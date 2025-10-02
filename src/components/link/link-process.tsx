@@ -25,8 +25,11 @@ import WhiteFoxIcon from "@/assets/icon-white-fox.png";
 import { orpc } from "@/lib/orpc/client";
 import type { TicketAuth, TicketSuccess } from "@/lib/universal/cosmo/shop/qr-auth";
 import { msToCountdown } from "@/lib/utils";
-import { Button, buttonStyles, Form, Link, Loader } from "../ui";
+import { Button, buttonStyles } from "../ui/button";
+import { Form } from "../ui/form";
 import { InputOTP } from "../ui/input-otp";
+import { Link } from "../ui/link";
+import { Loader } from "../ui/loader";
 import AbstractProcess from "./link-abstract";
 
 function generateQrCode(ticket: string) {

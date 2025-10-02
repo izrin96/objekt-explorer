@@ -22,11 +22,11 @@ import type { User } from "@/lib/server/auth";
 import { parseNickname } from "@/lib/utils";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
+import { Avatar } from "./ui/avatar";
+import { buttonStyles } from "./ui/button";
+import { Link } from "./ui/link";
+import { Loader } from "./ui/loader";
 import {
-  Avatar,
-  buttonStyles,
-  Link,
-  Loader,
   Menu,
   MenuContent,
   MenuHeader,
@@ -36,7 +36,7 @@ import {
   MenuSeparator,
   MenuSubmenu,
   MenuTrigger,
-} from "./ui";
+} from "./ui/menu";
 
 export default function UserNav() {
   const t = useTranslations("nav");

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useFilters } from "@/hooks/use-filters";
-import { Toggle } from "../ui";
+import { Toggle } from "../ui/toggle";
 
 export default function UnownedFilter() {
   const t = useTranslations("filter");

@@ -3,7 +3,14 @@
 import type React from "react";
 import { useState } from "react";
 import type { ValidObjekt } from "@/lib/universal/objekts";
-import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "../ui";
+import {
+  ModalBody,
+  ModalClose,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "../ui/modal";
 import ObjektDetail from "./objekt-detail";
 
 type Props = {

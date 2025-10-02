@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import "./globals.css";
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { Inter } from "next/font/google";
-import { Button } from "@/components/ui";
 
 const inter = Inter({
   variable: "--font-inter",

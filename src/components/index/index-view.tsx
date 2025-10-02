@@ -23,7 +23,7 @@ import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objek
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
-import { Loader } from "../ui";
+import { Loader } from "../ui/loader";
 import Filter from "./filter";
 
 export const IndexRenderDynamic = dynamic(() => Promise.resolve(IndexRender), {

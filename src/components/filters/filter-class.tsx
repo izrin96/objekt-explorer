@@ -6,7 +6,8 @@ import type { Selection } from "react-aria-components";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidClass } from "@/lib/universal/cosmo/common";
-import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
+import { Button } from "../ui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
 type Props = {
   hideEtc?: boolean;

@@ -8,18 +8,9 @@ import { type CSSProperties, Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
 import ErrorFallbackRender from "@/components/error-boundary";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Chart,
-  type ChartConfig,
-  ChartTooltip,
-  ChartTooltipContent,
-  Loader,
-} from "@/components/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Loader } from "@/components/ui/loader";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektFilter } from "@/hooks/use-objekt-filter";

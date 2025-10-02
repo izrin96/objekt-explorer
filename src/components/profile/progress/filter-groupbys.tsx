@@ -2,7 +2,8 @@
 
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui/menu";
 import { useFilters } from "@/hooks/use-filters";
 import type { ValidGroupBy } from "@/lib/universal/cosmo/common";
 

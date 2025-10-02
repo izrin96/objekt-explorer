@@ -1,13 +1,10 @@
 "use client";
 
 import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "./ui/button";
+import { Disclosure, DisclosureGroup, DisclosurePanel, DisclosureTrigger } from "./ui/disclosure";
+import { Link } from "./ui/link";
 import {
-  Button,
-  Disclosure,
-  DisclosureGroup,
-  DisclosurePanel,
-  DisclosureTrigger,
-  Link,
   Modal,
   ModalBody,
   ModalClose,
@@ -16,7 +13,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./ui";
+} from "./ui/modal";
 
 export default function Changelog() {
   return (

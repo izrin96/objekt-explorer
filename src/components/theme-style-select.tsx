@@ -4,7 +4,8 @@ import { DevicesIcon, MoonIcon, SunIcon, SwatchesIcon } from "@phosphor-icons/re
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useThemeStyle, type ValidThemeStyle } from "@/hooks/use-theme-style";
-import { Button, Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator } from "./ui";
+import { Button } from "./ui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator } from "./ui/menu";
 
 interface ThemeStyleItem {
   id: ValidThemeStyle;

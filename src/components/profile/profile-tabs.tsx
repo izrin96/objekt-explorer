@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Tab, TabList, Tabs } from "../ui";
+import { Tab, TabList, Tabs } from "../ui/tabs";
 
 export default function ProfileTabs({ path }: { path: string }) {
   const pathname = usePathname();

@@ -6,20 +6,12 @@ import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../error-boundary";
-import {
-  Button,
-  Card,
-  CardContent,
-  Link,
-  Menu,
-  MenuContent,
-  MenuItem,
-  Note,
-  Tab,
-  TabList,
-  TabPanel,
-  Tabs,
-} from "../ui";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Link } from "../ui/link";
+import { Menu, MenuContent, MenuItem } from "../ui/menu";
+import { Note } from "../ui/note";
+import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
 import { CreateListModal, DeleteListModal, EditListModal } from "./modal/manage-list";
 

@@ -2,7 +2,7 @@
 
 import type { CSSProperties, PropsWithChildren } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
-import { Avatar } from "../ui";
+import { Avatar } from "../ui/avatar";
 
 export default function LiveFooter({ children }: PropsWithChildren) {
   const liveSession = useLiveSession();

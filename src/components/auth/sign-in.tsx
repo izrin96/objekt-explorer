@@ -12,7 +12,9 @@ import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
-import { Button, Form, TextField } from "../ui";
+import { Button } from "../ui/button";
+import { Form } from "../ui/form";
+import { TextField } from "../ui/text-field";
 
 export default function SignIn() {
   const [state, setState] = useState<"sign-in" | "sign-up" | "forgot-password">("sign-in");

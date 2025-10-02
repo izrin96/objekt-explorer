@@ -5,7 +5,8 @@ import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidGroupBy, validGroupBy } from "@/lib/universal/cosmo/common";
-import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
+import { Button } from "../ui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
 export default function GroupByFilter() {
   const t = useTranslations("filter.group_by");

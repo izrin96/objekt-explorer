@@ -13,7 +13,9 @@ import {
 import Image from "next/image";
 import { type CSSProperties, useEffect, useState } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
-import { Button, Popover, PopoverContent, Slider } from "../ui";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent } from "../ui/popover";
+import { Slider } from "../ui/slider";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";

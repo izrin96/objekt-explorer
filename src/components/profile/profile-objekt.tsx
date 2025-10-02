@@ -34,7 +34,9 @@ import {
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
-import { Link, Loader, Note } from "../ui";
+import { Link } from "../ui/link";
+import { Loader } from "../ui/loader";
+import { Note } from "../ui/note";
 import Filter from "./filter";
 
 export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileObjektRender), {

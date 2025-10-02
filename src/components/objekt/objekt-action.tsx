@@ -17,7 +17,8 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicProfile } from "@/lib/universal/user";
 import { cn } from "@/utils/classes";
-import { Button, Menu, MenuContent } from "../ui";
+import { Button } from "../ui/button";
+import { Menu, MenuContent } from "../ui/menu";
 
 export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));

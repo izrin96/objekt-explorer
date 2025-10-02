@@ -8,12 +8,12 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 import Portal from "@/components/portal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
+import { Link } from "@/components/ui/link";
+import { Loader } from "@/components/ui/loader";
 import {
-  Button,
-  Checkbox,
-  Form,
-  Link,
-  Loader,
   ModalBody,
   ModalClose,
   ModalContent,
@@ -21,10 +21,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
+} from "@/components/ui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
   SheetBody,
   SheetClose,
   SheetContent,
@@ -32,8 +31,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  TextField,
-} from "@/components/ui";
+} from "@/components/ui/sheet";
+import { TextField } from "@/components/ui/text-field";
 import { orpc } from "@/lib/orpc/client";
 import { validColumns } from "@/lib/utils";
 

@@ -4,7 +4,8 @@ import { useTranslations } from "next-intl";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidSort, validSorts } from "@/lib/universal/cosmo/common";
-import { Button, Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../ui";
+import { Button } from "../ui/button";
+import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../ui/menu";
 
 type Props = {
   allowDuplicateSort?: boolean;

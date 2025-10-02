@@ -18,23 +18,12 @@ import {
 } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Link,
-  Tab,
-  TabList,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-  TabPanel,
-  Tabs,
-} from "../ui";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Link } from "../ui/link";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../ui/table";
+import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
 import { AttributePanel } from "./objekt-attribute";
 import ObjektSidebar from "./objekt-sidebar";
 import TradeView from "./trade-view";

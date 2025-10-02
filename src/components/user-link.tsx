@@ -1,6 +1,7 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { parseNickname } from "@/lib/utils";
-import { Link, Tooltip, TooltipContent, TooltipTrigger } from "./ui";
+import { Link } from "./ui/link";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export default function UserLink({
   address,

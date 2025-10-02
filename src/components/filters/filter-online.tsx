@@ -5,7 +5,8 @@ import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidOnlineType, validOnlineTypes } from "@/lib/universal/cosmo/common";
-import { Button, Menu, MenuContent, MenuItem, MenuLabel } from "../ui";
+import { Button } from "../ui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
 export default function OnlineFilter() {
   const t = useTranslations("filter");

@@ -7,7 +7,8 @@ import { toast } from "sonner";
 import { useAccount } from "wagmi";
 import WelcomeIcon from "@/assets/icon-welcome.png";
 import { orpc } from "@/lib/orpc/client";
-import { Button, buttonStyles, Link } from "../ui";
+import { Button, buttonStyles } from "../ui/button";
+import { Link } from "../ui/link";
 
 export default function AbstractProcess() {
   const [isSuccess, setIsSuccess] = useState(false);

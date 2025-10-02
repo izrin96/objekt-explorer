@@ -8,22 +8,19 @@ import { toast } from "sonner";
 import { CopyButton } from "@/components/copy-button";
 import ErrorFallbackRender from "@/components/error-boundary";
 import Portal from "@/components/portal";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
+import { Loader } from "@/components/ui/loader";
 import {
-  Button,
-  Checkbox,
-  Form,
-  Loader,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
   ModalTitle,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  Textarea,
-} from "@/components/ui";
+} from "@/components/ui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { format, makeMemberOrderedList, mapCollectionByMember } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";

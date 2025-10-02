@@ -10,14 +10,14 @@ import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 import { getBaseURL } from "@/lib/utils";
+import { Button } from "./ui/button";
 import {
-  Button,
   CommandMenu,
   CommandMenuItem,
   CommandMenuList,
   CommandMenuSearch,
   CommandMenuSection,
-} from "./ui";
+} from "./ui/command-menu";
 
 export default function UserSearch() {
   const t = useTranslations("nav.search_user");
