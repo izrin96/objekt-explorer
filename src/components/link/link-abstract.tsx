@@ -1,3 +1,5 @@
+"use client";
+
 import { useAbstractPrivyLogin } from "@abstract-foundation/agw-react/privy";
 import { usePrivy } from "@privy-io/react-auth";
 import { useMutation } from "@tanstack/react-query";

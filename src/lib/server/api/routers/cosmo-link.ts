@@ -4,8 +4,8 @@ import { ORPCError } from "@orpc/server";
 import { and, eq, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { z } from "zod/v4";
-import { env } from "@/env";
 import type { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
+import { AGW_APP_ID } from "@/lib/utils";
 import {
   certifyTicket,
   checkTicket as checkQrTicket,
@@ -142,7 +142,7 @@ export const cosmoLinkRouter = {
     });
 
     const linkedAccount = user.linkedAccounts.find(
-      (a) => a.type === "cross_app" && a.providerApp.id === env.PRIVY_ABS_APP_ID,
+      (a) => a.type === "cross_app" && a.providerApp.id === AGW_APP_ID,
     );
 
     if (!linkedAccount || linkedAccount.type !== "cross_app") {

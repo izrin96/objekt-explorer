@@ -34,7 +34,7 @@ function MyLink() {
     <div className="flex flex-col gap-4">
       <div className="w-full">
         <Link
-          href={`/link/onboard`}
+          href={`/link/connect`}
           className={(renderProps) =>
             buttonStyles({
               ...renderProps,

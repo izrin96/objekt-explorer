@@ -30,7 +30,6 @@ import { Form } from "../ui/form";
 import { InputOTP } from "../ui/input-otp";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
-import AbstractProcess from "./link-abstract";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -103,7 +102,16 @@ export default function LinkRender() {
             <span className="relative bg-bg px-3 text-muted-fg text-xs">OR</span>
           </div>
 
-          <Button size="sm" intent="plain" onClick={() => setStep(2)}>
+          <Link
+            className={(renderProps) =>
+              buttonStyles({
+                ...renderProps,
+                size: "sm",
+                intent: "plain",
+              })
+            }
+            href="/link/connect/abstract"
+          >
             Continue with{" "}
             <Image
               className="invert dark:invert-0"
@@ -113,11 +121,10 @@ export default function LinkRender() {
               height={20}
             />{" "}
             Abstract
-          </Button>
+          </Link>
         </div>
       )}
       {step === 1 && <TicketRender />}
-      {step === 2 && <AbstractProcess />}
     </div>
   );
 }

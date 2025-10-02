@@ -19,7 +19,6 @@ export const env = createEnv({
     SES_MAIL_FROM: z.string(),
     BYPASS_LIVE_KEY: z.string().optional(),
     PRIVY_APP_SECRET: z.string(),
-    PRIVY_ABS_APP_ID: z.string(),
     REDIS_URL: z.string(),
   },
   client: {

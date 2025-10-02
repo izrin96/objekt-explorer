@@ -51,7 +51,6 @@ services:
       - BYPASS_LIVE_KEY
       - NEXT_PUBLIC_PRIVY_APP_ID
       - PRIVY_APP_SECRET
-      - PRIVY_ABS_APP_ID
       - REDIS_URL
   minio:
     restart: always
