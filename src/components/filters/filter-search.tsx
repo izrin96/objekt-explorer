@@ -55,7 +55,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
           </Button>
         ) : (
           <Popover>
-            <Button intent="plain" size="sq-xs">
+            <Button aria-label="Info" intent="plain" size="sq-xs">
               <QuestionMarkIcon data-slot="icon" />
             </Button>
             <PopoverContent className="prose max-w-sm overflow-auto p-4">

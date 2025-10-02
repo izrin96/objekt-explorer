@@ -28,7 +28,7 @@ export default function SelectedArtistFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" size="sm" className="px-2 sm:px-2">
+      <Button aria-label="Selected artist" intent="outline" size="sm" className="px-2 sm:px-2">
         <div className="-space-x-2 flex items-center justify-center">
           {selectedArtists.map((artist) => (
             <Avatar

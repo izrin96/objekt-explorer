@@ -16,7 +16,7 @@ export default function ProfileTabs({ path }: { path: string }) {
       <Tabs aria-label="Navbar" className="w-min" selectedKey={decodeURIComponent(pathname)}>
         <TabList>
           {items.map((item) => (
-            <Tab key={item.url} id={item.url} href={item.url}>
+            <Tab key={item.url} id={item.url} href={item.url} aria-label={item.label}>
               {item.label}
             </Tab>
           ))}

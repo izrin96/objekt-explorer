@@ -33,7 +33,7 @@ export default function LiveSessionListRender() {
             <Tabs aria-label="Recipe App">
               <TabList className="w-fit">
                 {selectedArtists.map((artist) => (
-                  <Tab key={artist.id} id={artist.id}>
+                  <Tab key={artist.id} id={artist.id} aria-label={artist.name}>
                     {artist.title}
                   </Tab>
                 ))}
