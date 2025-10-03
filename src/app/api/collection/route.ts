@@ -30,12 +30,11 @@ export async function GET(request: NextRequest) {
 
   const singleResult = await indexer
     .select({
-      createdAt: collections.createdAt,
-      collectionId: collections.collectionId,
+      id: collections.id,
     })
     .from(collections)
     .where(whereQuery)
-    .orderBy(desc(collections.createdAt), desc(collections.collectionId))
+    .orderBy(desc(collections.id))
     .limit(1);
 
   if (!singleResult.length)
@@ -43,10 +42,8 @@ export async function GET(request: NextRequest) {
       collections: [],
     } satisfies CollectionResult);
 
-  const latestInfo = singleResult[0];
-
   // check for etag
-  const etag = `W/"${crypto.createHash("md5").update(JSON.stringify(latestInfo)).digest("hex")}"`;
+  const etag = `W/"${crypto.createHash("md5").update(singleResult[0].id).digest("hex")}"`;
   const ifNoneMatch = request.headers.get("if-none-match");
   if (ifNoneMatch === etag) {
     return new NextResponse(null, {
@@ -63,7 +60,7 @@ export async function GET(request: NextRequest) {
     })
     .from(collections)
     .where(whereQuery)
-    .orderBy(desc(collections.createdAt), desc(collections.collectionId));
+    .orderBy(desc(collections.id));
 
   const body = JSON.stringify({
     collections: result.map((collection) => ({
