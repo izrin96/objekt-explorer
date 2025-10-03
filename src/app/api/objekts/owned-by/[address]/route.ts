@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { z } from "zod/v4";
 import { getSession } from "@/lib/server/auth";
@@ -81,12 +81,9 @@ export async function GET(request: NextRequest, props: Params) {
           : []),
         ...(query.cursor
           ? [
-              or(
+              and(
                 lt(objekts.receivedAt, new Date(query.cursor.receivedAt)),
-                and(
-                  eq(objekts.receivedAt, new Date(query.cursor.receivedAt)),
-                  lt(objekts.id, Number(query.cursor.id)),
-                ),
+                lt(objekts.id, Number(query.cursor.id)),
               ),
             ]
           : []),
