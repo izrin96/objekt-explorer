@@ -60,7 +60,7 @@ export const objekts = pgTable(
     receivedAt: timestamp("received_at").notNull(),
     serial: integer("serial").notNull(),
     transferable: boolean("transferable").notNull(),
-    collectionId: varchar("collection_id", { length: 36 })
+    collectionId: uuid("collection_id")
       .notNull()
       .references(() => collections.id),
   },
