@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { type ValidType, validType } from "@/lib/universal/activity";
 import { Button } from "../ui/button";
@@ -24,13 +23,10 @@ export default function TypeFilter() {
     spin: t("spin"),
   };
 
-  const update = useCallback(
-    (key: Selection) => {
-      const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
-      setType(value === "all" ? null : value);
-    },
-    [setType],
-  );
+  const update = (key: Selection) => {
+    const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
+    setType(value === "all" ? null : value);
+  };
 
   return (
     <Menu>

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, type PropsWithChildren, useContext, useRef } from "react";
+import { toast } from "sonner";
 import { createStore, type StoreApi, useStore } from "zustand";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 
@@ -13,6 +14,7 @@ type ObjektSelectedState = {
   batchSelect: (selected: ValidObjekt[]) => void;
   isSelected: (selected: ValidObjekt) => boolean;
   reset: () => void;
+  handleAction: (open: () => void) => void;
 };
 
 const createObjektSelectStore = () =>
@@ -49,6 +51,14 @@ const createObjektSelectStore = () =>
     isSelected: (selected) => get().selected.has(selected.id),
 
     reset: () => set(() => ({ selected: new Map() })),
+
+    handleAction: (open: () => void) => {
+      if (get().selected.size === 0) {
+        toast.error("Must select at least one objekt");
+      } else {
+        open();
+      }
+    },
   }));
 
 const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(null);
@@ -59,9 +69,7 @@ export function ObjektSelectProvider({ children }: PropsWithChildren) {
     storeRef.current = createObjektSelectStore();
   }
 
-  return (
-    <ObjektSelectContext.Provider value={storeRef.current}>{children}</ObjektSelectContext.Provider>
-  );
+  return <ObjektSelectContext value={storeRef.current}>{children}</ObjektSelectContext>;
 }
 
 export function useObjektSelect<SelectorOutput>(

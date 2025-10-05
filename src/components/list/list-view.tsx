@@ -127,12 +127,8 @@ function ListView({ list }: { list: PublicList }) {
       <div className="flex flex-col gap-6">
         {authenticated && (
           <FloatingSelectMode objekts={filtered}>
-            {({ handleAction }) => (
-              <>
-                {isOwned && <RemoveFromList handleAction={handleAction} size="sm" />}
-                <AddToList handleAction={handleAction} size="sm" />
-              </>
-            )}
+            {isOwned && <RemoveFromList size="sm" />}
+            <AddToList size="sm" />
           </FloatingSelectMode>
         )}
         <FilterContainer>
@@ -165,12 +161,8 @@ function Filters({
       <Filter />
       {authenticated && (
         <SelectMode objekts={objekts}>
-          {({ handleAction }) => (
-            <>
-              {isOwned && <RemoveFromList handleAction={handleAction} />}
-              <AddToList handleAction={handleAction} />
-            </>
-          )}
+          {isOwned && <RemoveFromList />}
+          <AddToList />
         </SelectMode>
       )}
     </div>

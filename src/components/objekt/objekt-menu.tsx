@@ -11,7 +11,7 @@ import {
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
-import { type PropsWithChildren, useCallback } from "react";
+import type { PropsWithChildren } from "react";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
@@ -41,16 +41,13 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   const { data } = useQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
 
-  const handleAction = useCallback(
-    (slug: string) => {
-      addToList.mutate({
-        slug: slug,
-        skipDups: false,
-        collectionSlugs: [objekt.slug],
-      });
-    },
-    [objekt, addToList],
-  );
+  const handleAction = (slug: string) => {
+    addToList.mutate({
+      slug: slug,
+      skipDups: false,
+      collectionSlugs: [objekt.slug],
+    });
+  };
   return (
     <MenuSubmenu>
       <MenuItem>

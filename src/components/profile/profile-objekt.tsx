@@ -177,17 +177,13 @@ function ProfileObjekt() {
       <div className="flex flex-col gap-6">
         {authenticated && (
           <FloatingSelectMode objekts={filtered}>
-            {({ handleAction }) => (
+            <AddToList size="sm" />
+            {isProfileAuthed && (
               <>
-                <AddToList handleAction={handleAction} size="sm" />
-                {isProfileAuthed && (
-                  <>
-                    <PinObjekt handleAction={handleAction} size="sm" />
-                    <UnpinObjekt handleAction={handleAction} size="sm" />
-                    <LockObjekt handleAction={handleAction} size="sm" />
-                    <UnlockObjekt handleAction={handleAction} size="sm" />
-                  </>
-                )}
+                <PinObjekt size="sm" />
+                <UnpinObjekt size="sm" />
+                <LockObjekt size="sm" />
+                <UnlockObjekt size="sm" />
               </>
             )}
           </FloatingSelectMode>
@@ -222,17 +218,13 @@ function Filters({
       <Filter objekts={objekts} />
       {authenticated && (
         <SelectMode objekts={objekts}>
-          {({ handleAction }) => (
+          <AddToList />
+          {isOwned && (
             <>
-              <AddToList handleAction={handleAction} />
-              {isOwned && (
-                <>
-                  <PinObjekt handleAction={handleAction} />
-                  <UnpinObjekt handleAction={handleAction} />
-                  <LockObjekt handleAction={handleAction} />
-                  <UnlockObjekt handleAction={handleAction} />
-                </>
-              )}
+              <PinObjekt />
+              <UnpinObjekt />
+              <LockObjekt />
+              <UnlockObjekt />
             </>
           )}
         </SelectMode>

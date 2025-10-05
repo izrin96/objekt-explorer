@@ -9,9 +9,10 @@ import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 
-export function LockObjekt({ handleAction, size }: ObjektActionProps) {
+export function LockObjekt({ size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const handleAction = useObjektSelect((a) => a.handleAction);
   const batchLock = useBatchLock();
   return (
     <Button
@@ -35,9 +36,10 @@ export function LockObjekt({ handleAction, size }: ObjektActionProps) {
   );
 }
 
-export function UnlockObjekt({ handleAction, size }: ObjektActionProps) {
+export function UnlockObjekt({ size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const handleAction = useObjektSelect((a) => a.handleAction);
   const batchUnlock = useBatchUnlock();
   return (
     <Button

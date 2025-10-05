@@ -1,7 +1,6 @@
 "use client";
 
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui/menu";
@@ -23,13 +22,10 @@ export default function TypeFilter() {
   const [type, setType] = useTypeFilter();
   const selected = new Set(type ? [type] : ["all"]);
 
-  const update = useCallback(
-    (key: Selection) => {
-      const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
-      setType(value === "all" ? null : value);
-    },
-    [setType],
-  );
+  const update = (key: Selection) => {
+    const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
+    setType(value === "all" ? null : value);
+  };
 
   return (
     <Menu>

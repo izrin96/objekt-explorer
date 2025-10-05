@@ -9,9 +9,10 @@ import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 
-export function PinObjekt({ handleAction, size }: ObjektActionProps) {
+export function PinObjekt({ size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const handleAction = useObjektSelect((a) => a.handleAction);
   const batchPin = useBatchPin();
   return (
     <Button
@@ -35,12 +36,14 @@ export function PinObjekt({ handleAction, size }: ObjektActionProps) {
   );
 }
 
-export function UnpinObjekt({ handleAction }: ObjektActionProps) {
+export function UnpinObjekt({ size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const handleAction = useObjektSelect((a) => a.handleAction);
   const batchUnpin = useBatchUnpin();
   return (
     <Button
+      size={size}
       intent="outline"
       onClick={() => {
         handleAction(() => {

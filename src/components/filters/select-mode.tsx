@@ -3,8 +3,7 @@
 import { ChecksIcon, HandPointingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
-import { type ReactNode, useCallback } from "react";
-import { toast } from "sonner";
+import type { PropsWithChildren } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
@@ -12,10 +11,7 @@ import { Button } from "../ui/button";
 import { Toggle } from "../ui/toggle";
 import { Tooltip, TooltipContent } from "../ui/tooltip";
 
-type Props = {
-  children?: ({ handleAction }: { handleAction: (open: () => void) => void }) => ReactNode;
-  objekts: ValidObjekt[];
-};
+type Props = PropsWithChildren<{ objekts: ValidObjekt[] }>;
 
 export function SelectMode({ children, objekts }: Props) {
   const t = useTranslations("filter");
@@ -23,18 +19,6 @@ export function SelectMode({ children, objekts }: Props) {
   const batchSelect = useObjektSelect((a) => a.batchSelect);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
-  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
-
-  const handleAction = useCallback(
-    (open: () => void) => {
-      if (selected.length === 0) {
-        toast.error("Must select at least one objekt");
-      } else {
-        open();
-      }
-    },
-    [selected],
-  );
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -55,7 +39,7 @@ export function SelectMode({ children, objekts }: Props) {
         <XIcon weight="regular" data-slot="icon" />
         Deselect
       </Button>
-      {children?.({ handleAction })}
+      {children}
     </div>
   );
 }
@@ -66,17 +50,6 @@ export function FloatingSelectMode({ children, objekts }: Props) {
   const toggleMode = useObjektSelect((a) => a.toggleMode);
   const reset = useObjektSelect((a) => a.reset);
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
-
-  const handleAction = useCallback(
-    (open: () => void) => {
-      if (selected.length === 0) {
-        toast.error("Must select at least one objekt");
-      } else {
-        open();
-      }
-    },
-    [selected],
-  );
 
   return (
     <AnimatePresence>
@@ -109,7 +82,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
               Deselect
             </Button>
 
-            {children?.({ handleAction })}
+            {children}
 
             <span className="px-1 py-2 font-semibold text-sm">
               {selected.length.toLocaleString()} selected

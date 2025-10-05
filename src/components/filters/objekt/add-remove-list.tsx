@@ -3,11 +3,13 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AddToListModal, RemoveFromListModal } from "@/components/list/modal/manage-objekt";
 import { Button } from "@/components/ui/button";
+import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ObjektActionProps } from "./common";
 
-export function AddToList({ handleAction, size }: ObjektActionProps) {
+export function AddToList({ size }: ObjektActionProps) {
   const t = useTranslations("filter");
   const [addOpen, setAddOpen] = useState(false);
+  const handleAction = useObjektSelect((a) => a.handleAction);
   return (
     <>
       <AddToListModal open={addOpen} setOpen={setAddOpen} />
@@ -19,9 +21,10 @@ export function AddToList({ handleAction, size }: ObjektActionProps) {
   );
 }
 
-export function RemoveFromList({ handleAction, size }: ObjektActionProps) {
+export function RemoveFromList({ size }: ObjektActionProps) {
   const t = useTranslations("filter");
   const [open, setOpen] = useState(false);
+  const handleAction = useObjektSelect((a) => a.handleAction);
   return (
     <>
       <RemoveFromListModal open={open} setOpen={setOpen} />
