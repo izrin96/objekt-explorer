@@ -1,4 +1,4 @@
-import { asc } from "drizzle-orm";
+import { asc, ne } from "drizzle-orm";
 import { type ValidFourSeason, validArtists, validFourSeason } from "@/lib/universal/cosmo/common";
 import { classArtistMap } from "@/lib/universal/cosmo/filter-data";
 import { indexer } from "../db/indexer";
@@ -11,6 +11,7 @@ export async function fetchUniqueCollections() {
       collectionNo: collections.collectionNo,
     })
     .from(collections)
+    .where(ne(collections.slug, "empty-collection"))
     .orderBy(asc(collections.collectionNo));
   return result.map((a) => a.collectionNo);
 }
