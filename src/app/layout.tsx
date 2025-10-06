@@ -31,14 +31,14 @@ const notoSansKr = Noto_Sans_KR({
   variable: "--font-noto-sans-kr",
   display: "swap",
   weight: "variable",
-  preload: false,
+  subsets: ["latin"],
 });
 
 const notoSansSc = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
   display: "swap",
   weight: "variable",
-  preload: false,
+  subsets: ["latin"],
 });
 
 const nunitoFont = Nunito_Sans({
