@@ -36,18 +36,11 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
 }
 
 export function ObjektOverlay({ isPin, isLocked }: { isPin: boolean; isLocked: boolean }) {
+  if (!isPin && !isLocked) return;
   return (
-    <div className="absolute top-0 left-0 flex">
-      {isPin && (
-        <div className="rounded-lg bg-bg p-1 text-fg">
-          <PushPinIcon weight="bold" size={12} />
-        </div>
-      )}
-      {isLocked && (
-        <div className="rounded-lg bg-bg p-1 text-fg">
-          <LockSimpleIcon weight="bold" size={12} />
-        </div>
-      )}
+    <div className="pointer-events-none absolute top-0 left-0 flex items-start gap-[.2em] rounded-lg bg-bg p-1 text-fg">
+      {isPin && <PushPinIcon weight="bold" size={12} />}
+      {isLocked && <LockSimpleIcon weight="bold" size={12} />}
     </div>
   );
 }

@@ -101,7 +101,7 @@ function ListView({ list }: { list: PublicList }) {
                           showCount
                         >
                           {authenticated && (
-                            <div className="absolute top-0 right-0 flex">
+                            <div className="absolute top-0 right-0 flex items-start">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
                                 {isOwned && <RemoveFromListMenu objekt={objekt} />}

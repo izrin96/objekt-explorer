@@ -204,7 +204,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                             open={openObjekts}
                           >
                             {authenticated && (
-                              <div className="absolute top-0 right-0 flex">
+                              <div className="absolute top-0 right-0 flex items-start">
                                 <ObjektHoverMenu>
                                   <AddToListMenu objekt={objekt} />
                                 </ObjektHoverMenu>

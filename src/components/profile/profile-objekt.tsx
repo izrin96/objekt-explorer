@@ -142,7 +142,7 @@ function ProfileObjekt() {
                           isFade={!isOwned}
                         >
                           {authenticated && (
-                            <div className="absolute top-0 right-0 flex">
+                            <div className="absolute top-0 right-0 flex items-start">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
                                 {isProfileAuthed && isOwned && (

@@ -102,7 +102,7 @@ function IndexView() {
                           open={open}
                         >
                           {authenticated && (
-                            <div className="absolute top-0 right-0 flex">
+                            <div className="absolute top-0 right-0 flex items-start">
                               <ObjektSelect objekt={objekt} />
                               <ObjektHoverMenu>
                                 <AddToListMenu objekt={objekt} />
