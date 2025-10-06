@@ -31,6 +31,7 @@ const notoSansKr = Noto_Sans_KR({
   variable: "--font-noto-sans-kr",
   display: "swap",
   weight: "variable",
+  preload: false,
 });
 
 const notoSansSc = Noto_Sans_SC({
