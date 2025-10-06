@@ -61,12 +61,13 @@ type LinkedAccountProps = {
 };
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
-  const session = authClient.useSession();
   const [pullOpen, setPullOpen] = useState(false);
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
-        session.refetch();
+        client.refetchQueries({
+          queryKey: ["session"],
+        });
         client.invalidateQueries({
           queryKey: ["accounts"],
         });
@@ -143,11 +144,12 @@ type PullProfileProps = {
 };
 
 function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
-  const session = authClient.useSession();
   const refreshProfile = useMutation(
     orpc.user.refreshProfile.mutationOptions({
-      onSuccess: () => {
-        session.refetch();
+      onSuccess: (_, _v, _o, { client }) => {
+        client.refetchQueries({
+          queryKey: ["session"],
+        });
         setOpen(false);
         toast.success("Profile updated");
       },

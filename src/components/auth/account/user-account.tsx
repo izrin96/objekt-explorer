@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/sheet";
 import { TextField } from "@/components/ui/text-field";
 import { authClient } from "@/lib/auth-client";
+import { sessionOptions } from "@/lib/query-options";
 import type { User } from "@/lib/server/auth";
 import { ListAccounts } from "./link-account";
 
@@ -72,17 +73,7 @@ export default function UserAccountModal({ open, setOpen }: Props) {
 }
 
 function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const session = useSuspenseQuery({
-    queryKey: ["session"],
-    queryFn: async () => {
-      const result = await authClient.getSession();
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-      return result.data;
-    },
-    staleTime: 0,
-  });
+  const session = useSuspenseQuery(sessionOptions);
 
   if (!session.data) return;
 

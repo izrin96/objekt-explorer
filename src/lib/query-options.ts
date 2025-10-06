@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
+import { authClient } from "./auth-client";
 import type { ValidArtist } from "./universal/cosmo/common";
 import { type CollectionResult, mapObjektWithTag } from "./universal/objekts";
 import { getBaseURL } from "./utils";
@@ -30,3 +31,14 @@ export const ownedCollectionOptions = (address: string, artistIds: ValidArtist[]
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
   });
+
+export const sessionOptions = queryOptions({
+  queryKey: ["session"],
+  queryFn: async () => {
+    const result = await authClient.getSession();
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+    return result.data;
+  },
+});

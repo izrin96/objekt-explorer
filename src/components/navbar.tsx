@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import AppLogo from "./app-logo";
 import SelectedArtistFilter from "./filters/filter-selected-artist";
 import { ThemeStyleSwitcher } from "./theme-style-select";
@@ -18,7 +19,9 @@ export default function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <UserNav />
+          <Suspense>
+            <UserNav />
+          </Suspense>
           <ThemeStyleSwitcher />
           <SelectedArtistFilter />
           <UserSearch />
