@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
-import localFont from "next/font/local";
+import { Geist_Mono, Inter, Noto_Sans_KR, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
 import ClientProviders, { ClientArtistProvider } from "@/components/client-providers";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
@@ -28,17 +27,16 @@ const geistMono = Geist_Mono({
   weight: "variable",
 });
 
-const pretendard = localFont({
-  variable: "--font-pretendard",
-  src: "./fonts/PretendardVariable.woff2",
+const notoSansKr = Noto_Sans_KR({
+  variable: "--font-noto-sans-kr",
   display: "swap",
+  weight: "variable",
 });
 
 const notoSansSc = Noto_Sans_SC({
   variable: "--font-noto-sans-sc",
   display: "swap",
   weight: "variable",
-  preload: false,
 });
 
 const nunitoFont = Nunito_Sans({
@@ -88,7 +86,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} ${pretendard.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
+      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
       style={{
         scrollbarGutter: "stable",
       }}
