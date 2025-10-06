@@ -259,7 +259,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
           <span>
             <Link
               href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
-              className="inline-flex cursor-pointer items-center gap-2"
+              className="inline-flex cursor-pointer items-center gap-2 font-mono"
               target="_blank"
             >
               {data.tokenId}
