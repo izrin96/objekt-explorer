@@ -30,7 +30,7 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
       className={cn("hidden bg-bg/80 px-2 text-fg group-hover:block", isSelected && "block")}
       onClick={() => objektSelect(objekt)}
     >
-      <CheckIcon size={12} weight="bold" />
+      <CheckIcon className="size-2 sm:size-3" weight="bold" />
     </Button>
   );
 }
@@ -38,9 +38,9 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
 export function ObjektOverlay({ isPin, isLocked }: { isPin: boolean; isLocked: boolean }) {
   if (!isPin && !isLocked) return;
   return (
-    <div className="pointer-events-none absolute top-0 left-0 flex items-start gap-[.2em] rounded-lg bg-bg p-1 text-fg">
-      {isPin && <PushPinIcon weight="bold" size={12} />}
-      {isLocked && <LockSimpleIcon weight="bold" size={12} />}
+    <div className="pointer-events-none absolute top-0 left-0 flex items-start gap-[.2em] rounded-lg bg-(--objekt-bg-color) p-1 text-(--objekt-text-color)">
+      {isPin && <PushPinIcon weight="bold" className="size-2 sm:size-3" />}
+      {isLocked && <LockSimpleIcon weight="bold" className="size-2 sm:size-3" />}
     </div>
   );
 }
@@ -76,7 +76,11 @@ export function ObjektTogglePin({
       }}
     >
       <span className="text-nowrap font-semibold text-xs">
-        {isPin ? <PushPinSlashIcon size={12} /> : <PushPinIcon size={12} />}
+        {isPin ? (
+          <PushPinSlashIcon className="size-2 sm:size-3" />
+        ) : (
+          <PushPinIcon className="size-2 sm:size-3" />
+        )}
       </span>
     </Button>
   );
@@ -113,7 +117,11 @@ export function ObjektToggleLock({
       }}
     >
       <span className="text-nowrap font-semibold text-xs">
-        {isLocked ? <LockSimpleOpenIcon size={12} /> : <LockSimpleIcon size={12} />}
+        {isLocked ? (
+          <LockSimpleOpenIcon className="size-2 sm:size-3" />
+        ) : (
+          <LockSimpleIcon className="size-2 sm:size-3" />
+        )}
       </span>
     </Button>
   );
@@ -127,7 +135,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
         intent="plain"
         className="hidden bg-bg/80 px-2 text-fg group-hover:block data-pressed:block"
       >
-        <DotsThreeVerticalIcon size={12} weight="bold" />
+        <DotsThreeVerticalIcon className="size-2 sm:size-3" weight="bold" />
       </Button>
       <MenuContent placement="bottom right">{children}</MenuContent>
     </Menu>
