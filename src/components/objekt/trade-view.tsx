@@ -6,6 +6,7 @@ import {
   CaretLineLeftIcon,
   CaretLineRightIcon,
   CaretRightIcon,
+  CopyIcon,
   LockIcon,
   QuestionMarkIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -17,6 +18,8 @@ import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
+import { toast } from "sonner";
+import { useCopyToClipboard } from "usehooks-ts";
 import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
@@ -173,6 +176,7 @@ function Trades({
 type TransferItem = ObjektTransferResult["transfers"][number];
 
 function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
+  const [, copy] = useCopyToClipboard();
   const t = useTranslations("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: () => {
@@ -183,6 +187,11 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     retry: 1,
     staleTime: 0,
   });
+
+  const handleCopy = useCallback((tokenId: number | undefined) => {
+    copy(`${tokenId ?? ""}`);
+    toast.success("Token ID copied");
+  }, []);
 
   const list = useAsyncList<TransferItem>({
     async load() {
@@ -250,13 +259,11 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">{t("owner")}</span>
-          <span>
-            <UserLink address={data.owner} nickname={ownerNickname} />
-          </span>
+          <UserLink address={data.owner} nickname={ownerNickname} />
         </div>
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">{t("token_id")}</span>
-          <span>
+          <div className="flex items-center gap-2">
             <Link
               href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
               className="inline-flex cursor-pointer items-center gap-2 font-mono"
@@ -265,7 +272,12 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
               {data.tokenId}
               <IconOpenLink />
             </Link>
-          </span>
+            <CopyIcon
+              size={16}
+              className="cursor-pointer"
+              onClick={() => handleCopy(data.tokenId)}
+            />
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <span className="font-semibold text-sm">{t("transferable")}</span>

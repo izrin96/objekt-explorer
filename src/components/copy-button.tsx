@@ -8,7 +8,7 @@ export function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <Button
-      intent="secondary"
+      intent="outline"
       onClick={() => {
         setCopied(true);
         copy(text).then(() => {

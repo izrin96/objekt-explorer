@@ -1,7 +1,9 @@
 "use client";
 
-import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useCopyToClipboard } from "usehooks-ts";
 import { useProfileAuthed } from "@/hooks/use-user";
 import type { PublicProfile } from "@/lib/universal/user";
 import { parseNickname } from "@/lib/utils";
@@ -11,14 +13,26 @@ import { Button, buttonStyles } from "../ui/button";
 import { Link } from "../ui/link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
+  const [, copy] = useCopyToClipboard();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
+
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
       <div className="flex w-full flex-col md:w-auto">
         <div className="font-semibold text-xl">{nickname}</div>
-        <div className="truncate font-mono text-muted-fg text-xs">{user.address}</div>
+        <div className="inline-flex gap-1 truncate font-mono text-muted-fg text-xs">
+          {user.address}{" "}
+          <CopyIcon
+            size={14}
+            className="cursor-pointer text-fg"
+            onClick={() => {
+              copy(user.address);
+              toast.success("Address copied");
+            }}
+          />
+        </div>
       </div>
 
       <Link
