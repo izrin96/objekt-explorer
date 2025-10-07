@@ -1,6 +1,6 @@
 import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
 import type { NextRequest } from "next/server";
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { fetchKnownAddresses } from "@/lib/server/profile";

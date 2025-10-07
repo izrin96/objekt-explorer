@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import type { Outputs } from "@/lib/orpc/server";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { overrideCollection } from "@/lib/universal/objekts";

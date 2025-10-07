@@ -1,4 +1,4 @@
-import z from "zod/v4";
+import * as z from "zod/v4";
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
 import { replaceUrlSize } from "../utils";
 import type { ParsedDate } from "./common";

@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import { validArtists } from "@/lib/universal/cosmo/common";
 import { pub } from "../orpc";
 

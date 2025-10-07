@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import { fetchLiveSessions } from "@/lib/server/cosmo/live";
 import { getAccessToken } from "@/lib/server/token";
 

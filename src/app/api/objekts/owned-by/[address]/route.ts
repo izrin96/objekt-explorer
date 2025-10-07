@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import type { NextRequest } from "next/server";
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import { getSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";

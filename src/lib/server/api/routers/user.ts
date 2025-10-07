@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { eq } from "drizzle-orm";
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import { providersMap } from "@/lib/universal/user";
 import { auth } from "../../auth";
 import { db } from "../../db";

@@ -3,7 +3,7 @@
 import { ORPCError } from "@orpc/server";
 import { and, eq, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import type { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
 import { AGW_APP_ID } from "@/lib/utils";
 import {

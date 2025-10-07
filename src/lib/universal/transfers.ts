@@ -1,4 +1,4 @@
-import { z } from "zod/v4";
+import * as z from "zod/v4";
 import type { Transfer } from "../server/db/indexer/schema";
 import type { Cursor } from "./common";
 import { validArtists, validClasses, validOnlineTypes, validSeasons } from "./cosmo/common";
