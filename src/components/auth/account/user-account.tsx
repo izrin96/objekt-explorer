@@ -105,8 +105,11 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
       if (result.error) throw new Error(result.error.message);
       return result.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, _v, _o, { client }) => {
       setOpen(false);
+      client.refetchQueries({
+        queryKey: ["session"],
+      });
       router.refresh();
       toast.success("Account updated");
     },
