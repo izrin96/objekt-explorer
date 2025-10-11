@@ -10,12 +10,8 @@ import { useTranslations } from "next-intl";
 import { type CSSProperties, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
-import {
-  getObjektImageUrls,
-  type OwnedObjekt,
-  unobtainables,
-  type ValidObjekt,
-} from "@/lib/universal/objekts";
+import { getObjektImageUrls } from "@/lib/objekt-utils";
+import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import { Badge } from "../ui/badge";

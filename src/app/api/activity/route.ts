@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod/v4";
+import { mapOwnedObjekt } from "@/lib/objekt-utils";
 import { cursorSchema } from "@/lib/server/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
@@ -13,7 +14,6 @@ import {
   validOnlineTypes,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
-import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PAGE_SIZE = 300;

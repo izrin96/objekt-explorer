@@ -1,7 +1,8 @@
 import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 import { useElementSize } from "@/hooks/use-element-size";
-import { getCollectionShortId, type ValidObjekt } from "@/lib/universal/objekts";
+import { getCollectionShortId } from "@/lib/objekt-utils";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import { Badge } from "../ui/badge";

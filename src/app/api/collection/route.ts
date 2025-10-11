@@ -2,11 +2,12 @@ import crypto from "node:crypto";
 import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod/v4";
+import { overrideCollection } from "@/lib/objekt-utils";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { validArtists } from "@/lib/universal/cosmo/common";
-import { type CollectionResult, overrideCollection } from "@/lib/universal/objekts";
+import type { CollectionResult } from "@/lib/universal/objekts";
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),

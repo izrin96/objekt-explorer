@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import * as z from "zod/v4";
+import { mapOwnedObjekt } from "@/lib/objekt-utils";
 import { getSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
@@ -8,7 +9,7 @@ import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { validArtists } from "@/lib/universal/cosmo/common";
-import { mapOwnedObjekt, type OwnedObjektsResult } from "@/lib/universal/objekts";
+import type { OwnedObjektsResult } from "@/lib/universal/objekts";
 
 type Params = {
   params: Promise<{

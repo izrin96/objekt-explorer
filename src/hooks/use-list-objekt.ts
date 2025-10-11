@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
+import { mapObjektWithTag } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
-import { mapObjektWithTag } from "@/lib/universal/objekts";
 import { useObjektFilter } from "./use-objekt-filter";
 import { useShapeObjekts } from "./use-shape-objekt";
 
