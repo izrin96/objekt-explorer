@@ -44,7 +44,10 @@ export default function UserSearch() {
     setQuery("");
     setIsOpen(false);
     addRecent(user);
-    router.push(`/@${user.nickname}`);
+    // wait for close animation to complete before navigate
+    setTimeout(() => {
+      router.push(`/@${user.nickname}`);
+    }, 250);
   };
 
   return (
