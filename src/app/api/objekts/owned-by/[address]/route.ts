@@ -8,11 +8,7 @@ import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { validArtists } from "@/lib/universal/cosmo/common";
-import {
-  mapOwnedObjekt,
-  type OwnedObjektsResult,
-  ownedObjektCursorSchema,
-} from "@/lib/universal/objekts";
+import { mapOwnedObjekt, type OwnedObjektsResult } from "@/lib/universal/objekts";
 
 type Params = {
   params: Promise<{
@@ -24,7 +20,12 @@ const PER_PAGE = 10000;
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),
-  cursor: ownedObjektCursorSchema,
+  cursor: z
+    .object({
+      receivedAt: z.string().or(z.date()),
+      id: z.string(),
+    })
+    .optional(),
 });
 
 export async function GET(request: NextRequest, props: Params) {

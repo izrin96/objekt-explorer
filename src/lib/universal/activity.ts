@@ -1,6 +1,5 @@
 import * as z from "zod/v4";
 import type { Transfer } from "../server/db/indexer/schema";
-import type { Cursor } from "./common";
 import { validArtists, validClasses, validOnlineTypes, validSeasons } from "./cosmo/common";
 import type { OwnedObjekt } from "./objekts";
 
@@ -17,7 +16,9 @@ export type ActivityData = {
 
 export type ActivityResponse = {
   items: ActivityData[];
-  nextCursor?: Cursor;
+  nextCursor?: {
+    id: string;
+  };
 };
 
 export const validType = ["all", "mint", "transfer", "spin"] as const;

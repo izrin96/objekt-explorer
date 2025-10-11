@@ -1,4 +1,3 @@
-import * as z from "zod/v4";
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
 import { replaceUrlSize } from "../utils";
 import type { ParsedDate } from "./common";
@@ -268,17 +267,11 @@ export type ObjektTransferResult = {
   transfers: ObjektTransfer[];
 };
 
-export const ownedObjektCursorSchema = z
-  .object({
-    receivedAt: z.string().or(z.date()),
-    id: z.string(),
-  })
-  .optional();
-
-export type OwnedObjektsCursor = z.infer<typeof ownedObjektCursorSchema>;
-
 export type OwnedObjektsResult = {
-  nextCursor?: OwnedObjektsCursor;
+  nextCursor?: {
+    receivedAt: string | Date;
+    id: string;
+  };
   objekts: OwnedObjekt[];
 };
 

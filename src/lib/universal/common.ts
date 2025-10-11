@@ -6,6 +6,4 @@ export const cursorSchema = z
   })
   .optional();
 
-export type Cursor = z.infer<typeof cursorSchema>;
-
 export type ParsedDate = string | Date;
