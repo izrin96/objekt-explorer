@@ -1,19 +1,34 @@
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
+import * as z from "zod/v4";
+import { cursorSchema } from "@/lib/server/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses } from "@/lib/server/profile";
+import { type ActivityResponse, validType } from "@/lib/universal/activity";
 import {
-  type ActivityParams,
-  type ActivityResponse,
-  activitySchema,
-} from "@/lib/universal/activity";
-import { cursorSchema } from "@/lib/universal/common";
+  validArtists,
+  validClasses,
+  validOnlineTypes,
+  validSeasons,
+} from "@/lib/universal/cosmo/common";
 import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PAGE_SIZE = 300;
+
+const activitySchema = z.object({
+  type: z.enum(validType).default("all"),
+  artist: z.enum(validArtists).array(),
+  member: z.string().array(),
+  season: z.enum(validSeasons).array(),
+  class: z.enum(validClasses).array(),
+  on_offline: z.enum(validOnlineTypes).array(),
+  collection: z.string().array(),
+});
+
+type ActivityParams = z.infer<typeof activitySchema>;
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

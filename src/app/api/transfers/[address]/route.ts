@@ -1,21 +1,36 @@
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+import * as z from "zod/v4";
 import { getSession } from "@/lib/server/auth";
+import { cursorSchema } from "@/lib/server/common";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
-import { cursorSchema } from "@/lib/universal/common";
-import { mapOwnedObjekt } from "@/lib/universal/objekts";
 import {
-  type TransferParams,
-  type TransferResult,
-  transfersSchema,
-} from "@/lib/universal/transfers";
+  validArtists,
+  validClasses,
+  validOnlineTypes,
+  validSeasons,
+} from "@/lib/universal/cosmo/common";
+import { mapOwnedObjekt } from "@/lib/universal/objekts";
+import { type TransferResult, validType } from "@/lib/universal/transfers";
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PER_PAGE = 150;
+
+const transfersSchema = z.object({
+  type: z.enum(validType).default("all"),
+  artist: z.enum(validArtists).array(),
+  member: z.string().array(),
+  season: z.enum(validSeasons).array(),
+  class: z.enum(validClasses).array(),
+  on_offline: z.enum(validOnlineTypes).array(),
+  collection: z.string().array(),
+});
+
+type TransferParams = z.infer<typeof transfersSchema>;
 
 export async function GET(request: NextRequest, props: { params: Promise<{ address: string }> }) {
   const [session, params] = await Promise.all([getSession(), props.params]);
