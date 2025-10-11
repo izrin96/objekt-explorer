@@ -6,7 +6,17 @@
     "useIgnoreFile": false
   },
   "files": {
-    "includes": ["src/**/*.tsx", "src/**/*.ts", "messages/**/*.json"],
+    "includes": [
+      "src/**/*.tsx",
+      "src/**/*.ts",
+      "messages/**/*.json",
+      "!node_modules",
+      "!**/.next",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/.vscode",
+      "!*.config.*"
+    ],
     "ignoreUnknown": false
   },
   "formatter": {
