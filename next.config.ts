@@ -4,9 +4,7 @@ import bundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  experimental: {
-    reactCompiler: true,
-  },
+  reactCompiler: true,
   async rewrites() {
     return [
       {
