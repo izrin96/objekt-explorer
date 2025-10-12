@@ -54,6 +54,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
         ref.current.focus({
           preventScroll: true,
         });
+        ref.current.select();
       }
     };
     document.addEventListener("keydown", onKeyDown);
