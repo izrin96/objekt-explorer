@@ -54,11 +54,11 @@ function SignInForm({
       return result.data;
     },
     onSuccess: (_, _v, _o, { client }) => {
+      toast.success("Signed in successfully");
       client.refetchQueries({
         queryKey: ["session"],
       });
       router.push("/");
-      toast.success("Signed in successfully");
     },
     onError: (error) => {
       toast.error(`Sign in error. ${error.message}`);
@@ -205,6 +205,7 @@ function SignUpForm({
 }: {
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
+  const router = useRouter();
   const { handleSubmit, control } = useForm({
     defaultValues: {
       name: "",
@@ -215,18 +216,18 @@ function SignUpForm({
 
   const mutation = useMutation({
     mutationFn: async (data: { email: string; password: string; name: string }) => {
-      const result = await authClient.signUp.email({
-        ...data,
-        callbackURL: "/auth/verified",
-      });
+      const result = await authClient.signUp.email(data);
       if (result.error) {
         throw new Error(result.error.message);
       }
       return result.data;
     },
-    onSuccess: () => {
-      toast.success("Account created successfully. Please confirm your email.");
-      setState("sign-in");
+    onSuccess: (_, _v, _o, { client }) => {
+      toast.success("Account created successfully.");
+      client.refetchQueries({
+        queryKey: ["session"],
+      });
+      router.push("/");
     },
     onError: (error) => {
       toast.error(`Account creation error. ${error.message}`);

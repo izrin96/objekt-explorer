@@ -10,7 +10,7 @@ import {
   UserIcon,
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -58,6 +58,7 @@ export default function UserNav() {
 
 function UserMenu({ user }: { user: User }) {
   const t = useTranslations("nav");
+  const queryClient = useQueryClient();
   const [genOpen, setGenOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
@@ -120,6 +121,9 @@ function UserMenu({ user }: { user: User }) {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
+                    queryClient.refetchQueries({
+                      queryKey: ["session"],
+                    });
                     toast.success("Sign out successful");
                     router.refresh();
                   },
