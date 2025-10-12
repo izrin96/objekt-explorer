@@ -53,7 +53,10 @@ function SignInForm({
       if (result.error) throw new Error(result.error.message);
       return result.data;
     },
-    onSuccess: () => {
+    onSuccess: (_, _v, _o, { client }) => {
+      client.refetchQueries({
+        queryKey: ["session"],
+      });
       router.push("/");
       toast.success("Signed in successfully");
     },
