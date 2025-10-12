@@ -194,24 +194,21 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                           )
                         }
                       >
-                        {({ openObjekts }) => (
-                          <ObjektView
-                            objekts={objekts}
-                            isFade={!ownedSlugs.has(objekt.slug)}
-                            unobtainable={unobtainables.includes(objekt.slug)}
-                            showCount={showCount}
-                            hideLabel={hideLabel}
-                            open={openObjekts}
-                          >
-                            {authenticated && (
-                              <div className="absolute top-0 right-0 flex items-start">
-                                <ObjektHoverMenu>
-                                  <AddToListMenu objekt={objekt} />
-                                </ObjektHoverMenu>
-                              </div>
-                            )}
-                          </ObjektView>
-                        )}
+                        <ObjektView
+                          objekts={objekts}
+                          isFade={!ownedSlugs.has(objekt.slug)}
+                          unobtainable={unobtainables.includes(objekt.slug)}
+                          showCount={showCount}
+                          hideLabel={hideLabel}
+                        >
+                          {authenticated && (
+                            <div className="absolute top-0 right-0 flex items-start">
+                              <ObjektHoverMenu>
+                                <AddToListMenu objekt={objekt} />
+                              </ObjektHoverMenu>
+                            </div>
+                          )}
+                        </ObjektView>
                       </ObjektModal>
                     );
                   }}

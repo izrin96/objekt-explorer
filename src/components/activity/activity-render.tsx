@@ -24,7 +24,7 @@ import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
-import ObjektModal from "../objekt/objekt-modal";
+import ObjektModal, { useObjektModal } from "../objekt/objekt-modal";
 import { Badge } from "../ui/badge";
 import { Card } from "../ui/card";
 import { Loader } from "../ui/loader";
@@ -270,54 +270,48 @@ function Activity() {
           </div>
 
           <ObjektModal objekts={currentObjekt}>
-            {({ openObjekts }) => (
-              <div
-                style={{
-                  height: `${rowVirtualizer.getTotalSize()}px`,
-                }}
-                className="relative w-full [&>*]:will-change-transform"
-                role="region"
-                aria-label="Activity list"
-                onMouseEnter={() => {
-                  setIsHovering(true);
-                  isHoveringRef.current = true;
-                }}
-                onMouseLeave={() => {
-                  setIsHovering(false);
-                  isHoveringRef.current = false;
-                }}
-              >
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const item = transfers[virtualRow.index];
-                  const isNew = newTransferIds.has(item.transfer.id);
-                  return (
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+              }}
+              className="relative w-full [&>*]:will-change-transform"
+              role="region"
+              aria-label="Activity list"
+              onMouseEnter={() => {
+                setIsHovering(true);
+                isHoveringRef.current = true;
+              }}
+              onMouseLeave={() => {
+                setIsHovering(false);
+                isHoveringRef.current = false;
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const item = transfers[virtualRow.index];
+                const isNew = newTransferIds.has(item.transfer.id);
+                return (
+                  <div
+                    className="absolute top-0 left-0 grid w-full"
+                    key={virtualRow.key}
+                    style={{
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${
+                        virtualRow.start - rowVirtualizer.options.scrollMargin
+                      }px)`,
+                    }}
+                  >
                     <div
-                      className="absolute top-0 left-0 grid w-full"
-                      key={virtualRow.key}
-                      style={{
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${
-                          virtualRow.start - rowVirtualizer.options.scrollMargin
-                        }px)`,
-                      }}
+                      className={cn(
+                        isNew &&
+                          "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
+                      )}
                     >
-                      <div
-                        className={cn(
-                          isNew &&
-                            "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
-                        )}
-                      >
-                        <ActivityRow
-                          item={item}
-                          setCurrentObjekt={setCurrentObjekt}
-                          open={openObjekts}
-                        />
-                      </div>
+                      <ActivityRow item={item} setCurrentObjekt={setCurrentObjekt} />
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  </div>
+                );
+              })}
+            </div>
           </ObjektModal>
 
           {isHovering && (
@@ -341,16 +335,16 @@ function Activity() {
 
 const ActivityRow = memo(function ActivityRow({
   item,
-  open,
   setCurrentObjekt,
 }: {
   item: ActivityData;
-  open: () => void;
   setCurrentObjekt: (objekts: ValidObjekt[]) => void;
 }) {
+  const ctx = useObjektModal();
+
   const openObjekt = () => {
     setCurrentObjekt([item.objekt]);
-    open();
+    ctx.handleClick();
   };
 
   const event =

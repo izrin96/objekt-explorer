@@ -2,28 +2,26 @@
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
+import { ObjektModalContext, useObjektModal } from "./objekt-modal";
 
 export function ObjektViewSelectable({
   objekt,
-  openObjekts,
   children,
 }: {
   objekt: ValidObjekt;
-  openObjekts: () => void;
-  children: ({ isSelected, open }: { isSelected: boolean; open: () => void }) => React.ReactNode;
+  children: ({ isSelected }: { isSelected: boolean }) => React.ReactNode;
 }) {
-  const mode = useObjektSelect((a) => a.mode);
-  const objektSelect = useObjektSelect((a) => a.select);
+  const handleSelect = useObjektSelect((a) => a.handleSelect);
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
+  const ctx = useObjektModal();
 
-  return children({
-    isSelected,
-    open: () => {
-      if (mode) {
-        objektSelect(objekt);
-      } else {
-        openObjekts();
-      }
-    },
-  });
+  const handleClick = () => handleSelect(objekt, ctx.handleClick);
+
+  return (
+    <ObjektModalContext value={{ handleClick }}>
+      {children({
+        isSelected,
+      })}
+    </ObjektModalContext>
+  );
 }

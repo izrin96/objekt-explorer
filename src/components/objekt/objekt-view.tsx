@@ -6,6 +6,7 @@ import type { ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 import { Badge } from "../ui/badge";
+import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
 
 type Props = PropsWithChildren<{
@@ -17,7 +18,6 @@ type Props = PropsWithChildren<{
   showSerial?: boolean;
   isSelected?: boolean;
   hideLabel?: boolean;
-  open: () => void;
 }>;
 
 export default function ObjektView({
@@ -29,12 +29,12 @@ export default function ObjektView({
   showSerial = false,
   isSelected = false,
   hideLabel = false,
-  open,
   children,
 }: Props) {
   const [ref, { width }] = useElementSize();
   const [loaded, setLoaded] = useState(false);
   const [objekt] = objekts;
+  const ctx = useObjektModal();
 
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
@@ -57,7 +57,7 @@ export default function ObjektView({
       >
         <NextImage
           draggable={false}
-          onClick={open}
+          onClick={ctx.handleClick}
           fill
           priority={priority}
           src={resizedUrl}
@@ -75,7 +75,11 @@ export default function ObjektView({
       </div>
       {!hideLabel && (
         <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
-          <Badge intent="secondary" className="cursor-pointer font-semibold" onClick={open}>
+          <Badge
+            intent="secondary"
+            className="cursor-pointer font-semibold"
+            onClick={ctx.handleClick}
+          >
             {getCollectionShortId(objekt)}
             {showSerial && "serial" in objekt && ` #${objekt.serial}`}
           </Badge>

@@ -11,7 +11,7 @@ import { memo, Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
-import ObjektModal from "@/components/objekt/objekt-modal";
+import ObjektModal, { useObjektModal } from "@/components/objekt/objekt-modal";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Loader } from "@/components/ui/loader";
@@ -170,20 +170,13 @@ const RowsRender = memo(function RowsRender({
 }) {
   return (
     <ObjektModal objekts={[item.objekt]}>
-      {({ openObjekts }) => <TradeRow row={item} address={address} open={openObjekts} />}
+      <TradeRow row={item} address={address} />
     </ObjektModal>
   );
 });
 
-function TradeRow({
-  row,
-  address,
-  open,
-}: {
-  row: AggregatedTransfer;
-  address: string;
-  open: () => void;
-}) {
+function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }) {
+  const ctx = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const action = isReceiver ? (
@@ -213,7 +206,11 @@ function TradeRow({
       <div className="min-w-[210px] flex-1 px-3 py-2.5">
         {format(row.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </div>
-      <div role="none" className="min-w-[240px] flex-1 cursor-pointer px-3 py-2.5" onClick={open}>
+      <div
+        role="none"
+        className="min-w-[240px] flex-1 cursor-pointer px-3 py-2.5"
+        onClick={ctx.handleClick}
+      >
         <div className="inline-flex items-center gap-2">
           {row.objekt.collectionId}
           <IconOpenLink />

@@ -91,28 +91,25 @@ function IndexView() {
                     )
                   }
                 >
-                  {({ openObjekts }) => (
-                    <ObjektViewSelectable objekt={objekt} openObjekts={openObjekts}>
-                      {({ isSelected, open }) => (
-                        <ObjektView
-                          objekts={item.item}
-                          priority={index < columns * 3}
-                          isSelected={isSelected}
-                          hideLabel={hideLabel}
-                          open={open}
-                        >
-                          {authenticated && (
-                            <div className="absolute top-0 right-0 flex items-start">
-                              <ObjektSelect objekt={objekt} />
-                              <ObjektHoverMenu>
-                                <AddToListMenu objekt={objekt} />
-                              </ObjektHoverMenu>
-                            </div>
-                          )}
-                        </ObjektView>
-                      )}
-                    </ObjektViewSelectable>
-                  )}
+                  <ObjektViewSelectable objekt={objekt}>
+                    {({ isSelected }) => (
+                      <ObjektView
+                        objekts={item.item}
+                        priority={index < columns * 3}
+                        isSelected={isSelected}
+                        hideLabel={hideLabel}
+                      >
+                        {authenticated && (
+                          <div className="absolute top-0 right-0 flex items-start">
+                            <ObjektSelect objekt={objekt} />
+                            <ObjektHoverMenu>
+                              <AddToListMenu objekt={objekt} />
+                            </ObjektHoverMenu>
+                          </div>
+                        )}
+                      </ObjektView>
+                    )}
+                  </ObjektViewSelectable>
                 </ObjektModal>
               );
             }}

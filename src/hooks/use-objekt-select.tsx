@@ -14,7 +14,8 @@ type ObjektSelectedState = {
   batchSelect: (selected: ValidObjekt[]) => void;
   isSelected: (selected: ValidObjekt) => boolean;
   reset: () => void;
-  handleAction: (open: () => void) => void;
+  handleAction: (callback: () => void) => void;
+  handleSelect: (objekt: ValidObjekt, callback: () => void) => void;
 };
 
 const createObjektSelectStore = () =>
@@ -52,11 +53,19 @@ const createObjektSelectStore = () =>
 
     reset: () => set(() => ({ selected: new Map() })),
 
-    handleAction: (open: () => void) => {
+    handleAction: (callback: () => void) => {
       if (get().selected.size === 0) {
         toast.error("Must select at least one objekt");
       } else {
-        open();
+        callback();
+      }
+    },
+
+    handleSelect: (objekt: ValidObjekt, callback: () => void) => {
+      if (get().mode) {
+        get().select(objekt);
+      } else {
+        callback();
       }
     },
   }));

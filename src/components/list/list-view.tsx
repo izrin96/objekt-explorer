@@ -89,30 +89,27 @@ function ListView({ list }: { list: PublicList }) {
                     )
                   }
                 >
-                  {({ openObjekts }) => (
-                    <ObjektViewSelectable objekt={objekt} openObjekts={openObjekts}>
-                      {({ isSelected, open }) => (
-                        <ObjektView
-                          objekts={item.item}
-                          priority={index < columns * 3}
-                          isSelected={isSelected}
-                          hideLabel={hideLabel}
-                          open={open}
-                          showCount
-                        >
-                          {authenticated && (
-                            <div className="absolute top-0 right-0 flex items-start">
-                              <ObjektSelect objekt={objekt} />
-                              <ObjektHoverMenu>
-                                {isOwned && <RemoveFromListMenu objekt={objekt} />}
-                                <AddToListMenu objekt={objekt} />
-                              </ObjektHoverMenu>
-                            </div>
-                          )}
-                        </ObjektView>
-                      )}
-                    </ObjektViewSelectable>
-                  )}
+                  <ObjektViewSelectable objekt={objekt}>
+                    {({ isSelected }) => (
+                      <ObjektView
+                        objekts={item.item}
+                        priority={index < columns * 3}
+                        isSelected={isSelected}
+                        hideLabel={hideLabel}
+                        showCount
+                      >
+                        {authenticated && (
+                          <div className="absolute top-0 right-0 flex items-start">
+                            <ObjektSelect objekt={objekt} />
+                            <ObjektHoverMenu>
+                              {isOwned && <RemoveFromListMenu objekt={objekt} />}
+                              <AddToListMenu objekt={objekt} />
+                            </ObjektHoverMenu>
+                          </div>
+                        )}
+                      </ObjektView>
+                    )}
+                  </ObjektViewSelectable>
                 </ObjektModal>
               );
             }}
