@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Inter, Noto_Sans_KR, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
 import ClientProviders, { ClientArtistProvider } from "@/components/client-providers";
-import "./globals.css";
+import "@/app/globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import type { PropsWithChildren } from "react";
 import { Analytics } from "@/components/analytics";
 import Navbar from "@/components/navbar";
 import { cn } from "@/utils/classes";
-import "../lib/orpc/server";
+import "@/lib/orpc/server";
 import { preconnect } from "react-dom";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
