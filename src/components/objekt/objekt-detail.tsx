@@ -71,7 +71,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       aria-label="Objekt tab"
       selectedKey={currentTab}
       onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
-      className="p-2"
+      className="grow p-2"
     >
       <TabList>
         {showOwned && (
