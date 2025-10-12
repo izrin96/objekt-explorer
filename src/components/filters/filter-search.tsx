@@ -48,7 +48,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         window.scrollTo({
-          top: 0,
+          top: ref.current.getBoundingClientRect().y + window.scrollY - 150,
           behavior: "instant",
         });
         ref.current.focus({
