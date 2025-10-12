@@ -31,9 +31,6 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
         <div className="absolute right-0 h-[88.2%] w-[10.8%] rounded-l-[calc(var(--width)*0.035)] bg-(--objekt-bg-color)"></div>
       )}
 
-      {/* temporary custom band image, mostly for idntt */}
-      {!objekt.bandImageUrl && <TempCustomBand objekt={objekt} />}
-
       <div className="absolute right-0 flex h-[88.2%] w-[10.8%] items-center">
         {/* band artist and member name, only for idntt */}
         {objekt.artist === "idntt" && (
@@ -55,43 +52,5 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
         </div>
       </div>
     </div>
-  );
-}
-
-function TempCustomBand({ objekt }: { objekt: ValidObjekt }) {
-  return (
-    <>
-      {/* special class */}
-      {objekt.artist === "idntt" && objekt.class === "Special" && (
-        <Image
-          src="https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/86207a80d354439cada0ec6c45e076ee20250814061643330.png"
-          alt="band image"
-          className="object-cover"
-          fill
-        />
-      )}
-
-      {/* unit class */}
-      {objekt.artist === "idntt" && objekt.class === "Unit" && (
-        <Image
-          src="https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/e0e4fdd950bc4ca8ba49a98b053756f620250814065358420.png"
-          alt="band image"
-          className="object-cover"
-          fill
-        />
-      )}
-
-      {/* oma */}
-      {objekt.artist === "idntt" &&
-        objekt.onOffline === "offline" &&
-        objekt.backgroundColor === "#000000" && (
-          <Image
-            src="https://resources.cosmo.fans/images/collection-band/2025/07/12/04/raw/fab4f9ec98d24a00a7c417e012a493cd20250712042141653.png"
-            alt="band image"
-            className="object-cover"
-            fill
-          />
-        )}
-    </>
   );
 }

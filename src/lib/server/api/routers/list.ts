@@ -355,10 +355,7 @@ async function fetchCollections(slugs: string[], artists: ValidArtist[]) {
       ),
     );
 
-  return result.map((collection) => ({
-    ...collection,
-    ...overrideCollection(collection),
-  }));
+  return result.map(overrideCollection);
 }
 
 async function mapEntriesCollection(

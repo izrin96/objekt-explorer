@@ -64,10 +64,7 @@ export async function GET(request: NextRequest) {
     .orderBy(desc(collections.id));
 
   const body = JSON.stringify({
-    collections: result.map((collection) => ({
-      ...collection,
-      ...overrideCollection(collection),
-    })),
+    collections: result.map(overrideCollection),
   } satisfies CollectionResult);
 
   return new NextResponse(body, {
