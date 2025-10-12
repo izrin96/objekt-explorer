@@ -17,7 +17,7 @@ import {
 } from "react-aria-components";
 import { tv } from "tailwind-variants";
 
-import { composeTailwindRenderProps } from "@/lib/primitive";
+import { cx } from "@/lib/primitive";
 
 interface FieldProps {
   label?: string;
@@ -53,13 +53,7 @@ interface FieldErrorProps extends FieldErrorPrimitiveProps {
   ref?: React.RefObject<HTMLElement>;
 }
 const FieldError = ({ className, ref, ...props }: FieldErrorProps) => {
-  return (
-    <FieldErrorPrimitive
-      ref={ref}
-      {...props}
-      className={composeTailwindRenderProps(className, fieldError())}
-    />
-  );
+  return <FieldErrorPrimitive ref={ref} {...props} className={cx(fieldError(), className)} />;
 };
 
 interface FieldGroupProps extends GroupProps {
@@ -70,7 +64,7 @@ const FieldGroup = ({ className, ref, ...props }: FieldGroupProps) => {
     <Group
       {...props}
       ref={ref}
-      className={composeTailwindRenderProps(className, [
+      className={cx(
         "[--gutter-inset:--spacing(6)] [--gutter-x:--spacing(2.5)]",
         "*:text-base/6 *:sm:text-sm/6",
         "group relative inset-ring inset-ring-border flex items-center overflow-hidden rounded-lg shadow-xs transition duration-200 ease-out",
@@ -87,7 +81,8 @@ const FieldGroup = ({ className, ref, ...props }: FieldGroupProps) => {
         "hover:inset-ring-[color-mix(in_oklab,var(--border)_50%,var(--muted-fg)_25%)] focus-within:hover:inset-ring-ring/70 has-invalid:hover:inset-ring-danger/70",
         "invalid:inset-ring-danger/70 focus-within:invalid:inset-ring-danger/70 focus-within:invalid:ring-danger/20 group-invalid:inset-ring-danger/70 group-invalid:focus-within:inset-ring-danger/70 group-invalid:focus-within:ring-danger/20",
         "focus-within:inset-ring-ring/70 focus-within:ring-3 focus-within:ring-ring/20",
-      ])}
+        className,
+      )}
     />
   );
 };
@@ -101,9 +96,9 @@ const Input = ({ className, ref, ...props }: InputProps) => {
     <InputPrimitive
       ref={ref}
       {...props}
-      className={composeTailwindRenderProps(
-        className,
+      className={cx(
         "relative block w-full px-3.5 py-2 placeholder-muted-fg outline-hidden sm:px-3 sm:py-1.5 sm:text-sm/6 [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
+        className,
       )}
     />
   );
