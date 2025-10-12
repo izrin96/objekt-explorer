@@ -2,10 +2,11 @@
 
 import { QuestionMarkIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { Button } from "../ui/button";
+import { FieldGroup, Input } from "../ui/field";
 import { Popover, PopoverContent } from "../ui/popover";
 import { TextField } from "../ui/text-field";
 
@@ -27,6 +28,7 @@ interface SearchFilterFieldProps {
 function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
   const [localQuery, setLocalQuery] = useState(initialValue);
   const locale = useLocale();
+  const ref = useRef<HTMLInputElement>(null!);
   const t = useTranslations("filter");
   const [query, setQuery] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 250);
@@ -41,15 +43,33 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
     debouncedCommit(value);
   };
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "f" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        window.scrollTo({
+          top: 0,
+          behavior: "instant",
+        });
+        ref.current.focus({
+          preventScroll: true,
+        });
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <TextField
-      placeholder={t("quick_search")}
       onChange={handleChange}
       className="w-full min-w-50 max-w-72"
       value={query}
       aria-label="Search"
-      suffix={
-        query.length > 0 ? (
+    >
+      <FieldGroup>
+        <Input ref={ref} placeholder={t("quick_search")} />
+        {query.length > 0 ? (
           <Button intent="plain" size="sq-xs" onClick={() => handleChange("")}>
             <XIcon data-slot="icon" />
           </Button>
@@ -102,8 +122,8 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
               )}
             </PopoverContent>
           </Popover>
-        )
-      }
-    />
+        )}
+      </FieldGroup>
+    </TextField>
   );
 }
