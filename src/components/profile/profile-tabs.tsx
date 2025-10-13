@@ -1,9 +1,22 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useTarget } from "@/hooks/use-target";
 import { Tab, TabList, Tabs } from "../ui/tabs";
 
-export default function ProfileTabs({ path }: { path: string }) {
+export default function ProfileTabs() {
+  const router = useRouter();
+  const profile = useTarget((a) => a.profile)!;
+  const path = profile.nickname ?? profile.address;
+
+  useEffect(() => {
+    router.prefetch(`/@${path}`);
+    router.prefetch(`/@${path}/trades`);
+    router.prefetch(`/@${path}/stats`);
+    router.prefetch(`/@${path}/progress`);
+  }, []);
+
   const pathname = usePathname();
   const items = [
     { url: `/@${path}`, label: "Collection" },
