@@ -15,7 +15,7 @@ export default function ProfileTabs() {
     router.prefetch(`/@${path}/trades`);
     router.prefetch(`/@${path}/stats`);
     router.prefetch(`/@${path}/progress`);
-  }, []);
+  }, [path]);
 
   const pathname = usePathname();
   const items = [
