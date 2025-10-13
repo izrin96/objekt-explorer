@@ -16,6 +16,7 @@ export default function Navbar() {
   useEffect(() => {
     router.prefetch("/");
     router.prefetch("/activity");
+    router.prefetch("/login");
   }, []);
 
   return (
