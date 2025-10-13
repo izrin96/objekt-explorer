@@ -1,4 +1,7 @@
-import { Suspense } from "react";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
 import AppLogo from "./app-logo";
 import SelectedArtistFilter from "./filters/filter-selected-artist";
 import { ThemeStyleSwitcher } from "./theme-style-select";
@@ -8,6 +11,13 @@ import UserNav from "./user-nav";
 import UserSearch from "./user-search";
 
 export default function Navbar() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.prefetch("/");
+    router.prefetch("/activity");
+  }, []);
+
   return (
     <nav className="sticky top-0 right-0 left-0 z-30 h-14 bg-gradient-to-b from-bg/80 to-transparent">
       <div className="-z-1 mask-b-from-40% absolute size-full backdrop-blur-lg"></div>

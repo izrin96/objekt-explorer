@@ -11,6 +11,7 @@ import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession, toPublicUser } from "@/lib/server/auth";
 import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 import { fetchUserProfiles } from "@/lib/server/profile";
+import PrefetchLink from "./_prefetch";
 
 type Props = PropsWithChildren<{
   params: Promise<{
@@ -43,6 +44,7 @@ export default async function UserCollectionLayout(props: Props) {
 
   return (
     <ProfileProvider profiles={profiles} targetProfile={targetProfile} user={toPublicUser(session)}>
+      <PrefetchLink />
       <ProfileBanner profile={targetProfile} />
       {targetProfile.bannerImgUrl && (
         <Container>
