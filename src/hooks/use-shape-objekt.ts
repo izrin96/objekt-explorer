@@ -1,7 +1,8 @@
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
-import { classSort, type ObjektItem, seasonSort } from "@/lib/filter-utils";
-import type { PinObjekt, ValidObjekt } from "@/lib/universal/objekts";
+import { classSort, seasonSort } from "@/lib/filter-utils";
+import { isObjektOwned } from "@/lib/objekt-utils";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters, useIsFiltering } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
@@ -15,19 +16,13 @@ export function useShapeObjekts() {
   const sortObjekts = useObjektSort();
 
   return useCallback(
-    (
-      objekts: ValidObjekt[],
-      pins: PinObjekt[] = [],
-      lockedObjekts: PinObjekt[] = [],
-    ): [string, ObjektItem<ValidObjekt[]>[]][] => {
-      // 1. filter all
-      // 2. group by key
-      // 3. sort the group
-      // 4. sort the items
-      // 5. group by duplicate
-      // 6. sort by duplicate
-      // 7. map to ObjektItem<T[]>
-      // 8. sort pin objekt
+    (objekts: ValidObjekt[], isProfile: boolean = false): [string, ValidObjekt[][]][] => {
+      // - group by key
+      // - sort the group
+      // - sort the items
+      // - sort pin objekt
+      // - group by duplicate
+      // - sort by duplicate
 
       // group by key
       let groupByKey: Record<string, ValidObjekt[]>;
@@ -62,62 +57,40 @@ export function useShapeObjekts() {
         return keyA.localeCompare(keyB);
       });
 
-      return groupByKeySorted.map(([key, keyObjekts]) => {
+      return groupByKeySorted.map(([key, items]) => {
         // sort objekts
-        const sortedObjekts = sortObjekts(keyObjekts);
+        items = sortObjekts(items);
+
+        // sort pin
+        // if not filtering, pins should show first
+        if (!isFiltering && isProfile && !filters.hidePin) {
+          const ownedItems = items.filter(isObjektOwned);
+          items = [
+            ...ownedItems
+              .filter((item) => item.isPin === true)
+              .toSorted((a, b) => (a.pinOrder && b.pinOrder ? b.pinOrder - a.pinOrder : 0)),
+            ...ownedItems.filter((item) => item.isPin === false),
+          ];
+        }
 
         // group by duplicate
-        let group: ValidObjekt[][];
+        let grouped: ValidObjekt[][];
         if (filters.grouped) {
-          group = Object.values(groupBy(sortedObjekts, (a) => a.collectionId));
+          grouped = Object.values(groupBy(items, (a) => a.collectionId));
         } else {
-          group = sortedObjekts.map((objekt) => [objekt]);
+          grouped = items.map((objekt) => [objekt]);
         }
 
         // sort duplicate objekts
-        if (filters.sort === "duplicate") {
+        if (isFiltering && filters.sort === "duplicate") {
           if (filters.sort_dir === "asc") {
-            group = group.toSorted((a, b) => a.length - b.length);
+            grouped = grouped.toSorted((a, b) => a.length - b.length);
           } else {
-            group = group.toSorted((a, b) => b.length - a.length);
+            grouped = grouped.toSorted((a, b) => b.length - a.length);
           }
         }
 
-        // map T[] to ObjektItem<T[]>
-        let items: ObjektItem<ValidObjekt[]>[] = group.map((objekts) => {
-          const [objekt] = objekts;
-          const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
-          const lockedObjekt = lockedObjekts.find((lock) => lock.tokenId === objekt.id);
-          const isPin = pinObjekt !== undefined;
-          const isLocked = lockedObjekt !== undefined;
-          return {
-            isPin: isPin,
-            isLocked: isLocked,
-            item: objekts,
-            order: isPin ? pinObjekt.order : null,
-          };
-        });
-
-        if (pins.length > 0) {
-          // if not filtering, pins should show first
-          if (!isFiltering && !filters.hidePin) {
-            items = [
-              ...items
-                .filter((item) => item.isPin === true)
-                .toSorted((a, b) => (a.order && b.order ? b.order - a.order : 0)),
-              ...items.filter((item) => item.isPin === false),
-            ];
-          }
-        }
-
-        // filter locked / unlocked
-        if (filters.locked !== null) {
-          items = items.filter((item) =>
-            filters.locked !== null ? item.isLocked === filters.locked : true,
-          );
-        }
-
-        return [key, items];
+        return [key, grouped];
       });
     },
     [filters, isFiltering, getArtist, compareMember, sortObjekts],

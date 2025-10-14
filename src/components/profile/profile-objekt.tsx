@@ -12,6 +12,7 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
+import { isObjektOwned } from "@/lib/objekt-utils";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
@@ -102,12 +103,12 @@ function ProfileObjekt() {
             items={items}
           >
             {({ item, index }) => {
-              const [objekt] = item.item;
-              const isOwned = "serial" in objekt;
+              const [objekt] = item;
+              const isOwned = isObjektOwned(objekt);
               return (
                 <ObjektModal
                   key={objekt.id}
-                  objekts={item.item}
+                  objekts={item}
                   showOwned
                   menu={
                     authenticated && (
@@ -115,8 +116,8 @@ function ProfileObjekt() {
                         <SelectMenuItem objekt={objekt} />
                         {!filters.grouped && isProfileAuthed && isOwned && (
                           <>
-                            <TogglePinMenuItem isPin={item.isPin} tokenId={objekt.id} />
-                            <ToggleLockMenuItem isLocked={item.isLocked} tokenId={objekt.id} />
+                            <TogglePinMenuItem isPin={objekt.isPin} tokenId={objekt.id} />
+                            <ToggleLockMenuItem isLocked={objekt.isLocked} tokenId={objekt.id} />
                           </>
                         )}
                         <AddToListMenu objekt={objekt} />
@@ -127,7 +128,7 @@ function ProfileObjekt() {
                   <ObjektViewSelectable objekt={objekt}>
                     {({ isSelected }) => (
                       <ObjektView
-                        objekts={item.item}
+                        objekts={item}
                         priority={index < columns * 3}
                         isSelected={isSelected}
                         hideLabel={hideLabel}
@@ -142,9 +143,9 @@ function ProfileObjekt() {
                             <ObjektHoverMenu>
                               {!filters.grouped && isProfileAuthed && isOwned && (
                                 <>
-                                  <TogglePinMenuItem isPin={item.isPin} tokenId={objekt.id} />
+                                  <TogglePinMenuItem isPin={objekt.isPin} tokenId={objekt.id} />
                                   <ToggleLockMenuItem
-                                    isLocked={item.isLocked}
+                                    isLocked={objekt.isLocked}
                                     tokenId={objekt.id}
                                   />
                                 </>
@@ -153,8 +154,8 @@ function ProfileObjekt() {
                             </ObjektHoverMenu>
                           </div>
                         )}
-                        {!filters.grouped && (
-                          <ObjektOverlay isPin={item.isPin} isLocked={item.isLocked} />
+                        {!filters.grouped && isOwned && (
+                          <ObjektOverlay isPin={objekt.isPin} isLocked={objekt.isLocked} />
                         )}
                       </ObjektView>
                     )}

@@ -1,8 +1,10 @@
 import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
+import { mapObjektWithPinLock } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import type { ValidObjekt } from "@/lib/universal/objekts";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useObjektFilter } from "./use-objekt-filter";
@@ -37,19 +39,20 @@ export function useProfileObjekts() {
     enabled: filters.unowned ?? false,
   });
 
-  const joinedObjekts = useMemo(() => {
+  const objekts = useMemo(() => {
+    let combined: ValidObjekt[] = ownedQuery.data;
     if (filters.unowned) {
       const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
       const missingObjekts = (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug));
-      return [...ownedQuery.data, ...missingObjekts];
+      combined = [...ownedQuery.data, ...missingObjekts];
     }
-    return ownedQuery.data;
-  }, [ownedQuery.data, filters.unowned, objektsQuery.data]);
+    return combined.map((a) => mapObjektWithPinLock(a, pinsQuery.data, lockedObjektQuery.data));
+  }, [ownedQuery.data, objektsQuery.data, pinsQuery.data, lockedObjektQuery.data, filters.unowned]);
 
-  const filtered = filter(joinedObjekts);
+  const filtered = filter(objekts);
 
   return useDeferredValue({
-    shaped: shape(filtered, pinsQuery.data, lockedObjektQuery.data),
+    shaped: shape(filtered, true),
     filtered,
     grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
     filters,

@@ -1,7 +1,7 @@
 import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 import { useElementSize } from "@/hooks/use-element-size";
-import { getCollectionShortId } from "@/lib/objekt-utils";
+import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
@@ -81,7 +81,7 @@ export default function ObjektView({
             onClick={ctx.handleClick}
           >
             {getCollectionShortId(objekt)}
-            {showSerial && "serial" in objekt && ` #${objekt.serial}`}
+            {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
           </Badge>
           {unobtainable && (
             <Badge intent="custom" className="font-semibold text-xs">

@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { getSortDate, seasonSort } from "@/lib/filter-utils";
+import { isObjektOwned } from "@/lib/objekt-utils";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { useFilters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
@@ -39,11 +40,11 @@ export function useObjektSort() {
       } else if (sort === "serial") {
         if (sortDir === "desc") {
           objekts = objekts.toSorted((a, b) =>
-            "serial" in a && "serial" in b ? b.serial - a.serial : 0,
+            isObjektOwned(a) && isObjektOwned(b) ? b.serial - a.serial : 0,
           );
         } else {
           objekts = objekts.toSorted((a, b) =>
-            "serial" in a && "serial" in b ? a.serial - b.serial : 0,
+            isObjektOwned(a) && isObjektOwned(b) ? a.serial - b.serial : 0,
           );
         }
       } else if (sort === "member") {

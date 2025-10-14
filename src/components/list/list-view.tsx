@@ -71,11 +71,11 @@ function ListView({ list }: { list: PublicList }) {
             items={items}
           >
             {({ item, index }) => {
-              const [objekt] = item.item;
+              const [objekt] = item;
               return (
                 <ObjektModal
                   key={objekt.id}
-                  objekts={item.item}
+                  objekts={item}
                   menu={
                     authenticated && (
                       <ObjektStaticMenu>
@@ -89,7 +89,7 @@ function ListView({ list }: { list: PublicList }) {
                   <ObjektViewSelectable objekt={objekt}>
                     {({ isSelected }) => (
                       <ObjektView
-                        objekts={item.item}
+                        objekts={item}
                         priority={index < columns * 3}
                         isSelected={isSelected}
                         hideLabel={hideLabel}

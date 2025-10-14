@@ -1,7 +1,12 @@
 "use client";
 
 import { IconOpenLink } from "@intentui/icons";
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  CaretLeftIcon,
+  CaretRightIcon,
+  LockSimpleIcon,
+  PushPinIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
@@ -10,7 +15,7 @@ import { useTranslations } from "next-intl";
 import { type CSSProperties, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
-import { getObjektImageUrls } from "@/lib/objekt-utils";
+import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
@@ -61,10 +66,10 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
   const [objekt] = objekts;
   const t = useTranslations("objekt");
-  const isOwned = "serial" in objekt;
+  const isOwned = isObjektOwned(objekt);
   const currentTab = useObjektModal((a) => a.currentTab);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
-  const [serial, setSerial] = useState("serial" in objekt ? objekt.serial : null);
+  const [serial, setSerial] = useState(isOwned ? objekt.serial : null);
 
   return (
     <Tabs
@@ -89,7 +94,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       {showOwned && (
         <TabPanel id="owned">
           {isOwned ? (
-            <OwnedListPanel setSerial={setSerial} objekts={objekts as OwnedObjekt[]} />
+            <OwnedListPanel setSerial={setSerial} objekts={objekts.filter(isObjektOwned)} />
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
               <ArchiveXIcon strokeWidth={1} size={64} />
@@ -228,8 +233,15 @@ function OwnedListPanel({
             <TableBody>
               {currentItems.map((item) => (
                 <TableRow key={item.id} id={item.id}>
-                  <TableCell className="cursor-pointer" onClick={() => openTrades(item.serial)}>
+                  <TableCell
+                    className="flex cursor-pointer items-center gap-2"
+                    onClick={() => openTrades(item.serial)}
+                  >
                     {item.serial}
+                    <div className="flex items-center gap-1">
+                      {item.isPin && <PushPinIcon weight="regular" className="size-3" />}
+                      {item.isLocked && <LockSimpleIcon weight="regular" className="size-3" />}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Link

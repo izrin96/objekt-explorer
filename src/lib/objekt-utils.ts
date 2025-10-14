@@ -4,6 +4,7 @@ import {
   type OwnedObjekt,
   overrideAccents,
   overrideFonts,
+  type PinObjekt,
   shortformMembers,
   type ValidObjekt,
 } from "./universal/objekts";
@@ -56,11 +57,34 @@ export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt): Owned
   };
 }
 
+export function mapObjektWithPinLock(
+  objekt: ValidObjekt,
+  pins: PinObjekt[],
+  locked: PinObjekt[],
+): ValidObjekt {
+  if (!isObjektOwned(objekt)) return objekt;
+
+  const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
+  const lockedObjekt = locked.find((lock) => lock.tokenId === objekt.id);
+  const isPin = pinObjekt !== undefined;
+  const isLocked = lockedObjekt !== undefined;
+  return {
+    ...objekt,
+    isPin,
+    isLocked,
+    pinOrder: isPin ? pinObjekt.order : null,
+  } satisfies OwnedObjekt;
+}
+
 export function mapObjektWithTag(objekt: ValidObjekt): ValidObjekt {
   return {
     ...objekt,
     tags: makeCollectionTags(objekt),
   };
+}
+
+export function isObjektOwned(objekt: ValidObjekt) {
+  return "serial" in objekt;
 }
 
 export function overrideCollection(collection: IndexedObjekt) {

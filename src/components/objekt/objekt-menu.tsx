@@ -99,7 +99,13 @@ export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
   );
 }
 
-export function TogglePinMenuItem({ isPin, tokenId }: { isPin: boolean; tokenId: string }) {
+export function TogglePinMenuItem({
+  isPin = false,
+  tokenId,
+}: {
+  isPin?: boolean;
+  tokenId: string;
+}) {
   const profile = useTarget((a) => a.profile)!;
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
@@ -125,7 +131,13 @@ export function TogglePinMenuItem({ isPin, tokenId }: { isPin: boolean; tokenId:
   );
 }
 
-export function ToggleLockMenuItem({ isLocked, tokenId }: { isLocked: boolean; tokenId: string }) {
+export function ToggleLockMenuItem({
+  isLocked = false,
+  tokenId,
+}: {
+  isLocked?: boolean;
+  tokenId: string;
+}) {
   const profile = useTarget((a) => a.profile)!;
   const lock = useBatchLock();
   const unlock = useBatchUnlock();

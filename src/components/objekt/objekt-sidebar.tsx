@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useElementSize } from "@/hooks/use-element-size";
+import { isObjektOwned } from "@/lib/objekt-utils";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import IdnttLogo from "../idntt-logo";
 
@@ -43,7 +44,7 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
         {/* band collection no. and serial */}
         <div className="absolute flex w-full items-center font-semibold text-[calc(var(--width)*0.06)] [writing-mode:vertical-lr]">
           <span>{objekt.collectionNo}</span>
-          {!hideSerial && "serial" in objekt && (
+          {!hideSerial && isObjektOwned(objekt) && (
             <div className="flex pt-[0.7em] tracking-wide">
               <span className="pb-[.1em]">#</span>
               <span>{objekt.serial}</span>

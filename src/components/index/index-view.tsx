@@ -76,11 +76,11 @@ function IndexView() {
             items={items}
           >
             {({ item, index }) => {
-              const [objekt] = item.item;
+              const [objekt] = item;
               return (
                 <ObjektModal
                   key={objekt.id}
-                  objekts={item.item}
+                  objekts={item}
                   menu={
                     authenticated && (
                       <ObjektStaticMenu>
@@ -93,7 +93,7 @@ function IndexView() {
                   <ObjektViewSelectable objekt={objekt}>
                     {({ isSelected }) => (
                       <ObjektView
-                        objekts={item.item}
+                        objekts={item}
                         priority={index < columns * 3}
                         isSelected={isSelected}
                         hideLabel={hideLabel}

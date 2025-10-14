@@ -6,15 +6,9 @@ import {
   validClasses,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
+import { isObjektOwned } from "./objekt-utils";
 import type { ValidObjekt } from "./universal/objekts";
 import { getEdition } from "./utils";
-
-export type ObjektItem<T> = {
-  item: T;
-  isPin: boolean;
-  isLocked: boolean;
-  order: number | null;
-};
 
 function parseCollectionNo(value: string) {
   const expression = /^([a-zA-Z]*)(\d{3})([azAZ]?)$/;
@@ -47,7 +41,7 @@ function getObjektBreakdown(objekt: ValidObjekt) {
 
 function searchFilter(keyword: string, objekt: ValidObjekt) {
   // Handle serial search (e.g. #1-20)
-  if (keyword.startsWith("#") && "serial" in objekt) {
+  if (keyword.startsWith("#") && isObjektOwned(objekt)) {
     const [start, end] = keyword.split("-").map(parseSerial);
     if (start === null) return false;
     return objekt.serial >= start && objekt.serial <= (end ?? start);
@@ -92,7 +86,7 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
 }
 
 export function getSortDate(obj: ValidObjekt) {
-  return "receivedAt" in obj
+  return isObjektOwned(obj)
     ? new Date(obj.receivedAt).getTime()
     : new Date(obj.createdAt).getTime();
 }
@@ -136,12 +130,16 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
 
     if (filters.on_offline && !filters.on_offline.includes(a.onOffline)) return false;
 
-    if (filters.transferable && (!("transferable" in a) || !a.transferable)) return false;
+    if (filters.transferable && (!isObjektOwned(a) || !a.transferable)) return false;
 
     if (
       filters.edition &&
       (a.class !== "First" || !filters.edition.includes(getEdition(a.collectionNo)!))
     ) {
+      return false;
+    }
+
+    if (filters.locked !== null && (!isObjektOwned(a) || a.isLocked !== filters.locked)) {
       return false;
     }
 

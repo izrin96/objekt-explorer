@@ -8,6 +8,7 @@ import { useBatchPin } from "@/hooks/actions/batch-pin";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
+import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function PinObjekt({ size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
@@ -23,7 +24,7 @@ export function PinObjekt({ size }: ObjektActionProps) {
           batchPin.mutate({
             address: target.address,
             tokenIds: selected
-              .filter((objekt) => "serial" in objekt)
+              .filter(isObjektOwned)
               .map((a) => Number(a.id))
               .filter(Boolean),
           });
@@ -50,7 +51,7 @@ export function UnpinObjekt({ size }: ObjektActionProps) {
           batchUnpin.mutate({
             address: target.address,
             tokenIds: selected
-              .filter((objekt) => "serial" in objekt)
+              .filter(isObjektOwned)
               .map((a) => Number(a.id))
               .filter(Boolean),
           });

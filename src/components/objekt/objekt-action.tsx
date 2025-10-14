@@ -28,7 +28,13 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
   );
 }
 
-export function ObjektOverlay({ isPin, isLocked }: { isPin: boolean; isLocked: boolean }) {
+export function ObjektOverlay({
+  isPin = false,
+  isLocked = false,
+}: {
+  isPin?: boolean;
+  isLocked?: boolean;
+}) {
   if (!isPin && !isLocked) return;
   return (
     <div className="pointer-events-none absolute top-0 left-0 flex items-start gap-[.2em] rounded-lg bg-(--objekt-bg-color) p-1 text-(--objekt-text-color)">

@@ -8,6 +8,7 @@ import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
+import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function LockObjekt({ size }: ObjektActionProps) {
   const target = useTarget((a) => a.profile)!;
@@ -23,7 +24,7 @@ export function LockObjekt({ size }: ObjektActionProps) {
           batchLock.mutate({
             address: target.address,
             tokenIds: selected
-              .filter((objekt) => "serial" in objekt)
+              .filter(isObjektOwned)
               .map((a) => Number(a.id))
               .filter(Boolean),
           });
@@ -50,7 +51,7 @@ export function UnlockObjekt({ size }: ObjektActionProps) {
           batchUnlock.mutate({
             address: target.address,
             tokenIds: selected
-              .filter((objekt) => "serial" in objekt)
+              .filter(isObjektOwned)
               .map((a) => Number(a.id))
               .filter(Boolean),
           });

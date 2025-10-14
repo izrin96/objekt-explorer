@@ -1,15 +1,28 @@
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
 import type { ParsedDate } from "./common";
 
+type WithTags = {
+  tags?: string[];
+};
+
 export type IndexedObjekt = Omit<
   Collection,
   "contract" | "comoAmount" | "accentColor" | "thumbnailImage"
->;
+> &
+  WithTags;
 
 export type OwnedObjekt = IndexedObjekt &
-  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable">;
+  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> &
+  WithTags &
+  OwnedObjektExtraData;
 
-export type ValidObjekt = (OwnedObjekt | IndexedObjekt) & { tags?: string[] };
+type OwnedObjektExtraData = {
+  isPin?: boolean;
+  isLocked?: boolean;
+  pinOrder?: number | null;
+};
+
+export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
 export type PinObjekt = {
   tokenId: string;
