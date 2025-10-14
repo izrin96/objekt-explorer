@@ -54,7 +54,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
         <PlusIcon data-slot="icon" />
         <MenuLabel>Add to list</MenuLabel>
       </MenuItem>
-      <MenuContent placement="bottom right">
+      <MenuContent placement="bottom">
         {!data && (
           <MenuItem isDisabled>
             <MenuLabel>
