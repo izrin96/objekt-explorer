@@ -80,7 +80,7 @@ function ListCard({ list }: ListCardProps) {
     <>
       <EditListModal slug={list.slug} open={editOpen} setOpen={setEditOpen} />
       <DeleteListModal slug={list.slug} open={deleteOpen} setOpen={setDeleteOpen} />
-      <Card key={list.slug} className="bg-secondary/20">
+      <Card key={list.slug}>
         <CardContent className="flex justify-between">
           <Link href={`/list/${list.slug}`} className="flex-1 font-semibold text-base">
             {list.name}

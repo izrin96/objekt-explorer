@@ -66,7 +66,7 @@ function LinkCard({ link }: LinkCardProps) {
   const [removeOpen, setRemoveOpen] = useState(false);
   const nickname = parseNickname(link.address, link.nickname);
   return (
-    <Card className="bg-secondary/20">
+    <Card>
       <CardContent className="flex justify-between">
         <Link
           href={`/@${link.nickname ?? link.address}`}

@@ -145,7 +145,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
       <div
         role="none"
         className={cn(
-          "inset-ring inset-ring-fg/10 flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-secondary/30 p-4 py-4 transition hover:bg-secondary/60",
+          "inset-ring inset-ring-fg/10 flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-overlay p-4 py-4 transition hover:bg-muted",
           percentage >= 100 && "inset-ring-primary",
         )}
         onClick={() => setShow(!show)}
