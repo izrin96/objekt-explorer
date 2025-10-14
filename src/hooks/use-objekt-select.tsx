@@ -45,7 +45,7 @@ const createObjektSelectStore = () =>
     batchSelect: (selected) =>
       set(() => {
         return {
-          selected: new Map(selected.map((a) => [a.id, a])),
+          selected: new Map(selected.toReversed().map((a) => [a.id, a])),
         };
       }),
 

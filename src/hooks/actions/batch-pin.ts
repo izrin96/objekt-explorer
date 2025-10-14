@@ -13,7 +13,10 @@ export function useBatchPin() {
         client.setQueryData(orpc.pins.list.queryKey({ input: address }), (old = []) => {
           const tokenIdSet = new Set(tokenIds.map(String));
           return [
-            ...tokenIds.map((tokenId) => ({ tokenId: String(tokenId), order: Date.now() })),
+            ...tokenIds.map((tokenId, index) => ({
+              tokenId: String(tokenId),
+              order: Date.now() + index,
+            })),
             ...old.filter((item) => tokenIdSet.has(item.tokenId) === false),
           ];
         });

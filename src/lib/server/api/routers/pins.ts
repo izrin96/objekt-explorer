@@ -38,9 +38,10 @@ export const pinsRouter = {
       await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
 
       await db.insert(pins).values(
-        tokenIds.map((tokenId) => ({
+        tokenIds.map((tokenId, index) => ({
           address,
           tokenId,
+          createdAt: new Date(Date.now() + index),
         })),
       );
     }),

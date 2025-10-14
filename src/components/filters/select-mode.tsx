@@ -31,7 +31,7 @@ export function SelectMode({ children, objekts }: Props) {
         <HandPointingIcon weight="regular" data-slot="icon" />
         {t("select_mode")}
       </Toggle>
-      <Button intent="outline" onClick={() => batchSelect(objekts.toReversed())}>
+      <Button intent="outline" onClick={() => batchSelect(objekts)}>
         <ChecksIcon weight="regular" data-slot="icon" />
         Select all
       </Button>
@@ -73,7 +73,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
               </Toggle>
               <TooltipContent inverse>Toggle select mode</TooltipContent>
             </Tooltip>
-            <Button size="sm" intent="outline" onClick={() => batchSelect(objekts.toReversed())}>
+            <Button size="sm" intent="outline" onClick={() => batchSelect(objekts)}>
               <ChecksIcon weight="regular" data-slot="icon" />
               Select all
             </Button>
