@@ -147,7 +147,6 @@ export const pins = pgTable(
     address: citext("address", { length: 42 }).notNull(),
     tokenId: integer("token_id").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
-    order: integer("order"),
   },
   (t) => [index("pins_address_idx").on(t.address), index("pins_token_id_idx").on(t.tokenId)],
 );
