@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
@@ -19,7 +18,6 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const data = await getList(params.slug);
-  if (!data) notFound();
   return {
     title: `${data.name}${data.user ? ` · ${data.user.name}'s` : ""} List`,
   };
@@ -33,8 +31,6 @@ export default async function Page(props: Props) {
     getList(params.slug),
     session ? fetchOwnedLists(session.user.id) : undefined,
   ]);
-
-  if (!list) notFound();
 
   queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({

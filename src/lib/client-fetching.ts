@@ -14,9 +14,15 @@ export const getUserByIdentifier = cache(async (identifier: string) => {
 
 export const getLiveSession = cache(async (id: string) => {
   const accessToken = await getAccessToken();
-  return await fetchLiveSession(accessToken.accessToken, id);
+  const live = await fetchLiveSession(accessToken.accessToken, id);
+  if (!live) notFound();
+  return live;
 });
 
 export const getSelectedArtists = cache(parseSelectedArtists);
 
-export const getList = cache(fetchList);
+export const getList = cache(async (slug: string) => {
+  const list = await fetchList(slug);
+  if (!list) notFound();
+  return list;
+});

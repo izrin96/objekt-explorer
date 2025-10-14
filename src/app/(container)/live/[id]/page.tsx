@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import LiveStreamingRender from "@/components/live/live-render";
 import { env } from "@/env";
 import { getLiveSession } from "@/lib/client-fetching";
@@ -16,8 +16,6 @@ type Props = {
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   const live = await getLiveSession(params.id);
-
-  if (!live) notFound();
 
   return {
     title: `${live.title} · ${live.channel.name} Live`,
@@ -42,22 +40,17 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function Page(props: Props) {
   const [searchParams, params] = await Promise.all([props.searchParams, props.params]);
+  const token = searchParams?.token ?? "";
 
-  if (env.BYPASS_LIVE_KEY === undefined || searchParams?.token !== env.BYPASS_LIVE_KEY) {
-    onRedirect();
+  if (token !== env.BYPASS_LIVE_KEY) {
+    redirect("/live");
   }
 
   const live = await getLiveSession(params.id);
-
-  if (!live) notFound();
 
   return (
     <div className="flex flex-col pt-2">
       <LiveStreamingRender live={live} />
     </div>
   );
-}
-
-function onRedirect() {
-  redirect("/live");
 }

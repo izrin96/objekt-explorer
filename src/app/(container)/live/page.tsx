@@ -17,15 +17,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page(props: Props) {
   const searchParams = await props.searchParams;
+  const token = searchParams?.token ?? "";
   return (
     <div className="flex flex-col gap-3 pt-2 pb-36">
       <Note>
         As this feature violates Cosmo&apos;s Terms of Service, we will no longer continue offering
         it. Please watch the live stream on the Cosmo app instead.
       </Note>
-      {env.BYPASS_LIVE_KEY && searchParams?.token === env.BYPASS_LIVE_KEY && (
-        <LiveSessionListRender />
-      )}
+      {token === env.BYPASS_LIVE_KEY && <LiveSessionListRender />}
     </div>
   );
 }
