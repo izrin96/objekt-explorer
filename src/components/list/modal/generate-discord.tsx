@@ -136,8 +136,8 @@ function Content() {
             label="Have list"
             placeholder="Select a list"
             name={name}
-            selectedKey={value}
-            onSelectionChange={onChange}
+            value={value}
+            onChange={onChange}
             onBlur={onBlur}
             isRequired
             isInvalid={invalid}
@@ -165,8 +165,8 @@ function Content() {
             label="Want list"
             placeholder="Select a list"
             name={name}
-            selectedKey={value}
-            onSelectionChange={onChange}
+            value={value}
+            onChange={onChange}
             onBlur={onBlur}
             isRequired
             isInvalid={invalid}

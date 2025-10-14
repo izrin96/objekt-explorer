@@ -115,8 +115,8 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               label="My List"
               placeholder="Select a list"
               name={name}
-              selectedKey={value}
-              onSelectionChange={onChange}
+              value={value}
+              onChange={onChange}
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}

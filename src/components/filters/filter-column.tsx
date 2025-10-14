@@ -12,8 +12,8 @@ export default function ColumnFilter() {
   return (
     <Select
       className="w-[130px]"
-      selectedKey={columns}
-      onSelectionChange={(value) => {
+      value={columns}
+      onChange={(value) => {
         setColumns(Number(value));
       }}
       aria-label={t("column")}

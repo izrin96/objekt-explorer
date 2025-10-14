@@ -308,8 +308,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               label="Objekt Columns"
               description="Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=)."
               name={name}
-              selectedKey={`${value}`}
-              onSelectionChange={(key) => onChange(Number(key))}
+              value={`${value}`}
+              onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
               isInvalid={invalid}
               errorMessage={error?.message}
