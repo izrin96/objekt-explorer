@@ -86,7 +86,7 @@ function Activity() {
 
   const queryKey = [type, filters, parsedSelectedArtistIds];
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending, isRefetching } =
     useInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", ...queryKey],
       queryFn: async ({ pageParam, signal }) => {
@@ -109,7 +109,6 @@ function Activity() {
       initialPageParam: undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
       staleTime: 0,
-      gcTime: 0,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
     });
@@ -248,7 +247,7 @@ function Activity() {
     }
   }, [isHovering, queuedTransfers, addNewTransferIds]);
 
-  if (isPending) {
+  if (isPending || isRefetching) {
     return (
       <div className="flex justify-center py-2">
         <Loader variant="ring" />
