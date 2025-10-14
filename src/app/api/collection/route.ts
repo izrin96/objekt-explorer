@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+import { createHash } from "node:crypto";
 import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod/v4";
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     } satisfies CollectionResult);
 
   // check for etag
-  const etag = `W/"${crypto.createHash("md5").update(singleResult[0].id).digest("hex")}"`;
+  const etag = `W/"${createHash("md5").update(singleResult[0].id).digest("hex")}"`;
   const ifNoneMatch = request.headers.get("if-none-match");
   if (ifNoneMatch === etag) {
     return new NextResponse(null, {
