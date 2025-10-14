@@ -2,11 +2,10 @@
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Suspense, useDeferredValue, useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 import { useConfigStore } from "@/hooks/use-config";
-import { useFilters } from "@/hooks/use-filters";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
@@ -85,14 +84,12 @@ export default function ProfileObjektRender() {
 function ProfileObjekt() {
   const { authenticated } = useUser();
   const isProfileAuthed = useProfileAuthed();
-  const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const { shaped, filtered, grouped } = useProfileObjekts();
-  const deferredObjekts = useDeferredValue(shaped);
+  const { shaped, filtered, grouped, filters } = useProfileObjekts();
 
   const virtualList = useMemo(() => {
-    return deferredObjekts.flatMap(([title, items]) => [
+    return shaped.flatMap(([title, items]) => [
       ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...makeObjektRows({
         items,
@@ -116,7 +113,7 @@ function ProfileObjekt() {
                     authenticated && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
-                        {isProfileAuthed && isOwned && (
+                        {!filters.grouped && isProfileAuthed && isOwned && (
                           <>
                             <TogglePinMenuItem isPin={item.isPin} tokenId={objekt.id} />
                             <ToggleLockMenuItem isLocked={item.isLocked} tokenId={objekt.id} />
@@ -143,7 +140,7 @@ function ProfileObjekt() {
                           <div className="absolute top-0 right-0 flex items-start">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
-                              {isProfileAuthed && isOwned && (
+                              {!filters.grouped && isProfileAuthed && isOwned && (
                                 <>
                                   <TogglePinMenuItem isPin={item.isPin} tokenId={objekt.id} />
                                   <ToggleLockMenuItem
@@ -156,7 +153,9 @@ function ProfileObjekt() {
                             </ObjektHoverMenu>
                           </div>
                         )}
-                        <ObjektOverlay isPin={item.isPin} isLocked={item.isLocked} />
+                        {!filters.grouped && (
+                          <ObjektOverlay isPin={item.isPin} isLocked={item.isLocked} />
+                        )}
                       </ObjektView>
                     )}
                   </ObjektViewSelectable>
@@ -167,7 +166,7 @@ function ProfileObjekt() {
         ),
       }),
     ]);
-  }, [deferredObjekts, filters.grouped, columns, authenticated, isProfileAuthed, hideLabel]);
+  }, [shaped, filters.grouped, columns, authenticated, isProfileAuthed, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -186,7 +185,12 @@ function ProfileObjekt() {
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} isOwned={isProfileAuthed} objekts={filtered} />
+          <Filters
+            authenticated={authenticated}
+            isOwned={isProfileAuthed}
+            objekts={filtered}
+            isGrouped={filters.grouped ?? false}
+          />
         </FilterContainer>
       </div>
       <span className="font-semibold">
@@ -205,10 +209,12 @@ function Filters({
   authenticated,
   isOwned,
   objekts,
+  isGrouped,
 }: {
   authenticated: boolean;
   isOwned: boolean;
   objekts: ValidObjekt[];
+  isGrouped: boolean;
 }) {
   return (
     <div className="flex w-full flex-col gap-6">
@@ -216,7 +222,7 @@ function Filters({
       {authenticated && (
         <SelectMode objekts={objekts}>
           <AddToList />
-          {isOwned && (
+          {!isGrouped && isOwned && (
             <>
               <PinObjekt />
               <UnpinObjekt />

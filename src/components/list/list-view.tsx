@@ -1,11 +1,10 @@
 "use client";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { useDeferredValue, useMemo } from "react";
+import { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 import { useConfigStore } from "@/hooks/use-config";
-import { useFilters } from "@/hooks/use-filters";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
@@ -54,14 +53,12 @@ export default function ListRender() {
 function ListView({ list }: { list: PublicList }) {
   const { authenticated } = useUser();
   const isOwned = useListAuthed(list.slug);
-  const [filters] = useFilters();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const { shaped, filtered, grouped } = useListObjekts(list.slug);
-  const deferredObjekts = useDeferredValue(shaped);
+  const { shaped, filtered, grouped, filters } = useListObjekts(list.slug);
 
   const virtualList = useMemo(() => {
-    return deferredObjekts.flatMap(([title, items]) => [
+    return shaped.flatMap(([title, items]) => [
       ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...makeObjektRows({
         items,
@@ -117,7 +114,7 @@ function ListView({ list }: { list: PublicList }) {
         ),
       }),
     ]);
-  }, [deferredObjekts, columns, isOwned, authenticated, hideLabel]);
+  }, [shaped, columns, isOwned, authenticated, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">

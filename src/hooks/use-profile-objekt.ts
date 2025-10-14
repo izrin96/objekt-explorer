@@ -1,6 +1,6 @@
 import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import { useMemo } from "react";
+import { useDeferredValue, useMemo } from "react";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "./use-cosmo-artist";
@@ -48,9 +48,10 @@ export function useProfileObjekts() {
 
   const filtered = filter(joinedObjekts);
 
-  return {
+  return useDeferredValue({
     shaped: shape(filtered, pinsQuery.data, lockedObjektQuery.data),
     filtered,
     grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
-  };
+    filters,
+  });
 }

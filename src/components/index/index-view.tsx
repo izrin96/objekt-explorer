@@ -2,7 +2,7 @@
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Suspense, useDeferredValue, useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 import { useCollectionObjekts } from "@/hooks/use-collection-objekt";
@@ -61,10 +61,9 @@ function IndexView() {
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered } = useCollectionObjekts();
-  const deferredObjekts = useDeferredValue(shaped);
 
   const virtualList = useMemo(() => {
-    return deferredObjekts.flatMap(([title, items]) => [
+    return shaped.flatMap(([title, items]) => [
       ...(title ? [<GroupLabelRender title={title} key={`label-${title}`} />] : []),
       ...makeObjektRows({
         items,
@@ -117,7 +116,7 @@ function IndexView() {
         ),
       }),
     ]);
-  }, [deferredObjekts, columns, authenticated, hideLabel]);
+  }, [shaped, columns, authenticated, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
