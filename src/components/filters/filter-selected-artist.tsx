@@ -9,6 +9,7 @@ import { orpc } from "@/lib/orpc/client";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
+import { Loader } from "../ui/loader";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
 export default function SelectedArtistFilter() {
@@ -29,15 +30,19 @@ export default function SelectedArtistFilter() {
   return (
     <Menu>
       <Button aria-label="Selected artist" intent="outline" size="sm" className="px-2 sm:px-2">
-        <div className="-space-x-2 flex items-center justify-center">
-          {selectedArtists.map((artist) => (
-            <Avatar
-              key={artist.name}
-              src={artist.logoImageUrl}
-              className="size-5 ring-2 ring-bg *:size-5"
-            />
-          ))}
-        </div>
+        {isPending ? (
+          <Loader variant="ring" />
+        ) : (
+          <div className="-space-x-2 flex items-center justify-center">
+            {selectedArtists.map((artist) => (
+              <Avatar
+                key={artist.name}
+                src={artist.logoImageUrl}
+                className="size-5 ring-2 ring-bg *:size-5"
+              />
+            ))}
+          </div>
+        )}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {artists.map((item) => (

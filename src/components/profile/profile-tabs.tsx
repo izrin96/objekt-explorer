@@ -8,7 +8,15 @@ import { Tab, TabList, Tabs } from "../ui/tabs";
 export default function ProfileTabs() {
   const router = useRouter();
   const profile = useTarget((a) => a.profile)!;
+  const pathname = usePathname();
   const path = profile.nickname ?? profile.address;
+
+  const items = [
+    { url: `/@${path}`, label: "Collection" },
+    { url: `/@${path}/trades`, label: "Trade History" },
+    { url: `/@${path}/progress`, label: "Progress" },
+    { url: `/@${path}/stats`, label: "Statistics" },
+  ];
 
   useEffect(() => {
     router.prefetch(`/@${path}`);
@@ -17,13 +25,6 @@ export default function ProfileTabs() {
     router.prefetch(`/@${path}/progress`);
   }, [path]);
 
-  const pathname = usePathname();
-  const items = [
-    { url: `/@${path}`, label: "Collection" },
-    { url: `/@${path}/trades`, label: "Trade History" },
-    { url: `/@${path}/progress`, label: "Progress" },
-    { url: `/@${path}/stats`, label: "Statistics" },
-  ];
   return (
     <div className="overflow-x-auto">
       <Tabs aria-label="Navbar" className="w-min" selectedKey={decodeURIComponent(pathname)}>
