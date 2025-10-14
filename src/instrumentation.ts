@@ -1,3 +1,5 @@
 export async function register() {
-  await import("./lib/orpc/server");
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./lib/orpc/server");
+  }
 }
