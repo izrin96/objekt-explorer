@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import { useState } from "react";
-import { useDebounceCallback, useDebounceValue } from "usehooks-ts";
+import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 import { getBaseURL } from "@/lib/utils";
@@ -29,10 +29,6 @@ export default function UserSearch() {
   const [debouncedQuery, setQuery] = useDebounceValue<string>("", 350);
   const enable = debouncedQuery.length > 0;
 
-  // wait for close animation to complete before navigate
-  // issue: https://github.com/adobe/react-spectrum/issues/8786
-  const navigateUser = useDebounceCallback(router.push, 250);
-
   const { data, isPending } = useQuery({
     queryKey: ["user-search", debouncedQuery],
     queryFn: () => {
@@ -48,7 +44,7 @@ export default function UserSearch() {
     setQuery("");
     setIsOpen(false);
     addRecent(user);
-    navigateUser(`/@${user.nickname}`);
+    router.push(`/@${user.nickname}`);
   };
 
   return (
