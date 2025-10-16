@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
   "vcs": {
     "enabled": false,
     "clientKind": "git",
@@ -7,15 +7,24 @@
   },
   "files": {
     "includes": [
-      "src/**/*.tsx",
-      "src/**/*.ts",
-      "messages/**/*.json",
-      "!node_modules",
+      "**",
+      "!**/node_modules",
       "!**/.next",
       "!**/dist",
       "!**/.turbo",
+      "!**/dev-dist",
+      "!**/.zed",
       "!**/.vscode",
-      "!*.config.*"
+      "!**/routeTree.gen.ts",
+      "!**/src-tauri",
+      "!**/.nuxt",
+      "!bts.jsonc",
+      "!**/.expo",
+      "!**/.wrangler",
+      "!**/.alchemy",
+      "!**/.svelte-kit",
+      "!**/wrangler.jsonc",
+      "!**/.source"
     ],
     "ignoreUnknown": false
   },

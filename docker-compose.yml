@@ -23,11 +23,37 @@ services:
       - TOKEN=your-token-here
   web:
     restart: always
-    image: ghcr.io/izrin96/objekt-explorer:latest
-    expose:
-      - 3000
+    ports:
+      - "4000:3000"
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+      args:
+        - NEXT_PUBLIC_UMAMI_SCRIPT_URL
+        - NEXT_PUBLIC_UMAMI_WEBSITE_ID
+        - NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
+        - BETTER_AUTH_SECRET
+        - DISCORD_CLIENT_ID
+        - DISCORD_CLIENT_SECRET
+        - TWITTER_CLIENT_ID
+        - TWITTER_CLIENT_SECRET
+        - BROWSER_CDP_URL
+        - NEXT_PUBLIC_SITE_URL
+        - DATABASE_URL
+        - INDEXER_DATABASE_URL
+        - S3_ENDPOINT
+        - S3_ACCESS_KEY
+        - S3_SECRET_KEY
+        - SES_REGION
+        - SES_ACCESS_KEY
+        - SES_SECRET_KEY
+        - SES_MAIL_FROM
+        - NEXT_PUBLIC_LIVE_API_KEY
+        - BYPASS_LIVE_KEY
+        - NEXT_PUBLIC_PRIVY_APP_ID
+        - PRIVY_APP_SECRET
+        - REDIS_URL
     environment:
-      - NODE_ENV=production
       - NEXT_PUBLIC_UMAMI_SCRIPT_URL
       - NEXT_PUBLIC_UMAMI_WEBSITE_ID
       - NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
@@ -52,6 +78,15 @@ services:
       - NEXT_PUBLIC_PRIVY_APP_ID
       - PRIVY_APP_SECRET
       - REDIS_URL
+  server:
+    restart: always
+    ports:
+      - "4001:3000"
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+    environment:
+      - CORS_ORIGIN
   minio:
     restart: always
     image: minio/minio:latest

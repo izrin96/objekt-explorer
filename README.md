@@ -10,6 +10,9 @@ This project required [teamreflex/cosmo-db](https://github.com/teamreflex/cosmo-
 - [Tailwind 4](https://tailwindcss.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [IntentUI](https://intentui.com/)
+- [Better-Auth](https://www.better-auth.com/)
+- [Biome](https://biomejs.dev/)
+- [Turborepo](https://turborepo.com/)
 
 ## Credit/Acknowledgment
 

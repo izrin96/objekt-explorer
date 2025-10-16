@@ -32,36 +32,37 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./apps/web/Dockerfile
           push: true
           platforms: linux/amd64
           tags: ghcr.io/${{ github.repository }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          secrets: |
-            umami_script_url=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
-            umami_website_id=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
-            activity_websocket_url=${{ secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL }}
-            better_auth_secret=${{ secrets.BETTER_AUTH_SECRET }}
-            discord_client_id=${{ secrets.DISCORD_CLIENT_ID }}
-            discord_client_secret=${{ secrets.DISCORD_CLIENT_SECRET }}
-            twitter_client_id=${{ secrets.TWITTER_CLIENT_ID }}
-            twitter_client_secret=${{ secrets.TWITTER_CLIENT_SECRET }}
-            browser_cdp_url=${{ secrets.BROWSER_CDP_URL }}
-            site_url=${{ secrets.NEXT_PUBLIC_SITE_URL }}
-            database_url=${{ secrets.DATABASE_URL }}
-            indexer_database_url=${{ secrets.INDEXER_DATABASE_URL }}
-            s3_endpoint=${{ secrets.S3_ENDPOINT }}
-            s3_access_key=${{ secrets.S3_ACCESS_KEY }}
-            s3_secret_key=${{ secrets.S3_SECRET_KEY }}
-            ses_region=${{ secrets.SES_REGION }}
-            ses_access_key=${{ secrets.SES_ACCESS_KEY }}
-            ses_secret_key=${{ secrets.SES_SECRET_KEY }}
-            ses_mail_from=${{ secrets.SES_MAIL_FROM }}
-            live_api_key=${{ secrets.NEXT_PUBLIC_LIVE_API_KEY }}
-            bypass_live_key=${{ secrets.BYPASS_LIVE_KEY }}
-            privy_app_id=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-            privy_app_secret=${{ secrets.PRIVY_APP_SECRET }}
-            redis_url=${{ secrets.REDIS_URL }}
+          build-args: |
+            NEXT_PUBLIC_UMAMI_SCRIPT_URL=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
+            NEXT_PUBLIC_UMAMI_WEBSITE_ID=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
+            NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL=${{ secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL }}
+            BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
+            DISCORD_CLIENT_ID=${{ secrets.DISCORD_CLIENT_ID }}
+            DISCORD_CLIENT_SECRET=${{ secrets.DISCORD_CLIENT_SECRET }}
+            TWITTER_CLIENT_ID=${{ secrets.TWITTER_CLIENT_ID }}
+            TWITTER_CLIENT_SECRET=${{ secrets.TWITTER_CLIENT_SECRET }}
+            BROWSER_CDP_URL=${{ secrets.BROWSER_CDP_URL }}
+            NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            INDEXER_DATABASE_URL=${{ secrets.INDEXER_DATABASE_URL }}
+            S3_ENDPOINT=${{ secrets.S3_ENDPOINT }}
+            S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+            S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+            SES_REGION=${{ secrets.SES_REGION }}
+            SES_ACCESS_KEY=${{ secrets.SES_ACCESS_KEY }}
+            SES_SECRET_KEY=${{ secrets.SES_SECRET_KEY }}
+            SES_MAIL_FROM=${{ secrets.SES_MAIL_FROM }}
+            NEXT_PUBLIC_LIVE_API_KEY=${{ secrets.NEXT_PUBLIC_LIVE_API_KEY }}
+            BYPASS_LIVE_KEY=${{ secrets.BYPASS_LIVE_KEY }}
+            NEXT_PUBLIC_PRIVY_APP_ID=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
+            PRIVY_APP_SECRET=${{ secrets.PRIVY_APP_SECRET }}
+            REDIS_URL=${{ secrets.REDIS_URL }}
 
   cleanup:
     runs-on: ubuntu-latest
