@@ -40,30 +40,30 @@ RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=privy_app_id \
     --mount=type=secret,id=privy_app_secret \
     --mount=type=secret,id=redis_url \
-    NEXT_PUBLIC_UMAMI_SCRIPT_URL="$(cat /run/secrets/umami_script_url 2>/dev/null || echo '')" \
-    NEXT_PUBLIC_UMAMI_WEBSITE_ID="$(cat /run/secrets/umami_website_id 2>/dev/null || echo '')" \
-    NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL="$(cat /run/secrets/activity_websocket_url 2>/dev/null || echo '')" \
-    BETTER_AUTH_SECRET="$(cat /run/secrets/better_auth_secret 2>/dev/null || echo '')" \
-    DISCORD_CLIENT_ID="$(cat /run/secrets/discord_client_id 2>/dev/null || echo '')" \
-    DISCORD_CLIENT_SECRET="$(cat /run/secrets/discord_client_secret 2>/dev/null || echo '')" \
-    TWITTER_CLIENT_ID="$(cat /run/secrets/twitter_client_id 2>/dev/null || echo '')" \
-    TWITTER_CLIENT_SECRET="$(cat /run/secrets/twitter_client_secret 2>/dev/null || echo '')" \
-    BROWSER_CDP_URL="$(cat /run/secrets/browser_cdp_url 2>/dev/null || echo '')" \
-    NEXT_PUBLIC_SITE_URL="$(cat /run/secrets/site_url 2>/dev/null || echo '')" \
-    DATABASE_URL="$(cat /run/secrets/database_url 2>/dev/null || echo '')" \
-    INDEXER_DATABASE_URL="$(cat /run/secrets/indexer_database_url 2>/dev/null || echo '')" \
-    S3_ENDPOINT="$(cat /run/secrets/s3_endpoint 2>/dev/null || echo '')" \
-    S3_ACCESS_KEY="$(cat /run/secrets/s3_access_key 2>/dev/null || echo '')" \
-    S3_SECRET_KEY="$(cat /run/secrets/s3_secret_key 2>/dev/null || echo '')" \
-    SES_REGION="$(cat /run/secrets/ses_region 2>/dev/null || echo '')" \
-    SES_ACCESS_KEY="$(cat /run/secrets/ses_access_key 2>/dev/null || echo '')" \
-    SES_SECRET_KEY="$(cat /run/secrets/ses_secret_key 2>/dev/null || echo '')" \
-    SES_MAIL_FROM="$(cat /run/secrets/ses_mail_from 2>/dev/null || echo '')" \
-    NEXT_PUBLIC_LIVE_API_KEY="$(cat /run/secrets/live_api_key 2>/dev/null || echo '')" \
-    BYPASS_LIVE_KEY="$(cat /run/secrets/bypass_live_key 2>/dev/null || echo '')" \
-    NEXT_PUBLIC_PRIVY_APP_ID="$(cat /run/secrets/privy_app_id 2>/dev/null || echo '')" \
-    PRIVY_APP_SECRET="$(cat /run/secrets/privy_app_secret 2>/dev/null || echo '')" \
-    REDIS_URL="$(cat /run/secrets/redis_url 2>/dev/null || echo '')" \
+    NEXT_PUBLIC_UMAMI_SCRIPT_URL=$(cat /run/secrets/umami_script_url) \
+    NEXT_PUBLIC_UMAMI_WEBSITE_ID=$(cat /run/secrets/umami_website_id) \
+    NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL=$(cat /run/secrets/activity_websocket_url) \
+    BETTER_AUTH_SECRET=$(cat /run/secrets/better_auth_secret) \
+    DISCORD_CLIENT_ID=$(cat /run/secrets/discord_client_id) \
+    DISCORD_CLIENT_SECRET=$(cat /run/secrets/discord_client_secret) \
+    TWITTER_CLIENT_ID=$(cat /run/secrets/twitter_client_id) \
+    TWITTER_CLIENT_SECRET=$(cat /run/secrets/twitter_client_secret) \
+    BROWSER_CDP_URL=$(cat /run/secrets/browser_cdp_url) \
+    NEXT_PUBLIC_SITE_URL=$(cat /run/secrets/site_url) \
+    DATABASE_URL=$(cat /run/secrets/database_url) \
+    INDEXER_DATABASE_URL=$(cat /run/secrets/indexer_database_url) \
+    S3_ENDPOINT=$(cat /run/secrets/s3_endpoint) \
+    S3_ACCESS_KEY=$(cat /run/secrets/s3_access_key) \
+    S3_SECRET_KEY=$(cat /run/secrets/s3_secret_key) \
+    SES_REGION=$(cat /run/secrets/ses_region) \
+    SES_ACCESS_KEY=$(cat /run/secrets/ses_access_key) \
+    SES_SECRET_KEY=$(cat /run/secrets/ses_secret_key) \
+    SES_MAIL_FROM=$(cat /run/secrets/ses_mail_from) \
+    NEXT_PUBLIC_LIVE_API_KEY=$(cat /run/secrets/live_api_key) \
+    BYPASS_LIVE_KEY=$(cat /run/secrets/bypass_live_key) \
+    NEXT_PUBLIC_PRIVY_APP_ID=$(cat /run/secrets/privy_app_id) \
+    PRIVY_APP_SECRET=$(cat /run/secrets/privy_app_secret) \
+    REDIS_URL=$(cat /run/secrets/redis_url) \
     pnpm run build
 
 FROM base AS runner
