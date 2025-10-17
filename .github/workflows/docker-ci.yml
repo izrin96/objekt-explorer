@@ -28,16 +28,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build web docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./apps/web/prod.Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ghcr.io/objekt-explorer-web:latest
+          cache-from: type=gha,scope=web-cache
+          cache-to: type=gha,scope=web-cache,mode=max
           secrets: |
             umami_script_url=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
             umami_website_id=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
@@ -63,6 +63,17 @@ jobs:
             privy_app_id=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
             privy_app_secret=${{ secrets.PRIVY_APP_SECRET }}
             redis_url=${{ secrets.REDIS_URL }}
+
+      - name: Build server docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/server/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/objekt-explorer-server:latest
+          cache-from: type=gha,scope=server-cache
+          cache-to: type=gha,scope=server-cache,mode=max
 
   cleanup:
     runs-on: ubuntu-latest
