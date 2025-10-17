@@ -1,22 +1,33 @@
 FROM node:24-alpine AS base
 WORKDIR /app
+RUN apk update
+RUN apk add --no-cache libc6-compat
 
-FROM base AS builder
+FROM base AS pnpm
+RUN corepack enable
+RUN pnpm config set store-dir ~/.pnpm-store
+
+FROM pnpm AS builder
 RUN npm install -g turbo@latest
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune server --docker
 
-FROM base AS installer
+FROM pnpm AS installer
 COPY --from=builder /app/out/json/ .
 COPY tsconfig.base.json .
-RUN corepack enable pnpm
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
     pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
-RUN --mount=type=cache,target=/root/.cache/turbo \
-    pnpm run build
+RUN pnpm run build
+
+ENV CI=true
+RUN rm -rf node_modules
+RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
+    pnpm install --prod --frozen-lockfile
+RUN pnpm store prune
+RUN rm -rf ./**/*/src
 
 FROM base AS runner
 

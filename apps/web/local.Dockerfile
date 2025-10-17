@@ -1,16 +1,22 @@
 FROM node:24-alpine AS base
 WORKDIR /app
+RUN apk update
+RUN apk add --no-cache libc6-compat
 
-FROM base AS builder
+FROM base AS pnpm
+RUN corepack enable
+RUN pnpm config set store-dir ~/.pnpm-store
+
+FROM pnpm AS builder
 RUN npm install -g turbo@latest
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune web --docker
 
-FROM base AS installer
+FROM pnpm AS installer
 COPY --from=builder /app/out/json/ .
-RUN corepack enable pnpm
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
+    pnpm install --frozen-lockfile
 
 ARG NEXT_PUBLIC_UMAMI_SCRIPT_URL
 ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID
@@ -38,7 +44,6 @@ ARG PRIVY_APP_SECRET
 ARG REDIS_URL
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV TURBO_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_UMAMI_SCRIPT_URL=$NEXT_PUBLIC_UMAMI_SCRIPT_URL
 ENV NEXT_PUBLIC_UMAMI_WEBSITE_ID=$NEXT_PUBLIC_UMAMI_WEBSITE_ID
 ENV NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL=$NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
