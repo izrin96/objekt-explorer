@@ -13,6 +13,12 @@ COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune server --docker
 
+FROM pnpm AS installer-prod
+COPY --from=builder /app/out/json/ .
+COPY tsconfig.base.json .
+RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
+    pnpm install --frozen-lockfile --prod
+
 FROM pnpm AS installer
 COPY --from=builder /app/out/json/ .
 COPY tsconfig.base.json .
@@ -21,13 +27,6 @@ RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
 
 COPY --from=builder /app/out/full/ .
 RUN pnpm run build
-
-ENV CI=true
-RUN rm -rf node_modules
-RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
-    pnpm install --prod --frozen-lockfile
-RUN pnpm store prune
-RUN rm -rf ./**/*/src
 
 FROM base AS runner
 
@@ -38,7 +37,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 app
 USER app
 
-COPY --from=installer --chown=app:nodejs /app ./
+COPY --from=installer-prod --chown=app:nodejs /app/ .
+COPY --from=installer --chown=app:nodejs /app/apps/server/dist ./apps/server/dist
 
 EXPOSE 3000/tcp
 
