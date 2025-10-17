@@ -3,17 +3,17 @@ WORKDIR /app
 RUN apk update
 RUN apk add --no-cache libc6-compat
 
-FROM base AS turbo
+FROM base AS pnpm
 RUN corepack enable
-RUN npm install -g turbo@latest
 RUN pnpm config set store-dir ~/.pnpm-store
-ENV TURBO_TELEMETRY_DISABLED=1
 
-FROM turbo AS builder
+FROM pnpm AS builder
+RUN npm install -g turbo@latest
 COPY . .
+ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune server --docker
 
-FROM turbo AS installer
+FROM pnpm AS installer
 COPY --from=builder /app/out/json/ .
 COPY tsconfig.base.json .
 RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
@@ -21,6 +21,13 @@ RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
 
 COPY --from=builder /app/out/full/ .
 RUN pnpm run build
+
+ENV CI=true
+RUN rm -rf node_modules
+RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
+    pnpm install --prod --frozen-lockfile
+RUN pnpm store prune
+RUN rm -rf ./**/*/src
 
 FROM base AS runner
 
