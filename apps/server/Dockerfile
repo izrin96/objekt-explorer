@@ -11,10 +11,12 @@ FROM base AS installer
 COPY --from=builder /app/out/json/ .
 COPY tsconfig.base.json .
 RUN corepack enable pnpm
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
-RUN pnpm run build
+RUN --mount=type=cache,target=/root/.cache/turbo \
+    pnpm run build
 
 FROM base AS runner
 
