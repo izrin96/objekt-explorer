@@ -87,4 +87,4 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/publ
 
 EXPOSE 3000/tcp
 
-CMD node apps/web/server.js
+CMD ["node", "apps/web/server.js"]

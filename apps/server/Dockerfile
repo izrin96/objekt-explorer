@@ -43,4 +43,4 @@ COPY --from=installer --chown=app:nodejs /app/apps/server/dist ./apps/server/dis
 
 EXPOSE 3000/tcp
 
-CMD node apps/server/dist/index.js
+CMD ["node", "apps/server/dist/index.js"]
