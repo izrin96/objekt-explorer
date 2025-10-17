@@ -1,0 +1,62 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Node modules
+node_modules
+
+.vscode
+.github
+.env*
+.vercel
+.wrangler
+.next
+
+# Logs
+*.log
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist
+build
+.out
+
+# Turborepo
+.turbo
+
+# Tests
+__tests__
+*.test.*
+*.spec.*
+
+# Documentation
+*.md
+
+# Scripts
+*.sh
+*.ps1
+*.cmd
+
+# Temporary files
+*.tmp
+*.temp
+
+# Coverage
+coverage
+
+# Typescript
+*.tsbuildinfo
