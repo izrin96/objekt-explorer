@@ -5,7 +5,9 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "web#build": {
       "env": [
         "NEXT_PUBLIC_UMAMI_SCRIPT_URL",
         "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
@@ -32,6 +34,9 @@
         "PRIVY_APP_SECRET",
         "REDIS_URL"
       ]
+    },
+    "server#build": {
+      "env": ["CORS_ORIGIN"]
     },
     "lint": {
       "dependsOn": ["^lint"]
