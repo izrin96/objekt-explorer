@@ -25,6 +25,7 @@ COPY tsconfig.base.json .
 RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
     pnpm install --frozen-lockfile
 
+ENV TURBO_TELEMETRY_DISABLED=1
 COPY --from=builder /app/out/full/ .
 RUN pnpm run build
 

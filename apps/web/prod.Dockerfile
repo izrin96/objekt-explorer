@@ -19,6 +19,7 @@ RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
     pnpm install --frozen-lockfile
 
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV TURBO_TELEMETRY_DISABLED=1
 
 COPY --from=builder /app/out/full/ .
 RUN --mount=type=secret,id=umami_script_url \
