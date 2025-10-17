@@ -10,7 +10,8 @@ RUN turbo prune web --docker
 FROM base AS installer
 COPY --from=builder /app/out/json/ .
 RUN corepack enable pnpm
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV TURBO_TELEMETRY_DISABLED=1
@@ -40,6 +41,7 @@ RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=privy_app_id \
     --mount=type=secret,id=privy_app_secret \
     --mount=type=secret,id=redis_url \
+    --mount=type=cache,target=/root/.cache/turbo \
     NEXT_PUBLIC_UMAMI_SCRIPT_URL=$(cat /run/secrets/umami_script_url) \
     NEXT_PUBLIC_UMAMI_WEBSITE_ID=$(cat /run/secrets/umami_website_id) \
     NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL=$(cat /run/secrets/activity_websocket_url) \
