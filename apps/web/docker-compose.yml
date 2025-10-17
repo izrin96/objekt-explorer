@@ -26,8 +26,8 @@ services:
     ports:
       - "4000:3000"
     build:
-      context: .
-      dockerfile: ./apps/web/Dockerfile
+      context: ../..
+      dockerfile: ./apps/web/local.Dockerfile
       args:
         - NEXT_PUBLIC_UMAMI_SCRIPT_URL
         - NEXT_PUBLIC_UMAMI_WEBSITE_ID
@@ -53,6 +53,7 @@ services:
         - NEXT_PUBLIC_PRIVY_APP_ID
         - PRIVY_APP_SECRET
         - REDIS_URL
+    env_file: .env
     environment:
       - NEXT_PUBLIC_UMAMI_SCRIPT_URL
       - NEXT_PUBLIC_UMAMI_WEBSITE_ID
@@ -78,15 +79,6 @@ services:
       - NEXT_PUBLIC_PRIVY_APP_ID
       - PRIVY_APP_SECRET
       - REDIS_URL
-  server:
-    restart: always
-    ports:
-      - "4001:3000"
-    build:
-      context: .
-      dockerfile: ./apps/server/Dockerfile
-    environment:
-      - CORS_ORIGIN
   minio:
     restart: always
     image: minio/minio:latest

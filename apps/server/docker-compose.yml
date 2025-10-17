@@ -1,0 +1,21 @@
+services:
+  server:
+    restart: always
+    ports:
+      - "4000:3000"
+    build:
+      context: ../..
+      dockerfile: ./apps/server/Dockerfile
+    env_file: .env
+    environment:
+      - CORS_ORIGIN
+  redis:
+    restart: always
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # command: redis-server --appendonly yes
+volumes:
+  redis_data:
