@@ -110,7 +110,8 @@ app.get(
   upgradeWebSocket(() => {
     return {
       async onMessage(event, ws) {
-        if (event.type === "request_history") {
+        const data = JSON.parse(event.data) as { type: string; data?: any };
+        if (data.type === "request_history") {
           const history = await redis.lrange(TRANSFER_HISTORY_KEY, 0, -1);
           if (history.length > 0) {
             const parsed = history.map((item) => JSON.parse(item));
