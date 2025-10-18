@@ -35,9 +35,6 @@
         "REDIS_URL"
       ]
     },
-    "server#build": {
-      "env": ["CORS_ORIGIN"]
-    },
     "lint": {
       "dependsOn": ["^lint"]
     },
