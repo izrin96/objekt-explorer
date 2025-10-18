@@ -152,7 +152,13 @@ function Activity() {
         parsedSelectedArtistIds,
       ]);
 
-      const data = message.data.map((data) => ({ ...data, ...overrideCollection(data.objekt) }));
+      const data = message.data.map((data) => ({
+        ...data,
+        objekt: {
+          ...data.objekt,
+          ...overrideCollection(data.objekt),
+        },
+      }));
       const filtered = filterData(data, type ?? "all", {
         ...filters,
         artist: parsedSelectedArtistIds,
