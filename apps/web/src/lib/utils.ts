@@ -4,6 +4,11 @@ export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_TABLET = 5;
 export const GRID_COLUMNS_MOBILE = 3;
 
+export const OBJEKT_SIZE = {
+  height: 1673,
+  width: 1083,
+};
+
 export const AGW_APP_ID = "cm04asygd041fmry9zmcyn5o5";
 export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
