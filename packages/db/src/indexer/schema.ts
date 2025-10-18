@@ -11,8 +11,6 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export type ParsedDate = string | Date;
-
 export const collections = pgTable(
   "collection",
   {

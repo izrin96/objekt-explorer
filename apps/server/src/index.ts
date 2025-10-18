@@ -10,7 +10,7 @@ import { fetchKnownAddresses } from "./lib/utils";
 
 const TRANSFER_HISTORY_KEY = "transfer:history";
 
-const clients = new Set<WSContext<WebSocket>>();
+const clients = new Set<WSContext>();
 const app = new Hono();
 const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
 
@@ -19,78 +19,78 @@ type TransferData = Transfer & {
   objekt: Objekt;
 };
 
-redisPubSub.subscribe("transfers").then(() => {
-  redisPubSub.on("message", async (channel, message) => {
-    if (channel === "transfers") {
-      const transfers = JSON.parse(message) as TransferData[];
+redisPubSub.subscribe("transfers");
 
-      // fetch known address
-      const addresses = transfers.flatMap((a) => [a.from, a.to]);
-      const knownAddresses = await fetchKnownAddresses(addresses);
+redisPubSub.on("message", async (channel, message) => {
+  if (channel === "transfers") {
+    const transfers = JSON.parse(message) as TransferData[];
 
-      const transferBatch: any[] = [];
+    // fetch known address
+    const addresses = transfers.flatMap((a) => [a.from, a.to]);
+    const knownAddresses = await fetchKnownAddresses(addresses);
 
-      for (const transfer of transfers) {
-        const fromUser = knownAddresses.find(
-          (a) => a.address.toLowerCase() === transfer.from.toLowerCase(),
-        );
-        const toUser = knownAddresses.find(
-          (a) => a.address.toLowerCase() === transfer.to.toLowerCase(),
-        );
+    const transferBatch: any[] = [];
 
-        const transferEvent = {
-          nickname: {
-            from: fromUser?.nickname ?? undefined,
-            to: toUser?.nickname ?? undefined,
-          },
-          transfer: {
-            id: transfer.id,
-            from: transfer.from,
-            to: transfer.to,
-            timestamp: transfer.timestamp,
-            tokenId: transfer.tokenId,
-            hash: transfer.hash,
-          },
-          objekt: {
-            artist: transfer.collection.artist,
-            backImage: transfer.collection.backImage,
-            class: transfer.collection.class,
-            collectionId: transfer.collection.collectionId,
-            collectionNo: transfer.collection.collectionNo,
-            frontImage: transfer.collection.frontImage,
-            id: transfer.objekt.id,
-            member: transfer.collection.member,
-            onOffline: transfer.collection.onOffline,
-            receivedAt: transfer.objekt.receivedAt,
-            season: transfer.collection.season,
-            serial: transfer.objekt.serial,
-            slug: transfer.collection.slug,
-            transferable: transfer.objekt.transferable,
-          },
-        };
+    for (const transfer of transfers) {
+      const fromUser = knownAddresses.find(
+        (a) => a.address.toLowerCase() === transfer.from.toLowerCase(),
+      );
+      const toUser = knownAddresses.find(
+        (a) => a.address.toLowerCase() === transfer.to.toLowerCase(),
+      );
 
-        transferBatch.push(transferEvent);
-      }
+      const transferEvent = {
+        nickname: {
+          from: fromUser?.nickname ?? undefined,
+          to: toUser?.nickname ?? undefined,
+        },
+        transfer: {
+          id: transfer.id,
+          from: transfer.from,
+          to: transfer.to,
+          timestamp: transfer.timestamp,
+          tokenId: transfer.tokenId,
+          hash: transfer.hash,
+        },
+        objekt: {
+          artist: transfer.collection.artist,
+          backImage: transfer.collection.backImage,
+          class: transfer.collection.class,
+          collectionId: transfer.collection.collectionId,
+          collectionNo: transfer.collection.collectionNo,
+          frontImage: transfer.collection.frontImage,
+          id: transfer.objekt.id,
+          member: transfer.collection.member,
+          onOffline: transfer.collection.onOffline,
+          receivedAt: transfer.objekt.receivedAt,
+          season: transfer.collection.season,
+          serial: transfer.objekt.serial,
+          slug: transfer.collection.slug,
+          transferable: transfer.objekt.transferable,
+        },
+      };
 
-      // store history
-      await redis.lpush(TRANSFER_HISTORY_KEY, ...transferBatch.map((a) => JSON.stringify(a)));
-      await redis.ltrim(TRANSFER_HISTORY_KEY, 0, 50);
-
-      transferBatch.reverse();
-
-      // broadcast websocket
-      clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(
-            JSON.stringify({
-              type: "transfer",
-              data: transferBatch,
-            }),
-          );
-        }
-      });
+      transferBatch.push(transferEvent);
     }
-  });
+
+    // store history
+    await redis.lpush(TRANSFER_HISTORY_KEY, ...transferBatch.map((a) => JSON.stringify(a)));
+    await redis.ltrim(TRANSFER_HISTORY_KEY, 0, 50);
+
+    transferBatch.reverse();
+
+    // broadcast websocket
+    clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(
+          JSON.stringify({
+            type: "transfer",
+            data: transferBatch,
+          }),
+        );
+      }
+    });
+  }
 });
 
 app.use(
