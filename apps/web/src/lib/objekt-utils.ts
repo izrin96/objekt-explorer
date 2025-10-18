@@ -87,7 +87,7 @@ export function isObjektOwned(objekt: ValidObjekt) {
   return "serial" in objekt;
 }
 
-export function overrideCollection(collection: IndexedObjekt) {
+export function overrideCollection<T extends ValidObjekt>(collection: T): T {
   // temporary fix accent color for some collection
   const accentColor = overrideAccents[collection.slug];
   const fontColor = overrideFonts[collection.slug];

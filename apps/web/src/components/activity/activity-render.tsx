@@ -154,10 +154,7 @@ function Activity() {
 
       const data = message.data.map((data) => ({
         ...data,
-        objekt: {
-          ...data.objekt,
-          ...overrideCollection(data.objekt),
-        },
+        objekt: overrideCollection(data.objekt),
       }));
       const filtered = filterData(data, type ?? "all", {
         ...filters,
@@ -208,13 +205,13 @@ function Activity() {
   }, [...queryKey]);
 
   // send history request to websocket on query success
-  useEffect(() => {
-    if (status === "success") {
-      sendJsonMessage({
-        type: "request_history",
-      });
-    }
-  }, [status]);
+  // useEffect(() => {
+  //   if (status === "success") {
+  //     sendJsonMessage({
+  //       type: "request_history",
+  //     });
+  //   }
+  // }, [status]);
 
   // remove new transfer after animation completes
   useEffect(() => {
@@ -230,7 +227,7 @@ function Activity() {
             return newSet;
           });
           timeoutRef.current.delete(id);
-        }, 2500);
+        }, 1500);
         timeoutRef.current.set(id, timeout);
       }
     });
