@@ -79,8 +79,8 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
           y={memberPos.y}
           fill="currentColor"
           textAnchor="start"
-          dominantBaseline="middle"
-          fontSize={60}
+          dy=".3em"
+          fontSize="4.2em"
           className="font-semibold"
           transform={`rotate(90 ${memberPos.x} ${memberPos.y})`}
         >
@@ -94,8 +94,8 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
         y={collectionPos.y}
         fill="currentColor"
         textAnchor="middle"
-        dominantBaseline="middle"
-        fontSize={60}
+        dy=".3em"
+        fontSize="4.2em"
         className="font-semibold"
         transform={`rotate(90 ${collectionPos.x} ${collectionPos.y})`}
       >
