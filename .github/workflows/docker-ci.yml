@@ -35,7 +35,9 @@ jobs:
           file: ./apps/web/prod.Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository }}:web-latest
+          tags: |
+            ghcr.io/${{ github.repository }}:web-${{ github.sha }}
+            ghcr.io/${{ github.repository }}:web-latest
           cache-from: type=gha,scope=web-cache
           cache-to: type=gha,scope=web-cache,mode=max
           secrets: |
@@ -71,18 +73,20 @@ jobs:
           file: ./apps/server/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository }}:server-latest
+          tags: |
+            ghcr.io/${{ github.repository }}:server-${{ github.sha }}
+            ghcr.io/${{ github.repository }}:server-latest
           cache-from: type=gha,scope=server-cache
           cache-to: type=gha,scope=server-cache,mode=max
 
-  cleanup:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Delete untagged images from GHCR
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: ${{ github.event.repository.name }}
-          package-type: container
-          min-versions-to-keep: 3
-          delete-only-untagged-versions: true
+  # cleanup:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   steps:
+  #     - name: Delete untagged images from GHCR
+  #       uses: actions/delete-package-versions@v5
+  #       with:
+  #         package-name: ${{ github.event.repository.name }}
+  #         package-type: container
+  #         min-versions-to-keep: 6
+  #         delete-only-untagged-versions: true
