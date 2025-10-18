@@ -67,6 +67,8 @@ redisPubSub.on("message", async (channel, message) => {
           serial: transfer.objekt.serial,
           slug: transfer.collection.slug,
           transferable: transfer.objekt.transferable,
+          backgroundColor: transfer.collection.backgroundColor,
+          textColor: transfer.collection.textColor,
         },
       };
 
