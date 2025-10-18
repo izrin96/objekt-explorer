@@ -32,7 +32,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
 
   const memberPos = {
     x: bandX + bandWidth / 2,
-    y: 150,
+    y: 148,
   };
 
   const collectionPos = {
@@ -42,7 +42,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
 
   const logoPos = {
     x: bandX + bandWidth / 2 + 26,
-    y: bandHeight - 80,
+    y: bandHeight - 92,
     scale: 0.33,
   };
 
@@ -79,9 +79,9 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
           y={memberPos.y}
           fill="currentColor"
           textAnchor="start"
-          dy=".3em"
-          fontSize="4.2em"
-          className="font-semibold"
+          dy=".33em"
+          fontSize="3.4em"
+          className="font-bold"
           transform={`rotate(90 ${memberPos.x} ${memberPos.y})`}
         >
           {objekt.member}
@@ -94,8 +94,8 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
         y={collectionPos.y}
         fill="currentColor"
         textAnchor="middle"
-        dy=".3em"
-        fontSize="4.2em"
+        dy=".32em"
+        fontSize="4.1em"
         className="font-semibold"
         transform={`rotate(90 ${collectionPos.x} ${collectionPos.y})`}
       >
