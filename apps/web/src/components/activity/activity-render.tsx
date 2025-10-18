@@ -18,6 +18,7 @@ import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import { overrideCollection } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
@@ -151,7 +152,8 @@ function Activity() {
         parsedSelectedArtistIds,
       ]);
 
-      const filtered = filterData(message.data, type ?? "all", {
+      const data = message.data.map((data) => ({ ...data, ...overrideCollection(data.objekt) }));
+      const filtered = filterData(data, type ?? "all", {
         ...filters,
         artist: parsedSelectedArtistIds,
       });

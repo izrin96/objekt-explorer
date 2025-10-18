@@ -54,12 +54,24 @@ importers:
       '@hono/node-server':
         specifier: ^1.19.5
         version: 1.19.5(hono@4.9.12)
+      '@hono/node-ws':
+        specifier: ^1.2.0
+        version: 1.2.0(@hono/node-server@1.19.5(hono@4.9.12))(bufferutil@4.0.9)(hono@4.9.12)(utf-8-validate@5.0.10)
+      '@objekt-explorer/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       dotenv:
         specifier: 'catalog:'
         version: 17.2.3
+      drizzle-orm:
+        specifier: ^0.44.6
+        version: 0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)
       hono:
         specifier: 'catalog:'
         version: 4.9.12
+      ioredis:
+        specifier: ^5.8.1
+        version: 5.8.1
       zod:
         specifier: 'catalog:'
         version: 4.1.12
@@ -308,6 +320,34 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+
+  packages/db:
+    dependencies:
+      dotenv:
+        specifier: 'catalog:'
+        version: 17.2.3
+      drizzle-orm:
+        specifier: ^0.44.6
+        version: 0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.12
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.15.5
+        version: 8.15.5
+      drizzle-kit:
+        specifier: ^0.31.5
+        version: 0.31.5
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.15.7(typescript@5.9.3)
 
 packages:
 
@@ -1025,6 +1065,13 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/node-ws@1.2.0':
+    resolution: {integrity: sha512-OBPQ8OSHBw29mj00wT/xGYtB6HY54j0fNSdVZ7gZM3TUeq0So11GXaWtFf1xWxQNfumKIsj0wRuLKWfVsO5GgQ==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      '@hono/node-server': ^1.11.1
+      hono: ^4.6.0
 
   '@hpke/chacha20poly1305@1.7.1':
     resolution: {integrity: sha512-Zp8IwRIkdCucu877wCNqDp3B8yOhAnAah/YDDkO94pPr/KKV7IGnBbpwIjDB3BsAySWBMrhhdE0JKYw3N4FCag==}
@@ -6820,6 +6867,15 @@ snapshots:
     dependencies:
       hono: 4.9.12
 
+  '@hono/node-ws@1.2.0(@hono/node-server@1.19.5(hono@4.9.12))(bufferutil@4.0.9)(hono@4.9.12)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@hono/node-server': 1.19.5(hono@4.9.12)
+      hono: 4.9.12
+      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
   '@hpke/chacha20poly1305@1.7.1':
     dependencies:
       '@hpke/common': 1.8.1
@@ -7146,7 +7202,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
       '@types/debug': 4.1.12
-      debug: 4.3.4
+      debug: 4.4.3
       pony-cause: 2.1.11
       semver: 7.7.3
       uuid: 9.0.1
@@ -7160,7 +7216,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
       '@types/debug': 4.1.12
-      debug: 4.3.4
+      debug: 4.4.3
       pony-cause: 2.1.11
       semver: 7.7.3
       uuid: 9.0.1

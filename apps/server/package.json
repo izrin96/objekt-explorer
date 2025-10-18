@@ -10,15 +10,19 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "hono": "catalog:",
     "@hono/node-server": "^1.19.5",
+    "@hono/node-ws": "^1.2.0",
     "dotenv": "catalog:",
-    "zod": "catalog:"
+    "hono": "catalog:",
+    "ioredis": "^5.8.1",
+    "zod": "catalog:",
+    "drizzle-orm": "^0.44.6",
+    "@objekt-explorer/db": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "catalog:",
-    "tsx": "^4.20.6",
     "@types/node": "catalog:",
-    "tsdown": "catalog:"
+    "tsdown": "catalog:",
+    "tsx": "^4.20.6",
+    "typescript": "catalog:"
   }
 }
