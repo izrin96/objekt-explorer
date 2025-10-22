@@ -17,8 +17,8 @@ function optimizeRacLocales() {
 }
 
 export default defineConfig(async () => {
-  await import("./src/lib/env/client");
-  await import("./src/lib/env/server");
+  // await import("./src/lib/env/client");
+  // await import("./src/lib/env/server");
 
   return {
     plugins: [
@@ -45,9 +45,9 @@ export default defineConfig(async () => {
       rollupOptions: {
         output: {
           manualChunks: {
-            "react-vendor": ["react", "react-dom"],
-            "rac-vendor": ["react-aria-components"],
-            "wagmi-vendor": ["wagmi", "viem"],
+            // "react-vendor": ["react", "react-dom"],
+            // "rac-vendor": ["react-aria-components"],
+            // "wagmi-vendor": ["wagmi", "viem"],
           },
         },
         external: [
