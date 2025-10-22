@@ -133,7 +133,7 @@ export const cosmoLinkRouter = {
     }),
 
   linkAbs: authed.handler(async ({ context: { session } }) => {
-    const idToken = await getCookie("privy-id-token");
+    const idToken = getCookie("privy-id-token");
 
     if (!idToken)
       throw new ORPCError("BAD_REQUEST", {

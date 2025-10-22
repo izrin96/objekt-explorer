@@ -2,7 +2,7 @@ import { getCookie, setCookie } from "@tanstack/react-start/server";
 import type { ValidArtist } from "../universal/cosmo/common";
 
 export async function parseSelectedArtists() {
-  const value = await getCookie("artists");
+  const value = getCookie("artists");
 
   if (value === undefined) return [];
 
