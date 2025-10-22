@@ -9,9 +9,21 @@ catalogs:
     '@types/node':
       specifier: 24.8.0
       version: 24.8.0
+    dotenv:
+      specifier: 17.2.3
+      version: 17.2.3
+    hono:
+      specifier: ^4.9.12
+      version: 4.9.12
+    tsdown:
+      specifier: ^0.15.7
+      version: 0.15.7
     typescript:
       specifier: 5.9.3
       version: 5.9.3
+    zod:
+      specifier: ^4.1.12
+      version: 4.1.12
 
 importers:
 
@@ -81,7 +93,7 @@ importers:
     dependencies:
       '@abstract-foundation/agw-react':
         specifier: ^1.10.0
-        version: 1.10.0(5fc1434ea7d782e5b928470e895458d0)
+        version: 1.10.0(6b751d0715d61cf8fc0448f8afd6377f)
       '@aws-sdk/client-s3':
         specifier: ^3.911.0
         version: 3.911.0
@@ -102,7 +114,7 @@ importers:
         version: 1.9.4
       '@orpc/server':
         specifier: ^1.9.4
-        version: 1.9.4(crossws@0.4.1(srvx@0.8.16))(ws@7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        version: 1.9.4(crossws@0.4.1(srvx@0.8.16))(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@orpc/tanstack-query':
         specifier: ^1.9.4
         version: 1.9.4(@orpc/client@1.9.4)(@tanstack/query-core@5.90.5)
@@ -111,7 +123,7 @@ importers:
         version: 2.1.10(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@privy-io/react-auth':
         specifier: ^3.3.0
-        version: 3.3.0(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
+        version: 3.3.0(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
       '@privy-io/server-auth':
         specifier: ^1.32.5
         version: 1.32.5(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
@@ -267,7 +279,7 @@ importers:
         version: 4.1.12
       zustand:
         specifier: ^5.0.8
-        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.4.0(react@19.2.0))
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.14
@@ -313,7 +325,7 @@ importers:
     dependencies:
       '@abstract-foundation/agw-react':
         specifier: ^1.10.0
-        version: 1.10.0(6b751d0715d61cf8fc0448f8afd6377f)
+        version: 1.10.0(5fc1434ea7d782e5b928470e895458d0)
       '@aws-sdk/client-s3':
         specifier: ^3.911.0
         version: 3.911.0
@@ -346,7 +358,7 @@ importers:
         version: 1.9.4
       '@orpc/server':
         specifier: ^1.9.4
-        version: 1.9.4(crossws@0.4.1(srvx@0.8.16))(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        version: 1.9.4(crossws@0.4.1(srvx@0.8.16))(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@orpc/tanstack-query':
         specifier: ^1.9.4
         version: 1.9.4(@orpc/client@1.9.4)(@tanstack/query-core@5.90.5)
@@ -358,7 +370,7 @@ importers:
         version: 0.3.0(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
       '@privy-io/react-auth':
         specifier: ^3.3.0
-        version: 3.3.0(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
+        version: 3.3.0(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.2(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
       '@radix-ui/react-avatar':
         specifier: ^1.1.10
         version: 1.1.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -385,7 +397,7 @@ importers:
         version: 1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tanstack/react-router-ssr-query':
         specifier: ^1.133.16
-        version: 1.133.16(@tanstack/query-core@5.90.5)(@tanstack/react-query@5.90.5(react@19.2.0))(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@tanstack/router-core@1.133.13)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 1.133.16(@tanstack/query-core@5.90.5)(@tanstack/react-query@5.90.5(react@19.2.0))(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@tanstack/router-core@1.133.20)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tanstack/react-start':
         specifier: ^1.133.13
         version: 1.133.13(crossws@0.4.1(srvx@0.8.16))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.6))
@@ -397,7 +409,7 @@ importers:
         version: 1.133.13(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(zod@4.1.12)
       better-auth:
         specifier: ^1.3.27
-        version: 1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 1.3.27(next@16.0.0-beta.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       chroma-js:
         specifier: ^3.1.2
         version: 3.1.2
@@ -439,10 +451,10 @@ importers:
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nitro:
         specifier: 3.0.1-alpha.0
-        version: 3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.1)(lru-cache@11.2.2)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.6))
+        version: 3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.1)(lru-cache@11.2.2)(rolldown@1.0.0-beta.44)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.6))
       nuqs:
         specifier: ^2.7.2
-        version: 2.7.2(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+        version: 2.7.2(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0-beta.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       ofetch:
         specifier: ^1.4.1
         version: 1.4.1
@@ -514,7 +526,7 @@ importers:
         version: 4.1.12
       zustand:
         specifier: ^5.0.8
-        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.4.0(react@19.2.0))
+        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.1.14
@@ -3872,6 +3884,10 @@ packages:
     peerDependencies:
       vite: '>=6.0.0 || >=7.0.0'
 
+  '@tanstack/history@1.133.19':
+    resolution: {integrity: sha512-Y866qBVVprdQkmO0/W1AFBI8tiQy398vFeIwP+VrRWCOzs3VecxSVzAvaOM4iHfkJz81fFAZMhLLjDVoPikD+w==}
+    engines: {node: '>=12'}
+
   '@tanstack/history@1.133.3':
     resolution: {integrity: sha512-zFQnGdX0S4g5xRuS+95iiEXM+qlGvYG7ksmOKx7LaMv60lDWa0imR8/24WwXXvBWJT1KnwVdZcjvhCwz9IiJCw==}
     engines: {node: '>=12'}
@@ -3946,6 +3962,10 @@ packages:
 
   '@tanstack/router-core@1.133.13':
     resolution: {integrity: sha512-zZptdlS/wSkqozb07Y3zX5gas2OapJdjEG6/Id0e/twNefVdR4EY2TK/mgvyhHtKIpCxIcnZz/3opypgeQi9bg==}
+    engines: {node: '>=12'}
+
+  '@tanstack/router-core@1.133.20':
+    resolution: {integrity: sha512-cO8E6XA0vMX2BaPZck9kfgXK76e6Lqo13GmXEYxtXshmW8cIlgcLHhBDKnI/sCjIy9OPY2sV1qrGHtcxJy/4ew==}
     engines: {node: '>=12'}
 
   '@tanstack/router-generator@1.133.13':
@@ -10016,24 +10036,6 @@ snapshots:
 
   '@orpc/interop@1.9.4': {}
 
-  '@orpc/server@1.9.4(crossws@0.4.1(srvx@0.8.16))(ws@7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
-    dependencies:
-      '@orpc/client': 1.9.4
-      '@orpc/contract': 1.9.4
-      '@orpc/interop': 1.9.4
-      '@orpc/shared': 1.9.4
-      '@orpc/standard-server': 1.9.4
-      '@orpc/standard-server-aws-lambda': 1.9.4
-      '@orpc/standard-server-fetch': 1.9.4
-      '@orpc/standard-server-node': 1.9.4
-      '@orpc/standard-server-peer': 1.9.4
-      cookie: 1.0.2
-    optionalDependencies:
-      crossws: 0.4.1(srvx@0.8.16)
-      ws: 7.5.10(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-
   '@orpc/server@1.9.4(crossws@0.4.1(srvx@0.8.16))(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
     dependencies:
       '@orpc/client': 1.9.4
@@ -10049,6 +10051,24 @@ snapshots:
     optionalDependencies:
       crossws: 0.4.1(srvx@0.8.16)
       ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+
+  '@orpc/server@1.9.4(crossws@0.4.1(srvx@0.8.16))(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))':
+    dependencies:
+      '@orpc/client': 1.9.4
+      '@orpc/contract': 1.9.4
+      '@orpc/interop': 1.9.4
+      '@orpc/shared': 1.9.4
+      '@orpc/standard-server': 1.9.4
+      '@orpc/standard-server-aws-lambda': 1.9.4
+      '@orpc/standard-server-fetch': 1.9.4
+      '@orpc/standard-server-node': 1.9.4
+      '@orpc/standard-server-peer': 1.9.4
+      cookie: 1.0.2
+    optionalDependencies:
+      crossws: 0.4.1(srvx@0.8.16)
+      ws: 8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
@@ -12643,6 +12663,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@tanstack/history@1.133.19': {}
+
   '@tanstack/history@1.133.3': {}
 
   '@tanstack/query-core@5.90.5': {}
@@ -12660,12 +12682,12 @@ snapshots:
       '@tanstack/query-core': 5.90.5
       react: 19.2.0
 
-  '@tanstack/react-router-ssr-query@1.133.16(@tanstack/query-core@5.90.5)(@tanstack/react-query@5.90.5(react@19.2.0))(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@tanstack/router-core@1.133.13)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@tanstack/react-router-ssr-query@1.133.16(@tanstack/query-core@5.90.5)(@tanstack/react-query@5.90.5(react@19.2.0))(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@tanstack/router-core@1.133.20)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@tanstack/query-core': 5.90.5
       '@tanstack/react-query': 5.90.5(react@19.2.0)
       '@tanstack/react-router': 1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@tanstack/router-ssr-query-core': 1.133.16(@tanstack/query-core@5.90.5)(@tanstack/router-core@1.133.13)
+      '@tanstack/router-ssr-query-core': 1.133.16(@tanstack/query-core@5.90.5)(@tanstack/router-core@1.133.20)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
     transitivePeerDependencies:
@@ -12747,6 +12769,16 @@ snapshots:
       tiny-invariant: 1.3.3
       tiny-warning: 1.0.3
 
+  '@tanstack/router-core@1.133.20':
+    dependencies:
+      '@tanstack/history': 1.133.19
+      '@tanstack/store': 0.7.7
+      cookie-es: 2.0.0
+      seroval: 1.3.2
+      seroval-plugins: 1.3.3(seroval@1.3.2)
+      tiny-invariant: 1.3.3
+      tiny-warning: 1.0.3
+
   '@tanstack/router-generator@1.133.13':
     dependencies:
       '@tanstack/router-core': 1.133.13
@@ -12782,10 +12814,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tanstack/router-ssr-query-core@1.133.16(@tanstack/query-core@5.90.5)(@tanstack/router-core@1.133.13)':
+  '@tanstack/router-ssr-query-core@1.133.16(@tanstack/query-core@5.90.5)(@tanstack/router-core@1.133.20)':
     dependencies:
       '@tanstack/query-core': 5.90.5
-      '@tanstack/router-core': 1.133.13
+      '@tanstack/router-core': 1.133.20
 
   '@tanstack/router-utils@1.133.3':
     dependencies:
@@ -14103,25 +14135,6 @@ snapshots:
       zod: 4.1.12
     optionalDependencies:
       next: 16.0.0-beta.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
-
-  better-auth@1.3.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
-    dependencies:
-      '@better-auth/core': 1.3.27
-      '@better-auth/utils': 0.3.0
-      '@better-fetch/fetch': 1.1.18
-      '@noble/ciphers': 2.0.1
-      '@noble/hashes': 2.0.1
-      '@simplewebauthn/browser': 13.2.2
-      '@simplewebauthn/server': 13.2.2
-      better-call: 1.0.19
-      defu: 6.1.4
-      jose: 6.1.0
-      kysely: 0.28.8
-      nanostores: 1.0.1
-      zod: 4.1.12
-    optionalDependencies:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
 
@@ -15564,7 +15577,7 @@ snapshots:
 
   nf3@0.1.1: {}
 
-  nitro@3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.1)(lru-cache@11.2.2)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.6)):
+  nitro@3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.1)(lru-cache@11.2.2)(rolldown@1.0.0-beta.44)(vite@7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.6)):
     dependencies:
       consola: 3.4.2
       cookie-es: 2.0.0
@@ -15584,6 +15597,7 @@ snapshots:
       unenv: 2.0.0-rc.21
       unstorage: 2.0.0-alpha.3(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.44.6(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(idb-keyval@6.2.2)(ioredis@5.8.1)(lru-cache@11.2.2)(ofetch@1.4.1)
     optionalDependencies:
+      rolldown: 1.0.0-beta.44
       vite: 7.1.10(@types/node@24.8.0)(jiti@2.6.1)(lightningcss@1.30.1)(terser@5.44.0)(tsx@4.20.6)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -15673,13 +15687,6 @@ snapshots:
     optionalDependencies:
       '@tanstack/react-router': 1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       next: 16.0.0-beta.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-
-  nuqs@2.7.2(@tanstack/react-router@1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0):
-    dependencies:
-      '@standard-schema/spec': 1.0.0
-      react: 19.2.0
-    optionalDependencies:
-      '@tanstack/react-router': 1.133.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
 
   obj-multiplex@1.0.0:
     dependencies:

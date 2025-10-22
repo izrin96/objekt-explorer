@@ -8,6 +8,7 @@ import type { Outputs } from "@/lib/orpc/server";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import type { PublicList } from "@/lib/universal/user";
 import { getSession, mapPublicUser } from "../../auth";
+import { parseSelectedArtists } from "../../cookie";
 import { db } from "../../db";
 import { indexer } from "../../db/indexer";
 import { collections } from "../../db/indexer/schema";
@@ -52,7 +53,8 @@ export const listRouter = {
         slug: z.string(),
       }),
     )
-    .handler(async ({ input: { slug }, context: { artists } }) => {
+    .handler(async ({ input: { slug } }) => {
+      const artists = await parseSelectedArtists();
       const result = await db.query.lists.findFirst({
         with: {
           entries: {
@@ -85,9 +87,9 @@ export const listRouter = {
         input: { slug, skipDups, collectionSlugs },
         context: {
           session: { user },
-          artists,
         },
       }) => {
+        const artists = await parseSelectedArtists();
         const list = await findOwnedList(slug, user.id);
 
         if (skipDups) {

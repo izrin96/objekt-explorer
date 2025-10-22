@@ -7,6 +7,15 @@ import { defineConfig } from "vite";
 // import { nodePolyfills } from "vite-plugin-node-polyfills";
 import tsConfigPaths from "vite-tsconfig-paths";
 
+function optimizeRacLocales() {
+  return {
+    ...optimizeLocales.vite({
+      locales: ["en-US"],
+    }),
+    enforce: "pre",
+  } as const;
+}
+
 export default defineConfig(async () => {
   await import("./src/lib/env/client");
   await import("./src/lib/env/server");
@@ -27,18 +36,12 @@ export default defineConfig(async () => {
         },
       }),
       tailwindcss(),
-      {
-        ...optimizeLocales.vite({
-          locales: ["en-US"],
-        }),
-        enforce: "pre",
-      } as const,
+      optimizeRacLocales(),
     ],
     // optimizeDeps: {
-    //   exclude: ["some-heavy-lib"]
+    //   include: ["react", "react-dom", "react-aria-components"],
     // },
     build: {
-      sourcemap: false,
       rollupOptions: {
         output: {
           manualChunks: {
