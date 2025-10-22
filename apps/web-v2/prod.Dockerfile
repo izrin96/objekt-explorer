@@ -7,26 +7,30 @@ FROM base AS pnpm
 RUN corepack enable
 RUN pnpm config set store-dir ~/.pnpm-store
 
-FROM pnpm AS builder
+FROM pnpm AS prune
 RUN npm install -g turbo@latest
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune web-v2 --docker
 
-FROM pnpm AS installer-prod
-COPY --from=builder /app/out/json/ .
-RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
-    pnpm install --frozen-lockfile --prod
-
-FROM pnpm AS installer
-COPY --from=builder /app/out/json/ .
+# prod and dev dependencies
+FROM pnpm AS dev
+COPY --from=prune /app/out/json/ .
 RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
     pnpm install --frozen-lockfile
 
+# prod only dependencies
+FROM dev AS prod
+ENV CI=true
+RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
+    pnpm install --frozen-lockfile --prod
+
+# build
+FROM dev AS build
 ENV TURBO_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=12096"
 
-COPY --from=builder /app/out/full/ .
+COPY --from=prune /app/out/full/ .
 RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=umami_website_id \
     --mount=type=secret,id=activity_websocket_url \
@@ -77,6 +81,7 @@ RUN --mount=type=secret,id=umami_script_url \
     REDIS_URL=$(cat /run/secrets/redis_url) \
     pnpm run build
 
+# runner
 FROM base AS runner
 
 ENV NODE_ENV=production
@@ -85,8 +90,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nodejs
 USER nodejs
 
-COPY --from=installer-prod --chown=nodejs:nodejs /app/ .
-COPY --from=installer --chown=nodejs:nodejs /app/apps/web-v2/.output ./apps/web-v2/.output
+COPY --from=prod --chown=nodejs:nodejs /app/ .
+COPY --from=build --chown=nodejs:nodejs /app/apps/web-v2/.output ./apps/web-v2/.output
 
 EXPOSE 3000/tcp
 
