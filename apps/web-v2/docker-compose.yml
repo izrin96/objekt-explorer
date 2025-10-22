@@ -1,0 +1,118 @@
+services:
+  postgres:
+    restart: always
+    image: postgres:18
+    volumes:
+      - db_data:/var/lib/postgresql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  browserless:
+    image: ghcr.io/browserless/chromium
+    ports:
+      - "9222:3000"
+    environment:
+      - TOKEN=your-token-here
+  web:
+    restart: always
+    ports:
+      - "4000:3000"
+    build:
+      context: ../..
+      dockerfile: ./apps/web-v2/Dockerfile
+      args:
+        - VITE_UMAMI_SCRIPT_URL
+        - VITE_UMAMI_WEBSITE_ID
+        - VITE_ACTIVITY_WEBSOCKET_URL
+        - BETTER_AUTH_SECRET
+        - DISCORD_CLIENT_ID
+        - DISCORD_CLIENT_SECRET
+        - TWITTER_CLIENT_ID
+        - TWITTER_CLIENT_SECRET
+        - BROWSER_CDP_URL
+        - VITE_SITE_URL
+        - DATABASE_URL
+        - INDEXER_DATABASE_URL
+        - S3_ENDPOINT
+        - S3_ACCESS_KEY
+        - S3_SECRET_KEY
+        - SES_REGION
+        - SES_ACCESS_KEY
+        - SES_SECRET_KEY
+        - SES_MAIL_FROM
+        - VITE_LIVE_API_KEY
+        - BYPASS_LIVE_KEY
+        - VITE_PRIVY_APP_ID
+        - PRIVY_APP_SECRET
+        - REDIS_URL
+    env_file: .env
+    environment:
+      - VITE_UMAMI_SCRIPT_URL
+      - VITE_UMAMI_WEBSITE_ID
+      - VITE_ACTIVITY_WEBSOCKET_URL
+      - BETTER_AUTH_SECRET
+      - DISCORD_CLIENT_ID
+      - DISCORD_CLIENT_SECRET
+      - TWITTER_CLIENT_ID
+      - TWITTER_CLIENT_SECRET
+      - BROWSER_CDP_URL
+      - VITE_SITE_URL
+      - DATABASE_URL
+      - INDEXER_DATABASE_URL
+      - S3_ENDPOINT
+      - S3_ACCESS_KEY
+      - S3_SECRET_KEY
+      - SES_REGION
+      - SES_ACCESS_KEY
+      - SES_SECRET_KEY
+      - SES_MAIL_FROM
+      - VITE_LIVE_API_KEY
+      - BYPASS_LIVE_KEY
+      - VITE_PRIVY_APP_ID
+      - PRIVY_APP_SECRET
+      - REDIS_URL
+  minio:
+    restart: always
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "6432:6432"
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres
+      - DB_NAME=main
+      - POOL_MODE=transaction
+      - AUTH_TYPE=scram-sha-256
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost"]
+  redis:
+    restart: always
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    # command: redis-server --appendonly yes
+volumes:
+  db_data:
+  minio_data:
+  redis_data:

@@ -1,0 +1,1 @@
+ALTER TABLE "profile_list_entries" ADD COLUMN "received_at" timestamp NOT NULL;
