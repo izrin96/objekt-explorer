@@ -11,12 +11,13 @@ import { Toast } from "@/components/ui/toast";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { env } from "@/lib/env/client";
 import type { orpc } from "@/lib/orpc/client";
-import appCss from "../index.css?url";
 import "core-js/es/array/at";
 import "core-js/es/array/to-sorted";
 import "core-js/es/array/to-reversed";
 import { PostErrorComponent } from "@/components/error-boundary";
 import NotFound from "@/components/not-found";
+// import appCss from "../index.css?url";
+import "../index.css";
 
 export interface RouterAppContext {
   orpc: typeof orpc;
@@ -63,10 +64,10 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     ],
     links: [
       { rel: "icon", href: "/favicon.ico" },
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      // {
+      //   rel: "stylesheet",
+      //   href: appCss,
+      // },
       {
         rel: "apple-touch-icon",
         sizes: "180x180",
