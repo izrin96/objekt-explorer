@@ -35,7 +35,7 @@ jobs:
           file: ./apps/web/prod.Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository }}/web:latest
+          tags: ghcr.io/${{ github.repository }}-web:latest
           cache-from: type=gha,scope=web-cache
           cache-to: type=gha,scope=web-cache,mode=max
           secrets: |
@@ -71,7 +71,7 @@ jobs:
           file: ./apps/server/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository }}/server:latest
+          tags: ghcr.io/${{ github.repository }}-server:latest
           cache-from: type=gha,scope=server-cache
           cache-to: type=gha,scope=server-cache,mode=max
 
@@ -82,7 +82,7 @@ jobs:
       - name: Delete all untagged web images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: web
+          package-name: ${{ github.repository }}-web
           package-type: container
           delete-only-untagged-versions: true
           min-versions-to-keep: 0
@@ -90,7 +90,7 @@ jobs:
       - name: Delete all untagged server images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: server
+          package-name: ${{ github.repository }}-server
           package-type: container
           delete-only-untagged-versions: true
           min-versions-to-keep: 0
