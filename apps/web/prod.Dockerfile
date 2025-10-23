@@ -7,21 +7,22 @@ FROM base AS pnpm
 RUN corepack enable
 RUN pnpm config set store-dir ~/.pnpm-store
 
-FROM pnpm AS builder
+FROM pnpm AS prune
 RUN npm install -g turbo@latest
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune web --docker
 
-FROM pnpm AS installer
-COPY --from=builder /app/out/json/ .
+# build
+FROM pnpm AS build
+COPY --from=prune /app/out/json/ .
 RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
     pnpm install --frozen-lockfile
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV TURBO_TELEMETRY_DISABLED=1
 
-COPY --from=builder /app/out/full/ .
+COPY --from=prune /app/out/full/ .
 RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=umami_website_id \
     --mount=type=secret,id=activity_websocket_url \
@@ -72,6 +73,7 @@ RUN --mount=type=secret,id=umami_script_url \
     REDIS_URL=$(cat /run/secrets/redis_url) \
     pnpm run build
 
+# runner
 FROM base AS runner
 
 ENV NODE_ENV=production
@@ -81,9 +83,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 USER nextjs
 
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=build --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000/tcp
 
