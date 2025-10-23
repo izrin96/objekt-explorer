@@ -2,7 +2,7 @@
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-import { Suspense, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Cropper, type CropperRef } from "react-advanced-cropper";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
@@ -186,7 +186,6 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
   const router = useRouter();
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
-  const [isUploading, startUploadTransition] = useTransition();
 
   const { data } = useSuspenseQuery(
     orpc.profile.find.queryOptions({
@@ -205,7 +204,11 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
     removeBanner: false,
   };
 
-  const { handleSubmit, control } = useForm({
+  const {
+    handleSubmit,
+    control,
+    formState: { isSubmitting },
+  } = useForm({
     defaultValues: values,
     values: values,
   });
@@ -224,8 +227,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
     }),
   );
 
-  const getPresignedUrl = useMutation(
-    orpc.profile.getPresignedUrl.mutationOptions({
+  const getPresignedPost = useMutation(
+    orpc.profile.getPresignedPost.mutationOptions({
       onError: () => {
         toast.error("Failed to upload image");
       },
@@ -233,23 +236,30 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
     }),
   );
 
-  const handleUpload = useCallback(async (url: string, file: File) => {
-    try {
-      const response = await ofetch.raw(url, {
-        method: "PUT",
-        body: file,
-        headers: {
-          "Content-Type": file.type,
-        },
-      });
+  const handleUpload = useCallback(
+    async (url: string, fields: Record<string, string>, file: File) => {
+      try {
+        const formData = new FormData();
+        formData.append("Content-Type", file.type);
+        Object.entries(fields).forEach(([key, value]) => {
+          formData.append(key, value as string);
+        });
+        formData.append("file", file);
 
-      if (!response.ok) {
+        const response = await ofetch.raw(url, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to upload image");
+        }
+      } catch {
         throw new Error("Failed to upload image");
       }
-    } catch {
-      toast.error("Failed to upload image");
-    }
-  }, []);
+    },
+    [],
+  );
 
   const handleSelectImage = useCallback((e: FileList | null) => {
     const files = Array.from(e ?? []);
@@ -287,36 +297,35 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
   const onSubmit = handleSubmit(async (data) => {
     if (droppedImage && !data.removeBanner) {
       const croppedFile = await generateCroppedImage();
-      getPresignedUrl.mutate(
-        {
-          address,
-          fileName: droppedImage.name,
-        },
-        {
-          onSuccess: async (url) => {
-            startUploadTransition(async () => {
-              await handleUpload(url, croppedFile ?? droppedImage);
+      const { url, fields, key } = await getPresignedPost.mutateAsync({
+        address,
+        fileName: droppedImage.name,
+        mimeType: droppedImage.type,
+      });
 
-              const fileUrl = url.split("?")[0];
-              edit.mutate({
-                address: address,
-                hideUser: data.hideUser,
-                bannerImgUrl: fileUrl,
-                bannerImgType: droppedImage.type,
-                privateSerial: data.privateSerial,
-                privateProfile: data.privateProfile,
-                hideNickname: data.hideNickname,
-                hideTransfer: data.hideTransfer,
-                gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
-              });
-            });
-          },
-        },
-      );
+      try {
+        await handleUpload(url, fields, croppedFile ?? droppedImage);
+      } catch {
+        toast.error("Failed to upload image");
+        return;
+      }
+
+      await edit.mutateAsync({
+        address: address,
+        hideUser: data.hideUser,
+        bannerImgUrl: `${url}/${key}`,
+        bannerImgType: droppedImage.type,
+        privateSerial: data.privateSerial,
+        privateProfile: data.privateProfile,
+        hideNickname: data.hideNickname,
+        hideTransfer: data.hideTransfer,
+        gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
+      });
+
       return;
     }
 
-    edit.mutate({
+    await edit.mutateAsync({
       address: address,
       hideUser: data.hideUser,
       bannerImgUrl: data.removeBanner ? null : undefined,
@@ -467,11 +476,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         </span>
 
         <Portal to="#submit-form">
-          <Button
-            intent="primary"
-            isPending={edit.isPending || getPresignedUrl.isPending || isUploading}
-            onClick={onSubmit}
-          >
+          <Button intent="primary" isPending={isSubmitting} onClick={onSubmit}>
             Save
           </Button>
         </Portal>

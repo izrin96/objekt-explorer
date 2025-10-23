@@ -2,11 +2,10 @@ import {
   CreateBucketCommand,
   DeleteObjectCommand,
   HeadBucketCommand,
-  PutObjectCommand,
   S3Client,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 import { env } from "../env/server";
 
 export const s3Client = new S3Client({
@@ -54,26 +53,29 @@ export async function deleteFileFromBucket({
   }
 }
 
-export async function createPresignedUrlToUpload({
+export async function createPresignedPostToUpload({
   bucketName,
-  fileName,
-  expiry = 60 * 60,
+  key,
+  mimeType,
 }: {
   bucketName: string;
-  fileName: string;
-  expiry?: number;
+  key: string;
+  mimeType: string;
 }) {
   await createBucketIfNotExists(bucketName);
 
-  const command = new PutObjectCommand({
+  const { url, fields } = await createPresignedPost(s3Client, {
     Bucket: bucketName,
-    Key: fileName,
-    CacheControl: "private, max-age=31536000",
+    Key: key,
+    Conditions: [
+      ["content-length-range", 0, 10 * 1024 * 1024],
+      ["eq", "$Content-Type", mimeType],
+    ],
+    Fields: {
+      acl: "public-read",
+    },
+    Expires: 3600,
   });
 
-  const url = await getSignedUrl(s3Client, command, {
-    expiresIn: expiry,
-  });
-
-  return url;
+  return { url, fields, key };
 }

@@ -4,7 +4,7 @@ import * as z from "zod/v4";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
 import { fetchUserProfiles } from "../../profile";
-import { createPresignedUrlToUpload, deleteFileFromBucket } from "../../s3";
+import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3";
 import { authed } from "../orpc";
 
 export const profileRouter = {
@@ -53,23 +53,25 @@ export const profileRouter = {
         .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
     }),
 
-  getPresignedUrl: authed
+  getPresignedPost: authed
     .input(
       z.object({
         address: z.string(),
         fileName: z.string(),
+        mimeType: z.string(),
       }),
     )
-    .handler(async ({ input: { address, fileName }, context: { session } }) => {
+    .handler(async ({ input: { address, fileName, mimeType }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       const ext = fileName.split(".").pop();
-      const url = await createPresignedUrlToUpload({
+      const data = await createPresignedPostToUpload({
         bucketName: "profile-banner",
-        fileName: `${address}-${Date.now()}.${ext}`,
+        key: `${address}-${Date.now()}.${ext}`,
+        mimeType,
       });
 
-      return url;
+      return data;
     }),
 };
 
