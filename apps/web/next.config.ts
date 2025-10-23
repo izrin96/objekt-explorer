@@ -28,6 +28,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  serverExternalPackages: ["@privy-io/node"],
 };
 
 const withNextIntl = createNextIntlPlugin({

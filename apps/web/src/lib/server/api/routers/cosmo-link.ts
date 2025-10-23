@@ -137,12 +137,10 @@ export const cosmoLinkRouter = {
         message: "Missing identity token",
       });
 
-    const user = await privy.getUser({
-      idToken: idToken,
-    });
+    const user = await privy.users().get({ id_token: idToken });
 
-    const linkedAccount = user.linkedAccounts.find(
-      (a) => a.type === "cross_app" && a.providerApp.id === AGW_APP_ID,
+    const linkedAccount = user.linked_accounts.find(
+      (a) => a.type === "cross_app" && a.provider_app_id === AGW_APP_ID,
     );
 
     if (!linkedAccount || linkedAccount.type !== "cross_app") {
@@ -151,12 +149,12 @@ export const cosmoLinkRouter = {
       });
     }
 
-    if (linkedAccount.smartWallets.length === 0)
+    if (linkedAccount.smart_wallets.length === 0)
       throw new ORPCError("BAD_REQUEST", {
         message: "No Abstract wallet found",
       });
 
-    const address = linkedAccount.smartWallets[0].address;
+    const address = linkedAccount.smart_wallets[0].address;
 
     // link cosmo id with user
     await db
