@@ -41,16 +41,16 @@ jobs:
           cache-from: type=gha,scope=web-cache
           cache-to: type=gha,scope=web-cache,mode=max
           secrets: |
-            umami_script_url=${{ secrets.VITE_UMAMI_SCRIPT_URL }}
-            umami_website_id=${{ secrets.VITE_UMAMI_WEBSITE_ID }}
-            activity_websocket_url=${{ secrets.VITE_ACTIVITY_WEBSOCKET_URL }}
+            umami_script_url=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
+            umami_website_id=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
+            activity_websocket_url=${{ secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL }}
             better_auth_secret=${{ secrets.BETTER_AUTH_SECRET }}
             discord_client_id=${{ secrets.DISCORD_CLIENT_ID }}
             discord_client_secret=${{ secrets.DISCORD_CLIENT_SECRET }}
             twitter_client_id=${{ secrets.TWITTER_CLIENT_ID }}
             twitter_client_secret=${{ secrets.TWITTER_CLIENT_SECRET }}
             browser_cdp_url=${{ secrets.BROWSER_CDP_URL }}
-            site_url=${{ secrets.VITE_SITE_URL }}
+            site_url=${{ secrets.NEXT_PUBLIC_SITE_URL }}
             database_url=${{ secrets.DATABASE_URL }}
             indexer_database_url=${{ secrets.INDEXER_DATABASE_URL }}
             s3_endpoint=${{ secrets.S3_ENDPOINT }}
@@ -60,9 +60,9 @@ jobs:
             ses_access_key=${{ secrets.SES_ACCESS_KEY }}
             ses_secret_key=${{ secrets.SES_SECRET_KEY }}
             ses_mail_from=${{ secrets.SES_MAIL_FROM }}
-            live_api_key=${{ secrets.VITE_LIVE_API_KEY }}
+            live_api_key=${{ secrets.NEXT_PUBLIC_LIVE_API_KEY }}
             bypass_live_key=${{ secrets.BYPASS_LIVE_KEY }}
-            privy_app_id=${{ secrets.VITE_PRIVY_APP_ID }}
+            privy_app_id=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
             privy_app_secret=${{ secrets.PRIVY_APP_SECRET }}
             redis_url=${{ secrets.REDIS_URL }}
 
