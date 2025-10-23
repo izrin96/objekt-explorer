@@ -14,7 +14,7 @@
     "@hono/node-ws": "^1.2.0",
     "dotenv": "catalog:",
     "hono": "catalog:",
-    "ioredis": "^5.8.1",
+    "ioredis": "^5.8.2",
     "zod": "catalog:",
     "drizzle-orm": "^0.44.6",
     "@objekt-explorer/db": "workspace:*"

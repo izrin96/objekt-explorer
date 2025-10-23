@@ -3,9 +3,9 @@ packages:
   - packages/*
 
 catalog:
-  '@types/node': 24.8.0
-  dotenv: 17.2.3
-  hono: ^4.9.12
-  tsdown: ^0.15.7
-  typescript: 5.9.3
+  hono: ^4.10.2
+  dotenv: ^17.2.3
   zod: ^4.1.12
+  typescript: ^5.9.3
+  "@types/node": ^24.9.1
+  tsdown: ^0.15.9
