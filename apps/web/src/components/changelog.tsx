@@ -41,8 +41,8 @@ export default function Changelog() {
             <Disclosure id="4">
               <DisclosureTrigger>2025-09-13</DisclosureTrigger>
               <DisclosurePanel>
-                <div className="prose text-fg text-sm">
-                  <ul>
+                <div className="text-fg text-sm">
+                  <ul className="list-disc">
                     <li>Added Objekt Columns setting in Edit List and Edit Profile.</li>
                     <li>Added Wide/Compact layout toggle button.</li>
                   </ul>
@@ -52,8 +52,8 @@ export default function Changelog() {
             <Disclosure id="3">
               <DisclosureTrigger>2025-09-08</DisclosureTrigger>
               <DisclosurePanel>
-                <div className="prose text-fg text-sm">
-                  <ul>
+                <div className="text-fg text-sm">
+                  <ul className="list-disc">
                     <li>Improve scroll performance</li>
                     <li>
                       Remove objekt action (pin/lock) when hover an objekt in your linked profile to
@@ -66,8 +66,8 @@ export default function Changelog() {
             <Disclosure id="2">
               <DisclosureTrigger>2025-08-27</DisclosureTrigger>
               <DisclosurePanel>
-                <div className="prose text-fg text-sm">
-                  <ul>
+                <div className="text-fg text-sm">
+                  <ul className="list-disc">
                     <li>
                       &quot;Hide Activity&quot; setting in Edit Profile has been replaced with a new
                       &quot;Hide Cosmo ID&quot; setting. This change ensures that transfers will
@@ -80,8 +80,8 @@ export default function Changelog() {
             <Disclosure id="1">
               <DisclosureTrigger>2025-08-25</DisclosureTrigger>
               <DisclosurePanel>
-                <div className="prose text-fg text-sm">
-                  <ul>
+                <div className="text-fg text-sm">
+                  <ul className="list-disc">
                     <li>Cosmo profile links now support Abstract accounts.</li>
                   </ul>
                 </div>

@@ -12,8 +12,8 @@ export default function TermsPrivacy() {
     <div className="flex flex-col items-center gap-6 py-8">
       <h2 className="font-semibold text-lg">Terms and Privacy</h2>
 
-      <div className="prose text-fg text-sm">
-        <ul>
+      <div className="text-fg text-sm">
+        <ul className="list-disc">
           <li>
             When you log in with Twitter (X) or Discord, we get your public profile info (like your
             name and username).

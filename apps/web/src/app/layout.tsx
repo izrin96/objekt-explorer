@@ -7,7 +7,6 @@ import { getLocale } from "next-intl/server";
 import type { PropsWithChildren } from "react";
 import { Analytics } from "@/components/analytics";
 import Navbar from "@/components/navbar";
-import { cn } from "@/utils/classes";
 import "@/lib/orpc/server";
 import { preconnect } from "react-dom";
 import { getSelectedArtists } from "@/lib/client-fetching";
@@ -93,12 +92,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         scrollbarGutter: "stable",
       }}
     >
-      <body
-        className={cn(
-          "min-h-svh antialiased",
-          process.env.NODE_ENV === "development" ? "debug-screens" : "",
-        )}
-      >
+      <body className="min-h-svh">
         <NextIntlClientProvider>
           <ClientProviders>
             <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>

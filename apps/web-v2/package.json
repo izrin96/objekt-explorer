@@ -92,7 +92,6 @@
     "dotenv-cli": "^10.0.0",
     "drizzle-kit": "^0.31.5",
     "tailwindcss": "^4.1.15",
-    "terser": "^5.44.0",
     "typescript": "catalog:",
     "vite": "^7.1.12",
     "vite-plugin-node-polyfills": "^0.24.0",
