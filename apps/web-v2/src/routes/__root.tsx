@@ -85,8 +85,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         sizes: "16x16",
         href: "/favicon-16x16.png",
       },
-      { rel: "manifest", href: "/site.webmanifest", color: "#fffff" },
-      { rel: "icon", href: "/favicon.ico" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
     scripts: [
       ...(process.env.NODE_ENV === "production"
