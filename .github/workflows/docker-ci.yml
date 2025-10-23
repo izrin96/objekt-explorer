@@ -82,7 +82,7 @@ jobs:
       - name: Delete all untagged web images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: web
+          package-name: ${{ github.repository }}/web
           package-type: container
           delete-only-untagged-versions: true
           min-versions-to-keep: 0
@@ -90,7 +90,7 @@ jobs:
       - name: Delete all untagged server images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: server
+          package-name: ${{ github.repository }}/server
           package-type: container
           delete-only-untagged-versions: true
           min-versions-to-keep: 0
