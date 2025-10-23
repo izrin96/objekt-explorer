@@ -7,6 +7,7 @@ This project required [teamreflex/cosmo-db](https://github.com/teamreflex/cosmo-
 ## Tooling
 
 - [Next 15](https://nextjs.org/)
+- [Tanstack Start](https://tanstack.com/start/)
 - [Tailwind 4](https://tailwindcss.com/)
 - [Drizzle ORM](https://orm.drizzle.team/)
 - [IntentUI](https://intentui.com/)

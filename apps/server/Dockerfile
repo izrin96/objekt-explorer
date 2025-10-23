@@ -7,28 +7,32 @@ FROM base AS pnpm
 RUN corepack enable
 RUN pnpm config set store-dir ~/.pnpm-store
 
-FROM pnpm AS builder
+FROM pnpm AS prune
 RUN npm install -g turbo@latest
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune server --docker
 
-FROM pnpm AS installer-prod
-COPY --from=builder /app/out/json/ .
-COPY tsconfig.base.json .
-RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
-    pnpm install --frozen-lockfile --prod
-
-FROM pnpm AS installer
-COPY --from=builder /app/out/json/ .
+# prod and dev dependencies
+FROM pnpm AS dev
+COPY --from=prune /app/out/json/ .
 COPY tsconfig.base.json .
 RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
     pnpm install --frozen-lockfile
 
+# prod only dependencies
+FROM dev AS prod
+ENV CI=true
+RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
+    pnpm install --frozen-lockfile --prod
+
+# build
+FROM dev AS build
 ENV TURBO_TELEMETRY_DISABLED=1
-COPY --from=builder /app/out/full/ .
+COPY --from=prune /app/out/full/ .
 RUN pnpm run build
 
+# runner
 FROM base AS runner
 
 ENV NODE_ENV=production
@@ -38,8 +42,8 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 app
 USER app
 
-COPY --from=installer-prod --chown=app:nodejs /app/ .
-COPY --from=installer --chown=app:nodejs /app/apps/server/dist ./apps/server/dist
+COPY --from=prod --chown=app:nodejs /app/ .
+COPY --from=build --chown=app:nodejs /app/apps/server/dist ./apps/server/dist
 
 EXPOSE 3000/tcp
 

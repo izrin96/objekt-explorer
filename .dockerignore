@@ -20,3 +20,6 @@
 **/.out
 
 **/.turbo
+**/.nitro
+**/.output
+**/.tanstack

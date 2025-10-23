@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+
 catalog:
   hono: ^4.10.2
   dotenv: ^17.2.3

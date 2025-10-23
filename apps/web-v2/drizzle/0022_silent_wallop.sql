@@ -1,0 +1,1 @@
+ALTER TABLE "user_address" ADD COLUMN "hide_transfer" boolean DEFAULT false;
