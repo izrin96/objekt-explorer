@@ -130,7 +130,7 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
 
     if (filters.on_offline && !filters.on_offline.includes(a.onOffline)) return false;
 
-    if (filters.transferable && (!isObjektOwned(a) || !a.transferable)) return false;
+    if (filters.transferable && isObjektOwned(a) && !a.transferable) return false;
 
     if (
       filters.edition &&
@@ -139,7 +139,7 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
       return false;
     }
 
-    if (filters.locked !== null && (!isObjektOwned(a) || a.isLocked !== filters.locked)) {
+    if (filters.locked !== null && isObjektOwned(a) && a.isLocked !== filters.locked) {
       return false;
     }
 
