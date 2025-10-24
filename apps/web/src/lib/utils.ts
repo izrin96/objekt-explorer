@@ -17,21 +17,6 @@ export const SPIN_ADDRESS = "0xd3d5f29881ad87bb10c1100e2c709c9596de345f";
 
 export const OBJEKT_CONTRACT = "0x99bb83ae9bb0c0a6be865cacf67760947f91cb70";
 
-export function getEdition(collectionNo: string) {
-  const collection = parseInt(collectionNo);
-
-  if (collection >= 101 && collection <= 108) {
-    return "1st";
-  }
-  if (collection >= 109 && collection <= 116) {
-    return "2nd";
-  }
-  if (collection >= 117 && collection <= 120) {
-    return "3rd";
-  }
-  return null;
-}
-
 export function parseNickname(address: string, nickname?: string | null) {
   return nickname ?? `${address.substring(0, 8)}...`;
 }

@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { count, eq, sql } from "drizzle-orm";
+import { cacheHeaders } from "@/lib/server/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import type { CollectionMetadata } from "@/lib/universal/objekts";
-import { cacheHeaders, SPIN_ADDRESS } from "@/lib/utils";
+import { SPIN_ADDRESS } from "@/lib/utils";
 
 export const Route = createFileRoute("/api/objekts/metadata/$collectionSlug")({
   server: {

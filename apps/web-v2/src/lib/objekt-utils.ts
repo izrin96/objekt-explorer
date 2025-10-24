@@ -1,15 +1,10 @@
-import { getScoEdition } from "./server/collection-grid";
-import type { Objekt } from "./server/db/indexer/schema";
 import {
-  type IndexedObjekt,
   type OwnedObjekt,
-  overrideAccents,
-  overrideFonts,
   type PinObjekt,
   shortformMembers,
   type ValidObjekt,
 } from "./universal/objekts";
-import { getEdition, replaceUrlSize } from "./utils";
+import { replaceUrlSize } from "./utils";
 
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
@@ -47,17 +42,6 @@ function makeCollectionTags(objekt: ValidObjekt) {
   ].map((a) => a.toLowerCase());
 }
 
-export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt): OwnedObjekt {
-  return {
-    ...overrideCollection(collection),
-    id: objekt.id.toString(),
-    serial: objekt.serial,
-    receivedAt: objekt.receivedAt,
-    mintedAt: objekt.mintedAt,
-    transferable: objekt.transferable,
-  };
-}
-
 export function mapObjektWithPinLock(
   objekt: ValidObjekt,
   pins: PinObjekt[],
@@ -86,50 +70,6 @@ export function mapObjektWithTag(objekt: ValidObjekt): ValidObjekt {
 
 export function isObjektOwned(objekt: ValidObjekt) {
   return "serial" in objekt;
-}
-
-export function overrideCollection<T extends ValidObjekt>(collection: T): T {
-  // temporary fix accent color for some collection
-  const accentColor = overrideAccents[collection.slug];
-  const fontColor = overrideFonts[collection.slug];
-  const bandImageUrl = getBandImageUrl(collection);
-  const edition =
-    collection.class === "Special"
-      ? getScoEdition(collection.slug)
-      : collection.class === "First"
-        ? getEdition(collection.collectionNo)
-        : null;
-
-  return {
-    ...collection,
-    backgroundColor: accentColor ?? collection.backgroundColor,
-    textColor: fontColor ?? collection.textColor,
-    bandImageUrl: bandImageUrl,
-    edition: edition,
-  };
-}
-
-function getBandImageUrl(objekt: ValidObjekt) {
-  if (objekt.bandImageUrl) return objekt.bandImageUrl;
-
-  if (objekt.artist === "idntt") {
-    if (objekt.class === "Special") {
-      objekt.bandImageUrl =
-        "https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/86207a80d354439cada0ec6c45e076ee20250814061643330.png";
-    }
-
-    if (objekt.class === "Unit") {
-      objekt.bandImageUrl =
-        "https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/e0e4fdd950bc4ca8ba49a98b053756f620250814065358420.png";
-    }
-
-    if (objekt.onOffline === "offline" && objekt.backgroundColor === "#000000") {
-      objekt.bandImageUrl =
-        "https://resources.cosmo.fans/images/collection-band/2025/07/12/04/raw/fab4f9ec98d24a00a7c417e012a493cd20250712042141653.png";
-    }
-  }
-
-  return null;
 }
 
 export function getObjektImageUrls(objekt: ValidObjekt) {

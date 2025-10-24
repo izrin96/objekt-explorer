@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import z from "zod";
-import { mapOwnedObjekt } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 import { cursorSchema } from "@/lib/server/common";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
+import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 import {

@@ -1,10 +1,10 @@
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod/v4";
-import { mapOwnedObjekt } from "@/lib/objekt-utils";
 import { cursorSchema } from "@/lib/server/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
+import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses } from "@/lib/server/profile";
 import { type ActivityResponse, validType } from "@/lib/universal/activity";

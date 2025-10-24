@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import z from "zod";
-import { mapOwnedObjekt } from "@/lib/objekt-utils";
 import { cursorSchema } from "@/lib/server/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
+import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses } from "@/lib/server/profile";
 import { type ActivityResponse, validType } from "@/lib/universal/activity";

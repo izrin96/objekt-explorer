@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { asc, eq } from "drizzle-orm";
+import { cacheHeaders } from "@/lib/server/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
-import { cacheHeaders } from "@/lib/utils";
 
 export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
   server: {

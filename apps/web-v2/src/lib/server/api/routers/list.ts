@@ -3,7 +3,6 @@ import { notFound } from "@tanstack/react-router";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod/v4";
-import { overrideCollection } from "@/lib/objekt-utils";
 import type { Outputs } from "@/lib/orpc/server";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import type { PublicList } from "@/lib/universal/user";
@@ -13,6 +12,7 @@ import { db } from "../../db";
 import { indexer } from "../../db/indexer";
 import { collections } from "../../db/indexer/schema";
 import { type ListEntry, listEntries, lists } from "../../db/schema";
+import { overrideCollection } from "../../objekt";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { authed, pub } from "../orpc";
 
