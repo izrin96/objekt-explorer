@@ -1,3 +1,4 @@
+import { getScoEdition } from "./server/collection-grid";
 import type { Objekt } from "./server/db/indexer/schema";
 import {
   type IndexedObjekt,
@@ -8,7 +9,7 @@ import {
   shortformMembers,
   type ValidObjekt,
 } from "./universal/objekts";
-import { replaceUrlSize } from "./utils";
+import { getEdition, replaceUrlSize } from "./utils";
 
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
@@ -92,12 +93,19 @@ export function overrideCollection<T extends ValidObjekt>(collection: T): T {
   const accentColor = overrideAccents[collection.slug];
   const fontColor = overrideFonts[collection.slug];
   const bandImageUrl = getBandImageUrl(collection);
+  const edition =
+    collection.class === "Special"
+      ? getScoEdition(collection.slug)
+      : collection.class === "First"
+        ? getEdition(collection.collectionNo)
+        : null;
 
   return {
     ...collection,
     backgroundColor: accentColor ?? collection.backgroundColor,
     textColor: fontColor ?? collection.textColor,
-    bandImageUrl,
+    bandImageUrl: bandImageUrl,
+    edition: edition,
   };
 }
 
@@ -121,7 +129,7 @@ function getBandImageUrl(objekt: ValidObjekt) {
     }
   }
 
-  return objekt.bandImageUrl;
+  return null;
 }
 
 export function getObjektImageUrls(objekt: ValidObjekt) {

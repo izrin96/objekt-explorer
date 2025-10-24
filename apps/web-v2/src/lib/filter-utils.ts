@@ -2,13 +2,13 @@ import chroma from "chroma-js";
 import type { Filters } from "@/hooks/use-filters";
 import {
   type ValidClass,
+  type ValidEdition,
   type ValidSeason,
   validClasses,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
 import { isObjektOwned } from "./objekt-utils";
 import type { ValidObjekt } from "./universal/objekts";
-import { getEdition } from "./utils";
 
 function parseCollectionNo(value: string) {
   const expression = /^([a-zA-Z]*)(\d{3})([azAZ]?)$/;
@@ -132,10 +132,7 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
 
     if (filters.transferable && isObjektOwned(a) && !a.transferable) return false;
 
-    if (
-      filters.edition &&
-      (a.class !== "First" || !filters.edition.includes(getEdition(a.collectionNo)!))
-    ) {
+    if (filters.edition && (!a.edition || !filters.edition.includes(a.edition as ValidEdition))) {
       return false;
     }
 

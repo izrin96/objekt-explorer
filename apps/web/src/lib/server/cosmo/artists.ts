@@ -666,4 +666,4 @@ export const artists: CosmoArtistWithMembersBFF[] = [
       },
     },
   },
-];
+] as const;
