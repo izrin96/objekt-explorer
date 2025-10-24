@@ -79,11 +79,11 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
             <Button aria-label="Info" intent="plain" size="sq-xs">
               <QuestionMarkIcon data-slot="icon" />
             </Button>
-            <PopoverContent className="max-w-sm overflow-auto p-4">
+            <PopoverContent className="flex max-w-sm flex-col gap-2 overflow-auto p-6">
               {locale === "en" && (
                 <>
                   <span>This quick search supports:</span>
-                  <ul className="list-disc">
+                  <ul className="list-inside list-disc leading-6">
                     <li>OR query operation by comma</li>
                     <li>AND query operation by space</li>
                     <li>
@@ -105,7 +105,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
               {locale === "ko" && (
                 <>
                   <span>이 빠른 검색에서는 다음을 지원합니다:</span>
-                  <ul className="list-disc">
+                  <ul className="list-inside list-disc leading-6">
                     <li>쉼표(,)로 OR 조건 검색</li>
                     <li>공백으로 AND 조건 검색</li>
                     <li>느낌표(!)로 NOT 조건 검색 (예: !seoyeon, !d201-202)</li>

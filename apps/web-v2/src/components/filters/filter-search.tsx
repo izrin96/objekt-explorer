@@ -74,9 +74,9 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
             <Button aria-label="Info" intent="plain" size="sq-xs">
               <QuestionMarkIcon data-slot="icon" />
             </Button>
-            <PopoverContent className="max-w-sm overflow-auto p-4">
+            <PopoverContent className="flex max-w-sm flex-col gap-2 overflow-auto p-6">
               <span>This quick search supports:</span>
-              <ul className="list-disc">
+              <ul className="list-inside list-disc leading-6">
                 <li>OR query operation by comma</li>
                 <li>AND query operation by space</li>
                 <li>

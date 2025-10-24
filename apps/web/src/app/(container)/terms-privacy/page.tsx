@@ -13,7 +13,7 @@ export default function TermsPrivacy() {
       <h2 className="font-semibold text-lg">Terms and Privacy</h2>
 
       <div className="text-fg text-sm">
-        <ul className="list-disc">
+        <ul className="list-disc leading-8">
           <li>
             When you log in with Twitter (X) or Discord, we get your public profile info (like your
             name and username).
