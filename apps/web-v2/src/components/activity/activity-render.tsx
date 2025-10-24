@@ -143,11 +143,6 @@ function Activity() {
         parsedSelectedArtistIds,
       ]);
 
-      // todo: move to server
-      // const data = message.data.map((data) => ({
-      //   ...data,
-      //   objekt: overrideCollection(data.objekt),
-      // }));
       const filtered = filterData(message.data, type ?? "all", {
         ...filters,
         artist: parsedSelectedArtistIds,

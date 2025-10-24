@@ -5,7 +5,9 @@ import type { Collection, Objekt, Transfer } from "@objekt-explorer/db/indexer/s
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { WSContext } from "hono/ws";
+import { mapOwnedObjekt } from "./lib/objekt";
 import { redis, redisPubSub } from "./lib/redis";
+import type { OwnedObjekt } from "./lib/universal/objekts";
 import { fetchKnownAddresses } from "./lib/utils";
 
 const TRANSFER_HISTORY_KEY = "transfer:history";
@@ -19,6 +21,15 @@ type TransferData = Transfer & {
   objekt: Objekt;
 };
 
+type TransferSendData = {
+  nickname: {
+    from: string | undefined;
+    to: string | undefined;
+  };
+  transfer: Transfer;
+  objekt: OwnedObjekt;
+};
+
 redisPubSub.subscribe("transfers");
 
 redisPubSub.on("message", async (channel, message) => {
@@ -29,7 +40,7 @@ redisPubSub.on("message", async (channel, message) => {
     const addresses = transfers.flatMap((a) => [a.from, a.to]);
     const knownAddresses = await fetchKnownAddresses(addresses);
 
-    const transferBatch: any[] = [];
+    const transferBatch: TransferSendData[] = [];
 
     for (const transfer of transfers) {
       const fromUser = knownAddresses.find(
@@ -44,33 +55,9 @@ redisPubSub.on("message", async (channel, message) => {
           from: fromUser?.nickname ?? undefined,
           to: toUser?.nickname ?? undefined,
         },
-        transfer: {
-          id: transfer.id,
-          from: transfer.from,
-          to: transfer.to,
-          timestamp: transfer.timestamp,
-          tokenId: transfer.tokenId,
-          hash: transfer.hash,
-        },
-        objekt: {
-          artist: transfer.collection.artist,
-          backImage: transfer.collection.backImage,
-          class: transfer.collection.class,
-          collectionId: transfer.collection.collectionId,
-          collectionNo: transfer.collection.collectionNo,
-          frontImage: transfer.collection.frontImage,
-          id: transfer.objekt.id,
-          member: transfer.collection.member,
-          onOffline: transfer.collection.onOffline,
-          receivedAt: transfer.objekt.receivedAt,
-          season: transfer.collection.season,
-          serial: transfer.objekt.serial,
-          slug: transfer.collection.slug,
-          transferable: transfer.objekt.transferable,
-          backgroundColor: transfer.collection.backgroundColor,
-          textColor: transfer.collection.textColor,
-        },
-      };
+        transfer,
+        objekt: mapOwnedObjekt(transfer.objekt, transfer.collection),
+      } satisfies TransferSendData;
 
       transferBatch.push(transferEvent);
     }
