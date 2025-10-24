@@ -43,6 +43,7 @@ redisPubSub.on("message", async (channel, message) => {
     const transferBatch: TransferSendData[] = [];
 
     for (const transfer of transfers) {
+      const { objekt, collection, ...rest } = transfer;
       const fromUser = knownAddresses.find(
         (a) => a.address.toLowerCase() === transfer.from.toLowerCase(),
       );
@@ -55,8 +56,8 @@ redisPubSub.on("message", async (channel, message) => {
           from: fromUser?.nickname ?? undefined,
           to: toUser?.nickname ?? undefined,
         },
-        transfer,
-        objekt: mapOwnedObjekt(transfer.objekt, transfer.collection),
+        transfer: rest,
+        objekt: mapOwnedObjekt(objekt, collection),
       } satisfies TransferSendData;
 
       transferBatch.push(transferEvent);
