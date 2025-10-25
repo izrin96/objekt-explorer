@@ -3425,7 +3425,11 @@ export function getFcoCollectionIds(collectionId: string) {
   const collectionNo = editionCollectionNo.get(edition);
   if (!collectionNo) return [];
 
-  return collectionNo;
+  // todo: should hard coded collection id in future?
+  return collectionNo.flatMap((n) => {
+    const base = `${collectionId.substring(0, collectionId.length - 4)}${n}`;
+    return [`${base}z`, `${base}a`];
+  });
 }
 
 export function getCollectionEdition(objekt: ValidObjekt) {

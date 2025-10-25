@@ -3,7 +3,7 @@ packages:
   - packages/*
 
 catalog:
-  hono: ^4.10.2
+  hono: ^4.10.3
   dotenv: ^17.2.3
   zod: ^4.1.12
   typescript: ^5.9.3
