@@ -1,5 +1,4 @@
 import type { Objekt } from "@objekt-explorer/db/indexer/schema";
-import { getScoEdition } from "./collection-grid";
 import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "./universal/objekts";
 
 const overrideAccents: Record<string, string> = {
@@ -23,21 +22,6 @@ const overrideFonts: Record<string, string> = {
   "atom01-heejin-325z": "#FFFFFF",
   "ever01-seoyeon-338z": "#07328D",
 };
-
-function getEdition(collectionNo: string) {
-  const collection = parseInt(collectionNo);
-
-  if (collection >= 101 && collection <= 108) {
-    return 1;
-  }
-  if (collection >= 109 && collection <= 116) {
-    return 2;
-  }
-  if (collection >= 117 && collection <= 120) {
-    return 3;
-  }
-  return null;
-}
 
 function getBandImageUrl(objekt: ValidObjekt) {
   if (objekt.bandImageUrl) return objekt.bandImageUrl;
@@ -67,19 +51,12 @@ export function overrideCollection<T extends ValidObjekt>(collection: T): T {
   const accentColor = overrideAccents[collection.slug];
   const fontColor = overrideFonts[collection.slug];
   const bandImageUrl = getBandImageUrl(collection);
-  const edition =
-    collection.class === "Special"
-      ? getScoEdition(collection.slug)
-      : collection.class === "First"
-        ? getEdition(collection.collectionNo)
-        : null;
 
   return {
     ...collection,
     backgroundColor: accentColor ?? collection.backgroundColor,
     textColor: fontColor ?? collection.textColor,
     bandImageUrl: bandImageUrl,
-    edition: edition,
   };
 }
 

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { metadataQueryOptions } from "@/lib/query-options";
+import { getCollectionEdition } from "@/lib/universal/collection-grid";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { getEditionStr } from "@/lib/utils";
 import { Badge } from "../ui/badge";
@@ -70,13 +71,15 @@ export function AttributePanel({
   unobtainable: boolean;
 }) {
   const { getArtist } = useCosmoArtist();
+  const edition = getCollectionEdition(objekt);
+
   return (
     <div className="flex flex-wrap gap-2 p-2">
       <Pill label="Artist" value={getArtist(objekt.artist)?.title ?? ""} />
       <Pill label="Member" value={objekt.member} />
       <Pill label="Season" value={objekt.season} />
       <Pill label="Class" value={objekt.class} />
-      {objekt.edition && <Pill label="Edition" value={getEditionStr(objekt.edition)} />}
+      {edition && <Pill label="Edition" value={getEditionStr(edition)} />}
       <Pill label="Type" value={objekt.onOffline === "online" ? "Digital" : "Physical"} />
       <Pill label="Collection No." value={objekt.collectionNo} />
       <Pill

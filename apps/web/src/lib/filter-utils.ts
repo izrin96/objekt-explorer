@@ -2,12 +2,12 @@ import chroma from "chroma-js";
 import type { Filters } from "@/hooks/use-filters";
 import {
   type ValidClass,
-  type ValidEdition,
   type ValidSeason,
   validClasses,
   validSeasons,
 } from "@/lib/universal/cosmo/common";
 import { isObjektOwned } from "./objekt-utils";
+import { getCollectionEdition } from "./universal/collection-grid";
 import type { ValidObjekt } from "./universal/objekts";
 
 function parseCollectionNo(value: string) {
@@ -132,8 +132,11 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
 
     if (filters.transferable && isObjektOwned(a) && !a.transferable) return false;
 
-    if (filters.edition && (!a.edition || !filters.edition.includes(a.edition as ValidEdition))) {
-      return false;
+    if (filters.edition) {
+      const edition = getCollectionEdition(a);
+      if (!edition || !filters.edition.includes(edition)) {
+        return false;
+      }
     }
 
     if (filters.locked !== null && isObjektOwned(a) && a.isLocked !== filters.locked) {

@@ -4,7 +4,6 @@ export type ParsedDate = string | Date;
 
 type CollectionExtra = {
   tags?: string[];
-  edition?: number;
 };
 
 export type IndexedObjekt = Omit<
