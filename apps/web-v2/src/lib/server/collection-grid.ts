@@ -12591,5 +12591,5 @@ export const scoCollectionEditionMap = new Map<string, number>(
 
 export function getScoEdition(collectionId: string) {
   const edition = scoCollectionEditionMap.get(collectionId);
-  return edition === 1 ? "1st" : edition === 2 ? "2nd" : edition === 3 ? "3rd" : null;
+  return edition ?? null;
 }

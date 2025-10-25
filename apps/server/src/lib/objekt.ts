@@ -28,13 +28,13 @@ function getEdition(collectionNo: string) {
   const collection = parseInt(collectionNo);
 
   if (collection >= 101 && collection <= 108) {
-    return "1st";
+    return 1;
   }
   if (collection >= 109 && collection <= 116) {
-    return "2nd";
+    return 2;
   }
   if (collection >= 117 && collection <= 120) {
-    return "3rd";
+    return 3;
   }
   return null;
 }

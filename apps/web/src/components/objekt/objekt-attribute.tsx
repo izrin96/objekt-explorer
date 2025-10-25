@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import type { CollectionMetadata, ValidObjekt } from "@/lib/universal/objekts";
-import { getBaseURL } from "@/lib/utils";
+import { getBaseURL, getEditionStr } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 
@@ -87,7 +87,7 @@ export function AttributePanel({
       <Pill label={t("member")} value={objekt.member} />
       <Pill label={t("season")} value={objekt.season} />
       <Pill label={t("class")} value={objekt.class} />
-      {objekt.edition && <Pill label={t("edition")} value={objekt.edition} />}
+      {objekt.edition && <Pill label={t("edition")} value={getEditionStr(objekt.edition)} />}
       <Pill
         label={t("type")}
         value={objekt.onOffline === "online" ? t("digital") : t("physical")}

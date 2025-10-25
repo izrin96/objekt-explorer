@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
+import { getEditionStr } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
@@ -30,8 +31,8 @@ export default function EditionFilter() {
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {validEdition.map((item) => (
-          <MenuItem key={item} id={item} textValue={item}>
-            <MenuLabel>{item}</MenuLabel>
+          <MenuItem key={item} id={item} textValue={getEditionStr(item)}>
+            <MenuLabel>{getEditionStr(item)}</MenuLabel>
           </MenuItem>
         ))}
       </MenuContent>

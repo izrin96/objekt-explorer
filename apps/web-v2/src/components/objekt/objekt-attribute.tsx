@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { metadataQueryOptions } from "@/lib/query-options";
 import type { ValidObjekt } from "@/lib/universal/objekts";
+import { getEditionStr } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 
@@ -75,7 +76,7 @@ export function AttributePanel({
       <Pill label="Member" value={objekt.member} />
       <Pill label="Season" value={objekt.season} />
       <Pill label="Class" value={objekt.class} />
-      {objekt.edition && <Pill label="Edition" value={objekt.edition} />}
+      {objekt.edition && <Pill label="Edition" value={getEditionStr(objekt.edition)} />}
       <Pill label="Type" value={objekt.onOffline === "online" ? "Digital" : "Physical"} />
       <Pill label="Collection No." value={objekt.collectionNo} />
       <Pill

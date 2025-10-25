@@ -55,3 +55,7 @@ export const mimeTypes = {
   mkv: "video/x-matroska",
   m4v: "video/x-m4v",
 } as const;
+
+export function getEditionStr(edition: number) {
+  return edition === 1 ? "1st" : edition === 2 ? "2nd" : edition === 3 ? "3rd" : "";
+}

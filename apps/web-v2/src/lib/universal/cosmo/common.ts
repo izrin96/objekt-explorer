@@ -66,7 +66,7 @@ export const validClasses = [
 export type ValidClass = (typeof validClasses)[number];
 
 // edition
-export const validEdition = ["1st", "2nd", "3rd"] as const;
+export const validEdition = [1, 2, 3] as const;
 export type ValidEdition = (typeof validEdition)[number];
 
 // groupBy

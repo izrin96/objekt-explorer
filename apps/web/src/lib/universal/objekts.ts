@@ -3,7 +3,7 @@ import type { ParsedDate } from "./common";
 
 type CollectionExtra = {
   tags?: string[];
-  edition?: string;
+  edition?: number;
 };
 
 export type IndexedObjekt = Omit<
