@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { getCollectionEdition } from "@/lib/universal/collection-grid";
 import type { CollectionMetadata, ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, getEditionStr } from "@/lib/utils";
 import { Badge } from "../ui/badge";
@@ -82,7 +81,6 @@ export function AttributePanel({
 }) {
   const t = useTranslations("objekt");
   const { getArtist } = useCosmoArtist();
-  const edition = getCollectionEdition(objekt);
 
   return (
     <div className="flex flex-wrap gap-2 p-2">
@@ -90,7 +88,7 @@ export function AttributePanel({
       <Pill label={t("member")} value={objekt.member} />
       <Pill label={t("season")} value={objekt.season} />
       <Pill label={t("class")} value={objekt.class} />
-      {edition && <Pill label={t("edition")} value={getEditionStr(edition)} />}
+      {objekt.edition && <Pill label={t("edition")} value={getEditionStr(objekt.edition)} />}
       <Pill
         label={t("type")}
         value={objekt.onOffline === "online" ? t("digital") : t("physical")}

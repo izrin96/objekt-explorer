@@ -1,3 +1,4 @@
+import { getCollectionEdition } from "./universal/collection-grid";
 import {
   type OwnedObjekt,
   type PinObjekt,
@@ -65,6 +66,7 @@ export function mapObjektWithTag(objekt: ValidObjekt): ValidObjekt {
   return {
     ...objekt,
     tags: makeCollectionTags(objekt),
+    edition: getCollectionEdition(objekt),
   };
 }
 
