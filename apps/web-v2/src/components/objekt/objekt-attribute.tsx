@@ -85,7 +85,7 @@ export function AttributePanel({
       <Pill
         label="Accent Color"
         value={objekt.backgroundColor.toUpperCase()}
-        className="!bg-(--objekt-bg-color) !text-(--objekt-text-color)"
+        className="bg-(--objekt-bg-color)! text-(--objekt-text-color)!"
       />
       <Pill label="Text Color" value={objekt.textColor.toUpperCase()} />
       {unobtainable && (

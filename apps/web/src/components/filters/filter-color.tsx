@@ -68,7 +68,7 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
     <div style={{ "--objekt-color": color } as CSSProperties}>
       <ColorPicker
         eyeDropper
-        className={cn(color && "[&>*]:inset-ring-(--objekt-color)")}
+        className={cn(color && "*:inset-ring-(--objekt-color)")}
         label={t("color")}
         value={color ? parseColor(color) : "#000"}
         onChange={handleChange}

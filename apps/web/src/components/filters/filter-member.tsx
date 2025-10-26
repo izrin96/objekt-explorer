@@ -27,7 +27,7 @@ export default function MemberFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.member ? "!inset-ring-primary" : ""}>
+      <Button intent="outline" className={filters.member ? "inset-ring-primary!" : ""}>
         {t("member")}
       </Button>
       <MenuContent

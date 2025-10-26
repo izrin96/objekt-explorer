@@ -26,7 +26,7 @@ export default function OnlineFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.on_offline?.length ? "!inset-ring-primary" : ""}>
+      <Button intent="outline" className={filters.on_offline?.length ? "inset-ring-primary!" : ""}>
         Physical
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>

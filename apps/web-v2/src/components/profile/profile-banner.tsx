@@ -33,7 +33,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 alt="Banner"
               />
             )}
-            <div className="absolute inset-0 bg-gradient-to-b from-90% from-transparent to-100% to-bg"></div>
+            <div className="absolute inset-0 bg-linear-to-b from-90% from-transparent to-100% to-bg"></div>
           </div>
         </div>
       </div>
@@ -55,7 +55,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             alt="Banner"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-90% from-transparent to-100% to-bg backdrop-blur-xl"></div>
+        <div className="absolute inset-0 bg-linear-to-b from-90% from-transparent to-100% to-bg backdrop-blur-xl"></div>
       </div>
     </>
   );

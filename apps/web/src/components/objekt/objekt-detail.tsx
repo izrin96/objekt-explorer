@@ -40,7 +40,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
   return (
     <div
-      className="flex h-full w-screen flex-col gap-2 p-2 sm:grid sm:h-[33.5rem] sm:min-h-[33.5rem] sm:w-full sm:grid-cols-3 sm:p-3"
+      className="flex h-full w-screen flex-col gap-2 p-2 sm:grid sm:h-134 sm:min-h-134 sm:w-full sm:grid-cols-3 sm:p-3"
       style={
         {
           "--objekt-bg-color": objekt.backgroundColor,
@@ -124,7 +124,7 @@ function ObjektCard({
     <div
       role="none"
       onClick={() => setFlipped((prev) => !prev)}
-      className="flex h-[21rem] select-none self-center sm:h-fit"
+      className="flex h-84 select-none self-center sm:h-fit"
     >
       <div
         data-flipped={flipped}

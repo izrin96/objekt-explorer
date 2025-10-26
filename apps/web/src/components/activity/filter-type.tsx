@@ -30,7 +30,7 @@ export default function TypeFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={type ? "!inset-ring-primary" : ""}>
+      <Button intent="outline" className={type ? "inset-ring-primary!" : ""}>
         {t("label")}
       </Button>
       <MenuContent selectionMode="single" selectedKeys={selected} onSelectionChange={update}>

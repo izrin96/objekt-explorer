@@ -24,7 +24,7 @@ export function SelectMode({ children, objekts }: Props) {
     <div className="flex flex-wrap items-center gap-2">
       <Toggle
         isSelected={mode}
-        className={mode ? "!inset-ring-primary" : ""}
+        className={mode ? "inset-ring-primary!" : ""}
         intent="outline"
         onClick={toggleMode}
       >
@@ -67,7 +67,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
                 size="sq-sm"
                 intent="outline"
                 onClick={toggleMode}
-                className={mode ? "!inset-ring-primary" : ""}
+                className={mode ? "inset-ring-primary!" : ""}
               >
                 <HandPointingIcon weight="regular" data-slot="icon" />
               </Toggle>

@@ -51,7 +51,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   const liveSession = useLiveSession();
   const { participant } = useParticipantViewContext();
   return (
-    <div className="flex aspect-[9/16] h-full w-full items-center justify-center" style={style}>
+    <div className="flex aspect-9/16 h-full w-full items-center justify-center" style={style}>
       <div
         className="relative h-24 w-24 rounded-full outline-(--color) outline-4"
         style={
@@ -141,7 +141,7 @@ const CustomLivestreamLayout = () => {
         <>
           <ParticipantView
             PictureInPicturePlaceholder={null}
-            className="relative flex aspect-[9/16] h-[calc(100svh-140px)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
+            className="relative flex aspect-9/16 h-[calc(100svh-140px)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
             // render when video is disabled
             VideoPlaceholder={CustomVideoPlaceholder}
             // render after video element

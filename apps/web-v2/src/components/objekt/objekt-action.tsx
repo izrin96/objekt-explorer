@@ -48,7 +48,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
       <Button
         size="sq-xs"
         intent="plain"
-        className="hidden bg-bg/80 px-2 text-fg group-hover:block data-pressed:block"
+        className="pressed:block hidden bg-bg/80 px-2 text-fg group-hover:block"
       >
         <DotsThreeVerticalIcon className="size-3" weight="bold" />
       </Button>

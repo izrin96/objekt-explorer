@@ -11,7 +11,7 @@ export default function ShowCountFilter() {
   return (
     <Toggle
       intent="outline"
-      className="data-selected:inset-ring-primary"
+      className="selected:inset-ring-primary"
       isSelected={showCount ?? false}
       onChange={setShowCount}
     >

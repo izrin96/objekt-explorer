@@ -26,7 +26,7 @@ export default function EditionFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.edition?.length ? "!inset-ring-primary" : ""}>
+      <Button intent="outline" className={filters.edition?.length ? "inset-ring-primary!" : ""}>
         {t("edition")}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>

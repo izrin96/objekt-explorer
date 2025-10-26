@@ -113,7 +113,7 @@ function Activity() {
       refetchOnReconnect: false,
     });
 
-  const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
+  const { lastJsonMessage } = useWebSocket<WebSocketMessage>(
     status === "success" ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL! : null,
     {
       shouldReconnect: () => true,
@@ -273,7 +273,7 @@ function Activity() {
               style={{
                 height: `${rowVirtualizer.getTotalSize()}px`,
               }}
-              className="relative w-full [&>*]:will-change-transform"
+              className="relative w-full *:will-change-transform"
               role="region"
               aria-label="Activity list"
               onMouseEnter={() => {

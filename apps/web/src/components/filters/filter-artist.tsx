@@ -28,7 +28,7 @@ export default function ArtistFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.artist ? "!inset-ring-primary" : ""}>
+      <Button intent="outline" className={filters.artist ? "inset-ring-primary!" : ""}>
         {t("artist")}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>

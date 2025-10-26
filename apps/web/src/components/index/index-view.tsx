@@ -132,7 +132,7 @@ function IndexView() {
       </div>
       <span className="font-semibold">{filtered.length.toLocaleString()} total</span>
 
-      <div className="[&>*]:!overflow-visible [&>*]:!contain-[inherit] [&>*>*]:will-change-transform">
+      <div className="*:overflow-visible! *:contain-[inherit]! [&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </div>
     </div>
