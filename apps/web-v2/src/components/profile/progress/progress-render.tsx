@@ -1,4 +1,4 @@
-import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -11,15 +11,10 @@ import ObjektView from "@/components/objekt/objekt-view";
 import { Loader } from "@/components/ui/loader";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useConfigStore } from "@/hooks/use-config";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { useFilters } from "@/hooks/use-filters";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
-import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { useShapeProgress } from "@/hooks/use-shape-progress";
-import { useTarget } from "@/hooks/use-target";
+import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useUser } from "@/hooks/use-user";
-import { collectionQueryOptions, ownedCollectionQueryOptions } from "@/lib/query-options";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
@@ -51,24 +46,8 @@ export default function ProgressRender() {
 
 function Progress() {
   const { authenticated } = useUser();
-  const { selectedArtistIds } = useCosmoArtist();
   const { columns } = useObjektColumn();
-  const profile = useTarget((a) => a.profile)!;
-  const [filters] = useFilters();
-  const filter = useObjektFilter();
-  const shape = useShapeProgress();
-
-  const [objektsQuery, ownedQuery] = useSuspenseQueries({
-    queries: [
-      collectionQueryOptions(selectedArtistIds),
-      ownedCollectionQueryOptions(profile.address, selectedArtistIds),
-    ],
-  });
-
-  const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
-  const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
-  const filtered = filter([...ownedQuery.data, ...missingObjekts]);
-  const shaped = shape(filtered);
+  const { shaped, filters, ownedSlugs } = useProgressObjekts();
 
   return (
     <div className="flex flex-col gap-8">
