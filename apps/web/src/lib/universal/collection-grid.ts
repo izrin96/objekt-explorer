@@ -3433,6 +3433,9 @@ export function getFcoCollectionIds(collectionId: string) {
 }
 
 export function getCollectionEdition(objekt: ValidObjekt) {
+  if (objekt.artist === "idntt") {
+    return null;
+  }
   const edition =
     objekt.class === "Special"
       ? getScoEdition(objekt.slug)
