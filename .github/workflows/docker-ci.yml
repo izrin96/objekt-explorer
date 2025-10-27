@@ -38,8 +38,8 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-web:${{ github.sha }}
             ghcr.io/${{ github.repository }}-web:latest
-          cache-from: type=gha,scope=web-cache
-          cache-to: type=gha,scope=web-cache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           secrets: |
             umami_script_url=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
             umami_website_id=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
@@ -76,8 +76,21 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-server:${{ github.sha }}
             ghcr.io/${{ github.repository }}-server:latest
-          cache-from: type=gha,scope=server-cache
-          cache-to: type=gha,scope=server-cache,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build cron docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/cron/Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ github.repository }}-cron:${{ github.sha }}
+            ghcr.io/${{ github.repository }}-cron:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   cleanup:
     runs-on: ubuntu-latest
@@ -95,6 +108,14 @@ jobs:
         uses: actions/delete-package-versions@v5
         with:
           package-name: ${{ github.event.repository.name }}-server
+          package-type: container
+          delete-only-untagged-versions: true
+          min-versions-to-keep: 3
+
+      - name: Delete all untagged cron images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: ${{ github.event.repository.name }}-cron
           package-type: container
           delete-only-untagged-versions: true
           min-versions-to-keep: 3
