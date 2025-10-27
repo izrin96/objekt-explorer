@@ -9,7 +9,6 @@ services:
     env_file: .env
     environment:
       - CORS_ORIGIN
-      - REDIS_URL
       - REDIS_PUBSUB_URL
       - DATABASE_URL
       - INDEXER_DATABASE_URL

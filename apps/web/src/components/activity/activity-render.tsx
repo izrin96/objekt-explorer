@@ -113,7 +113,7 @@ function Activity() {
       refetchOnReconnect: false,
     });
 
-  const { lastJsonMessage } = useWebSocket<WebSocketMessage>(
+  const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
     status === "success" ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL! : null,
     {
       shouldReconnect: () => true,
@@ -200,13 +200,13 @@ function Activity() {
   }, [...queryKey]);
 
   // send history request to websocket on query success
-  // useEffect(() => {
-  //   if (status === "success") {
-  //     sendJsonMessage({
-  //       type: "request_history",
-  //     });
-  //   }
-  // }, [status]);
+  useEffect(() => {
+    if (status === "success") {
+      sendJsonMessage({
+        type: "request_history",
+      });
+    }
+  }, [status, sendJsonMessage]);
 
   // remove new transfer after animation completes
   useEffect(() => {

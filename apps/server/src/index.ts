@@ -6,15 +6,16 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { WSContext } from "hono/ws";
 import { mapOwnedObjekt } from "./lib/objekt";
-import { redis, redisPubSub } from "./lib/redis";
+import { redisPubSub } from "./lib/redis";
 import type { OwnedObjekt } from "./lib/universal/objekts";
 import { fetchKnownAddresses } from "./lib/utils";
-
-const TRANSFER_HISTORY_KEY = "transfer:history";
 
 const clients = new Set<WSContext>();
 const app = new Hono();
 const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
+
+const transferHistory: TransferSendData[] = [];
+const MAX_HISTORY_SIZE = 50;
 
 type TransferData = Transfer & {
   collection: Collection;
@@ -63,9 +64,11 @@ redisPubSub.on("message", async (channel, message) => {
       transferBatch.push(transferEvent);
     }
 
-    // store history
-    await redis.lpush(TRANSFER_HISTORY_KEY, ...transferBatch.map((a) => JSON.stringify(a)));
-    await redis.ltrim(TRANSFER_HISTORY_KEY, 0, 50);
+    // store history locally
+    transferHistory.unshift(...transferBatch);
+    if (transferHistory.length > MAX_HISTORY_SIZE) {
+      transferHistory.length = MAX_HISTORY_SIZE;
+    }
 
     transferBatch.reverse();
 
@@ -100,13 +103,10 @@ app.get(
       async onMessage(event, ws) {
         const data = JSON.parse(event.data) as { type: string; data?: any };
         if (data.type === "request_history") {
-          const history = await redis.lrange(TRANSFER_HISTORY_KEY, 0, -1);
-          if (history.length > 0) {
-            const parsed = history.map((item) => JSON.parse(item));
-
+          if (transferHistory.length > 0) {
             const msg = {
               type: "history",
-              data: parsed,
+              data: transferHistory,
             };
             ws.send(JSON.stringify(msg));
           }
