@@ -1,0 +1,26 @@
+{
+  "name": "cron",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "check-types": "tsc -b",
+    "compile": "pnpm build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@objekt-explorer/db": "workspace:*",
+    "croner": "^9.1.0",
+    "dotenv": "catalog:",
+    "drizzle-orm": "^0.44.7",
+    "ofetch": "^1.4.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsdown": "catalog:",
+    "tsx": "^4.20.6",
+    "typescript": "catalog:"
+  }
+}

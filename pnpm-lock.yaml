@@ -49,6 +49,40 @@ importers:
         specifier: ^2.5.8
         version: 2.5.8
 
+  apps/cron:
+    dependencies:
+      '@objekt-explorer/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      croner:
+        specifier: ^9.1.0
+        version: 9.1.0
+      dotenv:
+        specifier: 'catalog:'
+        version: 17.2.3
+      drizzle-orm:
+        specifier: ^0.44.7
+        version: 0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)
+      ofetch:
+        specifier: ^1.4.1
+        version: 1.4.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.12
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.9.1
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.15.9(typescript@5.9.3)
+      tsx:
+        specifier: ^4.20.6
+        version: 4.20.6
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   apps/server:
     dependencies:
       '@hono/node-server':
@@ -445,7 +479,7 @@ importers:
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nitro:
         specifier: 3.0.1-alpha.0
-        version: 3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(rolldown@1.0.0-beta.44)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6))
+        version: 3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6))
       nuqs:
         specifier: ^2.7.2
         version: 2.7.2(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0(@babel/core@7.28.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
@@ -4691,6 +4725,10 @@ packages:
 
   create-require@1.1.1:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
+
+  croner@9.1.0:
+    resolution: {integrity: sha512-p9nwwR4qyT5W996vBZhdvBCnMhicY5ytZkR4D1Xj0wuTDEiMnjwR57Q3RXYY/s0EpX6Ay3vgIcfaR+ewGHsi+g==}
+    engines: {node: '>=18.0'}
 
   cross-fetch@3.2.0:
     resolution: {integrity: sha512-Q+xVJLoGOeIMXZmbUK4HYk+69cQH6LudR0Vu/pRm2YlU/hDV9CiS0gKUMaWY5f2NeUH9C1nV3bsTlCo0FsTV1Q==}
@@ -14134,6 +14172,8 @@ snapshots:
 
   create-require@1.1.1: {}
 
+  croner@9.1.0: {}
+
   cross-fetch@3.2.0:
     dependencies:
       node-fetch: 2.7.0
@@ -15224,7 +15264,7 @@ snapshots:
 
   nf3@0.1.1: {}
 
-  nitro@3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(rolldown@1.0.0-beta.44)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)):
+  nitro@3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)):
     dependencies:
       consola: 3.4.2
       cookie-es: 2.0.0
@@ -15244,7 +15284,6 @@ snapshots:
       unenv: 2.0.0-rc.21
       unstorage: 2.0.0-alpha.3(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(ofetch@1.4.1)
     optionalDependencies:
-      rolldown: 1.0.0-beta.44
       vite: 7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)
     transitivePeerDependencies:
       - '@azure/app-configuration'
