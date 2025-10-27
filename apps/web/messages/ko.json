@@ -62,7 +62,7 @@
     "only_unlocked": "잠기지 않은 항목만",
     "lock_unlocked": "잠김/해제",
     "transferable": "전송 가능",
-    "show_unowned": "미보유 항목 표시",
+    "show_missing": "누락된 항목 보기",
     "filters": "필터",
     "event": {
       "label": "이벤트",

@@ -33,7 +33,7 @@ export function useProfileObjekts() {
 
   const objektsQuery = useQuery({
     ...collectionQueryOptions(selectedArtistIds),
-    enabled: filters.unowned ?? false,
+    enabled: (filters.unowned ?? false) || (filters.missing ?? false),
   });
 
   // owned objekts
@@ -42,10 +42,11 @@ export function useProfileObjekts() {
   );
 
   // find missing objekts based on owned slug
-  const ownedSlugs = new Set(ownedQuery.data.map((obj) => obj.slug));
-  const missingObjekts = filters.unowned
-    ? (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug))
-    : [];
+  const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
+  const missingObjekts =
+    filters.unowned || filters.missing
+      ? (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug))
+      : [];
   const missingFiltered = filter(missingObjekts);
 
   // combine both

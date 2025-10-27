@@ -18,6 +18,7 @@ export function useResetFilters() {
       sort_dir: null,
       group_dir: null,
       unowned: null,
+      missing: null,
       edition: null,
       hidePin: null,
       color: null,

@@ -42,6 +42,7 @@ export function useFilters() {
     sort_dir: parseAsStringEnum<ValidSortDirection>(Object.values(validSortDirection)),
     group_dir: parseAsStringEnum<ValidSortDirection>(Object.values(validSortDirection)),
     unowned: parseAsBoolean,
+    missing: parseAsBoolean,
     edition: parseAsArrayOf(parseAsNumberLiteral<ValidEdition>(Object.values(validEdition))),
     hidePin: parseAsBoolean,
     color: parseAsString,
@@ -74,6 +75,7 @@ function isFiltering(filters: Filters) {
     filters.sort_dir !== null ||
     filters.group_dir !== null ||
     filters.unowned !== null ||
+    filters.missing !== null ||
     filters.edition !== null ||
     filters.hidePin !== null ||
     filters.color !== null ||

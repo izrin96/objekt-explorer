@@ -62,7 +62,7 @@
     "only_unlocked": "Only unlocked",
     "lock_unlocked": "Lock/unlocked",
     "transferable": "Transferable",
-    "show_unowned": "Show unowned",
+    "show_missing": "Show missing",
     "filters": "Filters",
     "event": {
       "label": "Event",
