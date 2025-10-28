@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import z from "zod";
 import { orpc } from "@/lib/orpc/client";
 import { db } from "@/lib/server/db";
@@ -80,9 +80,12 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
                 : []),
               ...(query.cursor
                 ? [
-                    and(
+                    or(
                       lt(objekts.receivedAt, new Date(query.cursor.receivedAt)),
-                      lt(objekts.id, Number(query.cursor.id)),
+                      and(
+                        eq(objekts.receivedAt, new Date(query.cursor.receivedAt)),
+                        lt(objekts.id, Number(query.cursor.id)),
+                      ),
                     ),
                   ]
                 : []),
