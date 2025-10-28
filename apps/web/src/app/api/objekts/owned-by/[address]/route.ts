@@ -73,14 +73,6 @@ export async function GET(request: NextRequest, props: Params) {
     .where(
       and(
         eq(objekts.owner, params.address.toLowerCase()),
-        ...(query.artist.length
-          ? [
-              inArray(
-                collections.artist,
-                query.artist.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
         ...(query.cursor
           ? [
               or(
@@ -89,6 +81,14 @@ export async function GET(request: NextRequest, props: Params) {
                   eq(objekts.receivedAt, new Date(query.cursor.receivedAt)),
                   lt(objekts.id, Number(query.cursor.id)),
                 ),
+              ),
+            ]
+          : []),
+        ...(query.artist.length
+          ? [
+              inArray(
+                collections.artist,
+                query.artist.map((a) => a.toLowerCase()),
               ),
             ]
           : []),

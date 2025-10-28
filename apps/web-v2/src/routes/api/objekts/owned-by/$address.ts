@@ -70,14 +70,6 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
           .where(
             and(
               eq(objekts.owner, params.address.toLowerCase()),
-              ...(query.artist.length
-                ? [
-                    inArray(
-                      collections.artist,
-                      query.artist.map((a) => a.toLowerCase()),
-                    ),
-                  ]
-                : []),
               ...(query.cursor
                 ? [
                     or(
@@ -86,6 +78,14 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
                         eq(objekts.receivedAt, new Date(query.cursor.receivedAt)),
                         lt(objekts.id, Number(query.cursor.id)),
                       ),
+                    ),
+                  ]
+                : []),
+              ...(query.artist.length
+                ? [
+                    inArray(
+                      collections.artist,
+                      query.artist.map((a) => a.toLowerCase()),
                     ),
                   ]
                 : []),
