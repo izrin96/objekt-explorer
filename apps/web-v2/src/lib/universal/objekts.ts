@@ -45,6 +45,8 @@ export type CollectionMetadata = {
 // list taken from teamreflex/cosmo-web
 export const unobtainables = [
   // streaming event
+  "divine01-kimlip-337z",
+  // streaming event
   "divine01-haseul-331z",
   // artms burn release celebration
   "cream01-heejin-333z",
