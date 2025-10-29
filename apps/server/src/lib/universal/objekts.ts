@@ -176,7 +176,7 @@ export type ObjektTransfer = {
 
 export type ObjektTransferResult = {
   hide?: boolean;
-  tokenId?: number;
+  tokenId?: string;
   owner?: string;
   transferable?: boolean;
   transfers: ObjektTransfer[];

@@ -5,7 +5,6 @@ import {
   index,
   integer,
   pgTable,
-  serial,
   timestamp,
   uuid,
   varchar,
@@ -53,7 +52,7 @@ export const collectionRelations = relations(collections, ({ many }) => ({
 export const objekts = pgTable(
   "objekt",
   {
-    id: serial("id").primaryKey(),
+    id: varchar("id").primaryKey(),
     owner: varchar("owner", { length: 42 }).notNull(),
     mintedAt: timestamp("minted_at").notNull(),
     receivedAt: timestamp("received_at").notNull(),

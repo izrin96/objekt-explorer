@@ -76,7 +76,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
                       lt(objekts.receivedAt, new Date(query.cursor.receivedAt)),
                       and(
                         eq(objekts.receivedAt, new Date(query.cursor.receivedAt)),
-                        lt(objekts.id, Number(query.cursor.id)),
+                        lt(objekts.id, query.cursor.id),
                       ),
                     ),
                   ]

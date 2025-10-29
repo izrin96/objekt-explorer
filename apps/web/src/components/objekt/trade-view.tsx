@@ -188,7 +188,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     staleTime: 0,
   });
 
-  const handleCopy = useCallback((tokenId: number | undefined) => {
+  const handleCopy = useCallback((tokenId: string | undefined) => {
     copy(`${tokenId ?? ""}`);
     toast.success("Token ID copied");
   }, []);
