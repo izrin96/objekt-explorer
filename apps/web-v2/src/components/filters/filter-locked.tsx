@@ -7,7 +7,7 @@ export default function LockedFilter() {
     <Button
       intent="outline"
       data-selected={filters.locked}
-      className="selected:inset-ring-primary w-fit"
+      className="w-fit"
       onClick={() =>
         setFilters((f) => ({
           locked: f.locked === true ? false : f.locked === false ? null : true,

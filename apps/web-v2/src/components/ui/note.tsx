@@ -1,21 +1,21 @@
 import {
-  IconCircleCheckFill,
-  IconCircleExclamationFill,
-  IconCircleInfoFill,
-} from "@intentui/icons";
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/24/solid";
 import { twJoin, twMerge } from "tailwind-merge";
 
-interface NoteProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
+export interface NoteProps extends React.HtmlHTMLAttributes<HTMLDivElement> {
   intent?: "default" | "info" | "warning" | "danger" | "success";
   indicator?: boolean;
 }
 
-const Note = ({ indicator = true, intent = "default", className, ...props }: NoteProps) => {
+export function Note({ indicator = true, intent = "default", className, ...props }: NoteProps) {
   const iconMap: Record<string, React.ElementType | null> = {
-    info: IconCircleInfoFill,
-    warning: IconCircleExclamationFill,
-    danger: IconCircleExclamationFill,
-    success: IconCircleCheckFill,
+    info: InformationCircleIcon,
+    warning: ExclamationCircleIcon,
+    danger: ExclamationCircleIcon,
+    success: CheckCircleIcon,
     default: null,
   };
 
@@ -23,14 +23,19 @@ const Note = ({ indicator = true, intent = "default", className, ...props }: Not
 
   return (
     <div
+      data-slot="note"
       className={twMerge([
-        "inset-ring inset-ring-current/15 grid w-full grid-cols-[auto_1fr] overflow-hidden rounded-lg p-4 backdrop-blur-2xl sm:text-sm/6",
+        "grid w-full grid-cols-[auto_1fr] overflow-hidden rounded-lg border border-current/15 p-[calc(--spacing(4)-1px)] backdrop-blur-2xl sm:text-sm/6",
         "*:[a]:hover:underline **:[strong]:font-medium",
-        intent === "default" && "bg-muted text-secondary-fg",
-        intent === "info" && "bg-info-subtle text-info-subtle-fg",
-        intent === "warning" && "bg-warning-subtle text-warning-subtle-fg",
-        intent === "danger" && "bg-danger-subtle text-danger-subtle-fg",
-        intent === "success" && "bg-success-subtle text-success-subtle-fg",
+        intent === "default" && "bg-muted/50 text-secondary-fg",
+        intent === "info" &&
+          "bg-info-subtle text-info-subtle-fg **:[.text-muted-fg]:text-info-subtle-fg/70",
+        intent === "warning" &&
+          "bg-warning-subtle text-warning-subtle-fg **:[.text-muted-fg]:text-warning-subtle-fg/80",
+        intent === "danger" &&
+          "bg-danger-subtle text-danger-subtle-fg **:[.text-muted-fg]:text-danger-subtle-fg/80",
+        intent === "success" &&
+          "bg-success-subtle text-success-subtle-fg **:[.text-muted-fg]:text-success-subtle-fg/80",
         className,
       ])}
       {...props}
@@ -63,7 +68,4 @@ const Note = ({ indicator = true, intent = "default", className, ...props }: Not
       </div>
     </div>
   );
-};
-
-export type { NoteProps };
-export { Note };
+}

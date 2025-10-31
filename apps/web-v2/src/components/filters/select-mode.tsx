@@ -18,12 +18,7 @@ export function SelectMode({ children, objekts }: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Toggle
-        isSelected={mode}
-        className={mode ? "inset-ring-primary!" : ""}
-        intent="outline"
-        onClick={toggleMode}
-      >
+      <Toggle isSelected={mode} intent="outline" onClick={toggleMode}>
         <HandPointingIcon weight="regular" data-slot="icon" />
         Select mode
       </Toggle>
@@ -51,20 +46,14 @@ export function FloatingSelectMode({ children, objekts }: Props) {
     <AnimatePresence>
       {selected.length > 0 && (
         <motion.div
-          className="fixed inset-x-0 bottom-2 z-10 mx-auto w-fit rounded-lg border bg-bg/80 px-1.5 py-1 shadow backdrop-blur"
+          className="fixed inset-x-0 bottom-0 z-10 mx-auto w-fit rounded-lg rounded-b-none border bg-bg px-1.5 py-1"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
         >
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Tooltip delay={0} closeDelay={0}>
-              <Toggle
-                isSelected={mode}
-                size="sq-sm"
-                intent="outline"
-                onClick={toggleMode}
-                className={mode ? "inset-ring-primary!" : ""}
-              >
+              <Toggle isSelected={mode} size="sq-sm" intent="outline" onClick={toggleMode}>
                 <HandPointingIcon weight="regular" data-slot="icon" />
               </Toggle>
               <TooltipContent inverse>Toggle select mode</TooltipContent>

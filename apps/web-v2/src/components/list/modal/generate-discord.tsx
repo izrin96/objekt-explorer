@@ -8,6 +8,7 @@ import ErrorFallbackRender from "@/components/error-boundary";
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FieldError, Label } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Loader } from "@/components/ui/loader";
 import {
@@ -131,7 +132,6 @@ function Content() {
         }}
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            label="Have list"
             placeholder="Select a list"
             name={name}
             value={value}
@@ -139,8 +139,8 @@ function Content() {
             onBlur={onBlur}
             isRequired
             isInvalid={invalid}
-            errorMessage={error?.message}
           >
+            <Label>Have list</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -149,6 +149,7 @@ function Content() {
                 </SelectItem>
               ))}
             </SelectContent>
+            <FieldError>{error?.message}</FieldError>
           </Select>
         )}
       />
@@ -160,7 +161,6 @@ function Content() {
         }}
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            label="Want list"
             placeholder="Select a list"
             name={name}
             value={value}
@@ -168,8 +168,8 @@ function Content() {
             onBlur={onBlur}
             isRequired
             isInvalid={invalid}
-            errorMessage={error?.message}
           >
+            <Label>Want list</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -178,6 +178,7 @@ function Content() {
                 </SelectItem>
               ))}
             </SelectContent>
+            <FieldError>{error?.message}</FieldError>
           </Select>
         )}
       />
@@ -185,47 +186,36 @@ function Content() {
         control={control}
         name="showCount"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox
-            label="Show count"
-            name={name}
-            isSelected={value}
-            onChange={onChange}
-            onBlur={onBlur}
-          />
+          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Label>Show count</Label>
+          </Checkbox>
         )}
       />
       <Controller
         control={control}
         name="includeLink"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox
-            label="Include link"
-            name={name}
-            isSelected={value}
-            onChange={onChange}
-            onBlur={onBlur}
-          />
+          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Label>Include link</Label>
+          </Checkbox>
         )}
       />
       <Controller
         control={control}
         name="lowercase"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox
-            label="Lower case"
-            name={name}
-            isSelected={value}
-            onChange={onChange}
-            onBlur={onBlur}
-          />
+          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Label>Lower case</Label>
+          </Checkbox>
         )}
       />
       <Textarea
-        label="Formatted discord text"
         value={formatText}
-        onChange={setFormatText}
+        onChange={(e) => setFormatText(e.target.value)}
         className="max-h-64 min-h-32"
-      />
+      >
+        <Label>Formatted discord text</Label>
+      </Textarea>
       <div className="flex">
         <CopyButton text={formatText} />
       </div>

@@ -10,7 +10,6 @@ export default function HidePinFilter() {
   return (
     <Toggle
       intent="outline"
-      className="selected:inset-ring-primary"
       isSelected={filters.hidePin ?? false}
       onChange={(v) =>
         setFilters({

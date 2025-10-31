@@ -37,8 +37,8 @@ export function useProfileObjekts() {
   });
 
   // owned objekts
-  const ownedFiltered = filter(ownedQuery.data).map((a) =>
-    mapObjektWithPinLock(a, pinsQuery.data, lockedObjektQuery.data),
+  const ownedFiltered = filter(
+    ownedQuery.data.map((a) => mapObjektWithPinLock(a, pinsQuery.data, lockedObjektQuery.data)),
   );
 
   // find missing objekts based on owned slug

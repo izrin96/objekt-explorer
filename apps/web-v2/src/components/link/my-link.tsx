@@ -85,7 +85,7 @@ function LinkCard({ link }: LinkCardProps) {
                 Open
               </MenuItemLink>
               <MenuItem onAction={() => setEditOpen(true)}>Edit</MenuItem>
-              <MenuItem isDanger onAction={() => setRemoveOpen(true)}>
+              <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
                 Unlink
               </MenuItem>
             </MenuContent>

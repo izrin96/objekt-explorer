@@ -6,7 +6,6 @@ export default function CombineDuplicateFilter() {
   return (
     <Toggle
       intent="outline"
-      className="selected:inset-ring-primary"
       isSelected={filters.grouped ?? false}
       onChange={(v) =>
         setFilters({

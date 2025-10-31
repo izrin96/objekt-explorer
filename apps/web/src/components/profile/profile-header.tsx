@@ -36,14 +36,11 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       </div>
 
       <Link
-        className={(renderProps) =>
-          buttonStyles({
-            ...renderProps,
-            size: "sm",
-            className: "w-full flex-none md:w-auto",
-            intent: "outline",
-          })
-        }
+        className={buttonStyles({
+          size: "sm",
+          className: "w-full flex-none md:w-auto",
+          intent: "outline",
+        })}
         href={`https://apollo.cafe/@${user.nickname ?? user.address}`}
         target="_blank"
       >

@@ -99,7 +99,7 @@ function ListCard({ list }: ListCardProps) {
                   Open
                 </MenuItemLink>
                 <MenuItem onAction={() => setEditOpen(true)}>Edit</MenuItem>
-                <MenuItem isDanger onAction={() => setDeleteOpen(true)}>
+                <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
                   Delete
                 </MenuItem>
               </MenuContent>

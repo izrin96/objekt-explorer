@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { CopyButton } from "@/components/copy-button";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import {
   ModalBody,
@@ -56,13 +57,14 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
             name="showCount"
             render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
               <Checkbox
-                label="Show count"
                 name={name}
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
-              />
+              >
+                <Label>Show count</Label>
+              </Checkbox>
             )}
           />
           <Controller
@@ -70,22 +72,24 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
             name="lowercase"
             render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
               <Checkbox
-                label="Lower case"
                 name={name}
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
-              />
+              >
+                <Label>Lower case</Label>
+              </Checkbox>
             )}
           />
 
           <Textarea
-            label="Formatted discord text"
             value={formatText}
-            onChange={setFormatText}
+            onChange={(e) => setFormatText(e.target.value)}
             className="max-h-64 min-h-32"
-          />
+          >
+            <Label>Formatted discord text</Label>
+          </Textarea>
           <div className="flex">
             <CopyButton text={formatText} />
           </div>

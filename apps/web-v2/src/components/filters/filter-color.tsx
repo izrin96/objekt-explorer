@@ -3,9 +3,15 @@ import { type Color, parseColor } from "@react-stately/color";
 import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
-import { cn } from "@/utils/classes";
 import { Button } from "../ui/button";
-import { ColorPicker } from "../ui/color-picker";
+import { ColorArea } from "../ui/color-area";
+import { ColorField } from "../ui/color-field";
+import { ColorPicker, EyeDropper } from "../ui/color-picker";
+import { ColorSlider, ColorSliderTrack } from "../ui/color-slider";
+import { ColorSwatch } from "../ui/color-swatch";
+import { ColorThumb } from "../ui/color-thumb";
+import { Input } from "../ui/input";
+import { Popover, PopoverBody, PopoverContent } from "../ui/popover";
 import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {
@@ -61,13 +67,42 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
 
   return (
     <div style={{ "--objekt-color": color } as CSSProperties}>
-      <ColorPicker
-        eyeDropper
-        className={cn(color && "*:inset-ring-(--objekt-color)")}
-        label="Color"
-        value={color ? parseColor(color) : "#000"}
-        onChange={handleChange}
-      />
+      <ColorPicker value={color ? parseColor(color) : "#000"} onChange={handleChange}>
+        <Popover>
+          <Button
+            data-selected={color}
+            className="selected:border-(--objekt-color)"
+            intent="outline"
+            data-slot="control"
+          >
+            <ColorSwatch className="[--color-swatch-size:--spacing(5)]" />
+            Color
+          </Button>
+          <PopoverContent className="[--gutter:--spacing(1)]">
+            <PopoverBody>
+              <div className="space-y-(--gutter) p-2">
+                <ColorArea
+                  colorSpace="hsb"
+                  defaultValue="rgb(120,140,200)"
+                  xChannel="saturation"
+                  yChannel="brightness"
+                />
+                <ColorSlider colorSpace="hsb" channel="hue">
+                  <ColorSliderTrack>
+                    <ColorThumb />
+                  </ColorSliderTrack>
+                </ColorSlider>
+                <div className="flex items-center gap-1.5">
+                  <EyeDropper />
+                  <ColorField aria-label="Color">
+                    <Input />
+                  </ColorField>
+                </div>
+              </div>
+            </PopoverBody>
+          </PopoverContent>
+        </Popover>
+      </ColorPicker>
     </div>
   );
 }

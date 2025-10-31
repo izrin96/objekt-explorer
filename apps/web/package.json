@@ -19,6 +19,7 @@
     "@aws-sdk/client-s3": "^3.917.0",
     "@aws-sdk/client-ses": "^3.917.0",
     "@aws-sdk/s3-presigned-post": "^3.917.0",
+    "@heroicons/react": "^2.2.0",
     "@intentui/icons": "^1.11.0",
     "@next/bundle-analyzer": "^16.0.0",
     "@orpc/client": "^1.10.1",

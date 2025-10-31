@@ -523,7 +523,7 @@
 }
 
 .dark {
-  --bg: oklch(0.181 0.005 285.823);
+  --bg: oklch(0.161 0.005 285.823);
   --fg: oklch(0.985 0 0);
 
   --primary: oklch(0.985 0 0);
@@ -535,7 +535,7 @@
   --secondary: oklch(0.244 0.006 286.033);
   --secondary-fg: oklch(0.985 0 0);
 
-  --overlay: oklch(0.19 0.006 285.885);
+  --overlay: oklch(0.17 0.006 285.885);
   --overlay-fg: oklch(0.985 0 0);
 
   --accent: oklch(0.274 0.006 286.033);

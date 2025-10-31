@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { Key } from "react-aria-components";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
-import { MultipleSelect, MultipleSelectItem } from "../ui/multiple-select";
+import { MultipleSelect, MultipleSelectContent, MultipleSelectItem } from "../ui/multiple-select";
 
 export default function CollectionFilter() {
   const { collections } = useFilterData();
@@ -17,18 +17,19 @@ export default function CollectionFilter() {
 
   return (
     <MultipleSelect
-      className="min-w-44 max-w-min"
+      className="min-w-52 max-w-min"
       placeholder="Collection No."
       aria-label="Collection No."
       value={selected}
       onChange={update}
-      items={collections.map((name) => ({ id: name, name }))}
     >
-      {(item) => (
-        <MultipleSelectItem id={item.id} textValue={item.name}>
-          {item.name}
-        </MultipleSelectItem>
-      )}
+      <MultipleSelectContent items={collections.map((name) => ({ id: name, name }))}>
+        {(item) => (
+          <MultipleSelectItem id={item.id} textValue={item.name}>
+            {item.name}
+          </MultipleSelectItem>
+        )}
+      </MultipleSelectContent>
     </MultipleSelect>
   );
 }

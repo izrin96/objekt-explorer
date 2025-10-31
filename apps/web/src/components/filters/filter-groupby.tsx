@@ -36,7 +36,7 @@ export default function GroupByFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.group_by ? "inset-ring-primary!" : ""}>
+      <Button intent="outline" data-selected={filters.group_by}>
         {t("label")}
       </Button>
       <MenuContent

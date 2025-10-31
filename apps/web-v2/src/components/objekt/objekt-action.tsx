@@ -18,7 +18,10 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
     <Button
       size="sq-xs"
       intent="plain"
-      className={cn("hidden bg-bg/80 px-2 text-fg group-hover:block", isSelected && "block")}
+      className={cn(
+        "hidden bg-bg/80 px-2 text-fg hover:bg-bg group-hover:block",
+        isSelected && "block",
+      )}
       onClick={() => objektSelect(objekt)}
     >
       <CheckIcon className="size-3" weight="bold" />
@@ -48,7 +51,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
       <Button
         size="sq-xs"
         intent="plain"
-        className="pressed:block hidden bg-bg/80 px-2 text-fg group-hover:block"
+        className="pressed:block hidden bg-bg/80 px-2 text-fg hover:bg-bg group-hover:block"
       >
         <DotsThreeVerticalIcon className="size-3" weight="bold" />
       </Button>

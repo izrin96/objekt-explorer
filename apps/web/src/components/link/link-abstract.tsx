@@ -108,12 +108,9 @@ function Welcome({ address }: { address: string }) {
       <span>Success. Profile linked</span>
       <div>
         <Link
-          className={(renderProps) =>
-            buttonStyles({
-              ...renderProps,
-              intent: "secondary",
-            })
-          }
+          className={buttonStyles({
+            intent: "secondary",
+          })}
           href={`/@${address}`}
         >
           Go to your profile

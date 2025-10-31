@@ -10,7 +10,9 @@ import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Description, FieldError, Label } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
 import {
   ModalClose,
@@ -141,15 +143,16 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           }) => (
             <TextField
               isRequired
-              label="Name"
-              placeholder="Your name"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Name</Label>
+              <Input placeholder="Your name" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
 
@@ -158,14 +161,17 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           name="showSocial"
           render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
             <Checkbox
-              label="Show Social"
               name={name}
               onChange={onChange}
               onBlur={onBlur}
-              description="Display your social account such as Discord username in List and Cosmo profile"
               isSelected={value}
               isInvalid={invalid}
-            />
+            >
+              <Label>Show Social</Label>
+              <Description>
+                Display your social account such as Discord username in List and Cosmo profile
+              </Description>
+            </Checkbox>
           )}
         />
 
@@ -174,13 +180,14 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           name="removePic"
           render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
             <Checkbox
-              label="Remove Profile Picture"
               name={name}
               onChange={onChange}
               onBlur={onBlur}
               isSelected={value}
               isInvalid={invalid}
-            />
+            >
+              <Label>Remove Profile Picture</Label>
+            </Checkbox>
           )}
         />
 
@@ -245,17 +252,20 @@ function ChangeEmail({ email }: { email: string }) {
             <TextField
               className="w-full"
               isRequired
-              label="Email"
-              placeholder="Your email"
               name={name}
               type="email"
-              description="Verification email will be sent to verify your new email address"
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Email</Label>
+              <Input placeholder="Your email" />
+              <Description>
+                Verification email will be sent to verify your new email address
+              </Description>
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
 

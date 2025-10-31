@@ -105,8 +105,8 @@ function Activity() {
       refetchOnReconnect: false,
     });
 
-  const { lastJsonMessage } = useWebSocket<WebSocketMessage>(
-    status === "success" ? import.meta.env.VITE_ACTIVITY_WEBSOCKET_URL! : null,
+  const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
+    !(isPending || isRefetching) ? import.meta.env.VITE_ACTIVITY_WEBSOCKET_URL! : null,
     {
       shouldReconnect: () => true,
       reconnectAttempts: Infinity,
@@ -192,13 +192,14 @@ function Activity() {
   }, [...queryKey]);
 
   // send history request to websocket on query success
-  // useEffect(() => {
-  //   if (status === "success") {
-  //     sendJsonMessage({
-  //       type: "request_history",
-  //     });
-  //   }
-  // }, [status]);
+  useEffect(() => {
+    if (isPending || isRefetching) return;
+    if (status === "success") {
+      sendJsonMessage({
+        type: "request_history",
+      });
+    }
+  }, [status, isPending, isRefetching, sendJsonMessage]);
 
   // remove new transfer after animation completes
   useEffect(() => {

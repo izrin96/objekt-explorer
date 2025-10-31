@@ -18,23 +18,21 @@ export default function ProfileTabs() {
   const currentLink = links.find((link) => link.href === decodeURIComponent(pathname));
 
   return (
-    <div className="overflow-x-auto">
-      <Tabs
-        aria-label="Navbar"
-        className="w-min"
-        selectedKey={decodeURIComponent(currentLink?.to ?? "")}
-        onSelectionChange={(key) => {
-          navigate({ to: key.toString(), params: { nickname: identifier } });
-        }}
-      >
-        <TabList>
-          {links.map((item) => (
-            <Tab key={item.to} id={item.to} aria-label={item.label}>
-              {item.label}
-            </Tab>
-          ))}
-        </TabList>
-      </Tabs>
-    </div>
+    <Tabs
+      aria-label="Navbar"
+      className="w-min px-1.5"
+      selectedKey={decodeURIComponent(currentLink?.to ?? "")}
+      onSelectionChange={(key) => {
+        navigate({ to: key.toString(), params: { nickname: identifier } });
+      }}
+    >
+      <TabList>
+        {links.map((item) => (
+          <Tab key={item.to} id={item.to} aria-label={item.label}>
+            {item.label}
+          </Tab>
+        ))}
+      </TabList>
+    </Tabs>
   );
 }

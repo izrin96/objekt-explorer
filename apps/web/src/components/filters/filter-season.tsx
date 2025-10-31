@@ -27,7 +27,7 @@ export default function SeasonFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.season?.length ? "inset-ring-primary!" : ""}>
+      <Button intent="outline" data-selected={filters.season?.length}>
         {t("season")}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>

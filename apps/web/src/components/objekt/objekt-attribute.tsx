@@ -83,7 +83,7 @@ export function AttributePanel({
   const { getArtist } = useCosmoArtist();
 
   return (
-    <div className="flex flex-wrap gap-2 p-2">
+    <div className="flex flex-wrap gap-2">
       <Pill label={t("artist")} value={getArtist(objekt.artist)?.title ?? ""} />
       <Pill label={t("member")} value={objekt.member} />
       <Pill label={t("season")} value={objekt.season} />

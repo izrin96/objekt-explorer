@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { Button } from "../ui/button";
-import { FieldGroup, Input } from "../ui/field";
+import { Input, InputGroup } from "../ui/input";
 import { Popover, PopoverContent } from "../ui/popover";
 import { TextField } from "../ui/text-field";
 
@@ -63,7 +63,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       value={query}
       aria-label="Search"
     >
-      <FieldGroup>
+      <InputGroup>
         <Input ref={ref} placeholder="Quick search.." />
         {query.length > 0 ? (
           <Button intent="plain" size="sq-xs" onClick={() => handleChange("")}>
@@ -96,7 +96,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
             </PopoverContent>
           </Popover>
         )}
-      </FieldGroup>
+      </InputGroup>
     </TextField>
   );
 }

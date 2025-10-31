@@ -50,12 +50,12 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
     >
       <ObjektCard urls={urls} objekts={objekts} />
       <div
-        className="relative col-span-2 flex min-h-screen flex-col overflow-y-auto sm:min-h-full"
+        className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:min-h-full"
         style={{
           scrollbarGutter: "stable",
         }}
       >
-        <div className="px-2 font-semibold">{objekt.collectionId}</div>
+        <div className="font-semibold">{objekt.collectionId}</div>
         <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
         <ObjektPanel objekts={objekts} showOwned={showOwned} />
       </div>
@@ -76,9 +76,9 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       aria-label="Objekt tab"
       selectedKey={currentTab}
       onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
-      className="grow p-2"
+      className="grow pb-2"
     >
-      <TabList>
+      <TabList className="px-2.5">
         {showOwned && (
           <Tab id="owned">
             {t("owned")}

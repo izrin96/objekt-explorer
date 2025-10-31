@@ -9,7 +9,7 @@ import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu
 import ObjektModal from "@/components/objekt/objekt-modal";
 import ObjektView from "@/components/objekt/objekt-view";
 import { Loader } from "@/components/ui/loader";
-import { ProgressBar } from "@/components/ui/progress-bar";
+import { ProgressBar, ProgressBarTrack, ProgressBarValue } from "@/components/ui/progress-bar";
 import { useConfigStore } from "@/hooks/use-config";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
@@ -117,8 +117,8 @@ function ProgressCollapse(props: ProgressCollapseProps) {
       <div
         role="none"
         className={cn(
-          "inset-ring inset-ring-fg/10 flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-overlay p-4 py-4 transition hover:bg-muted",
-          percentage >= 100 && "inset-ring-primary",
+          "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-overlay p-4 py-4 ring-1 ring-fg/10 transition hover:bg-muted",
+          percentage >= 100 && "ring-primary",
         )}
         onClick={() => setShow(!show)}
       >
@@ -127,10 +127,15 @@ function ProgressCollapse(props: ProgressCollapseProps) {
         </div>
         <ProgressBar
           aria-label="Progress Bar"
-          className="min-w-[240px]"
+          className="flex w-fit min-w-[240px] items-center gap-2"
           valueLabel={`${owned.length}/${filtered.length} (${percentage}%)`}
           value={percentage}
-        />
+        >
+          <div className="relative">
+            <ProgressBarTrack className="h-2 min-w-32" />
+          </div>
+          <ProgressBarValue className="flex-none text-muted-fg text-sm tabular-nums" />
+        </ProgressBar>
       </div>
       <AnimatePresence>
         {show && (

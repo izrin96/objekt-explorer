@@ -2,8 +2,9 @@ import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { useFilters } from "@/hooks/use-filters";
 import { Button } from "../ui/button";
+import { Label } from "../ui/field";
 import { Popover, PopoverContent } from "../ui/popover";
-import { Slider } from "../ui/slider";
+import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../ui/slider";
 
 export default function ColorSensitivityFilter() {
   const [filters, setFilters] = useFilters();
@@ -34,7 +35,6 @@ function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitiv
 
   return (
     <Slider
-      label="Color sensitivity"
       className="pb-2"
       minValue={0}
       maxValue={30}
@@ -46,6 +46,15 @@ function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitiv
       }}
       step={0.1}
       style={{ "--primary": color ?? undefined } as CSSProperties}
-    />
+    >
+      <div className="flex min-w-56 items-center justify-between">
+        <Label>Color sensitivity</Label>
+        <SliderOutput />
+      </div>
+      <SliderTrack>
+        <SliderFill />
+        <SliderThumb />
+      </SliderTrack>
+    </Slider>
   );
 }

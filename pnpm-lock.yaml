@@ -127,7 +127,7 @@ importers:
     dependencies:
       '@abstract-foundation/agw-react':
         specifier: ^1.10.0
-        version: 1.10.0(a3bd8c1c065c582f052dc2be99353fa3)
+        version: 1.10.0(13d1524fcfecd417b0175e2eb02469b8)
       '@aws-sdk/client-s3':
         specifier: ^3.917.0
         version: 3.917.0
@@ -137,6 +137,9 @@ importers:
       '@aws-sdk/s3-presigned-post':
         specifier: ^3.917.0
         version: 3.917.0
+      '@heroicons/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react@19.2.0)
       '@intentui/icons':
         specifier: ^1.11.0
         version: 1.11.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -148,7 +151,7 @@ importers:
         version: 1.10.1
       '@orpc/server':
         specifier: ^1.10.1
-        version: 1.10.1(crossws@0.4.1(srvx@0.8.16))(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        version: 1.10.1(crossws@0.4.1(srvx@0.8.16))(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@orpc/tanstack-query':
         specifier: ^1.10.1
         version: 1.10.1(@orpc/client@1.10.1)(@tanstack/query-core@5.90.5)
@@ -160,7 +163,7 @@ importers:
         version: 0.3.0(viem@2.38.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
       '@privy-io/react-auth':
         specifier: ^3.4.1
-        version: 3.4.1(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
+        version: 3.4.1(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
       '@radix-ui/react-avatar':
         specifier: ^1.1.10
         version: 1.1.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -187,7 +190,7 @@ importers:
         version: 1.0.0
       better-auth:
         specifier: ^1.3.31
-        version: 1.3.31(next@16.0.0(@babel/core@7.28.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 1.3.31(next@16.0.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       chroma-js:
         specifier: ^3.1.2
         version: 3.1.2
@@ -235,7 +238,7 @@ importers:
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nuqs:
         specifier: ^2.7.2
-        version: 2.7.2(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0(@babel/core@7.28.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+        version: 2.7.2(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       ofetch:
         specifier: ^1.4.1
         version: 1.4.1
@@ -313,7 +316,7 @@ importers:
         version: 4.1.12
       zustand:
         specifier: ^5.0.8
-        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.4.0(react@19.2.0))
+        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.16
@@ -353,7 +356,7 @@ importers:
     dependencies:
       '@abstract-foundation/agw-react':
         specifier: ^1.10.0
-        version: 1.10.0(13d1524fcfecd417b0175e2eb02469b8)
+        version: 1.10.0(a3bd8c1c065c582f052dc2be99353fa3)
       '@aws-sdk/client-s3':
         specifier: ^3.917.0
         version: 3.917.0
@@ -378,6 +381,9 @@ importers:
       '@fontsource-variable/nunito-sans':
         specifier: ^5.2.7
         version: 5.2.7
+      '@heroicons/react':
+        specifier: ^2.2.0
+        version: 2.2.0(react@19.2.0)
       '@intentui/icons':
         specifier: ^1.11.0
         version: 1.11.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -386,7 +392,7 @@ importers:
         version: 1.10.1
       '@orpc/server':
         specifier: ^1.10.1
-        version: 1.10.1(crossws@0.4.1(srvx@0.8.16))(ws@8.18.3(bufferutil@4.0.9)(utf-8-validate@5.0.10))
+        version: 1.10.1(crossws@0.4.1(srvx@0.8.16))(ws@8.18.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))
       '@orpc/tanstack-query':
         specifier: ^1.10.1
         version: 1.10.1(@orpc/client@1.10.1)(@tanstack/query-core@5.90.5)
@@ -398,7 +404,7 @@ importers:
         version: 0.3.0(viem@2.38.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
       '@privy-io/react-auth':
         specifier: ^3.4.1
-        version: 3.4.1(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
+        version: 3.4.1(@abstract-foundation/agw-client@1.10.0(abitype@1.1.1(typescript@5.9.3)(zod@4.1.12))(typescript@5.9.3)(viem@2.38.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12)))(@types/react@19.2.2)(bufferutil@4.0.9)(db0@0.3.4(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(immer@10.1.3)(ioredis@5.8.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.0))(utf-8-validate@5.0.10)(zod@4.1.12)
       '@radix-ui/react-avatar':
         specifier: ^1.1.10
         version: 1.1.10(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -437,7 +443,7 @@ importers:
         version: 1.133.27(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(zod@4.1.12)
       better-auth:
         specifier: ^1.3.31
-        version: 1.3.31(next@16.0.0(@babel/core@7.28.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 1.3.31(next@16.0.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       chroma-js:
         specifier: ^3.1.2
         version: 3.1.2
@@ -479,10 +485,10 @@ importers:
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nitro:
         specifier: 3.0.1-alpha.0
-        version: 3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6))
+        version: 3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(rolldown@1.0.0-beta.44)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6))
       nuqs:
         specifier: ^2.7.2
-        version: 2.7.2(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0(@babel/core@7.28.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
+        version: 2.7.2(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       ofetch:
         specifier: ^1.4.1
         version: 1.4.1
@@ -554,7 +560,7 @@ importers:
         version: 4.1.12
       zustand:
         specifier: ^5.0.8
-        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.6.0(react@19.2.0))
+        version: 5.0.8(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(use-sync-external-store@1.4.0(react@19.2.0))
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.1.16
@@ -13860,7 +13866,7 @@ snapshots:
 
   basic-ftp@5.0.5: {}
 
-  better-auth@1.3.31(next@16.0.0(@babel/core@7.28.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  better-auth@1.3.31(next@16.0.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
     dependencies:
       '@better-auth/core': 1.3.31(@better-auth/utils@0.3.0)(@better-fetch/fetch@1.1.18)(better-call@1.0.19)(jose@6.1.0)(kysely@0.28.8)(nanostores@1.0.1)
       '@better-auth/telemetry': 1.3.31(better-call@1.0.19)(jose@6.1.0)(kysely@0.28.8)(nanostores@1.0.1)
@@ -15264,7 +15270,7 @@ snapshots:
 
   nf3@0.1.1: {}
 
-  nitro@3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)):
+  nitro@3.0.1-alpha.0(chokidar@4.0.3)(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(rolldown@1.0.0-beta.44)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)):
     dependencies:
       consola: 3.4.2
       cookie-es: 2.0.0
@@ -15284,6 +15290,7 @@ snapshots:
       unenv: 2.0.0-rc.21
       unstorage: 2.0.0-alpha.3(chokidar@4.0.3)(db0@0.3.4(drizzle-orm@0.44.7(@types/pg@8.15.5)(kysely@0.28.8)(pg@8.16.3)))(idb-keyval@6.2.2)(ioredis@5.8.2)(lru-cache@11.2.2)(ofetch@1.4.1)
     optionalDependencies:
+      rolldown: 1.0.0-beta.44
       vite: 7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(tsx@4.20.6)
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -15366,7 +15373,7 @@ snapshots:
     dependencies:
       boolbase: 1.0.0
 
-  nuqs@2.7.2(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0(@babel/core@7.28.4)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0):
+  nuqs@2.7.2(@tanstack/react-router@1.133.27(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(next@16.0.0(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0):
     dependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.2.0

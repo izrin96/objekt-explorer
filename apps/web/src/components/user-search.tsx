@@ -62,7 +62,7 @@ export default function UserSearch() {
       >
         <CommandMenuSearch placeholder={t("placeholder")} />
         <CommandMenuList autoFocus="first" shouldFocusWrap>
-          <CommandMenuSection title={t("result_label")}>
+          <CommandMenuSection label={t("result_label")}>
             {data?.map((user) => (
               <CommandMenuItem
                 onAction={() => handleAction(user)}
@@ -74,7 +74,7 @@ export default function UserSearch() {
               </CommandMenuItem>
             ))}
           </CommandMenuSection>
-          <CommandMenuSection title={t("recent_label")}>
+          <CommandMenuSection label={t("recent_label")}>
             {[
               ...recentUsers.map((user) => (
                 <CommandMenuItem
@@ -92,7 +92,7 @@ export default function UserSearch() {
                       key="clear"
                       textValue="Clear all"
                       onAction={() => clearAll()}
-                      isDanger
+                      intent="danger"
                     >
                       Clear history
                     </CommandMenuItem>,

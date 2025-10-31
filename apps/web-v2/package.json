@@ -19,6 +19,7 @@
     "@fontsource-variable/noto-sans-kr": "^5.2.9",
     "@fontsource-variable/noto-sans-sc": "^5.2.9",
     "@fontsource-variable/nunito-sans": "^5.2.7",
+    "@heroicons/react": "^2.2.0",
     "@intentui/icons": "^1.11.0",
     "@orpc/client": "^1.10.1",
     "@orpc/server": "^1.10.1",

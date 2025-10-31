@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "../ui/button";
+import { FieldError, Label } from "../ui/field";
 import { Form } from "../ui/form";
 import { TextField } from "../ui/text-field";
 
@@ -59,15 +60,16 @@ export default function ResetPassword({ token }: { token: string }) {
               }) => (
                 <TextField
                   isRequired
-                  label="Password"
                   type="password"
                   name={name}
                   value={value}
                   onChange={onChange}
                   onBlur={onBlur}
                   isInvalid={invalid}
-                  errorMessage={error?.message}
-                />
+                >
+                  <Label>Password</Label>
+                  <FieldError>{error?.message}</FieldError>
+                </TextField>
               )}
             />
             <Button type="submit" isDisabled={mutation.isPending}>

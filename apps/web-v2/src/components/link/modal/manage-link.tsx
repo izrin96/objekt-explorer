@@ -18,7 +18,7 @@ import { useRouter } from "@tanstack/react-router";
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/field";
+import { Description, Label } from "@/components/ui/field";
 import { FileTrigger } from "@/components/ui/file-trigger";
 import { Form } from "@/components/ui/form";
 import { Link } from "@/components/ui/link";
@@ -349,70 +349,54 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              label="Hide User"
-              name={name}
-              description="Hide Objekt Tracker account from Cosmo profile"
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-            />
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>Hide User</Label>
+              <Description>Hide Objekt Tracker account from Cosmo profile</Description>
+            </Checkbox>
           )}
         />
         <Controller
           control={control}
           name="hideNickname"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              label="Hide Cosmo ID"
-              name={name}
-              description="Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile."
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-            />
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>Hide Cosmo ID</Label>
+              <Description>
+                Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile.
+              </Description>
+            </Checkbox>
           )}
         />
         <Controller
           control={control}
           name="privateSerial"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              label="Hide from Serial Lookup"
-              name={name}
-              description="Prevent others from finding your objekt via serial number. Only you can see it."
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-            />
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>Hide from Serial Lookup</Label>
+              <Description>
+                Prevent others from finding your objekt via serial number. Only you can see it.
+              </Description>
+            </Checkbox>
           )}
         />
         <Controller
           control={control}
           name="hideTransfer"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              label="Hide Trade History"
-              name={name}
-              description="Hide your profile trade history. Only you can see it."
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-            />
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>Hide Trade History</Label>
+              <Description>Hide your profile trade history. Only you can see it.</Description>
+            </Checkbox>
           )}
         />
         <Controller
           control={control}
           name="privateProfile"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              label="Private Profile"
-              name={name}
-              description="Make your Cosmo profile private. Only you can see it."
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-            />
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>Private Profile</Label>
+              <Description>Make your Cosmo profile private. Only you can see it.</Description>
+            </Checkbox>
           )}
         />
 
@@ -423,13 +407,16 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
             <Select
               aria-label="Objekt Columns"
               placeholder="Objekt Columns"
-              label="Objekt Columns"
-              description="Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=)."
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
             >
+              <Label>Objekt Columns</Label>
+              <Description>
+                Number of columns to use on visit. Visitor are still allowed to change to any
+                columns they want. Pro tips: can also override using URL params (?column=).
+              </Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
@@ -462,13 +449,9 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="removeBanner"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              label="Remove Banner"
-              name={name}
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-            />
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>Remove Banner</Label>
+            </Checkbox>
           )}
         />
         <span className="text-muted-fg text-sm">

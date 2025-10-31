@@ -24,7 +24,7 @@ import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { Button } from "../ui/button";
 import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem, MenuLabel, MenuSubmenu } from "../ui/menu";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSubMenu } from "../ui/menu";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
@@ -49,7 +49,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
     });
   };
   return (
-    <MenuSubmenu>
+    <MenuSubMenu>
       <MenuItem>
         <PlusIcon data-slot="icon" />
         <MenuLabel>Add to list</MenuLabel>
@@ -75,7 +75,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
           </MenuItem>
         ))}
       </MenuContent>
-    </MenuSubmenu>
+    </MenuSubMenu>
   );
 }
 
@@ -91,7 +91,7 @@ export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
           ids: [Number(objekt.id)],
         })
       }
-      isDanger
+      intent="danger"
     >
       <TrashSimpleIcon data-slot="icon" />
       <MenuLabel>Remove from list</MenuLabel>

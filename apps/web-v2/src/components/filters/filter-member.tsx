@@ -23,7 +23,7 @@ export default function MemberFilter() {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.member ? "inset-ring-primary!" : ""}>
+      <Button intent="outline" data-selected={filters.member}>
         Member
       </Button>
       <MenuContent
@@ -33,7 +33,7 @@ export default function MemberFilter() {
         className="min-w-44"
       >
         {selectedArtists.map((artist) => (
-          <MenuSection key={artist.name} title={artist.title} id={artist.name}>
+          <MenuSection key={artist.name} label={artist.title} id={artist.name}>
             {artist.artistMembers.map((member) => (
               <MenuItem key={member.name} id={member.name} textValue={member.name}>
                 <MenuLabel>

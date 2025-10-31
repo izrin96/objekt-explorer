@@ -26,16 +26,14 @@ export default function ProfileTabs() {
   }, [path]);
 
   return (
-    <div className="overflow-x-auto">
-      <Tabs aria-label="Navbar" className="w-min" selectedKey={decodeURIComponent(pathname)}>
-        <TabList>
-          {items.map((item) => (
-            <Tab key={item.url} id={item.url} href={item.url} aria-label={item.label}>
-              {item.label}
-            </Tab>
-          ))}
-        </TabList>
-      </Tabs>
-    </div>
+    <Tabs aria-label="Navbar" className="w-min px-1.5" selectedKey={decodeURIComponent(pathname)}>
+      <TabList>
+        {items.map((item) => (
+          <Tab key={item.url} id={item.url} href={item.url} aria-label={item.label}>
+            {item.label}
+          </Tab>
+        ))}
+      </TabList>
+    </Tabs>
   );
 }

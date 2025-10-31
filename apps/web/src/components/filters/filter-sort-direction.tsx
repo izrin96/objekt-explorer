@@ -11,7 +11,7 @@ export default function SortDirectionFilter() {
   return (
     <Toggle
       intent="outline"
-      className="w-fit"
+      className="selected:inset-ring-fg/15 w-fit"
       isSelected={filters.sort_dir === "asc"}
       onChange={(v) =>
         setFilters({

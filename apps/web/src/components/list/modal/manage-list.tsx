@@ -10,7 +10,9 @@ import ErrorFallbackRender from "@/components/error-boundary";
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Description, FieldError, Label } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Link } from "@/components/ui/link";
 import { Loader } from "@/components/ui/loader";
 import {
@@ -92,29 +94,26 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                 <TextField
                   isRequired
                   autoFocus
-                  label="Name"
-                  placeholder="My list"
                   name={name}
                   value={value}
                   onChange={onChange}
                   onBlur={onBlur}
                   isInvalid={invalid}
-                  errorMessage={error?.message}
-                />
+                >
+                  <Label>Name</Label>
+                  <Input placeholder="My list" />
+                  <FieldError>{error?.message}</FieldError>
+                </TextField>
               )}
             />
             <Controller
               control={control}
               name="hideUser"
               render={({ field: { name, value, onChange, onBlur } }) => (
-                <Checkbox
-                  label="Hide User"
-                  name={name}
-                  description="Hide Objekt Tracker account from this list"
-                  isSelected={value}
-                  onChange={onChange}
-                  onBlur={onBlur}
-                />
+                <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+                  <Label>Hide User</Label>
+                  <Description>Hide Objekt Tracker account from this list</Description>
+                </Checkbox>
               )}
             />
           </div>
@@ -268,15 +267,16 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             <TextField
               isRequired
               autoFocus
-              label="Name"
-              placeholder="My list"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Name</Label>
+              <Input placeholder="My list" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
 
@@ -284,14 +284,10 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              label="Hide User"
-              name={name}
-              description="Hide Objekt Tracker account from this list"
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-            />
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>Hide User</Label>
+              <Description>Hide Objekt Tracker account from this list</Description>
+            </Checkbox>
           )}
         />
 
@@ -305,15 +301,17 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             <Select
               aria-label="Objekt Columns"
               placeholder="Objekt Columns"
-              label="Objekt Columns"
-              description="Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=)."
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
               isInvalid={invalid}
-              errorMessage={error?.message}
             >
+              <Label>Objekt Columns</Label>
+              <Description>
+                Number of columns to use on visit. Visitor are still allowed to change to any
+                columns they want. Pro tips: can also override using URL params (?column=).
+              </Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
@@ -325,6 +323,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
                   </SelectItem>
                 ))}
               </SelectContent>
+              <FieldError>{error?.message}</FieldError>
             </Select>
           )}
         />

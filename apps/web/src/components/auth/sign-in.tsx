@@ -13,7 +13,9 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "../ui/button";
+import { FieldError, Label } from "../ui/field";
 import { Form } from "../ui/form";
+import { Input } from "../ui/input";
 import { TextField } from "../ui/text-field";
 
 export default function SignIn() {
@@ -89,17 +91,18 @@ function SignInForm({
             fieldState: { invalid, error },
           }) => (
             <TextField
-              label="Email"
               type="email"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isRequired
-              placeholder="your@email.com"
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Email</Label>
+              <Input placeholder="your@email.com" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
         <Controller
@@ -113,18 +116,18 @@ function SignInForm({
             fieldState: { invalid, error },
           }) => (
             <TextField
-              label="Password"
               type="password"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isRequired
-              isRevealable
-              placeholder="•••••••"
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Password</Label>
+              <Input placeholder="•••••••" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
         <Button type="submit" intent="primary" isDisabled={mutation.isPending}>
@@ -252,17 +255,18 @@ function SignUpForm({
             fieldState: { invalid, error },
           }) => (
             <TextField
-              label="Name"
               type="text"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isRequired
-              placeholder="Your name"
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Name</Label>
+              <Input placeholder="Your name" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
         <Controller
@@ -276,17 +280,18 @@ function SignUpForm({
             fieldState: { invalid, error },
           }) => (
             <TextField
-              label="Email"
               type="email"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isRequired
-              placeholder="your@email.com"
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Email</Label>
+              <Input placeholder="your@email.com" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
         <Controller
@@ -300,17 +305,18 @@ function SignUpForm({
             fieldState: { invalid, error },
           }) => (
             <TextField
-              label="Password"
               type="password"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isRequired
-              isRevealable
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Password</Label>
+              <Input />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
         <Button type="submit" isDisabled={mutation.isPending}>
@@ -373,17 +379,18 @@ function ForgotPassword({
             fieldState: { invalid, error },
           }) => (
             <TextField
-              label="Email"
               type="email"
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isRequired
-              placeholder="your@email.com"
               isInvalid={invalid}
-              errorMessage={error?.message}
-            />
+            >
+              <Label>Email</Label>
+              <Input placeholder="your@email.com" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
           )}
         />
         <Button type="submit" isDisabled={mutation.isPending}>

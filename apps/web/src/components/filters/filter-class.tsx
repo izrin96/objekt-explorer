@@ -35,7 +35,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.class?.length ? "inset-ring-primary!" : ""}>
+      <Button intent="outline" data-selected={filters.class?.length}>
         {t("class")}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>

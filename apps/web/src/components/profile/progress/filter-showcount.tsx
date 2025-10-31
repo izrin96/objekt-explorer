@@ -9,12 +9,7 @@ export default function ShowCountFilter() {
   const [showCount, setShowCount] = useShowCount();
 
   return (
-    <Toggle
-      intent="outline"
-      className="selected:inset-ring-primary"
-      isSelected={showCount ?? false}
-      onChange={setShowCount}
-    >
+    <Toggle intent="outline" isSelected={showCount ?? false} onChange={setShowCount}>
       Show Count
     </Toggle>
   );

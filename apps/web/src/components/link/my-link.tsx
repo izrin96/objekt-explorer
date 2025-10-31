@@ -33,14 +33,7 @@ function MyLink() {
   return (
     <div className="flex flex-col gap-4">
       <div className="w-full">
-        <Link
-          href={`/link/connect`}
-          className={(renderProps) =>
-            buttonStyles({
-              ...renderProps,
-            })
-          }
-        >
+        <Link href={`/link/connect`} className={buttonStyles()}>
           {t("link_cosmo")}
         </Link>
       </div>
@@ -93,7 +86,7 @@ function LinkCard({ link }: LinkCardProps) {
             <MenuContent className="sm:min-w-56">
               <MenuItem href={`/@${link.nickname ?? link.address}`}>Open</MenuItem>
               <MenuItem onAction={() => setEditOpen(true)}>Edit</MenuItem>
-              <MenuItem isDanger onAction={() => setRemoveOpen(true)}>
+              <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
                 Unlink
               </MenuItem>
             </MenuContent>

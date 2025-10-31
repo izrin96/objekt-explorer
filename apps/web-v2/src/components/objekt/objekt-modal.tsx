@@ -31,21 +31,18 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
 
   return (
     <ObjektModalContext value={{ handleClick }}>
-      {/* temporary fix for modal stuck */}
-      {open && (
-        <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
-          <ModalHeader className="hidden">
-            <ModalTitle>Objekt display</ModalTitle>
-          </ModalHeader>
-          <ModalBody className="p-0 sm:p-0">
-            {menu}
-            <ObjektDetail objekts={objekts} showOwned={showOwned} />
-          </ModalBody>
-          <ModalFooter className="sm:hidden">
-            <ModalClose>Close</ModalClose>
-          </ModalFooter>
-        </ModalContent>
-      )}
+      <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
+        <ModalHeader className="hidden">
+          <ModalTitle>Objekt display</ModalTitle>
+        </ModalHeader>
+        <ModalBody className="p-0 sm:p-0">
+          {menu}
+          <ObjektDetail objekts={objekts} showOwned={showOwned} />
+        </ModalBody>
+        <ModalFooter className="sm:hidden">
+          <ModalClose>Close</ModalClose>
+        </ModalFooter>
+      </ModalContent>
       {children}
     </ObjektModalContext>
   );

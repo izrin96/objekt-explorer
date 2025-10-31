@@ -35,7 +35,7 @@ import {
   MenuLabel,
   MenuSection,
   MenuSeparator,
-  MenuSubmenu,
+  MenuSubMenu,
   MenuTrigger,
 } from "./ui/menu";
 
@@ -149,7 +149,7 @@ function MyListMenuItem({
 }) {
   const { data } = useQuery(orpc.list.list.queryOptions());
   return (
-    <MenuSubmenu>
+    <MenuSubMenu>
       <MenuItem>
         <HeartIcon data-slot="icon" />
         <MenuLabel>My List</MenuLabel>
@@ -187,7 +187,7 @@ function MyListMenuItem({
           <MenuLabel>Manage list</MenuLabel>
         </MenuItem>
       </MenuContent>
-    </MenuSubmenu>
+    </MenuSubMenu>
   );
 }
 
@@ -195,7 +195,7 @@ function MyCosmoProfileMenuItem() {
   const t = useTranslations("nav");
   const { data } = useQuery(orpc.profile.list.queryOptions());
   return (
-    <MenuSubmenu>
+    <MenuSubMenu>
       <MenuItem>
         <DeviceMobileIcon data-slot="icon" />
         <MenuLabel>{t("my_cosmo_link")}</MenuLabel>
@@ -225,6 +225,6 @@ function MyCosmoProfileMenuItem() {
           <MenuLabel>{t("manage_cosmo_link")}</MenuLabel>
         </MenuItem>
       </MenuContent>
-    </MenuSubmenu>
+    </MenuSubMenu>
   );
 }

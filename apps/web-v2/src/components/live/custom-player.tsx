@@ -12,7 +12,7 @@ import { type CSSProperties, useEffect, useState } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent } from "../ui/popover";
-import { Slider } from "../ui/slider";
+import { Slider, SliderFill, SliderThumb, SliderTrack } from "../ui/slider";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";
@@ -93,11 +93,9 @@ function LiveVolumeControl() {
       <Button size="sq-sm" intent="outline">
         <SpeakerHighIcon />
       </Button>
-      <PopoverContent className="m-4 min-w-0 p-4">
+      <PopoverContent className="p-4">
         <Slider
-          className="min-h-24 gap-y-0"
           defaultValue={currentSpeaker.audioVolume ?? 1}
-          output="none"
           minValue={0}
           maxValue={1}
           step={0.01}
@@ -106,7 +104,12 @@ function LiveVolumeControl() {
           onChange={(value) => {
             speaker.setParticipantVolume(currentSpeaker.sessionId, value as number);
           }}
-        />
+        >
+          <SliderTrack className="min-h-24">
+            <SliderFill />
+            <SliderThumb />
+          </SliderTrack>
+        </Slider>
       </PopoverContent>
     </Popover>
   );

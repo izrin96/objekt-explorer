@@ -103,13 +103,10 @@ export default function LinkRender() {
           </div>
 
           <Link
-            className={(renderProps) =>
-              buttonStyles({
-                ...renderProps,
-                size: "sm",
-                intent: "plain",
-              })
-            }
+            className={buttonStyles({
+              size: "sm",
+              intent: "plain",
+            })}
             href="/link/connect/abstract"
           >
             Continue with{" "}
@@ -340,12 +337,9 @@ function RenderOtp({
         <span>{t("success", { nickname: ticketStatus.user.nickname })}</span>
         <div>
           <Link
-            className={(renderProps) =>
-              buttonStyles({
-                ...renderProps,
-                intent: "outline",
-              })
-            }
+            className={buttonStyles({
+              intent: "outline",
+            })}
             href={`/@${ticketStatus.user.nickname}`}
           >
             {t("go_to_cosmo")}

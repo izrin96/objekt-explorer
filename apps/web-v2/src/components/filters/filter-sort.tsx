@@ -40,7 +40,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
 
   return (
     <Menu>
-      <Button intent="outline" className={filters.sort ? "inset-ring-primary!" : ""}>
+      <Button intent="outline" data-selected={filters.sort}>
         Sort by
       </Button>
       <MenuContent

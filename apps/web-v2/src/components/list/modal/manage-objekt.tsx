@@ -7,6 +7,7 @@ import type { ObjektActionModalProps } from "@/components/filters/objekt/common"
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Description, FieldError, Label } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Link } from "@/components/ui/link";
 import { Loader } from "@/components/ui/loader";
@@ -110,7 +111,6 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             fieldState: { invalid, error },
           }) => (
             <Select
-              label="My List"
               placeholder="Select a list"
               name={name}
               value={value}
@@ -118,8 +118,8 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
-              errorMessage={error?.message}
             >
+              <Label>My List</Label>
               <SelectTrigger />
               <SelectContent>
                 {data.map((item) => (
@@ -128,6 +128,7 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                   </SelectItem>
                 ))}
               </SelectContent>
+              <FieldError>{error?.message}</FieldError>
             </Select>
           )}
         />
@@ -135,14 +136,10 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="skipDups"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              name={name}
-              onChange={onChange}
-              onBlur={onBlur}
-              isSelected={value}
-              label="Prevent duplicate"
-              description="Skip the same objekt when adding"
-            />
+            <Checkbox name={name} onChange={onChange} onBlur={onBlur} isSelected={value}>
+              <Label>Prevent duplicate</Label>
+              <Description>Skip the same objekt when adding</Description>
+            </Checkbox>
           )}
         />
         <Portal to="#submit-form">

@@ -6,7 +6,6 @@ export default function MissingFilter() {
   return (
     <Toggle
       intent="outline"
-      className="selected:inset-ring-primary"
       isSelected={(filters.unowned ?? false) || (filters.missing ?? false)}
       onChange={(v) =>
         setFilters({

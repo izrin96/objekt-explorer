@@ -27,7 +27,7 @@ import ErrorFallbackRender from "../error-boundary";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
-import { FieldGroup, Input } from "../ui/field";
+import { Input, InputGroup } from "../ui/input";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../ui/table";
@@ -130,9 +130,9 @@ function Trades({
           isWheelDisabled
           className="grow"
         >
-          <FieldGroup>
+          <InputGroup>
             <Input className="tabular-nums" />
-          </FieldGroup>
+          </InputGroup>
         </NumberFieldPrimitive>
         <Button
           size="sq-md"

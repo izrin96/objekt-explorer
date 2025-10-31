@@ -84,7 +84,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
           textAnchor="start"
           dy=".33em"
           fontSize="3.4em"
-          className="font-bold"
+          className="font-semibold"
           transform={`rotate(90 ${memberPos.x} ${memberPos.y})`}
         >
           {objekt.member}
@@ -99,7 +99,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
         textAnchor="middle"
         dy=".32em"
         fontSize="4.1em"
-        className="font-semibold"
+        className="font-medium"
         transform={`rotate(90 ${collectionPos.x} ${collectionPos.y})`}
       >
         <tspan>{objekt.collectionNo}</tspan>
