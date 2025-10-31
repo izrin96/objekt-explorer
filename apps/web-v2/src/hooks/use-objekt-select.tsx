@@ -37,19 +37,20 @@ const createObjektSelectStore = () =>
         } else {
           map.set(selected.id, selected);
         }
-        return { selected: map };
+        return { selected: map, mode: map.size > 0 };
       }),
 
     batchSelect: (selected) =>
       set(() => {
         return {
           selected: new Map(selected.toReversed().map((a) => [a.id, a])),
+          mode: true,
         };
       }),
 
     isSelected: (selected) => get().selected.has(selected.id),
 
-    reset: () => set(() => ({ selected: new Map() })),
+    reset: () => set(() => ({ selected: new Map(), mode: false })),
 
     handleAction: (callback: () => void) => {
       if (get().selected.size === 0) {
