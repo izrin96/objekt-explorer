@@ -2,7 +2,12 @@
 
 import { MegaphoneIcon } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "./ui/button";
-import { Disclosure, DisclosureGroup, DisclosurePanel, DisclosureTrigger } from "./ui/disclosure";
+import {
+  Disclosure,
+  DisclosureGroup,
+  DisclosurePanel,
+  DisclosureTrigger,
+} from "./ui/disclosure-group";
 import { Link } from "./ui/link";
 import {
   Modal,
