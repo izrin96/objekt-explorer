@@ -1,16 +1,15 @@
 "use client";
 
-import type React from "react";
-import { createContext, use, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import type { ValidObjekt } from "@/lib/universal/objekts";
-import { ModalClose, ModalContent, ModalFooter } from "../ui/modal";
+import { ModalBody, ModalClose, ModalContent, ModalFooter } from "../ui/modal";
 import ObjektDetail from "./objekt-detail";
 
 type Props = {
   showOwned?: boolean;
   objekts: ValidObjekt[];
-  children: React.ReactNode;
-  menu?: React.ReactNode;
+  children: ReactNode;
+  menu?: ReactNode;
 };
 
 export const ObjektModalContext = createContext({
@@ -26,9 +25,11 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
 
   return (
     <ObjektModalContext value={{ handleClick }}>
-      <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl" className="overflow-y-auto">
-        {menu}
-        <ObjektDetail objekts={objekts} showOwned={showOwned} />
+      <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
+        <ModalBody className="[--gutter:0]">
+          {menu}
+          <ObjektDetail objekts={objekts} showOwned={showOwned} />
+        </ModalBody>
         <ModalFooter className="sm:hidden">
           <ModalClose>Close</ModalClose>
         </ModalFooter>
