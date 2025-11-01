@@ -113,28 +113,38 @@ export function ObjektCard({
 
   return (
     <div
-      role="none"
+      className="relative h-full w-full"
+      tabIndex={0}
+      role="button"
       onClick={() => setFlipped((prev) => !prev)}
-      data-flipped={flipped}
-      className="transform-3d relative aspect-photocard h-full w-full transform-gpu cursor-pointer touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
+      onKeyDown={() => setFlipped((prev) => !prev)}
     >
-      <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
-        {/* smaller image */}
-        <img
-          className="absolute inset-0 size-full"
-          src={urls.resizedUrl}
-          alt={objekt.collectionId}
-        />
-        {/* original image */}
-        <img
-          className="absolute inset-0 size-full"
-          src={urls.originalUrl}
-          alt={objekt.collectionId}
-        />
-        <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
-      </div>
-      <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
-        <img className="absolute inset-0 size-full" src={urls.backUrl} alt={objekt.collectionId} />
+      <div
+        data-flipped={flipped}
+        className="transform-3d relative aspect-photocard h-full w-full transform-gpu cursor-pointer touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
+      >
+        <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
+          {/* smaller image */}
+          <img
+            className="absolute inset-0 size-full"
+            src={urls.resizedUrl}
+            alt={objekt.collectionId}
+          />
+          {/* original image */}
+          <img
+            className="absolute inset-0 size-full"
+            src={urls.originalUrl}
+            alt={objekt.collectionId}
+          />
+          <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
+        </div>
+        <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
+          <img
+            className="absolute inset-0 size-full"
+            src={urls.backUrl}
+            alt={objekt.collectionId}
+          />
+        </div>
       </div>
     </div>
   );
