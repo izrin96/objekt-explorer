@@ -104,7 +104,7 @@ const CommandMenu = ({
         <ModalOverlay
           isDismissable={isDismissable}
           className={twJoin(
-            "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-black/15",
+            "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-full overflow-hidden bg-black/15",
             "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
             "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
             "exiting:fade-out exiting:animate-out exiting:ease-in",
