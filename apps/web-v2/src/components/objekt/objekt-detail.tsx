@@ -35,7 +35,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
   return (
     <div
-      className="flex h-full w-screen flex-col gap-2 p-2 sm:grid sm:h-134 sm:min-h-134 sm:w-full sm:grid-cols-3 sm:p-3"
+      className="flex h-full w-full flex-col gap-2 p-2 sm:grid sm:h-134 sm:min-h-134 sm:grid-cols-3 sm:p-3"
       style={
         {
           "--objekt-bg-color": objekt.backgroundColor,
@@ -43,13 +43,10 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
         } as CSSProperties
       }
     >
-      <ObjektCard urls={urls} objekts={objekts} />
-      <div
-        className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:min-h-full"
-        style={{
-          scrollbarGutter: "stable",
-        }}
-      >
+      <div className="flex h-84 select-none self-center sm:h-fit">
+        <ObjektCard urls={urls} objekts={objekts} />
+      </div>
+      <div className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:min-h-full sm:[scrollbar-gutter:stable]">
         <div className="font-semibold">{objekt.collectionId}</div>
         <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
         <ObjektPanel objekts={objekts} showOwned={showOwned} />
@@ -104,7 +101,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
   );
 }
 
-function ObjektCard({
+export function ObjektCard({
   objekts,
   urls,
 }: {
@@ -118,34 +115,26 @@ function ObjektCard({
     <div
       role="none"
       onClick={() => setFlipped((prev) => !prev)}
-      className="flex h-84 select-none self-center sm:h-fit"
+      data-flipped={flipped}
+      className="transform-3d relative aspect-photocard h-full w-full transform-gpu cursor-pointer touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
     >
-      <div
-        data-flipped={flipped}
-        className="transform-3d relative aspect-photocard h-full w-full transform-gpu cursor-pointer touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
-      >
-        <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
-          {/* smaller image */}
-          <img
-            className="absolute inset-0 size-full"
-            src={urls.resizedUrl}
-            alt={objekt.collectionId}
-          />
-          {/* original image */}
-          <img
-            className="absolute inset-0 size-full"
-            src={urls.originalUrl}
-            alt={objekt.collectionId}
-          />
-          <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
-        </div>
-        <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
-          <img
-            className="absolute inset-0 size-full"
-            src={urls.backUrl}
-            alt={objekt.collectionId}
-          />
-        </div>
+      <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
+        {/* smaller image */}
+        <img
+          className="absolute inset-0 size-full"
+          src={urls.resizedUrl}
+          alt={objekt.collectionId}
+        />
+        {/* original image */}
+        <img
+          className="absolute inset-0 size-full"
+          src={urls.originalUrl}
+          alt={objekt.collectionId}
+        />
+        <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
+      </div>
+      <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
+        <img className="absolute inset-0 size-full" src={urls.backUrl} alt={objekt.collectionId} />
       </div>
     </div>
   );

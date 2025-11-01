@@ -95,10 +95,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
-      style={{
-        scrollbarGutter: "stable",
-      }}
+      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable} ${nunitoFont.variable} [scrollbar-gutter:stable]`}
     >
       <body className="min-h-svh">
         <NextIntlClientProvider>
