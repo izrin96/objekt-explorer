@@ -119,7 +119,7 @@ export function ObjektCard({
 
   return (
     <div
-      className="relative h-full w-full"
+      className="relative h-full w-full cursor-pointer"
       tabIndex={0}
       role="button"
       onClick={() => setFlipped((prev) => !prev)}
@@ -127,7 +127,7 @@ export function ObjektCard({
     >
       <div
         data-flipped={flipped}
-        className="transform-3d relative aspect-photocard h-full w-full transform-gpu cursor-pointer touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
+        className="transform-3d relative aspect-photocard h-full w-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
       >
         <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
           {/* smaller image */}
