@@ -46,7 +46,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
       <div className="flex h-84 select-none self-center sm:h-fit">
         <ObjektCard urls={urls} objekts={objekts} />
       </div>
-      <div className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:min-h-full sm:[scrollbar-gutter:stable]">
+      <div className="sm:-me-2 relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:min-h-full sm:[scrollbar-gutter:stable]">
         <div className="font-semibold">{objekt.collectionId}</div>
         <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
         <ObjektPanel objekts={objekts} showOwned={showOwned} />

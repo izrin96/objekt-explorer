@@ -24,7 +24,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
   return (
     <ObjektModalContext value={{ handleClick }}>
       <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
-        <ModalBody className="[--gutter:0]">
+        <ModalBody className="py-0 [--gutter:0]">
           {menu}
           <ObjektDetail objekts={objekts} showOwned={showOwned} />
         </ModalBody>

@@ -132,7 +132,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
   preconnect("https://static.cosmo.fans");
 
   return (
-    <html lang="en" suppressHydrationWarning className="[scrollbar-gutter:stable]">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
