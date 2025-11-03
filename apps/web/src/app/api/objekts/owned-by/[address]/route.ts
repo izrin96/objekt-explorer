@@ -102,7 +102,7 @@ export async function GET(request: NextRequest, props: Params) {
   const nextCursor = hasNext
     ? {
         receivedAt: results[PER_PAGE - 1].objekt.receivedAt,
-        id: results[PER_PAGE - 1].objekt.id.toString(),
+        id: results[PER_PAGE - 1].objekt.id,
       }
     : undefined;
 

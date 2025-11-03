@@ -63,7 +63,7 @@ export function overrideCollection<T extends ValidObjekt>(collection: T): T {
 export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt): OwnedObjekt {
   return {
     ...overrideCollection(collection),
-    id: objekt.id.toString(),
+    id: objekt.id,
     serial: objekt.serial,
     receivedAt: objekt.receivedAt,
     mintedAt: objekt.mintedAt,

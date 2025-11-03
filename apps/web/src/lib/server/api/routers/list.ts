@@ -368,11 +368,16 @@ async function mapEntriesCollection(
   const collections = await fetchCollections(slugs, artists);
   const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
 
-  return result
-    .filter((a) => collectionsMap.has(a.collectionSlug))
-    .map(({ collectionSlug, id, createdAt }) => ({
-      ...collectionsMap.get(collectionSlug)!,
-      id: id.toString(),
-      createdAt: createdAt.toISOString(),
-    }));
+  return result.flatMap(({ collectionSlug, id, createdAt }) => {
+    const collection = collectionsMap.get(collectionSlug);
+    return collection
+      ? [
+          {
+            ...collection,
+            id: id.toString(),
+            createdAt: createdAt.toISOString(),
+          },
+        ]
+      : [];
+  });
 }

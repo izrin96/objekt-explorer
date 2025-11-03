@@ -99,7 +99,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
         const nextCursor = hasNext
           ? {
               receivedAt: results[PER_PAGE - 1].objekt.receivedAt,
-              id: results[PER_PAGE - 1].objekt.id.toString(),
+              id: results[PER_PAGE - 1].objekt.id,
             }
           : undefined;
 

@@ -43,13 +43,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
   ].map((a) => a.toLowerCase());
 }
 
-export function mapObjektWithPinLock(
-  objekt: ValidObjekt,
-  pins: PinObjekt[],
-  locked: PinObjekt[],
-): ValidObjekt {
-  if (!isObjektOwned(objekt)) return objekt;
-
+export function mapObjektWithPinLock(objekt: OwnedObjekt, pins: PinObjekt[], locked: PinObjekt[]) {
   const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
   const lockedObjekt = locked.find((lock) => lock.tokenId === objekt.id);
   const isPin = pinObjekt !== undefined;
@@ -59,10 +53,10 @@ export function mapObjektWithPinLock(
     isPin,
     isLocked,
     pinOrder: isPin ? pinObjekt.order : null,
-  } satisfies OwnedObjekt;
+  };
 }
 
-export function mapObjektWithTag(objekt: ValidObjekt): ValidObjekt {
+export function mapObjektWithTag<T extends ValidObjekt>(objekt: T) {
   return {
     ...objekt,
     tags: makeCollectionTags(objekt),
