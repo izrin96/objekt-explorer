@@ -8,9 +8,9 @@ import { user as userSchema } from "../../db/auth-schema";
 import { authed } from "../orpc";
 
 export const userRouter = {
-  refreshProfile: authed.input(z.enum(["discord", "twitter"])).handler(
+  refreshProfile: authed.input(z.object({ providerId: z.enum(["discord", "twitter"]) })).handler(
     async ({
-      input: providerId,
+      input: { providerId },
       context: {
         session: { user },
       },

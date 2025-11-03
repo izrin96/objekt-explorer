@@ -16,21 +16,13 @@ import {
 } from "@/components/ui/modal";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
+import { listAccountQueryOptions } from "@/lib/query-options";
 import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";
 
 const providers = Object.values(providersMap);
 
 export function ListAccounts() {
-  const query = useSuspenseQuery({
-    queryKey: ["accounts"],
-    queryFn: async () => {
-      const result = await authClient.listAccounts();
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-      return result.data;
-    },
-  });
+  const query = useSuspenseQuery(listAccountQueryOptions());
 
   const linkedAccounts = query.data.filter((a) => a.providerId !== "credential");
   const unlinkedProviders = providers.filter(
@@ -172,7 +164,7 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
           intent="primary"
           type="submit"
           isPending={refreshProfile.isPending}
-          onClick={() => refreshProfile.mutate(provider.id)}
+          onClick={() => refreshProfile.mutate({ providerId: provider.id })}
         >
           Continue
         </Button>

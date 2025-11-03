@@ -8,9 +8,9 @@ export function useBatchLock() {
     orpc.lockedObjekt.batchLock.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
         const previousLocks = client.getQueryData<LockListOutput>(
-          orpc.lockedObjekt.list.queryKey({ input: address }),
+          orpc.lockedObjekt.list.queryKey({ input: { address } }),
         );
-        client.setQueryData(orpc.lockedObjekt.list.queryKey({ input: address }), (old = []) => {
+        client.setQueryData(orpc.lockedObjekt.list.queryKey({ input: { address } }), (old = []) => {
           const tokenIdSet = new Set(tokenIds.map(String));
           return [
             ...tokenIds.map((tokenId) => ({ tokenId: String(tokenId), order: 0 })),
@@ -29,7 +29,7 @@ export function useBatchLock() {
       onError: (_err, { tokenIds, address }, context, { client }) => {
         if (context?.previousLocks) {
           client.setQueryData(
-            orpc.lockedObjekt.list.queryKey({ input: address }),
+            orpc.lockedObjekt.list.queryKey({ input: { address } }),
             context.previousLocks,
           );
         }

@@ -9,7 +9,9 @@ import { Analytics } from "@/components/analytics";
 import Navbar from "@/components/navbar";
 import "@/lib/orpc/server";
 import { preconnect } from "react-dom";
-import { getSelectedArtists } from "@/lib/client-fetching";
+import { getSelectedArtists } from "@/lib/data-fetching";
+import { orpc } from "@/lib/orpc/client";
+import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { artists } from "@/lib/server/cosmo/artists";
 
 const inter = Inter({
@@ -85,11 +87,14 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
+  const queryClient = getQueryClient();
   const [locale, selectedArtistIds] = await Promise.all([getLocale(), getSelectedArtists()]);
 
   preconnect("https://imagedelivery.net");
   preconnect("https://resources.cosmo.fans");
   preconnect("https://static.cosmo.fans");
+
+  queryClient.prefetchQuery(orpc.session.queryOptions());
 
   return (
     <html
@@ -101,9 +106,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <NextIntlClientProvider>
           <ClientProviders>
             <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>
-              <Navbar />
-              <main className="mx-auto w-full">{children}</main>
-              <Analytics />
+              <HydrateClient client={queryClient}>
+                <Navbar />
+                <main className="mx-auto w-full">{children}</main>
+                <Analytics />
+              </HydrateClient>
             </ClientArtistProvider>
           </ClientProviders>
         </NextIntlClientProvider>

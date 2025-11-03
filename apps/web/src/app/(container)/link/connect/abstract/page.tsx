@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import AbstractProcess from "@/components/link/link-abstract";
 import NextAbstractWalletProvider from "@/components/NextAbstractWalletProvider";
-import { getSession } from "@/lib/server/auth";
+import { orpc } from "@/lib/orpc/client";
+import { getQueryClient } from "@/lib/query/hydration";
 
 export default async function Page() {
-  const session = await getSession();
+  const queryClient = getQueryClient();
+  const session = await queryClient.ensureQueryData(orpc.session.queryOptions());
 
   if (!session) redirect("/");
 

@@ -10,8 +10,8 @@ import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
-import { useTarget } from "@/hooks/use-target";
-import { useProfileAuthed, useUser } from "@/hooks/use-user";
+import { useProfileAuthed, useTarget } from "@/hooks/use-target";
+import { useSession } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
@@ -83,7 +83,7 @@ export default function ProfileObjektRender() {
 }
 
 function ProfileObjekt() {
-  const { authenticated } = useUser();
+  const { data: user } = useSession();
   const isProfileAuthed = useProfileAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
@@ -111,7 +111,7 @@ function ProfileObjekt() {
                   objekts={item}
                   showOwned
                   menu={
-                    authenticated && (
+                    user && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
                         {isProfileAuthed && isOwned && (
@@ -132,12 +132,11 @@ function ProfileObjekt() {
                         priority={index < columns * 3}
                         isSelected={isSelected}
                         hideLabel={hideLabel}
-                        // for profile
                         showCount
                         showSerial={!filters.grouped}
                         isFade={!isOwned}
                       >
-                        {authenticated && (
+                        {user && (
                           <div className="absolute top-0 right-0 flex items-start">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
@@ -167,12 +166,12 @@ function ProfileObjekt() {
         ),
       }),
     ]);
-  }, [shaped, filters.grouped, columns, authenticated, isProfileAuthed, hideLabel]);
+  }, [shaped, filters.grouped, columns, user, isProfileAuthed, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        {authenticated && (
+        {user && (
           <FloatingSelectMode objekts={filtered}>
             <AddToList size="sm" />
             {isProfileAuthed && (
@@ -186,7 +185,7 @@ function ProfileObjekt() {
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} isOwned={isProfileAuthed} objekts={filtered} />
+          <Filters authenticated={user !== null} isOwned={isProfileAuthed} objekts={filtered} />
         </FilterContainer>
       </div>
       <span className="font-semibold">

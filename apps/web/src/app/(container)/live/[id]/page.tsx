@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import LiveStreamingRender from "@/components/live/live-render";
 import { env } from "@/env";
-import { getLiveSession } from "@/lib/client-fetching";
+import { getLiveSession } from "@/lib/data-fetching";
 
 type Props = {
   params: Promise<{

@@ -8,9 +8,9 @@ export function useBatchUnpin() {
     orpc.pins.batchUnpin.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
         const previousPins = client.getQueryData<PinListOutput>(
-          orpc.pins.list.queryKey({ input: address }),
+          orpc.pins.list.queryKey({ input: { address } }),
         );
-        client.setQueryData(orpc.pins.list.queryKey({ input: address }), (old = []) => {
+        client.setQueryData(orpc.pins.list.queryKey({ input: { address } }), (old = []) => {
           const tokenIdSet = new Set(tokenIds.map(String));
           return old.filter((item) => tokenIdSet.has(item.tokenId) === false);
         });
@@ -25,7 +25,10 @@ export function useBatchUnpin() {
       },
       onError: (_err, { tokenIds, address }, context, { client }) => {
         if (context?.previousPins) {
-          client.setQueryData(orpc.pins.list.queryKey({ input: address }), context.previousPins);
+          client.setQueryData(
+            orpc.pins.list.queryKey({ input: { address } }),
+            context.previousPins,
+          );
         }
         toast.error(
           tokenIds.length > 1

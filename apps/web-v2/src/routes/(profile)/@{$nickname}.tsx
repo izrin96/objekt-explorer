@@ -48,7 +48,7 @@ function RouteComponent() {
   return (
     <UserProvider profiles={profiles}>
       <TargetProvider profile={profile}>
-        <ProfileBanner profile={profile} />
+        <ProfileBanner />
         {profile.bannerImgUrl && (
           <Container>
             <ProfileBannerClearance />
@@ -56,7 +56,7 @@ function RouteComponent() {
         )}
         <AppContainer>
           <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
-            <ProfileHeader user={profile} />
+            <ProfileHeader />
             <ProfileTabs />
             <Outlet />
           </div>

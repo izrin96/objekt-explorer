@@ -7,7 +7,7 @@ import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
 export const lockedObjektsRouter = {
-  list: pub.input(z.string()).handler(async ({ input: address }) => {
+  list: pub.input(z.object({ address: z.string() })).handler(async ({ input: { address } }) => {
     const result = await db.query.lockedObjekts.findMany({
       columns: {
         id: true,

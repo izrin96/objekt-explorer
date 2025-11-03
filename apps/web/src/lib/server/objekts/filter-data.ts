@@ -5,7 +5,7 @@ import { indexer } from "../db/indexer";
 import { collections } from "../db/indexer/schema";
 import { getCache } from "../redis";
 
-export async function fetchUniqueCollections() {
+export async function getUniqueCollections() {
   const result = await indexer
     .selectDistinct({
       collectionNo: collections.collectionNo,
@@ -16,7 +16,7 @@ export async function fetchUniqueCollections() {
   return result.map((a) => a.collectionNo);
 }
 
-export async function fetchSeasonMap() {
+export async function getSeasonMap() {
   const result = await indexer
     .selectDistinct({
       artist: collections.artist,
@@ -70,12 +70,9 @@ export async function fetchSeasonMap() {
   });
 }
 
-export async function fetchFilterData() {
+export async function getFilterData() {
   return getCache("filter-data", 60 * 60, async () => {
-    const [collections, seasonsMap] = await Promise.all([
-      fetchUniqueCollections(),
-      fetchSeasonMap(),
-    ]);
+    const [collections, seasonsMap] = await Promise.all([getUniqueCollections(), getSeasonMap()]);
     return {
       collections,
       seasonsMap,

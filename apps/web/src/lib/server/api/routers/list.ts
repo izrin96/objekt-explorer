@@ -16,20 +16,22 @@ import { getCollectionColumns } from "../../objekts/objekt-index";
 import { authed, pub } from "../orpc";
 
 export const listRouter = {
-  find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
-    const result = await db.query.lists.findFirst({
-      columns: {
-        name: true,
-        hideUser: true,
-        gridColumns: true,
-      },
-      where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
-    });
+  find: authed
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ input: { slug }, context: { session } }) => {
+      const result = await db.query.lists.findFirst({
+        columns: {
+          name: true,
+          hideUser: true,
+          gridColumns: true,
+        },
+        where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
+      });
 
-    if (!result) throw new ORPCError("NOT_FOUND");
+      if (!result) throw new ORPCError("NOT_FOUND");
 
-    return result;
-  }),
+      return result;
+    }),
 
   listEntries: pub
     .input(

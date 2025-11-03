@@ -17,12 +17,12 @@ export default function SelectedArtistFilter() {
   const { artists, selectedArtistIds, selectedArtists } = useCosmoArtist();
   const [isPending, startTransition] = useTransition();
   const selected = new Set(selectedArtistIds);
-  const setArtists = useMutation(orpc.config.setArtists.mutationOptions());
+  const setArtists = useMutation(orpc.selectedArtist.set.mutationOptions());
 
   const update = useCallback((key: Selection) => {
     startTransition(async () => {
       const values = Array.from((key as Set<ValidArtist>).values());
-      await setArtists.mutateAsync(values);
+      await setArtists.mutateAsync({ artists: values });
       router.refresh();
     });
   }, []);

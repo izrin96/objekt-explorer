@@ -2,15 +2,14 @@
 
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { useTarget } from "@/hooks/use-target";
-import { useListAuthed } from "@/hooks/use-user";
+import { useListAuthed, useTarget } from "@/hooks/use-target";
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
   const list = useTarget((a) => a.list)!;
-  const isListAuthed = useListAuthed(list.slug);
+  const isListAuthed = useListAuthed();
   const { user, name } = list;
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">

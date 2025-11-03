@@ -13,3 +13,13 @@ export async function parseSelectedArtists() {
     return [];
   }
 }
+
+export async function setSelectedArtists(artists: ValidArtist[]) {
+  const cookie = await cookies();
+  await cookie.set("artists", JSON.stringify(artists), {
+    maxAge: 60 * 60 * 24 * 30,
+    sameSite: "lax",
+    httpOnly: true,
+    secure: true,
+  });
+}

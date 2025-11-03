@@ -27,3 +27,24 @@ export function useListObjekts(slug: string) {
     filters,
   });
 }
+
+export function useProfileListObjekts(slug: string) {
+  const filter = useObjektFilter();
+  const shape = useShapeObjekts();
+  const query = useSuspenseQuery(
+    orpc.profileList.listEntries.queryOptions({
+      input: {
+        slug,
+      },
+      select: (data) => data.map(mapObjektWithTag),
+    }),
+  );
+  const [filters] = useFilters();
+  const filtered = filter(query.data);
+  return useDeferredValue({
+    shaped: shape(filtered),
+    filtered,
+    grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
+    filters,
+  });
+}

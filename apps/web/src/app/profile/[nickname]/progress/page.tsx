@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ProgressRenderDynamic } from "@/components/profile/progress/progress-render";
-import { getUserByIdentifier } from "@/lib/client-fetching";
+import { getUserByIdentifier } from "@/lib/data-fetching";
 import { parseNickname } from "@/lib/utils";
 
 type Props = {

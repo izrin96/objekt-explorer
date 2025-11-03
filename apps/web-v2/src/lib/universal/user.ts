@@ -38,3 +38,11 @@ export type PublicList = {
   gridColumns?: number | null;
   user?: PublicUser | null;
 };
+
+export type PublicProfileList = {
+  slug: string;
+  address: string;
+  name: string;
+  gridColumns?: number | null;
+  nickname?: string | null;
+};

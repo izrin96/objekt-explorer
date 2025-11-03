@@ -20,14 +20,16 @@ import { authed } from "../orpc";
 
 export const cosmoLinkRouter = {
   // remove link
-  removeLink: authed.input(z.string()).handler(async ({ input: address, context: { session } }) => {
-    await db
-      .update(userAddress)
-      .set({
-        userId: null,
-      })
-      .where(and(eq(userAddress.userId, session.user.id), eq(userAddress.address, address)));
-  }),
+  removeLink: authed
+    .input(z.object({ address: z.string() }))
+    .handler(async ({ input: { address }, context: { session } }) => {
+      await db
+        .update(userAddress)
+        .set({
+          userId: null,
+        })
+        .where(and(eq(userAddress.userId, session.user.id), eq(userAddress.address, address)));
+    }),
 
   // generate qr ticket
   getTicket: authed.handler(async () => {
@@ -50,16 +52,18 @@ export const cosmoLinkRouter = {
   }),
 
   // check the ticket with cosmo shop
-  checkTicket: authed.input(z.string()).handler(async ({ input: ticket }) => {
-    try {
-      const result = await checkQrTicket(ticket);
-      return result;
-    } catch {
-      return {
-        status: "expired",
-      } satisfies TicketCheck;
-    }
-  }),
+  checkTicket: authed
+    .input(z.object({ ticket: z.string() }))
+    .handler(async ({ input: { ticket } }) => {
+      try {
+        const result = await checkQrTicket(ticket);
+        return result;
+      } catch {
+        return {
+          status: "expired",
+        } satisfies TicketCheck;
+      }
+    }),
 
   // send otp and check the ticket
   // and then link cosmo id with user

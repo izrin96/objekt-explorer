@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { fetchList } from "./server/api/routers/list";
+import { fetchProfileList } from "./server/api/routers/profile-list";
 import { fetchUserByIdentifier } from "./server/auth";
 import { parseSelectedArtists } from "./server/cookie";
 import { fetchLiveSession } from "./server/cosmo/live";
@@ -23,6 +24,12 @@ export const getSelectedArtists = cache(parseSelectedArtists);
 
 export const getList = cache(async (slug: string) => {
   const list = await fetchList(slug);
+  if (!list) notFound();
+  return list;
+});
+
+export const getProfileList = cache(async (slug: string, address: string) => {
+  const list = await fetchProfileList(slug, address);
   if (!list) notFound();
   return list;
 });

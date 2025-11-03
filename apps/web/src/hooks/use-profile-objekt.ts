@@ -3,7 +3,7 @@ import { groupBy } from "es-toolkit";
 import { useDeferredValue } from "react";
 import { mapObjektWithPinLock } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { collectionQueryOptions, ownedCollectionQueryOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useObjektFilter } from "./use-objekt-filter";
@@ -19,14 +19,14 @@ export function useProfileObjekts() {
 
   const [ownedQuery, pinsQuery, lockedObjektQuery] = useSuspenseQueries({
     queries: [
-      ownedCollectionOptions(profile.address, selectedArtistIds),
+      ownedCollectionQueryOptions(profile.address, selectedArtistIds),
       orpc.pins.list.queryOptions({
-        input: profile.address,
+        input: { address: profile.address },
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
       orpc.lockedObjekt.list.queryOptions({
-        input: profile.address,
+        input: { address: profile.address },
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
       }),
@@ -34,7 +34,7 @@ export function useProfileObjekts() {
   });
 
   const objektsQuery = useQuery({
-    ...collectionOptions(selectedArtistIds),
+    ...collectionQueryOptions(selectedArtistIds),
     enabled: (filters.unowned ?? false) || (filters.missing ?? false),
   });
 

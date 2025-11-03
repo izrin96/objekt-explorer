@@ -7,7 +7,7 @@ import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
 export const pinsRouter = {
-  list: pub.input(z.string()).handler(async ({ input: address }) => {
+  list: pub.input(z.object({ address: z.string() })).handler(async ({ input: { address } }) => {
     const result = await db.query.pins.findMany({
       columns: {
         tokenId: true,

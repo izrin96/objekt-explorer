@@ -76,7 +76,7 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
           intent="danger"
           type="submit"
           isPending={removeLink.isPending}
-          onClick={() => removeLink.mutate(address)}
+          onClick={() => removeLink.mutate({ address })}
         >
           Continue
         </Button>
@@ -189,7 +189,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
 
   const { data } = useSuspenseQuery(
     orpc.profile.find.queryOptions({
-      input: address,
+      input: { address },
       staleTime: 0,
     }),
   );

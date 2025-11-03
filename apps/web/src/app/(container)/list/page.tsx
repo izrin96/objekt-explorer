@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import MyListRender from "@/components/list/my-list";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
-import { getSession } from "@/lib/server/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -13,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const queryClient = getQueryClient();
-  const session = await getSession();
+  const session = await queryClient.ensureQueryData(orpc.session.queryOptions());
 
   if (!session) redirect("/");
 

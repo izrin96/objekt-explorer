@@ -140,9 +140,7 @@ export const getSession = cache(async () =>
   }),
 );
 
-export async function fetchUserByIdentifier(
-  identifier: string,
-): Promise<PublicProfile | undefined> {
+export async function fetchUserByIdentifier(identifier: string): Promise<PublicProfile | null> {
   const identifierIsAddress = isAddress(identifier);
 
   const cachedUser = await db.query.userAddress.findFirst({
@@ -194,7 +192,7 @@ export async function fetchUserByIdentifier(
 
   const user = await fetchByNickname(identifier);
   if (!user) {
-    return undefined;
+    return null;
   }
 
   after(async () => {
@@ -234,8 +232,8 @@ export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "a
 export type Session = typeof auth.$Infer.Session;
 export type User = Session["user"];
 
-export function toPublicUser(session: Session | null): PublicUser | undefined {
-  if (!session) return undefined;
+export function toPublicUser(session: Session | null): PublicUser | null {
+  if (!session) return null;
 
   return {
     discord: session.user.showSocial ? session.user.discord : null,

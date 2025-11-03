@@ -1,29 +1,27 @@
 "use client";
 
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createContext, type PropsWithChildren, useContext } from "react";
-import type { PublicList, PublicProfile, PublicUser } from "@/lib/universal/user";
-import { useTarget } from "./use-target";
+import { orpc } from "@/lib/orpc/client";
+import type { PublicList, PublicProfile, PublicProfileList } from "@/lib/universal/user";
 
 type UserProps = {
-  profiles?: PublicProfile[];
-  lists?: PublicList[];
-  user?: PublicUser;
+  profiles: PublicProfile[];
+  lists: PublicList[];
+  profileLists: PublicProfileList[];
 };
 
-interface UserState extends UserProps {
-  authenticated: boolean;
-}
+interface UserState extends UserProps {}
 
-const UserContext = createContext<UserState | null>(null);
+const UserContext = createContext<Partial<UserState> | null>(null);
 
-type ProviderProps = PropsWithChildren<UserProps>;
+type ProviderProps = PropsWithChildren<Partial<UserProps>>;
 
 export function UserProvider({ children, ...props }: ProviderProps) {
   return (
     <UserContext
       value={{
         ...props,
-        authenticated: props.user !== undefined,
       }}
     >
       {children}
@@ -31,7 +29,7 @@ export function UserProvider({ children, ...props }: ProviderProps) {
   );
 }
 
-export function useUser(): UserState {
+export function useUser() {
   const ctx = useContext(UserContext);
   if (!ctx) {
     throw new Error("useUser must be used within an UserProvider");
@@ -39,13 +37,10 @@ export function useUser(): UserState {
   return ctx;
 }
 
-export function useProfileAuthed() {
-  const target = useTarget((a) => a.profile);
-  const { profiles } = useUser();
-  return profiles?.some((a) => a.address === target?.address) ?? false;
-}
-
-export function useListAuthed(slug: string | undefined) {
-  const { lists } = useUser();
-  return lists?.some((a) => a.slug === slug) ?? false;
+export function useSession() {
+  return useSuspenseQuery(
+    orpc.session.queryOptions({
+      staleTime: Infinity,
+    }),
+  );
 }

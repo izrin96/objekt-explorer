@@ -181,7 +181,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
   const queryClient = useQueryClient();
   const { data } = useQuery(
     orpc.cosmoLink.checkTicket.queryOptions({
-      input: ticketAuth.ticket,
+      input: { ticket: ticketAuth.ticket },
       retry: false,
       refetchInterval: 2000,
       enabled: (query) => {

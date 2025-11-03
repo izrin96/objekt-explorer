@@ -4,10 +4,10 @@ import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
 import { authClient } from "./auth-client";
 import { mapObjektWithTag } from "./objekt-utils";
 import type { ValidArtist } from "./universal/cosmo/common";
-import type { CollectionResult } from "./universal/objekts";
+import type { CollectionMetadata, CollectionResult } from "./universal/objekts";
 import { getBaseURL } from "./utils";
 
-export const collectionOptions = (artistIds: ValidArtist[]) =>
+export const collectionQueryOptions = (artistIds: ValidArtist[]) =>
   queryOptions({
     queryKey: ["collections", artistIds],
     staleTime: Infinity,
@@ -24,7 +24,7 @@ export const collectionOptions = (artistIds: ValidArtist[]) =>
     },
   });
 
-export const ownedCollectionOptions = (address: string, artistIds: ValidArtist[]) =>
+export const ownedCollectionQueryOptions = (address: string, artistIds: ValidArtist[]) =>
   queryOptions({
     queryKey: ["owned-collections", address, artistIds],
     queryFn: () =>
@@ -33,13 +33,32 @@ export const ownedCollectionOptions = (address: string, artistIds: ValidArtist[]
     staleTime: 1000 * 60 * 5,
   });
 
-export const sessionOptions = queryOptions({
-  queryKey: ["session"],
-  queryFn: async () => {
-    const result = await authClient.getSession();
-    if (result.error) {
-      throw new Error(result.error.message);
-    }
-    return result.data;
-  },
-});
+export const metadataQueryOptions = (slug: string) =>
+  queryOptions({
+    queryKey: ["objekts", "metadata", slug],
+    queryFn: () => {
+      const url = new URL(`/api/objekts/metadata/${slug}`, getBaseURL());
+      return ofetch<CollectionMetadata>(url.toString());
+    },
+  });
+
+export const objektsQueryOptions = (slug: string) =>
+  queryOptions({
+    queryKey: ["objekts", "list", slug],
+    queryFn: () => {
+      const url = new URL(`/api/objekts/list/${slug}`, getBaseURL());
+      return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
+    },
+  });
+
+export const listAccountQueryOptions = () =>
+  queryOptions({
+    queryKey: ["accounts"],
+    queryFn: async () => {
+      const result = await authClient.listAccounts();
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      return result.data;
+    },
+  });

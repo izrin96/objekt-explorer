@@ -1,25 +1,17 @@
 import { IndexRenderDynamic } from "@/components/index/index-view";
-import { ProfileProvider } from "@/components/profile-provider";
+import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
-import { getSession, toPublicUser } from "@/lib/server/auth";
-import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 
 export default async function Home() {
   const queryClient = getQueryClient();
-  const session = await getSession();
 
-  queryClient.prefetchQuery({
-    queryKey: ["filter-data"],
-    queryFn: fetchFilterData,
-  });
+  queryClient.prefetchQuery(orpc.filterData.queryOptions());
 
   return (
     <div className="flex flex-col pt-2 pb-36">
-      <ProfileProvider user={toPublicUser(session)}>
-        <HydrateClient client={queryClient}>
-          <IndexRenderDynamic />
-        </HydrateClient>
-      </ProfileProvider>
+      <HydrateClient client={queryClient}>
+        <IndexRenderDynamic />
+      </HydrateClient>
     </div>
   );
 }

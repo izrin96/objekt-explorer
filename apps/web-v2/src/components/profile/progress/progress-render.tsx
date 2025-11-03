@@ -14,7 +14,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
-import { useUser } from "@/hooks/use-user";
+import { useSession } from "@/hooks/use-user";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
@@ -45,7 +45,7 @@ export default function ProgressRender() {
 }
 
 function Progress() {
-  const { authenticated } = useUser();
+  const { data: user } = useSession();
   const { columns } = useObjektColumn();
   const { shaped, filters, ownedSlugs } = useProgressObjekts();
 
@@ -63,7 +63,7 @@ function Progress() {
             title={key}
             grouped={grouped}
             ownedSlugs={ownedSlugs}
-            authenticated={authenticated}
+            authenticated={user !== null}
             columns={columns}
           />
         ))

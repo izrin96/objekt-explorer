@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
-import { ProfileProvider } from "@/components/profile-provider";
-import { getList } from "@/lib/client-fetching";
+import { TargetProvider } from "@/hooks/use-target";
+import { UserProvider } from "@/hooks/use-user";
+import { getList } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchOwnedLists } from "@/lib/server/api/routers/list";
-import { getSession, toPublicUser } from "@/lib/server/auth";
-import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 
 type Props = {
   params: Promise<{
@@ -25,7 +24,10 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function Page(props: Props) {
   const queryClient = getQueryClient();
-  const [params, session] = await Promise.all([props.params, getSession()]);
+  const [params, session] = await Promise.all([
+    props.params,
+    queryClient.ensureQueryData(orpc.session.queryOptions()),
+  ]);
 
   const [list, lists] = await Promise.all([
     getList(params.slug),
@@ -40,19 +42,18 @@ export default async function Page(props: Props) {
     }),
   );
 
-  queryClient.prefetchQuery({
-    queryKey: ["filter-data"],
-    queryFn: fetchFilterData,
-  });
+  queryClient.prefetchQuery(orpc.filterData.queryOptions());
 
   return (
-    <ProfileProvider targetList={list} lists={lists} user={toPublicUser(session)}>
-      <div className="flex flex-col gap-4 pt-2 pb-36">
-        <ListHeader />
-        <HydrateClient client={queryClient}>
-          <ListRender />
-        </HydrateClient>
-      </div>
-    </ProfileProvider>
+    <UserProvider lists={lists}>
+      <TargetProvider list={list}>
+        <div className="flex flex-col gap-4 pt-2 pb-36">
+          <ListHeader />
+          <HydrateClient client={queryClient}>
+            <ListRender />
+          </HydrateClient>
+        </div>
+      </TargetProvider>
+    </UserProvider>
   );
 }

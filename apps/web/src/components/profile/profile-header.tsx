@@ -4,15 +4,15 @@ import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
-import { useProfileAuthed } from "@/hooks/use-user";
-import type { PublicProfile } from "@/lib/universal/user";
+import { useProfileAuthed, useTarget } from "@/hooks/use-target";
 import { parseNickname } from "@/lib/utils";
 import { EditProfileModal } from "../link/modal/manage-link";
 import { Avatar } from "../ui/avatar";
 import { Button, buttonStyles } from "../ui/button";
 import { Link } from "../ui/link";
 
-export default function ProfileHeader({ user }: { user: PublicProfile }) {
+export default function ProfileHeader() {
+  const user = useTarget((a) => a.profile)!;
   const [, copy] = useCopyToClipboard();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();

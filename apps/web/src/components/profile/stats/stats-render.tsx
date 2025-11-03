@@ -15,7 +15,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useTarget } from "@/hooks/use-target";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { collectionQueryOptions, ownedCollectionQueryOptions } from "@/lib/query-options";
 import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
@@ -52,8 +52,8 @@ function ProfileStats() {
 
   const [query, collectionQuery] = useSuspenseQueries({
     queries: [
-      ownedCollectionOptions(profile.address, selectedArtistIds),
-      collectionOptions(selectedArtistIds),
+      ownedCollectionQueryOptions(profile.address, selectedArtistIds),
+      collectionQueryOptions(selectedArtistIds),
     ],
   });
 

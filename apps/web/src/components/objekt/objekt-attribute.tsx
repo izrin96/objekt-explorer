@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
-import { ofetch } from "ofetch";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import type { CollectionMetadata, ValidObjekt } from "@/lib/universal/objekts";
-import { getBaseURL, getEditionStr } from "@/lib/utils";
+import { metadataQueryOptions } from "@/lib/query-options";
+import type { ValidObjekt } from "@/lib/universal/objekts";
+import { getEditionStr } from "@/lib/utils";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 
@@ -25,7 +25,7 @@ function Pill({ label, value, className }: PillProps) {
 
 function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   const t = useTranslations("objekt");
-  const { data, status } = useQuery(fetchMetadata(objekt.slug));
+  const { data, status } = useQuery(metadataQueryOptions(objekt.slug));
 
   if (status === "pending") {
     return (
@@ -63,14 +63,6 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
     );
   }
 }
-
-const fetchMetadata = (slug: string) => ({
-  queryKey: ["objekts", "metadata", slug],
-  queryFn: () => {
-    const url = new URL(`/api/objekts/metadata/${slug}`, getBaseURL());
-    return ofetch<CollectionMetadata>(url.toString());
-  },
-});
 
 export function AttributePanel({
   objekt,

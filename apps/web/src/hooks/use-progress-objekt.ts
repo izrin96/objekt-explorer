@@ -1,6 +1,6 @@
 import { useSuspenseQueries } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { collectionQueryOptions, ownedCollectionQueryOptions } from "@/lib/query-options";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useObjektFilter } from "./use-objekt-filter";
@@ -16,8 +16,8 @@ export function useProgressObjekts() {
 
   const [objektsQuery, ownedQuery] = useSuspenseQueries({
     queries: [
-      collectionOptions(selectedArtistIds),
-      ownedCollectionOptions(profile.address, selectedArtistIds),
+      collectionQueryOptions(selectedArtistIds),
+      ownedCollectionQueryOptions(profile.address, selectedArtistIds),
     ],
   });
 

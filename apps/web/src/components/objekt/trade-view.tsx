@@ -20,6 +20,7 @@ import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
+import { objektsQueryOptions } from "@/lib/query-options";
 import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
@@ -37,14 +38,6 @@ type TradeViewProps = {
   objekt: ValidObjekt;
   serial: number | null;
 };
-
-const fetchObjektsQuery = (slug: string) => ({
-  queryKey: ["objekts", "list", slug],
-  queryFn: () => {
-    const url = new URL(`/api/objekts/list/${slug}`, getBaseURL());
-    return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
-  },
-});
 
 export default function TradeView({ ...props }: TradeViewProps) {
   return (
@@ -67,7 +60,7 @@ export default function TradeView({ ...props }: TradeViewProps) {
 }
 
 function TradeViewRender({ objekt, serial }: TradeViewProps) {
-  const { data } = useSuspenseQuery(fetchObjektsQuery(objekt.slug));
+  const { data } = useSuspenseQuery(objektsQueryOptions(objekt.slug));
 
   return (
     <>

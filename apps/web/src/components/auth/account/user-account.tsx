@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import { TextField } from "@/components/ui/text-field";
 import { authClient } from "@/lib/auth-client";
-import { sessionOptions } from "@/lib/query-options";
+import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth";
 import { ListAccounts } from "./link-account";
 
@@ -75,7 +75,7 @@ export default function UserAccountModal({ open, setOpen }: Props) {
 }
 
 function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const session = useSuspenseQuery(sessionOptions);
+  const session = useSuspenseQuery(orpc.session.queryOptions());
 
   if (!session.data) return;
 

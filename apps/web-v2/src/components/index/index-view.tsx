@@ -7,7 +7,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
-import { useUser } from "@/hooks/use-user";
+import { useSession } from "@/hooks/use-user";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -50,7 +50,7 @@ export default function IndexRender() {
 }
 
 function IndexView() {
-  const { authenticated } = useUser();
+  const { data: user } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered } = useCollectionObjekts();
@@ -75,7 +75,7 @@ function IndexView() {
                   key={objekt.id}
                   objekts={item}
                   menu={
-                    authenticated && (
+                    user && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
                         <AddToListMenu objekt={objekt} />
@@ -91,7 +91,7 @@ function IndexView() {
                         isSelected={isSelected}
                         hideLabel={hideLabel}
                       >
-                        {authenticated && (
+                        {user && (
                           <div className="absolute top-0 right-0 flex items-start">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
@@ -109,18 +109,18 @@ function IndexView() {
         ),
       }),
     ]);
-  }, [shaped, columns, authenticated, hideLabel]);
+  }, [shaped, columns, user, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        {authenticated && (
+        {user && (
           <FloatingSelectMode objekts={filtered}>
             <AddToList size="sm" />
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} objekts={filtered} />
+          <Filters authenticated={user !== null} objekts={filtered} />
         </FilterContainer>
       </div>
       <span className="font-semibold">{filtered.length.toLocaleString()} total</span>

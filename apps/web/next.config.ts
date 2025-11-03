@@ -23,6 +23,14 @@ const nextConfig: NextConfig = {
         source: "/@:nickname/stats",
         destination: "/profile/:nickname/stats",
       },
+      {
+        source: "/@:nickname/list",
+        destination: "/profile/:nickname/list",
+      },
+      {
+        source: "/@:nickname/list/:slug",
+        destination: "/profile/:nickname/list/:slug",
+      },
     ];
   },
   images: {

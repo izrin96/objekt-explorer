@@ -12,10 +12,12 @@ export const profileRouter = {
     return await fetchUserProfiles(session.user.id);
   }),
 
-  find: authed.input(z.string()).handler(async ({ input: address, context: { session } }) => {
-    const profile = await fetchOwnedProfile(address, session.user.id);
-    return profile;
-  }),
+  find: authed
+    .input(z.object({ address: z.string() }))
+    .handler(async ({ input: { address }, context: { session } }) => {
+      const profile = await fetchOwnedProfile(address, session.user.id);
+      return profile;
+    }),
 
   edit: authed
     .input(

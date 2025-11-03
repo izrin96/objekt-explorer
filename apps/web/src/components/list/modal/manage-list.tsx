@@ -214,7 +214,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   const router = useRouter();
   const { data } = useSuspenseQuery(
     orpc.list.find.queryOptions({
-      input: slug,
+      input: { slug },
       staleTime: 0,
     }),
   );

@@ -1,11 +1,12 @@
 import { createContext, type PropsWithChildren, useContext, useEffect, useRef } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import type { PublicList, PublicProfile } from "@/lib/universal/user";
+import type { PublicList, PublicProfile, PublicProfileList } from "@/lib/universal/user";
 import { useUser } from "./use-user";
 
 type TargetProps = {
   profile?: PublicProfile | null;
   list?: PublicList | null;
+  profileList: PublicProfileList | undefined;
 };
 
 interface TargetState extends TargetProps {}
@@ -18,6 +19,7 @@ const createTargetStore = (initial: Partial<TargetProps>) => {
   const DEFAULT_PROPS: TargetProps = {
     profile: undefined,
     list: undefined,
+    profileList: undefined,
   };
 
   return createStore<TargetState>()(() => ({
@@ -49,13 +51,19 @@ export function useTarget<SelectorOutput>(selector: (state: TargetState) => Sele
 }
 
 export function useProfileAuthed() {
-  const target = useTarget((a) => a.profile);
+  const profile = useTarget((a) => a.profile)!;
   const { profiles } = useUser();
-  return profiles?.some((a) => a.address === target?.address) ?? false;
+  return profiles?.some((a) => a.address === profile.address) ?? false;
 }
 
 export function useListAuthed() {
-  const list = useTarget((a) => a.list);
+  const list = useTarget((a) => a.list)!;
   const { lists } = useUser();
-  return lists?.some((a) => a.slug === list?.slug) ?? false;
+  return lists?.some((a) => a.slug === list.slug) ?? false;
+}
+
+export function useProfileListAuthed() {
+  const list = useTarget((a) => a.profileList)!;
+  const { profileLists } = useUser();
+  return profileLists?.some((a) => a.slug === list.slug) ?? false;
 }

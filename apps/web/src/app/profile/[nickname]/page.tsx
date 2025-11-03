@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ProfileObjektRenderDynamic } from "@/components/profile/profile-objekt";
-import { getUserByIdentifier } from "@/lib/client-fetching";
+import { getUserByIdentifier } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { parseNickname } from "@/lib/utils";
@@ -27,13 +27,17 @@ export default async function UserCollectionPage(props: Props) {
 
   queryClient.prefetchQuery(
     orpc.pins.list.queryOptions({
-      input: profile.address,
+      input: {
+        address: profile.address,
+      },
     }),
   );
 
   queryClient.prefetchQuery(
     orpc.lockedObjekt.list.queryOptions({
-      input: profile.address,
+      input: {
+        address: profile.address,
+      },
     }),
   );
 

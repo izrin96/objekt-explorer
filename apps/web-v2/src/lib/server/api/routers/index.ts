@@ -13,6 +13,7 @@ import { listRouter } from "./list";
 import { lockedObjektsRouter } from "./locked-objekts";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
+import { profileListRouter } from "./profile-list";
 import { userRouter } from "./user";
 
 export const router = {
@@ -22,6 +23,7 @@ export const router = {
   pins: pinsRouter,
   profile: profileRouter,
   lockedObjekt: lockedObjektsRouter,
+  profileList: profileListRouter,
 
   // get session
   session: pub.handler(getSession),
@@ -37,14 +39,14 @@ export const router = {
 
   // selected artists
   selectedArtist: {
-    get: pub.handler(() => parseSelectedArtists()),
+    get: pub.handler(parseSelectedArtists),
     set: pub
       .input(z.object({ artists: z.enum(validArtists).array() }))
       .handler(({ input }) => setSelectedArtists(input.artists)),
   },
 
   // filter data
-  filterData: pub.handler(() => getFilterData()),
+  filterData: pub.handler(getFilterData),
 
   // live
   liveSession: {
