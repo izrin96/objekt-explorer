@@ -46,6 +46,7 @@ export type CollectionMetadata = {
 export const unobtainables = [
   // streaming event
   "divine01-kimlip-337z",
+  "divine01-jinsoul-338z",
   // streaming event
   "divine01-haseul-331z",
   // artms burn release celebration
