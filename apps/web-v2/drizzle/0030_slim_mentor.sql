@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "profile_list_entries_objekt_id_unique" ON "profile_list_entries" USING btree ("list_id","objekt_id");

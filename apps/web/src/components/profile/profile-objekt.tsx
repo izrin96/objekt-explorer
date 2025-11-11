@@ -23,6 +23,7 @@ import { AddToList } from "../filters/objekt/add-remove-list";
 import { LockObjekt, UnlockObjekt } from "../filters/objekt/lock-unlock";
 import { PinObjekt, UnpinObjekt } from "../filters/objekt/pin-unpin";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { ObjektActionContext } from "../list/modal/manage-objekt";
 import { ObjektHoverMenu, ObjektOverlay, ObjektSelect } from "../objekt/objekt-action";
 import {
   AddToListMenu,
@@ -49,33 +50,35 @@ export default function ProfileObjektRender() {
     <ObjektColumnProvider initialColumn={profile.gridColumns}>
       <ObjektSelectProvider>
         <ObjektModalProvider initialTab="owned">
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex flex-col items-center gap-4">
-                      {profile.address.toLowerCase() === SPIN_ADDRESS && (
-                        <Note intent="info" className="max-w-2xl">
-                          Loading cosmo-spin objekts may take some time because it loads the entire
-                          collection at once. Please use{" "}
-                          <Link href="https://apollo.cafe/@cosmo-spin" className="underline">
-                            Apollo
-                          </Link>{" "}
-                          for faster loading.
-                        </Note>
-                      )}
-                      <div className="flex justify-center">
-                        <Loader variant="ring" />
+          <ObjektActionContext value={{ showProfileList: true, address: profile.address }}>
+            <QueryErrorResetBoundary>
+              {({ reset }) => (
+                <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                  <Suspense
+                    fallback={
+                      <div className="flex flex-col items-center gap-4">
+                        {profile.address.toLowerCase() === SPIN_ADDRESS && (
+                          <Note intent="info" className="max-w-2xl">
+                            Loading cosmo-spin objekts may take some time because it loads the
+                            entire collection at once. Please use{" "}
+                            <Link href="https://apollo.cafe/@cosmo-spin" className="underline">
+                              Apollo
+                            </Link>{" "}
+                            for faster loading.
+                          </Note>
+                        )}
+                        <div className="flex justify-center">
+                          <Loader variant="ring" />
+                        </div>
                       </div>
-                    </div>
-                  }
-                >
-                  <ProfileObjekt />
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
+                    }
+                  >
+                    <ProfileObjekt />
+                  </Suspense>
+                </ErrorBoundary>
+              )}
+            </QueryErrorResetBoundary>
+          </ObjektActionContext>
         </ObjektModalProvider>
       </ObjektSelectProvider>
     </ObjektColumnProvider>

@@ -36,14 +36,13 @@ export default async function Page(props: Props) {
 
   const [list, lists] = await Promise.all([
     getProfileList(params.slug, profile.address),
-    session ? fetchOwnedProfileLists(session.user.id) : undefined,
+    session ? fetchOwnedProfileLists(session.user.id, profile.address) : undefined,
   ]);
 
   queryClient.prefetchQuery(
     orpc.profileList.listEntries.queryOptions({
       input: {
         slug: params.slug,
-        address: profile.address,
       },
     }),
   );

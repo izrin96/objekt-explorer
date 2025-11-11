@@ -138,7 +138,10 @@ export const profileListEntries = pgTable(
     receivedAt: timestamp("received_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("profile_list_entries_list_idx").on(t.listId)],
+  (t) => [
+    index("profile_list_entries_list_idx").on(t.listId),
+    uniqueIndex("profile_list_entries_objekt_id_unique").on(t.listId, t.objektId),
+  ],
 );
 
 export const profileListEntriesRelations = relations(profileListEntries, ({ one }) => ({

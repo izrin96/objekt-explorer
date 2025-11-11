@@ -16,9 +16,10 @@ import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-rende
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
+import { RemoveFromProfileList } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
-import { ObjektStaticMenu, SelectMenuItem } from "../objekt/objekt-menu";
+import { ObjektStaticMenu, RemoveFromProfileListMenu, SelectMenuItem } from "../objekt/objekt-menu";
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
@@ -74,8 +75,7 @@ function ProfileListView() {
                     user && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
-                        {/* {isOwned && <RemoveFromListMenu objekt={objekt} />} */}
-                        {/* <AddToListMenu objekt={objekt} /> */}
+                        {isOwned && <RemoveFromProfileListMenu objekt={objekt} />}
                       </ObjektStaticMenu>
                     )
                   }
@@ -94,8 +94,7 @@ function ProfileListView() {
                           <div className="absolute top-0 right-0 flex items-start">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
-                              {/* {isOwned && <RemoveFromListMenu objekt={objekt} />} */}
-                              {/* <AddToListMenu objekt={objekt} /> */}
+                              {isOwned && <RemoveFromProfileListMenu objekt={objekt} />}
                             </ObjektHoverMenu>
                           </div>
                         )}
@@ -116,8 +115,7 @@ function ProfileListView() {
       <div className="flex flex-col gap-6">
         {user && (
           <FloatingSelectMode objekts={filtered}>
-            {/* {isOwned && <RemoveFromList size="sm" />}
-            <AddToList size="sm" /> */}
+            {isOwned && <RemoveFromProfileList size="sm" />}
           </FloatingSelectMode>
         )}
         <FilterContainer>
@@ -149,10 +147,7 @@ function Filters({
     <div className="flex w-full flex-col gap-6">
       <Filter />
       {authenticated && (
-        <SelectMode objekts={objekts}>
-          {/* {isOwned && <RemoveFromList />} */}
-          {/* <AddToList /> */}
-        </SelectMode>
+        <SelectMode objekts={objekts}>{isOwned && <RemoveFromProfileList />}</SelectMode>
       )}
     </div>
   );

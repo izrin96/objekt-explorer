@@ -1,11 +1,10 @@
 "use client";
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense } from "react";
+import { createContext, Suspense, use, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
-import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,15 +22,32 @@ import {
   ModalTitle,
 } from "@/components/ui/modal";
 import { Note } from "@/components/ui/note";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { useAddToList } from "@/hooks/actions/add-to-list";
-import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectSection,
+  SelectTrigger,
+} from "@/components/ui/select";
+import { useAddToList, useAddToProfileList } from "@/hooks/actions/add-to-list";
+import { useRemoveFromList, useRemoveFromProfileList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../../error-boundary";
 
-export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
+type Props = {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+};
+
+export const ObjektActionContext = createContext({
+  showProfileList: false,
+  address: "",
+});
+
+export function AddToListModal({ open, setOpen }: Props) {
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
@@ -61,9 +77,16 @@ export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
   );
 }
 
-function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
+function AddToListForm({ setOpen }: Pick<Props, "setOpen">) {
+  const [isProfile, setIsProfile] = useState(false);
+  const { showProfileList, address } = use(ObjektActionContext);
+  const { data } = useSuspenseQuery(
+    orpc.list.listCombined.queryOptions({
+      input: { includeProfile: showProfileList, address: address },
+    }),
+  );
   const addToList = useAddToList();
+  const addToProfileList = useAddToProfileList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
 
   const { handleSubmit, control } = useForm({
@@ -73,11 +96,25 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     },
   });
 
-  const onSubmit = handleSubmit((data) => {
+  const onSubmit = handleSubmit((formData) => {
+    if (isProfile) {
+      return addToProfileList.mutate(
+        {
+          slug: formData.slug,
+          objektIds: selected.map((a) => a.id),
+        },
+        {
+          onSuccess: () => {
+            setOpen(false);
+          },
+        },
+      );
+    }
+
     addToList.mutate(
       {
-        slug: data.slug,
-        skipDups: data.skipDups,
+        slug: formData.slug,
+        skipDups: formData.skipDups,
         collectionSlugs: selected.map((a) => a.slug),
       },
       {
@@ -116,7 +153,11 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               placeholder="Select a list"
               name={name}
               value={value}
-              onChange={onChange}
+              onChange={(e) => {
+                const isProfile = data.find((a) => a.slug === e)?.type === "profile";
+                setIsProfile(isProfile);
+                onChange(e);
+              }}
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
@@ -124,11 +165,31 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               <Label>My List</Label>
               <SelectTrigger />
               <SelectContent>
-                {data.map((item) => (
-                  <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
-                    {item.name}
-                  </SelectItem>
-                ))}
+                <SelectSection title="Normal list">
+                  {data.length === 0 && (
+                    <SelectItem isDisabled>
+                      <SelectLabel>No list found</SelectLabel>
+                    </SelectItem>
+                  )}
+                  {data
+                    .filter((a) => a.type === "normal")
+                    .map((item) => (
+                      <SelectItem key={item.slug} id={item.slug} textValue={item.name}>
+                        {item.name}
+                      </SelectItem>
+                    ))}
+                </SelectSection>
+                {showProfileList && (
+                  <SelectSection title="Profile list">
+                    {data
+                      .filter((a) => a.type === "profile")
+                      .map((item) => (
+                        <SelectItem key={item.slug} id={item.slug} textValue={item.name}>
+                          {item.name}
+                        </SelectItem>
+                      ))}
+                  </SelectSection>
+                )}
               </SelectContent>
               <FieldError>{error?.message}</FieldError>
             </Select>
@@ -138,14 +199,20 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="skipDups"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} onChange={onChange} onBlur={onBlur} isSelected={value}>
+            <Checkbox
+              name={name}
+              onChange={onChange}
+              onBlur={onBlur}
+              isSelected={value}
+              isDisabled={isProfile}
+            >
               <Label>Prevent duplicate</Label>
               <Description>Skip the same objekt when adding</Description>
             </Checkbox>
           )}
         />
         <Portal to="#submit-form">
-          <Button isPending={addToList.isPending} onClick={onSubmit}>
+          <Button isPending={addToList.isPending || addToProfileList.isPending} onClick={onSubmit}>
             Add
           </Button>
         </Portal>
@@ -154,11 +221,15 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   );
 }
 
-export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
-  const target = useTarget((a) => a.list)!;
-  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
-  const removeObjektsFromList = useRemoveFromList();
-  const reset = useObjektSelect((a) => a.reset);
+function RemoveFromListModalBase({
+  open,
+  setOpen,
+  isPending,
+  onSubmit,
+}: Props & {
+  isPending: boolean;
+  onSubmit: () => void;
+}) {
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
@@ -169,29 +240,68 @@ export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
       </ModalHeader>
       <ModalFooter>
         <ModalClose>Cancel</ModalClose>
-
-        <Button
-          intent="danger"
-          type="submit"
-          isPending={removeObjektsFromList.isPending}
-          onClick={() => {
-            removeObjektsFromList.mutate(
-              {
-                slug: target.slug,
-                ids: selected.map((a) => Number(a.id)),
-              },
-              {
-                onSuccess: () => {
-                  setOpen(false);
-                  reset();
-                },
-              },
-            );
-          }}
-        >
+        <Button intent="danger" type="submit" isPending={isPending} onClick={onSubmit}>
           Continue
         </Button>
       </ModalFooter>
     </ModalContent>
+  );
+}
+
+export function RemoveFromListModal({ open, setOpen }: Props) {
+  const target = useTarget((a) => a.list)!;
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const removeObjekts = useRemoveFromList();
+  const reset = useObjektSelect((a) => a.reset);
+
+  return (
+    <RemoveFromListModalBase
+      open={open}
+      setOpen={setOpen}
+      isPending={removeObjekts.isPending}
+      onSubmit={() =>
+        removeObjekts.mutate(
+          {
+            slug: target.slug,
+            ids: selected.map((a) => Number(a.id)),
+          },
+          {
+            onSuccess: () => {
+              setOpen(false);
+              reset();
+            },
+          },
+        )
+      }
+    />
+  );
+}
+
+export function RemoveFromProfileListModal({ open, setOpen }: Props) {
+  const target = useTarget((a) => a.profileList)!;
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const removeObjekts = useRemoveFromProfileList();
+  const reset = useObjektSelect((a) => a.reset);
+
+  return (
+    <RemoveFromListModalBase
+      open={open}
+      setOpen={setOpen}
+      isPending={removeObjekts.isPending}
+      onSubmit={() =>
+        removeObjekts.mutate(
+          {
+            slug: target.slug,
+            ids: selected.map((a) => Number(a.id)),
+          },
+          {
+            onSuccess: () => {
+              setOpen(false);
+              reset();
+            },
+          },
+        )
+      }
+    />
   );
 }

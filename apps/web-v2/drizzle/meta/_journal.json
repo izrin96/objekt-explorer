@@ -211,6 +211,13 @@
       "when": 1762119364675,
       "tag": "0029_happy_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1762844232988,
+      "tag": "0030_slim_mentor",
+      "breakpoints": true
     }
   ]
 }

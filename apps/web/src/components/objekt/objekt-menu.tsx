@@ -12,19 +12,21 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
-import { useAddToList } from "@/hooks/actions/add-to-list";
+import { use } from "react";
+import { useAddToList, useAddToProfileList } from "@/hooks/actions/add-to-list";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
-import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
+import { useRemoveFromList, useRemoveFromProfileList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import type { ValidObjekt } from "@/lib/universal/objekts";
+import { ObjektActionContext } from "../list/modal/manage-objekt";
 import { Button } from "../ui/button";
 import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem, MenuLabel, MenuSubMenu } from "../ui/menu";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSection, MenuSubMenu } from "../ui/menu";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
@@ -38,16 +40,32 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 }
 
 export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
-  const { data } = useQuery(orpc.list.list.queryOptions());
+  const { showProfileList, address } = use(ObjektActionContext);
+  const { data } = useQuery(
+    orpc.list.listCombined.queryOptions({
+      input: { includeProfile: showProfileList, address: address },
+    }),
+  );
   const addToList = useAddToList();
+  const addToProfileList = useAddToProfileList();
 
   const handleAction = (slug: string) => {
+    const isProfile = data?.find((a) => a.slug === slug)?.type === "profile";
+
+    if (isProfile) {
+      return addToProfileList.mutate({
+        slug: slug,
+        objektIds: [objekt.id],
+      });
+    }
+
     addToList.mutate({
       slug: slug,
       skipDups: false,
       collectionSlugs: [objekt.slug],
     });
   };
+
   return (
     <MenuSubMenu>
       <MenuItem>
@@ -62,18 +80,35 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
             </MenuLabel>
           </MenuItem>
         )}
-        {data && data.length === 0 && (
-          <MenuItem isDisabled>
-            <MenuLabel>
-              <span>No list found</span>
-            </MenuLabel>
-          </MenuItem>
+        {data && (
+          <MenuSection label="Normal list">
+            {data.length === 0 && (
+              <MenuItem isDisabled>
+                <MenuLabel>
+                  <span>No list found</span>
+                </MenuLabel>
+              </MenuItem>
+            )}
+            {data
+              .filter((a) => a.type === "normal")
+              .map((item) => (
+                <MenuItem key={item.slug} onAction={() => handleAction(item.slug)}>
+                  <MenuLabel>{item.name}</MenuLabel>
+                </MenuItem>
+              ))}
+          </MenuSection>
         )}
-        {data?.map((a) => (
-          <MenuItem key={a.slug} onAction={() => handleAction(a.slug)}>
-            <MenuLabel>{a.name}</MenuLabel>
-          </MenuItem>
-        ))}
+        {data && showProfileList && (
+          <MenuSection label="Profile list">
+            {data
+              .filter((a) => a.type === "profile")
+              .map((item) => (
+                <MenuItem key={item.slug} onAction={() => handleAction(item.slug)}>
+                  <MenuLabel>{item.name}</MenuLabel>
+                </MenuItem>
+              ))}
+          </MenuSection>
+        )}
       </MenuContent>
     </MenuSubMenu>
   );
@@ -81,16 +116,36 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
 
 export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
   const target = useTarget((a) => a.list)!;
-  const removeObjektsFromList = useRemoveFromList();
+  const remove = useRemoveFromList();
 
   return (
     <MenuItem
       onAction={() =>
-        removeObjektsFromList.mutate({
+        remove.mutate({
           slug: target.slug,
           ids: [Number(objekt.id)],
         })
       }
+      intent="danger"
+    >
+      <TrashSimpleIcon data-slot="icon" />
+      <MenuLabel>Remove from list</MenuLabel>
+    </MenuItem>
+  );
+}
+
+export function RemoveFromProfileListMenu({ objekt }: { objekt: ValidObjekt }) {
+  const target = useTarget((a) => a.profileList)!;
+  const remove = useRemoveFromProfileList();
+
+  return (
+    <MenuItem
+      onAction={() => {
+        remove.mutate({
+          slug: target.slug,
+          ids: [Number(objekt.id)],
+        });
+      }}
       intent="danger"
     >
       <TrashSimpleIcon data-slot="icon" />

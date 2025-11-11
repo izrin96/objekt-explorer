@@ -15,15 +15,9 @@ import { type ListEntry, listEntries, lists } from "../../db/schema";
 import { overrideCollection } from "../../objekt";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { authed, pub } from "../orpc";
+import { fetchOwnedProfileLists } from "./profile-list";
 
 export const listRouter = {
-  list: pub.handler(async () => {
-    const session = await getSession();
-    if (!session) return [];
-
-    return fetchOwnedLists(session.user.id);
-  }),
-
   findPublic: pub.input(z.object({ slug: z.string() })).handler(async ({ input: { slug } }) => {
     const list = await fetchList(slug);
     if (!list) throw notFound();
@@ -56,6 +50,7 @@ export const listRouter = {
     .handler(async ({ input: { slug } }) => {
       const artists = await parseSelectedArtists();
       const result = await db.query.lists.findFirst({
+        columns: {},
         with: {
           entries: {
             orderBy: (entries, { desc }) => [desc(entries.id)],
@@ -74,7 +69,33 @@ export const listRouter = {
       return mapEntriesCollection(result.entries, artists);
     }),
 
-  addObjektsToList: authed
+  list: pub.handler(async () => {
+    const session = await getSession();
+    if (!session) return [];
+
+    return fetchOwnedLists(session.user.id);
+  }),
+
+  listCombined: authed
+    .input(
+      z.object({
+        includeProfile: z.boolean().default(false),
+        address: z.string().optional(),
+      }),
+    )
+    .handler(async ({ context: { session }, input: { includeProfile, address } }) => {
+      const { user } = session;
+      const [lists, profileLists] = await Promise.all([
+        fetchOwnedLists(user.id),
+        includeProfile ? fetchOwnedProfileLists(user.id, address ?? "") : undefined,
+      ]);
+      return [
+        ...lists.map((a) => ({ ...a, type: "normal" as const })),
+        ...(profileLists?.map((a) => ({ ...a, type: "profile" as const })) ?? []),
+      ];
+    }),
+
+  addObjekts: authed
     .input(
       z.object({
         slug: z.string(),
@@ -143,7 +164,7 @@ export const listRouter = {
       },
     ),
 
-  removeObjektsFromList: authed
+  removeObjekts: authed
     .input(
       z.object({
         slug: z.string(),
@@ -385,7 +406,7 @@ async function mapEntriesCollection(
           {
             ...collection,
             id: id.toString(),
-            createdAt: createdAt.toISOString(),
+            createdAt: createdAt,
           },
         ]
       : [];

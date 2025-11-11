@@ -1,14 +1,13 @@
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/ssr";
 import { useShallow } from "zustand/react/shallow";
-import type { ObjektActionProps } from "@/components/filters/objekt/common";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
-export function LockObjekt({ size }: ObjektActionProps) {
+export function LockObjekt({ size }: ButtonProps) {
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -35,7 +34,7 @@ export function LockObjekt({ size }: ObjektActionProps) {
   );
 }
 
-export function UnlockObjekt({ size }: ObjektActionProps) {
+export function UnlockObjekt({ size }: ButtonProps) {
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
