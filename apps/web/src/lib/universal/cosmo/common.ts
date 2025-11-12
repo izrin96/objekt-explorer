@@ -28,10 +28,12 @@ export const seasonColors = [
   "#B400FF",
   "#33ECFD",
   "#FFCC00",
+  "#75FB4C",
   // for idntt
   "#25347C",
   "#619AFF",
   "#B5315A",
+  "#FFFFFF",
 ] as const;
 export const validSeasons = [
   "Atom01",
@@ -40,10 +42,12 @@ export const validSeasons = [
   "Divine01",
   "Ever01",
   "Atom02",
+  "Binary02",
   // for idntt
   "Spring25",
   "Summer25",
   "Autumn25",
+  "Winter25",
 ] as const;
 export type ValidSeason = (typeof validSeasons)[number];
 
@@ -58,6 +62,7 @@ export const validClasses = [
   "Premier",
   "Welcome",
   "Zero",
+  "Motion",
   // for idntt
   "Basic",
   "Event",
