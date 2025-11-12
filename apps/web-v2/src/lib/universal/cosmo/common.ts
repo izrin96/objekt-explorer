@@ -27,8 +27,8 @@ export const seasonColors = [
   "#FF7477",
   "#B400FF",
   "#33ECFD",
-  "#FFCC00",
-  "#75FB4C",
+  "#FAD900",
+  "#69FB3C",
   // for idntt
   "#25347C",
   "#619AFF",
@@ -58,11 +58,11 @@ export type ValidFourSeason = (typeof validFourSeason)[number];
 export const validClasses = [
   "First",
   "Special",
+  "Motion",
   "Double",
   "Premier",
   "Welcome",
   "Zero",
-  "Motion",
   // for idntt
   "Basic",
   "Event",
