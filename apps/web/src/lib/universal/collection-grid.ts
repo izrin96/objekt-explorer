@@ -3,6 +3,198 @@ import type { ValidObjekt } from "./objekts";
 
 export const gridCollections = [
   {
+    collectionId: "binary02-jiyeon-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-jiyeon-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-seoah-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-seoah-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-sullin-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-sullin-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-chaewon-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-chaewon-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-shion-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-shion-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-hayeon-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-hayeon-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-joobin-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-joobin-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-lynn-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-lynn-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-mayu-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-mayu-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-xinyu-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-xinyu-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-sohyun-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-sohyun-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-nien-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-nien-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-yeonji-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-yeonji-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-kotone-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-kotone-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-dahyun-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-dahyun-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-kaede-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-kaede-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-yubin-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-yubin-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-nakyoung-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-nakyoung-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-soomin-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-soomin-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-yooyeon-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-yooyeon-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-chaeyeon-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-chaeyeon-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-jiwoo-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-jiwoo-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-hyerin-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-hyerin-201z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-seoyeon-202z",
+    edition: 1,
+  },
+  {
+    collectionId: "binary02-seoyeon-201z",
+    edition: 1,
+  },
+  {
     collectionId: "atom02-seoyeon-205z",
     edition: 3,
   },
@@ -35,14 +227,6 @@ export const gridCollections = [
     edition: 3,
   },
   {
-    collectionId: "autumn25-hwanhee-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "autumn25-hwanhee-302z",
-    edition: 1,
-  },
-  {
     collectionId: "atom02-yooyeon-205z",
     edition: 3,
   },
@@ -67,28 +251,12 @@ export const gridCollections = [
     edition: 3,
   },
   {
-    collectionId: "autumn25-jiwoon-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "autumn25-jiwoon-302z",
-    edition: 1,
-  },
-  {
     collectionId: "atom02-yubin-205z",
     edition: 3,
   },
   {
     collectionId: "atom02-yubin-206z",
     edition: 3,
-  },
-  {
-    collectionId: "autumn25-juho-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "autumn25-juho-302z",
-    edition: 1,
   },
   {
     collectionId: "atom02-kaede-205z",
@@ -115,28 +283,12 @@ export const gridCollections = [
     edition: 3,
   },
   {
-    collectionId: "autumn25-jaeyoung-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "autumn25-jaeyoung-301z",
-    edition: 1,
-  },
-  {
     collectionId: "atom02-yeonji-206z",
     edition: 3,
   },
   {
     collectionId: "atom02-yeonji-205z",
     edition: 3,
-  },
-  {
-    collectionId: "autumn25-taein-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "autumn25-taein-302z",
-    edition: 1,
   },
   {
     collectionId: "atom02-nien-205z",
@@ -163,28 +315,12 @@ export const gridCollections = [
     edition: 3,
   },
   {
-    collectionId: "autumn25-heeju-302z",
-    edition: 1,
-  },
-  {
     collectionId: "atom02-mayu-206z",
     edition: 3,
   },
   {
-    collectionId: "autumn25-heeju-301z",
-    edition: 1,
-  },
-  {
     collectionId: "atom02-mayu-205z",
     edition: 3,
-  },
-  {
-    collectionId: "autumn25-dohun-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "autumn25-dohun-301z",
-    edition: 1,
   },
   {
     collectionId: "atom02-lynn-206z",
@@ -249,62 +385,6 @@ export const gridCollections = [
   {
     collectionId: "atom02-jiyeon-205z",
     edition: 3,
-  },
-  {
-    collectionId: "summer25-hwanhee-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-hwanhee-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-jiwoon-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-jiwoon-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-juho-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-juho-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-jaeyoung-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-jaeyoung-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-taein-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-taein-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-heeju-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-heeju-301z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-dohun-302z",
-    edition: 1,
-  },
-  {
-    collectionId: "summer25-dohun-301z",
-    edition: 1,
   },
   {
     collectionId: "atom02-jiyeon-203z",
