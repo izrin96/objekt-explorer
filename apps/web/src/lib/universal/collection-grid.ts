@@ -9,6 +9,7 @@ function getScoEdition(objekt: ValidObjekt, collection: number) {
     if ([218, 219].includes(collection)) {
       return 3;
     }
+    return null;
   }
 
   if ([201, 202].includes(collection)) {
