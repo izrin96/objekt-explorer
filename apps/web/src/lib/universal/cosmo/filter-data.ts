@@ -8,7 +8,7 @@ export type ClassArtist = {
 export const classArtistMap: ClassArtist[] = [
   {
     artistId: "tripleS",
-    classes: ["First", "Special", "Double", "Premier", "Welcome", "Zero"],
+    classes: ["First", "Special", "Motion", "Double", "Premier", "Welcome", "Zero"],
   },
   {
     artistId: "artms",

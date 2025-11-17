@@ -27,11 +27,13 @@ export const seasonColors = [
   "#FF7477",
   "#B400FF",
   "#33ECFD",
-  "#FFCC00",
+  "#FAD900",
+  "#69FB3C",
   // for idntt
   "#25347C",
   "#619AFF",
   "#B5315A",
+  "#FFFFFF",
 ] as const;
 export const validSeasons = [
   "Atom01",
@@ -40,10 +42,12 @@ export const validSeasons = [
   "Divine01",
   "Ever01",
   "Atom02",
+  "Binary02",
   // for idntt
   "Spring25",
   "Summer25",
   "Autumn25",
+  "Winter25",
 ] as const;
 export type ValidSeason = (typeof validSeasons)[number];
 
@@ -54,6 +58,7 @@ export type ValidFourSeason = (typeof validFourSeason)[number];
 export const validClasses = [
   "First",
   "Special",
+  "Motion",
   "Double",
   "Premier",
   "Welcome",
