@@ -56,7 +56,7 @@ export function mapObjektWithPinLock(objekt: OwnedObjekt, pins: PinObjekt[], loc
   };
 }
 
-export function mapObjektWithTag<T extends ValidObjekt>(objekt: T) {
+export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {
   return {
     ...objekt,
     tags: makeCollectionTags(objekt),

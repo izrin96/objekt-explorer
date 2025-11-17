@@ -18,6 +18,7 @@ import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import { mapObjektWithTag } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import type { ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
@@ -104,7 +105,11 @@ function Activity() {
           },
           signal,
         });
-        return response;
+
+        return {
+          ...response,
+          items: response.items.map((item) => ({ ...item, objekt: mapObjektWithTag(item.objekt) })),
+        };
       },
       initialPageParam: undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
@@ -151,10 +156,14 @@ function Activity() {
         parsedSelectedArtistIds,
       ]);
 
-      const filtered = filterData(message.data, type ?? "all", {
-        ...filters,
-        artist: parsedSelectedArtistIds,
-      });
+      const filtered = filterData(
+        message.data.map((item) => ({ ...item, objekt: mapObjektWithTag(item.objekt) })),
+        type ?? "all",
+        {
+          ...filters,
+          artist: parsedSelectedArtistIds,
+        },
+      );
 
       if (message.type === "transfer") {
         if (isHoveringRef.current) {
