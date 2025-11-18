@@ -259,6 +259,8 @@ export const listRouter = {
           collectionNo: true,
           member: true,
           artist: true,
+          collectionId: true,
+          class: true,
         },
       });
 
