@@ -20,7 +20,7 @@ export function getSeasonEmoji(season: string) {
   if (season.startsWith("Winter")) {
     return "❄️";
   }
-  return season;
+  return "";
 }
 
 export type GroupByMode = "none" | "season" | "season-first";
@@ -29,11 +29,12 @@ function formatCollection(
   collection: FormatObjekt,
   quantity: number,
   showQuantity: boolean,
+  showSeason: boolean,
 ): string {
   let text = "";
 
   if (collection.artist === "idntt") {
-    text = `${collection.collectionNo}`;
+    text = `${showSeason ? getSeasonEmoji(collection.season) : ""}${collection.collectionNo}`;
   } else {
     const seasonCode = collection.season.charAt(0);
     const seasonNumber = collection.season.slice(-2);
@@ -60,13 +61,13 @@ function formatMemberCollections(
       const formatted = Object.values(groupBy(seasonCollections, (a) => a.collectionId))
         .map((collections) => {
           const [collection] = collections;
-          return formatCollection(collection, collections.length, showQuantity);
+          return formatCollection(collection, collections.length, showQuantity, false);
         })
         .sort();
 
       if (formatted.length > 0) {
         // Format: - Season collection1 collection2
-        results.push(`- ${season} ${formatted.join(" ")}`);
+        results.push(`- ${getSeasonEmoji(season)}${season} ${formatted.join(" ")}`);
       }
     }
   } else {
@@ -74,7 +75,7 @@ function formatMemberCollections(
     const formatted = Object.values(groupBy(collections, (a) => a.collectionId))
       .map((collections) => {
         const [collection] = collections;
-        return formatCollection(collection, collections.length, showQuantity);
+        return formatCollection(collection, collections.length, showQuantity, true);
       })
       .sort();
 
@@ -103,7 +104,7 @@ export function format(
     const results: string[] = [];
 
     for (const [season, seasonCollections] of seasonEntries) {
-      results.push(`**${season}**`);
+      results.push(`**${getSeasonEmoji(season)}${season}**`);
 
       // group by member within this season
       const memberGroups = groupBy(seasonCollections, (a) => a.member);
@@ -113,7 +114,7 @@ export function format(
         const formatted = Object.values(groupBy(memberCollections, (a) => a.collectionId))
           .map((collections) => {
             const [collection] = collections;
-            return formatCollection(collection, collections.length, showQuantity);
+            return formatCollection(collection, collections.length, showQuantity, false);
           })
           .sort();
 
