@@ -19,8 +19,9 @@
     "db:migrate": "drizzle-kit migrate"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.31.5",
-    "@types/pg": "^8.15.5",
+    "@objekt-explorer/config": "workspace:*",
+    "drizzle-kit": "^0.31.7",
+    "@types/pg": "^8.15.6",
     "tsdown": "catalog:"
   },
   "peerDependencies": {

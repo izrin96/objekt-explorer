@@ -1,23 +1,18 @@
-FROM node:24-alpine AS base
+FROM imbios/bun-node:25-slim AS base
 WORKDIR /app
-RUN apk update
-RUN apk add --no-cache libc6-compat
 
-FROM base AS pnpm
-RUN corepack enable
-RUN pnpm config set store-dir ~/.pnpm-store
-
-FROM pnpm AS prune
-RUN npm install -g turbo@latest
+# prune monorepo
+FROM base AS prune
 COPY . .
+RUN bun install turbo --global
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune web --docker
 
-# build
-FROM pnpm AS build
+# dependencies & build
+FROM base AS build
 COPY --from=prune /app/out/json/ .
-RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
-    pnpm install --frozen-lockfile
+RUN bun install
+COPY --from=prune /app/out/full/ .
 
 ARG NEXT_PUBLIC_UMAMI_SCRIPT_URL
 ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID
@@ -71,8 +66,7 @@ ENV NEXT_PUBLIC_PRIVY_APP_ID=$NEXT_PUBLIC_PRIVY_APP_ID
 ENV PRIVY_APP_SECRET=$PRIVY_APP_SECRET
 ENV REDIS_URL=$REDIS_URL
 
-COPY --from=prune /app/out/full/ .
-RUN pnpm run build
+RUN bun run build
 
 # runner
 FROM base AS runner
@@ -80,14 +74,14 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1002 app
+RUN adduser --system --uid 1002 nextjs
 USER nextjs
 
-COPY --from=build --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=build --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=build --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
+COPY --from=build --chown=nextjs:app /app/apps/web/.next/standalone ./
+COPY --from=build --chown=nextjs:app /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build --chown=nextjs:app /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000/tcp
 
-CMD ["node", "apps/web/server.js"]
+CMD ["bun", "run", "--bun", "apps/web/server.js"]

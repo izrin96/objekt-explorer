@@ -1,36 +1,22 @@
-FROM node:24-alpine AS base
+FROM oven/bun:slim AS base
 WORKDIR /app
-RUN apk update
-RUN apk add --no-cache libc6-compat
 
-FROM base AS pnpm
-RUN corepack enable
-RUN pnpm config set store-dir ~/.pnpm-store
-
-FROM pnpm AS prune
-RUN npm install -g turbo@latest
+# prune monorepo
+FROM base AS prune
 COPY . .
+RUN bun install turbo --global
 ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune web-v2 --docker
 
-# prod and dev dependencies
-FROM pnpm AS dev
+# dependencies & build
+# todo: use production node_modules
+FROM base AS build
 COPY --from=prune /app/out/json/ .
-RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
-    pnpm install --frozen-lockfile
+RUN bun install
+COPY --from=prune /app/out/full/ .
 
-# prod only dependencies
-FROM dev AS prod
-ENV CI=true
-RUN --mount=type=cache,id=pnpm,target=~/.pnpm-store \
-    pnpm install --frozen-lockfile --prod
-
-# build
-FROM dev AS build
 ENV TURBO_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=12096"
-
-COPY --from=prune /app/out/full/ .
 RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=umami_website_id \
     --mount=type=secret,id=activity_websocket_url \
@@ -79,20 +65,21 @@ RUN --mount=type=secret,id=umami_script_url \
     VITE_PRIVY_APP_ID=$(cat /run/secrets/privy_app_id) \
     PRIVY_APP_SECRET=$(cat /run/secrets/privy_app_secret) \
     REDIS_URL=$(cat /run/secrets/redis_url) \
-    pnpm run build
+    bun run build
 
 # runner
 FROM base AS runner
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nodejs
-USER nodejs
+RUN addgroup --system --gid 1002 app
+RUN adduser --system --uid 1002 app
+USER app
 
-COPY --from=prod --chown=nodejs:nodejs /app/ .
-COPY --from=build --chown=nodejs:nodejs /app/apps/web-v2/.output ./apps/web-v2/.output
+COPY --from=build --chown=app:app /app/node_modules node_modules
+COPY --from=build --chown=app:app /app/apps/web-v2/node_modules ./apps/web-v2/node_modules
+COPY --from=build --chown=app:app /app/apps/web-v2/.output ./apps/web-v2
 
 EXPOSE 3000/tcp
 
-CMD ["node", "apps/web-v2/.output/server/index.mjs"]
+CMD ["bun", "run", "--bun", "./apps/web-v2/server/index.mjs"]

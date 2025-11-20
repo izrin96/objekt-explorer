@@ -21,9 +21,15 @@ import {
   ModalTitle,
 } from "@/components/ui/modal";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { TextField } from "@/components/ui/text-field";
 import { Textarea } from "@/components/ui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { format, makeMemberOrderedList, mapCollectionByMember } from "@/lib/discord-format-utils";
+import {
+  format,
+  type GroupByMode,
+  makeMemberOrderedList,
+  mapCollectionByMember,
+} from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
 import { getBaseURL } from "@/lib/utils";
 
@@ -72,6 +78,7 @@ function Content() {
       includeLink: false,
       showCount: false,
       lowercase: false,
+      groupBy: "none" as GroupByMode,
     },
   });
 
@@ -101,19 +108,31 @@ function Content() {
           const haveCollections = mapCollectionByMember(collectionsMap, have, members);
           const wantCollections = mapCollectionByMember(collectionsMap, want, members);
 
+          const haveFormatted = format(
+            haveCollections,
+            formData.showCount,
+            formData.lowercase,
+            formData.groupBy,
+          );
+          const wantFormatted = format(
+            wantCollections,
+            formData.showCount,
+            formData.lowercase,
+            formData.groupBy,
+          );
+
           setFormatText(
             [
               "## Have",
-              ...format(haveCollections, formData.showCount, formData.lowercase),
+              "",
+              haveFormatted,
               ...(formData.includeLink
-                ? [
-                    "",
-                    `[View this list](<${getBaseURL()}/list/${formData.haveSlug}>)`,
-                    "", // give a little bit of spacing
-                  ]
+                ? ["", `[View this list](<${getBaseURL()}/list/${formData.haveSlug}>)`]
                 : []),
+              "",
               "## Want",
-              ...format(wantCollections, formData.showCount, formData.lowercase),
+              "",
+              wantFormatted,
               ...(formData.includeLink
                 ? ["", `[View this list](<${getBaseURL()}/list/${formData.wantSlug}>)`]
                 : []),
@@ -211,13 +230,41 @@ function Content() {
           </Checkbox>
         )}
       />
-      <Textarea
-        value={formatText}
-        onChange={(e) => setFormatText(e.target.value)}
-        className="max-h-64 min-h-32"
-      >
+      <Controller
+        control={control}
+        name="groupBy"
+        render={({ field: { name, value, onChange, onBlur } }) => (
+          <Select
+            name={name}
+            value={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            placeholder="Select grouping mode"
+          >
+            <Label>Group by</Label>
+            <SelectTrigger />
+            <SelectContent>
+              <SelectItem id="none" textValue="none">
+                None (member → collection)
+              </SelectItem>
+              <SelectItem id="season" textValue="season">
+                Season (member → season → collection)
+              </SelectItem>
+              <SelectItem id="season-first" textValue="season-first">
+                Season first (season → member → collection)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+      />
+      <TextField>
         <Label>Formatted discord text</Label>
-      </Textarea>
+        <Textarea
+          value={formatText}
+          onChange={(e) => setFormatText(e.target.value)}
+          className="max-h-64 min-h-32"
+        />
+      </TextField>
       <div className="flex">
         <CopyButton text={formatText} />
       </div>

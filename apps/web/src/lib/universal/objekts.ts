@@ -30,11 +30,6 @@ export type PinObjekt = {
   order: number | null;
 };
 
-export type CollectionFormat = Pick<
-  Collection,
-  "slug" | "member" | "season" | "collectionNo" | "artist"
->;
-
 export type CollectionMetadata = {
   transferable: number;
   total: number;

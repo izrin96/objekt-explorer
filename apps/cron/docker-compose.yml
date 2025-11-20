@@ -1,9 +1,0 @@
-services:
-  cron:
-    restart: always
-    build:
-      context: ../..
-      dockerfile: ./apps/cron/Dockerfile
-    env_file: .env
-    environment:
-      - INDEXER_DATABASE_URL

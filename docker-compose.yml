@@ -1,4 +1,33 @@
 services:
+  cron:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./apps/cron/Dockerfile
+    environment:
+      - INDEXER_DATABASE_URL
+
+  server:
+    restart: always
+    ports:
+      - "4000:3000"
+    build:
+      context: .
+      dockerfile: ./apps/server/Dockerfile
+    environment:
+      - CORS_ORIGIN
+      - REDIS_PUBSUB_URL
+      - DATABASE_URL
+      - INDEXER_DATABASE_URL
+
+  pubsub:
+    restart: always
+    image: redis:latest
+    ports:
+      - "6380:6379"
+    volumes:
+      - pubsub_data:/data
+
   postgres:
     restart: always
     image: postgres:18
@@ -15,18 +44,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   browserless:
     image: ghcr.io/browserless/chromium
     ports:
       - "9222:3000"
     environment:
       - TOKEN=your-token-here
+
   web:
     restart: always
     ports:
       - "4000:3000"
+    platform: linux/amd64
     build:
-      context: ../..
+      context: .
       dockerfile: ./apps/web/Dockerfile
       args:
         - NEXT_PUBLIC_UMAMI_SCRIPT_URL
@@ -53,7 +85,6 @@ services:
         - NEXT_PUBLIC_PRIVY_APP_ID
         - PRIVY_APP_SECRET
         - REDIS_URL
-    env_file: .env
     environment:
       - NEXT_PUBLIC_UMAMI_SCRIPT_URL
       - NEXT_PUBLIC_UMAMI_WEBSITE_ID
@@ -79,6 +110,7 @@ services:
       - NEXT_PUBLIC_PRIVY_APP_ID
       - PRIVY_APP_SECRET
       - REDIS_URL
+
   minio:
     restart: always
     image: minio/minio:latest
@@ -88,6 +120,7 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+
   pgbouncer:
     image: edoburu/pgbouncer:latest
     restart: always
@@ -104,6 +137,7 @@ services:
       - AUTH_TYPE=scram-sha-256
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
+
   redis:
     restart: always
     image: redis:latest
@@ -111,8 +145,68 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    # command: redis-server --appendonly yes
+
+  web-v2:
+    restart: always
+    ports:
+      - "4000:3000"
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: ./apps/web-v2/Dockerfile
+      args:
+        - VITE_UMAMI_SCRIPT_URL
+        - VITE_UMAMI_WEBSITE_ID
+        - VITE_ACTIVITY_WEBSOCKET_URL
+        - BETTER_AUTH_SECRET
+        - DISCORD_CLIENT_ID
+        - DISCORD_CLIENT_SECRET
+        - TWITTER_CLIENT_ID
+        - TWITTER_CLIENT_SECRET
+        - BROWSER_CDP_URL
+        - VITE_SITE_URL
+        - DATABASE_URL
+        - INDEXER_DATABASE_URL
+        - S3_ENDPOINT
+        - S3_ACCESS_KEY
+        - S3_SECRET_KEY
+        - SES_REGION
+        - SES_ACCESS_KEY
+        - SES_SECRET_KEY
+        - SES_MAIL_FROM
+        - VITE_LIVE_API_KEY
+        - BYPASS_LIVE_KEY
+        - VITE_PRIVY_APP_ID
+        - PRIVY_APP_SECRET
+        - REDIS_URL
+    environment:
+      - VITE_UMAMI_SCRIPT_URL
+      - VITE_UMAMI_WEBSITE_ID
+      - VITE_ACTIVITY_WEBSOCKET_URL
+      - BETTER_AUTH_SECRET
+      - DISCORD_CLIENT_ID
+      - DISCORD_CLIENT_SECRET
+      - TWITTER_CLIENT_ID
+      - TWITTER_CLIENT_SECRET
+      - BROWSER_CDP_URL
+      - VITE_SITE_URL
+      - DATABASE_URL
+      - INDEXER_DATABASE_URL
+      - S3_ENDPOINT
+      - S3_ACCESS_KEY
+      - S3_SECRET_KEY
+      - SES_REGION
+      - SES_ACCESS_KEY
+      - SES_SECRET_KEY
+      - SES_MAIL_FROM
+      - VITE_LIVE_API_KEY
+      - BYPASS_LIVE_KEY
+      - VITE_PRIVY_APP_ID
+      - PRIVY_APP_SECRET
+      - REDIS_URL
+
 volumes:
   db_data:
   minio_data:
   redis_data:
+  pubsub_data:

@@ -1,25 +1,26 @@
 .git
-**/.gitignore
+.gitignore
 
-**/Dockerfile
-**/*.Dockerfile
-**/docker-compose*
+Dockerfile
+*.Dockerfile
+docker-compose*
 .dockerignore
 
-**/node_modules
+node_modules
 
 .vscode
 .github
-**/.env*
-**/.vercel
-**/.wrangler
-**/.next
+.env
+.env.*
+.vercel
+.wrangler
+.next
 
-**/dist
-**/build
-**/.out
+dist
+build
+.out
 
-**/.turbo
-**/.nitro
-**/.output
-**/.tanstack
+.turbo
+.nitro
+.output
+.tanstack

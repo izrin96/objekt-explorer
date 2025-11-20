@@ -29,7 +29,9 @@ export default defineConfig(async () => {
         projects: ["./tsconfig.json"],
       }),
       tanstackStart(),
-      nitro(),
+      nitro({
+        noExternals: true,
+      }),
       viteReact({
         babel: {
           plugins: ["babel-plugin-react-compiler"],
