@@ -38,6 +38,7 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
     defaultValues: {
       showCount: false,
       lowercase: false,
+      bullet: false,
       groupBy: "none" as GroupByMode,
     },
   });
@@ -45,7 +46,13 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
   const onSubmit = handleSubmit((data) => {
     const members = makeMemberOrderedList(objekts, artists);
     const haveCollections = mapByMember(objekts, members);
-    const formatted = format(haveCollections, data.showCount, data.lowercase, data.groupBy);
+    const formatted = format(
+      haveCollections,
+      data.showCount,
+      data.lowercase,
+      data.bullet,
+      data.groupBy,
+    );
     setFormatText(["## Have", "", formatted].join("\n"));
   });
 
@@ -84,6 +91,21 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
                 isInvalid={invalid}
               >
                 <Label>Lower case</Label>
+              </Checkbox>
+            )}
+          />
+          <Controller
+            control={control}
+            name="bullet"
+            render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+              <Checkbox
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+              >
+                <Label>Bulleted list</Label>
               </Checkbox>
             )}
           />

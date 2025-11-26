@@ -49,6 +49,7 @@ function formatMemberCollections(
   collections: FormatObjekt[],
   showQuantity: boolean,
   groupBySeason: boolean,
+  bullet: boolean,
 ): string[] {
   const results: string[] = [];
 
@@ -67,7 +68,9 @@ function formatMemberCollections(
 
       if (formatted.length > 0) {
         // Format: - Season collection1 collection2
-        results.push(`- ${getSeasonEmoji(season)}${season} ${formatted.join(" ")}`);
+        results.push(
+          `${bullet ? "- " : ""}${getSeasonEmoji(season)}${season} ${formatted.join(" ")}`,
+        );
       }
     }
   } else {
@@ -89,6 +92,7 @@ export function format(
   collectionMap: Map<string, FormatObjekt[]>,
   showQuantity: boolean,
   lowercase: boolean,
+  bullet: boolean,
   groupByMode: GroupByMode = "none",
 ) {
   if (groupByMode === "season-first") {
@@ -119,7 +123,7 @@ export function format(
           .sort();
 
         if (formatted.length > 0) {
-          results.push(`- ${member} ${formatted.join(" ")}`);
+          results.push(`${bullet ? "- " : ""}${member} ${formatted.join(" ")}`);
         }
       }
     }
@@ -135,6 +139,7 @@ export function format(
         collections,
         showQuantity,
         groupByMode === "season",
+        bullet,
       );
 
       if (formatted.length === 0) {
@@ -147,7 +152,7 @@ export function format(
       }
 
       // format: - member collectionNo
-      return `- ${member} ${formatted.join(" ")}`;
+      return `${bullet ? "- " : ""}${member} ${formatted.join(" ")}`;
     })
     .filter((line) => line !== "");
 

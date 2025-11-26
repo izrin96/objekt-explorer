@@ -78,6 +78,7 @@ function Content() {
       includeLink: false,
       showCount: false,
       lowercase: false,
+      bullet: false,
       groupBy: "none" as GroupByMode,
     },
   });
@@ -112,12 +113,14 @@ function Content() {
             haveCollections,
             formData.showCount,
             formData.lowercase,
+            formData.bullet,
             formData.groupBy,
           );
           const wantFormatted = format(
             wantCollections,
             formData.showCount,
             formData.lowercase,
+            formData.bullet,
             formData.groupBy,
           );
 
@@ -227,6 +230,21 @@ function Content() {
         render={({ field: { name, value, onChange, onBlur } }) => (
           <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
             <Label>Lower case</Label>
+          </Checkbox>
+        )}
+      />
+      <Controller
+        control={control}
+        name="bullet"
+        render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            isInvalid={invalid}
+          >
+            <Label>Bulleted list</Label>
           </Checkbox>
         )}
       />
