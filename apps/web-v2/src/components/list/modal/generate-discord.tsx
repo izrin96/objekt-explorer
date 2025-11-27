@@ -23,6 +23,7 @@ import { TextField } from "@/components/ui/text-field";
 import { Textarea } from "@/components/ui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import {
+  type FormatStyle,
   format,
   type GroupByMode,
   makeMemberOrderedList,
@@ -76,7 +77,9 @@ function Content() {
       includeLink: false,
       showCount: false,
       lowercase: false,
+      bullet: false,
       groupBy: "none" as GroupByMode,
+      style: "default" as FormatStyle,
     },
   });
 
@@ -110,13 +113,17 @@ function Content() {
             haveCollections,
             formData.showCount,
             formData.lowercase,
+            formData.bullet,
             formData.groupBy,
+            formData.style,
           );
           const wantFormatted = format(
             wantCollections,
             formData.showCount,
             formData.lowercase,
+            formData.bullet,
             formData.groupBy,
+            formData.style,
           );
 
           setFormatText(
@@ -230,6 +237,21 @@ function Content() {
       />
       <Controller
         control={control}
+        name="bullet"
+        render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            isInvalid={invalid}
+          >
+            <Label>Bulleted list</Label>
+          </Checkbox>
+        )}
+      />
+      <Controller
+        control={control}
         name="groupBy"
         render={({ field: { name, value, onChange, onBlur } }) => (
           <Select
@@ -250,6 +272,30 @@ function Content() {
               </SelectItem>
               <SelectItem id="season-first" textValue="season-first">
                 Season first (season → member → collection)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+      />
+      <Controller
+        control={control}
+        name="style"
+        render={({ field: { name, value, onChange, onBlur } }) => (
+          <Select
+            name={name}
+            value={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            placeholder="Select style"
+          >
+            <Label>Style</Label>
+            <SelectTrigger />
+            <SelectContent>
+              <SelectItem id="default" textValue="default">
+                Default
+              </SelectItem>
+              <SelectItem id="compact" textValue="compact">
+                Compact
               </SelectItem>
             </SelectContent>
           </Select>

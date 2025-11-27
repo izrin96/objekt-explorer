@@ -18,6 +18,7 @@ import { TextField } from "@/components/ui/text-field";
 import { Textarea } from "@/components/ui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import {
+  type FormatStyle,
   format,
   type GroupByMode,
   makeMemberOrderedList,
@@ -38,14 +39,23 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
     defaultValues: {
       showCount: false,
       lowercase: false,
+      bullet: false,
       groupBy: "none" as GroupByMode,
+      style: "default" as FormatStyle,
     },
   });
 
   const onSubmit = handleSubmit((data) => {
     const members = makeMemberOrderedList(objekts, artists);
     const haveCollections = mapByMember(objekts, members);
-    const formatted = format(haveCollections, data.showCount, data.lowercase, data.groupBy);
+    const formatted = format(
+      haveCollections,
+      data.showCount,
+      data.lowercase,
+      data.bullet,
+      data.groupBy,
+      data.style,
+    );
     setFormatText(["## Have", "", formatted].join("\n"));
   });
 
@@ -89,6 +99,21 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
           />
           <Controller
             control={control}
+            name="bullet"
+            render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+              <Checkbox
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+              >
+                <Label>Bulleted list</Label>
+              </Checkbox>
+            )}
+          />
+          <Controller
+            control={control}
             name="groupBy"
             render={({ field: { name, value, onChange, onBlur } }) => (
               <Select
@@ -109,6 +134,30 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
                   </SelectItem>
                   <SelectItem id="season-first" textValue="season-first">
                     Season first (season → member → collection)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          <Controller
+            control={control}
+            name="style"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Select
+                name={name}
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                placeholder="Select style"
+              >
+                <Label>Style</Label>
+                <SelectTrigger />
+                <SelectContent>
+                  <SelectItem id="default" textValue="default">
+                    Default
+                  </SelectItem>
+                  <SelectItem id="compact" textValue="compact">
+                    Compact
                   </SelectItem>
                 </SelectContent>
               </Select>
