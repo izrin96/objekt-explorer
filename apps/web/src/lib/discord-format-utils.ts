@@ -24,6 +24,7 @@ export function getSeasonEmoji(season: string) {
 }
 
 export type GroupByMode = "none" | "season" | "season-first";
+export type FormatStyle = "default" | "compact";
 
 function formatCollection(
   collection: FormatObjekt,
@@ -50,6 +51,7 @@ function formatMemberCollections(
   showQuantity: boolean,
   groupBySeason: boolean,
   bullet: boolean,
+  style: FormatStyle,
 ): string[] {
   const results: string[] = [];
 
@@ -67,10 +69,15 @@ function formatMemberCollections(
         .sort();
 
       if (formatted.length > 0) {
-        // Format: - Season collection1 collection2
-        results.push(
-          `${bullet ? "- " : ""}${getSeasonEmoji(season)}${season} ${formatted.join(" ")}`,
-        );
+        if (style === "compact") {
+          // compact: **season** collection1 collection2 (inline)
+          results.push(`**${season}** ${formatted.join(" ")}`);
+        } else {
+          // default: - Season collection1 collection2
+          results.push(
+            `${bullet ? "- " : ""}${getSeasonEmoji(season)}${season} ${formatted.join(" ")}`,
+          );
+        }
       }
     }
   } else {
@@ -94,6 +101,7 @@ export function format(
   lowercase: boolean,
   bullet: boolean,
   groupByMode: GroupByMode = "none",
+  style: FormatStyle = "default",
 ) {
   if (groupByMode === "season-first") {
     // group by season first, then by member
@@ -108,22 +116,48 @@ export function format(
     const results: string[] = [];
 
     for (const [season, seasonCollections] of seasonEntries) {
-      results.push(`**${getSeasonEmoji(season)}${season}**`);
-
       // group by member within this season
       const memberGroups = groupBy(seasonCollections, (a) => a.member);
       const memberEntries = Object.entries(memberGroups).sort(([a], [b]) => a.localeCompare(b));
 
-      for (const [member, memberCollections] of memberEntries) {
-        const formatted = Object.values(groupBy(memberCollections, (a) => a.collectionId))
-          .map((collections) => {
-            const [collection] = collections;
-            return formatCollection(collection, collections.length, showQuantity, false);
-          })
-          .sort();
+      if (style === "compact") {
+        // compact style: - __season__ **member1** collection1 **member2** collection2 (inline)
+        const memberParts: string[] = [];
+        for (const [member, memberCollections] of memberEntries) {
+          const formatted = Object.values(groupBy(memberCollections, (a) => a.collectionId))
+            .map((collections) => {
+              const [collection] = collections;
+              return formatCollection(collection, collections.length, showQuantity, false);
+            })
+            .sort();
 
-        if (formatted.length > 0) {
-          results.push(`${bullet ? "- " : ""}${member} ${formatted.join(" ")}`);
+          if (formatted.length > 0) {
+            memberParts.push(`**${member}** ${formatted.join(" ")}`);
+          }
+        }
+
+        if (memberParts.length > 0) {
+          results.push(`${bullet ? "- " : ""}__${season}__ ${memberParts.join(" ")}`);
+        }
+      } else {
+        // default style: **season**\n- member collection1 collection2
+        const memberLines: string[] = [];
+        for (const [member, memberCollections] of memberEntries) {
+          const formatted = Object.values(groupBy(memberCollections, (a) => a.collectionId))
+            .map((collections) => {
+              const [collection] = collections;
+              return formatCollection(collection, collections.length, showQuantity, false);
+            })
+            .sort();
+
+          if (formatted.length > 0) {
+            memberLines.push(`${bullet ? "- " : ""}${member} ${formatted.join(" ")}`);
+          }
+        }
+
+        if (memberLines.length > 0) {
+          results.push(`**${getSeasonEmoji(season)}${season}**`);
+          results.push(...memberLines);
         }
       }
     }
@@ -140,6 +174,7 @@ export function format(
         showQuantity,
         groupByMode === "season",
         bullet,
+        style,
       );
 
       if (formatted.length === 0) {
@@ -147,11 +182,15 @@ export function format(
       }
 
       if (groupByMode === "season") {
-        // format: **member**\n- season collectionNo
+        if (style === "compact") {
+          // compact: - __member__ **season** collection1 collection2 (inline)
+          return `${bullet ? "- " : ""}__${member}__ ${formatted.join(" ")}`;
+        }
+        // default: **member**\n- season collectionNo
         return `**${member}**\n${formatted.join("\n")}`;
       }
 
-      // format: - member collectionNo
+      // format: - member collectionNo (same for both default and compact)
       return `${bullet ? "- " : ""}${member} ${formatted.join(" ")}`;
     })
     .filter((line) => line !== "");

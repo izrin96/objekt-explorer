@@ -18,6 +18,7 @@ import { TextField } from "@/components/ui/text-field";
 import { Textarea } from "@/components/ui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import {
+  type FormatStyle,
   format,
   type GroupByMode,
   makeMemberOrderedList,
@@ -40,6 +41,7 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
       lowercase: false,
       bullet: false,
       groupBy: "none" as GroupByMode,
+      style: "default" as FormatStyle,
     },
   });
 
@@ -52,6 +54,7 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
       data.lowercase,
       data.bullet,
       data.groupBy,
+      data.style,
     );
     setFormatText(["## Have", "", formatted].join("\n"));
   });
@@ -131,6 +134,30 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
                   </SelectItem>
                   <SelectItem id="season-first" textValue="season-first">
                     Season first (season → member → collection)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          <Controller
+            control={control}
+            name="style"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Select
+                name={name}
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                placeholder="Select style"
+              >
+                <Label>Style</Label>
+                <SelectTrigger />
+                <SelectContent>
+                  <SelectItem id="default" textValue="default">
+                    Default
+                  </SelectItem>
+                  <SelectItem id="compact" textValue="compact">
+                    Compact
                   </SelectItem>
                 </SelectContent>
               </Select>
