@@ -1,8 +1,12 @@
 import type { ValidObjekt } from "./objekts";
 
 function getScoEdition(objekt: ValidObjekt, collection: number) {
-  // atom01 sco for 2nd and 3rd edition start from 216z
-  if (objekt.season === "Atom01" && [201, 202].includes(collection) === false) {
+  // tripleS atom01 sco for 2nd and 3rd edition start from 216z
+  if (
+    objekt.artist === "triples" &&
+    objekt.season === "Atom01" &&
+    [201, 202].includes(collection) === false
+  ) {
     if ([216, 217].includes(collection)) {
       return 2;
     }

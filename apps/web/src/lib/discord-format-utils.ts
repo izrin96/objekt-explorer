@@ -71,7 +71,7 @@ function formatMemberCollections(
       if (formatted.length > 0) {
         if (style === "compact") {
           // compact: **season** collection1 collection2 (inline)
-          results.push(`**${season}** ${formatted.join(" ")}`);
+          results.push(`**${getSeasonEmoji(season)}${season}** ${formatted.join(" ")}`);
         } else {
           // default: - Season collection1 collection2
           results.push(
@@ -137,7 +137,9 @@ export function format(
         }
 
         if (memberParts.length > 0) {
-          results.push(`${bullet ? "- " : ""}__${season}__ ${memberParts.join(" ")}`);
+          results.push(
+            `${bullet ? "- " : ""}__${getSeasonEmoji(season)}${season}__ ${memberParts.join(" ")}`,
+          );
         }
       } else {
         // default style: **season**\n- member collection1 collection2
