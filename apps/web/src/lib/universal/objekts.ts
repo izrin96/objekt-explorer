@@ -43,6 +43,7 @@ export const unobtainables = [
   "divine01-choerry-339z",
   "divine01-kimlip-337z",
   "divine01-jinsoul-338z",
+  "divine01-heejin-340z",
   // streaming event
   "divine01-haseul-331z",
   // artms burn release celebration
