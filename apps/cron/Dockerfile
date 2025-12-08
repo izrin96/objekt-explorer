@@ -1,4 +1,4 @@
-FROM oven/bun:slim AS base
+FROM imbios/bun-node:25-slim AS base
 WORKDIR /app
 
 # prune monorepo
