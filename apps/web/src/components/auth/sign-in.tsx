@@ -343,7 +343,7 @@ function ForgotPassword({
 
   const mutation = useMutation({
     mutationFn: async (email: string) => {
-      const result = await authClient.forgetPassword({
+      const result = await authClient.requestPasswordReset({
         email,
         redirectTo: "/auth/reset-password",
       });
