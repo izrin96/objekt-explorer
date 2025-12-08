@@ -13,7 +13,7 @@
     "@objekt-explorer/db": "workspace:*",
     "croner": "^9.1.0",
     "dotenv": "catalog:",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.0",
     "ofetch": "^1.5.1",
     "zod": "catalog:"
   },
@@ -21,7 +21,7 @@
     "@objekt-explorer/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
-    "tsx": "^4.20.6",
+    "tsx": "^4.21.0",
     "typescript": "catalog:"
   }
 }

@@ -28,7 +28,7 @@
     "typescript": "catalog:"
   },
   "dependencies": {
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.0",
     "pg": "^8.16.3",
     "dotenv": "catalog:",
     "zod": "catalog:"

@@ -16,7 +16,7 @@
     "hono": "catalog:",
     "ioredis": "^5.8.2",
     "zod": "catalog:",
-    "drizzle-orm": "^0.44.7",
+    "drizzle-orm": "^0.45.0",
     "@objekt-explorer/db": "workspace:*"
   },
   "devDependencies": {
