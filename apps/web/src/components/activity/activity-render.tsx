@@ -131,7 +131,6 @@ function Activity() {
 
   const rowVirtualizer = useWindowVirtualizer({
     count: transfers.length,
-    getItemKey: (index) => transfers[index].transfer.id,
     estimateSize: () => ROW_HEIGHT,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
@@ -301,7 +300,7 @@ function Activity() {
                 return (
                   <div
                     className="absolute top-0 left-0 grid w-full"
-                    key={virtualRow.key}
+                    key={item.transfer.id}
                     style={{
                       height: `${virtualRow.size}px`,
                       transform: `translateY(${
