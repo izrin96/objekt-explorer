@@ -10,7 +10,7 @@
     "start": "bun run dist/index.mjs"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.6",
+    "@hono/node-server": "^1.19.7",
     "@hono/node-ws": "^1.2.0",
     "dotenv": "catalog:",
     "hono": "catalog:",

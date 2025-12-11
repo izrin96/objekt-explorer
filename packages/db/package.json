@@ -21,14 +21,14 @@
   "devDependencies": {
     "@objekt-explorer/config": "workspace:*",
     "drizzle-kit": "^0.31.7",
-    "@types/pg": "^8.15.6",
+    "@types/pg": "^8.16.0",
     "tsdown": "catalog:"
   },
   "peerDependencies": {
     "typescript": "catalog:"
   },
   "dependencies": {
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "pg": "^8.16.3",
     "dotenv": "catalog:",
     "zod": "catalog:"
