@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@objekt-explorer/config": "workspace:*",
-    "drizzle-kit": "^0.31.7",
+    "drizzle-kit": "^0.31.8",
     "@types/pg": "^8.16.0",
     "tsdown": "catalog:"
   },

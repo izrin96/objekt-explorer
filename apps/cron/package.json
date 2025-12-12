@@ -13,7 +13,7 @@
     "@objekt-explorer/db": "workspace:*",
     "croner": "^9.1.0",
     "dotenv": "catalog:",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "ofetch": "^1.5.1",
     "zod": "catalog:"
   },

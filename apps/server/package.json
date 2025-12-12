@@ -16,14 +16,14 @@
     "hono": "catalog:",
     "ioredis": "^5.8.2",
     "zod": "catalog:",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "@objekt-explorer/db": "workspace:*"
   },
   "devDependencies": {
     "@objekt-explorer/config": "workspace:*",
     "@types/node": "catalog:",
     "tsdown": "catalog:",
-    "tsx": "^4.20.6",
+    "tsx": "^4.21.0",
     "typescript": "catalog:"
   }
 }
