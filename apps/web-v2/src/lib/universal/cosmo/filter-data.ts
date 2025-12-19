@@ -12,7 +12,7 @@ export const classArtistMap: ClassArtist[] = [
   },
   {
     artistId: "artms",
-    classes: ["First", "Special", "Double", "Premier", "Welcome"],
+    classes: ["First", "Special", "Motion", "Double", "Premier", "Welcome"],
   },
   {
     artistId: "idntt",
