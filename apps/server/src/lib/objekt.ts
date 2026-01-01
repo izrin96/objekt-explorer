@@ -41,6 +41,11 @@ function getBandImageUrl(objekt: ValidObjekt) {
       objekt.bandImageUrl =
         "https://resources.cosmo.fans/images/collection-band/2025/07/12/04/raw/fab4f9ec98d24a00a7c417e012a493cd20250712042141653.png";
     }
+
+    if (objekt.class === "Welcome" && objekt.collectionNo === "200Z") {
+      objekt.bandImageUrl =
+        "https://resources.cosmo.fans/images/collection-band/2025/04/23/08/raw/7d0e2956b196439eb10dd65ee94ac28e20250423082449685.png";
+    }
   }
 
   return null;

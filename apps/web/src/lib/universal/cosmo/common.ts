@@ -47,7 +47,7 @@ export const validSeasons = [
   "Spring25",
   "Summer25",
   "Autumn25",
-  "Winter25",
+  "Winter26",
 ] as const;
 export type ValidSeason = (typeof validSeasons)[number];
 
