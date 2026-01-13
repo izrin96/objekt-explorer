@@ -13,6 +13,11 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
       GET: async ({ params }) => {
         const session = await orpc.session.call();
 
+        const serial = parseInt(params.serial);
+        if (Number.isNaN(serial)) {
+          return Response.json({ message: "Invalid serial" }, { status: 422 });
+        }
+
         const results = await indexer
           .select({
             tokenId: objekts.id,
@@ -25,12 +30,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
           .from(transfers)
           .leftJoin(objekts, eq(transfers.objektId, objekts.id))
           .leftJoin(collections, eq(objekts.collectionId, collections.id))
-          .where(
-            and(
-              eq(collections.slug, params.collectionSlug),
-              eq(objekts.serial, Number(params.serial)),
-            ),
-          )
+          .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
           .orderBy(desc(transfers.id));
 
         if (!results.length)

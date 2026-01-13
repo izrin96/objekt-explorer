@@ -16,6 +16,11 @@ type Params = {
 export async function GET(_: Request, props: Params) {
   const [session, params] = await Promise.all([getSession(), props.params]);
 
+  const serial = parseInt(params.serial);
+  if (Number.isNaN(serial)) {
+    return Response.json({ message: "Invalid serial" }, { status: 422 });
+  }
+
   const results = await indexer
     .select({
       tokenId: objekts.id,
@@ -28,9 +33,7 @@ export async function GET(_: Request, props: Params) {
     .from(transfers)
     .leftJoin(objekts, eq(transfers.objektId, objekts.id))
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(
-      and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, Number(params.serial))),
-    )
+    .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
     .orderBy(desc(transfers.id));
 
   if (!results.length)
