@@ -217,7 +217,6 @@ export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "a
           set: {
             nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
           },
-          setWhere: sql`${userAddress.nickname} is distinct from excluded.${sql.raw(userAddress.nickname.name)}`,
         });
     } catch (err) {
       console.error("Bulk user caching failed:", err);
