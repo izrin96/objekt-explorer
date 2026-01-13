@@ -16,6 +16,6 @@ export const classArtistMap: ClassArtist[] = [
   },
   {
     artistId: "idntt",
-    classes: ["Basic", "Event", "Special", "Unit", "Welcome"],
+    classes: ["Basic", "Event", "Special", "Motion", "Unit", "Welcome"],
   },
 ];

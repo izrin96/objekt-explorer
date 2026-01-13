@@ -33,7 +33,7 @@ export const seasonColors = [
   "#25347C",
   "#619AFF",
   "#B5315A",
-  "#FFFFFF",
+  "#C6C6C6",
 ] as const;
 export const validSeasons = [
   "Atom01",
