@@ -57,16 +57,15 @@ export type ValidFourSeason = (typeof validFourSeason)[number];
 // classes
 export const validClasses = [
   "First",
-  "Special",
-  "Motion",
+  "Basic",
   "Double",
+  "Event",
+  "Unit",
+  "Motion",
+  "Special",
   "Premier",
   "Welcome",
   "Zero",
-  // for idntt
-  "Basic",
-  "Event",
-  "Unit",
 ] as const;
 export type ValidClass = (typeof validClasses)[number];
 
