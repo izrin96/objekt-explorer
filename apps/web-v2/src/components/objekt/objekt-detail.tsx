@@ -77,7 +77,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           </Tab>
         )}
         <Tab id="trades">Trades</Tab>
-        <Tab id="apollo" href={`https://apollo.cafe/objekts?id=${objekt.slug}`} target="_blank">
+        <Tab id="apollo" href={`https://apollo.cafe/?id=${objekt.slug}`} target="_blank">
           <IconOpenLink />
           View in Apollo
         </Tab>
