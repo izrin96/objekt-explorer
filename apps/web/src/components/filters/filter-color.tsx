@@ -99,7 +99,7 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
                 </ColorSlider>
                 <div className="flex items-center gap-1.5">
                   <EyeDropper />
-                  <ColorField aria-label="Color">
+                  <ColorField aria-label="Color" className="w-0 flex-1">
                     <Input />
                   </ColorField>
                 </div>
