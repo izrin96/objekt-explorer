@@ -190,16 +190,17 @@ function OwnedListPanel({
   const list = useAsyncList<OwnedObjekt>({
     async load() {
       return {
-        items: handleSort({
-          items: objekts,
-          sortDescriptor: { column: "receivedAt", direction: "descending" },
-        }),
+        items: objekts,
       };
     },
     async sort(params) {
       return {
         items: handleSort(params),
       };
+    },
+    initialSortDescriptor: {
+      column: "receivedAt",
+      direction: "descending",
     },
   });
 

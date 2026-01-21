@@ -215,6 +215,10 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
         }),
       };
     },
+    initialSortDescriptor: {
+      column: "timestamp",
+      direction: "descending",
+    },
   });
 
   useEffect(() => {
