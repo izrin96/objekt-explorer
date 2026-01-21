@@ -27,7 +27,7 @@ import type { TicketAuth, TicketSuccess } from "@/lib/universal/cosmo/shop/qr-au
 import { msToCountdown } from "@/lib/utils";
 import { Button, buttonStyles } from "../ui/button";
 import { Form } from "../ui/form";
-import { InputOTP } from "../ui/input-otp";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
 
@@ -94,31 +94,6 @@ export default function LinkRender() {
           >
             Continue with Cosmo app
           </Button>
-
-          <div className="relative my-2 flex w-full items-center justify-center text-sm">
-            <div className="absolute inset-0 flex items-center">
-              <div className="h-px w-full shrink-0 bg-border"></div>
-            </div>
-            <span className="relative bg-bg px-3 text-muted-fg text-xs">OR</span>
-          </div>
-
-          <Link
-            className={buttonStyles({
-              size: "sm",
-              intent: "plain",
-            })}
-            href="/link/connect/abstract"
-          >
-            Continue with{" "}
-            <Image
-              className="invert dark:invert-0"
-              src="/abs.svg"
-              alt="Abstract logomark"
-              width={20}
-              height={20}
-            />{" "}
-            Abstract
-          </Link>
         </div>
       )}
       {step === 1 && <TicketRender />}
@@ -372,11 +347,11 @@ function RenderOtp({
           }}
           render={({ field: { value, onChange } }) => (
             <InputOTP minLength={2} maxLength={2} required value={value} onChange={onChange}>
-              <InputOTP.Group>
+              <InputOTPGroup>
                 {[...Array(2)].map((_, index) => (
-                  <InputOTP.Slot key={index} index={index} />
+                  <InputOTPSlot key={index} index={index} />
                 ))}
-              </InputOTP.Group>
+              </InputOTPGroup>
             </InputOTP>
           )}
         />

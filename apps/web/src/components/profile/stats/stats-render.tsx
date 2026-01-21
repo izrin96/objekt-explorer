@@ -4,7 +4,7 @@ import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-que
 import { groupBy } from "es-toolkit";
 import dynamic from "next/dynamic";
 import type React from "react";
-import { type CSSProperties, Suspense, useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -107,7 +107,8 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
           data={chartData}
           dataKey="count"
           config={{} satisfies ChartConfig}
-          className="aspect-square h-full max-h-[450px] w-full"
+          containerHeight={450}
+          className="h-full w-full"
         >
           <PieChart>
             <ChartTooltip
@@ -138,7 +139,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
                           <span className="text-muted-fg">{(payload as any).name}</span>
                         </div>
                         <span className="font-medium text-fg tabular-nums">
-                          {(payload as any).percentage}% ({value.toLocaleString()})
+                          {(payload as any).percentage}% ({value?.toLocaleString()})
                         </span>
                       </div>
                     </>
@@ -190,7 +191,8 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
           data={chartData}
           dataKey="count"
           config={{} satisfies ChartConfig}
-          className="aspect-square h-full max-h-[450px] w-full"
+          containerHeight={450}
+          className="h-full w-full"
         >
           <PieChart>
             <ChartTooltip
@@ -221,7 +223,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
                           <span className="text-muted-fg">{(payload as any).name}</span>
                         </div>
                         <span className="font-medium text-fg tabular-nums">
-                          {(payload as any).percentage}% ({value.toLocaleString()})
+                          {(payload as any).percentage}% ({value?.toLocaleString()})
                         </span>
                       </div>
                     </>
@@ -309,12 +311,8 @@ function MemberProgressChart({
           data={chartData}
           dataKey="percentage"
           config={chartConfig}
-          className="h-(--height) w-full"
-          style={
-            {
-              "--height": `${chartData.length * 40}px`,
-            } as CSSProperties
-          }
+          containerHeight={chartData.length * 40}
+          className="w-full"
         >
           <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={32}>
             <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
@@ -369,7 +367,7 @@ function MemberProgressChart({
                           </span>
                         </div>
                         <span className="font-medium font-mono text-fg tabular-nums">
-                          {value.toLocaleString()}%
+                          {value?.toLocaleString()}%
                         </span>
                       </div>
                     </>

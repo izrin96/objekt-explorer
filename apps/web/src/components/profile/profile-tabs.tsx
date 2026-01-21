@@ -26,8 +26,12 @@ export default function ProfileTabs() {
   }, [path]);
 
   return (
-    <Tabs aria-label="Navbar" className="w-min px-1.5" selectedKey={decodeURIComponent(pathname)}>
-      <TabList>
+    <Tabs
+      aria-label="Navbar"
+      className="overflow-x-auto px-3 py-1"
+      selectedKey={decodeURIComponent(pathname)}
+    >
+      <TabList className="border-b-0">
         {items.map((item) => (
           <Tab key={item.url} id={item.url} href={item.url} aria-label={item.label}>
             {item.label}

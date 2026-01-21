@@ -18,7 +18,7 @@ const tooltipStyles = tv({
   ],
   variants: {
     inverse: {
-      true: ["border-transparent bg-fg text-bg", "**:[.text-muted-fg]:text-bg/60"],
+      true: "border-transparent bg-fg text-bg **:[.text-muted-fg]:text-bg/80",
       false: "bg-overlay text-overlay-fg",
     },
     isEntering: {
@@ -76,7 +76,7 @@ const TooltipContent = ({
             viewBox="0 0 12 12"
             // inverse
             className={twJoin(
-              "group-placement-left:-rotate-90 block group-placement-bottom:rotate-180 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]",
+              "block group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]",
               inverse ? "fill-fg stroke-transparent" : "fill-overlay stroke-(--tooltip-border)",
             )}
           >

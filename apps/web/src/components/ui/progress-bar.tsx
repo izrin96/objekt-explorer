@@ -70,7 +70,7 @@ export function ProgressBarTrack({ className, ref, ...props }: React.ComponentPr
       <div ref={ref} className="flex w-full items-center gap-x-2" {...props}>
         <div
           className={twMerge(
-            "-outline-offset-1 relative h-1.5 w-full min-w-52 overflow-hidden rounded-full bg-secondary outline-1 outline-transparent will-change-transform",
+            "relative h-1.5 w-full min-w-52 overflow-hidden rounded-full bg-secondary outline-1 outline-transparent -outline-offset-1 will-change-transform",
             className,
           )}
         >
@@ -83,7 +83,7 @@ export function ProgressBarTrack({ className, ref, ...props }: React.ComponentPr
           ) : (
             <div
               data-slot="progress-content"
-              className="absolute top-0 h-full rounded-full bg-primary [animation:progress-slide_2000ms_ease-in-out_infinite] forced-colors:bg-[Highlight]"
+              className="absolute top-0 h-full animate-[progress-slide_2000ms_ease-in-out_infinite] rounded-full bg-primary forced-colors:bg-[Highlight]"
               style={{ width: "40%" }}
             />
           )}

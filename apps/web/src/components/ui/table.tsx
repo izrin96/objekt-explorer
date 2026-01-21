@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { ChevronDownIcon, MinusIcon } from "@heroicons/react/20/solid";
 import { createContext, use } from "react";
 import type {
   CellProps,
@@ -67,7 +67,7 @@ const Table = ({
       <div className="flow-root">
         <div
           className={twMerge(
-            "-mx-(--gutter) relative overflow-x-auto whitespace-nowrap [--gutter-y:--spacing(2)] has-data-[slot=table-resizable-container]:overflow-auto",
+            "relative -mx-(--gutter) overflow-x-auto whitespace-nowrap [--gutter-y:--spacing(2)] has-data-[slot=table-resizable-container]:overflow-auto",
             className,
           )}
         >
@@ -92,7 +92,7 @@ const ColumnResizer = ({ className, ...props }: ColumnResizerProps) => (
   <ColumnResizerPrimitive
     {...props}
     className={cx(
-      "absolute top-0 right-0 bottom-0 grid w-px &[data-resizable-direction=left]:cursor-e-resize &[data-resizable-direction=right]:cursor-w-resize touch-none place-content-center px-1 data-[resizable-direction=both]:cursor-ew-resize [&[data-resizing]>div]:bg-primary",
+      "absolute top-0 right-0 bottom-0 grid w-px &[data-resizable-direction=left]:cursor-e-resize &[data-resizable-direction=right]:cursor-w-resize resizable-both:cursor-ew-resize touch-none place-content-center px-1 [&[data-resizing]>div]:bg-primary",
       className,
     )}
   >
@@ -117,7 +117,7 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
       className={cx(
         [
           "text-left font-medium text-fg",
-          "relative allows-sorting:cursor-default outline-hidden data-dragging:cursor-grabbing",
+          "relative allows-sorting:cursor-default dragging:cursor-grabbing outline-hidden",
           "px-4 py-(--gutter-y)",
           "first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
           !bleed && "sm:last:pr-1 sm:first:pl-1",
@@ -133,13 +133,19 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
           {values.allowsSorting && (
             <span
               className={twJoin(
-                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-transparent text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
+                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
                 values.isHovered ? "bg-secondary-fg/10" : "",
               )}
             >
-              <ChevronDownIcon
-                className={values.sortDirection === "ascending" ? "rotate-180" : ""}
-              />
+              {values.sortDirection === undefined ? (
+                <MinusIcon data-slot="icon" aria-hidden />
+              ) : (
+                <ChevronDownIcon
+                  data-slot="icon"
+                  aria-hidden
+                  className={values.sortDirection === "ascending" ? "rotate-180" : ""}
+                />
+              )}
             </span>
           )}
           {isResizable && <ColumnResizer />}
