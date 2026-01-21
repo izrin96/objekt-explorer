@@ -12,16 +12,16 @@
   "dependencies": {
     "@objekt-explorer/db": "workspace:*",
     "croner": "^9.1.0",
-    "dotenv": "catalog:",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
     "ofetch": "^1.5.1",
-    "zod": "catalog:"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@objekt-explorer/config": "workspace:*",
-    "@types/node": "catalog:",
-    "tsdown": "catalog:",
+    "@types/node": "^25.0.9",
+    "tsdown": "^0.20.0-beta.4",
     "tsx": "^4.21.0",
-    "typescript": "catalog:"
+    "typescript": "^5.9.3"
   }
 }

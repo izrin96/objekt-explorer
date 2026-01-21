@@ -10,20 +10,20 @@
     "start": "bun run dist/index.mjs"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.7",
-    "@hono/node-ws": "^1.2.0",
-    "dotenv": "catalog:",
-    "hono": "catalog:",
-    "ioredis": "^5.8.2",
-    "zod": "catalog:",
+    "@hono/node-server": "^1.19.9",
+    "@hono/node-ws": "^1.3.0",
+    "dotenv": "^17.2.3",
+    "hono": "^4.11.4",
+    "ioredis": "^5.9.2",
+    "zod": "^4.3.5",
     "drizzle-orm": "^0.45.1",
     "@objekt-explorer/db": "workspace:*"
   },
   "devDependencies": {
     "@objekt-explorer/config": "workspace:*",
-    "@types/node": "catalog:",
-    "tsdown": "catalog:",
+    "@types/node": "^25.0.9",
+    "tsdown": "^0.20.0-beta.4",
     "tsx": "^4.21.0",
-    "typescript": "catalog:"
+    "typescript": "^5.9.3"
   }
 }
