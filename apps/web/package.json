@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "bun run --bun next dev --port=3001",
-    "build": "next build --webpack",
+    "build": "bun run --bun next build",
     "start": "bun run --bun next start",
     "preview": "bun run build && bun run start",
     "db:push": "bun run --bun drizzle-kit push",
@@ -15,7 +15,6 @@
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {
-    "@abstract-foundation/agw-react": "^1.10.0",
     "@aws-sdk/client-s3": "^3.972.0",
     "@aws-sdk/client-ses": "^3.972.0",
     "@aws-sdk/s3-presigned-post": "^3.972.0",
@@ -26,8 +25,6 @@
     "@orpc/server": "^1.13.4",
     "@orpc/tanstack-query": "^1.13.4",
     "@phosphor-icons/react": "^2.1.10",
-    "@privy-io/node": "^0.8.0",
-    "@privy-io/react-auth": "^3.11.0",
     "@radix-ui/react-avatar": "^1.1.11",
     "@react-stately/color": "^3.9.3",
     "@react-stately/data": "^3.15.0",
@@ -76,7 +73,6 @@
     "usehooks-ts": "^3.1.1",
     "viem": "^2.44.4",
     "virtua": "^0.48.3",
-    "wagmi": "^3.3.4",
     "zod": "^4.3.5",
     "zustand": "^5.0.10"
   },

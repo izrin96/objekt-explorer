@@ -18,7 +18,6 @@ export const env = createEnv({
     SES_SECRET_KEY: z.string(),
     SES_MAIL_FROM: z.string(),
     BYPASS_LIVE_KEY: z.string().optional(),
-    PRIVY_APP_SECRET: z.string(),
     REDIS_URL: z.string(),
   },
   client: {
@@ -27,7 +26,6 @@ export const env = createEnv({
     NEXT_PUBLIC_UMAMI_WEBSITE_ID: z.string().optional(),
     NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: z.string().optional(),
     NEXT_PUBLIC_LIVE_API_KEY: z.string(),
-    NEXT_PUBLIC_PRIVY_APP_ID: z.string(),
   },
   experimental__runtimeEnv: {
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -35,6 +33,5 @@ export const env = createEnv({
     NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
     NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: process.env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL,
     NEXT_PUBLIC_LIVE_API_KEY: process.env.NEXT_PUBLIC_LIVE_API_KEY,
-    NEXT_PUBLIC_PRIVY_APP_ID: process.env.NEXT_PUBLIC_PRIVY_APP_ID,
   },
 });

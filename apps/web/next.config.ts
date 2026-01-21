@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  serverExternalPackages: ["@privy-io/node", "@aws-sdk/client-ses"],
+  serverExternalPackages: ["@aws-sdk/client-ses"],
 };
 
 const withNextIntl = createNextIntlPlugin({

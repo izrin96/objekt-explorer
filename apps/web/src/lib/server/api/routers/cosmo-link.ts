@@ -2,10 +2,8 @@
 
 import { ORPCError } from "@orpc/server";
 import { and, eq, sql } from "drizzle-orm";
-import { cookies } from "next/headers";
 import * as z from "zod/v4";
 import type { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
-import { AGW_APP_ID } from "@/lib/utils";
 import {
   certifyTicket,
   checkTicket as checkQrTicket,
@@ -15,7 +13,6 @@ import {
 } from "../../cosmo/shop/qr-auth";
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";
-import { privy } from "../../privy";
 import { authed } from "../orpc";
 
 export const cosmoLinkRouter = {
@@ -127,57 +124,4 @@ export const cosmoLinkRouter = {
           },
         });
     }),
-
-  linkAbs: authed.handler(async ({ context: { session } }) => {
-    const cookieStore = await cookies();
-    const idToken = cookieStore.get("privy-id-token")?.value;
-
-    if (!idToken)
-      throw new ORPCError("BAD_REQUEST", {
-        message: "Missing identity token",
-      });
-
-    const user = await privy.users().get({ id_token: idToken });
-
-    const linkedAccount = user.linked_accounts.find(
-      (a) => a.type === "cross_app" && a.provider_app_id === AGW_APP_ID,
-    );
-
-    if (!linkedAccount || linkedAccount.type !== "cross_app") {
-      throw new ORPCError("BAD_REQUEST", {
-        message: "No Abstract account found",
-      });
-    }
-
-    if (linkedAccount.smart_wallets.length === 0)
-      throw new ORPCError("BAD_REQUEST", {
-        message: "No Abstract wallet found",
-      });
-
-    const address = linkedAccount.smart_wallets[0].address;
-
-    // link cosmo id with user
-    await db
-      .insert(userAddress)
-      .values([
-        {
-          address: address,
-          linkedAt: sql`'now'`,
-          userId: session.user.id,
-          hideUser: true,
-          isAbstract: true,
-        },
-      ])
-      .onConflictDoUpdate({
-        target: userAddress.address,
-        set: {
-          linkedAt: sql`'now'`,
-          userId: session.user.id,
-          hideUser: true,
-          isAbstract: true,
-        },
-      });
-
-    return address;
-  }),
 };

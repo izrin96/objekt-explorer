@@ -62,8 +62,6 @@ jobs:
             ses_mail_from=${{ secrets.SES_MAIL_FROM }}
             live_api_key=${{ secrets.NEXT_PUBLIC_LIVE_API_KEY }}
             bypass_live_key=${{ secrets.BYPASS_LIVE_KEY }}
-            privy_app_id=${{ secrets.NEXT_PUBLIC_PRIVY_APP_ID }}
-            privy_app_secret=${{ secrets.PRIVY_APP_SECRET }}
             redis_url=${{ secrets.REDIS_URL }}
 
       - name: Build server docker image

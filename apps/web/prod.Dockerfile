@@ -37,8 +37,6 @@ RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=ses_mail_from \
     --mount=type=secret,id=live_api_key \
     --mount=type=secret,id=bypass_live_key \
-    --mount=type=secret,id=privy_app_id \
-    --mount=type=secret,id=privy_app_secret \
     --mount=type=secret,id=redis_url \
     NEXT_PUBLIC_UMAMI_SCRIPT_URL=$(cat /run/secrets/umami_script_url) \
     NEXT_PUBLIC_UMAMI_WEBSITE_ID=$(cat /run/secrets/umami_website_id) \
@@ -61,8 +59,6 @@ RUN --mount=type=secret,id=umami_script_url \
     SES_MAIL_FROM=$(cat /run/secrets/ses_mail_from) \
     NEXT_PUBLIC_LIVE_API_KEY=$(cat /run/secrets/live_api_key) \
     BYPASS_LIVE_KEY=$(cat /run/secrets/bypass_live_key) \
-    NEXT_PUBLIC_PRIVY_APP_ID=$(cat /run/secrets/privy_app_id) \
-    PRIVY_APP_SECRET=$(cat /run/secrets/privy_app_secret) \
     REDIS_URL=$(cat /run/secrets/redis_url) \
     bun run build
 
