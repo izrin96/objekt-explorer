@@ -1,1 +1,0 @@
-ALTER TABLE "user_address" ADD COLUMN "hide_user" boolean;

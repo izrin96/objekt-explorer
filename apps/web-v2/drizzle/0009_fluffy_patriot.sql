@@ -1,1 +1,0 @@
-CREATE INDEX "pins_token_id_idx" ON "pins" USING btree ("token_id");

@@ -1,1 +1,0 @@
-ALTER TABLE "user_address" ADD COLUMN "is_abstract" boolean DEFAULT false;
