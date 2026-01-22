@@ -20,7 +20,7 @@ export default function MemberFilter() {
   const update = useCallback(
     (key: Selection) => {
       const values = Array.from((key as Set<string>).values());
-      setFilters({
+      return setFilters({
         member: values.length ? values : null,
         artist: null,
       });

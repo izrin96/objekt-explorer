@@ -15,7 +15,7 @@ export default function HidePinFilter() {
       isSelected={filters.hidePin ?? false}
       onChange={(v) =>
         setFilters({
-          hidePin: v === false ? null : true,
+          hidePin: !v ? null : true,
         })
       }
     >

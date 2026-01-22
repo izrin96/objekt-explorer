@@ -21,7 +21,7 @@ export default function SeasonFilter() {
   const update = useCallback(
     (key: Selection) => {
       const values = Array.from((key as Set<ValidSeason>).values());
-      setFilters({
+      return setFilters({
         season: values.length ? values : null,
       });
     },

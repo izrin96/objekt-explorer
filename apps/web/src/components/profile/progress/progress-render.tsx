@@ -92,7 +92,7 @@ type ProgressGroupProps = {
 function ProgressGroup(props: ProgressGroupProps) {
   const filtered = props.grouped
     .map(([objekt]) => objekt)
-    .filter((a) => unobtainables.includes(a.slug) === false);
+    .filter((a) => !unobtainables.includes(a.slug));
 
   const owned = filtered.filter((a) => props.ownedSlugs.has(a.slug));
 

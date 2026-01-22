@@ -29,7 +29,7 @@ export default function GroupByFilter() {
   const update = useCallback(
     (key: Selection) => {
       const value = Array.from((key as Set<ValidGroupBy>).values()).at(0) ?? null;
-      setFilters({
+      return setFilters({
         group_by: value,
         group_dir: ["member", "class"].includes(value ?? "") ? "asc" : null,
       });

@@ -65,11 +65,11 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
   const [pullOpen, setPullOpen] = useState(false);
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
-      onSuccess: (_, _v, _o, { client }) => {
-        client.refetchQueries({
+      onSuccess: async (_, _v, _o, { client }) => {
+        void client.refetchQueries({
           queryKey: ["session"],
         });
-        client.invalidateQueries({
+        void client.invalidateQueries({
           queryKey: ["accounts"],
         });
         toast.success(`${provider.label} unlinked`);
@@ -148,7 +148,7 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
   const refreshProfile = useMutation(
     orpc.user.refreshProfile.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
-        client.refetchQueries({
+        void client.refetchQueries({
           queryKey: ["session"],
         });
         setOpen(false);

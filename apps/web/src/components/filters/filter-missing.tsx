@@ -16,7 +16,7 @@ export default function MissingFilter() {
       onChange={(v) =>
         setFilters({
           unowned: null,
-          missing: v === false ? null : true,
+          missing: !v ? null : true,
         })
       }
     >

@@ -8,8 +8,8 @@
     "./server/*": "./src/server/*.ts"
   },
   "scripts": {
-    "lint": "oxlint",
-    "lint:fix": "oxlint --fix",
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "tsc --noEmit",
     "format": "oxfmt ."
   },

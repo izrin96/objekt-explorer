@@ -33,7 +33,7 @@ export const useToggleFullScreen = () => {
     };
   }, []);
 
-  return useCallback(() => {
+  return useCallback(async () => {
     if (isFullscreen) {
       // Handle iOS Safari exit
       if ((document as any).webkitExitFullscreen) {
@@ -54,7 +54,7 @@ export const useToggleFullScreen = () => {
         return;
       }
       // Handle other browsers exit
-      document.exitFullscreen().then(() => {
+      await document.exitFullscreen().then(() => {
         setIsFullscreen(false);
       });
     } else {
@@ -77,7 +77,7 @@ export const useToggleFullScreen = () => {
         return;
       }
       // Handle other browsers enter
-      participantViewElement?.requestFullscreen().then(() => {
+      await participantViewElement?.requestFullscreen().then(() => {
         setIsFullscreen(true);
       });
     }

@@ -3,7 +3,7 @@ import { useFilters } from "./use-filters";
 export function useResetFilters() {
   const [, setFilters] = useFilters();
   function reset() {
-    setFilters({
+    return setFilters({
       member: null,
       artist: null,
       sort: null,

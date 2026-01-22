@@ -26,7 +26,7 @@ type TransferSendData = {
   objekt: PublicObjekt;
 };
 
-redisPubSub.subscribe("transfers");
+void redisPubSub.subscribe("transfers");
 
 redisPubSub.on("message", async (channel, message) => {
   if (channel === "transfers") {

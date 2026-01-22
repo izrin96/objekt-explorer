@@ -20,7 +20,7 @@ export default function CollectionFilter() {
   const selected = filters.collection ?? [];
 
   const update = useCallback((value: Key[]) => {
-    setFilters({
+    return setFilters({
       collection: value.length > 0 ? (value as string[]) : null,
     });
   }, []);

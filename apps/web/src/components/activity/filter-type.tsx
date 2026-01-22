@@ -28,7 +28,7 @@ export default function TypeFilter() {
 
   const update = (key: Selection) => {
     const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
-    setType(value === "all" ? null : value);
+    return setType(value === "all" ? null : value);
   };
 
   return (

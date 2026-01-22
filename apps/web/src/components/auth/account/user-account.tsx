@@ -110,9 +110,9 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
       if (result.error) throw new Error(result.error.message);
       return result.data;
     },
-    onSuccess: (_, _v, _o, { client }) => {
+    onSuccess: async (_, _v, _o, { client }) => {
       setOpen(false);
-      client.refetchQueries({
+      void client.refetchQueries({
         queryKey: ["session"],
       });
       router.refresh();

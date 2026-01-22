@@ -14,7 +14,7 @@ export function useBatchUnlock() {
         );
         client.setQueryData(orpc.lockedObjekt.list.queryKey({ input: address }), (old = []) => {
           const tokenIdSet = new Set(tokenIds.map(String));
-          return old.filter((item) => tokenIdSet.has(item.tokenId) === false);
+          return old.filter((item) => !tokenIdSet.has(item.tokenId));
         });
         return { previousLocks };
       },

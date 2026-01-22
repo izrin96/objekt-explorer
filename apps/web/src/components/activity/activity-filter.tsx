@@ -31,9 +31,9 @@ export default function ActivityFilter() {
       </Suspense>
       <ResetFilter
         isDisabled={!(isFiltering || type !== null)}
-        onReset={() => {
-          reset();
-          setType(null);
+        onReset={async () => {
+          await reset();
+          return setType(null);
         }}
       />
     </div>

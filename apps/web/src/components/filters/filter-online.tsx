@@ -24,7 +24,7 @@ export default function OnlineFilter() {
   const update = useCallback(
     (key: Selection) => {
       const values = Array.from((key as Set<ValidOnlineType>).values());
-      setFilters({
+      return setFilters({
         on_offline: values.length ? values : null,
       });
     },

@@ -15,7 +15,7 @@ export default function CombineDuplicateFilter() {
       isSelected={filters.grouped ?? false}
       onChange={(v) =>
         setFilters({
-          grouped: v === false ? null : true,
+          grouped: !v ? null : true,
         })
       }
     >

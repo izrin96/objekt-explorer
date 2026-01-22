@@ -47,7 +47,7 @@ export function TagField({
   const selection: Selection = value ?? internalSelection;
   const inputValue = controlledInput ?? uncontrolledInput;
   const setInputValue = onInputValueChange ?? setUncontrolledInput;
-  const applySelection = (next: Selection) => (onChange ?? setInternalSelection)(next as Selection);
+  const applySelection = (next: Selection) => (onChange ?? setInternalSelection)(next);
 
   const list = useMemo(() => {
     return selection === "all" ? [] : Array.from(selection).map((v) => String(v));

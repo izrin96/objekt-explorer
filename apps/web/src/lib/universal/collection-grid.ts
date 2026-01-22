@@ -5,7 +5,7 @@ function getScoEdition(objekt: ValidObjekt, collection: number) {
   if (
     objekt.artist === "triples" &&
     objekt.season === "Atom01" &&
-    [201, 202].includes(collection) === false
+    ![201, 202].includes(collection)
   ) {
     if ([216, 217].includes(collection)) {
       return 2;

@@ -12,7 +12,7 @@ export function CopyButton({ text }: { text: string }) {
       intent="outline"
       onClick={() => {
         setCopied(true);
-        copy(text).then(() => {
+        return copy(text).then(() => {
           setTimeout(() => setCopied(false), 2000);
         });
       }}

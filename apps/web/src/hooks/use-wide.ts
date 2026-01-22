@@ -13,9 +13,9 @@ export function useWide() {
   const setWideStore = useConfigStore((a) => a.setWide);
 
   const setWide = useCallback(
-    (value: boolean) => {
+    async (value: boolean) => {
       if (queryWide) {
-        setQueryWide(null);
+        await setQueryWide(null);
       }
       setWideStore(value);
     },

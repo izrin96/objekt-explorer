@@ -30,8 +30,8 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           <CopyIcon
             size={14}
             className="text-fg cursor-pointer"
-            onClick={() => {
-              copy(user.address);
+            onClick={async () => {
+              await copy(user.address);
               toast.success("Address copied");
             }}
           />

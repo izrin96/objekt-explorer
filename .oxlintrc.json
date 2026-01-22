@@ -18,6 +18,9 @@
     "typescript/no-non-null-assertion": "off",
     "typescript/prefer-ts-expect-error": "warn",
     "typescript/consistent-type-imports": "warn",
-    "typescript/no-unused-vars": "off"
+    "typescript/no-unused-vars": "off",
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/unbound-method": "off",
+    "typescript/restrict-template-expressions": "off"
   }
 }

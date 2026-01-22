@@ -20,7 +20,7 @@ export default function EditionFilter() {
   const update = useCallback(
     (key: Selection) => {
       const values = Array.from((key as Set<ValidEdition>).values());
-      setFilters({
+      return setFilters({
         edition: values.length ? values : null,
       });
     },

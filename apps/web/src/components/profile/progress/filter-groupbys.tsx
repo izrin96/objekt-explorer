@@ -23,7 +23,7 @@ export default function GroupBysFilter() {
   const update = useCallback(
     (key: Selection) => {
       const values = Array.from((key as Set<ValidGroupBy>).values());
-      setFilters({
+      return setFilters({
         group_bys: values.length ? values : null,
       });
     },

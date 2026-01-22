@@ -9,7 +9,7 @@ export function useRemoveFromList() {
       onSuccess: (_, { slug, ids }, _o, { client }) => {
         client.setQueryData(orpc.list.listEntries.queryKey({ input: { slug } }), (old = []) => {
           const idSet = new Set(ids.map(String));
-          return old.filter((item) => idSet.has(item.id) === false);
+          return old.filter((item) => !idSet.has(item.id));
         });
 
         toast.success("Objekt removed from the list");

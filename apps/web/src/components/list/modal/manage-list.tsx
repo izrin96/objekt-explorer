@@ -57,7 +57,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
         toast.success("List created");
-        client.invalidateQueries({
+        return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
@@ -142,7 +142,7 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
         toast.success("List deleted");
-        client.invalidateQueries({
+        return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },

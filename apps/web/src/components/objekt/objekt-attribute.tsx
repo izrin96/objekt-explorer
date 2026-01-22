@@ -52,10 +52,10 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
         <Pill label={t("created_at")} value={format(data.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
         <Pill
           label={objekt.onOffline === "online" ? t("copies") : t("scanned_copies")}
-          value={`${data.total.toLocaleString()}`}
+          value={data.total.toLocaleString()}
         />
-        <Pill label={t("spin")} value={`${data.spin.toLocaleString()}`} />
-        <Pill label={t("non_spin")} value={`${(data.total - data.spin).toLocaleString()}`} />
+        <Pill label={t("spin")} value={data.spin.toLocaleString()} />
+        <Pill label={t("non_spin")} value={(data.total - data.spin).toLocaleString()} />
         <Pill
           label={t("tradable")}
           value={`${((data.transferable / data.total) * 100.0).toFixed(

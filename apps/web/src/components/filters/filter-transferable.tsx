@@ -15,7 +15,7 @@ export default function TransferableFilter() {
       isSelected={filters.transferable ?? false}
       onChange={(v) =>
         setFilters({
-          transferable: v === false ? null : true,
+          transferable: !v ? null : true,
         })
       }
     >

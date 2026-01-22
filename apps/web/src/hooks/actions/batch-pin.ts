@@ -19,7 +19,7 @@ export function useBatchPin() {
               tokenId: String(tokenId),
               order: Date.now() + index,
             })),
-            ...old.filter((item) => tokenIdSet.has(item.tokenId) === false),
+            ...old.filter((item) => !tokenIdSet.has(item.tokenId)),
           ];
         });
         return { previousPins };

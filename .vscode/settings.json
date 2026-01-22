@@ -6,7 +6,7 @@
     "source.fixAll.oxc": "always"
   },
   "typescript.experimental.useTsgo": false,
-  "oxc.typeAware": false,
+  "oxc.typeAware": true,
   "files.watcherExclude": {
     "**/routeTree.gen.ts": true
   },

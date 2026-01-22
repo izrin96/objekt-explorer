@@ -32,7 +32,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
   function update(key: Selection) {
     const value = Array.from((key as Set<ValidSort>).values()).at(0) ?? "date";
 
-    setFilters((current) => ({
+    return setFilters((current) => ({
       sort: value === "date" ? null : value,
       sort_dir: ["serial", "member"].includes(value) ? "asc" : null,
       grouped: value === "duplicate" ? true : value === "serial" ? false : current.grouped,

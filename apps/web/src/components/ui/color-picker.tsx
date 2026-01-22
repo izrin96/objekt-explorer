@@ -46,7 +46,7 @@ const EyeDropper = () => {
       intent="outline"
       onPress={() => {
         const eyeDropper = window.EyeDropper ? new window.EyeDropper() : null;
-        eyeDropper?.open().then((result) => state.setColor(parseColor(result.sRGBHex)));
+        return eyeDropper?.open().then((result) => state.setColor(parseColor(result.sRGBHex)));
       }}
     >
       <EyeDropperIcon />
