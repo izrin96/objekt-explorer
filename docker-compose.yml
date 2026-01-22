@@ -1,9 +1,9 @@
 services:
-  cron:
+  worker:
     restart: always
     build:
       context: .
-      dockerfile: ./apps/cron/Dockerfile
+      dockerfile: ./apps/worker/Dockerfile
     environment:
       - INDEXER_DATABASE_URL
 
@@ -15,48 +15,14 @@ services:
       context: .
       dockerfile: ./apps/server/Dockerfile
     environment:
-      - CORS_ORIGIN
       - REDIS_PUBSUB_URL
       - DATABASE_URL
       - INDEXER_DATABASE_URL
 
-  pubsub:
-    restart: always
-    image: redis:latest
-    ports:
-      - "6380:6379"
-    volumes:
-      - pubsub_data:/data
-
-  postgres:
-    restart: always
-    image: postgres:18
-    volumes:
-      - db_data:/var/lib/postgresql
-    ports:
-      - "${DB_PORT:-5432}:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=main
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  browserless:
-    image: ghcr.io/browserless/chromium
-    ports:
-      - "9222:3000"
-    environment:
-      - TOKEN=your-token-here
-
   web:
     restart: always
     ports:
-      - "4000:3000"
-    platform: linux/amd64
+      - "3000:3000"
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
@@ -107,21 +73,28 @@ services:
       - BYPASS_LIVE_KEY
       - REDIS_URL
 
-  minio:
+  db:
     restart: always
-    image: minio/minio:latest
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+    image: postgres:18
     volumes:
-      - minio_data:/data
-    command: server /data --console-address ":9001"
+      - db_data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgbouncer:
     image: edoburu/pgbouncer:latest
     restart: always
     depends_on:
-      - postgres
+      - db
     ports:
       - "6432:6432"
     environment:
@@ -134,6 +107,16 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
 
+  minio:
+    restart: always
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
   redis:
     restart: always
     image: redis:latest
@@ -141,6 +124,21 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
+  pubsub:
+    restart: always
+    image: redis:latest
+    ports:
+      - "6380:6379"
+    volumes:
+      - pubsub_data:/data
+
+  browserless:
+    image: ghcr.io/browserless/chromium
+    ports:
+      - "9222:3000"
+    environment:
+      - TOKEN=your-token-here
 
 volumes:
   db_data:

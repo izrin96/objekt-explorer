@@ -1,0 +1,22 @@
+{
+  "name": "@repo/cosmo",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    "./types/*": "./src/types/*.ts",
+    "./server/*": "./src/server/*.ts"
+  },
+  "scripts": {
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt ."
+  },
+  "dependencies": {
+    "ofetch": "^1.5.1",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
+  }
+}

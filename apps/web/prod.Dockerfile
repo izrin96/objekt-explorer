@@ -1,4 +1,4 @@
-FROM imbios/bun-node:25-slim AS base
+FROM oven/bun:slim AS base
 WORKDIR /app
 
 # prune monorepo
@@ -11,7 +11,7 @@ RUN turbo prune web --docker
 # dependencies & build
 FROM base AS build
 COPY --from=prune /app/out/json/ .
-RUN bun install
+RUN bun install --frozen-lockfile
 COPY --from=prune /app/out/full/ .
 
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -60,7 +60,7 @@ RUN --mount=type=secret,id=umami_script_url \
     NEXT_PUBLIC_LIVE_API_KEY=$(cat /run/secrets/live_api_key) \
     BYPASS_LIVE_KEY=$(cat /run/secrets/bypass_live_key) \
     REDIS_URL=$(cat /run/secrets/redis_url) \
-    bun run build
+    bun run build --filter=web
 
 # runner
 FROM base AS runner
@@ -68,13 +68,9 @@ FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1002 app
-RUN adduser --system --uid 1002 nextjs
-USER nextjs
-
-COPY --from=build --chown=nextjs:app /app/apps/web/.next/standalone ./
-COPY --from=build --chown=nextjs:app /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=build --chown=nextjs:app /app/apps/web/public ./apps/web/public
+COPY --from=build /app/apps/web/.next/standalone ./
+COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build /app/apps/web/public ./apps/web/public
 
 EXPOSE 3000/tcp
 

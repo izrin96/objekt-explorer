@@ -1,36 +1,29 @@
 {
-  "name": "@objekt-explorer/db",
+  "name": "@repo/db",
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "types": "./dist/*.d.ts",
-      "default": "./src/*.ts"
-    }
+    ".": "./src/index.ts",
+    "./indexer": "./src/indexer/index.ts",
+    "./*": "./src/*.ts"
   },
   "scripts": {
-    "build": "tsdown",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt .",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
-  },
-  "devDependencies": {
-    "@objekt-explorer/config": "workspace:*",
-    "drizzle-kit": "^0.31.8",
-    "@types/pg": "^8.16.0",
-    "tsdown": "^0.20.0-beta.4"
-  },
-  "peerDependencies": {
-    "typescript": "^5.9.3"
+    "db:push": "bun run --env-file=../../.env drizzle-kit push",
+    "db:migrate": "bun run --env-file=../../.env drizzle-kit migrate",
+    "db:studio": "bun run --env-file=../../.env drizzle-kit studio"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.1",
     "pg": "^8.17.2",
-    "dotenv": "^17.2.3",
     "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8"
   }
 }

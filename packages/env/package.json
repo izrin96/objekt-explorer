@@ -1,0 +1,21 @@
+{
+  "name": "@repo/env",
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt ."
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
+  },
+  "dependencies": {
+    "@t3-oss/env-core": "^0.13.10",
+    "zod": "^4.3.5"
+  }
+}

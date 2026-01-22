@@ -1,5 +1,3 @@
-/** biome-ignore-all lint/correctness/noInnerDeclarations: false */
-
 import { ORPCError } from "@orpc/server";
 import { and, eq, sql } from "drizzle-orm";
 import * as z from "zod/v4";
@@ -70,6 +68,7 @@ export const cosmoLinkRouter = {
     .handler(async ({ input: { otp, ticket }, context: { session } }) => {
       try {
         // send otp
+        // biome-ignore lint/correctness/noInnerDeclarations: ignore
         var response = await certifyTicket(otp, ticket);
       } catch {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {

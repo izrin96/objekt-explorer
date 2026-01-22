@@ -1,1 +1,0 @@
-export const SPIN_ADDRESS = "0xd3d5f29881ad87bb10c1100e2c709c9596de345f";

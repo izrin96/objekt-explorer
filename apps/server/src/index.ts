@@ -1,14 +1,12 @@
-import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
-import type { Collection, Objekt, Transfer } from "@objekt-explorer/db/indexer/schema";
+import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
+import type { PublicObjekt } from "@repo/lib/objekts/types";
+import { mapPublicObjekt } from "@repo/lib/objekts/utils";
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import type { WSContext } from "hono/ws";
-import { mapOwnedObjekt } from "./lib/objekt";
 import { redisPubSub } from "./lib/redis";
-import type { OwnedObjekt } from "./lib/universal/objekts";
-import { fetchKnownAddresses } from "./lib/utils";
+import { fetchKnownAddresses } from "./lib/user";
 
 const clients = new Set<WSContext>();
 const app = new Hono();
@@ -28,7 +26,7 @@ type TransferSendData = {
     to: string | undefined;
   };
   transfer: Transfer;
-  objekt: OwnedObjekt;
+  objekt: PublicObjekt;
 };
 
 redisPubSub.subscribe("transfers");
@@ -58,7 +56,7 @@ redisPubSub.on("message", async (channel, message) => {
           to: toUser?.nickname ?? undefined,
         },
         transfer: rest,
-        objekt: mapOwnedObjekt(objekt, collection),
+        objekt: mapPublicObjekt(objekt, collection),
       } satisfies TransferSendData;
 
       transferBatch.push(transferEvent);
@@ -86,22 +84,12 @@ redisPubSub.on("message", async (channel, message) => {
   }
 });
 
-app.use(
-  "/*",
-  cors({
-    origin: process.env.CORS_ORIGIN || "",
-    allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  }),
-);
-
 app.get(
   "/ws",
   upgradeWebSocket(() => {
     return {
       async onMessage(event, ws) {
-        const data = JSON.parse(event.data) as { type: string; data?: any };
+        const data = JSON.parse(event.data as string) as { type: string; data?: any };
         if (data.type === "request_history") {
           if (transferHistory.length > 0) {
             const msg = {

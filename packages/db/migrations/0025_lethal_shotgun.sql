@@ -1,0 +1,1 @@
+ALTER TABLE "user_address" ALTER COLUMN "nickname" DROP NOT NULL;

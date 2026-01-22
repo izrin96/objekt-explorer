@@ -1,41 +1,35 @@
-FROM imbios/bun-node:25-slim AS base
-WORKDIR /app
+FROM oven/bun:slim AS base
 
-# prune monorepo
-FROM base AS prune
+# Prune the monorepo to only include server and its dependencies
+FROM base AS pruner
+WORKDIR /app
+RUN bun add --global turbo
 COPY . .
-RUN bun install turbo --global
-ENV TURBO_TELEMETRY_DISABLED=1
 RUN turbo prune server --docker
 
-# dependencies
-FROM base AS deps
-RUN mkdir -p /temp/dev
-RUN mkdir -p /temp/prod
-COPY --from=prune /app/out/json/ /temp/dev
-COPY --from=prune /app/out/json/ /temp/prod
-RUN cd /temp/dev && bun install --frozen-lockfile
-RUN cd /temp/prod && bun install --frozen-lockfile --production
+# Install dependencies only for pruned workspace
+FROM base AS installer
+WORKDIR /app
 
-# build
-FROM base AS build
-COPY --from=deps /temp/dev/ .
-COPY --from=prune /app/out/full/ .
-ENV TURBO_TELEMETRY_DISABLED=1
-RUN bun run build
+# Copy lockfile and package.json's from pruned workspace
+COPY --from=pruner /app/out/json/ .
+RUN bun install --frozen-lockfile
 
-# runner
+# Build the project
+COPY --from=pruner /app/out/full/ .
+RUN bun run build --filter=server
+
+# Production image - copy only what's needed to run
 FROM base AS runner
-
+WORKDIR /app
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1002 app
-RUN adduser --system --uid 1002 app
-USER app
+# Copy built application
+COPY --from=installer /app/apps/server/dist ./apps/server/dist
+COPY --from=installer /app/apps/server/package.json ./apps/server/package.json
+COPY --from=installer /app/node_modules ./node_modules
+COPY --from=installer /app/packages ./packages
 
-COPY --from=deps --chown=app:app /temp/prod/ .
-COPY --from=build --chown=app:app /app/apps/server/dist ./apps/server/dist
+WORKDIR /app/apps/server
 
-EXPOSE 3000/tcp
-
-CMD ["bun", "run", "--bun", "apps/server/dist/index.mjs"]
+CMD ["bun", "run", "start"]

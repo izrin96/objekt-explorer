@@ -77,16 +77,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build cron docker image
+      - name: Build worker docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./apps/cron/Dockerfile
+          file: ./apps/worker/Dockerfile
           push: true
           platforms: linux/amd64
           tags: |
-            ghcr.io/${{ github.repository }}-cron:${{ github.sha }}
-            ghcr.io/${{ github.repository }}-cron:latest
+            ghcr.io/${{ github.repository }}-worker:${{ github.sha }}
+            ghcr.io/${{ github.repository }}-worker:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -110,10 +110,10 @@ jobs:
           delete-only-untagged-versions: true
           min-versions-to-keep: 3
 
-      - name: Delete all untagged cron images
+      - name: Delete all untagged worker images
         uses: actions/delete-package-versions@v5
         with:
-          package-name: ${{ github.event.repository.name }}-cron
+          package-name: ${{ github.event.repository.name }}-worker
           package-type: container
           delete-only-untagged-versions: true
           min-versions-to-keep: 3

@@ -1,0 +1,24 @@
+{
+  "name": "worker",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --env-file=../../.env --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun run dist/index.js",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt ."
+  },
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "@repo/lib": "workspace:*",
+    "croner": "^9.1.0",
+    "drizzle-orm": "^0.45.1",
+    "ofetch": "^1.5.1",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
+  }
+}

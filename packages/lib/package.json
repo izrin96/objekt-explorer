@@ -1,0 +1,21 @@
+{
+  "name": "@repo/lib",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt ."
+  },
+  "dependencies": {
+    "@repo/db": "workspace:*",
+    "drizzle-orm": "^0.45.1"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
+  }
+}
