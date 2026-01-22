@@ -98,8 +98,9 @@ function LiveVolumeControl() {
       <Button size="sq-sm" intent="outline">
         <SpeakerHighIcon />
       </Button>
-      <PopoverContent className="p-4">
+      <PopoverContent>
         <Slider
+          className="p-6"
           defaultValue={currentSpeaker.audioVolume ?? 1}
           minValue={0}
           maxValue={1}
