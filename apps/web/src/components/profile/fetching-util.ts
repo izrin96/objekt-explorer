@@ -26,9 +26,10 @@ export async function fetchOwnedObjekts(address: string, artistIds: ValidArtist[
 
   // Loop until there are no more pages
   while (true) {
+    // eslint-disable-next-line no-await-in-loop
     const result = await fetchOwnedObjektsByCursor(address, artistIds, cursor);
 
-    allObjekts = [...allObjekts, ...result.objekts];
+    allObjekts.push(...result.objekts);
 
     if (result.nextCursor) {
       cursor = result.nextCursor;

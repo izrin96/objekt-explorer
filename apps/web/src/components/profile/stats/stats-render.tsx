@@ -91,10 +91,11 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
     }));
     const total = data.reduce((sum, d) => sum + d.count, 0);
     return data
-      .map((d) => ({
-        ...d,
-        percentage: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
-      }))
+      .map((d) =>
+        Object.assign({}, d, {
+          percentage: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
+        }),
+      )
       .toSorted((a, b) => b.count - a.count);
   }, [selectedArtists, objekts]);
 
@@ -175,10 +176,11 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
     }));
     const total = data.reduce((sum, d) => sum + d.count, 0);
     return data
-      .map((d) => ({
-        ...d,
-        percentage: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
-      }))
+      .map((d) =>
+        Object.assign({}, d, {
+          percentage: total > 0 ? Number(((d.count / total) * 100).toFixed(1)) : 0,
+        }),
+      )
       .toSorted((a, b) => b.count - a.count);
   }, [objekts]);
 

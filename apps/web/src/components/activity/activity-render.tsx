@@ -109,10 +109,9 @@ function Activity() {
           signal,
         });
 
-        return {
-          ...response,
-          items: response.items.map((item) => ({ ...item, objekt: mapObjektWithTag(item.objekt) })),
-        };
+        return Object.assign({}, response, {
+          items: response.items.map((item) => Object.assign({}, item, { objekt: mapObjektWithTag(item.objekt) })),
+        });
       },
       initialPageParam: undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor,

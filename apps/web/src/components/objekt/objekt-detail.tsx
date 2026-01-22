@@ -169,7 +169,7 @@ function OwnedListPanel({
 
   const handleSort = useCallback(
     ({ items, sortDescriptor }: { items: OwnedObjekt[]; sortDescriptor: SortDescriptor }) => {
-      return items.sort((a, b) => {
+      return items.toSorted((a, b) => {
         let cmp = 0;
         if (sortDescriptor.column === "receivedAt") {
           const aTime = new Date(a.receivedAt).getTime();

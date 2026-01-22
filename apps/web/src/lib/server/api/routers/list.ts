@@ -374,9 +374,10 @@ async function mapEntriesCollection(
 
   return result
     .filter((a) => collectionsMap.has(a.collectionSlug))
-    .map(({ collectionSlug, id, createdAt }) => ({
-      ...collectionsMap.get(collectionSlug)!,
-      id: id.toString(),
-      createdAt: createdAt.toISOString(),
-    }));
+    .map(({ collectionSlug, id, createdAt }) =>
+      Object.assign({}, collectionsMap.get(collectionSlug)!, {
+        id: id.toString(),
+        createdAt: createdAt.toISOString(),
+      }),
+    );
 }

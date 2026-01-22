@@ -15,20 +15,24 @@ export async function updateTransferableCosmoSpin() {
   // set transferable to false in batches
   const BATCH_SIZE = 150;
   if (spinObjekts.length) {
+    const batches = [];
     for (let i = 0; i < spinObjekts.length; i += BATCH_SIZE) {
       const batch = spinObjekts.slice(i, i + BATCH_SIZE);
-      await indexer
-        .update(objekts)
-        .set({
-          transferable: false,
-        })
-        .where(
-          inArray(
-            objekts.id,
-            batch.map((a) => a.id),
+      batches.push(
+        indexer
+          .update(objekts)
+          .set({
+            transferable: false,
+          })
+          .where(
+            inArray(
+              objekts.id,
+              batch.map((a) => a.id),
+            ),
           ),
-        );
+      );
     }
+    await Promise.all(batches);
   }
 
   console.log(`Update transferable status for ${spinObjekts.length} objekts. Reason: cosmo-spin`);

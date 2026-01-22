@@ -106,14 +106,14 @@ function Trades({
           if (objekt.onOffline === "online") {
             return prevSerial - 1 > 0 ? prevSerial - 1 : 1;
           }
-          const newSerial = serials.filter((serial) => serial < prevSerial).pop();
+          const newSerial = serials.findLast((serial) => serial < prevSerial);
           return newSerial ?? prevSerial;
         }
         if (mode === "next") {
           if (objekt.onOffline === "online") {
             return prevSerial + 1;
           }
-          const newSerial = serials.filter((serial) => serial > prevSerial)?.[0];
+          const newSerial = serials.find((serial) => serial > prevSerial);
           return newSerial ?? prevSerial;
         }
         return prevSerial;
@@ -208,7 +208,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     },
     async sort({ items, sortDescriptor }) {
       return {
-        items: items.sort((a, b) => {
+        items: items.toSorted((a, b) => {
           let cmp = 0;
           if (sortDescriptor.column === "timestamp") {
             const aTime = new Date(a.timestamp).getTime();
