@@ -10,7 +10,7 @@
     "start": "bun run --env-file=../../.env --bun next start",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "format": "oxfmt .",
     "db:push": "drizzle-kit push",
     "db:generate": "drizzle-kit generate",
