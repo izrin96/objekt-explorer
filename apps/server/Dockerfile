@@ -32,4 +32,6 @@ COPY --from=installer /app/packages ./packages
 
 WORKDIR /app/apps/server
 
+EXPOSE 3000/tcp
+
 CMD ["bun", "run", "start"]

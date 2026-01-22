@@ -1,4 +1,4 @@
-name: Next.js Docker CI/CD
+name: Docker CI/CD
 
 on:
   push:
@@ -10,11 +10,109 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      server: ${{ steps.filter.outputs.server }}
+      worker: ${{ steps.filter.outputs.worker }}
+      packages: ${{ steps.filter.outputs.packages }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'bun.lock'
+            server:
+              - 'apps/server/**'
+              - 'packages/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'bun.lock'
+            worker:
+              - 'apps/worker/**'
+              - 'packages/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'bun.lock'
+            packages:
+              - 'packages/**'
+
+  validate:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    # Only run validation if there are code changes
+    if: |
+      needs.detect-changes.outputs.web == 'true' ||
+      needs.detect-changes.outputs.server == 'true' ||
+      needs.detect-changes.outputs.worker == 'true' ||
+      needs.detect-changes.outputs.packages == 'true'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.6
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run linter
+        run: bun run lint
+
+      - name: Run type checking
+        run: bun run typecheck
+
   build:
     runs-on: ubuntu-latest
-    environment: Production
+    needs: [detect-changes, validate]
+    # Only run if changes detected or if it's a manual trigger
+    if: |
+      always() &&
+      (needs.validate.result == 'success' || needs.validate.result == 'skipped') &&
+      (needs.detect-changes.outputs.web == 'true' ||
+      needs.detect-changes.outputs.server == 'true' ||
+      needs.detect-changes.outputs.worker == 'true' ||
+      github.event_name == 'workflow_dispatch')
+    environment: ${{ github.event_name == 'pull_request' && 'Staging' || 'Production' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: web
+            dockerfile: ./apps/web/prod.Dockerfile
+            needs-secrets: true
+          - app: server
+            dockerfile: ./apps/server/Dockerfile
+            needs-secrets: false
+          - app: worker
+            dockerfile: ./apps/worker/Dockerfile
+            needs-secrets: false
     steps:
+      - name: Show detected changes
+        run: |
+          echo "Changes detected for ${{ matrix.app }}: ${{ needs.detect-changes.outputs[matrix.app] }}"
+          echo "Web changes: ${{ needs.detect-changes.outputs.web }}"
+          echo "Server changes: ${{ needs.detect-changes.outputs.server }}"
+          echo "Worker changes: ${{ needs.detect-changes.outputs.worker }}"
+          echo "Package changes: ${{ needs.detect-changes.outputs.packages }}"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -28,92 +126,105 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build web docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./apps/web/prod.Dockerfile
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ github.repository }}-web:${{ github.sha }}
-            ghcr.io/${{ github.repository }}-web:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          secrets: |
-            umami_script_url=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
-            umami_website_id=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
-            activity_websocket_url=${{ secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL }}
-            better_auth_secret=${{ secrets.BETTER_AUTH_SECRET }}
-            discord_client_id=${{ secrets.DISCORD_CLIENT_ID }}
-            discord_client_secret=${{ secrets.DISCORD_CLIENT_SECRET }}
-            twitter_client_id=${{ secrets.TWITTER_CLIENT_ID }}
-            twitter_client_secret=${{ secrets.TWITTER_CLIENT_SECRET }}
-            browser_cdp_url=${{ secrets.BROWSER_CDP_URL }}
-            site_url=${{ secrets.NEXT_PUBLIC_SITE_URL }}
-            database_url=${{ secrets.DATABASE_URL }}
-            indexer_database_url=${{ secrets.INDEXER_DATABASE_URL }}
-            s3_endpoint=${{ secrets.S3_ENDPOINT }}
-            s3_access_key=${{ secrets.S3_ACCESS_KEY }}
-            s3_secret_key=${{ secrets.S3_SECRET_KEY }}
-            ses_region=${{ secrets.SES_REGION }}
-            ses_access_key=${{ secrets.SES_ACCESS_KEY }}
-            ses_secret_key=${{ secrets.SES_SECRET_KEY }}
-            ses_mail_from=${{ secrets.SES_MAIL_FROM }}
-            live_api_key=${{ secrets.NEXT_PUBLIC_LIVE_API_KEY }}
-            bypass_live_key=${{ secrets.BYPASS_LIVE_KEY }}
-            redis_url=${{ secrets.REDIS_URL }}
+      - name: Generate Docker metadata
+        id: meta
+        if: needs.detect-changes.outputs[matrix.app] == 'true'
+        run: |
+          # Generate tags based on event type
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # PR tags: pr-123-sha, pr-123-latest
+            echo "tags<<EOF" >> $GITHUB_OUTPUT
+            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:pr-${{ github.event.pull_request.number }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:pr-${{ github.event.pull_request.number }}-latest" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            # Main branch tags: sha, latest, short-sha
+            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+            echo "tags<<EOF" >> $GITHUB_OUTPUT
+            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:latest" >> $GITHUB_OUTPUT
+            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:${SHORT_SHA}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build server docker image
+      - name: Build and push ${{ matrix.app }} docker image
+        # Only build if this specific app has changes
+        if: needs.detect-changes.outputs[matrix.app] == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./apps/server/Dockerfile
-          push: true
           platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ github.repository }}-server:${{ github.sha }}
-            ghcr.io/${{ github.repository }}-server:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build worker docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./apps/worker/Dockerfile
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ghcr.io/${{ github.repository }}-worker:${{ github.sha }}
-            ghcr.io/${{ github.repository }}-worker:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          file: ${{ matrix.dockerfile }}
+          # Only push to registry on main branch, not on PRs
+          push: ${{ github.event_name != 'pull_request' }}
+          # Load image locally on PRs for validation
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+          secrets: ${{ matrix.needs-secrets && format('umami_script_url={0}
+            umami_website_id={1}
+            activity_websocket_url={2}
+            better_auth_secret={3}
+            discord_client_id={4}
+            discord_client_secret={5}
+            twitter_client_id={6}
+            twitter_client_secret={7}
+            browser_cdp_url={8}
+            site_url={9}
+            database_url={10}
+            indexer_database_url={11}
+            s3_endpoint={12}
+            s3_access_key={13}
+            s3_secret_key={14}
+            ses_region={15}
+            ses_access_key={16}
+            ses_secret_key={17}
+            ses_mail_from={18}
+            live_api_key={19}
+            bypass_live_key={20}
+            redis_url={21}',
+            secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL,
+            secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
+            secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL,
+            secrets.BETTER_AUTH_SECRET,
+            secrets.DISCORD_CLIENT_ID,
+            secrets.DISCORD_CLIENT_SECRET,
+            secrets.TWITTER_CLIENT_ID,
+            secrets.TWITTER_CLIENT_SECRET,
+            secrets.BROWSER_CDP_URL,
+            secrets.NEXT_PUBLIC_SITE_URL,
+            secrets.DATABASE_URL,
+            secrets.INDEXER_DATABASE_URL,
+            secrets.S3_ENDPOINT,
+            secrets.S3_ACCESS_KEY,
+            secrets.S3_SECRET_KEY,
+            secrets.SES_REGION,
+            secrets.SES_ACCESS_KEY,
+            secrets.SES_SECRET_KEY,
+            secrets.SES_MAIL_FROM,
+            secrets.NEXT_PUBLIC_LIVE_API_KEY,
+            secrets.BYPASS_LIVE_KEY,
+            secrets.REDIS_URL) || '' }}
 
   cleanup:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [detect-changes, validate, build]
+    # Run cleanup only on main branch and only if build succeeded or was skipped
+    if: |
+      always() &&
+      github.event_name != 'pull_request' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [web, server, worker]
     steps:
-      - name: Delete all untagged web images
+      - name: Delete all untagged ${{ matrix.app }} images
         uses: actions/delete-package-versions@v5
+        continue-on-error: true
         with:
-          package-name: ${{ github.event.repository.name }}-web
-          package-type: container
-          delete-only-untagged-versions: true
-          min-versions-to-keep: 3
-
-      - name: Delete all untagged server images
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: ${{ github.event.repository.name }}-server
-          package-type: container
-          delete-only-untagged-versions: true
-          min-versions-to-keep: 3
-
-      - name: Delete all untagged worker images
-        uses: actions/delete-package-versions@v5
-        with:
-          package-name: ${{ github.event.repository.name }}-worker
+          package-name: ${{ github.event.repository.name }}-${{ matrix.app }}
           package-type: container
           delete-only-untagged-versions: true
           min-versions-to-keep: 3

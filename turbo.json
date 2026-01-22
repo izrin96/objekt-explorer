@@ -10,8 +10,9 @@
     "build": {
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
-    "build:prod": {
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    "start": {
+      "cache": false,
+      "persistent": true
     },
     "lint": {
       "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"],
@@ -32,19 +33,6 @@
       "inputs": ["$TURBO_DEFAULT$", ".oxfmtrc.json"],
       "outputs": ["**/*.{ts,tsx,js,jsx,json,css,md}"],
       "cache": false
-    },
-    "db:generate": {
-      "cache": false
-    },
-    "db:push": {
-      "cache": false
-    },
-    "db:migrate": {
-      "cache": false
-    },
-    "db:studio": {
-      "cache": false,
-      "persistent": true
     }
   }
 }

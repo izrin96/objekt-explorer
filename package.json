@@ -1,11 +1,11 @@
 {
   "name": "objekt-explorer",
   "private": true,
-  "type": "module",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
+  "type": "module",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -13,11 +13,7 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
-    "format": "turbo run format",
-    "db:generate": "turbo run db:generate",
-    "db:push": "turbo run db:push",
-    "db:migrate": "turbo run db:migrate",
-    "db:studio": "turbo run db:studio"
+    "format": "turbo run format"
   },
   "devDependencies": {
     "@types/node": "^25.0.10",
