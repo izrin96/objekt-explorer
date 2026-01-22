@@ -31,5 +31,6 @@
   },
   "[json5]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
-  }
+  },
+  "tailwindCSS.lint.suggestCanonicalClasses": "ignore"
 }
