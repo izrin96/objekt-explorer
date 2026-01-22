@@ -197,6 +197,10 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     async load() {
       return {
         items: data?.transfers ?? [],
+        sortDescriptor: {
+          column: "timestamp",
+          direction: "descending",
+        },
       };
     },
     async sort({ items, sortDescriptor }) {
@@ -214,10 +218,6 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
           return cmp;
         }),
       };
-    },
-    initialSortDescriptor: {
-      column: "timestamp",
-      direction: "descending",
     },
   });
 

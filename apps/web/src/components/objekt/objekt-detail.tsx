@@ -191,16 +191,16 @@ function OwnedListPanel({
     async load() {
       return {
         items: objekts,
+        sortDescriptor: {
+          column: "receivedAt",
+          direction: "descending",
+        },
       };
     },
     async sort(params) {
       return {
         items: handleSort(params),
       };
-    },
-    initialSortDescriptor: {
-      column: "receivedAt",
-      direction: "descending",
     },
   });
 
