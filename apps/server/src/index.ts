@@ -1,18 +1,13 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
 import type { PublicObjekt } from "@repo/lib/objekts/types";
-import type { WSContext } from "hono/ws";
+import type { ServerWebSocket } from "bun";
 
-import { serve } from "@hono/node-server";
-import { createNodeWebSocket } from "@hono/node-ws";
 import { mapPublicObjekt } from "@repo/lib/objekts/utils";
-import { Hono } from "hono";
 
 import { redisPubSub } from "./lib/redis";
 import { fetchKnownAddresses } from "./lib/user";
 
-const clients = new Set<WSContext>();
-const app = new Hono();
-const { upgradeWebSocket, injectWebSocket } = createNodeWebSocket({ app });
+const clients = new Set<ServerWebSocket>();
 
 const transferHistory: TransferSendData[] = [];
 const MAX_HISTORY_SIZE = 50;
@@ -86,43 +81,47 @@ redisPubSub.on("message", async (channel, message) => {
   }
 });
 
-app.get(
-  "/ws",
-  upgradeWebSocket(() => {
-    return {
-      async onMessage(event, ws) {
-        const data = JSON.parse(event.data as string) as { type: string; data?: any };
-        if (data.type === "request_history") {
-          if (transferHistory.length > 0) {
-            const msg = {
-              type: "history",
-              data: transferHistory,
-            };
-            ws.send(JSON.stringify(msg));
-          }
-        }
-      },
-      onOpen(_, ws) {
-        clients.add(ws);
-      },
-      onClose(_, ws) {
-        clients.delete(ws);
-      },
-    };
-  }),
-);
+const server = Bun.serve({
+  port: 3000,
+  fetch(req, server) {
+    const url = new URL(req.url);
 
-app.get("/", (c) => {
-  return c.text("OK");
+    // WebSocket upgrade endpoint
+    if (url.pathname === "/ws") {
+      const upgraded = server.upgrade(req);
+      if (upgraded) {
+        return undefined;
+      }
+      return new Response("Upgrade failed", { status: 500 });
+    }
+
+    // Health check endpoint
+    if (url.pathname === "/") {
+      return new Response("OK", { status: 200 });
+    }
+
+    return new Response("Not Found", { status: 404 });
+  },
+  websocket: {
+    open(ws) {
+      clients.add(ws);
+    },
+    message(ws, message) {
+      const data = JSON.parse(message as string) as { type: string; data?: any };
+      if (data.type === "request_history") {
+        if (transferHistory.length > 0) {
+          const msg = {
+            type: "history",
+            data: transferHistory,
+          };
+          ws.send(JSON.stringify(msg));
+        }
+      }
+    },
+    close(ws) {
+      clients.delete(ws);
+    },
+  },
 });
 
-const server = serve(
-  {
-    fetch: app.fetch,
-    port: 3000,
-  },
-  (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`);
-  },
-);
-injectWebSocket(server);
+console.log(`Server is running on http://localhost:${server.port}`);

@@ -12,7 +12,7 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 
 - `apps/web` - Main frontend (Next.js)
 - `apps/website` - Main frontend (TanStack React Start + Vite)
-- `apps/server` - WebSocket activity server (Hono)
+- `apps/server` - WebSocket activity server
 - `apps/worker` - Background job worker (Croner)
 - `apps/indexer` - NFT metadata indexer
 - `packages/db` - Database schema (Drizzle ORM + PostgreSQL)
