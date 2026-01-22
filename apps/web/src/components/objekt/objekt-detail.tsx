@@ -10,6 +10,7 @@ import {
   PushPinIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
+import { Addresses } from "@repo/lib";
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -19,7 +20,6 @@ import { type CSSProperties, useCallback, useState } from "react";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
-import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import { Badge } from "../ui/badge";
@@ -48,7 +48,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
         {
           "--objekt-bg-color": objekt.backgroundColor,
           "--objekt-text-color": objekt.textColor,
-        } as CSSProperties
+        } as Record<string, string>
       }
     >
       <div className="flex h-84 self-center select-none sm:h-fit">
@@ -248,7 +248,7 @@ function OwnedListPanel({
                   </TableCell>
                   <TableCell>
                     <Link
-                      href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${item.id}`}
+                      href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${item.id}`}
                       className="inline-flex cursor-pointer items-center gap-2"
                       target="_blank"
                     >

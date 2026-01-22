@@ -3,12 +3,24 @@ import type { ValidArtist } from "../types/common";
 import { cosmo } from "./http";
 
 export interface LiveSession {
-  id: string;
+  id: number;
+  thumbnailImage: string;
+  startedAt: string;
+  endedAt: string;
+  videoCallId: string;
+  chatChannelId: string;
+  slowModeSecond: number;
+  status: "in_progress" | "ended";
+  createdAt: string;
+  updatedAt: string;
+  channel: {
+    id: number;
+    name: string;
+    profileImageUrl: string;
+    primaryColorHex: string;
+    isConnected: boolean;
+  };
   title: string;
-  startTime: string;
-  endTime: string;
-  artistId: ValidArtist;
-  // Add other fields as needed from Cosmo API
 }
 
 /**
@@ -23,6 +35,17 @@ export async function fetchLiveSessions(token: string, artistId: ValidArtist) {
       skip: 0,
       take: 30,
       artistId,
+    },
+  });
+}
+
+/**
+ * Fetch single live session.
+ */
+export async function fetchLiveSession(token: string, id: string) {
+  return await cosmo<LiveSession>(`/bff/v3/live-sessions/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
     },
   });
 }

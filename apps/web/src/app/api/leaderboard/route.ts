@@ -1,14 +1,14 @@
 import type { NextRequest } from "next/server";
 
+import { validArtists, validOnlineTypes, validSeasons } from "@repo/cosmo/types/common";
+import { Addresses } from "@repo/lib";
 import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
 import * as z from "zod/v4";
 
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { fetchKnownAddresses } from "@/lib/server/profile";
-import { validArtists, validOnlineTypes, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables } from "@/lib/universal/objekts";
-import { SPIN_ADDRESS } from "@/lib/utils";
 
 import { cacheHeaders } from "../common";
 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     })
     .from(objekts)
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(and(...wheres, ne(objekts.owner, SPIN_ADDRESS)))
+    .where(and(...wheres, ne(objekts.owner, Addresses.SPIN)))
     .as("subquery");
 
   const query = await indexer

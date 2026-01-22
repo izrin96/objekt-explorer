@@ -1,13 +1,13 @@
 "use client";
 
+import type { LiveSession } from "@repo/cosmo/server/live";
+
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
 import { type CSSProperties, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-
-import type { LiveSession } from "@/lib/universal/cosmo/live";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { getBaseURL } from "@/lib/utils";
@@ -118,7 +118,7 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
             style={
               {
                 "--color": live.channel.primaryColorHex,
-              } as CSSProperties
+              } as Record<string, string>
             }
             className="outline-2 outline-(--color)"
             size="sm"

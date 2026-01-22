@@ -1,4 +1,4 @@
-import type { ValidArtist, ValidClass } from "./common";
+import type { ValidArtist, ValidClass } from "@repo/cosmo/types/common";
 
 export type ClassArtist = {
   artistId: ValidArtist;

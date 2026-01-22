@@ -1,5 +1,12 @@
 import type { NextRequest } from "next/server";
 
+import {
+  validArtists,
+  validClasses,
+  validOnlineTypes,
+  validSeasons,
+} from "@repo/cosmo/types/common";
+import { Addresses } from "@repo/lib";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod/v4";
 
@@ -11,14 +18,7 @@ import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema"
 import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
-import {
-  validArtists,
-  validClasses,
-  validOnlineTypes,
-  validSeasons,
-} from "@/lib/universal/cosmo/common";
 import { type TransferResult, validType } from "@/lib/universal/transfers";
-import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PER_PAGE = 150;
 
@@ -99,16 +99,36 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
             ]
           : []),
         ...(query.type === "mint"
-          ? [and(eq(transfers.from, NULL_ADDRESS), eq(transfers.to, params.address.toLowerCase()))]
+          ? [
+              and(
+                eq(transfers.from, Addresses.NULL),
+                eq(transfers.to, params.address.toLowerCase()),
+              ),
+            ]
           : []),
         ...(query.type === "received"
-          ? [and(ne(transfers.from, NULL_ADDRESS), eq(transfers.to, params.address.toLowerCase()))]
+          ? [
+              and(
+                ne(transfers.from, Addresses.NULL),
+                eq(transfers.to, params.address.toLowerCase()),
+              ),
+            ]
           : []),
         ...(query.type === "sent"
-          ? [and(eq(transfers.from, params.address.toLowerCase()), ne(transfers.to, SPIN_ADDRESS))]
+          ? [
+              and(
+                eq(transfers.from, params.address.toLowerCase()),
+                ne(transfers.to, Addresses.SPIN),
+              ),
+            ]
           : []),
         ...(query.type === "spin"
-          ? [and(eq(transfers.from, params.address.toLowerCase()), eq(transfers.to, SPIN_ADDRESS))]
+          ? [
+              and(
+                eq(transfers.from, params.address.toLowerCase()),
+                eq(transfers.to, Addresses.SPIN),
+              ),
+            ]
           : []),
         ...(cursor ? [lt(transfers.id, cursor.id)] : []),
         ...(query.artist.length

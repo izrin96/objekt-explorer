@@ -1,10 +1,9 @@
 "use client";
 
+import type { ValidGroupBy } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
 
 import { useCallback } from "react";
-
-import type { ValidGroupBy } from "@/lib/universal/cosmo/common";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui/menu";

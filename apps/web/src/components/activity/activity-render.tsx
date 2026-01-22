@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
+import { Addresses } from "@repo/lib";
 import {
   type InfiniteData,
   QueryErrorResetBoundary,
@@ -23,7 +24,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
-import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import { getBaseURL } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import ErrorFallbackRender from "../error-boundary";
@@ -110,7 +111,9 @@ function Activity() {
         });
 
         return Object.assign({}, response, {
-          items: response.items.map((item) => Object.assign({}, item, { objekt: mapObjektWithTag(item.objekt) })),
+          items: response.items.map((item) =>
+            Object.assign({}, item, { objekt: mapObjektWithTag(item.objekt) }),
+          ),
         });
       },
       initialPageParam: undefined,
@@ -180,7 +183,7 @@ function Activity() {
       if (message.type === "history") {
         const existing = latestData?.pages[0].items ?? [];
         const existHash = new Set(existing.map((a) => a.transfer.hash));
-        const historyFiltered = filtered.filter((a) => existHash.has(a.transfer.hash) === false);
+        const historyFiltered = filtered.filter((a) => !existHash.has(a.transfer.hash));
 
         if (isHoveringRef.current) {
           // Queue history updates when hovering
@@ -358,9 +361,9 @@ const ActivityRow = memo(function ActivityRow({
   };
 
   const event =
-    item.transfer.from === NULL_ADDRESS
+    item.transfer.from === Addresses.NULL
       ? "mint"
-      : item.transfer.to === SPIN_ADDRESS
+      : item.transfer.to === Addresses.SPIN
         ? "spin"
         : "transfer";
 

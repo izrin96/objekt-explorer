@@ -62,7 +62,7 @@ ENV NEXT_PUBLIC_LIVE_API_KEY=$NEXT_PUBLIC_LIVE_API_KEY
 ENV BYPASS_LIVE_KEY=$BYPASS_LIVE_KEY
 ENV REDIS_URL=$REDIS_URL
 
-RUN bun run build:prod --filter=web
+RUN bun run --filter web build:prod
 
 # runner
 FROM base AS runner

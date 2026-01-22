@@ -1,3 +1,4 @@
+import { fetchByNickname } from "@repo/cosmo/server/user";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins/username";
@@ -11,15 +12,14 @@ import { env } from "@/env";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
 
-import { getBaseURL } from "../utils";
-import { fetchByNickname } from "./cosmo/auth";
+import { getBaseURL, SITE_NAME } from "../utils";
 import { db } from "./db";
 import * as authSchema from "./db/auth-schema";
 import { type UserAddress, userAddress } from "./db/schema";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({
-  appName: "Objekt Tracker",
+  appName: SITE_NAME,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: authSchema,

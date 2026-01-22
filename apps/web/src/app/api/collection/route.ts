@@ -1,3 +1,4 @@
+import { validArtists } from "@repo/cosmo/types/common";
 import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
@@ -9,7 +10,6 @@ import { indexer } from "@/lib/server/db/indexer";
 import { collections } from "@/lib/server/db/indexer/schema";
 import { overrideCollection } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { validArtists } from "@/lib/universal/cosmo/common";
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),

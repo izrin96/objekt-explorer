@@ -1,7 +1,7 @@
+import type { CosmoPublicUser } from "@repo/cosmo/types/user";
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
-import type { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 
 type UserSearchState = {
   users: CosmoPublicUser[];

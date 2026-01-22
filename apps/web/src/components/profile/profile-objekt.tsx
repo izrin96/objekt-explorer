@@ -1,5 +1,6 @@
 "use client";
 
+import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
@@ -16,7 +17,6 @@ import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
-import { SPIN_ADDRESS } from "@/lib/utils";
 
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -58,7 +58,7 @@ export default function ProfileObjektRender() {
                 <Suspense
                   fallback={
                     <div className="flex flex-col items-center gap-4">
-                      {profile.address.toLowerCase() === SPIN_ADDRESS && (
+                      {profile.address.toLowerCase() === Addresses.SPIN && (
                         <Note intent="info" className="max-w-2xl">
                           Loading cosmo-spin objekts may take some time because it loads the entire
                           collection at once. Please use{" "}

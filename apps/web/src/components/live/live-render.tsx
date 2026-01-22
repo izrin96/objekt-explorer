@@ -1,8 +1,8 @@
 "use client";
 
-import { StreamVideo, StreamVideoClient, type User } from "@stream-io/video-react-sdk";
+import type { LiveSession } from "@repo/cosmo/server/live";
 
-import type { LiveSession } from "@/lib/universal/cosmo/live";
+import { StreamVideo, StreamVideoClient, type User } from "@stream-io/video-react-sdk";
 
 import { env } from "@/env";
 import { LiveSessionProvider } from "@/hooks/use-live-session";

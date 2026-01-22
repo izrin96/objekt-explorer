@@ -1,9 +1,10 @@
+import type { ValidArtist } from "@repo/cosmo/types/common";
+
 import { queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
 import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
 
-import type { ValidArtist } from "./universal/cosmo/common";
 import type { CollectionResult } from "./universal/objekts";
 
 import { authClient } from "./auth-client";

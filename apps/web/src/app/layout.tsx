@@ -14,6 +14,7 @@ import "@/lib/orpc/server";
 import Navbar from "@/components/navbar";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
+import { SITE_NAME } from "@/lib/utils";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -52,9 +53,9 @@ const nunitoFont = Nunito_Sans({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s · Objekt Tracker",
-    default: "Objekt Tracker",
-    absolute: "Objekt Tracker",
+    template: `%s · ${SITE_NAME}`,
+    default: SITE_NAME,
+    absolute: SITE_NAME,
   },
   description: "Cosmo objekt explorer",
   keywords: [

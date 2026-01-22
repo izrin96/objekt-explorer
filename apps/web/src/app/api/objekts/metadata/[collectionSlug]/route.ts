@@ -1,3 +1,4 @@
+import { Addresses } from "@repo/lib";
 import { count, eq, sql } from "drizzle-orm";
 
 import type { CollectionMetadata } from "@/lib/universal/objekts";
@@ -5,7 +6,6 @@ import type { CollectionMetadata } from "@/lib/universal/objekts";
 import { cacheHeaders } from "@/app/api/common";
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
-import { SPIN_ADDRESS } from "@/lib/utils";
 
 type Params = {
   params: Promise<{
@@ -19,9 +19,9 @@ export async function GET(_: Request, props: Params) {
   const results = await indexer
     .select({
       total: count(),
-      spin: sql`count(case when ${objekts.owner}=${SPIN_ADDRESS} then 1 end)`.mapWith(Number),
+      spin: sql`count(case when ${objekts.owner}=${Addresses.SPIN} then 1 end)`.mapWith(Number),
       transferable:
-        sql`count(case when transferable = true and ${objekts.owner}!=${SPIN_ADDRESS} then 1 end)`.mapWith(
+        sql`count(case when transferable = true and ${objekts.owner}!=${Addresses.SPIN} then 1 end)`.mapWith(
           Number,
         ),
       createdAt: collections.createdAt,

@@ -1,10 +1,10 @@
+import { validGroupBy } from "@repo/cosmo/types/common";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 
 import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { classSort, seasonSort } from "@/lib/filter-utils";
-import { validGroupBy } from "@/lib/universal/cosmo/common";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
@@ -17,7 +17,7 @@ export function useShapeProgress() {
 
   return useCallback(
     (data: ValidObjekt[]): [string, ValidObjekt[][]][] => {
-      const objekts = data.filter((a) => ["Welcome", "Zero"].includes(a.class) === false);
+      const objekts = data.filter((a) => !["Welcome", "Zero"].includes(a.class));
 
       const groupBys = filters.group_bys?.toSorted(
         (a, b) => validGroupBy.indexOf(a) - validGroupBy.indexOf(b),

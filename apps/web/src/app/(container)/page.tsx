@@ -8,7 +8,7 @@ export default async function Home() {
   const queryClient = getQueryClient();
   const session = await getSession();
 
-  queryClient.prefetchQuery({
+  void queryClient.prefetchQuery({
     queryKey: ["filter-data"],
     queryFn: fetchFilterData,
   });

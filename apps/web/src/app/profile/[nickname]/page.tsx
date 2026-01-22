@@ -26,13 +26,13 @@ export default async function UserCollectionPage(props: Props) {
   const params = await props.params;
   const profile = await getUserByIdentifier(params.nickname);
 
-  queryClient.prefetchQuery(
+  void queryClient.prefetchQuery(
     orpc.pins.list.queryOptions({
       input: profile.address,
     }),
   );
 
-  queryClient.prefetchQuery(
+  void queryClient.prefetchQuery(
     orpc.lockedObjekt.list.queryOptions({
       input: profile.address,
     }),

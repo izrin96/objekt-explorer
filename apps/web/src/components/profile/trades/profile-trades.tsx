@@ -2,6 +2,7 @@
 
 import { IconOpenLink } from "@intentui/icons";
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
@@ -23,7 +24,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useTarget } from "@/hooks/use-target";
-import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+import { getBaseURL } from "@/lib/utils";
 
 import { useTypeFilter } from "./filter-type";
 import TradesFilter from "./trades-filter";
@@ -192,12 +193,12 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
   );
 
   const user = isReceiver ? (
-    row.transfer.from === NULL_ADDRESS ? (
+    row.transfer.from === Addresses.NULL ? (
       <span className="text-muted-fg font-mono">COSMO</span>
     ) : (
       <UserLink address={row.transfer.from} nickname={row.nickname.from} />
     )
-  ) : row.transfer.to === SPIN_ADDRESS ? (
+  ) : row.transfer.to === Addresses.SPIN ? (
     <span className="text-muted-fg font-mono">COSMO Spin</span>
   ) : (
     <UserLink address={row.transfer.to} nickname={row.nickname.to} />

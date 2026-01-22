@@ -1,5 +1,7 @@
 import { env } from "@/env";
 
+export const SITE_NAME = "Objekt Tracker";
+
 export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_TABLET = 5;
 export const GRID_COLUMNS_MOBILE = 3;
@@ -12,11 +14,6 @@ export const OBJEKT_SIZE = {
 export const AGW_APP_ID = "cm04asygd041fmry9zmcyn5o5";
 export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
-export const NULL_ADDRESS = "0x0000000000000000000000000000000000000000";
-export const SPIN_ADDRESS = "0xd3d5f29881ad87bb10c1100e2c709c9596de345f";
-
-export const OBJEKT_CONTRACT = "0x99bb83ae9bb0c0a6be865cacf67760947f91cb70";
-
 export function parseNickname(address: string, nickname?: string | null) {
   return nickname ?? `${address.substring(0, 8)}...`;
 }
@@ -25,7 +22,7 @@ export function getBaseURL() {
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
-  return env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001";
+  return env.NEXT_PUBLIC_SITE_URL;
 }
 
 export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {

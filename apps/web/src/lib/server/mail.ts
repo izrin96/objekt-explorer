@@ -2,6 +2,8 @@ import { SES } from "@aws-sdk/client-ses";
 
 import { env } from "@/env";
 
+import { SITE_NAME } from "../utils";
+
 const ses = new SES({
   region: env.SES_REGION,
   credentials: {
@@ -10,7 +12,7 @@ const ses = new SES({
   },
 });
 
-const MAIL_FROM = `Objekt Tracker <${env.SES_MAIL_FROM}>`;
+const MAIL_FROM = `${SITE_NAME} <${env.SES_MAIL_FROM}>`;
 
 export async function sendVerificationEmail(to: string, url: string) {
   await ses.sendEmail({

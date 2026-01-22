@@ -1,6 +1,7 @@
+import type { CosmoArtistWithMembersBFF } from "@repo/cosmo/types/artists";
+
 import { groupBy } from "es-toolkit";
 
-import type { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import type { ValidObjekt } from "./universal/objekts";
 
 export type FormatObjekt = Pick<

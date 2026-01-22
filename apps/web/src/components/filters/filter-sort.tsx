@@ -2,10 +2,10 @@
 
 import type { Selection } from "react-aria-components";
 
+import { type ValidSort, validSorts } from "@repo/cosmo/types/common";
 import { useTranslations } from "next-intl";
 
 import { useFilters } from "@/hooks/use-filters";
-import { type ValidSort, validSorts } from "@/lib/universal/cosmo/common";
 
 import { Button } from "../ui/button";
 import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../ui/menu";

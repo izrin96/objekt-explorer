@@ -11,6 +11,7 @@ import {
   QuestionMarkIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
+import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
@@ -23,7 +24,7 @@ import { useCopyToClipboard } from "usehooks-ts";
 
 import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
 
-import { getBaseURL, OBJEKT_CONTRACT } from "@/lib/utils";
+import { getBaseURL } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import ErrorFallbackRender from "../error-boundary";
@@ -191,8 +192,8 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     staleTime: 0,
   });
 
-  const handleCopy = useCallback((tokenId: string | undefined) => {
-    copy(`${tokenId ?? ""}`);
+  const handleCopy = useCallback(async (tokenId: string | undefined) => {
+    await copy(tokenId ?? "");
     toast.success("Token ID copied");
   }, []);
 
@@ -272,7 +273,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
           <span className="text-sm font-semibold">{t("token_id")}</span>
           <div className="flex items-center gap-2">
             <Link
-              href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
+              href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${data.tokenId}`}
               className="inline-flex cursor-pointer items-center gap-2 font-mono"
               target="_blank"
             >
@@ -301,7 +302,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
             bleed
             aria-label="Trades"
             sortDescriptor={list.sortDescriptor}
-            onSortChange={list.sort}
+            onSortChange={(desc) => list.sort(desc)}
           >
             <TableHeader>
               <TableColumn isRowHeader>{t("owner")}</TableColumn>

@@ -1,11 +1,10 @@
 "use client";
 
+import type { ValidClass } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
 
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
-
-import type { ValidClass } from "@/lib/universal/cosmo/common";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
@@ -26,7 +25,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
   const update = useCallback(
     (key: Selection) => {
       const values = Array.from((key as Set<ValidClass>).values());
-      setFilters({
+      return setFilters({
         class: values.length ? values : null,
       });
     },
@@ -34,7 +33,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
   );
 
   const availableClasses = classes.filter((s) =>
-    hideEtc ? ["Zero", "Welcome"].includes(s) === false : true,
+    hideEtc ? !["Zero", "Welcome"].includes(s) : true,
   );
 
   return (

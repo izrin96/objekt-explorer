@@ -20,7 +20,7 @@ export default async function Page() {
 
   if (!session) redirect("/");
 
-  queryClient.prefetchQuery(orpc.profile.list.queryOptions());
+  void queryClient.prefetchQuery(orpc.profile.list.queryOptions());
 
   return (
     <div className="flex flex-col pt-2 pb-36">

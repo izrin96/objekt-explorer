@@ -1,4 +1,4 @@
-import type { CosmoArtistWithMembersBFF } from "@/lib/universal/cosmo/artists";
+import type { CosmoArtistWithMembersBFF } from "@repo/cosmo/types/artists";
 
 export const artists: CosmoArtistWithMembersBFF[] = [
   {

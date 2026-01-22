@@ -1,3 +1,10 @@
+import {
+  validArtists,
+  validClasses,
+  validOnlineTypes,
+  validSeasons,
+} from "@repo/cosmo/types/common";
+import { Addresses } from "@repo/lib";
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod/v4";
@@ -9,13 +16,6 @@ import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses } from "@/lib/server/profile";
 import { type ActivityResponse, validType } from "@/lib/universal/activity";
-import {
-  validArtists,
-  validClasses,
-  validOnlineTypes,
-  validSeasons,
-} from "@/lib/universal/cosmo/common";
-import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 const PAGE_SIZE = 300;
 
@@ -58,11 +58,11 @@ export async function GET(request: NextRequest) {
     .where(
       and(
         ...(cursor ? [lt(transfers.id, cursor.id)] : []),
-        ...(query.type === "mint" ? [eq(transfers.from, NULL_ADDRESS)] : []),
+        ...(query.type === "mint" ? [eq(transfers.from, Addresses.NULL)] : []),
         ...(query.type === "transfer"
-          ? [and(ne(transfers.from, NULL_ADDRESS), ne(transfers.to, SPIN_ADDRESS))]
+          ? [and(ne(transfers.from, Addresses.NULL), ne(transfers.to, Addresses.SPIN))]
           : []),
-        ...(query.type === "spin" ? [eq(transfers.to, SPIN_ADDRESS)] : []),
+        ...(query.type === "spin" ? [eq(transfers.to, Addresses.SPIN)] : []),
         ...(query.artist.length
           ? [
               inArray(

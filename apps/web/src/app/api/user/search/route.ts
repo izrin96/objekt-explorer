@@ -1,10 +1,10 @@
+import type { CosmoSearchResult } from "@repo/cosmo/types/user";
+
+import { search } from "@repo/cosmo/server/user";
 import { like } from "drizzle-orm";
 import { after, type NextRequest } from "next/server";
 
-import type { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
-
 import { cacheUsers } from "@/lib/server/auth";
-import { search } from "@/lib/server/cosmo/auth";
 import { db } from "@/lib/server/db";
 import { userAddress } from "@/lib/server/db/schema";
 import { getAccessToken } from "@/lib/server/token";
@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
   // fallback to db
   const users = await db
     .select({
+      id: userAddress.id,
       nickname: userAddress.nickname,
       address: userAddress.address,
     })
@@ -46,6 +47,7 @@ export async function GET(request: NextRequest) {
     hasNext: false,
     nextStartAfter: null,
     results: users.map((a) => ({
+      id: a.id,
       nickname: a.nickname!,
       address: a.address,
       profileImageUrl: "",

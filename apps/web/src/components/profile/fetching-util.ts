@@ -1,6 +1,7 @@
+import type { ValidArtist } from "@repo/cosmo/types/common";
+
 import { ofetch } from "ofetch";
 
-import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import type { OwnedObjekt, OwnedObjektsResult } from "@/lib/universal/objekts";
 
 import { getBaseURL } from "@/lib/utils";

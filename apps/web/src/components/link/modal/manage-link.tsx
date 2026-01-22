@@ -39,7 +39,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { orpc } from "@/lib/orpc/client";
-import { mimeTypes, validColumns } from "@/lib/utils";
+import { mimeTypes, SITE_NAME, validColumns } from "@/lib/utils";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -55,7 +55,7 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
         toast.success("Cosmo unlinked");
-        client.invalidateQueries({
+        void client.invalidateQueries({
           queryKey: orpc.profile.list.key(),
         });
       },
@@ -244,7 +244,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         const formData = new FormData();
         formData.append("Content-Type", file.type);
         Object.entries(fields).forEach(([key, value]) => {
-          formData.append(key, value as string);
+          formData.append(key, value);
         });
         formData.append("file", file);
 
@@ -349,7 +349,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
               <Label>Hide User</Label>
-              <Description>Hide Objekt Tracker account from Cosmo profile</Description>
+              <Description>Hide {SITE_NAME} account from Cosmo profile</Description>
             </Checkbox>
           )}
         />

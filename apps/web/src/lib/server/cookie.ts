@@ -1,6 +1,6 @@
-import { cookies } from "next/headers";
+import type { ValidArtist } from "@repo/cosmo/types/common";
 
-import type { ValidArtist } from "../universal/cosmo/common";
+import { cookies } from "next/headers";
 
 export async function parseSelectedArtists() {
   const cookie = await cookies();

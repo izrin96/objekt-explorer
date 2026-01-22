@@ -3,6 +3,8 @@
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { motion } from "motion/react";
 
+import { SITE_NAME } from "@/lib/utils";
+
 import { Link } from "./ui/link";
 
 export default function AppLogo() {
@@ -19,7 +21,7 @@ export default function AppLogo() {
           <CubeIcon size={24} weight="fill" />
         </motion.div>
         <span className="hidden truncate text-lg font-semibold select-none sm:block">
-          Objekt Tracker
+          {SITE_NAME}
         </span>
       </motion.div>
     </Link>

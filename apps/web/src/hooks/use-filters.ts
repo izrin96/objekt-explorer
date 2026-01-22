@@ -1,14 +1,4 @@
 import {
-  parseAsArrayOf,
-  parseAsBoolean,
-  parseAsFloat,
-  parseAsNumberLiteral,
-  parseAsString,
-  parseAsStringEnum,
-  useQueryStates,
-} from "nuqs";
-
-import {
   type ValidArtist,
   type ValidClass,
   type ValidEdition,
@@ -25,7 +15,16 @@ import {
   validSeasons,
   validSortDirection,
   validSorts,
-} from "@/lib/universal/cosmo/common";
+} from "@repo/cosmo/types/common";
+import {
+  parseAsArrayOf,
+  parseAsBoolean,
+  parseAsFloat,
+  parseAsNumberLiteral,
+  parseAsString,
+  parseAsStringEnum,
+  useQueryStates,
+} from "nuqs";
 
 export function useFilters() {
   return useQueryStates({

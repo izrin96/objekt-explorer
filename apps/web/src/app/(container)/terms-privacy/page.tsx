@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Link } from "@/components/ui/link";
+import { SITE_NAME } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -24,7 +25,7 @@ export default function TermsPrivacy() {
           <li>We only use your info to make the app work.</li>
           <li>You can ask us to delete your data anytime.</li>
           <li>
-            Objekt Tracker is open source. Github link{" "}
+            {SITE_NAME} is open source. Github link{" "}
             <Link
               href="https://github.com/izrin96/objekt-explorer"
               className="underline"

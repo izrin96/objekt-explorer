@@ -1,13 +1,12 @@
-import chroma from "chroma-js";
-
-import type { Filters } from "@/hooks/use-filters";
-
 import {
   type ValidClass,
   type ValidSeason,
   validClasses,
   validSeasons,
-} from "@/lib/universal/cosmo/common";
+} from "@repo/cosmo/types/common";
+import chroma from "chroma-js";
+
+import type { Filters } from "@/hooks/use-filters";
 
 import type { ValidObjekt } from "./universal/objekts";
 

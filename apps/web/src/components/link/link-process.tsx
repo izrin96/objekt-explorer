@@ -26,7 +26,7 @@ import TrashIcon from "@/assets/icon-trash.png";
 import WelcomeIcon from "@/assets/icon-welcome.png";
 import WhiteFoxIcon from "@/assets/icon-white-fox.png";
 import { orpc } from "@/lib/orpc/client";
-import { msToCountdown } from "@/lib/utils";
+import { msToCountdown, SITE_NAME } from "@/lib/utils";
 
 import { Button, buttonStyles } from "../ui/button";
 import { Form } from "../ui/form";
@@ -67,7 +67,7 @@ export default function LinkRender() {
               </p>
               <p>
                 This linking process will <span className="font-bold">not</span> allow Objekt
-                Tracker to access your Cosmo, but only to verify ownership of it. Objekt Tracker
+                Tracker to access your Cosmo, but only to verify ownership of it. {SITE_NAME}
                 does not store anything about your account other than wallet address and ID.
               </p>
             </div>
@@ -78,9 +78,9 @@ export default function LinkRender() {
                 계속 진행하기 전에 Cosmo 앱을 다운로드하고 연결하려는 Cosmo ID로 로그인해야 합니다.
               </p>
               <p>
-                이 연결 과정에서 Objekt Tracker가 사용자의 Cosmo에 접근하는 것은{" "}
+                이 연결 과정에서 {SITE_NAME}가 사용자의 Cosmo에 접근하는 것은{" "}
                 <span className="font-bold">전혀</span> 불가능하며, 단지 해당 Cosmo의 소유 여부만
-                확인합니다. Objekt Tracker는 지갑 주소와 ID를 제외하고는 계정에 대한 어떠한 정보도
+                확인합니다. {SITE_NAME}는 지갑 주소와 ID를 제외하고는 계정에 대한 어떠한 정보도
                 저장하지 않습니다.
               </p>
             </div>
@@ -89,7 +89,7 @@ export default function LinkRender() {
             size="md"
             intent="outline"
             onClick={() => {
-              queryClient.invalidateQueries({
+              void queryClient.invalidateQueries({
                 queryKey: orpc.cosmoLink.getTicket.key(),
               });
               setStep(1);
@@ -170,7 +170,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
 
   useEffect(() => {
     if (data?.status === "certified") {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: orpc.profile.list.key(),
       });
     }

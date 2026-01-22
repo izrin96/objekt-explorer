@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, type PropsWithChildren, useContext } from "react";
+import type { LiveSession } from "@repo/cosmo/server/live";
 
-import type { LiveSession } from "@/lib/universal/cosmo/live";
+import { createContext, type PropsWithChildren, useContext } from "react";
 
 type ContextProps = {
   live: LiveSession;

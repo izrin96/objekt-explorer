@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
+import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@repo/cosmo/types/artists";
+import type { ValidArtist } from "@repo/cosmo/types/common";
 
-import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
-import type { ValidArtist } from "@/lib/universal/cosmo/common";
+import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
 
 type ContextProps = {
   artists: CosmoArtistWithMembersBFF[];

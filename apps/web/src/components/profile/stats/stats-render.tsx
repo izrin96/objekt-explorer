@@ -2,6 +2,7 @@
 
 import type React from "react";
 
+import { seasonColors, validSeasons } from "@repo/cosmo/types/common";
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import dynamic from "next/dynamic";
@@ -18,7 +19,6 @@ import { useFilters } from "@/hooks/use-filters";
 import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useTarget } from "@/hooks/use-target";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
 
@@ -274,15 +274,15 @@ function MemberProgressChart({
         const owned = grouped.filter(([objekt]) => {
           return (
             objekt.member === member.name &&
-            unobtainables.includes(objekt.slug) === false &&
-            ["Welcome", "Zero"].includes(objekt.class) === false
+            !unobtainables.includes(objekt.slug) &&
+            !["Welcome", "Zero"].includes(objekt.class)
           );
         }).length;
         const total = collections.filter(
           (a) =>
             a.member === member.name &&
-            unobtainables.includes(a.slug) === false &&
-            ["Welcome", "Zero"].includes(a.class) === false,
+            !unobtainables.includes(a.slug) &&
+            !["Welcome", "Zero"].includes(a.class),
         ).length;
         const percentage = total > 0 ? (owned / total) * 100 : 0;
 

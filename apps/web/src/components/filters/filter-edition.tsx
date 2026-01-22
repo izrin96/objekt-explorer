@@ -2,11 +2,11 @@
 
 import type { Selection } from "react-aria-components";
 
+import { type ValidEdition, validEdition } from "@repo/cosmo/types/common";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
-import { type ValidEdition, validEdition } from "@/lib/universal/cosmo/common";
 import { getEditionStr } from "@/lib/utils";
 
 import { Button } from "../ui/button";

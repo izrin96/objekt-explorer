@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 
+import { validArtists } from "@repo/cosmo/types/common";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod/v4";
 
@@ -12,7 +13,6 @@ import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
-import { validArtists } from "@/lib/universal/cosmo/common";
 
 type Params = {
   params: Promise<{

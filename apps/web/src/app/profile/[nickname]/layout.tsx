@@ -28,7 +28,7 @@ export default async function UserCollectionLayout(props: Props) {
     session ? fetchUserProfiles(session.user.id) : undefined,
   ]);
 
-  queryClient.prefetchQuery({
+  void queryClient.prefetchQuery({
     queryKey: ["filter-data"],
     queryFn: fetchFilterData,
   });

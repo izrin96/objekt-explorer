@@ -33,7 +33,7 @@ export default async function Page(props: Props) {
     session ? fetchOwnedLists(session.user.id) : undefined,
   ]);
 
-  queryClient.prefetchQuery(
+  void queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({
       input: {
         slug: params.slug,
@@ -41,7 +41,7 @@ export default async function Page(props: Props) {
     }),
   );
 
-  queryClient.prefetchQuery({
+  void queryClient.prefetchQuery({
     queryKey: ["filter-data"],
     queryFn: fetchFilterData,
   });

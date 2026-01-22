@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function Page() {
   const queryClient = getQueryClient();
 
-  queryClient.prefetchQuery({
+  void queryClient.prefetchQuery({
     queryKey: ["filter-data"],
     queryFn: fetchFilterData,
   });

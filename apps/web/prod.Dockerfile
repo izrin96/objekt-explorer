@@ -60,7 +60,7 @@ RUN --mount=type=secret,id=umami_script_url \
     NEXT_PUBLIC_LIVE_API_KEY=$(cat /run/secrets/live_api_key) \
     BYPASS_LIVE_KEY=$(cat /run/secrets/bypass_live_key) \
     REDIS_URL=$(cat /run/secrets/redis_url) \
-    bun run build:prod --filter=web
+    bun run --filter web build:prod
 
 # runner
 FROM base AS runner

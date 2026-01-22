@@ -1,12 +1,13 @@
 import type { NextRequest } from "next/server";
 
+import { fetchLiveSessions } from "@repo/cosmo/server/live";
+import { validArtists } from "@repo/cosmo/types/common";
 import * as z from "zod/v4";
 
-import { fetchLiveSessions } from "@/lib/server/cosmo/live";
 import { getAccessToken } from "@/lib/server/token";
 
 const querySchema = z.object({
-  artistId: z.string(),
+  artistId: z.enum(validArtists),
 });
 
 export async function GET(request: NextRequest) {

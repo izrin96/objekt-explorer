@@ -1,8 +1,9 @@
+import type { ValidClass, ValidSeason } from "@repo/cosmo/types/common";
+
+import { Addresses } from "@repo/lib";
+
 import type { Filters } from "@/hooks/use-filters";
 import type { ActivityData, ValidType } from "@/lib/universal/activity";
-import type { ValidClass, ValidOnlineType, ValidSeason } from "@/lib/universal/cosmo/common";
-
-import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 export function filterData(
   data: ActivityData[],
@@ -12,8 +13,8 @@ export function filterData(
   return data.filter((item) => {
     // Filter by type
     if (type !== "all") {
-      const isMint = item.transfer.from === NULL_ADDRESS;
-      const isSpin = item.transfer.to === SPIN_ADDRESS;
+      const isMint = item.transfer.from === Addresses.NULL;
+      const isSpin = item.transfer.to === Addresses.SPIN;
       const isTransfer = !isMint && !isSpin;
 
       if (type === "mint" && !isMint) return false;
@@ -37,6 +38,7 @@ export function filterData(
 
     // Filter by season
     if (filters.season?.length) {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       if (!filters.season.includes(item.objekt.season as ValidSeason)) {
         return false;
       }
@@ -44,6 +46,7 @@ export function filterData(
 
     // Filter by class
     if (filters.class?.length) {
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
       if (!filters.class.includes(item.objekt.class as ValidClass)) {
         return false;
       }
@@ -51,7 +54,7 @@ export function filterData(
 
     // Filter by on/offline
     if (filters.on_offline?.length) {
-      if (!filters.on_offline.includes(item.objekt.onOffline as ValidOnlineType)) {
+      if (!filters.on_offline.includes(item.objekt.onOffline)) {
         return false;
       }
     }

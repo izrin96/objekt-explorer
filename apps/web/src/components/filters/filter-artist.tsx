@@ -1,11 +1,10 @@
 "use client";
 
+import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
 
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
-
-import type { ValidArtist } from "@/lib/universal/cosmo/common";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -22,7 +21,7 @@ export default function ArtistFilter() {
   const update = useCallback(
     (key: Selection) => {
       const values = Array.from((key as Set<ValidArtist>).values());
-      setFilters({
+      return setFilters({
         artist: values.length ? values : null,
         member: null,
       });

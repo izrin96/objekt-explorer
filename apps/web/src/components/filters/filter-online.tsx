@@ -2,11 +2,11 @@
 
 import type { Selection } from "react-aria-components";
 
+import { type ValidOnlineType, validOnlineTypes } from "@repo/cosmo/types/common";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
-import { type ValidOnlineType, validOnlineTypes } from "@/lib/universal/cosmo/common";
 
 import { Button } from "../ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";

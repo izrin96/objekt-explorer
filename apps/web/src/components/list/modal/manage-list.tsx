@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/sheet";
 import { TextField } from "@/components/ui/text-field";
 import { orpc } from "@/lib/orpc/client";
-import { validColumns } from "@/lib/utils";
+import { SITE_NAME, validColumns } from "@/lib/utils";
 
 type CreateListModalProps = {
   open: boolean;
@@ -113,7 +113,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
               render={({ field: { name, value, onChange, onBlur } }) => (
                 <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
                   <Label>Hide User</Label>
-                  <Description>Hide Objekt Tracker account from this list</Description>
+                  <Description>Hide {SITE_NAME} account from this list</Description>
                 </Checkbox>
               )}
             />
@@ -287,7 +287,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
               <Label>Hide User</Label>
-              <Description>Hide Objekt Tracker account from this list</Description>
+              <Description>Hide {SITE_NAME} account from this list</Description>
             </Checkbox>
           )}
         />

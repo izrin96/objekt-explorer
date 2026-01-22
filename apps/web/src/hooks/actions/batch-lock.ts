@@ -16,7 +16,7 @@ export function useBatchLock() {
           const tokenIdSet = new Set(tokenIds.map(String));
           return [
             ...tokenIds.map((tokenId) => ({ tokenId: String(tokenId), order: 0 })),
-            ...old.filter((item) => tokenIdSet.has(item.tokenId) === false),
+            ...old.filter((item) => !tokenIdSet.has(item.tokenId)),
           ];
         });
         return { previousLocks };

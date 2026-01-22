@@ -1,7 +1,8 @@
+import type { ValidEdition } from "@repo/cosmo/types/common";
+
 import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
 
 import type { ParsedDate } from "./common";
-import type { ValidEdition } from "./cosmo/common";
 
 type CollectionExtra = {
   tags?: string[];

@@ -1,12 +1,11 @@
 "use client";
 
+import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
 
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useTransition } from "react";
-
-import type { ValidArtist } from "@/lib/universal/cosmo/common";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";

@@ -2,6 +2,11 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.oxc": "always"
+  },
+  "typescript.experimental.useTsgo": false,
+  "oxc.typeAware": false,
   "files.watcherExclude": {
     "**/routeTree.gen.ts": true
   },

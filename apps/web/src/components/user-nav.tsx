@@ -120,19 +120,19 @@ function UserMenu({ user }: { user: User }) {
           <MenuSeparator />
 
           <MenuItem
-            onAction={() => {
+            onAction={() =>
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    queryClient.refetchQueries({
+                    void queryClient.refetchQueries({
                       queryKey: ["session"],
                     });
                     toast.success("Sign out successful");
                     router.refresh();
                   },
                 },
-              });
-            }}
+              })
+            }
           >
             <SignOutIcon data-slot="icon" />
             <MenuLabel>{t("sign_out")}</MenuLabel>
