@@ -1,8 +1,11 @@
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
+
+import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { classSort, seasonSort } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";
-import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters, useIsFiltering } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";

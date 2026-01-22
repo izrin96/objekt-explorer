@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+
 import ResetPassword from "@/components/auth/reset-password";
 
 export default async function ResetPasswordPage({

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+
 import ArtistFilter from "@/components/filters/filter-artist";
 import FilterClass from "@/components/filters/filter-class";
 import MemberFilter from "@/components/filters/filter-member";
@@ -9,6 +10,7 @@ import FilterSeason from "@/components/filters/filter-season";
 import ResetFilter from "@/components/filters/reset-filter";
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+
 import CollectionFilter from "../filters/filter-collection";
 import TypeFilter, { useTypeFilter } from "./filter-type";
 

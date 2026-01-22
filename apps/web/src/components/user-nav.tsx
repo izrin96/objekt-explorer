@@ -11,16 +11,19 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+
+import type { User } from "@/lib/server/auth";
+
 import UserAccountModal from "@/components/auth/account/user-account";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import { sessionOptions } from "@/lib/query-options";
-import type { User } from "@/lib/server/auth";
 import { parseNickname } from "@/lib/utils";
+
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
 import { Avatar } from "./ui/avatar";
@@ -86,13 +89,13 @@ function UserMenu({ user }: { user: User }) {
                 <span>{user.name}</span>
                 <div className="flex gap-2">
                   {user.discord && (
-                    <span className="inline-flex gap-1 font-normal text-muted-fg">
+                    <span className="text-muted-fg inline-flex gap-1 font-normal">
                       {user.discord}
                       <DiscordLogoIcon size={16} weight="regular" className="self-center" />
                     </span>
                   )}
                   {user.twitter && (
-                    <span className="inline-flex gap-1 font-normal text-muted-fg">
+                    <span className="text-muted-fg inline-flex gap-1 font-normal">
                       {user.twitter}
                       <XLogoIcon size={16} weight="regular" className="self-center" />
                     </span>

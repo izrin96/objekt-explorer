@@ -1,5 +1,6 @@
 import type { ValidArtist } from "../types/common";
 import type { ObjektSummariesResponse, ObjektSummary } from "../types/objekts";
+
 import { cosmo } from "./http";
 
 type FetchSummariesParams = {

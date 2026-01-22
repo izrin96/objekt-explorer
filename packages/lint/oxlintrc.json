@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "pedantic": "off",
+    "perf": "warn",
+    "style": "off"
+  },
+  "rules": {
+    "eslint/no-unused-vars": "off",
+    "eslint/no-console": "off",
+    "eslint/prefer-const": "warn",
+    "eslint/no-var": "error",
+    "eslint/eqeqeq": "warn",
+    "typescript/no-floating-promises": "warn",
+    "typescript/no-explicit-any": "off",
+    "typescript/no-non-null-assertion": "off",
+    "typescript/prefer-ts-expect-error": "warn",
+    "typescript/consistent-type-imports": "warn",
+    "typescript/no-unused-vars": "off"
+  }
+}

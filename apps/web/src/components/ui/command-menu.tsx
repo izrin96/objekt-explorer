@@ -1,7 +1,5 @@
 "use client";
 
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { createContext, use, useEffect } from "react";
 import type {
   AutocompleteProps,
   CollectionRenderer,
@@ -9,6 +7,9 @@ import type {
   MenuTriggerProps,
   SearchFieldProps,
 } from "react-aria-components";
+
+import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { createContext, use, useEffect } from "react";
 import {
   Autocomplete,
   Button,
@@ -28,7 +29,9 @@ import {
   useFilter,
 } from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
+
 import { DropdownKeyboard } from "./dropdown";
 import { Loader } from "./loader";
 import { MenuDescription, MenuItem, MenuLabel, type MenuSectionProps, MenuSeparator } from "./menu";
@@ -156,17 +159,17 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
       ) : (
         <MagnifyingGlassIcon
           data-slot="command-menu-search-icon"
-          className="size-5 shrink-0 text-muted-fg"
+          className="text-muted-fg size-5 shrink-0"
         />
       )}
       <Input
         placeholder={placeholder ?? "Search..."}
-        className="w-full min-w-0 bg-transparent px-2.5 py-2 text-base text-fg placeholder-muted-fg outline-hidden focus:outline-hidden sm:px-2 sm:py-1.5 sm:text-sm [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
+        className="text-fg placeholder-muted-fg w-full min-w-0 bg-transparent px-2.5 py-2 text-base outline-hidden focus:outline-hidden sm:px-2 sm:py-1.5 sm:text-sm [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
       />
       {escapeButton && (
         <Button
           onPress={() => state?.close()}
-          className="hidden cursor-default rounded border text-current/90 hover:bg-muted lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
+          className="hover:bg-muted hidden cursor-default rounded border text-current/90 lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
         >
           Esc
         </Button>
@@ -204,7 +207,7 @@ const CommandMenuSection = <T extends object>({
       {...props}
     >
       {"label" in props && (
-        <Header className="col-span-full mb-1 block min-w-(--trigger-width) truncate px-2.5 text-muted-fg text-xs">
+        <Header className="text-muted-fg col-span-full mb-1 block min-w-(--trigger-width) truncate px-2.5 text-xs">
           {props.label}
         </Header>
       )}
@@ -237,7 +240,7 @@ const renderer: CollectionRenderer = {
   CollectionRoot(props) {
     if (props.collection.size === 0) {
       return (
-        <div className="col-span-full p-4 text-center text-muted-fg text-sm">No results found.</div>
+        <div className="text-muted-fg col-span-full p-4 text-center text-sm">No results found.</div>
       );
     }
     return <DefaultCollectionRenderer.CollectionRoot {...props} />;
@@ -256,8 +259,8 @@ const CommandMenuFooter = ({ className, ...props }: React.ComponentProps<"div">)
   return (
     <div
       className={twMerge(
-        "col-span-full flex-none border-t px-2 py-1.5 text-muted-fg text-sm",
-        "*:[kbd]:inset-ring *:[kbd]:inset-ring-fg/10 *:[kbd]:mx-1 *:[kbd]:inline-grid *:[kbd]:h-4 *:[kbd]:min-w-4 *:[kbd]:place-content-center *:[kbd]:rounded-xs *:[kbd]:bg-secondary",
+        "text-muted-fg col-span-full flex-none border-t px-2 py-1.5 text-sm",
+        "*:[kbd]:inset-ring-fg/10 *:[kbd]:bg-secondary *:[kbd]:mx-1 *:[kbd]:inline-grid *:[kbd]:h-4 *:[kbd]:min-w-4 *:[kbd]:place-content-center *:[kbd]:rounded-xs *:[kbd]:inset-ring",
         className,
       )}
       {...props}
@@ -272,7 +275,7 @@ const CommandMenuShortcut = ({
 }: React.ComponentProps<typeof DropdownKeyboard>) => (
   <DropdownKeyboard
     className={twMerge(
-      "gap-0.5 font-sans text-[10.5px] uppercase *:inset-ring *:inset-ring-muted-fg/20 *:grid *:size-5.5 *:place-content-center *:rounded-xs *:bg-bg",
+      "*:inset-ring-muted-fg/20 *:bg-bg gap-0.5 font-sans text-[10.5px] uppercase *:grid *:size-5.5 *:place-content-center *:rounded-xs *:inset-ring",
       className,
     )}
     {...props}

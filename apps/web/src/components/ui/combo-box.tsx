@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import type {
   ComboBoxProps as ComboboxPrimitiveProps,
   InputProps,
   ListBoxProps,
   PopoverProps,
 } from "react-aria-components";
+
+import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import {
   Button,
   ComboBoxContext,
@@ -14,9 +15,11 @@ import {
   ListBox,
   useSlottedContext,
 } from "react-aria-components";
+
 import { fieldStyles } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cx } from "@/lib/primitive";
+
 import { DropdownDescription, DropdownItem, DropdownLabel, DropdownSection } from "./dropdown";
 import { PopoverContent } from "./popover";
 
@@ -31,8 +34,7 @@ const ComboBox = <T extends object>({ className, ...props }: ComboBoxProps<T>) =
 };
 
 interface ComboBoxListProps<T extends object>
-  extends Omit<ListBoxProps<T>, "layout" | "orientation">,
-    Pick<PopoverProps, "placement"> {
+  extends Omit<ListBoxProps<T>, "layout" | "orientation">, Pick<PopoverProps, "placement"> {
   popover?: Omit<PopoverProps, "children">;
 }
 
@@ -78,7 +80,7 @@ const ComboBoxInput = (props: InputProps) => {
       <Input {...props} placeholder={props?.placeholder} />
       <Button className="absolute top-0 right-0 grid h-full w-11 cursor-default place-content-center sm:w-9">
         {!context?.inputValue && (
-          <ChevronUpDownIcon data-slot="chevron" className="-mr-1 size-5 text-muted-fg sm:size-4" />
+          <ChevronUpDownIcon data-slot="chevron" className="text-muted-fg -mr-1 size-5 sm:size-4" />
         )}
       </Button>
     </span>

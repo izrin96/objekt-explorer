@@ -5,6 +5,9 @@ import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
+
+import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { useConfigStore } from "@/hooks/use-config";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
@@ -13,8 +16,8 @@ import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useUser } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
-import type { ValidObjekt } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
+
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";

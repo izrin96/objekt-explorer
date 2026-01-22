@@ -1,0 +1,14 @@
+{
+  "name": "@repo/lint",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./oxlint": "./oxlintrc.json",
+    "./oxlint/react": "./oxlintrc.react.json"
+  },
+  "files": [
+    "oxlintrc.json",
+    "oxlintrc.react.json"
+  ]
+}

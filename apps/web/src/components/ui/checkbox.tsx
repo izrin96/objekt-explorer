@@ -1,14 +1,17 @@
 "use client";
 
-import { CheckIcon, MinusIcon } from "@heroicons/react/20/solid";
 import type { CheckboxGroupProps, CheckboxProps } from "react-aria-components";
+
+import { CheckIcon, MinusIcon } from "@heroicons/react/20/solid";
 import {
   CheckboxGroup as CheckboxGroupPrimitive,
   Checkbox as CheckboxPrimitive,
   composeRenderProps,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
+
 import { Label } from "./field";
 
 export function CheckboxGroup({ className, ...props }: CheckboxGroupProps) {
@@ -59,16 +62,16 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
               <span
                 data-slot="indicator"
                 className={twMerge([
-                  "relative inset-ring inset-ring-input isolate flex shrink-0 items-center justify-center rounded text-bg transition group-hover:inset-ring-muted-fg/30",
+                  "inset-ring-input text-bg group-hover:inset-ring-muted-fg/30 relative isolate flex shrink-0 items-center justify-center rounded inset-ring transition",
                   "sm:size-4 sm:*:data-[slot=check-indicator]:size-3.5",
                   "size-4.5 *:data-[slot=check-indicator]:size-4",
                   "in-disabled:bg-muted",
                   (isSelected || isIndeterminate) && [
-                    "inset-ring-(--checkbox-ring,var(--color-ring)) bg-(--checkbox-bg,var(--color-primary)) text-(--checkbox-fg,var(--color-primary-fg))",
+                    "bg-(--checkbox-bg,var(--color-primary)) text-(--checkbox-fg,var(--color-primary-fg)) inset-ring-(--checkbox-ring,var(--color-ring))",
                     "group-invalid:inset-ring/70 group-invalid:bg-danger group-invalid:text-danger-fg dark:group-invalid:inset-ring-danger-subtle-fg/70",
                   ],
                   isFocusVisible && [
-                    "inset-ring-(--checkbox-ring,var(--color-ring)) ring-(--checkbox-ring,var(--color-ring))/20 ring-3",
+                    "ring-3 ring-(--checkbox-ring,var(--color-ring))/20 inset-ring-(--checkbox-ring,var(--color-ring))",
                     "group-invalid:inset-ring-danger-subtle-fg/70 group-invalid:text-danger-fg group-invalid:ring-danger-subtle-fg/20",
                   ],
                   isInvalid &&

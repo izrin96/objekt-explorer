@@ -14,15 +14,18 @@ import { ofetch } from "ofetch";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
+
+import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
+import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
-import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
-import type { ValidObjekt } from "@/lib/universal/objekts";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 import { cn } from "@/utils/classes";
+
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
 import ObjektModal, { useObjektModal } from "../objekt/objekt-modal";
@@ -49,7 +52,7 @@ export default function ActivityRender() {
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-xl">Objekt Activity</h2>
+          <h2 className="text-xl font-semibold">Objekt Activity</h2>
           <Badge intent="primary">Beta</Badge>
         </div>
         <p className="text-muted-fg text-sm">Latest objekt activity in realtime</p>
@@ -271,7 +274,7 @@ function Activity() {
           <div className="flex min-w-fit border-b">
             <div className="min-w-[120px] flex-1 px-3 py-2.5">Event</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">Objekt</div>
-            <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
+            <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">Serial</div>
             <div className="min-w-[300px] flex-1 px-3 py-2.5">From</div>
             <div className="min-w-[300px] flex-1 px-3 py-2.5">To</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">Time</div>
@@ -323,8 +326,8 @@ function Activity() {
           </ObjektModal>
 
           {isHovering && (
-            <div className="pointer-events-none fixed right-0 bottom-0 left-0 flex h-12 w-full flex-col justify-center bg-fg/10 px-2 py-3 backdrop-blur-md">
-              <span className="text-center font-mono text-sm uppercase leading-tight">
+            <div className="bg-fg/10 pointer-events-none fixed right-0 bottom-0 left-0 flex h-12 w-full flex-col justify-center px-2 py-3 backdrop-blur-md">
+              <span className="text-center font-mono text-sm leading-tight uppercase">
                 Paused on hover
               </span>
             </div>
@@ -364,14 +367,14 @@ const ActivityRow = memo(function ActivityRow({
 
   const from =
     event === "mint" ? (
-      <span className="font-mono text-muted-fg">COSMO</span>
+      <span className="text-muted-fg font-mono">COSMO</span>
     ) : (
       <UserLink address={item.transfer.from} nickname={item.nickname.from} />
     );
 
   const to =
     event === "spin" ? (
-      <span className="font-mono text-muted-fg">COSMO Spin</span>
+      <span className="text-muted-fg font-mono">COSMO Spin</span>
     ) : (
       <UserLink address={item.transfer.to} nickname={item.nickname.to} />
     );
@@ -411,7 +414,7 @@ const ActivityRow = memo(function ActivityRow({
       >
         {item.objekt.collectionId}
       </div>
-      <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
+      <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">{from}</div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">{to}</div>
       <div className="min-w-[250px] flex-1 px-3 py-2.5">

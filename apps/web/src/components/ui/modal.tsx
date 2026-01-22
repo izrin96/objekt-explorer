@@ -1,13 +1,16 @@
 "use client";
 
 import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components";
+
 import {
   DialogTrigger as DialogTriggerPrimitive,
   ModalOverlay,
   Modal as ModalPrimitive,
 } from "react-aria-components";
 import { twJoin } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
+
 import {
   Dialog,
   DialogBody,
@@ -39,7 +42,8 @@ const sizes = {
 };
 
 interface ModalContentProps
-  extends Omit<ModalOverlayProps, "children">,
+  extends
+    Omit<ModalOverlayProps, "children">,
     Pick<DialogProps, "aria-label" | "aria-labelledby" | "role" | "children"> {
   size?: keyof typeof sizes;
   closeButton?: boolean;

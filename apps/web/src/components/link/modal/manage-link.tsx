@@ -1,18 +1,18 @@
 "use client";
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Cropper, type CropperRef } from "react-advanced-cropper";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+
 import ErrorFallbackRender from "@/components/error-boundary";
-import { orpc } from "@/lib/orpc/client";
-import { mimeTypes, validColumns } from "@/lib/utils";
-import "react-advanced-cropper/dist/style.css";
-import { useRouter } from "next/navigation";
 import Portal from "@/components/portal";
+
+import "react-advanced-cropper/dist/style.css";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description, Label } from "@/components/ui/field";
@@ -38,6 +38,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { orpc } from "@/lib/orpc/client";
+import { mimeTypes, validColumns } from "@/lib/utils";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -173,7 +175,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         </div>
       )}
       <div className="flex items-center justify-between">
-        <span className="truncate text-muted-fg text-sm">Selected file: {droppedImage.name}</span>
+        <span className="text-muted-fg truncate text-sm">Selected file: {droppedImage.name}</span>
         <Button size="xs" intent="outline" onClick={onClear}>
           Clear
         </Button>

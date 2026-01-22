@@ -1,9 +1,11 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
+
+import type { PublicList, PublicProfile, PublicUser } from "@/lib/universal/user";
+
 import { TargetProvider } from "@/hooks/use-target";
 import { UserProvider } from "@/hooks/use-user";
-import type { PublicList, PublicProfile, PublicUser } from "@/lib/universal/user";
 
 type Props = {
   // target

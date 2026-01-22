@@ -1,14 +1,17 @@
 "use client";
 
-import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import type {
   ListBoxProps,
   PopoverProps,
   SelectProps as SelectPrimitiveProps,
 } from "react-aria-components";
+
+import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 import { Button, ListBox, Select as SelectPrimitive, SelectValue } from "react-aria-components";
 import { twJoin } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
+
 import {
   DropdownDescription,
   DropdownItem,
@@ -19,8 +22,10 @@ import {
 import { fieldStyles } from "./field";
 import { PopoverContent } from "./popover";
 
-interface SelectProps<T extends object, M extends "single" | "multiple" = "single">
-  extends SelectPrimitiveProps<T, M> {
+interface SelectProps<
+  T extends object,
+  M extends "single" | "multiple" = "single",
+> extends SelectPrimitiveProps<T, M> {
   items?: Iterable<T, M>;
 }
 
@@ -37,8 +42,10 @@ const Select = <T extends object, M extends "single" | "multiple" = "single">({
   );
 };
 
-interface SelectListProps<T extends object>
-  extends Omit<ListBoxProps<T>, "layout" | "orientation"> {
+interface SelectListProps<T extends object> extends Omit<
+  ListBoxProps<T>,
+  "layout" | "orientation"
+> {
   items?: Iterable<T>;
   popover?: Omit<PopoverProps, "children">;
 }
@@ -106,7 +113,7 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
                 <SelectValue
                   data-slot="select-value"
                   className={twJoin([
-                    "truncate text-start data-placeholder:text-muted-fg sm:text-sm/6 **:[[slot=description]]:hidden",
+                    "data-placeholder:text-muted-fg truncate text-start sm:text-sm/6 **:[[slot=description]]:hidden",
                     "has-data-[slot=avatar]:grid has-data-[slot=avatar]:grid-cols-[1fr_auto] has-data-[slot=avatar]:items-center has-data-[slot=avatar]:gap-x-2",
                     "has-data-[slot=icon]:grid has-data-[slot=icon]:grid-cols-[1fr_auto] has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-2",
                     "*:data-[slot=icon]:size-5 sm:*:data-[slot=icon]:size-4",
@@ -115,7 +122,7 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
                 />
                 <ChevronUpDownIcon
                   data-slot="chevron"
-                  className="-mr-1 ml-auto size-5 text-muted-fg sm:size-4"
+                  className="text-muted-fg -mr-1 ml-auto size-5 sm:size-4"
                 />
               </>
             )}

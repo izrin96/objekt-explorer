@@ -4,7 +4,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+
 import { authClient } from "@/lib/auth-client";
+
 import { Button } from "../ui/button";
 import { FieldError, Label } from "../ui/field";
 import { Form } from "../ui/form";
@@ -46,7 +48,7 @@ export default function ResetPassword({ token }: { token: string }) {
   return (
     <div className="flex flex-col pt-2 pb-36">
       <div className="flex w-full max-w-xl flex-col gap-4 self-center">
-        <div className="font-semibold text-xl">Reset Password</div>
+        <div className="text-xl font-semibold">Reset Password</div>
         <Form onSubmit={onSubmit}>
           <div className="flex flex-col gap-4">
             <Controller

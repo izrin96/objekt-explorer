@@ -4,9 +4,12 @@ import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
-import { useProfileAuthed } from "@/hooks/use-user";
+
 import type { PublicProfile } from "@/lib/universal/user";
+
+import { useProfileAuthed } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
+
 import { EditProfileModal } from "../link/modal/manage-link";
 import { Avatar } from "../ui/avatar";
 import { Button, buttonStyles } from "../ui/button";
@@ -21,12 +24,12 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
       <div className="flex w-full flex-col md:w-auto">
-        <div className="font-semibold text-xl">{nickname}</div>
-        <div className="inline-flex gap-1 truncate font-mono text-muted-fg text-xs">
+        <div className="text-xl font-semibold">{nickname}</div>
+        <div className="text-muted-fg inline-flex gap-1 truncate font-mono text-xs">
           {user.address}{" "}
           <CopyIcon
             size={14}
-            className="cursor-pointer text-fg"
+            className="text-fg cursor-pointer"
             onClick={() => {
               copy(user.address);
               toast.success("Address copied");
@@ -76,7 +79,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             initials={user.user.name.charAt(0)}
           />
           <div className="flex min-w-0 flex-col">
-            <span className="inline-flex gap-1 truncate font-semibold text-lg">
+            <span className="inline-flex gap-1 truncate text-lg font-semibold">
               {user.user.name}
             </span>
             {user.user.showSocial && (

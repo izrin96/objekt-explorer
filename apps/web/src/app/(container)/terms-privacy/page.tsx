@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { Link } from "@/components/ui/link";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -10,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function TermsPrivacy() {
   return (
     <div className="flex flex-col items-center gap-6 py-8">
-      <h2 className="font-semibold text-lg">Terms and Privacy</h2>
+      <h2 className="text-lg font-semibold">Terms and Privacy</h2>
 
       <div className="text-fg text-sm">
         <ul className="list-disc leading-8">

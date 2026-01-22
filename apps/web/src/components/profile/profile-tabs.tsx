@@ -2,7 +2,9 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+
 import { useTarget } from "@/hooks/use-target";
+
 import { Tab, TabList, Tabs } from "../ui/tabs";
 
 export default function ProfileTabs() {

@@ -1,10 +1,13 @@
 "use client";
 
+import type { Selection } from "react-aria-components";
+
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
-import type { Selection } from "react-aria-components";
+
 import { useFilters } from "@/hooks/use-filters";
 import { type ValidOnlineType, validOnlineTypes } from "@/lib/universal/cosmo/common";
+
 import { Button } from "../ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 

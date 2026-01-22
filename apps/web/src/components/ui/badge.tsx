@@ -2,8 +2,8 @@ import { tv, type VariantProps } from "tailwind-variants";
 
 const badgeStyles = tv({
   base: [
-    "inline-flex items-center gap-x-1.5 py-0.5 font-medium text-xs/5 forced-colors:outline",
-    "inset-ring inset-ring-(--badge-ring) bg-(--badge-bg) text-(--badge-fg) [--badge-ring:transparent]",
+    "inline-flex items-center gap-x-1.5 py-0.5 text-xs/5 font-medium forced-colors:outline",
+    "bg-(--badge-bg) text-(--badge-fg) inset-ring inset-ring-(--badge-ring) [--badge-ring:transparent]",
     "group-hover:bg-(--badge-overlay) group-focus:bg-(--badge-overlay)",
     "*:data-[slot=icon]:size-3 *:data-[slot=icon]:shrink-0",
     "duration-200",
@@ -37,8 +37,7 @@ const badgeStyles = tv({
 });
 
 interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeStyles> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeStyles> {
   className?: string;
   children: React.ReactNode;
 }

@@ -1,4 +1,5 @@
 import { parseAsBoolean, useQueryState } from "nuqs";
+
 import { Toggle } from "@/components/ui/toggle";
 
 export function useShowCount() {

@@ -1,6 +1,10 @@
-import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+
+import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod/v4";
+
+import type { OwnedObjektsResult } from "@/lib/universal/objekts";
+
 import { getSession } from "@/lib/server/auth";
 import { db } from "@/lib/server/db";
 import { indexer } from "@/lib/server/db/indexer";
@@ -9,7 +13,6 @@ import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 import { validArtists } from "@/lib/universal/cosmo/common";
-import type { OwnedObjektsResult } from "@/lib/universal/objekts";
 
 type Params = {
   params: Promise<{

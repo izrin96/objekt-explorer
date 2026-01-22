@@ -6,8 +6,11 @@ import { headers } from "next/headers";
 import { after } from "next/server";
 import { cache } from "react";
 import { isAddress } from "viem";
+
 import { env } from "@/env";
+
 import type { PublicProfile, PublicUser } from "../universal/user";
+
 import { getBaseURL } from "../utils";
 import { fetchByNickname } from "./cosmo/auth";
 import { db } from "./db";

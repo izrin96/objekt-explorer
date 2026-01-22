@@ -1,10 +1,13 @@
 import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
+
+import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
-import type { ValidObjekt } from "@/lib/universal/objekts";
 import { replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
+
 import { Badge } from "../ui/badge";
 import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
@@ -66,7 +69,7 @@ export default function ObjektView({
         />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
-          <div className="pointer-events-none absolute bottom-1 left-1 flex rounded-full bg-bg px-2 py-1 font-bold text-fg text-xs">
+          <div className="bg-bg text-fg pointer-events-none absolute bottom-1 left-1 flex rounded-full px-2 py-1 text-xs font-bold">
             {objekts.length.toLocaleString()}
           </div>
         )}
@@ -84,7 +87,7 @@ export default function ObjektView({
             {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
           </Badge>
           {unobtainable && (
-            <Badge intent="custom" className="font-semibold text-xs">
+            <Badge intent="custom" className="text-xs font-semibold">
               Unobtainable
             </Badge>
           )}

@@ -1,7 +1,9 @@
 import { ORPCError } from "@orpc/server";
 import { and, eq, sql } from "drizzle-orm";
 import * as z from "zod/v4";
+
 import type { TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
+
 import {
   certifyTicket,
   checkTicket as checkQrTicket,
@@ -68,59 +70,58 @@ export const cosmoLinkRouter = {
     .handler(async ({ input: { otp, ticket }, context: { session } }) => {
       try {
         // send otp
-        // biome-ignore lint/correctness/noInnerDeclarations: ignore
-        var response = await certifyTicket(otp, ticket);
+        const response = await certifyTicket(otp, ticket);
+
+        // extract session from cookie
+        const headers = response.headers.getSetCookie();
+        let userSession: string | null = null;
+        for (const header of headers) {
+          const parts = header.split(";");
+          for (const part of parts) {
+            const [name, value] = part.trim().split("=");
+            if (name === "user-session") {
+              userSession = value;
+              break;
+            }
+          }
+        }
+
+        if (!userSession)
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "Error getting user session",
+          });
+
+        const user = await getUser(userSession);
+        if (!user)
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: "Error fetching address",
+          });
+
+        // link cosmo id with user
+        await db
+          .insert(userAddress)
+          .values([
+            {
+              address: user.address,
+              nickname: user.nickname,
+              linkedAt: sql`'now'`,
+              userId: session.user.id,
+              hideUser: true,
+            },
+          ])
+          .onConflictDoUpdate({
+            target: userAddress.address,
+            set: {
+              nickname: user.nickname,
+              linkedAt: sql`'now'`,
+              userId: session.user.id,
+              hideUser: true,
+            },
+          });
       } catch {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: "Wrong OTP code",
         });
       }
-
-      // extract session from cookie
-      const headers = response.headers.getSetCookie();
-      let userSession: string | null = null;
-      for (const header of headers) {
-        const parts = header.split(";");
-        for (const part of parts) {
-          const [name, value] = part.trim().split("=");
-          if (name === "user-session") {
-            userSession = value;
-            break;
-          }
-        }
-      }
-
-      if (!userSession)
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Error getting user session",
-        });
-
-      const user = await getUser(userSession);
-      if (!user)
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: "Error fetching address",
-        });
-
-      // link cosmo id with user
-      await db
-        .insert(userAddress)
-        .values([
-          {
-            address: user.address,
-            nickname: user.nickname,
-            linkedAt: sql`'now'`,
-            userId: session.user.id,
-            hideUser: true,
-          },
-        ])
-        .onConflictDoUpdate({
-          target: userAddress.address,
-          set: {
-            nickname: user.nickname,
-            linkedAt: sql`'now'`,
-            userId: session.user.id,
-            hideUser: true,
-          },
-        });
     }),
 };

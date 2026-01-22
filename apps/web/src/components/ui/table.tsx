@@ -1,7 +1,5 @@
 "use client";
 
-import { ChevronDownIcon, MinusIcon } from "@heroicons/react/20/solid";
-import { createContext, use } from "react";
 import type {
   CellProps,
   ColumnProps,
@@ -11,6 +9,9 @@ import type {
   TableBodyProps,
   TableProps as TablePrimitiveProps,
 } from "react-aria-components";
+
+import { ChevronDownIcon, MinusIcon } from "@heroicons/react/20/solid";
+import { createContext, use } from "react";
 import {
   Button,
   Cell,
@@ -26,7 +27,9 @@ import {
   useTableOptions,
 } from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
+
 import { Checkbox } from "./checkbox";
 
 interface TableProps extends Omit<TablePrimitiveProps, "className"> {
@@ -96,7 +99,7 @@ const ColumnResizer = ({ className, ...props }: ColumnResizerProps) => (
       className,
     )}
   >
-    <div className="h-full w-px bg-border py-(--gutter-y)" />
+    <div className="bg-border h-full w-px py-(--gutter-y)" />
   </ColumnResizerPrimitive>
 );
 
@@ -133,7 +136,7 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
           {values.allowsSorting && (
             <span
               className={twJoin(
-                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded bg-secondary text-fg *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
+                "bg-secondary text-fg grid size-[1.15rem] flex-none shrink-0 place-content-center rounded *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
                 values.isHovered ? "bg-secondary-fg/10" : "",
               )}
             >
@@ -180,7 +183,7 @@ const TableHeader = <T extends object>({
           data-slot="table-column"
           className={twMerge(
             "first:pl-(--gutter,--spacing(2))",
-            !bleed && "sm:last:pr-1 sm:first:pl-1",
+            !bleed && "sm:first:pl-1 sm:last:pr-1",
           )}
         />
       )}
@@ -189,7 +192,7 @@ const TableHeader = <T extends object>({
           data-slot="table-column"
           className={twMerge(
             "first:pl-(--gutter,--spacing(2))",
-            !bleed && "sm:last:pr-1 sm:first:pl-1",
+            !bleed && "sm:first:pl-1 sm:last:pr-1",
           )}
         >
           {selectionMode === "multiple" && <Checkbox slot="selection" />}
@@ -234,17 +237,17 @@ const TableRow = <T extends object>({
           },
         ) =>
           twMerge(
-            "group relative cursor-default text-fg outline outline-transparent",
+            "group text-fg relative cursor-default outline outline-transparent",
             isFocusVisible &&
-              "bg-primary/5 outline-primary ring-3 ring-ring/20 hover:bg-primary/10",
-            isDragging && "cursor-grabbing bg-primary/10 text-fg outline-primary",
-            isSelected && "bg-(--table-selected-bg) text-fg hover:bg-(--table-selected-bg)/50",
+              "bg-primary/5 outline-primary ring-ring/20 hover:bg-primary/10 ring-3",
+            isDragging && "bg-primary/10 text-fg outline-primary cursor-grabbing",
+            isSelected && "text-fg bg-(--table-selected-bg) hover:bg-(--table-selected-bg)/50",
             striped && "even:bg-muted",
             (props.href || props.onAction || selectionMode === "multiple") &&
-              "hover:bg-(--table-selected-bg) hover:text-fg",
+              "hover:text-fg hover:bg-(--table-selected-bg)",
             (props.href || props.onAction || selectionMode === "multiple") &&
               isFocusVisibleWithin &&
-              "bg-(--table-selected-bg)/50 selected:bg-(--table-selected-bg)/50 text-fg",
+              "selected:bg-(--table-selected-bg)/50 text-fg bg-(--table-selected-bg)/50",
             isDisabled && "opacity-50",
             className,
           ),
@@ -254,7 +257,7 @@ const TableRow = <T extends object>({
         <TableCell className="px-0">
           <Button
             slot="drag"
-            className="grid place-content-center rounded-xs px-[calc(var(--gutter)/2)] outline-hidden focus-visible:ring focus-visible:ring-ring"
+            className="focus-visible:ring-ring grid place-content-center rounded-xs px-[calc(var(--gutter)/2)] outline-hidden focus-visible:ring"
           >
             <svg
               aria-hidden
@@ -302,11 +305,11 @@ const TableCell = ({ className, ref, ...props }: TableCellProps) => {
       {...props}
       className={cx(
         twJoin(
-          "group px-4 py-(--gutter-y) align-middle outline-hidden first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2)) group-has-data-focus-visible-within:text-fg",
+          "group group-has-data-focus-visible-within:text-fg px-4 py-(--gutter-y) align-middle outline-hidden first:pl-(--gutter,--spacing(2)) last:pr-(--gutter,--spacing(2))",
           !striped && "border-b",
           grid && "border-l first:border-l-0",
-          !bleed && "sm:last:pr-1 sm:first:pl-1",
-          allowResize && "overflow-hidden truncate",
+          !bleed && "sm:first:pl-1 sm:last:pr-1",
+          allowResize && "truncate overflow-hidden",
         ),
         className,
       )}

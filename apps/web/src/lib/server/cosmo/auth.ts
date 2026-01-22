@@ -1,4 +1,5 @@
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+
 import { cosmo } from "../http";
 
 export async function search(token: string, nickname: string) {

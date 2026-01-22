@@ -1,9 +1,11 @@
 import "server-only";
-
 import { randomUUID } from "node:crypto";
 import chromium from "puppeteer-core";
-import { env } from "@/env";
+
 import type { CosmoShopUser, TicketAuth, TicketCheck } from "@/lib/universal/cosmo/shop/qr-auth";
+
+import { env } from "@/env";
+
 import { cosmoShop } from "./http";
 
 export async function generateRecaptchaToken() {

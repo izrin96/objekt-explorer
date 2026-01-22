@@ -1,5 +1,6 @@
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { useCallback } from "react";
+
 import { useConfigStore } from "./use-config";
 
 export function useWideFilter() {

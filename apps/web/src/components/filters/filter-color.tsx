@@ -5,7 +5,9 @@ import { type Color, parseColor } from "@react-stately/color";
 import { useTranslations } from "next-intl";
 import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
+
 import { useFilters } from "@/hooks/use-filters";
+
 import { Button } from "../ui/button";
 import { ColorArea } from "../ui/color-area";
 import { ColorField } from "../ui/color-field";

@@ -1,13 +1,16 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
+import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useInterval } from "usehooks-ts";
+
+import type { TicketAuth, TicketSuccess } from "@/lib/universal/cosmo/shop/qr-auth";
+
 import AxolotlIcon from "@/assets/icon-axolotl.png";
 import BearIcon from "@/assets/icon-bear.png";
 import CarpenterIcon from "@/assets/icon-carpenter.png";
@@ -23,8 +26,8 @@ import TrashIcon from "@/assets/icon-trash.png";
 import WelcomeIcon from "@/assets/icon-welcome.png";
 import WhiteFoxIcon from "@/assets/icon-white-fox.png";
 import { orpc } from "@/lib/orpc/client";
-import type { TicketAuth, TicketSuccess } from "@/lib/universal/cosmo/shop/qr-auth";
 import { msToCountdown } from "@/lib/utils";
+
 import { Button, buttonStyles } from "../ui/button";
 import { Form } from "../ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
@@ -44,7 +47,7 @@ export default function LinkRender() {
     <div className="flex flex-col items-center justify-center gap-5">
       {step === 0 && (
         <div className="flex max-w-xl flex-col items-center justify-center gap-4">
-          <h2 className="font-semibold text-lg">
+          <h2 className="text-lg font-semibold">
             {locale === "en" && "Link your Cosmo profile"}
             {locale === "ko" && "Cosmo 프로필을 연결하세요"}
           </h2>

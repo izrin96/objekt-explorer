@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
+
+import { useCallback } from "react";
+
+import type { ValidGroupBy } from "@/lib/universal/cosmo/common";
+
 import { Button } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui/menu";
 import { useFilters } from "@/hooks/use-filters";
-import type { ValidGroupBy } from "@/lib/universal/cosmo/common";
 
 const map: Record<string, string> = {
   artist: "Artist",

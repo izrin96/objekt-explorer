@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import { GRID_COLUMNS } from "@/lib/utils";
 
 type BreakpointColumnState = {

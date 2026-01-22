@@ -1,8 +1,10 @@
 "use client";
 
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+
 import { type ComponentProps, startTransition } from "react";
 import { Bar, BarChart as BarChartPrimitive } from "recharts";
-import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+
 import {
   type BaseChartProps,
   CartesianGrid,
@@ -19,8 +21,10 @@ import {
   YAxis,
 } from "./chart";
 
-export interface BarChartProps<TValue extends ValueType, TName extends NameType>
-  extends BaseChartProps<TValue, TName> {
+export interface BarChartProps<
+  TValue extends ValueType,
+  TName extends NameType,
+> extends BaseChartProps<TValue, TName> {
   barCategoryGap?: number;
   barRadius?: number;
   barGap?: number;

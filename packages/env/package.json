@@ -1,5 +1,7 @@
 {
   "name": "@repo/env",
+  "version": "0.0.0",
+  "private": true,
   "type": "module",
   "exports": {
     "./server": "./src/server.ts",
@@ -11,11 +13,11 @@
     "typecheck": "tsc --noEmit",
     "format": "oxfmt ."
   },
-  "devDependencies": {
-    "@repo/tsconfig": "workspace:*"
-  },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.10",
     "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
   }
 }

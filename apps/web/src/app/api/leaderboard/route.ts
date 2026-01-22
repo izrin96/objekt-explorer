@@ -1,12 +1,15 @@
-import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
 import type { NextRequest } from "next/server";
+
+import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
 import * as z from "zod/v4";
+
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { fetchKnownAddresses } from "@/lib/server/profile";
 import { validArtists, validOnlineTypes, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables } from "@/lib/universal/objekts";
 import { SPIN_ADDRESS } from "@/lib/utils";
+
 import { cacheHeaders } from "../common";
 
 const schema = z.object({
@@ -17,9 +20,7 @@ const schema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const parsedParams = schema.safeParse({
-    ...Object.fromEntries(request.nextUrl.searchParams.entries()),
-  });
+  const parsedParams = schema.safeParse(Object.fromEntries(request.nextUrl.searchParams.entries()));
 
   if (!parsedParams.success)
     return Response.json(

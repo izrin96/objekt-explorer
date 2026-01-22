@@ -1,11 +1,13 @@
 import { like } from "drizzle-orm";
 import { after, type NextRequest } from "next/server";
+
+import type { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+
 import { cacheUsers } from "@/lib/server/auth";
 import { search } from "@/lib/server/cosmo/auth";
 import { db } from "@/lib/server/db";
 import { userAddress } from "@/lib/server/db/schema";
 import { getAccessToken } from "@/lib/server/token";
-import type { CosmoSearchResult } from "@/lib/universal/cosmo/auth";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

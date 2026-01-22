@@ -1,4 +1,14 @@
 {
   "name": "@repo/tsconfig",
-  "version": "1.0.0"
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "tsconfig.base.json",
+    "tsconfig.bun.json"
+  ],
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.bun.json": "./tsconfig.bun.json"
+  }
 }

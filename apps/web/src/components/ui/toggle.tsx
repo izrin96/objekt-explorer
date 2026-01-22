@@ -1,6 +1,7 @@
 "use client";
 
 import type { ToggleButtonProps } from "react-aria-components";
+
 import { composeRenderProps, ToggleButton } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
 import { tv, type VariantProps } from "tailwind-variants";
@@ -8,22 +9,22 @@ import { tv, type VariantProps } from "tailwind-variants";
 export const toggleStyles = tv({
   base: [
     "[--toggle-icon-active:var(--secondary-fg)] [--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))]",
-    "relative inset-ring inset-ring-fg/15 isolate inline-flex items-center justify-center font-medium",
-    "focus-visible:outline focus-visible:outline-offset-2 focus-visible:ring-2 focus-visible:ring-offset-3 focus-visible:ring-offset-bg",
+    "inset-ring-fg/15 relative isolate inline-flex items-center justify-center font-medium inset-ring",
+    "focus-visible:ring-offset-bg focus-visible:ring-2 focus-visible:ring-offset-3 focus-visible:outline focus-visible:outline-offset-2",
     "*:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:my-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--toggle-icon) sm:*:data-[slot=icon]:my-1",
     "focus-visible:*:data-[slot=icon]:text-(--toggle-icon-active)",
     "selected:*:data-[slot=icon]:text-(--toggle-icon-active)",
     "hover:*:data-[slot=icon]:text-(--toggle-icon-active)",
-    "*:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--toggle-icon) pressed:*:data-[slot=icon]:text-(--toggle-icon-active) focus-visible:*:data-[slot=icon]:text-(--toggle-icon-active)/80 hover:*:data-[slot=icon]:text-(--toggle-icon-active)/90 forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
+    "pressed:*:data-[slot=icon]:text-(--toggle-icon-active) *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--toggle-icon) hover:*:data-[slot=icon]:text-(--toggle-icon-active)/90 focus-visible:*:data-[slot=icon]:text-(--toggle-icon-active)/80 forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
     "forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
     // custom
     "selected:inset-ring-primary",
   ],
   variants: {
     intent: {
-      outline: ["bg-transparent outline-secondary-fg ring-secondary-fg/25 hover:bg-muted-fg/10"],
+      outline: ["outline-secondary-fg ring-secondary-fg/25 hover:bg-muted-fg/10 bg-transparent"],
       plain: [
-        "inset-ring-transparent bg-transparent outline-secondary-fg ring-secondary-fg/25 hover:bg-muted-fg/10",
+        "outline-secondary-fg ring-secondary-fg/25 hover:bg-muted-fg/10 bg-transparent inset-ring-transparent",
       ],
     },
     size: {
@@ -65,7 +66,7 @@ export const toggleStyles = tv({
       false: "rounded-[calc(var(--radius-lg)-1px)]",
     },
     isDisabled: {
-      true: "inset-ring-0 opacity-50 forced-colors:text-[GrayText]",
+      true: "opacity-50 inset-ring-0 forced-colors:text-[GrayText]",
     },
   },
   defaultVariants: {

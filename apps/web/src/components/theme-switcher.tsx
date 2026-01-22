@@ -3,6 +3,7 @@
 import { IconDeviceDesktop2, IconMoon, IconSun } from "@intentui/icons";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+
 import { Button } from "./ui/button";
 
 export function ThemeSwitcher({

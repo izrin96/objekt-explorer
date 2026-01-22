@@ -1,7 +1,9 @@
 "use client";
 
 import { createContext, type PropsWithChildren, useContext } from "react";
+
 import type { PublicList, PublicProfile, PublicUser } from "@/lib/universal/user";
+
 import { useTarget } from "./use-target";
 
 type UserProps = {

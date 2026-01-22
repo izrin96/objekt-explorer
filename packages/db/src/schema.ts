@@ -10,8 +10,9 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
-import { citext } from "./custom-type";
+
 import { account, session, user, verification } from "./auth-schema";
+import { citext } from "./custom-type";
 
 export { user, session, account, verification };
 

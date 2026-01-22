@@ -4,6 +4,10 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
+
+import type { ValidObjekt } from "@/lib/universal/objekts";
+import type { PublicList } from "@/lib/universal/user";
+
 import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
@@ -11,8 +15,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed, useUser } from "@/hooks/use-user";
-import type { ValidObjekt } from "@/lib/universal/objekts";
-import type { PublicList } from "@/lib/universal/user";
+
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";

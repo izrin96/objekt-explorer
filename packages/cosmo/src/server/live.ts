@@ -1,4 +1,5 @@
 import type { ValidArtist } from "../types/common";
+
 import { cosmo } from "./http";
 
 export interface LiveSession {

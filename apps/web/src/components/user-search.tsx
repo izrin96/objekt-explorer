@@ -2,14 +2,17 @@
 
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
 import { useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
-import { useUserSearchStore } from "@/hooks/use-user-search-store";
+
 import type { CosmoPublicUser, CosmoSearchResult } from "@/lib/universal/cosmo/auth";
+
+import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import { getBaseURL } from "@/lib/utils";
+
 import { Button } from "./ui/button";
 import {
   CommandMenu,

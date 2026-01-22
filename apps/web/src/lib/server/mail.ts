@@ -1,4 +1,5 @@
 import { SES } from "@aws-sdk/client-ses";
+
 import { env } from "@/env";
 
 const ses = new SES({

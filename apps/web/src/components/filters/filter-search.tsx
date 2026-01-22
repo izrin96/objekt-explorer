@@ -4,7 +4,9 @@ import { QuestionMarkIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
+
 import { useFilters } from "@/hooks/use-filters";
+
 import { Button } from "../ui/button";
 import { Input, InputGroup } from "../ui/input";
 import { Popover, PopoverContent } from "../ui/popover";
@@ -64,7 +66,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
   return (
     <TextField
       onChange={handleChange}
-      className="w-full min-w-50 max-w-72"
+      className="w-full max-w-72 min-w-50"
       value={query}
       aria-label="Search"
     >

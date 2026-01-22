@@ -5,6 +5,7 @@ import type {
   CosmoShopUser,
   CosmoUserProfile,
 } from "../types/user";
+
 import { cosmo, cosmoShop } from "./http";
 
 /**

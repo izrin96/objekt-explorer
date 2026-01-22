@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import LiveSessionListRender from "@/components/live/session-list";
 import { Note } from "@/components/ui/note";
 import { env } from "@/env";

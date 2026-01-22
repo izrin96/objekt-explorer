@@ -20,9 +20,12 @@ import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
+
 import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
+
 import { getBaseURL, OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
+
 import ErrorFallbackRender from "../error-boundary";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -262,11 +265,11 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     <>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">{t("owner")}</span>
+          <span className="text-sm font-semibold">{t("owner")}</span>
           <UserLink address={data.owner} nickname={ownerNickname} />
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">{t("token_id")}</span>
+          <span className="text-sm font-semibold">{t("token_id")}</span>
           <div className="flex items-center gap-2">
             <Link
               href={`https://opensea.io/item/abstract/${OBJEKT_CONTRACT}/${data.tokenId}`}
@@ -284,7 +287,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-sm">{t("transferable")}</span>
+          <span className="text-sm font-semibold">{t("transferable")}</span>
           <Badge className={cn("text-xs")} intent={!data.transferable ? "custom" : "info"}>
             {data.transferable ? "Yes" : "No"}
           </Badge>

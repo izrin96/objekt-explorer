@@ -1,31 +1,36 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalDependencies": [".oxlintrc.json", ".oxfmtrc.json"],
   "tasks": {
     "dev": {
       "cache": false,
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["*"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "build:prod": {
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"],
-      "cache": false
+      "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"],
+      "outputs": [],
+      "cache": true
     },
     "lint:fix": {
-      "dependsOn": ["^lint:fix"],
+      "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"],
+      "outputs": ["**/*.{ts,tsx,js,jsx}"],
       "cache": false
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
-      "cache": false
+      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json"],
+      "outputs": [],
+      "cache": true
     },
     "format": {
-      "dependsOn": ["^format"],
+      "inputs": ["$TURBO_DEFAULT$", ".oxfmtrc.json"],
+      "outputs": ["**/*.{ts,tsx,js,jsx,json,css,md}"],
       "cache": false
     },
     "db:generate": {

@@ -1,13 +1,16 @@
 "use client";
 
 import type { DialogProps, ModalOverlayProps } from "react-aria-components";
+
 import {
   DialogTrigger as DialogTriggerPrimitive,
   Modal,
   ModalOverlay,
 } from "react-aria-components";
 import { twJoin } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
+
 import {
   Dialog,
   DialogBody,
@@ -23,7 +26,8 @@ import {
 const Sheet = DialogTriggerPrimitive;
 
 interface SheetContentProps
-  extends Omit<ModalOverlayProps, "children">,
+  extends
+    Omit<ModalOverlayProps, "children">,
     Pick<DialogProps, "aria-label" | "role" | "aria-labelledby" | "children"> {
   closeButton?: boolean;
   isFloat?: boolean;

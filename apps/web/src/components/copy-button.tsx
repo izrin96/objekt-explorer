@@ -1,6 +1,7 @@
 import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
+
 import { Button } from "./ui/button";
 
 export function CopyButton({ text }: { text: string }) {

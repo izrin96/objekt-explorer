@@ -1,11 +1,14 @@
 "use client";
 
-import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import type { InputProps, SearchFieldProps } from "react-aria-components";
+
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid";
 import { Button, SearchField as SearchFieldPrimitive } from "react-aria-components";
 import { twJoin } from "tailwind-merge";
+
 import { fieldStyles } from "@/components/ui/field";
 import { cx } from "@/lib/primitive";
+
 import { Input, InputGroup } from "./input";
 
 export function SearchField({ className, ...props }: SearchFieldProps) {
@@ -26,7 +29,7 @@ export function SearchInput(props: InputProps) {
       <Input {...props} />
       <Button
         className={twJoin(
-          "touch-target grid place-content-center pressed:text-fg text-muted-fg hover:text-fg group-empty/search-field:invisible",
+          "touch-target pressed:text-fg text-muted-fg hover:text-fg grid place-content-center group-empty/search-field:invisible",
           "px-3 py-2 sm:px-2.5 sm:py-1.5 sm:text-sm/5",
         )}
       >

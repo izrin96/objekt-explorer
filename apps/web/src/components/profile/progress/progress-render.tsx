@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
@@ -20,6 +21,7 @@ import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useUser } from "@/hooks/use-user";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
+
 import { useShowCount } from "./filter-showcount";
 import ProgressFilter from "./progress-filter";
 
@@ -60,7 +62,7 @@ function Progress() {
     <div className="flex flex-col gap-8">
       <ProgressFilter />
       {!filters.artist && !filters.member ? (
-        <div className="flex justify-center text-muted-fg text-sm">
+        <div className="text-muted-fg flex justify-center text-sm">
           Select at least 1 artist or 1 member
         </div>
       ) : (
@@ -129,7 +131,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
         )}
         onClick={() => setShow(!show)}
       >
-        <div className="inline-flex min-w-72 items-center gap-2 font-semibold text-base">
+        <div className="inline-flex min-w-72 items-center gap-2 text-base font-semibold">
           {title}
         </div>
         <ProgressBar
@@ -141,7 +143,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           <div className="relative">
             <ProgressBarTrack className="h-2 min-w-32" />
           </div>
-          <ProgressBarValue className="flex-none text-muted-fg text-sm tabular-nums" />
+          <ProgressBarValue className="text-muted-fg flex-none text-sm tabular-nums" />
         </ProgressBar>
       </div>
       <AnimatePresence>

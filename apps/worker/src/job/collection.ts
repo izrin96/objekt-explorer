@@ -1,6 +1,7 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { and, eq } from "drizzle-orm";
+
 import { fetchMetadata, type MetadataV1 } from "../lib/metadata-utils";
 
 export async function fixObjektMetadata() {

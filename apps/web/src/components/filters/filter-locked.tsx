@@ -1,7 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+
 import { useFilters } from "@/hooks/use-filters";
+
 import { Button } from "../ui/button";
 
 export default function LockedFilter() {

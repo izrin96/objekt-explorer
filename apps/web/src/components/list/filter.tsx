@@ -2,6 +2,7 @@
 
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
 import ColorFilter from "../filters/filter-color";

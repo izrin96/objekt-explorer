@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+
 import { useLiveSession } from "@/hooks/use-live-session";
+
 import LiveFooter from "./live-footer";
 
 export default function LiveEnded() {
@@ -19,8 +21,8 @@ export default function LiveEnded() {
           />
         )}
       </div>
-      <div className="absolute size-full bg-bg/50"></div>
-      <div className="absolute flex justify-center font-semibold text-fg">Live stream ended</div>
+      <div className="bg-bg/50 absolute size-full"></div>
+      <div className="text-fg absolute flex justify-center font-semibold">Live stream ended</div>
       <LiveFooter />
     </div>
   );

@@ -7,6 +7,9 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+import type { User } from "@/lib/server/auth";
+
 import ErrorFallbackRender from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -32,7 +35,7 @@ import {
 import { TextField } from "@/components/ui/text-field";
 import { authClient } from "@/lib/auth-client";
 import { sessionOptions } from "@/lib/query-options";
-import type { User } from "@/lib/server/auth";
+
 import { ListAccounts } from "./link-account";
 
 type Props = {

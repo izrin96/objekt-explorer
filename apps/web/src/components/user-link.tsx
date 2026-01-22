@@ -1,5 +1,7 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
+
 import { parseNickname } from "@/lib/utils";
+
 import { Link } from "./ui/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
@@ -25,7 +27,7 @@ export default function UserLink({
           )}
         </>
       ) : (
-        <span className="font-mono text-muted-fg">(deleted)</span>
+        <span className="text-muted-fg font-mono">(deleted)</span>
       )}
     </div>
   );

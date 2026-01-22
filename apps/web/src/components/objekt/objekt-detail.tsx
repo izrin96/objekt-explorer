@@ -1,5 +1,7 @@
 "use client";
 
+import type { SortDescriptor } from "react-aria-components";
+
 import { IconOpenLink } from "@intentui/icons";
 import {
   CaretLeftIcon,
@@ -10,15 +12,16 @@ import {
 import { useAsyncList } from "@react-stately/data";
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
-import NextImage from "next/image";
 import { useTranslations } from "next-intl";
+import NextImage from "next/image";
 import { type CSSProperties, useCallback, useState } from "react";
-import type { SortDescriptor } from "react-aria-components";
+
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { OBJEKT_CONTRACT } from "@/lib/utils";
 import { cn } from "@/utils/classes";
+
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -48,7 +51,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
         } as CSSProperties
       }
     >
-      <div className="flex h-84 select-none self-center sm:h-fit">
+      <div className="flex h-84 self-center select-none sm:h-fit">
         <ObjektCard urls={urls} objekts={objekts} />
       </div>
       <div className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:-me-2 sm:min-h-full sm:[scrollbar-gutter:stable]">
@@ -127,16 +130,16 @@ export function ObjektCard({
     >
       <div
         data-flipped={flipped}
-        className="transform-3d relative aspect-photocard h-full w-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform data-[flipped=true]:rotate-y-180"
+        className="aspect-photocard relative h-full w-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
       >
-        <div className="backface-hidden absolute inset-0 rotate-y-0 drop-shadow">
+        <div className="absolute inset-0 rotate-y-0 drop-shadow backface-hidden">
           {/* smaller image */}
           <NextImage fill loading="eager" src={urls.resizedUrl} alt={objekt.collectionId} />
           {/* original image */}
           <NextImage fill loading="eager" src={urls.originalUrl} alt={objekt.collectionId} />
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
-        <div className="backface-hidden absolute inset-0 rotate-y-180 drop-shadow">
+        <div className="absolute inset-0 rotate-y-180 drop-shadow backface-hidden">
           <NextImage fill loading="eager" src={urls.backUrl} alt={objekt.collectionId} />
         </div>
       </div>

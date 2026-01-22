@@ -5,7 +5,7 @@ const Separator = ({ orientation = "horizontal", className, ...props }: Separato
   return (
     <Divider
       className={twMerge(
-        "shrink-0 bg-border",
+        "bg-border shrink-0",
         "forced-colors:bg-[ButtonBorder]",
         orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
         className,

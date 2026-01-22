@@ -1,12 +1,14 @@
 "use client";
 
+import type React from "react";
+
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import dynamic from "next/dynamic";
-import type React from "react";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
+
 import ErrorFallbackRender from "@/components/error-boundary";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -19,6 +21,7 @@ import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
 import { seasonColors, validSeasons } from "@/lib/universal/cosmo/common";
 import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
 import { cn } from "@/utils/classes";
+
 import StatsFilter from "./stats-filter";
 
 export const ProfileStatsRenderDynamic = dynamic(() => Promise.resolve(ProfileStatsRender), {
@@ -138,7 +141,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
                         <div className="grid gap-1.5">
                           <span className="text-muted-fg">{(payload as any).name}</span>
                         </div>
-                        <span className="font-medium text-fg tabular-nums">
+                        <span className="text-fg font-medium tabular-nums">
                           {(payload as any).percentage}% ({value?.toLocaleString()})
                         </span>
                       </div>
@@ -222,7 +225,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
                         <div className="grid gap-1.5">
                           <span className="text-muted-fg">{(payload as any).name}</span>
                         </div>
-                        <span className="font-medium text-fg tabular-nums">
+                        <span className="text-fg font-medium tabular-nums">
                           {(payload as any).percentage}% ({value?.toLocaleString()})
                         </span>
                       </div>
@@ -366,7 +369,7 @@ function MemberProgressChart({
                             {(payload as any).count}/{(payload as any).total}
                           </span>
                         </div>
-                        <span className="font-medium font-mono text-fg tabular-nums">
+                        <span className="text-fg font-mono font-medium tabular-nums">
                           {value?.toLocaleString()}%
                         </span>
                       </div>

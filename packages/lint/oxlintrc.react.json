@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": ["./oxlintrc.json"],
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "pedantic": "off",
+    "perf": "warn",
+    "style": "off"
+  },
+  "rules": {
+    "eslint/no-unused-vars": "off",
+    "eslint/no-console": "off",
+    "eslint/prefer-const": "warn",
+    "eslint/no-var": "error",
+    "eslint/eqeqeq": "warn",
+    "typescript/no-floating-promises": "warn",
+    "typescript/no-explicit-any": "off",
+    "typescript/no-non-null-assertion": "off",
+    "typescript/prefer-ts-expect-error": "warn",
+    "typescript/consistent-type-imports": "warn",
+    "typescript/no-unused-vars": "off",
+    "react/no-children-prop": "off",
+    "react/no-danger": "off",
+    "react/no-danger-with-children": "off",
+    "react/jsx-key": "error",
+    "react/jsx-no-comment-textnodes": "error",
+    "react/jsx-no-duplicate-props": "error",
+    "react/jsx-no-undef": "error",
+    "react/no-direct-mutation-state": "error",
+    "react/require-render-return": "error",
+    "react-perf/jsx-no-new-array-as-prop": "off",
+    "react-perf/jsx-no-new-object-as-prop": "off",
+    "jsx-a11y/alt-text": "warn",
+    "jsx-a11y/anchor-is-valid": "off",
+    "jsx-a11y/aria-props": "warn",
+    "jsx-a11y/aria-unsupported-elements": "warn",
+    "jsx-a11y/role-has-required-aria-props": "warn",
+    "jsx-a11y/no-redundant-roles": "off"
+  }
+}

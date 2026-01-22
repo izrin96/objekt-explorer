@@ -63,7 +63,7 @@ export function Note({ indicator = true, intent = "default", className, ...props
           </div>
         </div>
       )}
-      <div className="text-pretty text-base/6 group-has-data-[slot=icon]:col-start-2 sm:text-sm/6">
+      <div className="text-base/6 text-pretty group-has-data-[slot=icon]:col-start-2 sm:text-sm/6">
         {props.children}
       </div>
     </div>

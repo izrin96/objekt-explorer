@@ -6,9 +6,12 @@ import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
 import { type CSSProperties, Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+
 import type { LiveSession } from "@/lib/universal/cosmo/live";
+
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { getBaseURL } from "@/lib/utils";
+
 import ErrorFallbackRender from "../error-boundary";
 import { Avatar } from "../ui/avatar";
 import { Badge } from "../ui/badge";
@@ -22,7 +25,7 @@ export default function LiveSessionListRender() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-xl">Cosmo Live</h2>
+          <h2 className="text-xl font-semibold">Cosmo Live</h2>
           <Badge intent="warning">Alpha</Badge>
         </div>
         <p className="text-muted-fg text-sm">Live by member from Cosmo app</p>
@@ -104,7 +107,7 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
             alt={live.title}
           />
           {live.status === "in_progress" && (
-            <div className="absolute top-2 left-2 rounded-lg bg-rose-500 px-1.5 py-0.5 font-semibold text-sm text-white shadow">
+            <div className="absolute top-2 left-2 rounded-lg bg-rose-500 px-1.5 py-0.5 text-sm font-semibold text-white shadow">
               Live
             </div>
           )}
@@ -117,11 +120,11 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
                 "--color": live.channel.primaryColorHex,
               } as CSSProperties
             }
-            className="outline-(--color) outline-2"
+            className="outline-2 outline-(--color)"
             size="sm"
             src={live.channel.profileImageUrl}
           />
-          <span className="font-semibold text-sm">{live.channel.name}</span>
+          <span className="text-sm font-semibold">{live.channel.name}</span>
         </div>
       </div>
     </Link>

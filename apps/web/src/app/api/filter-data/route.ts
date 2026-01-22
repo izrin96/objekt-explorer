@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+
 import { fetchFilterData } from "@/lib/server/objekts/filter-data";
+
 import { cacheHeaders } from "../common";
 
 export async function GET() {

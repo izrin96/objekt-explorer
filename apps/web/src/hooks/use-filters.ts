@@ -7,6 +7,7 @@ import {
   parseAsStringEnum,
   useQueryStates,
 } from "nuqs";
+
 import {
   type ValidArtist,
   type ValidClass,

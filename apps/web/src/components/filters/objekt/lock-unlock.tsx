@@ -2,7 +2,9 @@
 
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/ssr";
 import { useShallow } from "zustand/react/shallow";
+
 import type { ObjektActionProps } from "@/components/filters/objekt/common";
+
 import { Button } from "@/components/ui/button";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";

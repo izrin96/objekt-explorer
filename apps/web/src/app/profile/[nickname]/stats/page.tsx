@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { ProfileStatsRenderDynamic } from "@/components/profile/stats/stats-render";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { parseNickname } from "@/lib/utils";

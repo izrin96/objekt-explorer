@@ -2,10 +2,10 @@
 
 import { ErrorRender } from "@/components/error-boundary";
 
-export default function IndexError() {
-  function refresh() {
-    window.location.reload();
-  }
+function refresh() {
+  window.location.reload();
+}
 
+export default function IndexError() {
   return <ErrorRender onRetry={refresh} message="Error loading profile" />;
 }

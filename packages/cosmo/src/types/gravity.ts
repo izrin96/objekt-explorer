@@ -1,4 +1,5 @@
 import * as z from "zod";
+
 import type { ValidArtist } from "./common";
 
 export type CosmoGravityType = "event-gravity" | "grand-gravity";

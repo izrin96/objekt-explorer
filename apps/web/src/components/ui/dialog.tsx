@@ -1,14 +1,17 @@
 "use client";
 
-import { XMarkIcon } from "@heroicons/react/24/solid";
 import type { HeadingProps, TextProps } from "react-aria-components";
+
+import { XMarkIcon } from "@heroicons/react/24/solid";
 import {
   Heading,
   Button as PrimitiveButton,
   Dialog as PrimitiveDialog,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
+
 import { Button, type ButtonProps } from "./button";
 
 const Dialog = ({
@@ -21,7 +24,7 @@ const Dialog = ({
       data-slot="dialog"
       role={role}
       className={twMerge(
-        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden outline-hidden [--gutter:--spacing(6)] sm:[--gutter:--spacing(8)]",
+        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden outline-hidden [--gutter:--spacing(6)] sm:[--gutter:--spacing(6)]",
         className,
       )}
       {...props}
@@ -65,7 +68,7 @@ const DialogTitle = ({ className, ref, ...props }: DialogTitleProps) => (
   <Heading
     slot="title"
     ref={ref}
-    className={twMerge("text-balance font-semibold text-fg text-lg/6 sm:text-base/6", className)}
+    className={twMerge("text-fg text-lg/6 font-semibold text-balance sm:text-base/6", className)}
     {...props}
   />
 );
@@ -77,7 +80,7 @@ const DialogDescription = ({ className, ref, ...props }: DialogDescriptionProps)
   <p
     data-slot="description"
     className={twMerge(
-      "text-pretty text-base/6 text-muted-fg group-disabled:opacity-50 sm:text-sm/6",
+      "text-muted-fg text-base/6 text-pretty group-disabled:opacity-50 sm:text-sm/6",
       className,
     )}
     ref={ref}

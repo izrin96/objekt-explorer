@@ -1,4 +1,5 @@
 import { ofetch } from "ofetch";
+
 import { COSMO_ENDPOINT } from "../types/common";
 
 const apolloHeaders = {

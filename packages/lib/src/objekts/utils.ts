@@ -1,4 +1,5 @@
 import type { Collection, Objekt } from "@repo/db/indexer/schema";
+
 import type { PublicCollection, PublicObjekt } from "./types";
 
 const overrideAccents: Record<string, string> = {

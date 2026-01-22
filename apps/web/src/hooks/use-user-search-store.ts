@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
 import type { CosmoPublicUser } from "@/lib/universal/cosmo/auth";
 
 type UserSearchState = {

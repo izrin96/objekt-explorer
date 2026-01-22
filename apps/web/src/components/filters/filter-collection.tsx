@@ -3,8 +3,10 @@
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { Autocomplete, type Key, Popover, useFilter } from "react-aria-components";
+
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
+
 import { Dialog } from "../ui/dialog";
 import { ListBox } from "../ui/list-box";
 import { SearchField, SearchInput } from "../ui/search-field";
@@ -33,11 +35,11 @@ export default function CollectionFilter() {
       className="max-w-52"
     >
       <SelectTrigger />
-      <Popover className="entering:fade-in exiting:fade-out flex max-h-80 w-(--trigger-width) entering:animate-in exiting:animate-out flex-col overflow-hidden rounded-lg border bg-overlay">
+      <Popover className="entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out bg-overlay flex max-h-80 w-(--trigger-width) flex-col overflow-hidden rounded-lg border">
         <Dialog aria-label="Language">
           <Autocomplete filter={contains}>
-            <div className="border-b bg-muted p-2">
-              <SearchField className="rounded-lg bg-bg" autoFocus>
+            <div className="bg-muted border-b p-2">
+              <SearchField className="bg-bg rounded-lg" autoFocus>
                 <SearchInput />
               </SearchField>
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
+
 import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@/lib/universal/cosmo/artists";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 

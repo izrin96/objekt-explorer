@@ -1,12 +1,13 @@
 "use client";
 
-import { use } from "react";
 import type {
   ButtonProps,
   DisclosureGroupProps,
   DisclosurePanelProps,
   DisclosureProps,
 } from "react-aria-components";
+
+import { use } from "react";
 import {
   Button,
   composeRenderProps,
@@ -17,6 +18,7 @@ import {
   DisclosurePanel as PrimitiveDisclosurePanel,
 } from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
 
 const DisclosureGroup = ({ className, ...props }: DisclosureGroupProps) => {
@@ -46,10 +48,10 @@ const Disclosure = ({ className, ...props }: DisclosureProps) => {
     <PrimitiveDisclosure
       className={composeRenderProps(className, (className, { isExpanded, isFocusVisibleWithin }) =>
         twMerge(
-          "group/disclosure-item inset-ring inset-ring-(--disclosure-collapsed-border,transparent) w-full rounded-(--disclosure-radius,--spacing(0)) bg-(--disclosure-collapsed-bg,transparent) duration-200",
+          "group/disclosure-item w-full rounded-(--disclosure-radius,--spacing(0)) bg-(--disclosure-collapsed-bg,transparent) inset-ring inset-ring-(--disclosure-collapsed-border,transparent) duration-200",
           (isExpanded || isFocusVisibleWithin) &&
-            "inset-ring-(--disclosure-expanded-border,transparent) bg-(--disclosure-expanded-bg)",
-          "has-data-hovered:inset-ring-(--disclosure-expanded-border,transparent) has-data-hovered:bg-(--disclosure-expanded-bg)",
+            "bg-(--disclosure-expanded-bg) inset-ring-(--disclosure-expanded-border,transparent)",
+          "has-data-hovered:bg-(--disclosure-expanded-bg) has-data-hovered:inset-ring-(--disclosure-expanded-border,transparent)",
           className,
         ),
       )}
@@ -116,7 +118,7 @@ const DisclosurePanel = ({ className, ...props }: DisclosurePanelProps) => {
     >
       <div
         data-slot="disclosure-panel-content"
-        className="justify-start self-stretch text-pretty px-(--disclosure-gutter-x,--spacing(0)) pt-2 pb-(--disclosure-gutter-x,--spacing(0)) text-(--disclosure-collapsed-fg)"
+        className="justify-start self-stretch px-(--disclosure-gutter-x,--spacing(0)) pt-2 pb-(--disclosure-gutter-x,--spacing(0)) text-pretty text-(--disclosure-collapsed-fg)"
       >
         {props.children}
       </div>

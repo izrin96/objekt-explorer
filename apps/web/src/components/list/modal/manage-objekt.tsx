@@ -5,7 +5,9 @@ import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
+
 import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
+
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,6 +31,7 @@ import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
+
 import ErrorFallbackRender from "../../error-boundary";
 
 export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {

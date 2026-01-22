@@ -11,7 +11,9 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+
 import { authClient } from "@/lib/auth-client";
+
 import { Button } from "../ui/button";
 import { FieldError, Label } from "../ui/field";
 import { Form } from "../ui/form";
@@ -74,7 +76,7 @@ function SignInForm({
   return (
     <>
       <div className="flex flex-col">
-        <h2 className="font-semibold text-lg/8">Sign In</h2>
+        <h2 className="text-lg/8 font-semibold">Sign In</h2>
         <span className="text-muted-fg text-sm">
           Please enter your credentials to access your account.
         </span>
@@ -148,9 +150,9 @@ function SignInForm({
 
       <div className="relative my-2 flex items-center justify-center text-sm">
         <div className="absolute inset-0 flex items-center">
-          <div className="h-px w-full shrink-0 bg-border"></div>
+          <div className="bg-border h-px w-full shrink-0"></div>
         </div>
-        <span className="relative bg-bg px-3">Or continue with</span>
+        <span className="bg-bg relative px-3">Or continue with</span>
       </div>
 
       <div className="flex flex-col gap-2">

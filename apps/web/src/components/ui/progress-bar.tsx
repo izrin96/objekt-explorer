@@ -1,9 +1,11 @@
 "use client";
 
-import { createContext, use } from "react";
 import type { ProgressBarProps, ProgressBarRenderProps } from "react-aria-components";
+
+import { createContext, use } from "react";
 import { ProgressBar as ProgressBarPrimitive } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
 
 const ProgressBarContext = createContext<ProgressBarRenderProps | null>(null);
@@ -70,20 +72,20 @@ export function ProgressBarTrack({ className, ref, ...props }: React.ComponentPr
       <div ref={ref} className="flex w-full items-center gap-x-2" {...props}>
         <div
           className={twMerge(
-            "relative h-1.5 w-full min-w-52 overflow-hidden rounded-full bg-secondary outline-1 outline-transparent -outline-offset-1 will-change-transform",
+            "bg-secondary relative h-1.5 w-full min-w-52 overflow-hidden rounded-full outline-1 -outline-offset-1 outline-transparent will-change-transform",
             className,
           )}
         >
           {!isIndeterminate ? (
             <div
               data-slot="progress-content"
-              className="absolute top-0 left-0 h-full rounded-full bg-primary transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
+              className="bg-primary absolute top-0 left-0 h-full rounded-full transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
               style={{ width: `${percentage}%` }}
             />
           ) : (
             <div
               data-slot="progress-content"
-              className="absolute top-0 h-full animate-[progress-slide_2000ms_ease-in-out_infinite] rounded-full bg-primary forced-colors:bg-[Highlight]"
+              className="bg-primary absolute top-0 h-full animate-[progress-slide_2000ms_ease-in-out_infinite] rounded-full forced-colors:bg-[Highlight]"
               style={{ width: "40%" }}
             />
           )}

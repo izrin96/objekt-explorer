@@ -1,7 +1,9 @@
 "use client";
 
-import { useObjektSelect } from "@/hooks/use-objekt-select";
 import type { ValidObjekt } from "@/lib/universal/objekts";
+
+import { useObjektSelect } from "@/hooks/use-objekt-select";
+
 import { ObjektModalContext, useObjektModal } from "./objekt-modal";
 
 export function ObjektViewSelectable({

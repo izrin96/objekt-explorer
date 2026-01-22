@@ -8,6 +8,7 @@ import {
   SliderStateContext,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
 
 export function SliderGroup({ className, ...props }: React.ComponentProps<"div">) {
@@ -116,7 +117,7 @@ export function SliderFill({ className, ...props }: React.HTMLAttributes<HTMLDiv
       {...props}
       style={getStyle()}
       className={twMerge(
-        "group-orientation-horizontal/top-0 pointer-events-none absolute rounded-full bg-primary group-disabled/track:opacity-60 group-orientation-vertical/track:bottom-0 group-orientation-horizontal/track:h-full group-orientation-vertical/track:w-full",
+        "group-orientation-horizontal/top-0 bg-primary group-orientation-vertical/track:bottom-0 group-orientation-horizontal/track:h-full group-orientation-vertical/track:w-full pointer-events-none absolute rounded-full group-disabled/track:opacity-60",
         className,
       )}
     />

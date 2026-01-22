@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+
 import { useCosmoArtist } from "./use-cosmo-artist";
 
 export function useCompareMember() {

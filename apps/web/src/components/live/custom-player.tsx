@@ -12,7 +12,9 @@ import {
 } from "@stream-io/video-react-sdk";
 import Image from "next/image";
 import { type CSSProperties, useEffect, useState } from "react";
+
 import { useLiveSession } from "@/hooks/use-live-session";
+
 import { Button } from "../ui/button";
 import { Popover, PopoverContent } from "../ui/popover";
 import { Slider, SliderFill, SliderThumb, SliderTrack } from "../ui/slider";
@@ -56,7 +58,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   return (
     <div className="flex aspect-9/16 h-full w-full items-center justify-center" style={style}>
       <div
-        className="relative h-24 w-24 rounded-full outline-(--color) outline-4"
+        className="relative h-24 w-24 rounded-full outline-4 outline-(--color)"
         style={
           {
             "--color": liveSession.channel.primaryColorHex,
@@ -121,19 +123,19 @@ function LiveVolumeControl() {
   );
 }
 
+const formatDuration = (durationInMs: number) => {
+  const days = Math.floor(durationInMs / 86400);
+  const hours = Math.floor(durationInMs / 3600);
+  const minutes = Math.floor((durationInMs % 3600) / 60);
+  const seconds = durationInMs % 60;
+
+  return `${days ? `${days} ` : ""}${hours ? `${hours}:` : ""}${
+    minutes < 10 ? "0" : ""
+  }${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+};
+
 function LiveDuration() {
   const duration = useUpdateCallDuration();
-
-  const formatDuration = (durationInMs: number) => {
-    const days = Math.floor(durationInMs / 86400);
-    const hours = Math.floor(durationInMs / 3600);
-    const minutes = Math.floor((durationInMs % 3600) / 60);
-    const seconds = durationInMs % 60;
-
-    return `${days ? `${days} ` : ""}${hours ? `${hours}:` : ""}${
-      minutes < 10 ? "0" : ""
-    }${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  };
 
   return (
     <div className="flex items-center gap-2 text-sm tabular-nums">{formatDuration(duration)}</div>
@@ -164,7 +166,7 @@ const CustomLivestreamLayout = () => {
             key={`${open}`}
           />
           {!open && (
-            <div className="absolute top-0 left-0 flex h-full w-full items-center justify-center bg-bg/50">
+            <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
               <Button intent="outline" onClick={() => setOpen((prev) => !prev)}>
                 Unmute
               </Button>

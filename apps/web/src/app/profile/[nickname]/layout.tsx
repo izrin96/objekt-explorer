@@ -1,10 +1,12 @@
-import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 import type { PropsWithChildren } from "react";
+
+import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+
 import DynamicContainer from "@/components/dynamic-container";
+import { ProfileProvider } from "@/components/profile-provider";
 import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
-import { ProfileProvider } from "@/components/profile-provider";
 import { Container } from "@/components/ui/container";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";

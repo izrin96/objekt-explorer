@@ -9,6 +9,9 @@ import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+
+import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
+
 import ErrorFallbackRender from "@/components/error-boundary";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
 import ObjektModal, { useObjektModal } from "@/components/objekt/objekt-modal";
@@ -20,8 +23,8 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useTarget } from "@/hooks/use-target";
-import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
 import { getBaseURL, NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
+
 import { useTypeFilter } from "./filter-type";
 import TradesFilter from "./trades-filter";
 
@@ -129,7 +132,7 @@ function ProfileTradesVirtualizer({
       <div className="flex min-w-fit border-b">
         <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
         <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
-        <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">Serial</div>
+        <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">Serial</div>
         <div className="min-w-[130px] flex-1 px-3 py-2.5">Action</div>
         <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
       </div>
@@ -190,12 +193,12 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
 
   const user = isReceiver ? (
     row.transfer.from === NULL_ADDRESS ? (
-      <span className="font-mono text-muted-fg">COSMO</span>
+      <span className="text-muted-fg font-mono">COSMO</span>
     ) : (
       <UserLink address={row.transfer.from} nickname={row.nickname.from} />
     )
   ) : row.transfer.to === SPIN_ADDRESS ? (
-    <span className="font-mono text-muted-fg">COSMO Spin</span>
+    <span className="text-muted-fg font-mono">COSMO Spin</span>
   ) : (
     <UserLink address={row.transfer.to} nickname={row.nickname.to} />
   );
@@ -215,7 +218,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
           <IconOpenLink />
         </div>
       </div>
-      <div className="min-w-[100px] max-w-[130px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
+      <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
       <div className="min-w-[130px] flex-1 px-3 py-2.5">{action}</div>
       <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>
     </div>

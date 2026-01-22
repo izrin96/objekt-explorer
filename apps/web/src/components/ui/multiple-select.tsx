@@ -9,7 +9,9 @@ import {
   SelectValue,
   useFilter,
 } from "react-aria-components";
+
 import { cx } from "@/lib/primitive";
+
 import { Button } from "./button";
 import { fieldStyles } from "./field";
 import { ListBox, ListBoxItem } from "./list-box";
@@ -22,8 +24,10 @@ interface OptionBase {
   name: string;
 }
 
-interface MultipleSelectProps<T extends OptionBase>
-  extends Omit<SelectProps<T, "multiple">, "selectionMode" | "children"> {
+interface MultipleSelectProps<T extends OptionBase> extends Omit<
+  SelectProps<T, "multiple">,
+  "selectionMode" | "children"
+> {
   placeholder?: string;
   className?: string;
   children?: React.ReactNode;
@@ -89,9 +93,9 @@ function MultipleSelect<T extends OptionBase>({
                   }}
                 >
                   <TagList
-                    items={selectedItems.filter((i) => i != null)}
+                    items={selectedItems.filter((i) => i !== null)}
                     renderEmptyState={() => (
-                      <i className="pl-2 text-muted-fg text-sm">{placeholder}</i>
+                      <i className="text-muted-fg pl-2 text-sm">{placeholder}</i>
                     )}
                   >
                     {(item) => <Tag className="rounded-md">{item.name}</Tag>}

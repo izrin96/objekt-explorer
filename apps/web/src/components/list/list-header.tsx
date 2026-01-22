@@ -2,8 +2,10 @@
 
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
+
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
+
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { EditListModal } from "./modal/manage-list";
@@ -25,7 +27,7 @@ export default function ListHeader() {
           />
         )}
         <div className="flex flex-col">
-          <div className="font-semibold text-lg">{name}</div>
+          <div className="text-lg font-semibold">{name}</div>
           {user && (
             <div className="flex items-center gap-2">
               <span className="text-fg text-sm">{user.name}</span>

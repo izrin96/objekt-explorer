@@ -1,9 +1,11 @@
 import type { ColorSliderProps, SliderOutputProps, SliderTrackProps } from "react-aria-components";
+
 import {
   ColorSlider as PrimitiveColorSlider,
   SliderOutput,
   SliderTrack,
 } from "react-aria-components";
+
 import { fieldStyles } from "@/components/ui/field";
 import { cx } from "@/lib/primitive";
 

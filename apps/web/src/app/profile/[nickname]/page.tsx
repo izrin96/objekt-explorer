@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { ProfileObjektRenderDynamic } from "@/components/profile/profile-objekt";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { orpc } from "@/lib/orpc/client";

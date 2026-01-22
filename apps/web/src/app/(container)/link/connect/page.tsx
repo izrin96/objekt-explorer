@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+
 import LinkRender from "@/components/link/link-process";
 import { getSession } from "@/lib/server/auth";
 

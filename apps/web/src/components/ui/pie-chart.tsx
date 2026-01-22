@@ -1,8 +1,10 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { Cell, Pie, PieChart as PieChartPrimitive } from "recharts";
 import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
+
+import { Cell, Pie, PieChart as PieChartPrimitive } from "recharts";
+
 import {
   type BaseChartProps,
   Chart,
@@ -24,18 +26,17 @@ const parseLabelInput = (
   valueKey: string,
 ): string => labelInput || valueFormatter(calculateDefaultLabel(data, valueKey));
 
-interface PieChartProps<TValue extends ValueType, TName extends NameType>
-  extends Omit<
-    BaseChartProps<TValue, TName>,
-    | "hideGridLines"
-    | "hideXAxis"
-    | "hideYAxis"
-    | "xAxisProps"
-    | "yAxisProps"
-    | "displayEdgeLabelsOnly"
-    | "legend"
-    | "legendProps"
-  > {
+interface PieChartProps<TValue extends ValueType, TName extends NameType> extends Omit<
+  BaseChartProps<TValue, TName>,
+  | "hideGridLines"
+  | "hideXAxis"
+  | "hideYAxis"
+  | "xAxisProps"
+  | "yAxisProps"
+  | "displayEdgeLabelsOnly"
+  | "legend"
+  | "legendProps"
+> {
   variant?: "pie" | "donut";
   nameKey?: string;
 

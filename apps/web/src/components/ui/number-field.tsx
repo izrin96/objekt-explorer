@@ -1,8 +1,11 @@
-import { MinusIcon, PlusIcon } from "@heroicons/react/20/solid";
 import type { ButtonProps, InputProps, NumberFieldProps } from "react-aria-components";
+
+import { MinusIcon, PlusIcon } from "@heroicons/react/20/solid";
 import { Button, NumberField as NumberFieldPrimitive } from "react-aria-components";
+
 import { Input, InputGroup } from "@/components/ui/input";
 import { cx } from "@/lib/primitive";
+
 import { fieldStyles } from "./field";
 
 const NumberField = ({ className, ...props }: NumberFieldProps) => {
@@ -17,7 +20,7 @@ function NumberInput({ className, ...props }: InputProps) {
       <Input className={cx("tabular-nums", className)} {...props} />
       <div
         data-slot="text"
-        className="in-disabled:pointer-events-none pointer-events-auto right-0 p-px in-disabled:opacity-50"
+        className="pointer-events-auto right-0 p-px in-disabled:pointer-events-none in-disabled:opacity-50"
       >
         <div className="flex h-full items-center divide-x overflow-hidden rounded-r-[calc(var(--radius-lg)-1px)] border-l">
           <StepperButton slot="decrement" />

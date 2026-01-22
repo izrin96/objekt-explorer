@@ -1,4 +1,5 @@
 import { groupBy } from "es-toolkit";
+
 import type { CosmoArtistWithMembersBFF } from "./universal/cosmo/artists";
 import type { ValidObjekt } from "./universal/objekts";
 
@@ -58,7 +59,7 @@ function formatMemberCollections(
   if (groupBySeason) {
     // group by season within member
     const seasonGroups = groupBy(collections, (a) => a.season);
-    const seasonEntries = Object.entries(seasonGroups).sort(([a], [b]) => a.localeCompare(b));
+    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) => a.localeCompare(b));
 
     for (const [season, seasonCollections] of seasonEntries) {
       const formatted = Object.values(groupBy(seasonCollections, (a) => a.collectionId))
@@ -66,7 +67,7 @@ function formatMemberCollections(
           const [collection] = collections;
           return formatCollection(collection, collections.length, showQuantity, false);
         })
-        .sort();
+        .toSorted();
 
       if (formatted.length > 0) {
         if (style === "compact") {
@@ -87,7 +88,7 @@ function formatMemberCollections(
         const [collection] = collections;
         return formatCollection(collection, collections.length, showQuantity, true);
       })
-      .sort();
+      .toSorted();
 
     results.push(...formatted);
   }
@@ -111,14 +112,14 @@ export function format(
     }
 
     const seasonGroups = groupBy(allCollections, (a) => a.season);
-    const seasonEntries = Object.entries(seasonGroups).sort(([a], [b]) => a.localeCompare(b));
+    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) => a.localeCompare(b));
 
     const results: string[] = [];
 
     for (const [season, seasonCollections] of seasonEntries) {
       // group by member within this season
       const memberGroups = groupBy(seasonCollections, (a) => a.member);
-      const memberEntries = Object.entries(memberGroups).sort(([a], [b]) => a.localeCompare(b));
+      const memberEntries = Object.entries(memberGroups).toSorted(([a], [b]) => a.localeCompare(b));
 
       if (style === "compact") {
         // compact style: - __season__ **member1** collection1 **member2** collection2 (inline)
@@ -129,7 +130,7 @@ export function format(
               const [collection] = collections;
               return formatCollection(collection, collections.length, showQuantity, false);
             })
-            .sort();
+            .toSorted();
 
           if (formatted.length > 0) {
             memberParts.push(`**${member}** ${formatted.join(" ")}`);
@@ -150,7 +151,7 @@ export function format(
               const [collection] = collections;
               return formatCollection(collection, collections.length, showQuantity, false);
             })
-            .sort();
+            .toSorted();
 
           if (formatted.length > 0) {
             memberLines.push(`${bullet ? "- " : ""}${member} ${formatted.join(" ")}`);

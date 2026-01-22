@@ -7,7 +7,7 @@ export default function ParticipantCounter() {
   const { useParticipantCount } = useCallStateHooks();
   const count = useParticipantCount();
   return (
-    <span className="flex items-center gap-1 font-semibold text-red-400 text-sm tabular-nums">
+    <span className="flex items-center gap-1 text-sm font-semibold text-red-400 tabular-nums">
       <UsersIcon size={16} />
       {count}
     </span>

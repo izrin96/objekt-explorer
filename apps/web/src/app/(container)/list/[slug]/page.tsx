@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";

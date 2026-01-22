@@ -1,6 +1,5 @@
 "use client";
 
-import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import type {
   ButtonProps,
   MenuItemProps as MenuItemPrimitiveProps,
@@ -8,6 +7,8 @@ import type {
   MenuSectionProps as MenuSectionPrimitiveProps,
   MenuTriggerProps as MenuTriggerPrimitiveProps,
 } from "react-aria-components";
+
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import {
   Button,
   Collection,
@@ -21,7 +22,9 @@ import {
 } from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
 import { tv, type VariantProps } from "tailwind-variants";
+
 import { cx } from "@/lib/primitive";
+
 import {
   DropdownDescription,
   DropdownKeyboard,
@@ -58,8 +61,7 @@ const MenuTrigger = ({ className, ref, ...props }: MenuTriggerProps) => (
 );
 
 interface MenuContentProps<T>
-  extends MenuPrimitiveProps<T>,
-    Pick<PopoverContentProps, "placement"> {
+  extends MenuPrimitiveProps<T>, Pick<PopoverContentProps, "placement"> {
   className?: string;
   popover?: Pick<
     PopoverContentProps,
@@ -77,7 +79,7 @@ interface MenuContentProps<T>
 }
 
 const menuContentStyles = tv({
-  base: "grid max-h-[inherit] grid-cols-[auto_1fr] gap-y-1 overflow-y-auto overflow-x-hidden overscroll-contain p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-xl)-(--spacing(1))))] *:[[role='group']+[role=group]]:mt-3",
+  base: "grid max-h-[inherit] grid-cols-[auto_1fr] gap-y-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-xl)-(--spacing(1))))] *:[[role='group']+[role=group]]:mt-3",
 });
 
 const MenuContent = <T extends object>({
@@ -162,7 +164,7 @@ export interface MenuHeaderProps extends React.ComponentProps<typeof Header> {
 const MenuHeader = ({ className, separator = false, ...props }: MenuHeaderProps) => (
   <Header
     className={twMerge(
-      "col-span-full px-2.5 py-2 font-medium text-base sm:text-sm",
+      "col-span-full px-2.5 py-2 text-base font-medium sm:text-sm",
       separator && "-mx-1 border-b sm:px-3 sm:pb-2.5",
       className,
     )}

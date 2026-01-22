@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+
+import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
-import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
 import ColorFilter from "../filters/filter-color";

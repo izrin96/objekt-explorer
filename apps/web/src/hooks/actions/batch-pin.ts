@@ -1,7 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { orpc } from "@/lib/orpc/client";
+
 import type { PinListOutput } from "@/lib/server/api/routers/pins";
+
+import { orpc } from "@/lib/orpc/client";
 
 export function useBatchPin() {
   const batchPin = useMutation(

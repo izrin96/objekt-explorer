@@ -5,8 +5,10 @@ import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
+
 import ErrorFallbackRender from "../error-boundary";
 import { Button, buttonStyles } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -65,8 +67,8 @@ function LinkCard({ link }: LinkCardProps) {
           href={`/@${link.nickname ?? link.address}`}
           className="flex min-w-0 flex-1 flex-col gap-1 text-base"
         >
-          <span className="truncate font-semibold text-lg">{nickname}</span>
-          <span className="truncate font-mono text-muted-fg text-xs">{link.address}</span>
+          <span className="truncate text-lg font-semibold">{nickname}</span>
+          <span className="text-muted-fg truncate font-mono text-xs">{link.address}</span>
         </Link>
 
         <RemoveLinkModal address={link.address} open={removeOpen} setOpen={setRemoveOpen} />

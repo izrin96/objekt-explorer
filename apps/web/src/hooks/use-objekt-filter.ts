@@ -1,6 +1,9 @@
 import { useCallback } from "react";
-import { filterObjekts } from "@/lib/filter-utils";
+
 import type { ValidObjekt } from "@/lib/universal/objekts";
+
+import { filterObjekts } from "@/lib/filter-utils";
+
 import { useFilters } from "./use-filters";
 
 export function useObjektFilter() {

@@ -1,12 +1,16 @@
 "use client";
 
+import type { Selection } from "react-aria-components";
+
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useTransition } from "react";
-import type { Selection } from "react-aria-components";
+
+import type { ValidArtist } from "@/lib/universal/cosmo/common";
+
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
-import type { ValidArtist } from "@/lib/universal/cosmo/common";
+
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Loader } from "../ui/loader";
@@ -33,12 +37,12 @@ export default function SelectedArtistFilter() {
         {isPending ? (
           <Loader variant="ring" />
         ) : (
-          <div className="-space-x-2 flex items-center justify-center">
+          <div className="flex items-center justify-center -space-x-2">
             {selectedArtists.map((artist) => (
               <Avatar
                 key={artist.name}
                 src={artist.logoImageUrl}
-                className="size-5 ring-2 ring-bg *:size-5"
+                className="ring-bg size-5 ring-2 *:size-5"
               />
             ))}
           </div>

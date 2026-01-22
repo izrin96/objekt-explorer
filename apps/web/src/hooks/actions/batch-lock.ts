@@ -1,7 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { orpc } from "@/lib/orpc/client";
+
 import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
+
+import { orpc } from "@/lib/orpc/client";
 
 export function useBatchLock() {
   const batchLock = useMutation(

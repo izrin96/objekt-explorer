@@ -1,7 +1,10 @@
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
+
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
+
 import { getBaseURL } from "@/lib/utils";
+
 import { useCosmoArtist } from "./use-cosmo-artist";
 
 export const filterDataQuery = queryOptions({

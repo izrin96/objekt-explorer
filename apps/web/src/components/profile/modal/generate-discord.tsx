@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+
+import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { CopyButton } from "@/components/copy-button";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,7 +29,6 @@ import {
   makeMemberOrderedList,
   mapByMember,
 } from "@/lib/discord-format-utils";
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 type Props = {
   open: boolean;

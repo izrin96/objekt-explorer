@@ -1,6 +1,5 @@
 "use client";
 
-import { createContext, use } from "react";
 import type {
   TabListProps as TabListPrimitiveProps,
   TabPanelProps as TabPanelPrimitiveProps,
@@ -8,6 +7,8 @@ import type {
   TabProps as TabPrimitiveProps,
   TabsProps as TabsPrimitiveProps,
 } from "react-aria-components";
+
+import { createContext, use } from "react";
 import {
   composeRenderProps,
   TabPanels as PrimitiveTabPanels,
@@ -20,6 +21,7 @@ import {
   useSlottedContext,
 } from "react-aria-components";
 import { twMerge } from "tailwind-merge";
+
 import { cx } from "@/lib/primitive";
 
 interface TabsProps extends TabsPrimitiveProps {
@@ -90,7 +92,7 @@ export function TabScrollArea({ className, ...props }: React.ComponentProps<"div
     <div className="relative">
       <div className={twMerge("scrollbar-hidden overflow-x-auto sm:overflow-x-visible", className)}>
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px w-full bg-border"
+          className="bg-border pointer-events-none absolute inset-x-0 bottom-0 h-px w-full"
           aria-hidden
         />
         {props.children}
@@ -131,7 +133,7 @@ const Tab = ({ className, ref, ...props }: TabProps) => {
             <SelectionIndicator
               data-slot="selected-indicator"
               className={twMerge(
-                "absolute bg-fg transition-[translate,width,height] duration-200",
+                "bg-fg absolute transition-[translate,width,height] duration-200",
                 orientation === "horizontal"
                   ? "right-(--tab-gutter-x) -bottom-[calc(var(--tab-gutter-y)+1px)] left-(--tab-gutter-x) h-0.5"
                   : "top-(--tab-gutter-y) bottom-(--tab-gutter-y) -left-[calc(var(--tab-gutter-x)-var(--tab-list-gutter)+1px)] w-[2px]",

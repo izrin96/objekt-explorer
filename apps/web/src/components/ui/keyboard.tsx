@@ -8,7 +8,7 @@ const Keyboard = ({ className, ...props }: KeyboardProps) => {
     <KeyboardPrimitive
       data-slot="keyboard"
       className={twMerge(
-        "hidden font-mono text-[0.80rem]/6 text-current/60 group-hover:text-fg group-focus:text-fg group-focus:opacity-90 group-disabled:opacity-50 lg:inline forced-colors:group-focus:text-[HighlightText",
+        "group-hover:text-fg group-focus:text-fg forced-colors:group-focus:text-[HighlightText hidden font-mono text-[0.80rem]/6 text-current/60 group-focus:opacity-90 group-disabled:opacity-50 lg:inline",
         className,
       )}
       {...props}

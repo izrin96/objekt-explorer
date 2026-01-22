@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useElementSize } from "@/hooks/use-element-size";
+
 import type { PublicProfile } from "@/lib/universal/user";
+
+import { useElementSize } from "@/hooks/use-element-size";
 
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();
@@ -14,11 +16,11 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   return (
     <>
       {/* banner */}
-      <div className="-z-5 absolute inset-0 top-14 xl:top-0">
+      <div className="absolute inset-0 top-14 -z-5 xl:top-0">
         <div className="mx-auto w-full max-w-7xl lg:max-w-(--breakpoint-xl) 2xl:max-w-(--breakpoint-2xl)">
           <div
             ref={bannerRef}
-            className={"mask-x-from-100% xl:mask-x-from-97% relative aspect-[2.3/1]"}
+            className={"relative aspect-[2.3/1] mask-x-from-100% xl:mask-x-from-97%"}
           >
             {isVideo ? (
               <video
@@ -38,12 +40,12 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 priority
               />
             )}
-            <div className="absolute inset-0 bg-linear-to-b from-90% from-transparent to-100% to-bg"></div>
+            <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100%"></div>
           </div>
         </div>
       </div>
       {/* background */}
-      <div className={"-z-10 absolute inset-0 top-14 xl:top-0"} style={{ height: `${height}px` }}>
+      <div className={"absolute inset-0 top-14 -z-10 xl:top-0"} style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
             src={profile.bannerImgUrl}
@@ -62,12 +64,12 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             priority
           />
         )}
-        <div className="absolute inset-0 bg-linear-to-b from-90% from-transparent to-100% to-bg backdrop-blur-xl"></div>
+        <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100% backdrop-blur-xl"></div>
       </div>
     </>
   );
 }
 
 export function ProfileBannerClearance() {
-  return <div className={"-mt-2 xl:-mt-16 aspect-[2.3/1]"}></div>;
+  return <div className={"-mt-2 aspect-[2.3/1] xl:-mt-16"}></div>;
 }

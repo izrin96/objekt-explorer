@@ -2,6 +2,7 @@
 
 import { createContext, type PropsWithChildren, useContext, useEffect, useRef } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
+
 import type { PublicList, PublicProfile } from "@/lib/universal/user";
 
 type TargetProps = {

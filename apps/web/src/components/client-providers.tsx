@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type PropsWithChildren, useLayoutEffect, useState } from "react";
 import { RouterProvider } from "react-aria-components";
+
 import { ThemeProvider } from "@/components/theme-provider";
 import { CosmoArtistProvider, type CosmoArtistProviderProps } from "@/hooks/use-cosmo-artist";
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { createQueryClient } from "@/lib/query/client";
+
 import { Toast } from "./ui/toast";
 
 declare module "react-aria-components" {

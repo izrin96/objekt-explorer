@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+
 import { redirect } from "next/navigation";
+
 import MyListRender from "@/components/list/my-list";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";

@@ -4,7 +4,9 @@ import { IconDotsVertical } from "@intentui/icons";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+
 import { orpc } from "@/lib/orpc/client";
+
 import ErrorFallbackRender from "../error-boundary";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
@@ -34,7 +36,7 @@ function MyList() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="font-semibold text-xl">My List</div>
+      <div className="text-xl font-semibold">My List</div>
 
       <Tabs aria-label="Navbar">
         <TabList className="w-fit">
@@ -82,7 +84,7 @@ function ListCard({ list }: ListCardProps) {
       <DeleteListModal slug={list.slug} open={deleteOpen} setOpen={setDeleteOpen} />
       <Card key={list.slug}>
         <CardContent className="flex justify-between">
-          <Link href={`/list/${list.slug}`} className="flex-1 font-semibold text-base">
+          <Link href={`/list/${list.slug}`} className="flex-1 text-base font-semibold">
             {list.name}
           </Link>
           <div className="flex items-center">

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
+
 import AppLogo from "./app-logo";
 import SelectedArtistFilter from "./filters/filter-selected-artist";
 import { ThemeStyleSwitcher } from "./theme-style-select";
@@ -20,8 +21,8 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="sticky top-0 right-0 left-0 z-30 h-14 bg-linear-to-b from-bg/80 to-transparent">
-      <div className="-z-1 mask-b-from-40% absolute size-full backdrop-blur-lg"></div>
+    <nav className="from-bg/80 sticky top-0 right-0 left-0 z-30 h-14 bg-linear-to-b to-transparent">
+      <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>
       <Container className="flex justify-center">
         <div className="flex h-14 grow items-center gap-2">
           <AppLogo />
@@ -44,7 +45,7 @@ export default function Navbar() {
 
 function Activity() {
   return (
-    <Link href="/activity" className="flex items-center gap-2 px-1.5 py-1.5 font-medium text-sm">
+    <Link href="/activity" className="flex items-center gap-2 px-1.5 py-1.5 text-sm font-medium">
       <span className="text-xs">Activity</span>
     </Link>
   );

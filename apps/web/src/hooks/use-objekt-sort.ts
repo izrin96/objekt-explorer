@@ -1,7 +1,10 @@
 import { useCallback } from "react";
+
+import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { getSortDate, seasonSort } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";
-import type { ValidObjekt } from "@/lib/universal/objekts";
+
 import { useFilters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
 

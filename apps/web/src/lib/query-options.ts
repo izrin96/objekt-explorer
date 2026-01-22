@@ -1,10 +1,13 @@
 import { queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
+
 import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
-import { authClient } from "./auth-client";
-import { mapObjektWithTag } from "./objekt-utils";
+
 import type { ValidArtist } from "./universal/cosmo/common";
 import type { CollectionResult } from "./universal/objekts";
+
+import { authClient } from "./auth-client";
+import { mapObjektWithTag } from "./objekt-utils";
 import { getBaseURL } from "./utils";
 
 export const collectionOptions = (artistIds: ValidArtist[]) =>

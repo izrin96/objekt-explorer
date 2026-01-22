@@ -1,15 +1,19 @@
 "use client";
 
+import type { PropsWithChildren } from "react";
+
 import {
   CheckIcon,
   DotsThreeVerticalIcon,
   LockSimpleIcon,
   PushPinIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import type { PropsWithChildren } from "react";
-import { useObjektSelect } from "@/hooks/use-objekt-select";
+
 import type { ValidObjekt } from "@/lib/universal/objekts";
+
+import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { cn } from "@/utils/classes";
+
 import { Button } from "../ui/button";
 import { Menu, MenuContent } from "../ui/menu";
 
@@ -53,7 +57,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
       <Button
         size="sq-xs"
         intent="plain"
-        className="pressed:block hidden bg-bg/80 px-2 text-fg hover:bg-bg group-hover:block"
+        className="pressed:block bg-bg/80 text-fg hover:bg-bg hidden px-2 group-hover:block"
       >
         <DotsThreeVerticalIcon className="size-3" weight="bold" />
       </Button>

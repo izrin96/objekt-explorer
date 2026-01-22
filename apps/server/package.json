@@ -1,5 +1,7 @@
 {
   "name": "server",
+  "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "bun run --env-file=../../.env --hot src/index.ts",

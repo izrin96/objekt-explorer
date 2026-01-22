@@ -2,9 +2,11 @@ import { ORPCError } from "@orpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod/v4";
+
 import type { Outputs } from "@/lib/orpc/server";
 import type { ValidArtist } from "@/lib/universal/cosmo/common";
 import type { PublicList } from "@/lib/universal/user";
+
 import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
 import { db } from "../../db";

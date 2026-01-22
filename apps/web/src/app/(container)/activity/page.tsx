@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import { ActivityRenderDynamic } from "@/components/activity/activity-render";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchFilterData } from "@/lib/server/objekts/filter-data";

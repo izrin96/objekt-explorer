@@ -1,6 +1,8 @@
 import Image from "next/image";
-import { isObjektOwned } from "@/lib/objekt-utils";
+
 import type { ValidObjekt } from "@/lib/universal/objekts";
+
+import { isObjektOwned } from "@/lib/objekt-utils";
 import { OBJEKT_SIZE } from "@/lib/utils";
 
 type Props = {
@@ -11,7 +13,7 @@ type Props = {
 export default function ObjektSidebar(props: Props) {
   const { objekt } = props;
   return (
-    <div className="pointer-events-none relative flex h-full w-full select-none items-center text-(--objekt-text-color)">
+    <div className="pointer-events-none relative flex h-full w-full items-center text-(--objekt-text-color) select-none">
       {/* custom band image */}
       {objekt.bandImageUrl && (
         <Image className="object-cover" alt="band image" src={objekt.bandImageUrl} fill />
@@ -101,7 +103,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
       >
         <tspan>{objekt.collectionNo}</tspan>
         {!hideSerial && isObjektOwned(objekt) && (
-          <tspan className="tabular-nums tracking-wide" dx={40}>
+          <tspan className="tracking-wide tabular-nums" dx={40}>
             #{objekt.serial}
           </tspan>
         )}

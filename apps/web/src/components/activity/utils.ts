@@ -1,6 +1,7 @@
 import type { Filters } from "@/hooks/use-filters";
 import type { ActivityData, ValidType } from "@/lib/universal/activity";
 import type { ValidClass, ValidOnlineType, ValidSeason } from "@/lib/universal/cosmo/common";
+
 import { NULL_ADDRESS, SPIN_ADDRESS } from "@/lib/utils";
 
 export function filterData(
