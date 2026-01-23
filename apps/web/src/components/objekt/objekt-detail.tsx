@@ -15,11 +15,12 @@ import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import NextImage from "next/image";
-import { type CSSProperties, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
-import { type OwnedObjekt, unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
+import { type OwnedObjekt, type ValidObjekt } from "@/lib/universal/objekts";
+import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 
 import { Badge } from "../ui/badge";

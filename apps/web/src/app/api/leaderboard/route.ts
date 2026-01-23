@@ -8,7 +8,7 @@ import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
 import * as z from "zod";
 
 import { fetchKnownAddresses } from "@/lib/server/profile";
-import { unobtainables } from "@/lib/universal/objekts";
+import { unobtainables } from "@/lib/unobtainables";
 
 import { cacheHeaders } from "../common";
 

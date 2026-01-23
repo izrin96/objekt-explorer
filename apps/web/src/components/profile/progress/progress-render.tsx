@@ -19,7 +19,8 @@ import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useUser } from "@/hooks/use-user";
-import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
+import { type ValidObjekt } from "@/lib/universal/objekts";
+import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 
 import { useShowCount } from "./filter-showcount";

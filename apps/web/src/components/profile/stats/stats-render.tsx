@@ -19,7 +19,8 @@ import { useFilters } from "@/hooks/use-filters";
 import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useTarget } from "@/hooks/use-target";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import { unobtainables, type ValidObjekt } from "@/lib/universal/objekts";
+import { type ValidObjekt } from "@/lib/universal/objekts";
+import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 
 import StatsFilter from "./stats-filter";
