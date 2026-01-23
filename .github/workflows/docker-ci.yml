@@ -5,6 +5,16 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      force_build_all:
+        description: 'Force build all apps regardless of changes'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 permissions:
   contents: read
@@ -97,13 +107,10 @@ jobs:
         include:
           - app: web
             dockerfile: ./apps/web/prod.Dockerfile
-            needs-secrets: true
           - app: server
             dockerfile: ./apps/server/Dockerfile
-            needs-secrets: false
           - app: worker
             dockerfile: ./apps/worker/Dockerfile
-            needs-secrets: false
     steps:
       - name: Show detected changes
         run: |
@@ -128,7 +135,7 @@ jobs:
 
       - name: Generate Docker metadata
         id: meta
-        if: needs.detect-changes.outputs[matrix.app] == 'true'
+        if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
         run: |
           # Generate tags based on event type
           if [ "${{ github.event_name }}" == "pull_request" ]; then
@@ -148,8 +155,8 @@ jobs:
           fi
 
       - name: Build and push ${{ matrix.app }} docker image
-        # Only build if this specific app has changes
-        if: needs.detect-changes.outputs[matrix.app] == 'true'
+        # Only build if this specific app has changes or force build is enabled
+        if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -162,50 +169,29 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
-          secrets: ${{ matrix.needs-secrets && format('umami_script_url={0}
-            umami_website_id={1}
-            activity_websocket_url={2}
-            better_auth_secret={3}
-            discord_client_id={4}
-            discord_client_secret={5}
-            twitter_client_id={6}
-            twitter_client_secret={7}
-            browser_cdp_url={8}
-            site_url={9}
-            database_url={10}
-            indexer_database_url={11}
-            s3_endpoint={12}
-            s3_access_key={13}
-            s3_secret_key={14}
-            ses_region={15}
-            ses_access_key={16}
-            ses_secret_key={17}
-            ses_mail_from={18}
-            live_api_key={19}
-            bypass_live_key={20}
-            redis_url={21}',
-            secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL,
-            secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
-            secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL,
-            secrets.BETTER_AUTH_SECRET,
-            secrets.DISCORD_CLIENT_ID,
-            secrets.DISCORD_CLIENT_SECRET,
-            secrets.TWITTER_CLIENT_ID,
-            secrets.TWITTER_CLIENT_SECRET,
-            secrets.BROWSER_CDP_URL,
-            secrets.NEXT_PUBLIC_SITE_URL,
-            secrets.DATABASE_URL,
-            secrets.INDEXER_DATABASE_URL,
-            secrets.S3_ENDPOINT,
-            secrets.S3_ACCESS_KEY,
-            secrets.S3_SECRET_KEY,
-            secrets.SES_REGION,
-            secrets.SES_ACCESS_KEY,
-            secrets.SES_SECRET_KEY,
-            secrets.SES_MAIL_FROM,
-            secrets.NEXT_PUBLIC_LIVE_API_KEY,
-            secrets.BYPASS_LIVE_KEY,
-            secrets.REDIS_URL) || '' }}
+          secrets: |
+            umami_script_url=${{ secrets.NEXT_PUBLIC_UMAMI_SCRIPT_URL }}
+            umami_website_id=${{ secrets.NEXT_PUBLIC_UMAMI_WEBSITE_ID }}
+            activity_websocket_url=${{ secrets.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL }}
+            better_auth_secret=${{ secrets.BETTER_AUTH_SECRET }}
+            discord_client_id=${{ secrets.DISCORD_CLIENT_ID }}
+            discord_client_secret=${{ secrets.DISCORD_CLIENT_SECRET }}
+            twitter_client_id=${{ secrets.TWITTER_CLIENT_ID }}
+            twitter_client_secret=${{ secrets.TWITTER_CLIENT_SECRET }}
+            browser_cdp_url=${{ secrets.BROWSER_CDP_URL }}
+            site_url=${{ secrets.NEXT_PUBLIC_SITE_URL }}
+            database_url=${{ secrets.DATABASE_URL }}
+            indexer_database_url=${{ secrets.INDEXER_DATABASE_URL }}
+            s3_endpoint=${{ secrets.S3_ENDPOINT }}
+            s3_access_key=${{ secrets.S3_ACCESS_KEY }}
+            s3_secret_key=${{ secrets.S3_SECRET_KEY }}
+            ses_region=${{ secrets.SES_REGION }}
+            ses_access_key=${{ secrets.SES_ACCESS_KEY }}
+            ses_secret_key=${{ secrets.SES_SECRET_KEY }}
+            ses_mail_from=${{ secrets.SES_MAIL_FROM }}
+            live_api_key=${{ secrets.NEXT_PUBLIC_LIVE_API_KEY }}
+            bypass_live_key=${{ secrets.BYPASS_LIVE_KEY }}
+            redis_url=${{ secrets.REDIS_URL }}
 
   cleanup:
     runs-on: ubuntu-latest
