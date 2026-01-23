@@ -1,12 +1,12 @@
 import { ORPCError } from "@orpc/server";
+import { db } from "@repo/db";
+import { user as userSchema } from "@repo/db/auth-schema";
 import { eq } from "drizzle-orm";
 import * as z from "zod";
 
 import { providersMap } from "@/lib/universal/user";
 
 import { auth } from "../../auth";
-import { db } from "../../db";
-import { user as userSchema } from "../../db/auth-schema";
 import { authed } from "../orpc";
 
 export const userRouter = {

@@ -1,8 +1,8 @@
+import { indexer } from "@repo/db/indexer";
+import { collections, objekts } from "@repo/db/indexer/schema";
 import { asc, eq } from "drizzle-orm";
 
 import { cacheHeaders } from "@/app/api/common";
-import { indexer } from "@/lib/server/db/indexer";
-import { collections, objekts } from "@/lib/server/db/indexer/schema";
 
 type Params = {
   params: Promise<{

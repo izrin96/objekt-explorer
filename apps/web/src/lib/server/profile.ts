@@ -1,7 +1,6 @@
+import { db } from "@repo/db";
+import { userAddress } from "@repo/db/schema";
 import { inArray } from "drizzle-orm";
-
-import { db } from "./db";
-import { userAddress } from "./db/schema";
 
 export async function fetchKnownAddresses(addresses: string[]) {
   const result = await db

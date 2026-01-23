@@ -1,6 +1,10 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 
 import { ORPCError } from "@orpc/server";
+import { db } from "@repo/db";
+import { indexer } from "@repo/db/indexer";
+import { collections } from "@repo/db/indexer/schema";
+import { type ListEntry, listEntries, lists } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
@@ -10,10 +14,6 @@ import type { PublicList } from "@/lib/universal/user";
 
 import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
-import { db } from "../../db";
-import { indexer } from "../../db/indexer";
-import { collections } from "../../db/indexer/schema";
-import { type ListEntry, listEntries, lists } from "../../db/schema";
 import { overrideCollection } from "../../objekt";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { authed, pub } from "../orpc";

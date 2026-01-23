@@ -1,4 +1,6 @@
 import { validArtists } from "@repo/cosmo/types/common";
+import { indexer } from "@repo/db/indexer";
+import { collections } from "@repo/db/indexer/schema";
 import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
@@ -6,8 +8,6 @@ import * as z from "zod";
 
 import type { CollectionResult } from "@/lib/universal/objekts";
 
-import { indexer } from "@/lib/server/db/indexer";
-import { collections } from "@/lib/server/db/indexer/schema";
 import { overrideCollection } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 

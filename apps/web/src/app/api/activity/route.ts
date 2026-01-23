@@ -4,14 +4,14 @@ import {
   validOnlineTypes,
   validSeasons,
 } from "@repo/cosmo/types/common";
+import { indexer } from "@repo/db/indexer";
+import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
 import { cursorSchema } from "@/lib/server/common";
-import { indexer } from "@/lib/server/db/indexer";
-import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses } from "@/lib/server/profile";

@@ -1,11 +1,11 @@
+import { indexer } from "@repo/db/indexer";
+import { collections, objekts } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { count, eq, sql } from "drizzle-orm";
 
 import type { CollectionMetadata } from "@/lib/universal/objekts";
 
 import { cacheHeaders } from "@/app/api/common";
-import { indexer } from "@/lib/server/db/indexer";
-import { collections, objekts } from "@/lib/server/db/indexer/schema";
 
 type Params = {
   params: Promise<{

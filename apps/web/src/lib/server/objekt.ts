@@ -1,5 +1,6 @@
+import type { Objekt } from "@repo/db/indexer/schema";
+
 import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "../universal/objekts";
-import type { Objekt } from "./db/indexer/schema";
 
 const overrideAccents: Record<string, string> = {
   "divine01-seoyeon-117z": "#B400FF",

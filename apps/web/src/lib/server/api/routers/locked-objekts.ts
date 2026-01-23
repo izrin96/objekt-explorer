@@ -1,10 +1,10 @@
+import { db } from "@repo/db";
+import { lockedObjekts } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
 import type { Outputs } from "@/lib/orpc/server";
 
-import { db } from "../../db";
-import { lockedObjekts } from "../../db/schema";
 import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 

@@ -1,8 +1,5 @@
 import type { ValidEdition } from "@repo/cosmo/types/common";
-
-import type { Collection, Objekt } from "@/lib/server/db/indexer/schema";
-
-import type { ParsedDate } from "./common";
+import type { Collection, Objekt } from "@repo/db/indexer/schema";
 
 type CollectionExtra = {
   tags?: string[];
@@ -172,7 +169,7 @@ export const shortformMembers: Record<string, string> = {
 export type ObjektTransfer = {
   id: string;
   to: string;
-  timestamp: ParsedDate;
+  timestamp: string;
   nickname?: string | null;
 };
 

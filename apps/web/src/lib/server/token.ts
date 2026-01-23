@@ -1,8 +1,8 @@
 import { refresh } from "@repo/cosmo/server/auth";
 import { type RefreshTokenResult } from "@repo/cosmo/types/auth";
+import { db } from "@repo/db";
+import { accessToken } from "@repo/db/schema";
 
-import { db } from "./db";
-import { accessToken } from "./db/schema";
 import { validateExpiry } from "./jwt";
 
 export async function getAccessToken() {

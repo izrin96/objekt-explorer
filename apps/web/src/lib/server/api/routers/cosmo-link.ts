@@ -1,4 +1,6 @@
 import { ORPCError } from "@orpc/server";
+import { db } from "@repo/db";
+import { userAddress } from "@repo/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import * as z from "zod";
 
@@ -11,8 +13,6 @@ import {
   generateRecaptchaToken,
   getUser,
 } from "../../cosmo/shop/qr-auth";
-import { db } from "../../db";
-import { userAddress } from "../../db/schema";
 import { authed } from "../orpc";
 
 export const cosmoLinkRouter = {

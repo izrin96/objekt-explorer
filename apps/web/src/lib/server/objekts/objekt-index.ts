@@ -1,6 +1,5 @@
+import { collections } from "@repo/db/indexer/schema";
 import { getTableColumns } from "drizzle-orm";
-
-import { collections } from "../db/indexer/schema";
 
 export function getCollectionColumns() {
   const {

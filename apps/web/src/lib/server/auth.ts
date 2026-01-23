@@ -1,4 +1,7 @@
 import { fetchByNickname } from "@repo/cosmo/server/user";
+import { db } from "@repo/db";
+import * as authSchema from "@repo/db/auth-schema";
+import { type UserAddress, userAddress } from "@repo/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins/username";
@@ -13,9 +16,6 @@ import { env } from "@/env";
 import type { PublicProfile, PublicUser } from "../universal/user";
 
 import { getBaseURL, SITE_NAME } from "../utils";
-import { db } from "./db";
-import * as authSchema from "./db/auth-schema";
-import { type UserAddress, userAddress } from "./db/schema";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({

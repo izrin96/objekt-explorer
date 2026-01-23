@@ -1,15 +1,15 @@
 import type { NextRequest } from "next/server";
 
 import { validArtists } from "@repo/cosmo/types/common";
+import { db } from "@repo/db";
+import { indexer } from "@repo/db/indexer";
+import { collections, objekts } from "@repo/db/indexer/schema";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import type { OwnedObjektsResult } from "@/lib/universal/objekts";
 
 import { getSession } from "@/lib/server/auth";
-import { db } from "@/lib/server/db";
-import { indexer } from "@/lib/server/db/indexer";
-import { collections, objekts } from "@/lib/server/db/indexer/schema";
 import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";

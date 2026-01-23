@@ -11,7 +11,6 @@ export const OBJEKT_SIZE = {
   width: 1083,
 };
 
-export const AGW_APP_ID = "cm04asygd041fmry9zmcyn5o5";
 export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
 
 export function parseNickname(address: string, nickname?: string | null) {

@@ -1,12 +1,12 @@
 import type { CosmoSearchResult } from "@repo/cosmo/types/user";
 
 import { search } from "@repo/cosmo/server/user";
+import { db } from "@repo/db";
+import { userAddress } from "@repo/db/schema";
 import { like } from "drizzle-orm";
 import { after, type NextRequest } from "next/server";
 
 import { cacheUsers } from "@/lib/server/auth";
-import { db } from "@/lib/server/db";
-import { userAddress } from "@/lib/server/db/schema";
 import { getAccessToken } from "@/lib/server/token";
 
 export async function GET(request: NextRequest) {

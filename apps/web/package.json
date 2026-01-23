@@ -34,6 +34,7 @@
     "@react-stately/color": "^3.9.3",
     "@react-stately/data": "^3.15.0",
     "@repo/cosmo": "workspace:*",
+    "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
     "@stream-io/video-react-sdk": "^1.31.4",
     "@t3-oss/env-nextjs": "^0.13.10",

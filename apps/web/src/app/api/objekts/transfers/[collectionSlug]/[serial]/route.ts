@@ -1,11 +1,11 @@
+import { db } from "@repo/db";
+import { indexer } from "@repo/db/indexer";
+import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { and, desc, eq } from "drizzle-orm";
 
 import type { ObjektTransferResult } from "@/lib/universal/objekts";
 
 import { getSession } from "@/lib/server/auth";
-import { db } from "@/lib/server/db";
-import { indexer } from "@/lib/server/db/indexer";
-import { collections, objekts, transfers } from "@/lib/server/db/indexer/schema";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 
 type Params = {
@@ -90,5 +90,5 @@ export async function GET(_: Request, props: Params) {
         (a) => a.address.toLowerCase() === result.to.toLowerCase() && !a.hideNickname,
       )?.nickname,
     })),
-  } satisfies ObjektTransferResult);
+  });
 }

@@ -1,4 +1,5 @@
-import type { Transfer } from "../server/db/indexer/schema";
+import type { Transfer } from "@repo/db/indexer/schema";
+
 import type { OwnedObjekt } from "./objekts";
 
 export type AggregatedTransfer = {

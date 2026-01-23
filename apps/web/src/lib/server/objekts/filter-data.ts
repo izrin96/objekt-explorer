@@ -1,10 +1,10 @@
 import { type ValidFourSeason, validArtists, validFourSeason } from "@repo/cosmo/types/common";
+import { indexer } from "@repo/db/indexer";
+import { collections } from "@repo/db/indexer/schema";
 import { asc, ne } from "drizzle-orm";
 
 import { classArtistMap } from "@/lib/universal/cosmo/filter-data";
 
-import { indexer } from "../db/indexer";
-import { collections } from "../db/indexer/schema";
 import { getCache } from "../redis";
 
 export async function fetchUniqueCollections() {
