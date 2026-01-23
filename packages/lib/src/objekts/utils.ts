@@ -65,7 +65,10 @@ export function overrideCollection(collection: Collection) {
 export function mapPublicCollection(collection: Collection): PublicCollection {
   return {
     ...collection,
-    createdAt: collection.createdAt.toISOString(),
+    createdAt:
+      typeof collection.createdAt === "string"
+        ? collection.createdAt
+        : collection.createdAt.toISOString(),
   };
 }
 
@@ -74,8 +77,9 @@ export function mapPublicObjekt(objekt: Objekt, collection: Collection): PublicO
     ...mapPublicCollection(collection),
     id: objekt.id,
     serial: objekt.serial,
-    receivedAt: objekt.receivedAt.toISOString(),
-    mintedAt: objekt.mintedAt.toISOString(),
+    receivedAt:
+      typeof objekt.receivedAt === "string" ? objekt.receivedAt : objekt.receivedAt.toISOString(),
+    mintedAt: typeof objekt.mintedAt === "string" ? objekt.mintedAt : objekt.mintedAt.toISOString(),
     transferable: objekt.transferable,
   };
 }
