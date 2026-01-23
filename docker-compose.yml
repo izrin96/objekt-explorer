@@ -6,6 +6,10 @@ services:
       dockerfile: ./apps/worker/Dockerfile
     environment:
       - INDEXER_DATABASE_URL
+    healthcheck:
+      test: test ! -f /tmp/drain
+      interval: 5s
+      retries: 1
 
   server:
     restart: always
@@ -18,6 +22,10 @@ services:
       - REDIS_PUBSUB_URL
       - DATABASE_URL
       - INDEXER_DATABASE_URL
+    healthcheck:
+      test: test ! -f /tmp/drain && curl -f http://localhost:3000
+      interval: 5s
+      retries: 1
 
   web:
     restart: always
@@ -72,6 +80,10 @@ services:
       - NEXT_PUBLIC_LIVE_API_KEY
       - BYPASS_LIVE_KEY
       - REDIS_URL
+    healthcheck:
+      test: test ! -f /tmp/drain && curl -f http://localhost:3000/api/healthcheck
+      interval: 5s
+      retries: 1
 
   db:
     restart: always

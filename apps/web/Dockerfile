@@ -67,6 +67,9 @@ RUN bun run --filter web build:prod
 # runner
 FROM base AS runner
 
+# Install curl for healthchecks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
