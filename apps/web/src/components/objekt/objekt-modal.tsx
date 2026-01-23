@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, type ReactNode, use, useState } from "react";
+import type { ValidObjekt } from "@repo/lib/objekts";
 
-import type { ValidObjekt } from "@/lib/universal/objekts";
+import { createContext, type ReactNode, use, useState } from "react";
 
 import { ModalBody, ModalClose, ModalContent, ModalFooter } from "../ui/modal";
 import ObjektDetail from "./objekt-detail";

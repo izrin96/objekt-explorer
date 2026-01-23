@@ -1,7 +1,7 @@
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { classSort, seasonSort } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";

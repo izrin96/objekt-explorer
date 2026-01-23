@@ -1,8 +1,8 @@
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import { validGroupBy } from "@repo/cosmo/types/common";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { classSort, seasonSort } from "@/lib/filter-utils";
 

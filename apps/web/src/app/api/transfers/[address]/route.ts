@@ -10,12 +10,12 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
+import { mapOwnedObjekt } from "@repo/lib/objekts";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
 import { cursorSchema } from "@/lib/server/common";
-import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 import { type TransferResult, validType } from "@/lib/universal/transfers";
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
     return Response.json({
       hide: true,
       results: [],
-    } satisfies TransferResult);
+    });
 
   if (session && isPrivate) {
     const profiles = await fetchUserProfiles(session.user.id);
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       return Response.json({
         hide: true,
         results: [],
-      } satisfies TransferResult);
+      });
   }
 
   const results = await indexer
@@ -178,7 +178,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         )?.nickname,
       },
     })),
-  } satisfies TransferResult);
+  });
 }
 
 function parseParams(params: URLSearchParams): TransferParams {

@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
 import { Addresses } from "@repo/lib";
+import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/objekts";
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -19,7 +20,6 @@ import { useCallback, useState } from "react";
 
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
-import { type OwnedObjekt, type ValidObjekt } from "@/lib/universal/objekts";
 import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 

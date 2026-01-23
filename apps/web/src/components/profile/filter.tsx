@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import type { ValidObjekt } from "@repo/lib/objekts";
 
-import type { ValidObjekt } from "@/lib/universal/objekts";
+import { useState } from "react";
 
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
 import type { PropsWithChildren } from "react";
 
 import {
@@ -13,8 +14,6 @@ import {
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useBatchLock } from "@/hooks/actions/batch-lock";

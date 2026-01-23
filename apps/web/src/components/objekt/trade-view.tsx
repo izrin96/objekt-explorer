@@ -1,5 +1,7 @@
 "use client";
 
+import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/objekts";
+
 import { IconOpenLink } from "@intentui/icons";
 import {
   CaretLeftIcon,
@@ -21,8 +23,6 @@ import { NumberField as NumberFieldPrimitive } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
-
-import type { ObjektTransferResult, ValidObjekt } from "@/lib/universal/objekts";
 
 import { getBaseURL } from "@/lib/utils";
 import { cn } from "@/utils/classes";

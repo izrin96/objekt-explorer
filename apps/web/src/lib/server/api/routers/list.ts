@@ -5,6 +5,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { type ListEntry, listEntries, lists } from "@repo/db/schema";
+import { overrideCollection } from "@repo/lib/objekts";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
@@ -14,7 +15,6 @@ import type { PublicList } from "@/lib/universal/user";
 
 import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
-import { overrideCollection } from "../../objekt";
 import { getCollectionColumns } from "../../objekts/objekt-index";
 import { authed, pub } from "../orpc";
 
@@ -378,7 +378,7 @@ async function mapEntriesCollection(
     .map(({ collectionSlug, id, createdAt }) =>
       Object.assign({}, collectionsMap.get(collectionSlug)!, {
         id: id.toString(),
-        createdAt: createdAt.toISOString(),
+        createdAt,
       }),
     );
 }

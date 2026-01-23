@@ -1,10 +1,10 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import { createContext, type PropsWithChildren, useContext, useRef } from "react";
 import { toast } from "sonner";
 import { createStore, type StoreApi, useStore } from "zustand";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 type ObjektSelectedState = {
   mode: boolean;

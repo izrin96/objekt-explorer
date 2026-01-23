@@ -1,6 +1,6 @@
-import Image from "next/image";
+import type { ValidObjekt } from "@repo/lib/objekts";
 
-import type { ValidObjekt } from "@/lib/universal/objekts";
+import Image from "next/image";
 
 import { isObjektOwned } from "@/lib/objekt-utils";
 import { OBJEKT_SIZE } from "@/lib/utils";

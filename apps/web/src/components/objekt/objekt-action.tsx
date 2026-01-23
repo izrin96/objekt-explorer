@@ -1,5 +1,6 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
 import type { PropsWithChildren } from "react";
 
 import {
@@ -8,8 +9,6 @@ import {
   LockSimpleIcon,
   PushPinIcon,
 } from "@phosphor-icons/react/dist/ssr";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { cn } from "@/utils/classes";

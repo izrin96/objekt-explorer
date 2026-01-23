@@ -1,9 +1,9 @@
+import type { CollectionMetadata, ValidObjekt } from "@repo/lib/objekts";
+
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
-
-import type { CollectionMetadata, ValidObjekt } from "@/lib/universal/objekts";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { getBaseURL, getEditionStr } from "@/lib/utils";

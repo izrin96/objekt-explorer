@@ -1,8 +1,8 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
-import type { PublicObjekt } from "@repo/lib/objekts/types";
+import type { OwnedObjekt } from "@repo/lib/objekts";
 import type { ServerWebSocket } from "bun";
 
-import { mapPublicObjekt } from "@repo/lib/objekts/utils";
+import { mapOwnedObjekt } from "@repo/lib/objekts";
 
 import { redisPubSub } from "./lib/redis";
 import { fetchKnownAddresses } from "./lib/user";
@@ -23,7 +23,7 @@ type TransferSendData = {
     to: string | undefined;
   };
   transfer: Transfer;
-  objekt: PublicObjekt;
+  objekt: OwnedObjekt;
 };
 
 void redisPubSub.subscribe("transfers");
@@ -53,8 +53,8 @@ redisPubSub.on("message", async (channel, message) => {
           to: toUser?.nickname ?? undefined,
         },
         transfer: rest,
-        objekt: mapPublicObjekt(objekt, collection),
-      } satisfies TransferSendData;
+        objekt: mapOwnedObjekt(objekt, collection),
+      };
 
       transferBatch.push(transferEvent);
     }

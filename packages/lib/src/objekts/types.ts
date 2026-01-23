@@ -1,50 +1,39 @@
-export type PublicCollection = {
-  id: string;
-  createdAt: string;
-  slug: string;
-  collectionId: string;
-  season: string;
-  member: string;
-  artist: string;
-  collectionNo: string;
-  class: string;
-  frontImage: string;
-  backImage: string;
-  backgroundColor: string;
-  textColor: string;
-  onOffline: "online" | "offline";
-  bandImageUrl: string | null;
+import type { Collection, Objekt } from "@repo/db/indexer/schema";
+
+// Extra fields not in DB schema
+type CollectionExtra = {
+  tags?: string[];
+  edition?: 1 | 2 | 3 | null;
 };
 
-export type CollectionExtra = {
-  tags: string[];
-  edition: 1 | 2 | 3 | null;
+type OwnedExtra = {
+  isPin?: boolean;
+  isLocked?: boolean;
+  pinOrder?: number | null;
 };
 
-export type CollectionItem = PublicCollection & CollectionExtra;
+// Indexed collection - base collection info without ownership
+export type IndexedObjekt = Omit<
+  Collection,
+  "contract" | "comoAmount" | "accentColor" | "thumbnailImage"
+> &
+  CollectionExtra;
 
-export type ObjektStatus = {
-  mintedAt: string;
-  receivedAt: string;
-  serial: number;
-  transferable: boolean;
-};
+// Owned objekt - collection + ownership info
+export type OwnedObjekt = IndexedObjekt &
+  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> &
+  OwnedExtra;
 
-export type PublicObjekt = PublicCollection & ObjektStatus;
+// Union type for functions that accept either indexed or owned objekts
+export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 
-export type ObjektExtra = {
-  isPin: boolean;
-  isLocked: boolean;
-  pinOrder: number | null;
-};
-
-export type ObjektItem = CollectionItem & ObjektStatus & ObjektExtra;
-
-export type ObjektOrder = {
+// Pin info
+export type PinObjekt = {
   tokenId: string;
   order: number | null;
 };
 
+// Collection metadata
 export type CollectionMetadata = {
   transferable: number;
   total: number;
@@ -52,6 +41,7 @@ export type CollectionMetadata = {
   createdAt: string;
 };
 
+// Transfer history
 export type ObjektTransfer = {
   id: string;
   to: string;
@@ -59,7 +49,7 @@ export type ObjektTransfer = {
   nickname?: string | null;
 };
 
-export type ObjektResult = {
+export type ObjektTransferResult = {
   hide?: boolean;
   tokenId?: string;
   owner?: string;
@@ -67,10 +57,64 @@ export type ObjektResult = {
   transfers: ObjektTransfer[];
 };
 
-export type ObjektsResult = {
+// API response types
+export type OwnedObjektsResult = {
   nextCursor?: {
-    receivedAt: string | Date;
+    receivedAt: string;
     id: string;
   };
-  objekts: PublicObjekt[];
+  objekts: OwnedObjekt[];
+};
+
+export type CollectionResult = {
+  collections: IndexedObjekt[];
+};
+
+// Member shortform aliases
+export const shortformMembers: Record<string, string> = {
+  naky: "NaKyoung",
+  n: "Nien",
+  nk: "NaKyoung",
+  tone: "Kotone",
+  sulin: "Sullin",
+  s: "Sullin",
+  sh: "SoHyun",
+  c: "Choerry",
+  ch: "Choerry",
+  choery: "Choerry",
+  cw: "ChaeWon",
+  cy: "ChaeYeon",
+  sy: "SeoYeon",
+  sm: "SooMin",
+  so: "ShiOn",
+  sa: "SeoAh",
+  sl: "Sullin",
+  jw: "JiWoo",
+  jb: "JooBin",
+  jy: "JiYeon",
+  js: "JinSoul",
+  dh: "DaHyun",
+  kd: "Kaede",
+  kl: "KimLip",
+  k: "Kaede",
+  hr: "HyeRin",
+  hy: "HaYeon",
+  hj: "HeeJin",
+  hs: "HaSeul",
+  yb: "YuBin",
+  yj: "YeonJi",
+  yy: "YooYeon",
+  x: "Xinyu",
+  m: "Mayu",
+  l: "Lynn",
+  soda: "DaHyun",
+  kwak: "YeonJi",
+  yubam: "YuBin",
+  ham: "SeoYeon",
+  ssaem: "SoHyun",
+  park: "SoHyun",
+  mg: "MinGyeol",
+  hh: "HwanHee",
+  jh: "JuHo",
+  ti: "TaeIn",
 };

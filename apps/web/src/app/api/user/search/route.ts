@@ -53,5 +53,5 @@ export async function GET(request: NextRequest) {
       profileImageUrl: "",
       userProfiles: [],
     })),
-  } satisfies CosmoSearchResult);
+  });
 }

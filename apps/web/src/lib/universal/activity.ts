@@ -1,6 +1,5 @@
 import type { Transfer } from "@repo/db/indexer/schema";
-
-import type { OwnedObjekt } from "./objekts";
+import type { OwnedObjekt } from "@repo/lib/objekts";
 
 export type PartialTransfer = Pick<Transfer, "id" | "from" | "to" | "timestamp" | "hash">;
 

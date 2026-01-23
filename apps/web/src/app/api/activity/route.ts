@@ -7,12 +7,12 @@ import {
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
+import { mapOwnedObjekt } from "@repo/lib/objekts";
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
 import { cursorSchema } from "@/lib/server/common";
-import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses } from "@/lib/server/profile";
 import { type ActivityResponse, validType } from "@/lib/universal/activity";
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     items,
     nextCursor,
-  } satisfies ActivityResponse);
+  });
 }
 
 function parseParams(params: URLSearchParams): ActivityParams {

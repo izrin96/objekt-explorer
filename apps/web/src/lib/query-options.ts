@@ -1,11 +1,10 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
+import type { CollectionResult } from "@repo/lib/objekts";
 
 import { queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
 import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
-
-import type { CollectionResult } from "./universal/objekts";
 
 import { authClient } from "./auth-client";
 import { mapObjektWithTag } from "./objekt-utils";

@@ -1,13 +1,12 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
 import type { PropsWithChildren } from "react";
 
 import { ChecksIcon, HandPointingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useShallow } from "zustand/react/shallow";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 

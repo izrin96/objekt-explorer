@@ -1,3 +1,5 @@
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import {
   type ValidClass,
   type ValidSeason,
@@ -7,8 +9,6 @@ import {
 import chroma from "chroma-js";
 
 import type { Filters } from "@/hooks/use-filters";
-
-import type { ValidObjekt } from "./universal/objekts";
 
 import { isObjektOwned } from "./objekt-utils";
 

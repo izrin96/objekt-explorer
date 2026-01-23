@@ -1,5 +1,7 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
 import { Addresses } from "@repo/lib";
 import {
@@ -17,7 +19,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
@@ -124,7 +125,7 @@ function Activity() {
     });
 
   const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
-    !(isPending || isRefetching) ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL! : null,
+    !(isPending || isRefetching) ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL : null,
     {
       shouldReconnect: () => true,
       reconnectAttempts: Infinity,

@@ -1,5 +1,6 @@
 "use client";
 
+import { type ValidObjekt } from "@repo/lib/objekts";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
@@ -19,7 +20,6 @@ import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useUser } from "@/hooks/use-user";
-import { type ValidObjekt } from "@/lib/universal/objekts";
 import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 

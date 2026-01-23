@@ -1,7 +1,7 @@
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";

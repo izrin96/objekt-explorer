@@ -3,6 +3,7 @@
 import type React from "react";
 
 import { seasonColors, validSeasons } from "@repo/cosmo/types/common";
+import { type ValidObjekt } from "@repo/lib/objekts";
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import dynamic from "next/dynamic";
@@ -19,7 +20,6 @@ import { useFilters } from "@/hooks/use-filters";
 import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useTarget } from "@/hooks/use-target";
 import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
-import { type ValidObjekt } from "@/lib/universal/objekts";
 import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 

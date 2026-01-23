@@ -3,8 +3,6 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { and, desc, eq } from "drizzle-orm";
 
-import type { ObjektTransferResult } from "@/lib/universal/objekts";
-
 import { getSession } from "@/lib/server/auth";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 
@@ -41,7 +39,7 @@ export async function GET(_: Request, props: Params) {
   if (!results.length)
     return Response.json({
       transfers: [],
-    } satisfies ObjektTransferResult);
+    });
 
   const [result] = results;
 
@@ -58,7 +56,7 @@ export async function GET(_: Request, props: Params) {
     return Response.json({
       hide: true,
       transfers: [],
-    } satisfies ObjektTransferResult);
+    });
 
   if (session && isPrivate) {
     const profiles = await fetchUserProfiles(session.user.id);
@@ -71,7 +69,7 @@ export async function GET(_: Request, props: Params) {
       return Response.json({
         hide: true,
         transfers: [],
-      } satisfies ObjektTransferResult);
+      });
   }
 
   const addresses = Array.from(new Set(results.map((r) => r.to)));

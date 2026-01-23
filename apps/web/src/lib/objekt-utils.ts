@@ -1,10 +1,11 @@
-import { getCollectionEdition } from "./universal/collection-grid";
 import {
   type OwnedObjekt,
   type PinObjekt,
   shortformMembers,
   type ValidObjekt,
-} from "./universal/objekts";
+} from "@repo/lib/objekts";
+
+import { getCollectionEdition } from "./universal/collection-grid";
 import { replaceUrlSize } from "./utils";
 
 function getMemberShortKeys(value: string) {

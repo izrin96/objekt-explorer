@@ -4,13 +4,11 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
+import { mapOwnedObjekt } from "@repo/lib/objekts";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
-import type { OwnedObjektsResult } from "@/lib/universal/objekts";
-
 import { getSession } from "@/lib/server/auth";
-import { mapOwnedObjekt } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchUserProfiles } from "@/lib/server/profile";
 
@@ -49,7 +47,7 @@ export async function GET(request: NextRequest, props: Params) {
   if (!session && isPrivate)
     return Response.json({
       objekts: [],
-    } satisfies OwnedObjektsResult);
+    });
 
   if (session && isPrivate) {
     const profiles = await fetchUserProfiles(session.user.id);
@@ -61,7 +59,7 @@ export async function GET(request: NextRequest, props: Params) {
     if (!isProfileAuthed)
       return Response.json({
         objekts: [],
-      } satisfies OwnedObjektsResult);
+      });
   }
 
   const results = await indexer
@@ -105,14 +103,14 @@ export async function GET(request: NextRequest, props: Params) {
   const nextCursor = hasNext
     ? {
         receivedAt: results[PER_PAGE - 1].objekt.receivedAt,
-        id: results[PER_PAGE - 1].objekt.id.toString(),
+        id: results[PER_PAGE - 1].objekt.id,
       }
     : undefined;
 
   return Response.json({
     nextCursor,
     objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
-  } satisfies OwnedObjektsResult);
+  });
 }
 
 function parseParams(params: URLSearchParams): z.infer<typeof schema> {

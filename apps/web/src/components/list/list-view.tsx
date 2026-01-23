@@ -1,11 +1,12 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 
-import type { ValidObjekt } from "@/lib/universal/objekts";
 import type { PublicList } from "@/lib/universal/user";
 
 import { useConfigStore } from "@/hooks/use-config";

@@ -1,13 +1,13 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
-
-import type { ValidObjekt } from "@/lib/universal/objekts";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";

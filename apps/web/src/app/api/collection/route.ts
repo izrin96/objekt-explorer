@@ -1,14 +1,14 @@
+import type { CollectionResult } from "@repo/lib/objekts";
+
 import { validArtists } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
+import { overrideCollection } from "@repo/lib/objekts";
 import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import * as z from "zod";
 
-import type { CollectionResult } from "@/lib/universal/objekts";
-
-import { overrideCollection } from "@/lib/server/objekt";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 
 const schema = z.object({
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
   if (!singleResult.length)
     return Response.json({
       collections: [],
-    } satisfies CollectionResult);
+    });
 
   // check for etag
   const etag = `W/"${createHash("md5").update(singleResult[0].id).digest("hex")}"`;
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
   const body = JSON.stringify({
     collections: result.map(overrideCollection),
-  } satisfies CollectionResult);
+  });
 
   return new NextResponse(body, {
     status: 200,

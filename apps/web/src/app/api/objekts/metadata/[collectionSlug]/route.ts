@@ -3,8 +3,6 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { count, eq, sql } from "drizzle-orm";
 
-import type { CollectionMetadata } from "@/lib/universal/objekts";
-
 import { cacheHeaders } from "@/app/api/common";
 
 type Params = {
@@ -37,8 +35,8 @@ export async function GET(_: Request, props: Params) {
         total: 0,
         spin: 0,
         transferable: 0,
-        createdAt: new Date(0).toISOString(),
-      } satisfies CollectionMetadata,
+        createdAt: new Date(0),
+      },
       {
         headers: cacheHeaders(),
       },

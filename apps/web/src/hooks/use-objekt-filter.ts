@@ -1,6 +1,6 @@
-import { useCallback } from "react";
+import type { ValidObjekt } from "@repo/lib/objekts";
 
-import type { ValidObjekt } from "@/lib/universal/objekts";
+import { useCallback } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";
 

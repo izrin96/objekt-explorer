@@ -1,6 +1,6 @@
 "use client";
 
-import type { ValidObjekt } from "@/lib/universal/objekts";
+import type { ValidObjekt } from "@repo/lib/objekts";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 
