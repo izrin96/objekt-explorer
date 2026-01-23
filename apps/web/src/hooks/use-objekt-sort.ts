@@ -2,13 +2,15 @@ import type { ValidObjekt } from "@repo/lib/objekts";
 
 import { useCallback } from "react";
 
-import { getSortDate, seasonSort } from "@/lib/filter-utils";
+import { compareByArray, getSortDate } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
+import { useFilterData } from "./use-filter-data";
 import { useFilters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
 
 export function useObjektSort() {
+  const { seasons } = useFilterData();
   const [filters] = useFilters();
   const compareMember = useCompareMember();
 
@@ -32,12 +34,12 @@ export function useObjektSort() {
         if (sortDir === "asc") {
           objekts = objekts.toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo));
           if (sort === "season") {
-            objekts = objekts.toSorted((a, b) => seasonSort(a.season, b.season));
+            objekts = objekts.toSorted((a, b) => compareByArray(seasons, a.season, b.season));
           }
         } else {
           objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
           if (sort === "season") {
-            objekts = objekts.toSorted((a, b) => seasonSort(b.season, a.season));
+            objekts = objekts.toSorted((a, b) => compareByArray(seasons, b.season, a.season));
           }
         }
       } else if (sort === "serial") {
@@ -54,7 +56,7 @@ export function useObjektSort() {
         // default to season sort (ascending)
         objekts = objekts
           .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-          .toSorted((a, b) => seasonSort(a.season, b.season));
+          .toSorted((a, b) => compareByArray(seasons, a.season, b.season));
 
         if (sortDir === "asc") {
           objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
@@ -65,6 +67,6 @@ export function useObjektSort() {
 
       return objekts;
     },
-    [filters, compareMember],
+    [filters, compareMember, seasons],
   );
 }

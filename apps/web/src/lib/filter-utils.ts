@@ -1,11 +1,5 @@
 import type { ValidObjekt } from "@repo/lib/objekts";
 
-import {
-  type ValidClass,
-  type ValidSeason,
-  validClasses,
-  validSeasons,
-} from "@repo/cosmo/types/common";
 import chroma from "chroma-js";
 
 import type { Filters } from "@/hooks/use-filters";
@@ -126,9 +120,9 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
       return false;
     }
 
-    if (filters.class && !filters.class.includes(a.class as ValidClass)) return false;
+    if (filters.class && !filters.class.includes(a.class)) return false;
 
-    if (filters.season && !filters.season.includes(a.season as ValidSeason)) return false;
+    if (filters.season && !filters.season.includes(a.season)) return false;
 
     if (filters.on_offline && !filters.on_offline.includes(a.onOffline)) return false;
 
@@ -169,12 +163,4 @@ export function compareByArray<T>(valid: readonly T[], a: T, b: T) {
   const posA = valid.indexOf(a);
   const posB = valid.indexOf(b);
   return posA - posB;
-}
-
-export function seasonSort(a: string, b: string) {
-  return compareByArray(validSeasons, a, b);
-}
-
-export function classSort(a: string, b: string) {
-  return compareByArray(validClasses, a, b);
 }

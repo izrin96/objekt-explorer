@@ -2,19 +2,15 @@ import type { ValidCustomSort } from "@repo/cosmo/types/common";
 
 import {
   type ValidArtist,
-  type ValidClass,
   type ValidEdition,
   type ValidGroupBy,
   type ValidOnlineType,
-  type ValidSeason,
   type ValidSortDirection,
   validArtists,
-  validClasses,
   validCustomSorts,
   validEdition,
   validGroupBy,
   validOnlineTypes,
-  validSeasons,
   validSortDirection,
 } from "@repo/cosmo/types/common";
 import {
@@ -32,8 +28,8 @@ export function useFilters() {
     member: parseAsArrayOf(parseAsString),
     artist: parseAsArrayOf(parseAsStringEnum<ValidArtist>(Object.values(validArtists))),
     sort: parseAsStringEnum<ValidCustomSort>(Object.values(validCustomSorts)),
-    class: parseAsArrayOf(parseAsStringEnum<ValidClass>(Object.values(validClasses))),
-    season: parseAsArrayOf(parseAsStringEnum<ValidSeason>(Object.values(validSeasons))),
+    class: parseAsArrayOf(parseAsString),
+    season: parseAsArrayOf(parseAsString),
     on_offline: parseAsArrayOf(parseAsStringEnum<ValidOnlineType>(Object.values(validOnlineTypes))),
     transferable: parseAsBoolean,
     search: parseAsString,

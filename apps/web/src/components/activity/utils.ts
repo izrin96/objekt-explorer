@@ -1,5 +1,3 @@
-import type { ValidClass, ValidSeason } from "@repo/cosmo/types/common";
-
 import { Addresses } from "@repo/lib";
 
 import type { Filters } from "@/hooks/use-filters";
@@ -38,16 +36,14 @@ export function filterData(
 
     // Filter by season
     if (filters.season?.length) {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-      if (!filters.season.includes(item.objekt.season as ValidSeason)) {
+      if (!filters.season.includes(item.objekt.season)) {
         return false;
       }
     }
 
     // Filter by class
     if (filters.class?.length) {
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-      if (!filters.class.includes(item.objekt.class as ValidClass)) {
+      if (!filters.class.includes(item.objekt.class)) {
         return false;
       }
     }

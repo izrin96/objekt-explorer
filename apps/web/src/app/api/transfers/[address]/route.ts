@@ -1,11 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import {
-  validArtists,
-  validClasses,
-  validOnlineTypes,
-  validSeasons,
-} from "@repo/cosmo/types/common";
+import { validArtists, validOnlineTypes } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
@@ -26,8 +21,8 @@ const transfersSchema = z.object({
   type: z.enum(validType).default("all"),
   artist: z.enum(validArtists).array(),
   member: z.string().array(),
-  season: z.enum(validSeasons).array(),
-  class: z.enum(validClasses).array(),
+  season: z.string().array(),
+  class: z.string().array(),
   on_offline: z.enum(validOnlineTypes).array(),
   collection: z.string().array(),
 });

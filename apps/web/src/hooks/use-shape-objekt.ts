@@ -3,15 +3,17 @@ import type { ValidObjekt } from "@repo/lib/objekts";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 
-import { classSort, seasonSort } from "@/lib/filter-utils";
+import { compareByArray } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
+import { useFilterData } from "./use-filter-data";
 import { useFilters, useIsFiltering } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
 import { useObjektSort } from "./use-objekt-sort";
 
 export function useShapeObjekts() {
+  const { seasons, classes } = useFilterData();
   const [filters] = useFilters();
   const isFiltering = useIsFiltering();
   const { getArtist } = useCosmoArtist();
@@ -49,11 +51,15 @@ export function useShapeObjekts() {
         }
 
         if (filters.group_by === "class") {
-          return groupDir === "asc" ? classSort(keyA, keyB) : classSort(keyB, keyA);
+          return groupDir === "asc"
+            ? compareByArray(classes, keyA, keyB)
+            : compareByArray(classes, keyB, keyA);
         }
 
         if (filters.group_by === "season") {
-          return groupDir === "asc" ? seasonSort(keyA, keyB) : seasonSort(keyB, keyA);
+          return groupDir === "asc"
+            ? compareByArray(seasons, keyA, keyB)
+            : compareByArray(seasons, keyB, keyA);
         }
 
         if (groupDir === "desc") return keyB.localeCompare(keyA);
@@ -96,6 +102,6 @@ export function useShapeObjekts() {
         return [key, grouped];
       });
     },
-    [filters, isFiltering, getArtist, compareMember, sortObjekts],
+    [filters, isFiltering, getArtist, compareMember, sortObjekts, seasons, classes],
   );
 }

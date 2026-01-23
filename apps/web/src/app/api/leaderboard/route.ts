@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { validArtists, validOnlineTypes, validSeasons } from "@repo/cosmo/types/common";
+import { validArtists, validOnlineTypes } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
@@ -16,7 +16,7 @@ const schema = z.object({
   artist: z.enum(validArtists).nullable().optional(),
   member: z.string().nullable().optional(),
   onlineType: z.enum(validOnlineTypes).nullable().optional(),
-  season: z.enum(validSeasons).nullable().optional(),
+  season: z.string().nullable().optional(),
 });
 
 export async function GET(request: NextRequest) {

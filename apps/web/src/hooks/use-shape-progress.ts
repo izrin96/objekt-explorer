@@ -4,13 +4,15 @@ import { validGroupBy } from "@repo/cosmo/types/common";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 
-import { classSort, seasonSort } from "@/lib/filter-utils";
+import { compareByArray } from "@/lib/filter-utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
+import { useFilterData } from "./use-filter-data";
 import { useFilters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
 
 export function useShapeProgress() {
+  const { seasons, classes } = useFilterData();
   const [filters] = useFilters();
   const { getArtist } = useCosmoArtist();
   const compareMember = useCompareMember();
@@ -38,13 +40,13 @@ export function useShapeProgress() {
 
       if (groupBys.includes("class")) {
         entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
-          classSort(objektA.class, objektB.class),
+          compareByArray(classes, objektA.class, objektB.class),
         );
       }
 
       if (groupBys.includes("season")) {
         entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
-          seasonSort(objektB.season, objektA.season),
+          compareByArray(seasons, objektB.season, objektA.season),
         );
       }
 
@@ -63,11 +65,11 @@ export function useShapeProgress() {
               objekts
                 .toSorted((a, b) => compareMember(a.member, b.member))
                 .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-                .toSorted((a, b) => seasonSort(a.season, b.season)),
+                .toSorted((a, b) => compareByArray(seasons, a.season, b.season)),
             ] as const,
         )
         .map(([key, objekts]) => [key, Object.values(groupBy(objekts, (a) => a.collectionId))]);
     },
-    [filters, getArtist, compareMember],
+    [filters, getArtist, compareMember, seasons, classes],
   );
 }

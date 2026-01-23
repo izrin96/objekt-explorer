@@ -1,6 +1,5 @@
 "use client";
 
-import type { ValidClass } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
 
 import { useTranslations } from "next-intl";
@@ -24,7 +23,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
 
   const update = useCallback(
     (key: Selection) => {
-      const values = Array.from((key as Set<ValidClass>).values());
+      const values = Array.from((key as Set<string>).values());
       return setFilters({
         class: values.length ? values : null,
       });

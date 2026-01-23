@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { seasonColors, validSeasons } from "@repo/cosmo/types/common";
+import { seasonColors } from "@repo/cosmo/types/common";
 import { type ValidObjekt } from "@repo/lib/objekts";
 import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
@@ -16,6 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Loader } from "@/components/ui/loader";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useTarget } from "@/hooks/use-target";
@@ -169,8 +170,10 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
 }
 
 function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
+  const { seasons } = useFilterData();
+
   const chartData = useMemo(() => {
-    const data = validSeasons.map((season, i) => ({
+    const data = seasons.map((season, i) => ({
       name: season,
       fill: seasonColors[i],
       count: objekts.filter((obj) => obj.season === season).length,
@@ -183,7 +186,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
         }),
       )
       .toSorted((a, b) => b.count - a.count);
-  }, [objekts]);
+  }, [objekts, seasons]);
 
   return (
     <Card>

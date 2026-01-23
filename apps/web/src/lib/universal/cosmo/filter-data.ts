@@ -1,8 +1,8 @@
-import type { ValidArtist, ValidClass } from "@repo/cosmo/types/common";
+import type { ValidArtist } from "@repo/cosmo/types/common";
 
 export type ClassArtist = {
   artistId: ValidArtist;
-  classes: ValidClass[];
+  classes: string[];
 };
 
 export const classArtistMap: ClassArtist[] = [
