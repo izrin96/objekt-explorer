@@ -8,7 +8,7 @@ import { useFilters } from "@/hooks/use-filters";
 
 import { Button } from "../ui/button";
 import { Label } from "../ui/field";
-import { Popover, PopoverContent } from "../ui/popover";
+import { Popover, PopoverBody, PopoverContent } from "../ui/popover";
 import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../ui/slider";
 
 export default function ColorSensitivityFilter() {
@@ -18,12 +18,14 @@ export default function ColorSensitivityFilter() {
   return (
     <Popover>
       <Button intent="outline">{t("color_sensitivity")}</Button>
-      <PopoverContent className="p-3">
-        <ColorSensitivitySlider
-          initialValue={filters.colorSensitivity ?? 7}
-          color={filters.color}
-          onCommit={(value) => setFilters({ colorSensitivity: value === 7 ? null : value })}
-        />
+      <PopoverContent>
+        <PopoverBody className="py-2 [--gutter:--spacing(4)]">
+          <ColorSensitivitySlider
+            initialValue={filters.colorSensitivity ?? 7}
+            color={filters.color}
+            onCommit={(value) => setFilters({ colorSensitivity: value === 7 ? null : value })}
+          />
+        </PopoverBody>
       </PopoverContent>
     </Popover>
   );

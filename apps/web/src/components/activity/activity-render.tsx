@@ -13,7 +13,7 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 
@@ -85,11 +85,9 @@ function Activity() {
 
   const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
 
-  const queryKey = [type, filters, parsedSelectedArtistIds];
-
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending, isRefetching } =
     useInfiniteQuery<ActivityResponse>({
-      queryKey: ["activity", ...queryKey],
+      queryKey: ["activity", type, filters, parsedSelectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
         const url = new URL("/api/activity", getBaseURL());
         const response = await ofetch<ActivityResponse>(url.toString(), {
@@ -128,7 +126,10 @@ function Activity() {
     },
   );
 
-  const transfers = [...realtimeTransfers, ...(data?.pages ?? []).flatMap((page) => page.items)];
+  const transfers = useMemo(
+    () => [...realtimeTransfers, ...(data?.pages ?? []).flatMap((page) => page.items)],
+    [realtimeTransfers, data?.pages],
+  );
 
   const rowVirtualizer = useWindowVirtualizer({
     count: transfers.length,
@@ -191,7 +192,7 @@ function Activity() {
         }
       }
     },
-    [...queryKey, addNewTransferIds],
+    [type, filters, parsedSelectedArtistIds, addNewTransferIds, queryClient],
   );
 
   // handle incoming message
@@ -206,7 +207,7 @@ function Activity() {
     setRealtimeTransfers([]);
     setNewTransferIds(new Set());
     setQueuedTransfers([]);
-  }, [...queryKey]);
+  }, [type, filters, parsedSelectedArtistIds]);
 
   // send history request to websocket on query success
   useEffect(() => {
@@ -351,10 +352,10 @@ const ActivityRow = memo(function ActivityRow({
 }) {
   const ctx = useObjektModal();
 
-  const openObjekt = () => {
+  const openObjekt = useCallback(() => {
     setCurrentObjekt([item.objekt]);
     ctx.handleClick();
-  };
+  }, [item.objekt, setCurrentObjekt, ctx]);
 
   const event =
     item.transfer.from === Addresses.NULL

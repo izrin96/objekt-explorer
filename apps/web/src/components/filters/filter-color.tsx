@@ -85,26 +85,24 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
             <ColorSwatch className="[--color-swatch-size:--spacing(5)]" />
             {t("color")}
           </Button>
-          <PopoverContent className="[--gutter:--spacing(1)]">
-            <PopoverBody>
-              <div className="space-y-(--gutter) p-2">
-                <ColorArea
-                  colorSpace="hsb"
-                  defaultValue="rgb(120,140,200)"
-                  xChannel="saturation"
-                  yChannel="brightness"
-                />
-                <ColorSlider colorSpace="hsb" channel="hue">
-                  <ColorSliderTrack>
-                    <ColorThumb />
-                  </ColorSliderTrack>
-                </ColorSlider>
-                <div className="flex items-center gap-1.5">
-                  <EyeDropper />
-                  <ColorField aria-label="Color" className="w-0 flex-1">
-                    <Input />
-                  </ColorField>
-                </div>
+          <PopoverContent>
+            <PopoverBody className="space-y-2 py-3 [--gutter:--spacing(3)]">
+              <ColorArea
+                colorSpace="hsb"
+                defaultValue="rgb(120,140,200)"
+                xChannel="saturation"
+                yChannel="brightness"
+              />
+              <ColorSlider colorSpace="hsb" channel="hue">
+                <ColorSliderTrack>
+                  <ColorThumb />
+                </ColorSliderTrack>
+              </ColorSlider>
+              <div className="flex items-center gap-1.5">
+                <EyeDropper />
+                <ColorField aria-label="Color" className="w-0 flex-1">
+                  <Input />
+                </ColorField>
               </div>
             </PopoverBody>
           </PopoverContent>
