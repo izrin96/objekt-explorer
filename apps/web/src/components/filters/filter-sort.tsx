@@ -1,8 +1,9 @@
 "use client";
 
+import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
 
-import { type ValidSort, validSorts } from "@repo/cosmo/types/common";
+import { validCustomSorts } from "@repo/cosmo/types/common";
 import { useTranslations } from "next-intl";
 
 import { useFilters } from "@/hooks/use-filters";
@@ -30,7 +31,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
   };
 
   function update(key: Selection) {
-    const value = Array.from((key as Set<ValidSort>).values()).at(0) ?? "date";
+    const value = Array.from((key as Set<ValidCustomSort>).values()).at(0) ?? "date";
 
     return setFilters((current) => ({
       sort: value === "date" ? null : value,
@@ -39,7 +40,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
     }));
   }
 
-  const availableSorts = validSorts.filter((s) => {
+  const availableSorts = validCustomSorts.filter((s) => {
     if (s === "duplicate" && !allowDuplicateSort) return false;
     if (s === "serial" && !allowSerialSort) return false;
     return true;

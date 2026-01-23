@@ -17,7 +17,6 @@ type CosmoGravityList = {
 
 /**
  * Fetch the list of gravities for the given artist.
- * Not cached due to COMO updates.
  */
 export async function fetchGravities(token: string, artistId: ValidArtist) {
   return await cosmo<CosmoGravityList>(`/bff/v3/gravities`, {
@@ -33,8 +32,12 @@ export async function fetchGravities(token: string, artistId: ValidArtist) {
 /**
  * Fetch a single gravity.
  */
-export async function fetchGravity(artistId: ValidArtist, gravityId: number) {
-  return await cosmo<{ gravity: CosmoGravity }>(`/gravity/v3/${artistId}/gravity/${gravityId}`)
+export async function fetchGravity(token: string, gravityId: number) {
+  return await cosmo<{ gravity: CosmoGravity }>(`/bff/v3/gravities/${gravityId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
     .then((res: { gravity: CosmoGravity }) => res.gravity)
     .catch(() => null);
 }
