@@ -9,7 +9,6 @@ export const env = createEnv({
     VITE_UMAMI_WEBSITE_ID: z.string().min(1),
     VITE_ACTIVITY_WEBSOCKET_URL: z.string().min(1),
     VITE_LIVE_API_KEY: z.string().min(1),
-    VITE_PRIVY_APP_ID: z.string().min(1),
   },
   runtimeEnv: (import.meta as any).env,
   emptyStringAsUndefined: true,

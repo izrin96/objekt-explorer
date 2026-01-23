@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { validArtists } from "@repo/cosmo/types/common";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import type { OwnedObjektsResult } from "@/lib/universal/objekts";
 

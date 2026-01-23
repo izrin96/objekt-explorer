@@ -1,6 +1,6 @@
 import { validArtists } from "@repo/cosmo/types/common";
 import { cookies } from "next/headers";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import { pub } from "../orpc";
 

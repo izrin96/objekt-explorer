@@ -7,7 +7,7 @@ import {
 import { Addresses } from "@repo/lib";
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import { cursorSchema } from "@/lib/server/common";
 import { indexer } from "@/lib/server/db/indexer";

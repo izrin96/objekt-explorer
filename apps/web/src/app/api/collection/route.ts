@@ -2,7 +2,7 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import type { CollectionResult } from "@/lib/universal/objekts";
 

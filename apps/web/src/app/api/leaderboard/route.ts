@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { validArtists, validOnlineTypes, validSeasons } from "@repo/cosmo/types/common";
 import { Addresses } from "@repo/lib";
 import { and, count, desc, eq, inArray, ne, not } from "drizzle-orm";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import { indexer } from "@/lib/server/db/indexer";
 import { collections, objekts } from "@/lib/server/db/indexer/schema";

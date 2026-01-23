@@ -18,8 +18,6 @@ export const env = createEnv({
     SES_SECRET_KEY: z.string().min(1),
     SES_MAIL_FROM: z.string().min(1),
     BYPASS_LIVE_KEY: z.string().min(1).optional(),
-    PRIVY_APP_SECRET: z.string().min(1),
-    VITE_PRIVY_APP_ID: z.string().min(1),
     REDIS_URL: z.string().min(1),
     VITE_SITE_URL: z.string().min(1),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),

@@ -8,7 +8,7 @@ import {
 } from "@repo/cosmo/types/common";
 import { Addresses } from "@repo/lib";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
 import { cursorSchema } from "@/lib/server/common";

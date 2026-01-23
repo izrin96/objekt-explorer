@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { and, eq } from "drizzle-orm";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import { db } from "../../db";
 import { userAddress } from "../../db/schema";

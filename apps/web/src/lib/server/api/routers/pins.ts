@@ -1,5 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import type { Outputs } from "@/lib/orpc/server";
 

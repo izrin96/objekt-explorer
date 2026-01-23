@@ -3,7 +3,7 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import { ORPCError } from "@orpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import * as z from "zod/v4";
+import * as z from "zod";
 
 import type { Outputs } from "@/lib/orpc/server";
 import type { PublicList } from "@/lib/universal/user";
