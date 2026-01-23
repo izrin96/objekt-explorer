@@ -26,10 +26,6 @@ import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
 import ProgressFilter from "./progress-filter";
 
-export const ProgressRenderDynamic = dynamic(() => Promise.resolve(ProgressRender), {
-  ssr: false,
-});
-
 export default function ProgressRender() {
   return (
     <ObjektColumnProvider>

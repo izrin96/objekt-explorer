@@ -8,6 +8,8 @@ type ConfigState = {
   setHideLabel: (value: boolean) => void;
   wide: boolean;
   setWide: (value: boolean) => void;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
 };
 
 export const useConfigStore = create<ConfigState>()(
@@ -20,9 +22,18 @@ export const useConfigStore = create<ConfigState>()(
         }),
       wide: false,
       setWide: (value: boolean) => set({ wide: value }),
+      _hasHydrated: false,
+      setHasHydrated: (state) => {
+        set({
+          _hasHydrated: state,
+        });
+      },
     }),
     {
       name: "config",
+      onRehydrateStorage: (state) => {
+        return () => state.setHasHydrated(true);
+      },
     },
   ),
 );

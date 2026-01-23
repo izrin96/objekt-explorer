@@ -42,10 +42,6 @@ import { Loader } from "../ui/loader";
 import { Note } from "../ui/note";
 import Filter from "./filter";
 
-export const ProfileObjektRenderDynamic = dynamic(() => Promise.resolve(ProfileObjektRender), {
-  ssr: false,
-});
-
 export default function ProfileObjektRender() {
   const profile = useTarget((a) => a.profile)!;
   return (

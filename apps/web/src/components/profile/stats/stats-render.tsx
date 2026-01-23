@@ -26,10 +26,6 @@ import { cn } from "@/utils/classes";
 
 import StatsFilter from "./stats-filter";
 
-export const ProfileStatsRenderDynamic = dynamic(() => Promise.resolve(ProfileStatsRender), {
-  ssr: false,
-});
-
 export default function ProfileStatsRender() {
   return (
     <QueryErrorResetBoundary>

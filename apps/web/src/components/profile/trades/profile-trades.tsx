@@ -29,10 +29,6 @@ import { getBaseURL } from "@/lib/utils";
 import { useTypeFilter } from "./filter-type";
 import TradesFilter from "./trades-filter";
 
-export const ProfileTradesRenderDynamic = dynamic(() => Promise.resolve(ProfileTradesRender), {
-  ssr: false,
-});
-
 export default function ProfileTradesRender() {
   return (
     <ObjektModalProvider initialTab="trades">

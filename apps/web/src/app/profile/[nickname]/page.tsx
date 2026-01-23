@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ProfileObjektRenderDynamic } from "@/components/profile/profile-objekt";
+import ProfileObjektRender from "@/components/profile/profile-objekt";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
@@ -40,7 +40,7 @@ export default async function UserCollectionPage(props: Props) {
 
   return (
     <HydrateClient client={queryClient}>
-      <ProfileObjektRenderDynamic />
+      <ProfileObjektRender />
     </HydrateClient>
   );
 }
