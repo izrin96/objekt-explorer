@@ -75,7 +75,7 @@ export function ThemeStyleSwitcher() {
 
   return (
     <Menu>
-      <Button aria-label="Style switcher" intent="outline" size="sq-sm">
+      <Button aria-label="Style switcher" intent="outline" size="sm" className="px-2 sm:px-2">
         <SwatchesIcon />
       </Button>
       <MenuContent

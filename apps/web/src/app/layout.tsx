@@ -11,7 +11,7 @@ import { preconnect } from "react-dom";
 import { Analytics } from "@/components/analytics";
 import ClientProviders, { ClientArtistProvider } from "@/components/client-providers";
 import "@/lib/orpc/server";
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/navbar-v2";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { artists } from "@/lib/server/cosmo/artists";
 import { SITE_NAME } from "@/lib/utils";
