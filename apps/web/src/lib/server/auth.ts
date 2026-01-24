@@ -217,10 +217,11 @@ export async function fetchUserByIdentifier(
 
 export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "address">[]) {
   if (newAddresses.length > 0) {
+    const values = newAddresses.map((a) => ({ nickname: a.nickname, address: a.address }));
     try {
       await db
         .insert(userAddress)
-        .values(newAddresses)
+        .values(values)
         .onConflictDoUpdate({
           target: userAddress.address,
           set: {
