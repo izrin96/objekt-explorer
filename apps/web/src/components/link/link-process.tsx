@@ -33,6 +33,7 @@ import { Form } from "../ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
+import { Note } from "../ui/note";
 
 function generateQrCode(ticket: string) {
   return `cosmo://ticket-login?t=${ticket}`;
@@ -47,6 +48,9 @@ export default function LinkRender() {
     <div className="flex flex-col items-center justify-center gap-5">
       {step === 0 && (
         <div className="flex max-w-xl flex-col items-center justify-center gap-4">
+          <Note intent="info">
+            This linking process will get updated with new method soon. We are still working on it.
+          </Note>
           <h2 className="text-lg font-semibold">
             {locale === "en" && "Link your Cosmo profile"}
             {locale === "ko" && "Cosmo 프로필을 연결하세요"}
@@ -67,8 +71,8 @@ export default function LinkRender() {
               </p>
               <p>
                 This linking process will <span className="font-bold">not</span> allow Objekt
-                Tracker to access your Cosmo, but only to verify ownership of it. {SITE_NAME}
-                does not store anything about your account other than wallet address and ID.
+                Tracker to access your Cosmo, but only to verify ownership of it. {SITE_NAME} does
+                not store anything about your account other than wallet address and ID.
               </p>
             </div>
           )}
