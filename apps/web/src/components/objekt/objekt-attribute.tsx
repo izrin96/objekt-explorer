@@ -33,7 +33,6 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   if (status === "pending") {
     return (
       <>
-        <Skeleton className="h-6 w-57" />
         <Skeleton className="h-6 w-20" />
         <Skeleton className="h-6 w-16" />
         <Skeleton className="h-6 w-20" />
@@ -49,7 +48,6 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   if (status === "success") {
     return (
       <>
-        <Pill label={t("created_at")} value={format(data.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
         <Pill
           label={objekt.onOffline === "online" ? t("copies") : t("scanned_copies")}
           value={data.total.toLocaleString()}
@@ -108,6 +106,7 @@ export function AttributePanel({
           {t("unobtainable")}
         </Badge>
       )}
+      <Pill label={t("created_at")} value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
       <PillMetadata objekt={objekt} />
     </div>
   );

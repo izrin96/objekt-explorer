@@ -22,7 +22,6 @@ export async function GET(_: Request, props: Params) {
         sql`count(case when transferable = true and ${objekts.owner}!=${Addresses.SPIN} then 1 end)`.mapWith(
           Number,
         ),
-      createdAt: collections.createdAt,
     })
     .from(collections)
     .leftJoin(objekts, eq(collections.id, objekts.collectionId))
@@ -35,7 +34,6 @@ export async function GET(_: Request, props: Params) {
         total: 0,
         spin: 0,
         transferable: 0,
-        createdAt: new Date(0),
       },
       {
         headers: cacheHeaders(),

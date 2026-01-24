@@ -38,7 +38,6 @@ export type CollectionMetadata = {
   transferable: number;
   total: number;
   spin: number;
-  createdAt: string;
 };
 
 // Transfer history
