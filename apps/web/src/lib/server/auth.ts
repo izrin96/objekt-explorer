@@ -195,7 +195,7 @@ export async function fetchUserByIdentifier(
     };
   }
 
-  const user = await fetchByNickname(identifier);
+  const user = await fetchByNickname(identifier).catch(() => undefined);
   if (!user) {
     return undefined;
   }
