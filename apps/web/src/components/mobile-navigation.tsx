@@ -69,7 +69,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
               onOpenChange={setOpen}
               isOpen={open}
               className={cx(
-                "h-full placement-bottom:entering:slide-in-from-top-1 -mt-1 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
+                "min-h-screen placement-bottom:entering:slide-in-from-top-1 -mt-2 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
                 "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
                 "slide-out-to-top-1 slide-in-from-top-1",
                 pathname === "/" && "from-blue-50 dark:from-[#151518]",

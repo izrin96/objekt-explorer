@@ -28,7 +28,9 @@ export default function NavbarV2() {
   return (
     <>
       {/* Desktop Navbar */}
-      <nav className="bg-bg sticky top-0 z-40 hidden h-12 lg:flex">
+      <nav className="from-bg/80 sticky top-0 z-40 hidden h-12 bg-linear-to-b to-transparent lg:flex">
+        <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>
+
         <Container className="flex items-center">
           <div className="flex items-center gap-x-2">
             <AppLogo />

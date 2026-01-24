@@ -16,7 +16,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   return (
     <>
       {/* banner */}
-      <div className="absolute inset-0 top-14 -z-5 xl:top-0">
+      <div className="absolute inset-0 top-12 -z-5 xl:top-0">
         <div className="mx-auto w-full max-w-7xl lg:max-w-(--breakpoint-xl) 2xl:max-w-(--breakpoint-2xl)">
           <div
             ref={bannerRef}
@@ -45,7 +45,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         </div>
       </div>
       {/* background */}
-      <div className={"absolute inset-0 top-14 -z-10 xl:top-0"} style={{ height: `${height}px` }}>
+      <div className={"absolute inset-0 top-12 -z-10 xl:top-0"} style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
             src={profile.bannerImgUrl}
@@ -71,5 +71,5 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
 }
 
 export function ProfileBannerClearance() {
-  return <div className={"-mt-2 aspect-[2.3/1] xl:-mt-16"}></div>;
+  return <div className={"-mt-2 aspect-[2.3/1] xl:-mt-14"}></div>;
 }
