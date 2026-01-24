@@ -129,21 +129,11 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
 
-  redis:
+  valkey:
     restart: always
-    image: redis:latest
+    image: valkey/valkey:alpine
     ports:
       - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  pubsub:
-    restart: always
-    image: redis:latest
-    ports:
-      - "6380:6379"
-    volumes:
-      - pubsub_data:/data
 
   browserless:
     image: ghcr.io/browserless/chromium
@@ -155,5 +145,3 @@ services:
 volumes:
   db_data:
   minio_data:
-  redis_data:
-  pubsub_data:
