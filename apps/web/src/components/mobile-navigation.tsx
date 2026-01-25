@@ -45,7 +45,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
               intent="plain"
               className="pressed:bg-transparent outline-hidden"
             >
-              <span className="relative flex h-8 w-(--width) items-center justify-center [--width:--spacing(4.5)]">
+              <span className="relative flex h-8 w-(--width) items-center justify-center [--width:--spacing(4)]">
                 <span className="relative size-(--width)">
                   <span
                     className={twJoin(
@@ -69,7 +69,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
               onOpenChange={setOpen}
               isOpen={open}
               className={cx(
-                "min-h-screen placement-bottom:entering:slide-in-from-top-1 -mt-2 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
+                "min-h-screen placement-bottom:entering:slide-in-from-top-1 -mt-1 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
                 "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
                 "slide-out-to-top-1 slide-in-from-top-1",
                 pathname === "/" && "from-blue-50 dark:from-[#151518]",
@@ -77,7 +77,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
               )}
               containerPadding={0}
             >
-              <Menu className="-mt-4 outline-hidden">
+              <Menu className="-mt-2 outline-hidden">
                 <MenuSection>
                   <NavHeading>Navigation</NavHeading>
                   <NavLink href="/">
