@@ -1,5 +1,7 @@
 "use client";
 
+import type { ValidObjekt } from "@repo/lib/objekts";
+
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 
@@ -20,8 +22,9 @@ import SortFilter from "../filters/filter-sort";
 import SortDirectionFilter from "../filters/filter-sort-direction";
 import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
+import { GenerateDiscordButton } from "../generate-discord-button";
 
-export default function Filter() {
+export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
   return (
@@ -45,6 +48,7 @@ export default function Filter() {
         <WideFilter />
         <ColumnFilter />
         <SearchFilter />
+        <GenerateDiscordButton objekts={objekts} />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>

@@ -30,7 +30,7 @@ import {
   format,
   type GroupByMode,
   makeMemberOrderedList,
-  mapCollectionByMember,
+  mapByMember,
 } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
 import { getBaseURL } from "@/lib/utils";
@@ -73,7 +73,7 @@ function Content() {
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
 
-  const { handleSubmit, control } = useForm({
+  const { handleSubmit, control, reset } = useForm({
     defaultValues: {
       haveSlug: "",
       wantSlug: "",
@@ -94,7 +94,17 @@ function Content() {
     }),
   );
 
+  const handleReset = () => {
+    reset();
+    setFormatText("");
+  };
+
   const onSubmit = handleSubmit((formData) => {
+    if (!formData.haveSlug && !formData.wantSlug) {
+      toast.error("Please select at least one list");
+      return;
+    }
+
     generateDiscordFormat.mutate(
       {
         haveSlug: formData.haveSlug,
@@ -102,50 +112,52 @@ function Content() {
       },
       {
         onSuccess: async (data) => {
-          const { have, want, collections } = data;
+          const { have, want } = data;
+          const output: string[] = [];
 
-          // collections map for faster search
-          const collectionsMap = new Map(collections.map((a) => [a.slug, a]));
+          // Format have list if selected
+          if (formData.haveSlug && have.length > 0) {
+            const haveMembers = makeMemberOrderedList(have, artists);
+            const haveCollections = mapByMember(have, haveMembers);
+            const haveFormatted = format(haveCollections, {
+              showQuantity: formData.showCount,
+              lowercase: formData.lowercase,
+              bullet: formData.bullet,
+              groupByMode: formData.groupBy,
+              style: formData.style,
+            });
 
-          const members = makeMemberOrderedList(collections, artists);
+            output.push("## Have", "", haveFormatted);
 
-          const haveCollections = mapCollectionByMember(collectionsMap, have, members);
-          const wantCollections = mapCollectionByMember(collectionsMap, want, members);
+            if (formData.includeLink) {
+              output.push("", `[View this list](<${getBaseURL()}/list/${formData.haveSlug}>)`);
+            }
+          }
 
-          const haveFormatted = format(
-            haveCollections,
-            formData.showCount,
-            formData.lowercase,
-            formData.bullet,
-            formData.groupBy,
-            formData.style,
-          );
-          const wantFormatted = format(
-            wantCollections,
-            formData.showCount,
-            formData.lowercase,
-            formData.bullet,
-            formData.groupBy,
-            formData.style,
-          );
+          // Format want list if selected
+          if (formData.wantSlug && want.length > 0) {
+            if (output.length > 0) {
+              output.push(""); // Add spacing between sections
+            }
 
-          setFormatText(
-            [
-              "## Have",
-              "",
-              haveFormatted,
-              ...(formData.includeLink
-                ? ["", `[View this list](<${getBaseURL()}/list/${formData.haveSlug}>)`]
-                : []),
-              "",
-              "## Want",
-              "",
-              wantFormatted,
-              ...(formData.includeLink
-                ? ["", `[View this list](<${getBaseURL()}/list/${formData.wantSlug}>)`]
-                : []),
-            ].join("\n"),
-          );
+            const wantMembers = makeMemberOrderedList(want, artists);
+            const wantCollections = mapByMember(want, wantMembers);
+            const wantFormatted = format(wantCollections, {
+              showQuantity: formData.showCount,
+              lowercase: formData.lowercase,
+              bullet: formData.bullet,
+              groupByMode: formData.groupBy,
+              style: formData.style,
+            });
+
+            output.push("## Want", "", wantFormatted);
+
+            if (formData.includeLink) {
+              output.push("", `[View this list](<${getBaseURL()}/list/${formData.wantSlug}>)`);
+            }
+          }
+
+          setFormatText(output.join("\n"));
         },
       },
     );
@@ -156,17 +168,13 @@ function Content() {
       <Controller
         control={control}
         name="haveSlug"
-        rules={{
-          required: "Have list is required.",
-        }}
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder="Select a list"
+            placeholder="Select a list (optional)"
             name={name}
             value={value}
             onChange={onChange}
             onBlur={onBlur}
-            isRequired
             isInvalid={invalid}
           >
             <Label>Have list</Label>
@@ -185,17 +193,13 @@ function Content() {
       <Controller
         control={control}
         name="wantSlug"
-        rules={{
-          required: "Want list is required.",
-        }}
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder="Select a list"
+            placeholder="Select a list (optional)"
             name={name}
             value={value}
             onChange={onChange}
             onBlur={onBlur}
-            isRequired
             isInvalid={invalid}
           >
             <Label>Want list</Label>
@@ -317,9 +321,14 @@ function Content() {
       </div>
 
       <Portal to="#submit-form">
-        <Button isPending={generateDiscordFormat.isPending} onClick={onSubmit}>
-          Generate
-        </Button>
+        <div className="flex gap-2">
+          <Button intent="outline" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button isPending={generateDiscordFormat.isPending} onClick={onSubmit}>
+            Generate
+          </Button>
+        </div>
       </Portal>
     </Form>
   );

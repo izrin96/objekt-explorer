@@ -3,7 +3,8 @@ import type { ValidObjekt } from "@repo/lib/objekts";
 
 import { groupBy } from "es-toolkit";
 
-export type FormatObjekt = Pick<
+// Minimal type for discord formatting - only the fields we actually use
+export type DiscordFormatObjekt = Pick<
   ValidObjekt,
   "slug" | "season" | "collectionNo" | "member" | "artist" | "collectionId" | "class"
 >;
@@ -27,8 +28,16 @@ export function getSeasonEmoji(season: string) {
 export type GroupByMode = "none" | "season" | "season-first";
 export type FormatStyle = "default" | "compact";
 
+export type FormatOptions = {
+  showQuantity: boolean;
+  lowercase: boolean;
+  bullet: boolean;
+  groupByMode?: GroupByMode;
+  style?: FormatStyle;
+};
+
 function formatCollection(
-  collection: FormatObjekt,
+  collection: DiscordFormatObjekt,
   quantity: number,
   showQuantity: boolean,
   showSeason: boolean,
@@ -48,7 +57,7 @@ function formatCollection(
 }
 
 function formatMemberCollections(
-  collections: FormatObjekt[],
+  collections: DiscordFormatObjekt[],
   showQuantity: boolean,
   groupBySeason: boolean,
   bullet: boolean,
@@ -96,17 +105,12 @@ function formatMemberCollections(
   return results;
 }
 
-export function format(
-  collectionMap: Map<string, FormatObjekt[]>,
-  showQuantity: boolean,
-  lowercase: boolean,
-  bullet: boolean,
-  groupByMode: GroupByMode = "none",
-  style: FormatStyle = "default",
-) {
+export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, options: FormatOptions) {
+  const { showQuantity, lowercase, bullet, groupByMode = "none", style = "default" } = options;
+
   if (groupByMode === "season-first") {
     // group by season first, then by member
-    const allCollections: FormatObjekt[] = [];
+    const allCollections: DiscordFormatObjekt[] = [];
     for (const collections of collectionMap.values()) {
       allCollections.push(...collections);
     }
@@ -202,29 +206,11 @@ export function format(
   return lowercase ? output.toLowerCase() : output;
 }
 
-export function mapCollectionByMember(
-  collectionMap: Map<string, FormatObjekt>,
-  entries: string[],
-  members: string[],
-): Map<string, FormatObjekt[]> {
-  const output = new Map<string, FormatObjekt[]>();
-  const collectionEntries = entries
-    .map((slug) => collectionMap.get(slug))
-    .filter((a) => a !== undefined);
-  for (const member of members) {
-    for (const collectionEntry of collectionEntries.filter((a) => a.member === member)) {
-      output.set(member, [...(output.get(member) ?? []), collectionEntry]);
-    }
-  }
-
-  return output;
-}
-
 export function mapByMember(
-  entries: FormatObjekt[],
+  entries: DiscordFormatObjekt[],
   members: string[],
-): Map<string, FormatObjekt[]> {
-  const output = new Map<string, FormatObjekt[]>();
+): Map<string, DiscordFormatObjekt[]> {
+  const output = new Map<string, DiscordFormatObjekt[]>();
   for (const member of members) {
     for (const collectionEntry of entries.filter((a) => a.member === member)) {
       output.set(member, [...(output.get(member) ?? []), collectionEntry]);
@@ -235,7 +221,7 @@ export function mapByMember(
 }
 
 export function makeMemberOrderedList(
-  entries: FormatObjekt[],
+  entries: DiscordFormatObjekt[],
   artists: CosmoArtistWithMembersBFF[],
 ) {
   const artistsMembers = artists.flatMap((a) => a.artistMembers);

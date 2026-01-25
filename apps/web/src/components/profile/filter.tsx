@@ -2,8 +2,6 @@
 
 import type { ValidObjekt } from "@repo/lib/objekts";
 
-import { useState } from "react";
-
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 
@@ -28,8 +26,7 @@ import SortDirectionFilter from "../filters/filter-sort-direction";
 import TransferableFilter from "../filters/filter-transferable";
 import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
-import { Button } from "../ui/button";
-import GenerateDiscordFormatModalProfile from "./modal/generate-discord";
+import { GenerateDiscordButton } from "../generate-discord-button";
 
 export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
   const reset = useResetFilters();
@@ -59,21 +56,9 @@ export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
         <WideFilter />
         <ColumnFilter />
         <SearchFilter />
-        <GenerateDiscordFormat objekts={objekts} />
+        <GenerateDiscordButton objekts={objekts} />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>
-  );
-}
-
-function GenerateDiscordFormat({ objekts }: { objekts: ValidObjekt[] }) {
-  const [genOpen, setGenOpen] = useState(false);
-  return (
-    <>
-      <GenerateDiscordFormatModalProfile objekts={objekts} open={genOpen} setOpen={setGenOpen} />
-      <Button intent="outline" onClick={() => setGenOpen(true)}>
-        Discord format
-      </Button>
-    </>
   );
 }

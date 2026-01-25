@@ -232,14 +232,21 @@ export const listRouter = {
   generateDiscordFormat: authed
     .input(
       z.object({
-        haveSlug: z.string(),
-        wantSlug: z.string(),
+        haveSlug: z.string().optional(),
+        wantSlug: z.string().optional(),
       }),
     )
     .handler(async ({ input: { haveSlug, wantSlug } }) => {
+      // get slugs to query
+      const slugs = [haveSlug, wantSlug].filter((s) => s !== undefined);
+
+      if (slugs.length === 0) {
+        return { have: [], want: [] };
+      }
+
       // get both list
       const lists = await db.query.lists.findMany({
-        where: (t, { inArray }) => inArray(t.slug, [haveSlug, wantSlug]),
+        where: (t, { inArray }) => inArray(t.slug, slugs),
         with: {
           entries: {
             columns: {
@@ -267,14 +274,25 @@ export const listRouter = {
         },
       });
 
+      const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
+
       // entry for both list
-      const haveList = lists.find((a) => a.slug === haveSlug);
-      const wantList = lists.find((a) => a.slug === wantSlug);
+      const haveList = haveSlug ? lists.find((a) => a.slug === haveSlug) : undefined;
+      const wantList = wantSlug ? lists.find((a) => a.slug === wantSlug) : undefined;
+
+      const have =
+        haveList?.entries
+          .map((a) => collectionsMap.get(a.collectionSlug))
+          .filter((c) => c !== undefined) ?? [];
+
+      const want =
+        wantList?.entries
+          .map((a) => collectionsMap.get(a.collectionSlug))
+          .filter((c) => c !== undefined) ?? [];
 
       return {
-        collections,
-        have: haveList?.entries.map((a) => a.collectionSlug) ?? [],
-        want: wantList?.entries.map((a) => a.collectionSlug) ?? [],
+        have,
+        want,
       };
     }),
 };

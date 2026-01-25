@@ -36,7 +36,7 @@ type Props = {
   objekts: ValidObjekt[];
 };
 
-export default function GenerateDiscordFormatModalProfile({ open, setOpen, objekts }: Props) {
+export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: Props) {
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
   const { handleSubmit, control } = useForm({
@@ -52,14 +52,13 @@ export default function GenerateDiscordFormatModalProfile({ open, setOpen, objek
   const onSubmit = handleSubmit((data) => {
     const members = makeMemberOrderedList(objekts, artists);
     const haveCollections = mapByMember(objekts, members);
-    const formatted = format(
-      haveCollections,
-      data.showCount,
-      data.lowercase,
-      data.bullet,
-      data.groupBy,
-      data.style,
-    );
+    const formatted = format(haveCollections, {
+      showQuantity: data.showCount,
+      lowercase: data.lowercase,
+      bullet: data.bullet,
+      groupByMode: data.groupBy,
+      style: data.style,
+    });
     setFormatText(["## Have", "", formatted].join("\n"));
   });
 
