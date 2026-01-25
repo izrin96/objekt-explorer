@@ -109,7 +109,7 @@ const CommandMenu = ({
           className={twJoin(
             "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-full overflow-hidden bg-black/15",
             "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
-            "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
+            "entering:fade-in entering:animate-in entering:duration-100 entering:ease-out",
             "exiting:fade-out exiting:animate-out exiting:ease-in",
             isBlurred && "backdrop-blur-[1px] backdrop-filter",
           )}
@@ -121,7 +121,7 @@ const CommandMenu = ({
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
               "rounded-t-2xl md:rounded-xl",
               sizes[size],
-              "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
+              "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-100 entering:ease-out",
               "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
               className,
             )}

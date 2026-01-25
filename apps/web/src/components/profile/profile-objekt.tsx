@@ -193,7 +193,7 @@ function ProfileObjekt() {
         {filters.grouped ? ` (${grouped.length.toLocaleString()} types)` : ""}
       </span>
 
-      <div className="*:overflow-visible! *:contain-[inherit]! [&>*>*]:will-change-transform">
+      <div className="[&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </div>
     </div>

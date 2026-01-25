@@ -65,8 +65,8 @@ const SheetContent = ({
       isDismissable={isDismissable}
       className={twJoin(
         "fixed top-0 left-0 z-50 w-full overflow-hidden bg-black/15",
-        "entering:fade-in entering:animate-in entering:duration-500",
-        "exiting:fade-out exiting:animate-out exiting:duration-300",
+        "entering:fade-in entering:animate-in entering:duration-100",
+        "exiting:fade-out exiting:animate-out exiting:duration-100",
         isFloat ? "h-full" : "h-(--page-height)",
       )}
       {...props}
@@ -78,8 +78,8 @@ const SheetContent = ({
           "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
           "data-[float=true]:rounded-lg data-[float=true]:ring data-[float=true]:ring-fg/5 dark:data-[float=true]:ring-border",
           "border-fg/20 dark:border-border",
-          "entering:fade-in entering:animate-in entering:duration-500",
-          "exiting:fade-in exiting:animate-out exiting:duration-300",
+          "entering:fade-in entering:animate-in entering:duration-100",
+          "exiting:fade-in exiting:animate-out exiting:duration-100",
           sideVariants[side],
           className,
         )}

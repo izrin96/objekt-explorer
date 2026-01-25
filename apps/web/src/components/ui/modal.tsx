@@ -75,7 +75,7 @@ const ModalContent = ({
         "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) bg-black/15",
         "grid grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_1fr]",
         size === "fullscreen" ? "md:p-3" : "md:p-4",
-        "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
+        "entering:fade-in entering:animate-in entering:duration-100 entering:ease-out",
         "exiting:fade-out exiting:animate-out exiting:ease-in",
         isBlurred && "backdrop-blur-[1px]",
       )}
@@ -92,7 +92,7 @@ const ModalContent = ({
           "relative overflow-hidden bg-bg text-fg",
           "rounded-t-2xl shadow-lg ring ring-fg/5 dark:ring-border",
           sizes[size],
-          "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
+          "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-100 entering:ease-out",
           "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
           className,
         )}
