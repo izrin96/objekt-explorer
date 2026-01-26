@@ -260,6 +260,8 @@ export const listRouter = {
         lists.flatMap((a) => a.entries).map((a) => a.collectionSlug),
       );
 
+      if (uniqueCollectionSlug.size === 0) return { have: [], want: [] };
+
       // get all collections based on both list
       const collections = await indexer.query.collections.findMany({
         where: (t, { inArray }) => inArray(t.slug, Array.from(uniqueCollectionSlug)),
@@ -360,6 +362,8 @@ async function findOwnedList(slug: string, userId: string) {
 
 async function fetchCollections(slugs: string[], artists: ValidArtist[]) {
   const uniqueSlugs = new Set(slugs);
+
+  if (uniqueSlugs.size === 0) return [];
 
   const result = await indexer
     .select({

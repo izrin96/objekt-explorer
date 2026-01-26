@@ -3,6 +3,7 @@ import { userAddress } from "@repo/db/schema";
 import { inArray } from "drizzle-orm";
 
 export async function fetchKnownAddresses(addresses: string[]) {
+  if (addresses.length === 0) return [];
   const result = await db
     .select({
       address: userAddress.address,
