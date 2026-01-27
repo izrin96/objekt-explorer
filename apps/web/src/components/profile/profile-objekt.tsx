@@ -53,16 +53,6 @@ export default function ProfileObjektRender() {
                 <Suspense
                   fallback={
                     <div className="flex flex-col items-center gap-4">
-                      {profile.address.toLowerCase() === Addresses.SPIN && (
-                        <Note intent="info" className="max-w-2xl">
-                          Loading cosmo-spin objekts may take some time because it loads the entire
-                          collection at once. Please use{" "}
-                          <Link href="https://apollo.cafe/@cosmo-spin" className="underline">
-                            Apollo
-                          </Link>{" "}
-                          for faster loading.
-                        </Note>
-                      )}
                       <div className="flex justify-center">
                         <Loader variant="ring" />
                       </div>
