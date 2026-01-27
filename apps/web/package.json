@@ -20,7 +20,6 @@
     "@aws-sdk/s3-presigned-post": "^3.975.0",
     "@heroicons/react": "^2.2.0",
     "@intentui/icons": "^1.11.0",
-    "@next/bundle-analyzer": "^16.1.5",
     "@orpc/client": "^1.13.4",
     "@orpc/server": "^1.13.4",
     "@orpc/tanstack-query": "^1.13.4",
