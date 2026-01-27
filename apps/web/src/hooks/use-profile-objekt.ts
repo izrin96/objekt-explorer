@@ -40,10 +40,7 @@ export function useProfileObjekts() {
     ],
   });
 
-  const objektsQuery = useQuery({
-    ...collectionOptions(selectedArtistIds),
-    enabled: (filters.unowned ?? false) || (filters.missing ?? false),
-  });
+  const objektsQuery = useQuery(collectionOptions(selectedArtistIds));
 
   // owned objekts
   const ownedFiltered = filter(
