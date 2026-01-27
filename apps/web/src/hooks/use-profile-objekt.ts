@@ -4,11 +4,12 @@ import { useDeferredValue } from "react";
 
 import { mapObjektWithPinLock } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { collectionOptions } from "@/lib/query-options";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useObjektFilter } from "./use-objekt-filter";
+import { useOwnedCollections } from "./use-owned-collections";
 import { useShapeObjekts } from "./use-shape-objekt";
 import { useTarget } from "./use-target";
 
@@ -19,9 +20,13 @@ export function useProfileObjekts() {
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const [ownedQuery, pinsQuery, lockedObjektQuery] = useSuspenseQueries({
+  const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
+    profile.address,
+    selectedArtistIds,
+  );
+
+  const [pinsQuery, lockedObjektQuery] = useSuspenseQueries({
     queries: [
-      ownedCollectionOptions(profile.address, selectedArtistIds),
       orpc.pins.list.queryOptions({
         input: profile.address,
         refetchOnWindowFocus: false,
@@ -42,7 +47,7 @@ export function useProfileObjekts() {
 
   // owned objekts
   const ownedFiltered = filter(
-    ownedQuery.data.map((a) => mapObjektWithPinLock(a, pinsQuery.data, lockedObjektQuery.data)),
+    allOwnedObjekts.map((a) => mapObjektWithPinLock(a, pinsQuery.data, lockedObjektQuery.data)),
   );
 
   // find missing objekts based on owned slug
@@ -61,5 +66,6 @@ export function useProfileObjekts() {
     filtered,
     grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
     filters,
+    hasNextPage,
   });
 }

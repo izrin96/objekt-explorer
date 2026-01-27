@@ -3,7 +3,6 @@
 import { type ValidObjekt } from "@repo/lib/objekts";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -53,26 +52,35 @@ export default function ProgressRender() {
 function Progress() {
   const { authenticated } = useUser();
   const { columns } = useObjektColumn();
-  const { shaped, filters, ownedSlugs } = useProgressObjekts();
+  const { shaped, filters, ownedSlugs, hasNextPage } = useProgressObjekts();
 
   return (
     <div className="flex flex-col gap-8">
       <ProgressFilter />
+
       {!filters.artist && !filters.member ? (
         <div className="text-muted-fg flex justify-center text-sm">
           Select at least 1 artist or 1 member
         </div>
       ) : (
-        shaped.map(([key, grouped]) => (
-          <ProgressGroup
-            key={key}
-            title={key}
-            grouped={grouped}
-            ownedSlugs={ownedSlugs}
-            authenticated={authenticated}
-            columns={columns}
-          />
-        ))
+        <div className="flex flex-col gap-8">
+          {hasNextPage && (
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              Loading objekts <Loader variant="ring" className="size-4" />
+            </div>
+          )}
+
+          {shaped.map(([key, grouped]) => (
+            <ProgressGroup
+              key={key}
+              title={key}
+              grouped={grouped}
+              ownedSlugs={ownedSlugs}
+              authenticated={authenticated}
+              columns={columns}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

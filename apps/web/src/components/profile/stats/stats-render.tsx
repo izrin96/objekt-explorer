@@ -4,9 +4,8 @@ import type React from "react";
 
 import { seasonColors } from "@repo/cosmo/types/common";
 import { type ValidObjekt } from "@repo/lib/objekts";
-import { QueryErrorResetBoundary, useSuspenseQueries } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
@@ -19,8 +18,9 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektFilter } from "@/hooks/use-objekt-filter";
+import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useTarget } from "@/hooks/use-target";
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { collectionOptions } from "@/lib/query-options";
 import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 
@@ -51,20 +51,26 @@ function ProfileStats() {
   const filter = useObjektFilter();
   const { selectedArtistIds } = useCosmoArtist();
 
-  const [query, collectionQuery] = useSuspenseQueries({
-    queries: [
-      ownedCollectionOptions(profile.address, selectedArtistIds),
-      collectionOptions(selectedArtistIds),
-    ],
-  });
+  const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
+    profile.address,
+    selectedArtistIds,
+  );
+  const collectionQuery = useSuspenseQuery(collectionOptions(selectedArtistIds));
 
-  const objekts = filter(query.data);
+  const objekts = filter(allOwnedObjekts);
 
   const collections = filter(collectionQuery.data);
 
   return (
     <div className="flex flex-col gap-4">
       <StatsFilter />
+
+      {hasNextPage && (
+        <div className="flex items-center gap-2 text-xs font-semibold">
+          Loading objekts <Loader variant="ring" className="size-4" />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <BreakdownByMemberChart objekts={objekts} />
         <BreakdownBySeasonChart objekts={objekts} />

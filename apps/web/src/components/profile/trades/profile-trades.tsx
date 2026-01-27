@@ -6,7 +6,6 @@ import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
-import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";

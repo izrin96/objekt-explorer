@@ -1,11 +1,12 @@
-import { useSuspenseQueries } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 
-import { collectionOptions, ownedCollectionOptions } from "@/lib/query-options";
+import { collectionOptions } from "@/lib/query-options";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useObjektFilter } from "./use-objekt-filter";
+import { useOwnedCollections } from "./use-owned-collections";
 import { useShapeProgress } from "./use-shape-progress";
 import { useTarget } from "./use-target";
 
@@ -16,15 +17,14 @@ export function useProgressObjekts() {
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const [objektsQuery, ownedQuery] = useSuspenseQueries({
-    queries: [
-      collectionOptions(selectedArtistIds),
-      ownedCollectionOptions(profile.address, selectedArtistIds),
-    ],
-  });
+  const objektsQuery = useSuspenseQuery(collectionOptions(selectedArtistIds));
+  const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
+    profile.address,
+    selectedArtistIds,
+  );
 
   // owned objekts
-  const ownedFiltered = filter(ownedQuery.data);
+  const ownedFiltered = filter(allOwnedObjekts);
 
   // find missing objekts based on owned slug
   const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
@@ -38,5 +38,6 @@ export function useProgressObjekts() {
     shaped: shape(filtered),
     filters,
     ownedSlugs,
+    hasNextPage,
   });
 }

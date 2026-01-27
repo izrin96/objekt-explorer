@@ -4,7 +4,6 @@ import type { ValidObjekt } from "@repo/lib/objekts";
 
 import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -86,7 +85,7 @@ function ProfileObjekt() {
   const isProfileAuthed = useProfileAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const { shaped, filtered, grouped, filters } = useProfileObjekts();
+  const { shaped, filtered, grouped, filters, hasNextPage } = useProfileObjekts();
 
   const virtualList = useMemo(() => {
     return shaped.flatMap(([title, items]) => [
@@ -188,9 +187,12 @@ function ProfileObjekt() {
           <Filters authenticated={authenticated} isOwned={isProfileAuthed} objekts={filtered} />
         </FilterContainer>
       </div>
-      <span className="font-semibold">
-        {filtered.length.toLocaleString()} total
-        {filters.grouped ? ` (${grouped.length.toLocaleString()} types)` : ""}
+      <span className="flex items-center gap-2 font-semibold">
+        <span>
+          {filtered.length.toLocaleString()} total
+          {filters.grouped ? ` (${grouped.length.toLocaleString()} types)` : ""}
+        </span>
+        {hasNextPage && <Loader variant="ring" className="size-4" />}
       </span>
 
       <div className="[&>*>*]:will-change-transform">

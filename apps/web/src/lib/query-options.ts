@@ -1,10 +1,10 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { CollectionResult } from "@repo/lib/objekts";
 
-import { queryOptions } from "@tanstack/react-query";
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
-import { fetchOwnedObjekts } from "@/components/profile/fetching-util";
+import { fetchOwnedObjektsByCursor } from "@/components/profile/fetching-util";
 
 import { authClient } from "./auth-client";
 import { mapObjektWithTag } from "./objekt-utils";
@@ -28,10 +28,15 @@ export const collectionOptions = (artistIds: ValidArtist[]) =>
   });
 
 export const ownedCollectionOptions = (address: string, artistIds: ValidArtist[]) =>
-  queryOptions({
+  infiniteQueryOptions({
     queryKey: ["owned-collections", address, artistIds],
-    queryFn: () =>
-      fetchOwnedObjekts(address, artistIds).then((a) => a.objekts.map(mapObjektWithTag)),
+    queryFn: ({ pageParam }) =>
+      fetchOwnedObjektsByCursor(address, artistIds, pageParam).then((result) => ({
+        objekts: result.objekts.map(mapObjektWithTag),
+        nextCursor: result.nextCursor,
+      })),
+    initialPageParam: undefined as { receivedAt: string; id: string } | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
   });
