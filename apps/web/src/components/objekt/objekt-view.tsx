@@ -53,7 +53,8 @@ export default function ObjektView({
         style={css}
         ref={ref}
         className={cn(
-          "group relative aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] drop-shadow transition-all",
+          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md transition-all",
+          "contain-layout contain-paint",
           isSelected && "bg-fg outline-[calc(var(--width)*0.03)]",
           !loaded && "opacity-0",
         )}
@@ -61,15 +62,17 @@ export default function ObjektView({
         <NextImage
           draggable={false}
           onClick={ctx.handleClick}
-          fill
           priority={priority}
+          className="h-full w-full object-cover"
           src={resizedUrl}
+          width={582}
+          height={900}
           alt={objekt.collectionId}
           onLoad={() => setLoaded(true)}
         />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
-          <div className="bg-bg text-fg pointer-events-none absolute bottom-1 left-1 flex rounded-full px-2 py-1 text-xs font-bold">
+          <div className="bg-bg text-fg pointer-events-none m-1 flex self-end justify-self-start rounded-full px-2 py-1 text-xs font-bold">
             {objekts.length.toLocaleString()}
           </div>
         )}

@@ -13,10 +13,16 @@ type Props = {
 export default function ObjektSidebar(props: Props) {
   const { objekt } = props;
   return (
-    <div className="pointer-events-none relative flex h-full w-full items-center text-(--objekt-text-color) select-none">
+    <div className="pointer-events-none grid h-full w-full items-center text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
       {/* custom band image */}
       {objekt.bandImageUrl && (
-        <Image className="object-cover" alt="band image" src={objekt.bandImageUrl} fill />
+        <Image
+          className="h-full w-full object-cover"
+          alt="band image"
+          src={objekt.bandImageUrl}
+          width={1083}
+          height={1673}
+        />
       )}
       <SidebarBand {...props} />
     </div>
@@ -54,7 +60,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
       height={canvasHeight}
       viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       xmlns="http://www.w3.org/2000/svg"
-      className="absolute h-full w-full"
+      className="h-full w-full"
     >
       {/* band background */}
       {objekt.artist === "idntt" && !objekt.bandImageUrl && (

@@ -18,6 +18,7 @@ import { useTranslations } from "next-intl";
 import NextImage from "next/image";
 import { useCallback, useState } from "react";
 
+import { useElementSize } from "@/hooks/use-element-size";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
@@ -120,9 +121,17 @@ export function ObjektCard({
 }) {
   const [objekt] = objekts;
   const [flipped, setFlipped] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [ref, { width }] = useElementSize();
+
+  const css = {
+    "--width": `${width}px`,
+  } as Record<string, string>;
 
   return (
     <div
+      ref={ref}
+      style={css}
       className="relative h-full w-full cursor-pointer"
       tabIndex={0}
       role="button"
@@ -133,15 +142,40 @@ export function ObjektCard({
         data-flipped={flipped}
         className="aspect-photocard relative h-full w-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
       >
-        <div className="absolute inset-0 rotate-y-0 drop-shadow backface-hidden">
-          {/* smaller image */}
-          <NextImage fill loading="eager" src={urls.resizedUrl} alt={objekt.collectionId} />
-          {/* original image */}
-          <NextImage fill loading="eager" src={urls.originalUrl} alt={objekt.collectionId} />
+        {/* Front side */}
+        <div className="absolute inset-0 grid rotate-y-0 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
+          {/* Progressive loading: show resized first, then original when loaded */}
+          {!loaded && (
+            <NextImage
+              className="h-full w-full object-cover"
+              width={582}
+              height={900}
+              loading="eager"
+              src={urls.resizedUrl}
+              alt={objekt.collectionId}
+            />
+          )}
+          <NextImage
+            className="h-full w-full object-cover"
+            width={1083}
+            height={1673}
+            loading="eager"
+            src={urls.originalUrl}
+            alt={objekt.collectionId}
+            onLoad={() => setLoaded(true)}
+          />
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
-        <div className="absolute inset-0 rotate-y-180 drop-shadow backface-hidden">
-          <NextImage fill loading="eager" src={urls.backUrl} alt={objekt.collectionId} />
+        {/* Back side */}
+        <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
+          <NextImage
+            className="h-full w-full object-cover"
+            width={1083}
+            height={1673}
+            loading="eager"
+            src={urls.backUrl}
+            alt={objekt.collectionId}
+          />
         </div>
       </div>
     </div>

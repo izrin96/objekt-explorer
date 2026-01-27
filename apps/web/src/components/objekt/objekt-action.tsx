@@ -43,7 +43,7 @@ export function ObjektOverlay({
 }) {
   if (!isPin && !isLocked) return;
   return (
-    <div className="pointer-events-none absolute top-0 left-0 flex items-start gap-[.2em] rounded-lg bg-(--objekt-bg-color) p-1 text-(--objekt-text-color)">
+    <div className="pointer-events-none flex items-start justify-start gap-[.2em] self-start justify-self-start rounded-lg bg-(--objekt-bg-color) p-1 text-(--objekt-text-color)">
       {isPin && <PushPinIcon weight="bold" className="size-2 sm:size-3" />}
       {isLocked && <LockSimpleIcon weight="bold" className="size-2 sm:size-3" />}
     </div>
