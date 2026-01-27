@@ -12,11 +12,6 @@
     "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "next typegen && tsc --noEmit",
     "format": "oxfmt .",
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate",
-    "db:upgrade": "bun run --env-file=../../.env drizzle-kit up",
-    "db:migrate": "bun run --env-file=../../.env drizzle-kit migrate",
-    "db:studio": "bun run --env-file=../../.env drizzle-kit studio",
     "scan": "bunx react-scan@latest localhost:3001"
   },
   "dependencies": {

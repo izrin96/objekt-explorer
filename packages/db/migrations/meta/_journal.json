@@ -204,6 +204,13 @@
       "when": 1760478336423,
       "tag": "0028_flawless_thena",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1769500089030,
+      "tag": "0029_massive_blindfold",
+      "breakpoints": true
     }
   ]
 }

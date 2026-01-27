@@ -1,0 +1,1 @@
+ALTER TABLE "locked_objekts" RENAME COLUMN "tokenId" TO "token_id";

@@ -1,1 +1,0 @@
-ALTER TABLE "user_address" ADD COLUMN "banner_img_url" text;

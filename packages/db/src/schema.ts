@@ -164,7 +164,7 @@ export const lockedObjekts = pgTable(
   {
     id: serial("id").primaryKey(),
     address: citext("address", { length: 42 }).notNull(),
-    tokenId: integer("tokenId").notNull(),
+    tokenId: integer("token_id").notNull(),
   },
   (t) => [index("locked_objekts_address_idx").on(t.address)],
 );

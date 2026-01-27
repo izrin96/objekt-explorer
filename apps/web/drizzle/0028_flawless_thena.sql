@@ -1,1 +1,0 @@
-ALTER TABLE "pins" DROP COLUMN "order";
