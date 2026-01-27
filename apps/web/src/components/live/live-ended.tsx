@@ -13,7 +13,6 @@ export default function LiveEnded() {
       <div className="relative aspect-square size-full overflow-hidden rounded">
         {liveSession.thumbnailImage && (
           <Image
-            priority
             className="size-full object-contain object-center"
             fill
             src={liveSession.thumbnailImage}

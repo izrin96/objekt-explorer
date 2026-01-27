@@ -100,7 +100,6 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
       <div className="flex flex-col gap-2">
         <div className="relative aspect-square overflow-hidden rounded">
           <Image
-            priority
             className="size-full object-cover object-center"
             fill
             src={live.thumbnailImage}

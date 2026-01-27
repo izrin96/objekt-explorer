@@ -56,7 +56,6 @@ export default function LinkRender() {
             {locale === "ko" && "Cosmo 프로필을 연결하세요"}
           </h2>
           <Image
-            priority
             src={SmartphoneIcon.src}
             alt="Smartphone"
             width={220}
@@ -122,7 +121,6 @@ function TicketRender() {
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          priority
           src={QRCodeIcon.src}
           alt="Loading"
           width={220}
@@ -139,7 +137,6 @@ function TicketRender() {
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          priority
           src={CarpenterIcon.src}
           alt="Carpenter"
           width={220}
@@ -205,7 +202,6 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          priority
           src={TrashIcon.src}
           alt="Trash"
           width={220}
@@ -284,7 +280,6 @@ function RenderOtp({
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          priority
           src={IconError.src}
           alt="Error"
           width={220}
@@ -309,7 +304,6 @@ function RenderOtp({
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          priority
           src={WelcomeIcon.src}
           width={220}
           height={220}
@@ -334,7 +328,6 @@ function RenderOtp({
   return (
     <div className="flex flex-col items-center gap-2">
       <Image
-        priority
         src={randomIcon.src}
         alt={randomIcon.alt}
         width={220}

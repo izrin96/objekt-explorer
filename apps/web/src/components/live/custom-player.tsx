@@ -66,7 +66,6 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
         }
       >
         <Image
-          priority
           fill
           className="size-full rounded-full object-contain object-center"
           src={liveSession.channel.profileImageUrl}
