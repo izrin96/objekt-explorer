@@ -16,11 +16,11 @@
     "format": "turbo run format"
   },
   "devDependencies": {
-    "@types/node": "^25.0.10",
+    "@types/node": "^25.1.0",
     "oxfmt": "^0.27.0",
     "oxlint": "^1.42.0",
-    "oxlint-tsgolint": "^0.11.2",
-    "turbo": "^2.7.6",
+    "oxlint-tsgolint": "^0.11.3",
+    "turbo": "^2.8.0",
     "typescript": "^5.9.3"
   },
   "packageManager": "bun@1.3.7"
