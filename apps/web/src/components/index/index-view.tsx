@@ -97,7 +97,7 @@ function IndexView() {
                         hideLabel={hideLabel}
                       >
                         {authenticated && (
-                          <div className="absolute top-0 right-0 flex items-start">
+                          <div className="flex items-start self-start justify-self-end">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
                               <AddToListMenu objekt={objekt} />

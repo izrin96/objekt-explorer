@@ -193,7 +193,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                           hideLabel={hideLabel}
                         >
                           {authenticated && (
-                            <div className="absolute top-0 right-0 flex items-start">
+                            <div className="flex items-start self-start justify-self-end">
                               <ObjektHoverMenu>
                                 <AddToListMenu objekt={objekt} />
                               </ObjektHoverMenu>

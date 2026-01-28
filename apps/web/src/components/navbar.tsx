@@ -1,52 +1,81 @@
 "use client";
 
+import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { Suspense, useEffect } from "react";
 
-import AppLogo from "./app-logo";
-import SelectedArtistFilter from "./filters/filter-selected-artist";
-import { ThemeStyleSwitcher } from "./theme-style-select";
-import { Container } from "./ui/container";
-import { Link } from "./ui/link";
-import UserNav from "./user-nav";
-import UserSearch from "./user-search";
+import AppLogo from "@/components/app-logo";
+import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
+import { ThemeStyleSwitcher } from "@/components/theme-style-select";
+import { Link } from "@/components/ui/link";
+import UserNav from "@/components/user-nav";
+import UserSearch from "@/components/user-search";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
-export default function Navbar() {
+import { MobileNavigation } from "./mobile-navigation";
+import { Container } from "./ui/container";
+
+export default function NavbarV2() {
   const router = useRouter();
+  const isMobile = useMediaQuery("(max-width: 1023px)");
 
   useEffect(() => {
     router.prefetch("/");
     router.prefetch("/activity");
     router.prefetch("/login");
-  }, []);
+  }, [router]);
 
   return (
-    <nav className="from-bg/80 sticky top-0 right-0 left-0 z-30 h-14 bg-linear-to-b to-transparent">
-      <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>
-      <Container className="flex justify-center">
-        <div className="flex h-14 grow items-center gap-2">
-          <AppLogo />
-          <div className="flex items-center">
-            <Activity />
+    <>
+      {/* Desktop Navbar */}
+      <nav className="from-bg/80 sticky top-0 z-40 hidden h-12 bg-linear-to-b to-transparent lg:flex">
+        <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>
+
+        <Container className="flex items-center">
+          <div className="flex items-center gap-x-2">
+            <AppLogo />
+            <div className="flex items-center gap-x-1">
+              {navMenuItems.map((menu) => (
+                <NavLink key={menu.href} href={menu.href}>
+                  {menu.label}
+                  {menu.icon && <menu.icon className="size-4" weight="regular" />}
+                </NavLink>
+              ))}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Suspense>
-            <UserNav />
-          </Suspense>
-          <ThemeStyleSwitcher />
-          <SelectedArtistFilter />
-          <UserSearch />
-        </div>
-      </Container>
-    </nav>
+
+          <div className="flex-1" aria-hidden />
+
+          <div className="flex items-center gap-x-1">
+            <Suspense>
+              <UserNav />
+            </Suspense>
+            <ThemeStyleSwitcher />
+            <SelectedArtistFilter />
+            <UserSearch />
+          </div>
+        </Container>
+      </nav>
+
+      {/* Mobile Navbar */}
+      {isMobile && <MobileNavigation />}
+    </>
   );
 }
 
-function Activity() {
+function NavLink({ ...props }: React.ComponentProps<typeof Link>) {
   return (
-    <Link href="/activity" className="flex items-center gap-2 px-1.5 py-1.5 text-sm font-medium">
-      <span className="text-xs">Activity</span>
-    </Link>
+    <Link
+      className="text-fg hover:text-fg flex items-center gap-x-2 rounded-full px-2.5 py-1 text-sm font-medium tracking-tight outline-hidden transition duration-200 focus-visible:ring-2"
+      {...props}
+    />
   );
 }
+
+export const navMenuItems = [
+  {
+    href: "/activity",
+    label: "Activity",
+    icon: ChartLineIcon,
+  },
+];

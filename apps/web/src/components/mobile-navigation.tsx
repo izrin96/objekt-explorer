@@ -17,7 +17,7 @@ import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
 
-import { navMenuItems } from "./navbar-v2";
+import { navMenuItems } from "./navbar";
 import { Container } from "./ui/container";
 import { MenuLabel } from "./ui/menu";
 
