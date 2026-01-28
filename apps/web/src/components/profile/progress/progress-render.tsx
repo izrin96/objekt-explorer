@@ -97,7 +97,7 @@ type ProgressGroupProps = {
 function ProgressGroup(props: ProgressGroupProps) {
   const filtered = props.grouped
     .map(([objekt]) => objekt)
-    .filter((a) => !unobtainables.includes(a.slug));
+    .filter((a): a is ValidObjekt => a !== undefined && !unobtainables.includes(a.slug));
 
   const owned = filtered.filter((a) => props.ownedSlugs.has(a.slug));
 
@@ -171,7 +171,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                   items={items}
                 >
                   {({ item: objekts }) => {
-                    const [objekt] = objekts;
+                    const [objekt] = objekts as [ValidObjekt];
                     return (
                       <ObjektModal
                         key={objekt.id}

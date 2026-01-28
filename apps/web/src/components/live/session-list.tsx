@@ -6,7 +6,7 @@ import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
-import { type CSSProperties, Suspense } from "react";
+import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";

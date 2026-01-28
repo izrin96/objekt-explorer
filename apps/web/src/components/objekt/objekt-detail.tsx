@@ -41,6 +41,8 @@ type ObjektDetailProps = {
 
 export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetailProps) {
   const [objekt] = objekts;
+  if (!objekt) return null;
+
   const urls = getObjektImageUrls(objekt);
 
   return (
@@ -67,6 +69,8 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
 function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
   const [objekt] = objekts;
+  if (!objekt) return null;
+
   const t = useTranslations("objekt");
   const isOwned = isObjektOwned(objekt);
   const currentTab = useObjektModal((a) => a.currentTab);
@@ -120,6 +124,8 @@ export function ObjektCard({
   urls: ReturnType<typeof getObjektImageUrls>;
 }) {
   const [objekt] = objekts;
+  if (!objekt) return null;
+
   const [flipped, setFlipped] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [ref, { width }] = useElementSize();

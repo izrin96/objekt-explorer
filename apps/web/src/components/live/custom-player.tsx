@@ -94,6 +94,9 @@ function LiveVolumeControl() {
   const { useParticipants, useSpeakerState } = useCallStateHooks();
   const [currentSpeaker] = useParticipants();
   const { speaker } = useSpeakerState();
+
+  if (!currentSpeaker) return null;
+
   return (
     <Popover>
       <Button size="sq-sm" intent="outline">

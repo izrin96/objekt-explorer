@@ -84,7 +84,7 @@ function ProfileTrades() {
 
   const rows = query.data.pages.flatMap((p) => p.results);
 
-  if (query.data.pages[0].hide) {
+  if (query.data.pages[0]?.hide) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
@@ -141,6 +141,7 @@ function ProfileTradesVirtualizer({
       >
         {rowVirtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
+          if (!row) return null;
           return (
             <div
               className="absolute top-0 left-0 w-full"

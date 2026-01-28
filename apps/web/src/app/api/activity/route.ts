@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
   const hasNextPage = transferResults.length > PAGE_SIZE;
   const nextCursor = hasNextPage
     ? {
-        id: transferResults[PAGE_SIZE - 1].transfer.id,
+        id: transferResults[PAGE_SIZE - 1]!.transfer.id,
       }
     : undefined;
 

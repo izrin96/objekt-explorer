@@ -1,5 +1,3 @@
-import type { CosmoSearchResult } from "@repo/cosmo/types/user";
-
 import { search } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";

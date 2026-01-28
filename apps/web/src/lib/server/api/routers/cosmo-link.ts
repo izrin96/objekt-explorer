@@ -79,7 +79,7 @@ export const cosmoLinkRouter = {
           const parts = header.split(";");
           for (const part of parts) {
             const [name, value] = part.trim().split("=");
-            if (name === "user-session") {
+            if (name === "user-session" && value) {
               userSession = value;
               break;
             }

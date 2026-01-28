@@ -178,7 +178,7 @@ function Activity() {
       }
 
       if (message.type === "history") {
-        const existing = latestData?.pages[0].items ?? [];
+        const existing = latestData?.pages[0]?.items ?? [];
         const existHash = new Set(existing.map((a) => a.transfer.hash));
         const historyFiltered = filtered.filter((a) => !existHash.has(a.transfer.hash));
 
@@ -298,6 +298,7 @@ function Activity() {
             >
               {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                 const item = transfers[virtualRow.index];
+                if (!item) return null;
                 const isNew = newTransferIds.has(item.transfer.id);
                 return (
                   <div

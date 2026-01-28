@@ -39,6 +39,8 @@ export default function ObjektView({
   const [objekt] = objekts;
   const ctx = useObjektModal();
 
+  if (!objekt) return null;
+
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,

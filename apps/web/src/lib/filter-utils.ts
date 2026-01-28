@@ -10,7 +10,7 @@ function parseCollectionNo(value: string) {
   const expression = /^([a-zA-Z]*)(\d{3})([azAZ]?)$/;
   const match = value.match(expression);
   if (!match) return null;
-  const [, seasonCode, collectionNo, type] = match;
+  const [, seasonCode = "", collectionNo = "", type = ""] = match;
   return {
     seasonCode: seasonCode.length > 0 ? seasonCode.charAt(0) : "",
     seasonNumber: seasonCode.length,
@@ -39,7 +39,7 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
   // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && isObjektOwned(objekt)) {
     const [start, end] = keyword.split("-").map(parseSerial);
-    if (start === null) return false;
+    if (!start) return false;
     return objekt.serial >= start && objekt.serial <= (end ?? start);
   }
 

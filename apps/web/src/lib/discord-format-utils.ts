@@ -74,8 +74,11 @@ function formatMemberCollections(
       const formatted = Object.values(groupBy(seasonCollections, (a) => a.collectionId))
         .map((collections) => {
           const [collection] = collections;
-          return formatCollection(collection, collections.length, showQuantity, false);
+          return collection
+            ? formatCollection(collection, collections.length, showQuantity, false)
+            : null;
         })
+        .filter((item) => item !== null)
         .toSorted();
 
       if (formatted.length > 0) {
@@ -95,8 +98,11 @@ function formatMemberCollections(
     const formatted = Object.values(groupBy(collections, (a) => a.collectionId))
       .map((collections) => {
         const [collection] = collections;
-        return formatCollection(collection, collections.length, showQuantity, true);
+        return collection
+          ? formatCollection(collection, collections.length, showQuantity, true)
+          : null;
       })
+      .filter((item) => item !== null)
       .toSorted();
 
     results.push(...formatted);
@@ -132,8 +138,11 @@ export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, option
           const formatted = Object.values(groupBy(memberCollections, (a) => a.collectionId))
             .map((collections) => {
               const [collection] = collections;
-              return formatCollection(collection, collections.length, showQuantity, false);
+              return collection
+                ? formatCollection(collection, collections.length, showQuantity, false)
+                : null;
             })
+            .filter((item) => item !== null)
             .toSorted();
 
           if (formatted.length > 0) {
@@ -153,8 +162,11 @@ export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, option
           const formatted = Object.values(groupBy(memberCollections, (a) => a.collectionId))
             .map((collections) => {
               const [collection] = collections;
-              return formatCollection(collection, collections.length, showQuantity, false);
+              return collection
+                ? formatCollection(collection, collections.length, showQuantity, false)
+                : null;
             })
+            .filter((item) => item !== null)
             .toSorted();
 
           if (formatted.length > 0) {
@@ -230,19 +242,19 @@ export function makeMemberOrderedList(
   const members = Object.values(groupBy(entries, (a) => `${a.artist}-${a.member}`))
     .toSorted(([a], [b]) => {
       // order by member
-      const posA = artistsMembers.findIndex((p) => p.name === a.member);
-      const posB = artistsMembers.findIndex((p) => p.name === b.member);
+      const posA = artistsMembers.findIndex((p) => p.name === a?.member);
+      const posB = artistsMembers.findIndex((p) => p.name === b?.member);
 
       return posA - posB;
     })
     .toSorted(([a], [b]) => {
       // order by artist
-      const posA = artists.findIndex((p) => p.name === a.artist);
-      const posB = artists.findIndex((p) => p.name === b.artist);
+      const posA = artists.findIndex((p) => p.name === a?.artist);
+      const posB = artists.findIndex((p) => p.name === b?.artist);
 
       return posA - posB;
     })
-    .map(([a]) => a.member);
+    .map(([a]) => a!.member);
 
   return members;
 }

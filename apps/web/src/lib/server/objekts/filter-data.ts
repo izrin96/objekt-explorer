@@ -48,8 +48,8 @@ export async function fetchSeasonMap() {
         return a.localeCompare(b);
       }
 
-      const [, prefixA, numA] = matchA;
-      const [, prefixB, numB] = matchB;
+      const [, prefixA = "", numA = ""] = matchA;
+      const [, prefixB = "", numB = ""] = matchB;
 
       const numCompare = parseInt(numA) - parseInt(numB);
       if (numCompare !== 0) {

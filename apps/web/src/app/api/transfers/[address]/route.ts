@@ -13,7 +13,7 @@ import { getSession } from "@/lib/server/auth";
 import { cursorSchema } from "@/lib/server/common";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
 import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
-import { type TransferResult, validType } from "@/lib/universal/transfers";
+import { validType } from "@/lib/universal/transfers";
 
 const PER_PAGE = 150;
 
@@ -148,7 +148,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
     ? {
-        id: results[PER_PAGE - 1].transfer.id,
+        id: results[PER_PAGE - 1]!.transfer.id,
       }
     : undefined;
   const slicedResults = results.slice(0, PER_PAGE);

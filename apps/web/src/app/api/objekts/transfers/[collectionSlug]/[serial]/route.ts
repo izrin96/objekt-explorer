@@ -36,12 +36,11 @@ export async function GET(_: Request, props: Params) {
     .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
     .orderBy(desc(transfers.id));
 
-  if (!results.length)
+  const [result] = results;
+  if (!result)
     return Response.json({
       transfers: [],
     });
-
-  const [result] = results;
 
   const owner = await db.query.userAddress.findFirst({
     where: (q, { eq }) => eq(q.address, result.owner!),

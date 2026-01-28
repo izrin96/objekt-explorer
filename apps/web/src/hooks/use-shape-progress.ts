@@ -40,19 +40,19 @@ export function useShapeProgress() {
 
       if (groupBys.includes("class")) {
         entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
-          compareByArray(classes, objektA.class, objektB.class),
+          compareByArray(classes, objektA?.class ?? "", objektB?.class ?? ""),
         );
       }
 
       if (groupBys.includes("season")) {
         entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
-          compareByArray(seasons, objektB.season, objektA.season),
+          compareByArray(seasons, objektB?.season ?? "", objektA?.season ?? ""),
         );
       }
 
       if (groupBys.includes("member")) {
         entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
-          compareMember(objektA.member, objektB.member),
+          compareMember(objektA?.member ?? "", objektB?.member ?? ""),
         );
       }
 

@@ -279,9 +279,9 @@ function MemberProgressChart({
       .map((member) => {
         const owned = grouped.filter(([objekt]) => {
           return (
-            objekt.member === member.name &&
-            !unobtainables.includes(objekt.slug) &&
-            !["Welcome", "Zero"].includes(objekt.class)
+            objekt?.member === member.name &&
+            !unobtainables.includes(objekt?.slug ?? "") &&
+            !["Welcome", "Zero"].includes(objekt?.class ?? "")
           );
         }).length;
         const total = collections.filter(

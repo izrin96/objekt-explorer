@@ -328,8 +328,8 @@ function RenderOtp({
   return (
     <div className="flex flex-col items-center gap-2">
       <Image
-        src={randomIcon.src}
-        alt={randomIcon.alt}
+        src={randomIcon!.src}
+        alt={randomIcon!.alt}
         width={220}
         height={220}
         className="fade-in zoom-in animate-in duration-200"

@@ -74,7 +74,7 @@ function IndexView() {
             items={items}
           >
             {({ item, index }) => {
-              const [objekt] = item;
+              const [objekt] = item as [ValidObjekt];
               return (
                 <ObjektModal
                   key={objekt.id}

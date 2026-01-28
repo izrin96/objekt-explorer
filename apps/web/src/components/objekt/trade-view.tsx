@@ -76,7 +76,7 @@ function TradeViewRender({ objekt, serial }: TradeViewProps) {
   return (
     <>
       {data.length > 0 && (
-        <Trades serials={data} initialSerial={serial ?? data[0]} objekt={objekt} />
+        <Trades serials={data} initialSerial={serial ?? data[0] ?? 1} objekt={objekt} />
       )}
     </>
   );

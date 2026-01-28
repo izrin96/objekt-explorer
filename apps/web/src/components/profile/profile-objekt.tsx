@@ -2,7 +2,6 @@
 
 import type { ValidObjekt } from "@repo/lib/objekts";
 
-import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -36,9 +35,7 @@ import {
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
-import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
-import { Note } from "../ui/note";
 import Filter from "./filter";
 
 export default function ProfileObjektRender() {
@@ -91,7 +88,7 @@ function ProfileObjekt() {
             items={items}
           >
             {({ item, index }) => {
-              const [objekt] = item;
+              const [objekt] = item as [ValidObjekt];
               const isOwned = isObjektOwned(objekt);
               return (
                 <ObjektModal

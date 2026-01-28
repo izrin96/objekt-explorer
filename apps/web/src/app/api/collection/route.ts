@@ -1,5 +1,3 @@
-import type { CollectionResult } from "@repo/lib/objekts";
-
 import { validArtists } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
@@ -31,7 +29,7 @@ export async function GET(request: NextRequest) {
     ne(collections.slug, "empty-collection"),
   );
 
-  const singleResult = await indexer
+  const [singleResult] = await indexer
     .select({
       id: collections.id,
     })
@@ -40,13 +38,13 @@ export async function GET(request: NextRequest) {
     .orderBy(desc(collections.id))
     .limit(1);
 
-  if (!singleResult.length)
+  if (!singleResult)
     return Response.json({
       collections: [],
     });
 
   // check for etag
-  const etag = `W/"${createHash("md5").update(singleResult[0].id).digest("hex")}"`;
+  const etag = `W/"${createHash("md5").update(singleResult.id).digest("hex")}"`;
   const ifNoneMatch = request.headers.get("if-none-match");
   if (ifNoneMatch === etag) {
     return new NextResponse(null, {

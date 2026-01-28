@@ -102,8 +102,8 @@ export async function GET(request: NextRequest, props: Params) {
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
     ? {
-        receivedAt: results[PER_PAGE - 1].objekt.receivedAt,
-        id: results[PER_PAGE - 1].objekt.id,
+        receivedAt: results[PER_PAGE - 1]!.objekt.receivedAt,
+        id: results[PER_PAGE - 1]!.objekt.id,
       }
     : undefined;
 
