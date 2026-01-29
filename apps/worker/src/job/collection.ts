@@ -1,5 +1,5 @@
 import { indexer } from "@repo/db/indexer";
-import { collections, objekts } from "@repo/db/indexer/schema";
+import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { and, eq } from "drizzle-orm";
 
 import { fetchMetadata, type MetadataV1 } from "../lib/metadata-utils";
@@ -46,6 +46,14 @@ async function processObjekt(objekt: { id: string }) {
       collectionId: collection.id,
     })
     .where(eq(objekts.id, objekt.id));
+
+  // update transfer
+  await indexer
+    .update(transfers)
+    .set({
+      collectionId: collection.id,
+    })
+    .where(eq(transfers.objektId, objekt.id));
 
   console.log(`Update missing metadata for token ID ${objekt.id}`);
 }
