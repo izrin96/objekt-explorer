@@ -115,6 +115,7 @@
       "name": "worker",
       "version": "0.0.0",
       "dependencies": {
+        "@repo/cosmo": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/lib": "workspace:*",
         "croner": "^9.1.0",

@@ -1,8 +1,10 @@
+import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
+
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { and, eq } from "drizzle-orm";
 
-import { fetchMetadata, type MetadataV1 } from "../lib/metadata-utils";
+import { fetchMetadata } from "../lib/metadata-utils";
 
 async function processObjekt(objekt: { id: string }) {
   // fetch metadata
@@ -74,7 +76,7 @@ export async function fixObjektMetadata() {
   }
 }
 
-export async function updateCollectionMetadata(slug: string, metadata: MetadataV1) {
+export async function updateCollectionMetadata(slug: string, metadata: CosmoObjektMetadataV1) {
   // update collection metadata
   await indexer
     .update(collections)
