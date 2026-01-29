@@ -27,10 +27,6 @@ export default function NavbarV2() {
 
   return (
     <>
-      <div className="bg-secondary text-secondary-fg text-center text-xs">
-        We are aware that the metadata fetching service currently down at this moment, will get it
-        fix soon.
-      </div>
       {/* Desktop Navbar */}
       <nav className="from-bg/80 sticky top-0 z-40 hidden h-12 bg-linear-to-b to-transparent lg:flex">
         <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>

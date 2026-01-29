@@ -60,7 +60,10 @@ export async function fixObjektMetadata() {
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
     .where(and(eq(collections.slug, "empty-collection")));
 
-  await Promise.all(objektsResults.map((objekt) => processObjekt(objekt)));
+  for (const objekt of objektsResults) {
+    // oxlint-disable-next-line no-await-in-loop
+    await processObjekt(objekt);
+  }
 }
 
 export async function updateCollectionMetadata(slug: string, metadata: MetadataV1) {
