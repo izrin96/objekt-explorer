@@ -6,10 +6,14 @@ import type { CosmoObjektMetadataV1, CosmoObjektMetadataV3 } from "../types/meta
  * Fetch objekt metadata from the v1 API.
  */
 export async function fetchMetadataV1(tokenId: string) {
-  return await ofetch<CosmoObjektMetadataV1>(`https://api.cosmo.fans/objekt/v1/token/${tokenId}`, {
-    retry: 4,
-    retryDelay: 750, // 750ms backoff
-  });
+  return await ofetch.raw<CosmoObjektMetadataV1>(
+    `https://api.cosmo.fans/objekt/v1/token/${tokenId}`,
+    {
+      retry: 4,
+      retryDelay: 750, // 750ms backoff
+      ignoreResponseError: true,
+    },
+  );
 }
 
 /**
@@ -17,8 +21,8 @@ export async function fetchMetadataV1(tokenId: string) {
  * Shouldn't be used as it doesn't contain full collection data.
  */
 export async function fetchMetadataV3(tokenId: string) {
-  return await ofetch<CosmoObjektMetadataV3>(
+  return await ofetch.raw<CosmoObjektMetadataV3>(
     `https://api.cosmo.fans/bff/v3/objekts/nft-metadata/${tokenId}`,
-    { retry: 2, retryDelay: 500 }, // 500ms backoff
+    { retry: 2, retryDelay: 500, ignoreResponseError: true }, // 500ms backoff
   );
 }

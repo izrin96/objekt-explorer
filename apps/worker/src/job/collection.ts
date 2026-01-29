@@ -4,7 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { and, eq } from "drizzle-orm";
 
-import { fetchMetadata } from "../lib/metadata-utils";
+import { fetchMetadata, slugify } from "../lib/metadata-utils";
 
 async function processObjekt(objekt: { id: string }) {
   // fetch metadata
@@ -12,31 +12,21 @@ async function processObjekt(objekt: { id: string }) {
 
   if (metadata === null) return;
 
-  const slug = metadata.objekt.collectionId
-    .toLowerCase()
-    // replace diacritics
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    // remove non-alphanumeric characters
-    .replace(/[^\w\s-]/g, "")
-    // replace spaces with hyphens
-    .replace(/\s+/g, "-");
+  const slug = slugify(metadata.objekt.collectionId);
 
   // find correct collection
-  const collectionResult = await indexer
+  const [collection] = await indexer
     .select({
       id: collections.id,
     })
     .from(collections)
     .where(eq(collections.slug, slug));
 
-  const collection = collectionResult.at(0);
-
   // if not found, skip, just wait indexer processor create it
   // rarely happen
   if (!collection) return;
 
-  // optional
+  // optional: force update metadata
   // await updateCollectionMetadata(slug, metadata);
 
   // update objekt

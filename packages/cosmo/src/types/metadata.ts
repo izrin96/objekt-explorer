@@ -89,7 +89,7 @@ function getTrait(metadata: CosmoObjektMetadataV3, tokenId: string, trait: strin
       trait === "Member" &&
       arr.findIndex((a) => a.trait_type === "Class" && a.value === "Unit") > -1
     ) {
-      return attr.value.includes(" x ");
+      return attr.value.toLowerCase().includes(" x ");
     }
 
     return attr.trait_type === trait;
