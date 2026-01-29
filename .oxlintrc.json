@@ -21,6 +21,7 @@
     "typescript/no-unused-vars": "off",
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/unbound-method": "off",
-    "typescript/restrict-template-expressions": "off"
+    "typescript/restrict-template-expressions": "off",
+    "no-await-in-loop": "off"
   }
 }

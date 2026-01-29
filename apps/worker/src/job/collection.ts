@@ -2,9 +2,10 @@ import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
+import { slugifyObjekt } from "@repo/lib";
 import { eq } from "drizzle-orm";
 
-import { fetchMetadata, slugify } from "../lib/metadata-utils";
+import { fetchMetadata } from "../lib/metadata-utils";
 
 const enableUpdateMetadata = false;
 
@@ -22,7 +23,6 @@ export async function fixObjektMetadata() {
     .where(eq(collections.slug, "empty-collection"));
 
   for (const objekt of objektsResults) {
-    // oxlint-disable-next-line no-await-in-loop
     await processObjekt(objekt);
   }
 }
@@ -39,7 +39,6 @@ export async function fixObjektSerialZero() {
     .where(eq(objekts.serial, 0));
 
   for (const objekt of objektsResults) {
-    // oxlint-disable-next-line no-await-in-loop
     await processObjekt(objekt);
   }
 }
@@ -53,7 +52,7 @@ async function processObjekt(objekt: { id: string }) {
 
   if (metadata === null) return;
 
-  const slug = slugify(metadata.objekt.collectionId);
+  const slug = slugifyObjekt(metadata.objekt.collectionId);
 
   // find correct collection
   const [collection] = await indexer

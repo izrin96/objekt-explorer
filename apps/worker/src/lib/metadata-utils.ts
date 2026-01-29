@@ -4,21 +4,13 @@ import { fetchMetadataV1, fetchMetadataV3 } from "@repo/cosmo/server/metadata";
 import { normalizeV3 } from "@repo/cosmo/types/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
+import { slugifyObjekt } from "@repo/lib";
 import { eq } from "drizzle-orm";
-
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD") // replace diacritics
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^\w\s-]/g, "") // remove non-alphanumeric characters
-    .replace(/\s+/g, "-"); // replace spaces with hyphens
-}
 
 async function enrichWithCollectionData(
   metadata: CosmoObjektMetadataV1,
 ): Promise<CosmoObjektMetadataV1> {
-  const slug = slugify(metadata.objekt.collectionId);
+  const slug = slugifyObjekt(metadata.objekt.collectionId);
 
   const [collection] = await indexer
     .select({
