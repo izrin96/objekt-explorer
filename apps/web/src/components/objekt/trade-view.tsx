@@ -127,7 +127,7 @@ function Trades({
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <NumberFieldPrimitive
-          minValue={1}
+          minValue={0}
           aria-label="Serial no."
           value={serial}
           onChange={setSerial}
