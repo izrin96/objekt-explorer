@@ -21,6 +21,11 @@ export async function GET(_: Request, props: Params) {
     return Response.json({ message: "Invalid serial" }, { status: 422 });
   }
 
+  if (serial < 1)
+    return Response.json({
+      transfers: [],
+    });
+
   const results = await indexer
     .select({
       tokenId: objekts.id,
