@@ -9,6 +9,7 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -16,7 +17,6 @@ import { authClient } from "@/lib/auth-client";
 
 import { Button } from "../ui/button";
 import { FieldError, Label } from "../ui/field";
-import { Form } from "../ui/form";
 import { Input } from "../ui/input";
 import { TextField } from "../ui/text-field";
 

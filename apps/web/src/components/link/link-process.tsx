@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState } from "react";
+import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useInterval } from "usehooks-ts";
@@ -29,7 +30,6 @@ import { orpc } from "@/lib/orpc/client";
 import { msToCountdown, SITE_NAME } from "@/lib/utils";
 
 import { Button, buttonStyles } from "../ui/button";
-import { Form } from "../ui/form";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";

@@ -5,19 +5,19 @@ import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Cropper, type CropperRef } from "react-advanced-cropper";
+import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import ErrorFallbackRender from "@/components/error-boundary";
-import Portal from "@/components/portal";
 
 import "react-advanced-cropper/dist/style.css";
+import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description, Label } from "@/components/ui/field";
 import { FileTrigger } from "@/components/ui/file-trigger";
-import { Form } from "@/components/ui/form";
 import { Link } from "@/components/ui/link";
 import { Loader } from "@/components/ui/loader";
 import {

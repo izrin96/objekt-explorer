@@ -3,13 +3,13 @@
 import type { ValidObjekt } from "@repo/lib/objekts";
 
 import { useState } from "react";
+import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
 
 import { CopyButton } from "@/components/copy-button";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/field";
-import { Form } from "@/components/ui/form";
 import {
   ModalBody,
   ModalContent,

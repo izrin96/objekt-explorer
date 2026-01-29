@@ -3,6 +3,7 @@
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
+import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,7 +13,6 @@ import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description, FieldError, Label } from "@/components/ui/field";
-import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/components/ui/link";
 import { Loader } from "@/components/ui/loader";

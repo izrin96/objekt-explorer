@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -9,7 +10,6 @@ import { authClient } from "@/lib/auth-client";
 
 import { Button } from "../ui/button";
 import { FieldError, Label } from "../ui/field";
-import { Form } from "../ui/form";
 import { TextField } from "../ui/text-field";
 
 export default function ResetPassword({ token }: { token: string }) {
