@@ -37,7 +37,7 @@ export async function GET(_: Request, props: Params) {
     })
     .from(transfers)
     .leftJoin(objekts, eq(transfers.objektId, objekts.id))
-    .leftJoin(collections, eq(objekts.collectionId, collections.id))
+    .leftJoin(collections, eq(transfers.collectionId, collections.id))
     .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
     .orderBy(desc(transfers.id));
 
