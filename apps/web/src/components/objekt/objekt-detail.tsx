@@ -22,6 +22,7 @@ import { useElementSize } from "@/hooks/use-element-size";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
+import { OBJEKT_SIZE } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import { Badge } from "../ui/badge";
@@ -163,8 +164,8 @@ export function ObjektCard({
           )}
           <NextImage
             className="h-full w-full object-cover"
-            width={1083}
-            height={1673}
+            width={OBJEKT_SIZE.width}
+            height={OBJEKT_SIZE.height}
             loading="eager"
             src={urls.originalUrl}
             alt={objekt.collectionId}
@@ -176,8 +177,8 @@ export function ObjektCard({
         <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           <NextImage
             className="h-full w-full object-cover"
-            width={1083}
-            height={1673}
+            width={OBJEKT_SIZE.width}
+            height={OBJEKT_SIZE.height}
             loading="eager"
             src={urls.backUrl}
             alt={objekt.collectionId}
