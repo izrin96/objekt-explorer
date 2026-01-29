@@ -2,10 +2,51 @@ import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { fetchMetadata, slugify } from "../lib/metadata-utils";
 
+const enableUpdateMetadata = false;
+
+/**
+ * Fix all missing metadata for all objekt in 'empty-collection'
+ */
+export async function fixObjektMetadata() {
+  // find objekt that have missing metadata
+  const objektsResults = await indexer
+    .select({
+      id: objekts.id,
+    })
+    .from(objekts)
+    .leftJoin(collections, eq(objekts.collectionId, collections.id))
+    .where(eq(collections.slug, "empty-collection"));
+
+  for (const objekt of objektsResults) {
+    // oxlint-disable-next-line no-await-in-loop
+    await processObjekt(objekt);
+  }
+}
+
+/**
+ * Fix all objekt with serial 0
+ */
+export async function fixObjektSerialZero() {
+  const objektsResults = await indexer
+    .select({
+      id: objekts.id,
+    })
+    .from(objekts)
+    .where(eq(objekts.serial, 0));
+
+  for (const objekt of objektsResults) {
+    // oxlint-disable-next-line no-await-in-loop
+    await processObjekt(objekt);
+  }
+}
+
+/**
+ * Fetch metadata for an objekt
+ */
 async function processObjekt(objekt: { id: string }) {
   // fetch metadata
   const metadata = await fetchMetadata(objekt.id);
@@ -24,10 +65,15 @@ async function processObjekt(objekt: { id: string }) {
 
   // if not found, skip, just wait indexer processor create it
   // rarely happen
-  if (!collection) return;
+  if (!collection) {
+    console.log(`Collection not yet exist for token ID ${objekt.id}`);
+    return;
+  }
 
   // optional: force update metadata
-  // await updateCollectionMetadata(slug, metadata);
+  if (enableUpdateMetadata) {
+    await updateCollectionMetadata(slug, metadata);
+  }
 
   // update objekt
   await indexer
@@ -50,23 +96,10 @@ async function processObjekt(objekt: { id: string }) {
   console.log(`Update missing metadata for token ID ${objekt.id}`);
 }
 
-export async function fixObjektMetadata() {
-  // find objekt that have missing metadata
-  const objektsResults = await indexer
-    .select({
-      id: objekts.id,
-    })
-    .from(objekts)
-    .leftJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(and(eq(collections.slug, "empty-collection")));
-
-  for (const objekt of objektsResults) {
-    // oxlint-disable-next-line no-await-in-loop
-    await processObjekt(objekt);
-  }
-}
-
-export async function updateCollectionMetadata(slug: string, metadata: CosmoObjektMetadataV1) {
+/**
+ * Update collection metadata
+ */
+async function updateCollectionMetadata(slug: string, metadata: CosmoObjektMetadataV1) {
   // update collection metadata
   await indexer
     .update(collections)
