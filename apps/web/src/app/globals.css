@@ -105,10 +105,10 @@
   --secondary-fg: oklch(0.141 0.005 285.823);
   --overlay: oklch(1 0 0);
   --overlay-fg: oklch(0.141 0.005 285.823);
-  --accent: oklch(0.92 0.004 286.32);
-  --accent-fg: oklch(0.141 0.005 285.823);
-  --accent-subtle: oklch(0.442 0.017 285.786 / 0.1);
-  --accent-subtle-fg: oklch(0.37 0.013 285.805);
+  --accent: oklch(0.585 0.233 277.117 / 0.15);
+  --accent-fg: oklch(0.457 0.24 277.023);
+  --accent-subtle: oklch(0.585 0.233 277.117 / 0.15);
+  --accent-subtle-fg: oklch(0.457 0.24 277.023);
   --muted: oklch(0.967 0.001 286.375);
   --muted-fg: oklch(0.552 0.016 285.938);
   --success: oklch(0.897 0.196 126.665);
@@ -136,8 +136,8 @@
   --sidebar-fg: oklch(0.141 0.005 285.823);
   --sidebar-primary: oklch(0.442 0.017 285.786 / 0.1);
   --sidebar-primary-fg: oklch(0.37 0.013 285.805);
-  --sidebar-accent: oklch(0.92 0.004 286.32);
-  --sidebar-accent-fg: oklch(0.141 0.005 285.823);
+  --sidebar-accent: oklch(0.585 0.233 277.117);
+  --sidebar-accent-fg: oklch(1 0 0);
   --sidebar-border: oklch(0.901 0.006 286.286);
   --sidebar-ring: oklch(0.141 0.005 285.823);
   --chart-1: oklch(0.274 0.006 286.033);
@@ -157,6 +157,9 @@
 
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+
+  /* custom */
+  --accent-solid: oklch(0.585 0.233 277.117);
 }
 
 .dark {
@@ -170,10 +173,10 @@
   --secondary-fg: oklch(0.985 0 0);
   --overlay: oklch(0.18 0.006 285.885);
   --overlay-fg: oklch(0.985 0 0);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-fg: oklch(0.985 0 0);
-  --accent-subtle: oklch(0.442 0.017 285.786 / 0.1);
-  --accent-subtle-fg: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.585 0.233 277.117 / 0.1);
+  --accent-fg: oklch(0.673 0.182 276.935);
+  --accent-subtle: oklch(0.585 0.233 277.117 / 0.1);
+  --accent-subtle-fg: oklch(0.673 0.182 276.935);
   --muted: oklch(0.21 0.006 285.885);
   --muted-fg: oklch(0.705 0.015 286.067);
   --success: oklch(0.897 0.196 126.665);
@@ -201,8 +204,8 @@
   --sidebar-fg: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.442 0.017 285.786 / 0.1);
   --sidebar-primary-fg: oklch(0.705 0.015 286.067);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-fg: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.585 0.233 277.117);
+  --sidebar-accent-fg: oklch(1 0 0);
   --sidebar-border: oklch(0.274 0.006 286.033);
   --sidebar-ring: oklch(0.985 0 0);
   --chart-1: oklch(0.985 0 0);
@@ -210,6 +213,9 @@
   --chart-3: oklch(0.871 0.006 286.286);
   --chart-4: oklch(0.705 0.015 286.067);
   --chart-5: oklch(0.552 0.016 285.938);
+
+  /* custom */
+  --accent-solid: oklch(0.585 0.233 277.117);
 }
 
 @utility touch-target {

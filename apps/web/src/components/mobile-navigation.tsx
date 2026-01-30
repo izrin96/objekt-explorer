@@ -10,7 +10,6 @@ import { twJoin, twMerge } from "tailwind-merge";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
-import { ThemeStyleSwitcher } from "@/components/theme-style-select";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import UserNav from "@/components/user-nav";
@@ -18,6 +17,7 @@ import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
 
 import { navMenuItems } from "./navbar";
+import { ThemeSwitcher } from "./theme-switcher";
 import { Container } from "./ui/container";
 import { MenuLabel } from "./ui/menu";
 
@@ -104,7 +104,8 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
           <Suspense>
             <UserNav />
           </Suspense>
-          <ThemeStyleSwitcher />
+          {/* <ThemeStyleSwitcher /> */}
+          <ThemeSwitcher />
           <SelectedArtistFilter />
           <UserSearch />
         </div>

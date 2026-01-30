@@ -6,13 +6,13 @@ import { Suspense, useEffect } from "react";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
-import { ThemeStyleSwitcher } from "@/components/theme-style-select";
 import { Link } from "@/components/ui/link";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import { MobileNavigation } from "./mobile-navigation";
+import { ThemeSwitcher } from "./theme-switcher";
 import { Container } from "./ui/container";
 
 export default function NavbarV2() {
@@ -50,7 +50,8 @@ export default function NavbarV2() {
             <Suspense>
               <UserNav />
             </Suspense>
-            <ThemeStyleSwitcher />
+            {/* <ThemeStyleSwitcher /> */}
+            <ThemeSwitcher />
             <SelectedArtistFilter />
             <UserSearch />
           </div>

@@ -9,7 +9,7 @@ export default function HideLabelFilter() {
   const setHideLabel = useConfigStore((a) => a.setHideLabel);
   return (
     <Toggle
-      className="selected:inset-ring-fg/15"
+      className="selected:border-border"
       intent="outline"
       isSelected={hideLabel}
       onChange={setHideLabel}

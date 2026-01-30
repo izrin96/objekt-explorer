@@ -32,7 +32,12 @@ export default function SelectedArtistFilter() {
 
   return (
     <Menu>
-      <Button aria-label="Selected artist" intent="outline" size="sm" className="px-1.5 sm:px-1.5">
+      <Button
+        aria-label="Selected artist"
+        intent="outline"
+        size="sm"
+        className="bg-bg/50 px-1.5 sm:px-1.5"
+      >
         {isPending ? (
           <Loader variant="ring" />
         ) : (

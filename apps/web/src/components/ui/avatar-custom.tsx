@@ -1,6 +1,6 @@
 "use client";
 
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { twMerge } from "tailwind-merge";
 
 export interface AvatarProps {
@@ -59,7 +59,7 @@ export const Avatar = ({
         className,
       )}
     >
-      <AvatarPrimitive.Fallback asChild>
+      <AvatarPrimitive.Fallback>
         <svg
           className="font-md size-full fill-current p-[5%] text-[48px] uppercase select-none"
           viewBox="0 0 100 100"

@@ -16,7 +16,7 @@ export default function WideFilter() {
       intent="outline"
       isSelected={wide}
       onChange={setWide}
-      className="selected:inset-ring-fg/15 hidden xl:block"
+      className="selected:border-border hidden xl:block"
     >
       {wide ? "Compact" : "Wide"}
     </Toggle>
