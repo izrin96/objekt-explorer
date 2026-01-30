@@ -11,7 +11,7 @@ import { TextField } from "@/components/ui/text-field";
 
 interface TagInputProps extends Pick<
   TextFieldProps,
-  "children" | "aria-label" | "aria-labelledby"
+  "isDisabled" | "isReadOnly" | "children" | "aria-label" | "aria-labelledby"
 > {
   value?: Selection;
   onChange?: (next: Selection) => void;
@@ -47,7 +47,7 @@ export function TagField({
   const selection: Selection = value ?? internalSelection;
   const inputValue = controlledInput ?? uncontrolledInput;
   const setInputValue = onInputValueChange ?? setUncontrolledInput;
-  const applySelection = (next: Selection) => (onChange ?? setInternalSelection)(next);
+  const applySelection = (next: Selection) => (onChange ?? setInternalSelection)(next as Selection);
 
   const list = useMemo(() => {
     return selection === "all" ? [] : Array.from(selection).map((v) => String(v));
@@ -128,7 +128,12 @@ export function TagField({
         )}
       </TextField>
       {selection ? (
-        <TagGroup className="mt-1" aria-label="Selected tags" onRemove={removeKeys}>
+        <TagGroup
+          disabledKeys={props.isDisabled ? new Set(list) : undefined}
+          className="mt-1"
+          aria-label="Selected tags"
+          {...(!props.isReadOnly && !props.isDisabled ? { onRemove: removeKeys } : {})}
+        >
           <TagList>
             {list.map((id) => (
               <Tag key={id} id={id}>

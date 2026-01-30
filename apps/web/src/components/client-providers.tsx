@@ -12,7 +12,7 @@ import { CosmoArtistProvider, type CosmoArtistProviderProps } from "@/hooks/use-
 import { useThemeStyle } from "@/hooks/use-theme-style";
 import { createQueryClient } from "@/lib/query/client";
 
-import { Toast } from "./ui/toast";
+import { Toast } from "./ui/toast-custom";
 
 declare module "react-aria-components" {
   interface RouterConfig {

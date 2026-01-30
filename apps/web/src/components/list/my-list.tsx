@@ -38,7 +38,7 @@ function MyList() {
     <div className="flex flex-col gap-4">
       <div className="text-xl font-semibold">My List</div>
 
-      <Tabs aria-label="Navbar">
+      <Tabs aria-label="Navbar" className="w-full">
         <TabList className="w-fit">
           <Tab id="a">Normal List</Tab>
           <Tab id="b">Profile List</Tab>

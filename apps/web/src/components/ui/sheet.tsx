@@ -7,7 +7,6 @@ import {
   Modal,
   ModalOverlay,
 } from "react-aria-components";
-import { twJoin } from "tailwind-merge";
 
 import { cx } from "@/lib/primitive";
 
@@ -56,30 +55,24 @@ const SheetContent = ({
   ...props
 }: SheetContentProps) => {
   const isDismissable = isDismissableInternal ?? role !== "alertdialog";
-
   // temporary fix issue: https://github.com/adobe/react-spectrum/issues/8786
   if (!props.isOpen) return;
 
   return (
     <ModalOverlay
       isDismissable={isDismissable}
-      className={twJoin(
-        "fixed top-0 left-0 z-50 w-full overflow-hidden bg-black/15",
-        "entering:fade-in entering:animate-in entering:duration-100",
-        "exiting:fade-out exiting:animate-out exiting:duration-100",
-        isFloat ? "h-full" : "h-(--page-height)",
-      )}
+      className="entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out entering:duration-300 exiting:duration-300 fixed start-0 top-0 z-50 size-full overflow-hidden bg-black/15"
       {...props}
     >
       <Modal
         data-float={isFloat}
         className={cx(
-          "fixed z-50 grid gap-4 border-muted-fg/20 bg-bg text-fg shadow-lg dark:border-border",
+          "fixed z-50 grid gap-4 border-muted-fg/20 bg-overlay text-overlay-fg shadow-lg dark:border-border",
           "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
           "data-[float=true]:rounded-lg data-[float=true]:ring data-[float=true]:ring-fg/5 dark:data-[float=true]:ring-border",
           "border-fg/20 dark:border-border",
-          "entering:fade-in entering:animate-in entering:duration-100",
-          "exiting:fade-in exiting:animate-out exiting:duration-100",
+          "entering:fade-in entering:animate-in entering:duration-300",
+          "exiting:fade-in exiting:animate-out exiting:duration-300",
           sideVariants[side],
           className,
         )}
@@ -89,7 +82,7 @@ const SheetContent = ({
             <>
               {typeof children === "function" ? children(values) : children}
               {closeButton && (
-                <DialogCloseIcon className="top-2.5 right-2.5" isDismissable={isDismissable} />
+                <DialogCloseIcon className="end-2.5 top-2.5" isDismissable={isDismissable} />
               )}
             </>
           )}

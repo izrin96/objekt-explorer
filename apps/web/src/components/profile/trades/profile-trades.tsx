@@ -178,16 +178,6 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
   const ctx = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
-  const action = isReceiver ? (
-    <Badge className="text-xs" intent="info">
-      Received From
-    </Badge>
-  ) : (
-    <Badge className="text-xs" intent="custom">
-      Sent To
-    </Badge>
-  );
-
   const user = isReceiver ? (
     row.transfer.from === Addresses.NULL ? (
       <span className="text-muted-fg font-mono">COSMO</span>
@@ -216,7 +206,11 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
         </div>
       </div>
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
-      <div className="min-w-[130px] flex-1 px-3 py-2.5">{action}</div>
+      <div className="min-w-[130px] flex-1 px-3 py-2.5">
+        <Badge className="text-xs" intent={isReceiver ? "info" : "danger"}>
+          {isReceiver ? "Received From" : "Sent To"}
+        </Badge>
+      </div>
       <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>
     </div>
   );

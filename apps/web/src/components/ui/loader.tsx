@@ -73,6 +73,7 @@ export interface LoaderProps extends Omit<
   isIndeterminate?: boolean;
   formatOptions?: Intl.NumberFormatOptions;
   ref?: React.RefObject<SVGSVGElement>;
+  "data-slot"?: string;
 }
 
 export function Loader({ isIndeterminate = true, ref, ...props }: LoaderProps) {
@@ -81,7 +82,7 @@ export function Loader({ isIndeterminate = true, ref, ...props }: LoaderProps) {
 
   return (
     <ProgressBar
-      data-slot="loader"
+      data-slot={props["data-slot"] ?? "loader"}
       aria-label={props["aria-label"] ?? "Pending..."}
       formatOptions={props.formatOptions}
       isIndeterminate={isIndeterminate}

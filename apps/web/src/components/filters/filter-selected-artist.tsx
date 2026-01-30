@@ -10,7 +10,7 @@ import { useCallback, useTransition } from "react";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 
-import { Avatar } from "../ui/avatar";
+import { Avatar } from "../ui/avatar-custom";
 import { Button } from "../ui/button";
 import { Loader } from "../ui/loader";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";

@@ -9,5 +9,11 @@ import { Container } from "./ui/container";
 
 export default function DynamicContainer({ children }: PropsWithChildren) {
   const { wide } = useWide();
-  return <Container className={cn(wide && "max-w-full!")}>{children}</Container>;
+  return (
+    <Container
+      className={cn("[--container-breakpoint:var(--breakpoint-2xl)]", wide && "max-w-full!")}
+    >
+      {children}
+    </Container>
+  );
 }

@@ -26,7 +26,7 @@ import { parseNickname } from "@/lib/utils";
 
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
-import { Avatar } from "./ui/avatar";
+import { Avatar } from "./ui/avatar-custom";
 import { buttonStyles } from "./ui/button";
 import { Link } from "./ui/link";
 import { Loader } from "./ui/loader";
@@ -127,7 +127,7 @@ function UserMenu({ user }: { user: User }) {
                     void queryClient.refetchQueries({
                       queryKey: ["session"],
                     });
-                    toast.success("Sign out successful");
+                    toast("Sign out successful");
                     router.refresh();
                   },
                 },

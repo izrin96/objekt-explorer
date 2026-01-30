@@ -1,18 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export const validThemeStyle = [
-  "default",
-  "catppuccin",
-  "matsu",
-  "bubblegum",
-  "caffeine",
-  "amethyst-haze",
-  "tangerine",
-  "mocha-mousse",
-  "sunset-horizon",
-  "cosmic-night",
-] as const;
+export const validThemeStyle = ["default"] as const;
 export type ValidThemeStyle = (typeof validThemeStyle)[number];
 
 interface ThemeStyleStore {

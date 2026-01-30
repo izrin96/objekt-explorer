@@ -9,7 +9,7 @@ import { tv, type VariantProps } from "tailwind-variants";
 export const toggleStyles = tv({
   base: [
     "[--toggle-icon-active:var(--secondary-fg)] [--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))]",
-    "inset-ring-fg/15 relative isolate inline-flex items-center justify-center font-medium inset-ring",
+    "relative isolate inline-flex items-center justify-center border font-medium",
     "focus-visible:ring-offset-bg focus-visible:ring-2 focus-visible:ring-offset-3 focus-visible:outline focus-visible:outline-offset-2",
     "*:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:my-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--toggle-icon) sm:*:data-[slot=icon]:my-1",
     "focus-visible:*:data-[slot=icon]:text-(--toggle-icon-active)",
@@ -17,14 +17,12 @@ export const toggleStyles = tv({
     "hover:*:data-[slot=icon]:text-(--toggle-icon-active)",
     "pressed:*:data-[slot=icon]:text-(--toggle-icon-active) *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--toggle-icon) hover:*:data-[slot=icon]:text-(--toggle-icon-active)/90 focus-visible:*:data-[slot=icon]:text-(--toggle-icon-active)/80 forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
     "forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
-    // custom
-    "selected:inset-ring-primary",
   ],
   variants: {
     intent: {
-      outline: ["outline-secondary-fg ring-secondary-fg/25 hover:bg-muted-fg/10 bg-transparent"],
+      outline: ["outline-secondary-fg ring-secondary-fg/25 hover:bg-secondary bg-transparent"],
       plain: [
-        "outline-secondary-fg ring-secondary-fg/25 hover:bg-muted-fg/10 bg-transparent inset-ring-transparent",
+        "outline-secondary-fg ring-secondary-fg/25 hover:bg-secondary border-transparent bg-transparent",
       ],
     },
     size: {
@@ -66,7 +64,7 @@ export const toggleStyles = tv({
       false: "rounded-[calc(var(--radius-lg)-1px)]",
     },
     isDisabled: {
-      true: "opacity-50 inset-ring-0 forced-colors:text-[GrayText]",
+      true: "border-0 opacity-50 forced-colors:text-[GrayText]",
     },
   },
   defaultVariants: {

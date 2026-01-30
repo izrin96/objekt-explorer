@@ -11,7 +11,7 @@ import { useProfileAuthed } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 
 import { EditProfileModal } from "../link/modal/manage-link";
-import { Avatar } from "../ui/avatar";
+import { Avatar } from "../ui/avatar-custom";
 import { Button, buttonStyles } from "../ui/button";
 import { Link } from "../ui/link";
 

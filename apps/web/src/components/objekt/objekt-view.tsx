@@ -92,7 +92,7 @@ export default function ObjektView({
             {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
           </Badge>
           {unobtainable && (
-            <Badge intent="custom" className="text-xs font-semibold">
+            <Badge className="text-xs font-semibold" intent="danger">
               Unobtainable
             </Badge>
           )}

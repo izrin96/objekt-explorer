@@ -4,11 +4,11 @@ import { Link as LinkPrimitive, type LinkProps as LinkPrimitiveProps } from "rea
 
 import { cx } from "@/lib/primitive";
 
-interface LinkProps extends LinkPrimitiveProps {
+export interface LinkProps extends LinkPrimitiveProps {
   ref?: React.RefObject<HTMLAnchorElement>;
 }
 
-const Link = ({ className, ref, ...props }: LinkProps) => {
+export function Link({ className, ref, ...props }: LinkProps) {
   return (
     <LinkPrimitive
       ref={ref}
@@ -16,7 +16,7 @@ const Link = ({ className, ref, ...props }: LinkProps) => {
         [
           "font-medium text-(--text)",
           "outline-0 outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring forced-colors:outline-[Highlight]",
-          "disabled:cursor-default disabled:text-muted-fg forced-colors:disabled:text-[GrayText]",
+          "disabled:cursor-default disabled:opacity-50 forced-colors:disabled:text-[GrayText]",
           "href" in props && "cursor-pointer",
         ],
         className,
@@ -24,7 +24,4 @@ const Link = ({ className, ref, ...props }: LinkProps) => {
       {...props}
     />
   );
-};
-
-export type { LinkProps };
-export { Link };
+}

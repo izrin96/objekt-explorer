@@ -10,31 +10,31 @@ import { cx } from "@/lib/primitive";
 
 export const buttonStyles = tv({
   base: [
-    "[--btn-border:var(--fg)]/15 [--btn-icon-active:var(--btn-fg)] [--btn-outline:var(--btn-bg)] [--btn-radius:calc(var(--radius-lg)-1px)] [--btn-ring:var(--btn-bg)]/20",
+    "[--btn-border:var(--color-fg)]/15 [--btn-icon-active:var(--btn-fg)] [--btn-outline:var(--btn-bg)] [--btn-radius:calc(var(--radius-lg)-1px)] [--btn-ring:var(--btn-bg)]/20",
     "bg-(--btn-bg) text-(--btn-fg) ring-(--btn-ring) outline-(--btn-outline) hover:bg-(--btn-overlay)",
     "relative isolate inline-flex items-center justify-center border border-(--btn-border) font-medium hover:no-underline",
     "focus-visible:ring-offset-bg focus:outline-0 focus-visible:ring-2 focus-visible:ring-offset-3 focus-visible:outline focus-visible:outline-offset-2",
     "*:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--btn-icon) hover:*:data-[slot=icon]:text-(--btn-icon-active)/90 focus-visible:*:data-[slot=icon]:text-(--btn-icon-active)/80 forced-colors:[--btn-icon:ButtonText] forced-colors:hover:[--btn-icon:ButtonText]",
     "*:data-[slot=loader]:-mx-0.5 *:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-(--btn-icon)",
     "pending:opacity-50 disabled:opacity-50 disabled:forced-colors:text-[GrayText]",
-    "*:data-[slot=color-swatch]:-mx-0.5 *:data-[slot=color-swatch]:shrink-0 *:data-[slot=color-swatch]:self-center *:data-[slot=color-swatch]:[--swatch-size:--spacing(5)]",
+    "*:data-[slot=color-swatch]:-mx-0.5 *:data-[slot=color-swatch]:shrink-0 *:data-[slot=color-swatch]:self-center *:data-[slot=color-swatch]:[--color-swatch-size:--spacing(5)]",
     // custom
     "selected:border-primary",
   ],
   variants: {
     intent: {
       primary:
-        "[--btn-bg:var(--primary)] [--btn-fg:var(--primary-fg)] [--btn-icon-active:var(--primary-fg)]/80 [--btn-icon:var(--primary-fg)]/60 [--btn-overlay:color-mix(in_oklab,var(--primary-fg)_10%,var(--primary)_90%)]",
+        "[--btn-bg:var(--color-primary)] [--btn-fg:var(--color-primary-fg)] [--btn-icon-active:var(--primary-fg)]/80 [--btn-icon:var(--primary-fg)]/60 [--btn-overlay:color-mix(in_oklab,var(--color-primary-fg)_10%,var(--color-primary)_90%)]",
       secondary:
-        "[--btn-bg:var(--secondary)] [--btn-fg:var(--secondary-fg)] [--btn-icon:var(--muted-fg)] [--btn-outline:var(--secondary-fg)] [--btn-overlay:var(--muted-fg)]/25 [--btn-ring:var(--muted-fg)]/20",
+        "[--btn-bg:var(--color-secondary)] [--btn-fg:var(--color-secondary-fg)] [--btn-icon:var(--color-muted-fg)] [--btn-outline:var(--color-secondary-fg)] [--btn-overlay:color-mix(in_oklab,var(--color-secondary-fg)_10%,var(--color-secondary)_90%)] [--btn-ring:var(--color-muted-fg)]/20",
       warning:
-        "[--btn-bg:var(--warning)] [--btn-fg:var(--warning-fg)] [--btn-icon:var(--warning-fg)]/60 [--btn-overlay:var(--warning)]/85",
+        "[--btn-bg:var(--color-warning)] [--btn-fg:var(--color-warning-fg)] [--btn-icon:var(--color-warning-fg)]/60 [--btn-overlay:color-mix(in_oklab,var(--color-white)_10%,var(--color-warning)_90%)]",
       danger:
-        "[--btn-bg:var(--danger)] [--btn-fg:var(--danger-fg)] [--btn-icon:color-mix(in_oklab,var(--danger-fg)_60%,var(--danger)_40%)] [--btn-overlay:var(--danger)]/85",
+        "[--btn-bg:var(--color-danger)] [--btn-fg:var(--color-danger-fg)] [--btn-icon:color-mix(in_oklab,var(--color-danger-fg)_60%,var(--danger)_40%)] [--btn-overlay:color-mix(in_oklab,var(--color-white)_10%,var(--color-danger)_90%)]",
       outline:
-        "[--btn-bg:transparent] [--btn-icon:var(--muted-fg)] [--btn-outline:var(--ring)] [--btn-overlay:var(--muted-fg)]/10 [--btn-ring:var(--ring)]/20",
+        "[--btn-bg:transparent] [--btn-icon:var(--color-muted-fg)] [--btn-outline:var(--color-ring)] [--btn-overlay:var(--color-secondary)] [--btn-ring:var(--color-ring)]/20",
       plain:
-        "border-transparent [--btn-bg:transparent] [--btn-icon:var(--muted-fg)] [--btn-outline:var(--ring)] [--btn-overlay:var(--muted-fg)]/10 [--btn-ring:var(--ring)]/20",
+        "border-transparent [--btn-bg:transparent] [--btn-icon:var(--color-muted-fg)] [--btn-outline:var(--color-ring)] [--btn-overlay:var(--color-secondary)] [--btn-ring:var(--color-ring)]/20",
     },
     size: {
       xs: [

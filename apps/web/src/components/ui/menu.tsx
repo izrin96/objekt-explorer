@@ -20,7 +20,7 @@ import {
   MenuTrigger as MenuTriggerPrimitive,
   SubmenuTrigger as SubmenuTriggerPrimitive,
 } from "react-aria-components";
-import { twJoin, twMerge } from "tailwind-merge";
+import { twMerge } from "tailwind-merge";
 import { tv, type VariantProps } from "tailwind-variants";
 
 import { cx } from "@/lib/primitive";
@@ -52,7 +52,7 @@ const MenuTrigger = ({ className, ref, ...props }: MenuTriggerProps) => (
     ref={ref}
     data-slot="menu-trigger"
     className={cx(
-      "relative inline text-left outline-hidden focus-visible:ring-1 focus-visible:ring-primary",
+      "relative inline text-start outline-hidden focus-visible:ring-1 focus-visible:ring-primary",
       "*:data-[slot=chevron]:size-5 sm:*:data-[slot=chevron]:size-4",
       className,
     )}
@@ -79,7 +79,7 @@ interface MenuContentProps<T>
 }
 
 const menuContentStyles = tv({
-  base: "grid max-h-[inherit] grid-cols-[auto_1fr] gap-y-0 overflow-x-hidden overflow-y-auto overscroll-contain p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-xl)-(--spacing(1))))] *:[[role='group']+[role=group]]:mt-3",
+  base: "grid max-h-[inherit] grid-cols-[auto_1fr] gap-y-1 overflow-x-hidden overflow-y-auto overscroll-contain p-1 outline-hidden [clip-path:inset(0_0_0_0_round_calc(var(--radius-xl)-(--spacing(1))))] [&>[data-slot=menu-section]+[data-slot=menu-section]:not([class*='mt-']):not([class*='my-'])]:mt-3",
 });
 
 const MenuContent = <T extends object>({
@@ -131,25 +131,13 @@ const MenuItem = ({ className, intent, children, ...props }: MenuItemProps) => {
       {(values) => (
         <>
           {values.isSelected && (
-            <span
-              className={twJoin(
-                "group-has-data-[slot=avatar]:absolute group-has-data-[slot=avatar]:right-0",
-                "group-has-data-[slot=icon]:absolute group-has-data-[slot=icon]:right-0",
-              )}
-            >
-              {values.selectionMode === "single" && (
-                <CheckIcon className="-mx-0.5 mr-2 size-4" data-slot="check-indicator" />
-              )}
-              {values.selectionMode === "multiple" && (
-                <CheckIcon className="-mx-0.5 mr-2 size-4" data-slot="check-indicator" />
-              )}
-            </span>
+            <>{["single", "multiple"].includes(values.selectionMode) && <CheckIcon />}</>
           )}
 
           {typeof children === "function" ? children(values) : children}
 
           {values.hasSubmenu && (
-            <ChevronRightIcon data-slot="chevron" className="absolute right-2 size-4" />
+            <ChevronRightIcon data-slot="chevron" className="absolute end-2 size-3.5" />
           )}
         </>
       )}
@@ -186,7 +174,12 @@ const MenuSection = <T extends object>({
   ...props
 }: MenuSectionProps<T>) => {
   return (
-    <MenuSectionPrimitive ref={ref} className={section({ className })} {...props}>
+    <MenuSectionPrimitive
+      data-slot="menu-section"
+      ref={ref}
+      className={section({ className })}
+      {...props}
+    >
       {"label" in props && <Header className={header()}>{props.label}</Header>}
       <Collection items={props.items}>{children}</Collection>
     </MenuSectionPrimitive>

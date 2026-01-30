@@ -25,7 +25,6 @@ import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { getBaseURL } from "@/lib/utils";
-import { cn } from "@/utils/classes";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Badge } from "../ui/badge";
@@ -289,14 +288,14 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold">{t("transferable")}</span>
-          <Badge className={cn("text-xs")} intent={!data.transferable ? "custom" : "info"}>
+          <Badge intent={data.transferable ? "info" : "danger"}>
             {data.transferable ? "Yes" : "No"}
           </Badge>
         </div>
       </div>
 
       <Card className="py-0">
-        <CardContent className="px-3">
+        <CardContent className="border-t-0! px-3">
           <Table
             className="[--gutter:--spacing(3)]"
             bleed

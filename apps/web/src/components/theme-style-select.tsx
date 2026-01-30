@@ -19,42 +19,6 @@ const themeStyles: ThemeStyleItem[] = [
     id: "default",
     name: "Default",
   },
-  {
-    id: "catppuccin",
-    name: "Catppuccin",
-  },
-  {
-    id: "matsu",
-    name: "Matsu",
-  },
-  {
-    id: "bubblegum",
-    name: "Bubblegum",
-  },
-  {
-    id: "caffeine",
-    name: "Caffeine",
-  },
-  {
-    id: "amethyst-haze",
-    name: "Amethyst Haze",
-  },
-  {
-    id: "tangerine",
-    name: "Tangerine",
-  },
-  {
-    id: "mocha-mousse",
-    name: "Mocha Mousse",
-  },
-  {
-    id: "sunset-horizon",
-    name: "Sunset Horizon",
-  },
-  {
-    id: "cosmic-night",
-    name: "Cosmic Night",
-  },
 ];
 
 export function ThemeStyleSwitcher() {

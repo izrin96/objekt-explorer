@@ -2,7 +2,7 @@
 
 import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
-import { type ComponentProps, startTransition } from "react";
+import { type ComponentProps, startTransition, useMemo } from "react";
 import { Bar, BarChart as BarChartPrimitive } from "recharts";
 
 import {
@@ -74,9 +74,17 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
 
   ...props
 }: BarChartProps<TValue, TName>) {
-  const categoryColors = constructCategoryColors(Object.keys(config), colors);
+  const configKeys = useMemo(() => Object.keys(config), [config]);
+  const categoryColors = useMemo(
+    () => constructCategoryColors(configKeys, colors),
+    [configKeys, colors],
+  );
+
+  const configEntries = useMemo(() => Object.entries(config), [config]);
 
   const stacked = type === "stacked" || type === "percent";
+  const defaultBarRadius = stacked ? undefined : 4;
+
   return (
     <Chart config={config} data={data} dataKey={dataKey} layout={layout} {...props}>
       {({ onLegendSelect, selectedLegend }) => (
@@ -130,13 +138,17 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
           )}
 
           {!children
-            ? Object.entries(config).map(([category, values]) => {
+            ? configEntries.map(([category, values]) => {
+                const color = getColorValue(values.color || categoryColors.get(category));
+                const strokeOpacity = selectedLegend && selectedLegend !== category ? 0.2 : 0;
+                const fillOpacity = selectedLegend && selectedLegend !== category ? 0.1 : 1;
+
                 return (
                   <Bar
                     key={category}
                     name={category}
                     dataKey={category}
-                    stroke={getColorValue(values.color || categoryColors.get(category))}
+                    stroke={color}
                     strokeWidth={1}
                     stackId={stacked ? "stack" : undefined}
                     onClick={(_item, _number, event) => {
@@ -146,10 +158,10 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
                         onLegendSelect(category);
                       });
                     }}
-                    radius={barRadius ?? (stacked ? undefined : 4)}
-                    strokeOpacity={selectedLegend && selectedLegend !== category ? 0.2 : 0}
-                    fillOpacity={selectedLegend && selectedLegend !== category ? 0.1 : 1}
-                    fill={getColorValue(values.color || categoryColors.get(category))}
+                    radius={barRadius ?? defaultBarRadius}
+                    strokeOpacity={strokeOpacity}
+                    fillOpacity={fillOpacity}
+                    fill={color}
                     {...barProps}
                   />
                 );

@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
 
-import { Avatar } from "../ui/avatar";
+import { Avatar } from "../ui/avatar-custom";
 import { Button } from "../ui/button";
 import { EditListModal } from "./modal/manage-list";
 

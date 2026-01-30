@@ -13,7 +13,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { getBaseURL } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Avatar } from "../ui/avatar";
+import { Avatar } from "../ui/avatar-custom";
 import { Badge } from "../ui/badge";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
@@ -33,7 +33,7 @@ export default function LiveSessionListRender() {
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Tabs aria-label="Recipe App">
+            <Tabs aria-label="Recipe App" className="w-full">
               <TabList className="w-fit">
                 {selectedArtists.map((artist) => (
                   <Tab key={artist.id} id={artist.id} aria-label={artist.name}>

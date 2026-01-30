@@ -52,7 +52,11 @@ export function ProgressBarValue({
 }: Omit<React.ComponentProps<"span">, "children">) {
   const { valueText } = use(ProgressBarContext)!;
   return (
-    <span className={twMerge("text-base/6 sm:text-sm/6", className)} {...props}>
+    <span
+      data-slot="progress-bar-value"
+      className={twMerge("text-base/6 sm:text-sm/6", className)}
+      {...props}
+    >
       {valueText}
     </span>
   );
@@ -64,22 +68,24 @@ export function ProgressBarTrack({ className, ref, ...props }: React.ComponentPr
     <span data-slot="progress-bar-track" className="relative block w-full">
       <style>{`
         @keyframes progress-slide {
-          0% { left: 0% }
-          50% { left: 100% }
-          100% { left: 0% }
+          0% { inset-inline-start: 0% }
+          50% { inset-inline-start: 100% }
+          100% { inset-inline-start: 0% }
         }
       `}</style>
       <div ref={ref} className="flex w-full items-center gap-x-2" {...props}>
         <div
+          data-slot="progress-container"
           className={twMerge(
-            "bg-secondary relative h-1.5 w-full min-w-52 overflow-hidden rounded-full outline-1 -outline-offset-1 outline-transparent will-change-transform",
+            "[--progress-content-bg:var(--color-primary)]",
+            "relative h-1.5 w-full min-w-52 overflow-hidden rounded-full bg-(--progress-container-bg,var(--color-secondary)) outline-1 -outline-offset-1 outline-transparent will-change-transform",
             className,
           )}
         >
           {!isIndeterminate ? (
             <div
               data-slot="progress-content"
-              className="bg-primary absolute top-0 left-0 h-full rounded-full transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
+              className="absolute start-0 top-0 h-full rounded-full bg-(--progress-content-bg) transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
               style={{ width: `${percentage}%` }}
             />
           ) : (

@@ -2,7 +2,7 @@
 
 import type { VariantProps } from "tailwind-variants";
 
-import { CameraIcon, FolderIcon, PaperClipIcon } from "@heroicons/react/20/solid";
+import { CameraIcon, FolderIcon, PaperClipIcon } from "@heroicons/react/24/outline";
 import {
   FileTrigger as FileTriggerPrimitive,
   type FileTriggerProps as FileTriggerPrimitiveProps,

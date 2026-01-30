@@ -1,7 +1,6 @@
 "use client";
 
-import { PlusIcon } from "@heroicons/react/20/solid";
-import React, { useMemo, useRef } from "react";
+import { Children, isValidElement, useMemo, useRef } from "react";
 import {
   Autocomplete,
   Select,
@@ -55,9 +54,9 @@ function MultipleSelect<T extends OptionBase>({
   const { contains } = useFilter({ sensitivity: "base" });
 
   const { before, after, list } = useMemo(() => {
-    const arr = React.Children.toArray(children);
+    const arr = Children.toArray(children);
     const idx = arr.findIndex(
-      (c) => React.isValidElement(c) && (c.type as any)?.displayName === "MultipleSelectContent",
+      (c) => isValidElement(c) && (c.type as any)?.displayName === "MultipleSelectContent",
     );
     if (idx === -1) {
       return { before: arr, after: [], list: null as null | MultipleSelectContentProps<T> };
@@ -93,9 +92,9 @@ function MultipleSelect<T extends OptionBase>({
                   }}
                 >
                   <TagList
-                    items={selectedItems.filter((i) => i !== null)}
+                    items={selectedItems.filter((i) => i != null)}
                     renderEmptyState={() => (
-                      <i className="text-muted-fg pl-2 text-sm">{placeholder}</i>
+                      <i className="text-muted-fg ps-2 text-sm">{placeholder}</i>
                     )}
                   >
                     {(item) => <Tag className="rounded-md">{item.name}</Tag>}
@@ -108,7 +107,18 @@ function MultipleSelect<T extends OptionBase>({
               size="sq-xs"
               className="self-end rounded-[calc(var(--radius-lg)-(--spacing(1)))]"
             >
-              <PlusIcon />
+              <svg
+                data-slot="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </Button>
           </div>
           <PopoverContent

@@ -30,7 +30,7 @@ export default function ProfileTabs() {
   return (
     <Tabs
       aria-label="Navbar"
-      className="overflow-x-auto px-3 py-1"
+      className="w-full overflow-x-auto px-3 py-1"
       selectedKey={decodeURIComponent(pathname)}
     >
       <TabList className="border-b-0">

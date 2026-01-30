@@ -1,5 +1,3 @@
-"use client";
-
 import type {
   ListBoxProps,
   PopoverProps,
@@ -69,7 +67,7 @@ const SelectContent = <T extends object>({
         layout="stack"
         orientation="vertical"
         className={cx(
-          "grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-0 overflow-y-auto p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+          "grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
           className,
         )}
         items={items}
@@ -89,7 +87,7 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
     <span data-slot="control" className="relative block w-full">
       <Button
         className={cx(
-          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 rounded-lg border border-input px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] text-start text-fg outline-hidden transition duration-200 sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6 sm:*:text-sm/6 dark:shadow-none",
+          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 rounded-lg border border-input px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] text-start text-fg outline-hidden sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6 sm:*:text-sm/6 dark:shadow-none",
           "focus:border-ring/70 focus:ring-3 focus:ring-ring/20 focus:enabled:hover:border-ring/80",
           "enabled:hover:border-muted-fg/30",
           "group-open/select:border-ring/70 group-open/select:ring-3 group-open/select:ring-ring/20",
@@ -122,7 +120,7 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
                 />
                 <ChevronUpDownIcon
                   data-slot="chevron"
-                  className="text-muted-fg -mr-1 ml-auto size-5 sm:size-4"
+                  className="text-muted-fg ms-auto -me-1 size-5 shrink-0 sm:size-4"
                 />
               </>
             )}

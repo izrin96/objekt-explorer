@@ -21,7 +21,7 @@ import { twJoin, twMerge } from "tailwind-merge";
 
 import { cx } from "@/lib/primitive";
 
-const DisclosureGroup = ({ className, ...props }: DisclosureGroupProps) => {
+export function DisclosureGroup({ className, ...props }: DisclosureGroupProps) {
   return (
     <PrimitiveDisclosureGroup
       className={cx(
@@ -41,9 +41,9 @@ const DisclosureGroup = ({ className, ...props }: DisclosureGroupProps) => {
       {...props}
     />
   );
-};
+}
 
-const Disclosure = ({ className, ...props }: DisclosureProps) => {
+export function Disclosure({ className, ...props }: DisclosureProps) {
   return (
     <PrimitiveDisclosure
       className={composeRenderProps(className, (className, { isExpanded, isFocusVisibleWithin }) =>
@@ -58,13 +58,19 @@ const Disclosure = ({ className, ...props }: DisclosureProps) => {
       {...props}
     />
   );
-};
-
-interface DisclosureTriggerProps extends ButtonProps {
-  ref?: React.Ref<HTMLButtonElement>;
 }
 
-const DisclosureTrigger = ({ ref, className, ...props }: DisclosureTriggerProps) => {
+export interface DisclosureTriggerProps extends ButtonProps {
+  ref?: React.Ref<HTMLButtonElement>;
+  triggerIndicator?: boolean;
+}
+
+export function DisclosureTrigger({
+  ref,
+  className,
+  triggerIndicator = true,
+  ...props
+}: DisclosureTriggerProps) {
   const state = use(DisclosureStateContext)!;
   return (
     <Heading>
@@ -74,8 +80,7 @@ const DisclosureTrigger = ({ ref, className, ...props }: DisclosureTriggerProps)
         slot="trigger"
         className={cx(
           [
-            "outline-hidden [--width:--spacing(2.5)]",
-            "relative isolate flex w-full cursor-default items-center justify-between px-(--disclosure-gutter-x,--spacing(0)) py-[calc(var(--disclosure-gutter-x,--spacing(0))-(--spacing(1)))] text-left font-medium text-sm/6",
+            "relative isolate flex w-full cursor-default items-center justify-between px-(--disclosure-gutter-x,--spacing(0)) py-[calc(var(--disclosure-gutter-x,--spacing(0))-(--spacing(1)))] text-start font-medium text-sm/6 outline-hidden",
             "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4",
             "disabled:opacity-50",
             state.isExpanded
@@ -88,26 +93,36 @@ const DisclosureTrigger = ({ ref, className, ...props }: DisclosureTriggerProps)
         {(values) => (
           <>
             {typeof props.children === "function" ? props.children(values) : props.children}
-            <span
-              data-slot="disclosure-indicator"
-              className="pointer-events-none relative -mr-[calc(var(--disclosure-gutter-x,--spacing(0))-(--spacing(3)))] ml-(--disclosure-gutter-x,--spacing(0)) flex size-6 items-center justify-center"
-            >
-              <span
-                className={twJoin([
-                  "absolute h-[1.5px] w-(--width) origin-center bg-current transition-transform duration-300",
-                  state.isExpanded ? "rotate-0" : "rotate-90",
-                ])}
-              />
-              <span className="absolute h-[1.5px] w-(--width) origin-center bg-current transition-transform duration-300" />
-            </span>
+            {triggerIndicator && <DisclosureIndicator />}
           </>
         )}
       </Button>
     </Heading>
   );
-};
+}
 
-const DisclosurePanel = ({ className, ...props }: DisclosurePanelProps) => {
+export function DisclosureIndicator({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="disclosure-indicator"
+      className={twMerge(
+        "pointer-events-none relative ms-(--disclosure-gutter-x,--spacing(0)) -me-[calc(var(--disclosure-gutter-x,--spacing(0))-(--spacing(2)))] flex size-6 shrink-0 items-center justify-center [--width:--spacing(2.5)]",
+        className,
+      )}
+      {...props}
+    >
+      <span
+        className={twJoin([
+          "absolute h-[1.5px] w-(--width) origin-center bg-current transition-transform duration-300",
+          "group-expanded/disclosure-item:rotate-0 group-expanded:rotate-0 rotate-90",
+        ])}
+      />
+      <span className="absolute h-[1.5px] w-(--width) origin-center bg-current transition-transform duration-300" />
+    </span>
+  );
+}
+
+export function DisclosurePanel({ className, ...props }: DisclosurePanelProps) {
   return (
     <PrimitiveDisclosurePanel
       data-slot="disclosure-panel"
@@ -124,6 +139,4 @@ const DisclosurePanel = ({ className, ...props }: DisclosurePanelProps) => {
       </div>
     </PrimitiveDisclosurePanel>
   );
-};
-
-export { DisclosureGroup, Disclosure, DisclosureTrigger, DisclosurePanel };
+}

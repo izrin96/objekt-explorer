@@ -23,7 +23,6 @@ import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
 import { OBJEKT_SIZE } from "@/lib/utils";
-import { cn } from "@/utils/classes";
 
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -83,7 +82,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       aria-label="Objekt tab"
       selectedKey={currentTab}
       onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
-      className="grow pb-2"
+      className="w-full pb-2"
     >
       <TabList className="px-2.5">
         {showOwned && (
@@ -257,7 +256,7 @@ function OwnedListPanel({
   return (
     <div className="flex flex-col gap-2">
       <Card className="py-0">
-        <CardContent className="px-3">
+        <CardContent className="border-t-0! px-3">
           <Table
             className="[--gutter:--spacing(3)]"
             bleed
@@ -300,10 +299,7 @@ function OwnedListPanel({
                   </TableCell>
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
                   <TableCell>
-                    <Badge
-                      className={cn("text-xs")}
-                      intent={!item.transferable ? "custom" : "info"}
-                    >
+                    <Badge intent={item.transferable ? "info" : "danger"}>
                       {item.transferable ? "Yes" : "No"}
                     </Badge>
                   </TableCell>

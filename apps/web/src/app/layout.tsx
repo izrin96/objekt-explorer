@@ -101,7 +101,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
     >
-      <body className="min-h-svh">
+      <body className="min-h-svh font-sans antialiased">
         <NextIntlClientProvider>
           <ClientProviders>
             <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>

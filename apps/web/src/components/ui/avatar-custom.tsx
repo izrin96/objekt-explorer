@@ -1,3 +1,6 @@
+"use client";
+
+import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { twMerge } from "tailwind-merge";
 
 export interface AvatarProps {
@@ -22,7 +25,7 @@ export interface AvatarProps {
     | "9xl";
 }
 
-export function Avatar({
+export const Avatar = ({
   src = null,
   isSquare = false,
   size = "md",
@@ -30,9 +33,9 @@ export function Avatar({
   alt = "",
   className,
   ...props
-}: AvatarProps & React.ComponentPropsWithoutRef<"span">) {
+}: AvatarProps & React.ComponentPropsWithoutRef<"span">) => {
   return (
-    <span
+    <AvatarPrimitive.Root
       data-slot="avatar"
       {...props}
       className={twMerge(
@@ -49,14 +52,14 @@ export function Avatar({
         size === "6xl" && "[--avatar-size:--spacing(28)]",
         size === "7xl" && "[--avatar-size:--spacing(32)]",
         size === "8xl" && "[--avatar-size:--spacing(36)]",
-        size === "9xl" && "[--avatar-size:--spacing(42)]",
+        size === "9xl" && "[--avatar-size:--spacing(32)]",
         isSquare
           ? "rounded-(--avatar-radius) *:rounded-(--avatar-radius)"
           : "rounded-full *:rounded-full",
         className,
       )}
     >
-      {initials && (
+      <AvatarPrimitive.Fallback asChild>
         <svg
           className="font-md size-full fill-current p-[5%] text-[48px] uppercase select-none"
           viewBox="0 0 100 100"
@@ -74,8 +77,14 @@ export function Avatar({
             {initials}
           </text>
         </svg>
+      </AvatarPrimitive.Fallback>
+      {src && (
+        <AvatarPrimitive.Image
+          className="size-full object-cover object-center"
+          src={src}
+          alt={alt}
+        />
       )}
-      {src && <img className="size-full object-cover object-center" src={src} alt={alt} />}
-    </span>
+    </AvatarPrimitive.Root>
   );
-}
+};

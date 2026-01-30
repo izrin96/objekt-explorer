@@ -5,6 +5,7 @@ import type {
   CollectionRenderer,
   MenuProps,
   MenuTriggerProps,
+  ModalOverlayProps,
   SearchFieldProps,
 } from "react-aria-components";
 
@@ -28,7 +29,7 @@ import {
   SearchField,
   useFilter,
 } from "react-aria-components";
-import { twJoin, twMerge } from "tailwind-merge";
+import { twMerge } from "tailwind-merge";
 
 import { cx } from "@/lib/primitive";
 
@@ -67,9 +68,9 @@ interface CommandMenuProps extends AutocompleteProps, MenuTriggerProps, CommandM
   isDismissable?: boolean;
   "aria-label"?: string;
   shortcut?: string;
-  isBlurred?: boolean;
   className?: string;
   size?: keyof typeof sizes;
+  overlay?: Pick<ModalOverlayProps, "className">;
 }
 
 const CommandMenu = ({
@@ -78,8 +79,8 @@ const CommandMenu = ({
   isDismissable = true,
   escapeButton = true,
   isPending,
+  overlay,
   size = "lg",
-  isBlurred,
   shortcut,
   ...props
 }: CommandMenuProps) => {
@@ -105,23 +106,23 @@ const CommandMenu = ({
     <CommandMenuContext value={{ isPending: isPending, escapeButton: escapeButton }}>
       <ModalContext value={{ isOpen: props.isOpen, onOpenChange: onOpenChange }}>
         <ModalOverlay
+          {...props}
           isDismissable={isDismissable}
-          className={twJoin(
+          className={cx(
             "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-full overflow-hidden bg-black/15",
             "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
-            "entering:fade-in entering:animate-in entering:duration-100 entering:ease-out",
+            "entering:fade-in entering:animate-in entering:duration-150 entering:ease-out",
             "exiting:fade-out exiting:animate-out exiting:ease-in",
-            isBlurred && "backdrop-blur-[1px] backdrop-filter",
+            overlay?.className,
           )}
-          {...props}
         >
           <Modal
             className={cx(
-              "row-start-2 bg-bg text-left text-fg shadow-lg outline-none ring ring-muted-fg/15 md:row-start-1 dark:ring-border",
+              "row-start-2 bg-overlay text-start text-overlay-fg shadow-lg outline-none ring ring-muted-fg/15 md:row-start-1 dark:ring-border",
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
               "rounded-t-2xl md:rounded-xl",
               sizes[size],
-              "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-100 entering:ease-out",
+              "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-150 entering:ease-out",
               "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
               className,
             )}
@@ -201,7 +202,7 @@ const CommandMenuSection = <T extends object>({
     <MenuSection
       ref={ref}
       className={twMerge(
-        "col-span-full grid grid-cols-[auto_1fr] content-start gap-y-px",
+        "col-span-full grid grid-cols-[auto_1fr] content-start gap-y-0.25",
         className,
       )}
       {...props}
@@ -232,7 +233,7 @@ interface CommandMenuDescriptionProps extends React.ComponentProps<typeof MenuDe
 
 const CommandMenuDescription = ({ className, ...props }: CommandMenuDescriptionProps) => {
   return (
-    <MenuDescription className={twMerge("col-start-3 row-start-1 ml-auto", className)} {...props} />
+    <MenuDescription className={twMerge("col-start-3 row-start-1 ms-auto", className)} {...props} />
   );
 };
 

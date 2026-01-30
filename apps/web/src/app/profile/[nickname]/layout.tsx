@@ -47,7 +47,7 @@ export default async function UserCollectionLayout(props: Props) {
     <ProfileProvider profiles={profiles} targetProfile={targetProfile} user={toPublicUser(session)}>
       <ProfileBanner profile={targetProfile} />
       {targetProfile.bannerImgUrl && (
-        <Container>
+        <Container className="[--container-breakpoint:var(--breakpoint-2xl)]">
           <ProfileBannerClearance />
         </Container>
       )}

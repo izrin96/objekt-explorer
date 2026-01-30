@@ -102,7 +102,7 @@ export function AttributePanel({
       />
       <Pill label={t("text_color")} value={objekt.textColor.toUpperCase()} />
       {unobtainable && (
-        <Badge intent="custom" className="font-semibold">
+        <Badge intent="danger" className="font-semibold">
           {t("unobtainable")}
         </Badge>
       )}

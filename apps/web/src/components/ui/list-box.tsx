@@ -23,8 +23,9 @@ import {
 const ListBox = <T extends object>({ className, ...props }: ListBoxProps<T>) => (
   <ListBoxPrimitive
     {...props}
+    data-slot="list-box"
     className={cx(
-      "grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-0 overflow-y-auto overscroll-contain rounded-xl border bg-bg p-1 outline-hidden [scrollbar-width:thin] has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] [&::-webkit-scrollbar]:size-0.5 *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+      "grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto overscroll-contain rounded-xl border bg-bg p-1 outline-hidden [scrollbar-width:thin] has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] [&::-webkit-scrollbar]:size-0.5 *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
       className,
     )}
   />
@@ -59,7 +60,7 @@ const ListBoxItem = <T extends object>({ children, className, ...props }: ListBo
             {allowsDragging && (
               <svg
                 data-slot="drag-icon"
-                className="text-muted-fg mr-2 size-5 h-lh sm:w-4"
+                className="text-muted-fg me-2 size-5 h-lh sm:w-4"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -92,7 +93,7 @@ const ListBoxItem = <T extends object>({ children, className, ...props }: ListBo
             )}
             {isSelected && (
               <CheckIcon
-                className="group-allows-dragging:col-start-2 -mx-0.5 mr-2 h-lh w-5 shrink-0 sm:w-4"
+                className="group-allows-dragging:col-start-2 -mx-0.5 me-2 h-lh w-5 shrink-0 sm:w-4"
                 data-slot="check-icon"
               />
             )}
@@ -113,7 +114,7 @@ const ListBoxItem = <T extends object>({ children, className, ...props }: ListBo
 const ListBoxSection = <T extends object>({ className, ...props }: DropdownSectionProps<T>) => {
   return (
     <DropdownSection
-      className={twMerge("gap-y-0 *:data-[slot=list-box-item]:last:-mb-1.5", className)}
+      className={twMerge("gap-y-1 *:data-[slot=list-box-item]:last:-mb-1.5", className)}
       {...props}
     />
   );

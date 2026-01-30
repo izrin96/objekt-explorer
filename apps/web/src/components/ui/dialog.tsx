@@ -24,7 +24,7 @@ const Dialog = ({
       data-slot="dialog"
       role={role}
       className={twMerge(
-        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden outline-hidden [--gutter:--spacing(6)] sm:[--gutter:--spacing(6)]",
+        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden outline-hidden [--gutter:--spacing(6)]",
         className,
       )}
       {...props}
@@ -101,7 +101,8 @@ const DialogBody = ({ className, ...props }: DialogBodyProps) => (
   />
 );
 
-const DialogFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
+interface DialogFooterProps extends React.ComponentProps<"div"> {}
+const DialogFooter = ({ className, ...props }: DialogFooterProps) => {
   return (
     <div
       data-slot="dialog-footer"
@@ -129,7 +130,7 @@ const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => 
       aria-label="Close"
       slot="close"
       className={cx(
-        "close absolute top-1 right-1 z-50 grid size-8 place-content-center rounded-xl hover:bg-secondary focus:bg-secondary focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary sm:top-2 sm:right-2 sm:size-7 sm:rounded-md",
+        "close absolute end-1 top-1 z-50 grid size-8 place-content-center rounded-xl hover:bg-secondary focus:bg-secondary focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary sm:end-2 sm:top-2 sm:size-7 sm:rounded-md",
         className,
       )}
     >
@@ -142,6 +143,7 @@ export type {
   DialogHeaderProps,
   DialogTitleProps,
   DialogBodyProps,
+  DialogFooterProps,
   DialogDescriptionProps,
   CloseButtonIndicatorProps,
 };

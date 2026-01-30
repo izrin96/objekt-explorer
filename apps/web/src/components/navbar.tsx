@@ -31,7 +31,7 @@ export default function NavbarV2() {
       <nav className="from-bg/80 sticky top-0 z-40 hidden h-12 bg-linear-to-b to-transparent lg:flex">
         <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>
 
-        <Container className="flex items-center">
+        <Container className="flex items-center [--container-breakpoint:var(--breakpoint-2xl)]">
           <div className="flex items-center gap-x-2">
             <AppLogo />
             <div className="flex items-center gap-x-1">
