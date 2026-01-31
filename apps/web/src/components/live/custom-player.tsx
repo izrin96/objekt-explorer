@@ -169,7 +169,7 @@ const CustomLivestreamLayout = () => {
           />
           {!open && (
             <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
-              <Button intent="outline" onClick={() => setOpen((prev) => !prev)}>
+              <Button intent="primary" onClick={() => setOpen((prev) => !prev)}>
                 Unmute
               </Button>
             </div>

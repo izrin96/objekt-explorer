@@ -87,6 +87,7 @@ export default function ObjektView({
             intent="secondary"
             className="cursor-pointer font-semibold"
             onClick={ctx.handleClick}
+            isCircle={false}
           >
             {getCollectionShortId(objekt)}
             {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}

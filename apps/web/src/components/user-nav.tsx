@@ -51,7 +51,7 @@ export default function UserNav() {
       {data ? (
         <UserMenu user={data.user} />
       ) : (
-        <Link href="/login" className={buttonStyles({ intent: "outline", size: "sm" })}>
+        <Link href="/login" className={buttonStyles({ intent: "plain", size: "sm" })}>
           {t("sign_in")}
         </Link>
       )}

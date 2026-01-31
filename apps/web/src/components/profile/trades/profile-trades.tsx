@@ -1,6 +1,5 @@
 "use client";
 
-import { IconOpenLink } from "@intentui/icons";
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
@@ -200,10 +199,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
         className="min-w-[240px] flex-1 cursor-pointer px-3 py-2.5"
         onClick={ctx.handleClick}
       >
-        <div className="inline-flex items-center gap-2">
-          {row.objekt.collectionId}
-          <IconOpenLink />
-        </div>
+        <div className="inline-flex items-center gap-2">{row.objekt.collectionId}</div>
       </div>
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
       <div className="min-w-[130px] flex-1 px-3 py-2.5">
