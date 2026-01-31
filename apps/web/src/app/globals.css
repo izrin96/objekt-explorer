@@ -155,8 +155,8 @@
   --radius-3xl: calc(var(--radius-lg) * 3);
   --radius-4xl: calc(var(--radius-lg) * 4);
 
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-ot-sans);
+  --font-mono: var(--font-ot-mono);
 
   /* custom */
   --accent-solid: oklch(0.585 0.233 277.117);

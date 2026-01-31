@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 
 import "@/app/globals.css";
 import { getLocale } from "next-intl/server";
-import { Geist_Mono, Inter, Noto_Sans_KR, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
+import { Fira_Mono, Noto_Sans_KR, Noto_Sans_SC, Nunito_Sans, Figtree } from "next/font/google";
 import { preconnect } from "react-dom";
 
 import { Analytics } from "@/components/analytics";
@@ -19,18 +19,18 @@ import { artists } from "@/lib/server/cosmo/artists";
 import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 import { SITE_NAME } from "@/lib/utils";
 
-const inter = Inter({
-  variable: "--font-inter",
+const sans = Figtree({
+  variable: "--font-ot-sans",
   display: "swap",
   subsets: ["latin"],
   weight: "variable",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mono = Fira_Mono({
+  variable: "--font-ot-mono",
   display: "swap",
   subsets: ["latin"],
-  weight: "variable",
+  weight: "500",
 });
 
 const notoSansKr = Noto_Sans_KR({
@@ -115,7 +115,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
+      className={`${sans.variable} ${mono.variable} ${notoSansKr.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
     >
       <body className="min-h-svh font-sans antialiased">
         <NextIntlClientProvider>
