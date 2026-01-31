@@ -6,7 +6,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/field";
 import {
   ModalClose,
   ModalContent,
@@ -40,7 +39,6 @@ export function ListAccounts() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Label>Social Link</Label>
       {linkedAccounts.map((a) => (
         <LinkedAccount
           key={a.id}
