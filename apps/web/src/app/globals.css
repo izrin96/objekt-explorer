@@ -217,7 +217,7 @@
   /* custom */
   --accent-solid: oklch(0.585 0.233 277.117);
 }
-
+/* 
 @utility touch-target {
   position: relative;
   &::before {
@@ -233,7 +233,7 @@
     min-width: 44px;
     z-index: 9999;
   }
-}
+} */
 
 @layer base {
   *,
