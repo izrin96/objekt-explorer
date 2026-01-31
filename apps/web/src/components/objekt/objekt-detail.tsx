@@ -152,6 +152,15 @@ export function ObjektCard({
         {/* Front side */}
         <div className="absolute inset-0 grid rotate-y-0 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {/* Progressive loading: show resized first, then original when loaded */}
+          <NextImage
+            className="h-full w-full object-cover"
+            width={OBJEKT_SIZE.width}
+            height={OBJEKT_SIZE.height}
+            loading="eager"
+            src={urls.originalUrl}
+            alt={objekt.collectionId}
+            onLoad={() => setLoaded(true)}
+          />
           {!loaded && (
             <NextImage
               className="h-full w-full object-cover"
@@ -162,15 +171,6 @@ export function ObjektCard({
               alt={objekt.collectionId}
             />
           )}
-          <NextImage
-            className="h-full w-full object-cover"
-            width={OBJEKT_SIZE.width}
-            height={OBJEKT_SIZE.height}
-            loading="eager"
-            src={urls.originalUrl}
-            alt={objekt.collectionId}
-            onLoad={() => setLoaded(true)}
-          />
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
         {/* Back side */}
