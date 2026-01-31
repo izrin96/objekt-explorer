@@ -3,19 +3,19 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 
 import "./globals.css";
-import { Figtree } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { Button } from "@/components/ui/button";
 import { SITE_NAME } from "@/lib/utils";
 
-const sans = Figtree({
-  variable: "--font-ot-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export default function GlobalError() {
   return (
-    <html lang="en" className={`dark ${sans.variable}`}>
+    <html lang="en" className={`dark ${inter.variable}`}>
       <head>
         <title>{SITE_NAME}</title>
       </head>
