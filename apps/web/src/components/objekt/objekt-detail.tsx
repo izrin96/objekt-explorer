@@ -62,6 +62,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
         <div className="font-semibold">{objekt.collectionId}</div>
         <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
         <ObjektPanel objekts={objekts} showOwned={showOwned} />
+        <div className="flex-1" aria-hidden />
       </div>
     </div>
   );
