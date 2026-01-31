@@ -14,6 +14,12 @@ import type { User } from "@/lib/server/auth";
 import ErrorFallbackRender from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Disclosure,
+  DisclosureGroup,
+  DisclosurePanel,
+  DisclosureTrigger,
+} from "@/components/ui/disclosure-group";
 import { Description, FieldError, Label } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Loader } from "@/components/ui/loader";
@@ -63,7 +69,6 @@ export default function UserAccountModal({ open, setOpen }: Props) {
               >
                 <div className="flex flex-col gap-9">
                   <UserAccount setOpen={setOpen} />
-                  <ListAccounts />
                   <div className="flex">
                     <DeleteAccount />
                   </div>
@@ -83,10 +88,38 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
   if (!session.data) return;
 
   return (
-    <div className="flex flex-col gap-9">
-      <UserAccountForm user={session.data.user} setOpen={setOpen} />
-      <ChangeEmail email={session.data.user.email} />
-    </div>
+    <DisclosureGroup
+      defaultExpandedKeys="1"
+      className="[--disclosure-collapsed-bg:transparent] [--disclosure-collapsed-border:transparent] [--disclosure-gutter-x:--spacing(3)]"
+    >
+      <Disclosure id="1">
+        <DisclosureTrigger>General</DisclosureTrigger>
+        <DisclosurePanel>
+          <UserAccountForm user={session.data.user} setOpen={setOpen} />
+        </DisclosurePanel>
+      </Disclosure>
+
+      <Disclosure>
+        <DisclosureTrigger>Change Email</DisclosureTrigger>
+        <DisclosurePanel>
+          <ChangeEmail email={session.data.user.email} />
+        </DisclosurePanel>
+      </Disclosure>
+
+      <Disclosure>
+        <DisclosureTrigger>Change Password</DisclosureTrigger>
+        <DisclosurePanel>
+          <ChangePassword />
+        </DisclosurePanel>
+      </Disclosure>
+
+      <Disclosure>
+        <DisclosureTrigger>Social Link</DisclosureTrigger>
+        <DisclosurePanel>
+          <ListAccounts />
+        </DisclosurePanel>
+      </Disclosure>
+    </DisclosureGroup>
   );
 }
 
@@ -202,6 +235,112 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
         <div className="flex">
           <Button size="md" intent="outline" type="submit" isPending={mutation.isPending}>
             Save
+          </Button>
+        </div>
+      </div>
+    </Form>
+  );
+}
+
+function ChangePassword() {
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const result = await authClient.changePassword(data);
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    },
+    onSuccess: () => {
+      toast.success("Password changed successfully");
+    },
+    onError: ({ message }) => {
+      toast.error(`Error changing password. ${message}`);
+    },
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    mutation.mutate({
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword,
+    });
+  });
+
+  return (
+    <Form onSubmit={onSubmit}>
+      <div className="flex flex-col gap-3">
+        <Controller
+          control={control}
+          name="currentPassword"
+          rules={{
+            required: "Current password is required.",
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              className="w-full"
+              isRequired
+              name={name}
+              type="password"
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+            >
+              <Label>Current Password</Label>
+              <Input placeholder="Your current password" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="newPassword"
+          rules={{
+            required: "New password is required.",
+            minLength: {
+              value: 8,
+              message: "Password must be at least 8 characters",
+            },
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              className="w-full"
+              isRequired
+              name={name}
+              type="password"
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+            >
+              <Label>New Password</Label>
+              <Input placeholder="Your new password" />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
+          )}
+        />
+
+        <div className="flex">
+          <Button
+            isDisabled={mutation.isPending}
+            size="md"
+            intent="outline"
+            className="flex-none"
+            type="submit"
+          >
+            Save Password
           </Button>
         </div>
       </div>
