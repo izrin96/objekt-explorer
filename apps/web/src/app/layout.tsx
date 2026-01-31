@@ -5,7 +5,13 @@ import { NextIntlClientProvider } from "next-intl";
 
 import "@/app/globals.css";
 import { getLocale } from "next-intl/server";
-import { Geist_Mono, Inter, Noto_Sans_KR, Noto_Sans_SC, Nunito_Sans } from "next/font/google";
+import {
+  Geist_Mono,
+  Google_Sans_Flex,
+  Noto_Sans_KR,
+  Noto_Sans_SC,
+  Nunito_Sans,
+} from "next/font/google";
 import { preconnect } from "react-dom";
 
 import { Analytics } from "@/components/analytics";
@@ -19,7 +25,7 @@ import { artists } from "@/lib/server/cosmo/artists";
 import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 import { SITE_NAME } from "@/lib/utils";
 
-const inter = Inter({
+const inter = Google_Sans_Flex({
   variable: "--font-inter",
   display: "swap",
   subsets: ["latin"],

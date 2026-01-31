@@ -3,14 +3,16 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Google_Sans_Flex } from "next/font/google";
 
 import { Button } from "@/components/ui/button";
 import { SITE_NAME } from "@/lib/utils";
 
-const inter = Inter({
+const inter = Google_Sans_Flex({
   variable: "--font-inter",
+  display: "swap",
   subsets: ["latin"],
+  weight: "variable",
 });
 
 export default function GlobalError() {
