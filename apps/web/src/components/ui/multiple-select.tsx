@@ -92,7 +92,7 @@ function MultipleSelect<T extends OptionBase>({
                   }}
                 >
                   <TagList
-                    items={selectedItems.filter((i) => i != null)}
+                    items={selectedItems.filter((i) => i !== null)}
                     renderEmptyState={() => (
                       <i className="text-muted-fg ps-2 text-sm">{placeholder}</i>
                     )}

@@ -13,7 +13,10 @@ import ClientProviders, { ClientArtistProvider } from "@/components/client-provi
 import "@/lib/orpc/server";
 import Navbar from "@/components/navbar";
 import { getSelectedArtists } from "@/lib/client-fetching";
+import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
+import { getSession } from "@/lib/server/auth";
 import { artists } from "@/lib/server/cosmo/artists";
+import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 import { SITE_NAME } from "@/lib/utils";
 
 const inter = Inter({
@@ -90,10 +93,23 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: PropsWithChildren) {
   const [locale, selectedArtistIds] = await Promise.all([getLocale(), getSelectedArtists()]);
+  const queryClient = getQueryClient();
 
   preconnect("https://imagedelivery.net");
   preconnect("https://resources.cosmo.fans");
   preconnect("https://static.cosmo.fans");
+
+  void queryClient.prefetchQuery({
+    queryKey: ["session"],
+    queryFn: () => {
+      return getSession();
+    },
+  });
+
+  void queryClient.prefetchQuery({
+    queryKey: ["filter-data"],
+    queryFn: fetchFilterData,
+  });
 
   return (
     <html
@@ -105,9 +121,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         <NextIntlClientProvider>
           <ClientProviders>
             <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>
-              <Navbar />
-              <main className="mx-auto w-full">{children}</main>
-              <Analytics />
+              <HydrateClient client={queryClient}>
+                <Navbar />
+                <main className="mx-auto w-full">{children}</main>
+                <Analytics />
+              </HydrateClient>
             </ClientArtistProvider>
           </ClientProviders>
         </NextIntlClientProvider>

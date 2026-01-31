@@ -8,7 +8,6 @@ import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchOwnedLists } from "@/lib/server/api/routers/list";
 import { getSession, toPublicUser } from "@/lib/server/auth";
-import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 
 type Props = {
   params: Promise<{
@@ -41,19 +40,14 @@ export default async function Page(props: Props) {
     }),
   );
 
-  void queryClient.prefetchQuery({
-    queryKey: ["filter-data"],
-    queryFn: fetchFilterData,
-  });
-
   return (
     <ProfileProvider targetList={list} lists={lists} user={toPublicUser(session)}>
-      <div className="flex flex-col gap-4 pt-2 pb-36">
-        <ListHeader />
-        <HydrateClient client={queryClient}>
+      <HydrateClient client={queryClient}>
+        <div className="flex flex-col gap-4 pt-2 pb-36">
+          <ListHeader />
           <ListRender />
-        </HydrateClient>
-      </div>
+        </div>
+      </HydrateClient>
     </ProfileProvider>
   );
 }
