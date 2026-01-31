@@ -5,13 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 
 import "@/app/globals.css";
 import { getLocale } from "next-intl/server";
-import {
-  Geist_Mono,
-  Google_Sans_Flex,
-  Noto_Sans_KR,
-  Noto_Sans_SC,
-  Nunito_Sans,
-} from "next/font/google";
+import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
 import { preconnect } from "react-dom";
 
 import { Analytics } from "@/components/analytics";
@@ -51,13 +45,6 @@ const notoSansSc = Noto_Sans_SC({
   display: "swap",
   weight: "variable",
   subsets: ["latin"],
-});
-
-const nunitoFont = Nunito_Sans({
-  variable: "--font-nunito",
-  display: "swap",
-  subsets: ["latin"],
-  weight: ["700"],
 });
 
 export const metadata: Metadata = {
@@ -121,7 +108,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable} ${nunitoFont.variable}`}
+      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable}`}
     >
       <body className="min-h-svh font-sans antialiased">
         <NextIntlClientProvider>
