@@ -29,16 +29,11 @@ export async function GET(_: Request, props: Params) {
     .groupBy(collections.id);
 
   if (!results.length)
-    return Response.json(
-      {
-        total: 0,
-        spin: 0,
-        transferable: 0,
-      },
-      {
-        headers: cacheHeaders(),
-      },
-    );
+    return Response.json({
+      total: 0,
+      spin: 0,
+      transferable: 0,
+    });
 
   return Response.json(results[0], {
     headers: cacheHeaders(),
