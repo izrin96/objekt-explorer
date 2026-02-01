@@ -5,7 +5,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { type ListEntry, listEntries, lists } from "@repo/db/schema";
-import { overrideCollection } from "@repo/lib/objekts";
+import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";

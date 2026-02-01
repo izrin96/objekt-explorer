@@ -1,7 +1,7 @@
 import { validArtists } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { overrideCollection } from "@repo/lib/objekts";
+import { overrideCollection } from "@repo/lib/server/objekt";
 import { and, desc, inArray, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";

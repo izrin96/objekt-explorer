@@ -1,11 +1,11 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
-import type { OwnedObjekt } from "@repo/lib/objekts";
+import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import type { ServerWebSocket } from "bun";
 
-import { mapOwnedObjekt } from "@repo/lib/objekts";
+import { mapOwnedObjekt } from "@repo/lib/server/objekt";
+import { fetchKnownAddresses } from "@repo/lib/server/user";
 
 import { redisPubSub } from "./lib/redis";
-import { fetchKnownAddresses } from "./lib/user";
 
 const clients = new Set<ServerWebSocket>();
 

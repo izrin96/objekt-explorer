@@ -1,6 +1,6 @@
 "use client";
 
-import { type ValidObjekt } from "@repo/lib/objekts";
+import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { Suspense, useState } from "react";

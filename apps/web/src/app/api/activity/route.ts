@@ -2,14 +2,14 @@ import { validArtists, validOnlineTypes } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { mapOwnedObjekt } from "@repo/lib/objekts";
+import { mapOwnedObjekt } from "@repo/lib/server/objekt";
+import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
 import { cursorSchema } from "@/lib/server/common";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { fetchKnownAddresses } from "@/lib/server/profile";
 import { validType } from "@/lib/universal/activity";
 
 const PAGE_SIZE = 300;

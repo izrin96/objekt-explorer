@@ -1,6 +1,6 @@
 "use client";
 
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";

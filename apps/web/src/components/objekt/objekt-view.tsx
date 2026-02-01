@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";

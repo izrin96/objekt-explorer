@@ -1,6 +1,6 @@
 "use client";
 
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { createContext, type ReactNode, use, useState } from "react";
 

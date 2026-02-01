@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { seasonColors } from "@repo/cosmo/types/common";
-import { type ValidObjekt } from "@repo/lib/objekts";
+import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { Suspense, useMemo } from "react";

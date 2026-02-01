@@ -1,10 +1,10 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
+import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { and, desc, eq } from "drizzle-orm";
 
 import { getSession } from "@/lib/server/auth";
-import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 
 type Params = {
   params: Promise<{

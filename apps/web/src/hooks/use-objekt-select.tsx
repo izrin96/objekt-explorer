@@ -1,6 +1,6 @@
 "use client";
 
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { createContext, type PropsWithChildren, useContext, useRef } from "react";
 import { toast } from "sonner";

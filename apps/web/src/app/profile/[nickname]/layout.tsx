@@ -1,6 +1,7 @@
 import type { PropsWithChildren } from "react";
 
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import { fetchUserProfiles } from "@repo/lib/server/user";
 
 import DynamicContainer from "@/components/dynamic-container";
 import { ProfileProvider } from "@/components/profile-provider";
@@ -10,7 +11,6 @@ import ProfileTabs from "@/components/profile/profile-tabs";
 import { Container } from "@/components/ui/container";
 import { getUserByIdentifier } from "@/lib/client-fetching";
 import { getSession, toPublicUser } from "@/lib/server/auth";
-import { fetchUserProfiles } from "@/lib/server/profile";
 
 type Props = PropsWithChildren<{
   params: Promise<{

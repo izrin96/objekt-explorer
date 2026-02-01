@@ -1,5 +1,5 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
-import type { OwnedObjekt, OwnedObjektsResult } from "@repo/lib/objekts";
+import type { OwnedObjekt, OwnedObjektsResult } from "@repo/lib/types/objekt";
 
 import { ofetch } from "ofetch";
 

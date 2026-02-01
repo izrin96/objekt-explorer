@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import Image from "next/image";
 import { useRef, useState } from "react";

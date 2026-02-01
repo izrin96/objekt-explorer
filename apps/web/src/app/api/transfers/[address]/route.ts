@@ -5,14 +5,14 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { mapOwnedObjekt } from "@repo/lib/objekts";
+import { mapOwnedObjekt } from "@repo/lib/server/objekt";
+import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
 import { cursorSchema } from "@/lib/server/common";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { fetchKnownAddresses, fetchUserProfiles } from "@/lib/server/profile";
 import { validType } from "@/lib/universal/transfers";
 
 const PER_PAGE = 150;

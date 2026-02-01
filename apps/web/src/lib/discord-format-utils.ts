@@ -1,5 +1,5 @@
 import type { CosmoArtistWithMembersBFF } from "@repo/cosmo/types/artists";
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { groupBy } from "es-toolkit";
 

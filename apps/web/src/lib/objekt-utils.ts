@@ -3,7 +3,7 @@ import {
   type PinObjekt,
   shortformMembers,
   type ValidObjekt,
-} from "@repo/lib/objekts";
+} from "@repo/lib/types/objekt";
 
 import { getCollectionEdition } from "./universal/collection-grid";
 import { replaceUrlSize } from "./utils";

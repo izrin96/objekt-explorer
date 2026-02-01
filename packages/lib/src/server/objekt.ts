@@ -1,29 +1,39 @@
 import type { Objekt } from "@repo/db/indexer/schema";
 
-import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "./types";
+import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "../types/objekt";
 
-const overrideAccents: Record<string, string> = {
-  "divine01-seoyeon-117z": "#B400FF",
-  "divine01-seoyeon-118z": "#B400FF",
-  "divine01-seoyeon-119z": "#B400FF",
-  "divine01-seoyeon-120z": "#B400FF",
-  "divine01-seoyeon-317z": "#df2e37",
-  "binary01-choerry-201z": "#FFFFFF",
-  "binary01-choerry-202z": "#FFFFFF",
-  "atom01-yubin-302z": "#D300BB",
-  "atom01-nakyoung-302z": "#D300BB",
-  "atom01-yooyeon-302z": "#D300BB",
-  "atom01-hyerin-302z": "#D300BB",
-};
+/**
+ * Override color for some collection
+ */
+const collectionOverrides = {
+  // Divine collections
+  "divine01-seoyeon-117z": { backgroundColor: "#B400FF" },
+  "divine01-seoyeon-118z": { backgroundColor: "#B400FF" },
+  "divine01-seoyeon-119z": { backgroundColor: "#B400FF" },
+  "divine01-seoyeon-120z": { backgroundColor: "#B400FF" },
+  "divine01-seoyeon-317z": { backgroundColor: "#df2e37" },
 
-const overrideFonts: Record<string, string> = {
-  "atom01-heejin-322z": "#FFFFFF",
-  "atom01-heejin-323z": "#FFFFFF",
-  "atom01-heejin-324z": "#FFFFFF",
-  "atom01-heejin-325z": "#FFFFFF",
-  "ever01-seoyeon-338z": "#07328D",
-};
+  // Binary collections
+  "binary01-choerry-201z": { backgroundColor: "#FFFFFF" },
+  "binary01-choerry-202z": { backgroundColor: "#FFFFFF" },
 
+  // Atom collections
+  "atom01-yubin-302z": { backgroundColor: "#D300BB" },
+  "atom01-nakyoung-302z": { backgroundColor: "#D300BB" },
+  "atom01-yooyeon-302z": { backgroundColor: "#D300BB" },
+  "atom01-hyerin-302z": { backgroundColor: "#D300BB" },
+  "atom01-heejin-322z": { textColor: "#FFFFFF" },
+  "atom01-heejin-323z": { textColor: "#FFFFFF" },
+  "atom01-heejin-324z": { textColor: "#FFFFFF" },
+  "atom01-heejin-325z": { textColor: "#FFFFFF" },
+
+  // Ever collections
+  "ever01-seoyeon-338z": { textColor: "#07328D" },
+} as const satisfies Record<string, Partial<Pick<ValidObjekt, "backgroundColor" | "textColor">>>;
+
+/**
+ * Get custom band image
+ */
 function getBandImageUrl(objekt: ValidObjekt) {
   if (objekt.bandImageUrl) return objekt.bandImageUrl;
 
@@ -52,15 +62,13 @@ function getBandImageUrl(objekt: ValidObjekt) {
  * Apply color and band image overrides to any objekt type
  */
 export function overrideCollection<T extends ValidObjekt>(collection: T): T {
-  const accentColor = overrideAccents[collection.slug];
-  const fontColor = overrideFonts[collection.slug];
+  const overrides = collectionOverrides[collection.slug as keyof typeof collectionOverrides];
   const bandImageUrl = getBandImageUrl(collection);
 
   return {
     ...collection,
-    backgroundColor: accentColor ?? collection.backgroundColor,
-    textColor: fontColor ?? collection.textColor,
-    bandImageUrl: bandImageUrl,
+    ...overrides,
+    bandImageUrl,
   };
 }
 

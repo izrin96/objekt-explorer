@@ -1,6 +1,6 @@
 "use client";
 
-import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/objekts";
+import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/types/objekt";
 
 import { IconOpenLink } from "@intentui/icons";
 import {

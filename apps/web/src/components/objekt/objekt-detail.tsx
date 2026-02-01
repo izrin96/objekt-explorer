@@ -11,7 +11,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
 import { Addresses } from "@repo/lib";
-import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/objekts";
+import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";

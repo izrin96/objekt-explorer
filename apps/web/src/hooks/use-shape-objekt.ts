@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";

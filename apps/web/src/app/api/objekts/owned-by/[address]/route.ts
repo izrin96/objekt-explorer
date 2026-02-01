@@ -4,13 +4,13 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { mapOwnedObjekt } from "@repo/lib/objekts";
+import { mapOwnedObjekt } from "@repo/lib/server/objekt";
+import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
 import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
-import { fetchUserProfiles } from "@/lib/server/profile";
 
 type Params = {
   params: Promise<{

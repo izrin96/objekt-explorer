@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import chroma from "chroma-js";
 

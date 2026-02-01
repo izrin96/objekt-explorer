@@ -1,10 +1,10 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
+import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, eq } from "drizzle-orm";
 import * as z from "zod";
 
-import { fetchUserProfiles } from "../../profile";
 import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3";
 import { authed } from "../orpc";
 

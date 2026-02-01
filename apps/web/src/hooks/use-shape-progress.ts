@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/objekts";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { validGroupBy } from "@repo/cosmo/types/common";
 import { groupBy } from "es-toolkit";

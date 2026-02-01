@@ -1,5 +1,5 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
-import type { CollectionResult } from "@repo/lib/objekts";
+import type { CollectionResult } from "@repo/lib/types/objekt";
 
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
