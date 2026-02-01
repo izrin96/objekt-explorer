@@ -39,30 +39,32 @@ async function enrichWithCollectionData(
 }
 
 export async function fetchMetadata(tokenId: string): Promise<CosmoObjektMetadataV1 | null> {
-  const v1Response = await fetchMetadataV1(tokenId);
+  try {
+    const v1Metadata = await fetchMetadataV1(tokenId);
+    return v1Metadata;
+  } catch (error: any) {
+    // if not 404 error, just return null and try again next time because service probably down
+    if (error?.status !== 404) {
+      console.log(
+        `[fetchMetadata] Error fetching v1 metadata (status: ${error?.status ?? "unknown"})`,
+      );
+      return null;
+    }
 
-  if (v1Response.ok && v1Response._data) {
-    return v1Response._data;
+    // if 404 error, proceed with v3
+    console.log(
+      `[fetchMetadata] Error fetching v1 metadata (status: ${error.status}). Trying with v3..`,
+    );
   }
 
-  // if not 404 error, just return null and try again next time because service probably down
-  if (v1Response.status !== 404) {
-    console.log(`[fetchMetadata] Error fetching v1 metadata (status: ${v1Response.status})`);
+  try {
+    const v3Metadata = await fetchMetadataV3(tokenId);
+    const metadata = normalizeV3(v3Metadata, tokenId);
+    return await enrichWithCollectionData(metadata);
+  } catch (error: any) {
+    console.log(
+      `[fetchMetadata] Error fetching v3 metadata (status: ${error?.status ?? "unknown"})`,
+    );
     return null;
   }
-
-  // if 404 error, proceed with v3
-  console.log(
-    `[fetchMetadata] Error fetching v1 metadata (status: ${v1Response.status}). Trying with v3..`,
-  );
-
-  const v3Response = await fetchMetadataV3(tokenId);
-
-  if (!v3Response.ok || !v3Response._data) {
-    console.log(`[fetchMetadata] Error fetching v3 metadata (status: ${v3Response.status})`);
-    return null;
-  }
-
-  const metadata = normalizeV3(v3Response._data, tokenId);
-  return await enrichWithCollectionData(metadata);
 }

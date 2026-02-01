@@ -24,13 +24,12 @@ export async function fixTransferable() {
 }
 
 async function fetchMetadata(tokenId: string) {
-  const response = await fetchMetadataV1(tokenId);
-
-  if (response.ok && response._data) {
-    return response._data;
+  try {
+    return await fetchMetadataV1(tokenId);
+  } catch (error: any) {
+    console.log(`[fetchMetadata] Error fetching metadata (status: ${error?.status ?? "unknown"})`);
+    return null;
   }
-
-  return null;
 }
 
 async function processBatch(batch: { id: string }[], batchNumber: number, totalBatches: number) {
