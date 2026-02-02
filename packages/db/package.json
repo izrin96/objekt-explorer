@@ -2,7 +2,6 @@
   "name": "@repo/db",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./indexer": "./src/indexer/index.ts",

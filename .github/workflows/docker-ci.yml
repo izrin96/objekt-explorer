@@ -31,6 +31,7 @@ jobs:
       web: ${{ steps.filter.outputs.web }}
       server: ${{ steps.filter.outputs.server }}
       worker: ${{ steps.filter.outputs.worker }}
+      indexer: ${{ steps.filter.outputs.indexer }}
       packages: ${{ steps.filter.outputs.packages }}
     steps:
       - name: Checkout repository
@@ -59,6 +60,12 @@ jobs:
               - 'turbo.json'
               - 'package.json'
               - 'bun.lock'
+            indexer:
+              - 'apps/indexer/**'
+              - 'packages/**'
+              - 'turbo.json'
+              - 'package.json'
+              - 'bun.lock'
             packages:
               - 'packages/**'
 
@@ -70,6 +77,7 @@ jobs:
       needs.detect-changes.outputs.web == 'true' ||
       needs.detect-changes.outputs.server == 'true' ||
       needs.detect-changes.outputs.worker == 'true' ||
+      needs.detect-changes.outputs.indexer == 'true' ||
       needs.detect-changes.outputs.packages == 'true'
     steps:
       - name: Checkout repository
@@ -99,6 +107,7 @@ jobs:
       (needs.detect-changes.outputs.web == 'true' ||
       needs.detect-changes.outputs.server == 'true' ||
       needs.detect-changes.outputs.worker == 'true' ||
+      needs.detect-changes.outputs.indexer == 'true' ||
       github.event_name == 'workflow_dispatch')
     environment: ${{ github.event_name == 'pull_request' && 'Staging' || 'Production' }}
     strategy:
@@ -111,6 +120,8 @@ jobs:
             dockerfile: ./apps/server/Dockerfile
           - app: worker
             dockerfile: ./apps/worker/Dockerfile
+          - app: indexer
+            dockerfile: ./apps/indexer/Dockerfile
     steps:
       - name: Show detected changes
         run: |
@@ -118,6 +129,7 @@ jobs:
           echo "Web changes: ${{ needs.detect-changes.outputs.web }}"
           echo "Server changes: ${{ needs.detect-changes.outputs.server }}"
           echo "Worker changes: ${{ needs.detect-changes.outputs.worker }}"
+          echo "Indexer changes: ${{ needs.detect-changes.outputs.indexer }}"
           echo "Package changes: ${{ needs.detect-changes.outputs.packages }}"
 
       - name: Checkout repository
@@ -204,7 +216,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, server, worker]
+        app: [web, server, worker, indexer]
     steps:
       - name: Delete all untagged ${{ matrix.app }} images
         uses: actions/delete-package-versions@v5

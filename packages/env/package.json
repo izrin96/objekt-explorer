@@ -2,7 +2,6 @@
   "name": "@repo/env",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
   "exports": {
     "./server": "./src/server.ts",
     "./client": "./src/client.ts"

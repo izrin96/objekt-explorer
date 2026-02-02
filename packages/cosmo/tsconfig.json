@@ -1,3 +1,14 @@
 {
-  "extends": "@repo/tsconfig/tsconfig.base.json"
+  "extends": "@repo/tsconfig/tsconfig.base.json",
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", ".turbo"],
+
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

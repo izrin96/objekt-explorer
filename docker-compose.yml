@@ -1,16 +1,20 @@
 services:
+  # background worker
   worker:
     restart: always
     build:
       context: .
       dockerfile: ./apps/worker/Dockerfile
+    depends_on:
+      - postgres-indexer
     environment:
-      - INDEXER_DATABASE_URL
+      - INDEXER_DATABASE_URL=postgresql://postgres:postgres@postgres-indexer:5432/indexer
     healthcheck:
       test: test ! -f /tmp/drain
       interval: 5s
       retries: 1
 
+  # websocket server
   server:
     restart: always
     ports:
@@ -18,19 +22,91 @@ services:
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
+    depends_on:
+      - pgbouncer
+      - pgbouncer-indexer
+      - valkey
     environment:
-      - REDIS_PUBSUB_URL
-      - DATABASE_URL
-      - INDEXER_DATABASE_URL
+      - REDIS_PUBSUB_URL=redis://valkey:6379
+      - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
+      - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
     healthcheck:
       test: test ! -f /tmp/drain && curl -f http://localhost:3000
       interval: 5s
       retries: 1
 
+  # indexer processor
+  processor:
+    build:
+      context: .
+      dockerfile: apps/indexer/Dockerfile
+    restart: always
+    environment:
+      - FORCE_PRETTY_LOGGER=${INDEXER_FORCE_PRETTY_LOGGER}
+      - RPC_ENDPOINT=${INDEXER_RPC_ENDPOINT}
+      - RPC_RATE_LIMIT=${INDEXER_RPC_RATE_LIMIT}
+      - RPC_FINALITY=${INDEXER_RPC_FINALITY}
+      - SQD_ENDPOINT=${INDEXER_SQD_ENDPOINT}
+      - DB_URL=postgresql://postgres:postgres@postgres-indexer:5432/indexer
+      - DB_NAME=indexer
+      - DB_READ_USER=postgres-read
+      - DB_READ_PASS=postgres-read
+      - ENABLE_OBJEKTS=${INDEXER_ENABLE_OBJEKTS}
+      - ENABLE_GRAVITY=${INDEXER_ENABLE_GRAVITY}
+      - COSMO_PARALLEL_COUNT=${INDEXER_COSMO_PARALLEL_COUNT}
+      - REDIS_URL=redis://valkey:6379
+    depends_on:
+      - postgres-indexer
+      - valkey
+
+  # postgres database for indexer
+  postgres-indexer:
+    restart: always
+    image: postgres:18
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=indexer
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test: "pg_isready -d indexer -U postgres"
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    volumes:
+      - postgres-indexer-data:/var/lib/postgresql
+
+  # pgbouncer for indexer
+  pgbouncer-indexer:
+    image: edoburu/pgbouncer:latest
+    restart: always
+    depends_on:
+      - postgres-indexer
+    ports:
+      - "5435:5432"
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=postgres-indexer
+      - DB_NAME=indexer
+      - POOL_MODE=transaction
+      - AUTH_TYPE=scram-sha-256
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "localhost"]
+
+  # web
   web:
     restart: always
     ports:
       - "3000:3000"
+    depends_on:
+      - pgbouncer
+      - pgbouncer-indexer
+      - valkey
+      - browserless
+      - rustfs
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
@@ -43,20 +119,20 @@ services:
         - DISCORD_CLIENT_SECRET
         - TWITTER_CLIENT_ID
         - TWITTER_CLIENT_SECRET
-        - BROWSER_CDP_URL
+        - BROWSER_CDP_URL=ws://browserless:3000
         - NEXT_PUBLIC_SITE_URL
-        - DATABASE_URL
-        - INDEXER_DATABASE_URL
-        - S3_ENDPOINT
-        - S3_ACCESS_KEY
-        - S3_SECRET_KEY
+        - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
+        - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
+        - S3_ENDPOINT=http://rustfs:9000
+        - S3_ACCESS_KEY=rustfsadmin
+        - S3_SECRET_KEY=rustfsadmin
         - SES_REGION
         - SES_ACCESS_KEY
         - SES_SECRET_KEY
         - SES_MAIL_FROM
         - NEXT_PUBLIC_LIVE_API_KEY
         - BYPASS_LIVE_KEY
-        - REDIS_URL
+        - REDIS_URL=redis://valkey:6379
     environment:
       - NEXT_PUBLIC_UMAMI_SCRIPT_URL
       - NEXT_PUBLIC_UMAMI_WEBSITE_ID
@@ -66,30 +142,31 @@ services:
       - DISCORD_CLIENT_SECRET
       - TWITTER_CLIENT_ID
       - TWITTER_CLIENT_SECRET
-      - BROWSER_CDP_URL
+      - BROWSER_CDP_URL=ws://browserless:3000
       - NEXT_PUBLIC_SITE_URL
-      - DATABASE_URL
-      - INDEXER_DATABASE_URL
-      - S3_ENDPOINT
-      - S3_ACCESS_KEY
-      - S3_SECRET_KEY
+      - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
+      - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
+      - S3_ENDPOINT=http://rustfs:9000
+      - S3_ACCESS_KEY=rustfsadmin
+      - S3_SECRET_KEY=rustfsadmin
       - SES_REGION
       - SES_ACCESS_KEY
       - SES_SECRET_KEY
       - SES_MAIL_FROM
       - NEXT_PUBLIC_LIVE_API_KEY
       - BYPASS_LIVE_KEY
-      - REDIS_URL
+      - REDIS_URL=redis://valkey:6379
     healthcheck:
       test: test ! -f /tmp/drain && curl -f http://localhost:3000/api/healthcheck
       interval: 5s
       retries: 1
 
-  db:
+  # postgres database for web
+  postgres:
     restart: always
     image: postgres:18
     volumes:
-      - db_data:/var/lib/postgresql
+      - postgres-data:/var/lib/postgresql
     ports:
       - "5432:5432"
     environment:
@@ -102,13 +179,14 @@ services:
       timeout: 5s
       retries: 5
 
+  # pgbouncer for web
   pgbouncer:
     image: edoburu/pgbouncer:latest
     restart: always
     depends_on:
-      - db
+      - postgres
     ports:
-      - "6432:6432"
+      - "5433:5432"
     environment:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
@@ -119,12 +197,14 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
 
+  # redis compatible image
   valkey:
     restart: always
     image: valkey/valkey:alpine
     ports:
       - "6379:6379"
 
+  # browserless
   browserless:
     image: ghcr.io/browserless/chromium
     ports:
@@ -132,6 +212,7 @@ services:
     environment:
       - TOKEN=your-token-here
 
+  # s3 compatible image
   rustfs:
     image: rustfs/rustfs:latest
     ports:
@@ -146,8 +227,8 @@ services:
       - RUSTFS_ACCESS_KEY=rustfsadmin
       - RUSTFS_SECRET_KEY=rustfsadmin
     volumes:
-      - rustfs_data:/data
-    restart: unless-stopped
+      - rustfs-data:/data
+    restart: always
     healthcheck:
       test:
         [
@@ -162,5 +243,6 @@ services:
       start_period: 40s
 
 volumes:
-  db_data:
-  rustfs_data:
+  postgres-data:
+  postgres-indexer-data:
+  rustfs-data:

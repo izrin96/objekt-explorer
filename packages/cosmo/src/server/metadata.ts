@@ -1,4 +1,4 @@
-import { ofetch } from "ofetch";
+import { FetchError, ofetch } from "ofetch";
 
 import type { CosmoObjektMetadataV1, CosmoObjektMetadataV3 } from "../types/metadata";
 
@@ -21,4 +21,50 @@ export async function fetchMetadataV3(tokenId: string) {
     `https://api.cosmo.fans/bff/v3/objekts/nft-metadata/${tokenId}`,
     { retry: 2, retryDelay: 500 }, // 500ms backoff
   );
+}
+
+/**
+ * For indexer use.
+ * If metadata endpoint down, just return empty metadata and it will refetch by worker later
+ */
+export async function fetchMetadata(tokenId: string) {
+  try {
+    return await fetchMetadataV1(tokenId);
+  } catch (error) {
+    const statusInfo = error instanceof FetchError ? ` (status: ${error.status})` : "";
+    console.log(`[fetchMetadata] Error fetching v1 metadata${statusInfo}: ${error}`);
+    return emptyMetadata(tokenId);
+  }
+}
+
+/**
+ * Empty metadata
+ */
+export function emptyMetadata(tokenId: string): CosmoObjektMetadataV1 {
+  return {
+    name: "empty-collection",
+    description: "",
+    image: "",
+    background_color: "",
+    objekt: {
+      collectionId: "empty-collection",
+      season: "",
+      member: "",
+      collectionNo: "",
+      class: "",
+      artists: [""],
+      thumbnailImage: "",
+      frontImage: "",
+      backgroundColor: "",
+      comoAmount: 0,
+      tokenId: tokenId,
+      // not possible to get from v3
+      backImage: "",
+      accentColor: "",
+      textColor: "",
+      objektNo: 0,
+      tokenAddress: "",
+      transferable: false,
+    },
+  };
 }
