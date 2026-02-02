@@ -29,7 +29,6 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  serverExternalPackages: ["@aws-sdk/client-ses"],
 };
 
 const withNextIntl = createNextIntlPlugin({

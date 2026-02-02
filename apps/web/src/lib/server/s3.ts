@@ -1,10 +1,4 @@
-import {
-  CreateBucketCommand,
-  DeleteObjectCommand,
-  HeadBucketCommand,
-  S3Client,
-  S3ServiceException,
-} from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 
 import { env } from "@/env";
@@ -18,21 +12,6 @@ export const s3Client = new S3Client({
   },
   forcePathStyle: true,
 });
-
-export async function createBucketIfNotExists(bucketName: string) {
-  try {
-    await s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
-  } catch (error) {
-    if (
-      error instanceof S3ServiceException &&
-      (error.name === "NotFound" || error.$metadata.httpStatusCode === 404)
-    ) {
-      await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
-    } else {
-      throw error;
-    }
-  }
-}
 
 export async function deleteFileFromBucket({
   bucketName,
@@ -48,9 +27,9 @@ export async function deleteFileFromBucket({
         Key: fileName,
       }),
     );
-    return true;
-  } catch {
-    return false;
+  } catch (error) {
+    console.error("Failed to delete file from S3:", error);
+    throw error;
   }
 }
 
@@ -63,20 +42,23 @@ export async function createPresignedPostToUpload({
   key: string;
   mimeType: string;
 }) {
-  await createBucketIfNotExists(bucketName);
+  try {
+    const { url, fields } = await createPresignedPost(s3Client, {
+      Bucket: bucketName,
+      Key: key,
+      Conditions: [
+        ["content-length-range", 0, 10 * 1024 * 1024],
+        ["eq", "$Content-Type", mimeType],
+      ],
+      Fields: {
+        acl: "public-read",
+      },
+      Expires: 3600,
+    });
 
-  const { url, fields } = await createPresignedPost(s3Client, {
-    Bucket: bucketName,
-    Key: key,
-    Conditions: [
-      ["content-length-range", 0, 10 * 1024 * 1024],
-      ["eq", "$Content-Type", mimeType],
-    ],
-    Fields: {
-      acl: "public-read",
-    },
-    Expires: 3600,
-  });
-
-  return { url, fields, key };
+    return { url, fields, key };
+  } catch (error) {
+    console.error("Failed to create presigned post:", error);
+    throw error;
+  }
 }
