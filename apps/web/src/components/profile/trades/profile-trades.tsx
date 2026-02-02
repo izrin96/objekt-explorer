@@ -5,6 +5,7 @@ import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -27,7 +28,11 @@ import { getBaseURL } from "@/lib/utils";
 import { useTypeFilter } from "./filter-type";
 import TradesFilter from "./trades-filter";
 
-export default function ProfileTradesRender() {
+export default dynamic(() => Promise.resolve(ProfileTradesRender), {
+  ssr: false,
+});
+
+function ProfileTradesRender() {
   return (
     <ObjektModalProvider initialTab="trades">
       <TradesFilter />

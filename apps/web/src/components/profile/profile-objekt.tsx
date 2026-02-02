@@ -3,6 +3,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -38,7 +39,11 @@ import ObjektView from "../objekt/objekt-view";
 import { Loader } from "../ui/loader";
 import Filter from "./filter";
 
-export default function ProfileObjektRender() {
+export default dynamic(() => Promise.resolve(ProfileObjektRender), {
+  ssr: false,
+});
+
+function ProfileObjektRender() {
   const profile = useTarget((a) => a.profile)!;
   return (
     <ObjektColumnProvider initialColumn={profile.gridColumns}>

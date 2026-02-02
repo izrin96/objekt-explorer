@@ -1,8 +1,7 @@
 "use client";
 
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
-import { useRouter } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
@@ -15,15 +14,8 @@ import { MobileNavigation } from "./mobile-navigation";
 import { ThemeSwitcher } from "./theme-switcher";
 import { Container } from "./ui/container";
 
-export default function NavbarV2() {
-  const router = useRouter();
+export default function Navbar() {
   const isMobile = useMediaQuery("(max-width: 1023px)");
-
-  useEffect(() => {
-    router.prefetch("/");
-    router.prefetch("/activity");
-    router.prefetch("/login");
-  }, [router]);
 
   return (
     <>

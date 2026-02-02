@@ -6,6 +6,7 @@ import { seasonColors } from "@repo/cosmo/types/common";
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
+import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
@@ -26,7 +27,11 @@ import { cn } from "@/utils/classes";
 
 import StatsFilter from "./stats-filter";
 
-export default function ProfileStatsRender() {
+export default dynamic(() => Promise.resolve(ProfileStatsRender), {
+  ssr: false,
+});
+
+function ProfileStatsRender() {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (

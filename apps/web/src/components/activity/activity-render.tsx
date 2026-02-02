@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
+import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -44,7 +45,11 @@ type WebSocketMessage =
 
 const ROW_HEIGHT = 42;
 
-export default function ActivityRender() {
+export default dynamic(() => Promise.resolve(ActivityRender), {
+  ssr: false,
+});
+
+function ActivityRender() {
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">

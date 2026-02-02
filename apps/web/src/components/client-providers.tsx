@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useRouter } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import { type PropsWithChildren, useEffect, useLayoutEffect, useState } from "react";
+import { type PropsWithChildren, useLayoutEffect, useState } from "react";
 import { RouterProvider } from "react-aria-components";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -32,31 +32,15 @@ export default function ClientProviders({ children }: PropsWithChildren) {
           defaultTheme="system"
           themes={["light", "dark"]}
         >
-          <Mounted>
+          <NuqsAdapter>
             <Toast />
-            <NuqsAdapter>
-              {children}
-              <ReactQueryDevtools />
-            </NuqsAdapter>
-          </Mounted>
+            {children}
+            <ReactQueryDevtools />
+          </NuqsAdapter>
         </ThemeProvider>
       </AppRouterProvider>
     </QueryClientProvider>
   );
-}
-
-function Mounted({ children }: PropsWithChildren) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
-  return children;
 }
 
 export function ThemeStyleProvider({ children }: PropsWithChildren) {

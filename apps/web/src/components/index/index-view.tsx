@@ -3,6 +3,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -28,7 +29,11 @@ import ObjektView from "../objekt/objekt-view";
 import { Loader } from "../ui/loader";
 import Filter from "./filter";
 
-export default function IndexRender() {
+export default dynamic(() => Promise.resolve(IndexRender), {
+  ssr: false,
+});
+
+function IndexRender() {
   return (
     <ObjektColumnProvider>
       <ObjektSelectProvider>

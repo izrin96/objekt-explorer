@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import type { PropsWithChildren } from "react";
 
 import { NextIntlClientProvider } from "next-intl";
 
 import "@/app/globals.css";
-import { getLocale } from "next-intl/server";
 import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
+import { Suspense, type PropsWithChildren } from "react";
 import { preconnect } from "react-dom";
 
 import { Analytics } from "@/components/analytics";
-import ClientProviders, { ClientArtistProvider } from "@/components/client-providers";
 import "@/lib/orpc/server";
+import ClientProviders, { ClientArtistProvider } from "@/components/client-providers";
 import Navbar from "@/components/navbar";
+import { Loader } from "@/components/ui/loader";
 import { getSelectedArtists } from "@/lib/client-fetching";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
@@ -85,18 +85,42 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const [locale, selectedArtistIds] = await Promise.all([getLocale(), getSelectedArtists()]);
-  const queryClient = getQueryClient();
-
   preconnect("https://imagedelivery.net");
   preconnect("https://resources.cosmo.fans");
   preconnect("https://static.cosmo.fans");
 
+  return (
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable}`}
+    >
+      <body className="min-h-svh font-sans antialiased">
+        <ClientProviders>
+          <Suspense fallback={<Loading />}>
+            <Providers>{children}</Providers>
+          </Suspense>
+        </ClientProviders>
+      </body>
+    </html>
+  );
+}
+
+function Loading() {
+  return (
+    <div className="flex w-full flex-col items-center justify-center gap-2">
+      <Loader variant="ring" />
+    </div>
+  );
+}
+
+async function Providers({ children }: PropsWithChildren) {
+  const selectedArtistIds = await getSelectedArtists();
+  const queryClient = getQueryClient();
+
   void queryClient.prefetchQuery({
     queryKey: ["session"],
-    queryFn: () => {
-      return getSession();
-    },
+    queryFn: () => getSession(),
   });
 
   void queryClient.prefetchQuery({
@@ -105,24 +129,14 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   });
 
   return (
-    <html
-      lang={locale}
-      suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable}`}
-    >
-      <body className="min-h-svh font-sans antialiased">
-        <NextIntlClientProvider>
-          <ClientProviders>
-            <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>
-              <HydrateClient client={queryClient}>
-                <Navbar />
-                <main className="mx-auto w-full">{children}</main>
-                <Analytics />
-              </HydrateClient>
-            </ClientArtistProvider>
-          </ClientProviders>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider>
+      <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>
+        <HydrateClient client={queryClient}>
+          <Navbar />
+          <main className="mx-auto w-full">{children}</main>
+          <Analytics />
+        </HydrateClient>
+      </ClientArtistProvider>
+    </NextIntlClientProvider>
   );
 }

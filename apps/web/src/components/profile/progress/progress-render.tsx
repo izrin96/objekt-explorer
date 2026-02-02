@@ -3,6 +3,7 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
+import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -25,7 +26,11 @@ import { cn } from "@/utils/classes";
 import { useShowCount } from "./filter-showcount";
 import ProgressFilter from "./progress-filter";
 
-export default function ProgressRender() {
+export default dynamic(() => Promise.resolve(ProgressRender), {
+  ssr: false,
+});
+
+function ProgressRender() {
   return (
     <ObjektColumnProvider>
       <ObjektModalProvider initialTab="owned">
