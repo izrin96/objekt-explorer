@@ -2,6 +2,7 @@ import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
 import { type UserAddress, userAddress } from "@repo/db/schema";
+import { isAddress } from "@repo/lib";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins/username";
@@ -9,7 +10,6 @@ import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { cache } from "react";
-import { isAddress } from "viem";
 
 import { env } from "@/env";
 

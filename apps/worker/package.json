@@ -15,7 +15,7 @@
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
-    "croner": "^9.1.0",
+    "croner": "^10.0.1",
     "drizzle-orm": "^0.45.1",
     "ofetch": "^1.5.1",
     "zod": "^4.3.6"
