@@ -1,4 +1,4 @@
-FROM oven/bun:slim AS base
+FROM oven/bun:alpine AS base
 
 # Prune the monorepo to only include server and its dependencies
 FROM base AS pruner
@@ -23,7 +23,7 @@ RUN bun run build --filter=server
 FROM base AS runner
 
 # Install curl for healthchecks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache curl
 
 WORKDIR /app
 ENV NODE_ENV=production
