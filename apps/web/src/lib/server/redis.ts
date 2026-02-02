@@ -2,7 +2,9 @@ import { Redis } from "ioredis";
 
 import { env } from "@/env";
 
-export const redis = new Redis(env.REDIS_URL);
+const isBuild = process.env.NEXT_PHASE === "phase-production-build";
+
+export const redis = isBuild ? ({} as Redis) : new Redis(env.REDIS_URL);
 
 export async function getCache<T>(
   key: string,

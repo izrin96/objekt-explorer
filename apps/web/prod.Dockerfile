@@ -1,4 +1,4 @@
-FROM oven/bun:1.3.6-slim AS base
+FROM oven/bun:slim AS base
 WORKDIR /app
 
 # prune monorepo
@@ -11,7 +11,7 @@ RUN turbo prune web --docker
 # dependencies & build
 FROM base AS build
 COPY --from=prune /app/out/json/ .
-RUN bun install --frozen-lockfile
+RUN bun install
 COPY --from=prune /app/out/full/ .
 
 ENV NEXT_TELEMETRY_DISABLED=1
