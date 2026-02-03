@@ -1,6 +1,6 @@
 "use client";
 
-import { IconDotsVertical } from "@intentui/icons";
+import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -99,7 +99,7 @@ function ListCard({ list }: ListCardProps) {
           <div className="flex items-center">
             <Menu>
               <Button intent="outline" size="sq-xs">
-                <IconDotsVertical />
+                <EllipsisVerticalIcon className="size-5" />
               </Button>
               <MenuContent className="sm:min-w-56">
                 <MenuItem href={`/list/${list.slug}`}>Open</MenuItem>

@@ -2,7 +2,7 @@
 
 import type { SortDescriptor } from "react-aria-components";
 
-import { IconOpenLink } from "@intentui/icons";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import {
   CaretLeftIcon,
   CaretRightIcon,
@@ -96,7 +96,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
         )}
         <Tab id="trades">{t("trades")}</Tab>
         <Tab id="apollo" href={`https://apollo.cafe/?id=${objekt.slug}`} target="_blank">
-          <IconOpenLink />
+          <ArrowTopRightOnSquareIcon className="size-5" />
           {t("view_in_apollo")}
         </Tab>
       </TabList>
@@ -297,7 +297,7 @@ function OwnedListPanel({
                       target="_blank"
                     >
                       {item.id}
-                      <IconOpenLink />
+                      <ArrowTopRightOnSquareIcon className="size-4" />
                     </Link>
                   </TableCell>
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>

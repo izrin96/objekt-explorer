@@ -2,7 +2,7 @@
 
 import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/types/objekt";
 
-import { IconOpenLink } from "@intentui/icons";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import {
   CaretLeftIcon,
   CaretLineLeftIcon,
@@ -277,7 +277,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
               target="_blank"
             >
               {data.tokenId}
-              <IconOpenLink />
+              <ArrowTopRightOnSquareIcon className="size-4" />
             </Link>
             <CopyIcon
               size={16}

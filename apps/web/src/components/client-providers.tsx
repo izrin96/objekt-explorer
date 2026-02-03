@@ -5,7 +5,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useRouter } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type PropsWithChildren, useState } from "react";
-import { I18nProvider, RouterProvider } from "react-aria-components";
+import { RouterProvider } from "react-aria-components";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { createQueryClient } from "@/lib/query/client";
@@ -23,23 +23,21 @@ export default function ClientProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => createQueryClient());
 
   return (
-    <I18nProvider locale="en">
-      <RouterProvider navigate={router.push}>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider
-            enableSystem
-            attribute="class"
-            defaultTheme="system"
-            themes={["light", "dark"]}
-          >
-            <NuqsAdapter>
-              <Toast />
-              {children}
-              <ReactQueryDevtools />
-            </NuqsAdapter>
-          </ThemeProvider>
-        </QueryClientProvider>
-      </RouterProvider>
-    </I18nProvider>
+    <RouterProvider navigate={router.push}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          enableSystem
+          attribute="class"
+          defaultTheme="system"
+          themes={["light", "dark"]}
+        >
+          <NuqsAdapter>
+            <Toast />
+            {children}
+            <ReactQueryDevtools />
+          </NuqsAdapter>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </RouterProvider>
   );
 }
