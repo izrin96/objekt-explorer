@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { useTarget } from "@/hooks/use-target";
 
@@ -19,6 +20,10 @@ export default function ProfileTabs() {
     { url: `/@${path}/stats`, label: "Statistics" },
   ];
 
+  useEffect(() => {
+    items.forEach((item) => router.prefetch(item.url));
+  }, [items, router]);
+
   return (
     <Tabs
       aria-label="Navbar"
@@ -32,8 +37,6 @@ export default function ProfileTabs() {
             id={item.url}
             href={item.url}
             aria-label={item.label}
-            onMouseOver={() => router.prefetch(item.url)}
-            onPointerOver={() => router.prefetch(item.url)}
           >
             {item.label}
           </Tab>
