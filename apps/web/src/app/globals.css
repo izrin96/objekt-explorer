@@ -6,10 +6,10 @@
 
 @theme inline {
   --font-sans:
-    var(--font-sans), var(--font-noto-sans-kr), var(--font-noto-sans-sc), ui-sans-serif, system-ui,
+    var(--font-inter), var(--font-noto-sans-kr), var(--font-noto-sans-sc), ui-sans-serif, system-ui,
     sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono:
-    var(--font-mono), "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas",
+    var(--font-geist-mono), "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas",
     '"Liberation Mono"', '"Courier New"', "monospace";
 
   --font-sans--font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -154,9 +154,6 @@
   --radius-2xl: calc(var(--radius-lg) * 2);
   --radius-3xl: calc(var(--radius-lg) * 3);
   --radius-4xl: calc(var(--radius-lg) * 4);
-
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
 
   /* custom */
   --accent-solid: oklch(0.585 0.233 277.117);

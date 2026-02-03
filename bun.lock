@@ -75,7 +75,6 @@
         "@orpc/server": "^1.13.4",
         "@orpc/tanstack-query": "^1.13.4",
         "@phosphor-icons/react": "^2.1.10",
-        "@react-aria/optimize-locales-plugin": "^1.1.5",
         "@react-stately/color": "^3.9.3",
         "@react-stately/data": "^3.15.0",
         "@repo/cosmo": "workspace:*",
@@ -825,8 +824,6 @@
     "@react-aria/meter": ["@react-aria/meter@3.4.28", "", { "dependencies": { "@react-aria/progress": "^3.4.28", "@react-types/meter": "^3.4.13", "@react-types/shared": "^3.32.1", "@swc/helpers": "^0.5.0" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1", "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1" } }, "sha512-elACITUBOf4Dp+BQ2aIgHIe58fjWYjspxhVcE5BMiqePktOfRkpb9ESj8nWcNXO8eqCYwrFJpElHvXkjYLWemw=="],
 
     "@react-aria/numberfield": ["@react-aria/numberfield@3.12.3", "", { "dependencies": { "@react-aria/i18n": "^3.12.14", "@react-aria/interactions": "^3.26.0", "@react-aria/spinbutton": "^3.7.0", "@react-aria/textfield": "^3.18.3", "@react-aria/utils": "^3.32.0", "@react-stately/form": "^3.2.2", "@react-stately/numberfield": "^3.10.3", "@react-types/button": "^3.14.1", "@react-types/numberfield": "^3.8.16", "@react-types/shared": "^3.32.1", "@swc/helpers": "^0.5.0" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1", "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1" } }, "sha512-70LRXWPEuj2X8mbQXUx6l6We+RGs49Kb+2eUiSSLArHK4RvTWJWEfSjHL5IHHJ+j2AkbORdryD7SR3gcXSX+5w=="],
-
-    "@react-aria/optimize-locales-plugin": ["@react-aria/optimize-locales-plugin@1.1.5", "", { "dependencies": { "unplugin": "^1.4.0" } }, "sha512-X8Y2Jm8pxNGQ3yBtiSZ8u3tn7YKg+xKUNZZWEFXiNR0Cd2Hu25NMEIUs2xoX+6gP6UbFBhwl3erEbnJRSIaHcw=="],
 
     "@react-aria/overlays": ["@react-aria/overlays@3.31.0", "", { "dependencies": { "@react-aria/focus": "^3.21.3", "@react-aria/i18n": "^3.12.14", "@react-aria/interactions": "^3.26.0", "@react-aria/ssr": "^3.9.10", "@react-aria/utils": "^3.32.0", "@react-aria/visually-hidden": "^3.8.29", "@react-stately/overlays": "^3.6.21", "@react-types/button": "^3.14.1", "@react-types/overlays": "^3.9.2", "@react-types/shared": "^3.32.1", "@swc/helpers": "^0.5.0" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1", "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1" } }, "sha512-Vq41X1s8XheGIhGbbuqRJslJEX08qmMVX//dwuBaFX9T18mMR04tumKOMxp8Lz+vqwdGLvjNUYDMcgolL+AMjw=="],
 
@@ -2510,8 +2507,6 @@
 
     "unpipe": ["unpipe@1.0.0", "", {}, "sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ=="],
 
-    "unplugin": ["unplugin@1.16.1", "", { "dependencies": { "acorn": "^8.14.0", "webpack-virtual-modules": "^0.6.2" } }, "sha512-4/u/j4FrCKdi17jaxuJA0jClGxB1AvU2hw/IuayPc4ay1XGaJs/rbb4v5WKwAjNifjmXK9PIFyuPiaK8azyR9w=="],
-
     "until-async": ["until-async@3.0.2", "", {}, "sha512-IiSk4HlzAMqTUseHHe3VhIGyuFmN90zMTpD3Z3y8jeQbzLIq500MVM7Jq2vUAnTKAFPJrqwkzr6PoTcPhGcOiw=="],
 
     "upath": ["upath@2.0.1", "", {}, "sha512-1uEe95xksV1O0CYKXo8vQvN1JEbtJp7lb7C5U9HMsIp6IVwntkH/oNUzyVNQSd4S1sYk2FpSSW44FqMc8qee5w=="],
@@ -2555,8 +2550,6 @@
     "webdriver-bidi-protocol": ["webdriver-bidi-protocol@0.4.0", "", {}, "sha512-U9VIlNRrq94d1xxR9JrCEAx5Gv/2W7ERSv8oWRoNe/QYbfccS0V3h/H6qeNeCRJxXGMhhnkqvwNrvPAYeuP9VA=="],
 
     "webidl-conversions": ["webidl-conversions@3.0.1", "", {}, "sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ=="],
-
-    "webpack-virtual-modules": ["webpack-virtual-modules@0.6.2", "", {}, "sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ=="],
 
     "webrtc-adapter": ["webrtc-adapter@8.2.4", "", { "dependencies": { "sdp": "^3.2.0" } }, "sha512-VwtwbYNKnVQW8koB9qb8YcxNwpSVHTvvKEZLzY6uQ3gFrA9E87VPbB5xE+m1AGwUjL1UgN35jRR9hQgteZI5bg=="],
 

@@ -1,6 +1,5 @@
 import type { NextConfig } from "next";
 
-import optimizeLocales from "@react-aria/optimize-locales-plugin";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
@@ -13,14 +12,6 @@ const nextConfig: NextConfig = {
       static: 180,
     },
     optimizePackageImports: ["react-aria-components", "@phosphor-icons/react"],
-  },
-  webpack(config) {
-    config.plugins.push(
-      optimizeLocales.webpack({
-        locales: ["en-US"],
-      }),
-    );
-    return config;
   },
   async rewrites() {
     return [
