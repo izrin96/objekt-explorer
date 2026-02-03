@@ -1,8 +1,8 @@
-import { Redis } from "ioredis";
+import { RedisClient } from "bun";
 
 import { env } from "@/env";
 
-export const redis = new Redis(env.REDIS_URL);
+export const redis = new RedisClient(env.REDIS_URL);
 
 export async function getCache<T>(
   key: string,

@@ -1,3 +1,3 @@
-import Redis from "ioredis";
+import { RedisClient } from "bun";
 
-export const redisPubSub = new Redis(process.env.REDIS_PUBSUB_URL || "");
+export const redisPubSub = new RedisClient(process.env.REDIS_PUBSUB_URL || "");

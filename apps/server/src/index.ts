@@ -1,9 +1,9 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
-import type { ServerWebSocket } from "bun";
 
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
+import { serve, type ServerWebSocket } from "bun";
 
 import { redisPubSub } from "./lib/redis";
 
@@ -26,9 +26,7 @@ type TransferSendData = {
   objekt: OwnedObjekt;
 };
 
-void redisPubSub.subscribe("transfers");
-
-redisPubSub.on("message", async (channel, message) => {
+void redisPubSub.subscribe("transfers", async (message, channel) => {
   if (channel === "transfers") {
     const transfers = JSON.parse(message) as TransferData[];
 
@@ -81,7 +79,7 @@ redisPubSub.on("message", async (channel, message) => {
   }
 });
 
-const server = Bun.serve({
+const server = serve({
   port: 3000,
   fetch(req, server) {
     const url = new URL(req.url);
