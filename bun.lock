@@ -109,7 +109,6 @@
         "qrcode.react": "^4.2.0",
         "react": "^19.2.4",
         "react-advanced-cropper": "^0.20.1",
-        "react-aria": "^3.45.0",
         "react-aria-components": "^1.14.0",
         "react-dom": "^19.2.4",
         "react-error-boundary": "^6.1.0",

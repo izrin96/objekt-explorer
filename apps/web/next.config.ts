@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
       dynamic: 30,
       static: 180,
     },
-    optimizePackageImports: ["react-aria", "react-aria-components", "@phosphor-icons/react"],
+    optimizePackageImports: ["react-aria-components", "@phosphor-icons/react"],
   },
   webpack(config) {
     config.plugins.push(
