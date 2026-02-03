@@ -3,7 +3,7 @@
 import { IconDotsVertical } from "@intentui/icons";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { orpc } from "@/lib/orpc/client";
@@ -13,6 +13,7 @@ import ErrorFallbackRender from "../error-boundary";
 import { Button, buttonStyles } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 import { Link } from "../ui/link";
+import { Loader } from "../ui/loader";
 import { Menu, MenuContent, MenuItem } from "../ui/menu";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
 
@@ -21,7 +22,15 @@ export default function MyLinkRender() {
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <MyLink />
+          <Suspense
+            fallback={
+              <div className="flex justify-center">
+                <Loader variant="ring" />
+              </div>
+            }
+          >
+            <MyLink />
+          </Suspense>
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>

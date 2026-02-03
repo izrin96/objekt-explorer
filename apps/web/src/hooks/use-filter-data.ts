@@ -1,34 +1,25 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { ofetch } from "ofetch";
-
-import { getBaseURL } from "@/lib/utils";
+import { orpc } from "@/lib/orpc/client";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 
-export const filterDataQuery = queryOptions({
-  queryKey: ["filter-data"],
-  queryFn: () => {
-    const url = new URL("/api/filter-data", getBaseURL());
-    return ofetch<FilterData>(url.toString());
-  },
-  staleTime: Infinity,
-  refetchOnWindowFocus: false,
-});
-
 export function useFilterData() {
-  const { data } = useSuspenseQuery(filterDataQuery);
+  const { data } = useSuspenseQuery({
+    ...orpc.config.getFilterData.queryOptions(),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
   const { selectedArtistIds } = useCosmoArtist();
 
   const selectedSeasonMap =
     selectedArtistIds.length > 0
-      ? data.seasonsMap.filter((a) => selectedArtistIds.includes(a.artistId as ValidArtist))
+      ? data.seasonsMap.filter((a) => selectedArtistIds.includes(a.artistId))
       : data.seasonsMap;
 
   const selectedClassMap =
     selectedArtistIds.length > 0
-      ? data.classesMap.filter((a) => selectedArtistIds.includes(a.artistId as ValidArtist))
+      ? data.classesMap.filter((a) => selectedArtistIds.includes(a.artistId))
       : data.classesMap;
 
   return {

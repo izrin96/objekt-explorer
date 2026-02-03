@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactCompiler: true,
   compress: false,
+  experimental: {
+    staleTimes: {
+      dynamic: 30,
+      static: 180,
+    },
+  },
   async rewrites() {
     return [
       {

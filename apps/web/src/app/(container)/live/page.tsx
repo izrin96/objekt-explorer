@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
+
 import LiveSessionListRender from "@/components/live/session-list";
+import { Loader } from "@/components/ui/loader";
 import { Note } from "@/components/ui/note";
 import { env } from "@/env";
 
@@ -25,7 +28,17 @@ export default async function Page(props: Props) {
         As this feature violates Cosmo&apos;s Terms of Service, we will no longer continue offering
         it. Please watch the live stream on the Cosmo app instead.
       </Note>
-      {token === env.BYPASS_LIVE_KEY && <LiveSessionListRender />}
+      {token === env.BYPASS_LIVE_KEY && (
+        <Suspense
+          fallback={
+            <div className="flex justify-center">
+              <Loader variant="ring" />
+            </div>
+          }
+        >
+          <LiveSessionListRender />
+        </Suspense>
+      )}
     </div>
   );
 }

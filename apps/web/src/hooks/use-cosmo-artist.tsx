@@ -5,9 +5,10 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 
 import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
 
+import { useSelectedArtists } from "./use-selected-artists";
+
 type ContextProps = {
   artists: CosmoArtistWithMembersBFF[];
-  selectedArtistIds: ValidArtist[];
   artistMap: Map<string, CosmoArtistWithMembersBFF>;
   memberMap: Map<string, CosmoMemberBFF>;
 };
@@ -16,14 +17,9 @@ const CosmoArtistContext = createContext<ContextProps | null>(null);
 
 export type CosmoArtistProviderProps = PropsWithChildren<{
   artists: CosmoArtistWithMembersBFF[];
-  selectedArtistIds: ValidArtist[];
 }>;
 
-export function CosmoArtistProvider({
-  children,
-  artists,
-  selectedArtistIds,
-}: CosmoArtistProviderProps) {
+export function CosmoArtistProvider({ children, artists }: CosmoArtistProviderProps) {
   const artistMap = new Map(artists.map((artist) => [artist.id.toLowerCase(), artist]));
   const memberMap = new Map(
     artists.flatMap((artist) =>
@@ -31,15 +27,15 @@ export function CosmoArtistProvider({
     ),
   );
   return (
-    <CosmoArtistContext value={{ artists, artistMap, memberMap, selectedArtistIds }}>
-      {children}
-    </CosmoArtistContext>
+    <CosmoArtistContext value={{ artists, artistMap, memberMap }}>{children}</CosmoArtistContext>
   );
 }
 
 export function useCosmoArtist() {
   const ctx = useContext(CosmoArtistContext);
   if (!ctx) throw new Error("useCosmoArtist must be used within CosmoArtistProvider");
+
+  const { data: selectedArtistIds } = useSelectedArtists();
 
   const getArtist = useCallback(
     (artistName: string) => ctx.artistMap.get(artistName.toLowerCase()),
@@ -53,24 +49,24 @@ export function useCosmoArtist() {
 
   const getSelectedArtistIds = useCallback(
     (artistIds: ValidArtist[] | null) =>
-      ctx.selectedArtistIds.length > 0
+      selectedArtistIds.length > 0
         ? artistIds !== null
-          ? artistIds.filter((artist) => ctx.selectedArtistIds.includes(artist))
-          : ctx.selectedArtistIds
+          ? artistIds.filter((artist) => selectedArtistIds.includes(artist))
+          : selectedArtistIds
         : artistIds,
-    [ctx.selectedArtistIds],
+    [selectedArtistIds],
   );
 
   const selectedArtists =
-    ctx.selectedArtistIds.length > 0
-      ? ctx.artists.filter((a) => ctx.selectedArtistIds.includes(a.id))
+    selectedArtistIds.length > 0
+      ? ctx.artists.filter((a) => selectedArtistIds.includes(a.id))
       : ctx.artists;
 
   return {
     artists: ctx.artists,
     getArtist,
     getMember,
-    selectedArtistIds: ctx.selectedArtistIds,
+    selectedArtistIds,
     selectedArtists,
     getSelectedArtistIds,
   };

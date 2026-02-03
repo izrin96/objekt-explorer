@@ -3,7 +3,7 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useTransition } from "react";
 
@@ -16,6 +16,7 @@ import { Loader } from "../ui/loader";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
 export default function SelectedArtistFilter() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { artists, selectedArtistIds, selectedArtists } = useCosmoArtist();
   const [isPending, startTransition] = useTransition();
@@ -26,6 +27,9 @@ export default function SelectedArtistFilter() {
     startTransition(async () => {
       const values = Array.from((key as Set<ValidArtist>).values());
       await setArtists.mutateAsync(values);
+      void queryClient.invalidateQueries({
+        queryKey: orpc.config.getArtists.key(),
+      });
       router.refresh();
     });
   }, []);

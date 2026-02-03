@@ -4,19 +4,18 @@ import { NextIntlClientProvider } from "next-intl";
 
 import "@/app/globals.css";
 import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
-import { Suspense, type PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 import { preconnect } from "react-dom";
 
-import { Analytics } from "@/components/analytics";
 import "@/lib/orpc/server";
-import ClientProviders, { ClientArtistProvider } from "@/components/client-providers";
+import { Analytics } from "@/components/analytics";
+import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
-import { Loader } from "@/components/ui/loader";
-import { getSelectedArtists } from "@/lib/client-fetching";
+import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 import { artists } from "@/lib/server/cosmo/artists";
-import { fetchFilterData } from "@/lib/server/objekts/filter-data";
 import { SITE_NAME } from "@/lib/utils";
 
 const inter = Google_Sans_Flex({
@@ -24,6 +23,8 @@ const inter = Google_Sans_Flex({
   display: "swap",
   subsets: ["latin"],
   weight: "variable",
+  adjustFontFallback: false,
+  fallback: [],
 });
 
 const geistMono = Geist_Mono({
@@ -97,46 +98,34 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     >
       <body className="min-h-svh font-sans antialiased">
         <ClientProviders>
-          <Suspense fallback={<Loading />}>
-            <Providers>{children}</Providers>
-          </Suspense>
+          <Providers>
+            <Navbar />
+            <main className="mx-auto w-full">{children}</main>
+            <Analytics />
+          </Providers>
         </ClientProviders>
       </body>
     </html>
   );
 }
 
-function Loading() {
-  return (
-    <div className="flex w-full flex-col items-center justify-center gap-2">
-      <Loader variant="ring" />
-    </div>
-  );
-}
-
-async function Providers({ children }: PropsWithChildren) {
-  const selectedArtistIds = await getSelectedArtists();
+function Providers({ children }: PropsWithChildren) {
   const queryClient = getQueryClient();
+
+  void queryClient.prefetchQuery(orpc.config.getArtists.queryOptions());
 
   void queryClient.prefetchQuery({
     queryKey: ["session"],
     queryFn: () => getSession(),
   });
 
-  void queryClient.prefetchQuery({
-    queryKey: ["filter-data"],
-    queryFn: fetchFilterData,
-  });
+  void queryClient.prefetchQuery(orpc.config.getFilterData.queryOptions());
 
   return (
-    <NextIntlClientProvider>
-      <ClientArtistProvider artists={artists} selectedArtistIds={selectedArtistIds}>
-        <HydrateClient client={queryClient}>
-          <Navbar />
-          <main className="mx-auto w-full">{children}</main>
-          <Analytics />
-        </HydrateClient>
-      </ClientArtistProvider>
-    </NextIntlClientProvider>
+    <HydrateClient client={queryClient}>
+      <NextIntlClientProvider>
+        <CosmoArtistProvider artists={artists}>{children}</CosmoArtistProvider>
+      </NextIntlClientProvider>
+    </HydrateClient>
   );
 }

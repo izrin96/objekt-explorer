@@ -21,8 +21,12 @@ export default function ActivityFilter() {
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
       <TypeFilter />
-      <ArtistFilter />
-      <MemberFilter />
+      <Suspense>
+        <ArtistFilter />
+      </Suspense>
+      <Suspense>
+        <MemberFilter />
+      </Suspense>
       <FilterSeason />
       <FilterClass />
       <FilterOnline />

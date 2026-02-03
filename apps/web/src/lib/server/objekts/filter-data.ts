@@ -1,3 +1,5 @@
+import type { ValidArtist } from "@repo/cosmo/types/common";
+
 import { type ValidFourSeason, validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
@@ -26,7 +28,7 @@ export async function fetchSeasonMap() {
     })
     .from(collections);
 
-  const seasonArtistMap = new Map<string, string[]>();
+  const seasonArtistMap = new Map<ValidArtist, string[]>();
   for (const artist of validArtists) {
     const items = result.filter((a) => a.artist === artist.toLowerCase());
     for (const item of items) {

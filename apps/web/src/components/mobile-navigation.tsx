@@ -104,9 +104,10 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
           <Suspense>
             <UserNav />
           </Suspense>
-          {/* <ThemeStyleSwitcher /> */}
           <ThemeSwitcher />
-          <SelectedArtistFilter />
+          <Suspense>
+            <SelectedArtistFilter />
+          </Suspense>
           <UserSearch />
         </div>
       </Container>

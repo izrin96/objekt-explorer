@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import ArtistFilter from "@/components/filters/filter-artist";
 import FilterClass from "@/components/filters/filter-class";
 import ColumnFilter from "@/components/filters/filter-column";
@@ -21,8 +23,12 @@ export default function ProgressFilter() {
   const isFiltering = useIsFiltering();
   return (
     <div className="flex flex-wrap items-center justify-center gap-2">
-      <ArtistFilter />
-      <MemberFilter />
+      <Suspense>
+        <ArtistFilter />
+      </Suspense>
+      <Suspense>
+        <MemberFilter />
+      </Suspense>
       <TransferableFilter />
       <FilterSeason />
       <FilterClass hideEtc />

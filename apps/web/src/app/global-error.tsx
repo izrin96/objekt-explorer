@@ -13,6 +13,8 @@ const inter = Google_Sans_Flex({
   display: "swap",
   subsets: ["latin"],
   weight: "variable",
+  adjustFontFallback: false,
+  fallback: [],
 });
 
 export default function GlobalError() {

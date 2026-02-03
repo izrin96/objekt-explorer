@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 
 import ProfileObjektRender from "@/components/profile/profile-objekt";
 import { getUserByIdentifier } from "@/lib/client-fetching";
-import { orpc } from "@/lib/orpc/client";
-import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { parseNickname } from "@/lib/utils";
 
 type Props = {
@@ -21,26 +19,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-export default async function UserCollectionPage(props: Props) {
-  const queryClient = getQueryClient();
-  const params = await props.params;
-  const profile = await getUserByIdentifier(params.nickname);
-
-  void queryClient.prefetchQuery(
-    orpc.pins.list.queryOptions({
-      input: profile.address,
-    }),
-  );
-
-  void queryClient.prefetchQuery(
-    orpc.lockedObjekt.list.queryOptions({
-      input: profile.address,
-    }),
-  );
-
-  return (
-    <HydrateClient client={queryClient}>
-      <ProfileObjektRender />
-    </HydrateClient>
-  );
+export default async function UserCollectionPage() {
+  return <ProfileObjektRender />;
 }

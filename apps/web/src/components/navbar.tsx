@@ -42,9 +42,10 @@ export default function Navbar() {
             <Suspense>
               <UserNav />
             </Suspense>
-            {/* <ThemeStyleSwitcher /> */}
             <ThemeSwitcher />
-            <SelectedArtistFilter />
+            <Suspense>
+              <SelectedArtistFilter />
+            </Suspense>
             <UserSearch />
           </div>
         </Container>

@@ -3,7 +3,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 
@@ -33,6 +33,7 @@ import {
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
+import { Loader } from "../ui/loader";
 import Filter from "./filter";
 
 export default function ListRender() {
@@ -44,7 +45,15 @@ export default function ListRender() {
           <QueryErrorResetBoundary>
             {({ reset }) => (
               <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <ListView list={list} />
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
+                  }
+                >
+                  <ListView list={list} />
+                </Suspense>
               </ErrorBoundary>
             )}
           </QueryErrorResetBoundary>

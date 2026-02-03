@@ -2,6 +2,8 @@
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
+import { Suspense } from "react";
+
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 
@@ -30,8 +32,12 @@ export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
-        <ArtistFilter />
-        <MemberFilter />
+        <Suspense>
+          <ArtistFilter />
+        </Suspense>
+        <Suspense>
+          <MemberFilter />
+        </Suspense>
         <SeasonFilter />
         <ClassFilter />
         <EditionFilter />

@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { ArchiveXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import NextImage from "next/image";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
@@ -60,7 +60,9 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
       </div>
       <div className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:-me-2 sm:min-h-full sm:[scrollbar-gutter:stable]">
         <div className="font-semibold">{objekt.collectionId}</div>
-        <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
+        <Suspense>
+          <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
+        </Suspense>
         <ObjektPanel objekts={objekts} showOwned={showOwned} />
         <div className="flex-1" aria-hidden />
       </div>

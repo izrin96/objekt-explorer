@@ -1,12 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { useTarget } from "@/hooks/use-target";
 
 import { Tab, TabList, Tabs } from "../ui/tabs";
 
 export default function ProfileTabs() {
+  const router = useRouter();
   const profile = useTarget((a) => a.profile)!;
   const pathname = usePathname();
   const path = profile.nickname ?? profile.address;
@@ -26,7 +27,14 @@ export default function ProfileTabs() {
     >
       <TabList className="border-b-0">
         {items.map((item) => (
-          <Tab key={item.url} id={item.url} href={item.url} aria-label={item.label}>
+          <Tab
+            key={item.url}
+            id={item.url}
+            href={item.url}
+            aria-label={item.label}
+            onMouseOver={() => router.prefetch(item.url)}
+            onPointerOver={() => router.prefetch(item.url)}
+          >
             {item.label}
           </Tab>
         ))}
