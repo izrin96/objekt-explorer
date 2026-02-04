@@ -48,8 +48,8 @@ export async function GET(request: NextRequest) {
       },
     })
     .from(transfers)
-    .innerJoin(collections, eq(transfers.collectionId, collections.id))
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+    .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(
       and(
         ...(cursor ? [lt(transfers.id, cursor.id)] : []),

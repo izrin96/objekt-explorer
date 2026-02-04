@@ -81,8 +81,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       },
     })
     .from(transfers)
-    .innerJoin(collections, eq(transfers.collectionId, collections.id))
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+    .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(
       and(
         ...(query.type === "all"
