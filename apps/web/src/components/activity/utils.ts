@@ -8,8 +8,14 @@ export function filterData(
   type: ValidType,
   filters: Filters,
 ): ActivityData[] {
+  const artistSet = filters.artist?.length ? new Set(filters.artist.map((a) => a.toLowerCase())) : null;
+  const memberSet = filters.member?.length ? new Set(filters.member) : null;
+  const seasonSet = filters.season?.length ? new Set(filters.season) : null;
+  const classSet = filters.class?.length ? new Set(filters.class) : null;
+  const onOfflineSet = filters.on_offline?.length ? new Set(filters.on_offline) : null;
+  const collectionSet = filters.collection?.length ? new Set(filters.collection) : null;
+
   return data.filter((item) => {
-    // Filter by type
     if (type !== "all") {
       const isMint = item.transfer.from === Addresses.NULL;
       const isSpin = item.transfer.to === Addresses.SPIN;
@@ -20,47 +26,12 @@ export function filterData(
       if (type === "transfer" && !isTransfer) return false;
     }
 
-    // Filter by artist
-    if (filters.artist?.length) {
-      if (!filters.artist.map((a) => a.toLowerCase()).includes(item.objekt.artist.toLowerCase())) {
-        return false;
-      }
-    }
-
-    // Filter by member
-    if (filters.member?.length) {
-      if (!filters.member.includes(item.objekt.member)) {
-        return false;
-      }
-    }
-
-    // Filter by season
-    if (filters.season?.length) {
-      if (!filters.season.includes(item.objekt.season)) {
-        return false;
-      }
-    }
-
-    // Filter by class
-    if (filters.class?.length) {
-      if (!filters.class.includes(item.objekt.class)) {
-        return false;
-      }
-    }
-
-    // Filter by on/offline
-    if (filters.on_offline?.length) {
-      if (!filters.on_offline.includes(item.objekt.onOffline)) {
-        return false;
-      }
-    }
-
-    // Filter by collectionNo
-    if (filters.collection?.length) {
-      if (!filters.collection.includes(item.objekt.collectionNo)) {
-        return false;
-      }
-    }
+    if (artistSet && !artistSet.has(item.objekt.artist.toLowerCase())) return false;
+    if (memberSet && !memberSet.has(item.objekt.member)) return false;
+    if (seasonSet && !seasonSet.has(item.objekt.season)) return false;
+    if (classSet && !classSet.has(item.objekt.class)) return false;
+    if (onOfflineSet && !onOfflineSet.has(item.objekt.onOffline)) return false;
+    if (collectionSet && !collectionSet.has(item.objekt.collectionNo)) return false;
 
     return true;
   });

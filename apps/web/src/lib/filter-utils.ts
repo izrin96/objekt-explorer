@@ -35,6 +35,10 @@ function getObjektBreakdown(objekt: ValidObjekt) {
   };
 }
 
+function toSeasonKey(seasonCode: string, seasonNumber: number) {
+  return String(seasonNumber).padStart(2, "0") + seasonCode;
+}
+
 function searchFilter(keyword: string, objekt: ValidObjekt) {
   // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && isObjektOwned(objekt)) {
@@ -43,42 +47,38 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
     return objekt.serial >= start && objekt.serial <= (end ?? start);
   }
 
-  // Handle collection range search (e.g. 301z-302z)
-  // legacy, doesn't support for atom02
+  // Handle collection range search (e.g. 301z-302z, aa201z-204z, a201z-aa204z)
   if (!keyword.startsWith("#") && keyword.includes("-")) {
     const [start, end] = keyword.split("-").map(parseCollectionNo);
     if (!start || !end) return false;
+    if (objekt.artist === "idntt") return false;
 
-    const objektBreakdown = getObjektBreakdown(objekt);
+    const breakdown = getObjektBreakdown(objekt);
+    const hasSeason = start.seasonNumber > 0 || end.seasonNumber > 0;
 
-    const startBreakdown = {
-      collectionNo: start.collectionNo,
-      seasonCode: start.seasonCode || "a",
-      seasonNumber: start.seasonNumber,
-      type: start.type || "a",
-    };
+    if (hasSeason) {
+      const startSeasonKey = toSeasonKey(
+        start.seasonCode || end.seasonCode || "a",
+        start.seasonNumber || end.seasonNumber,
+      );
+      const endSeasonKey = toSeasonKey(
+        end.seasonCode || start.seasonCode || "z",
+        end.seasonNumber || start.seasonNumber || 99,
+      );
+      const objectSeasonKey = toSeasonKey(breakdown.seasonCode, breakdown.seasonNumber);
+      if (objectSeasonKey < startSeasonKey || objectSeasonKey > endSeasonKey) return false;
+    }
 
-    const endBreakdown = {
-      collectionNo: end.collectionNo,
-      seasonCode: end.seasonCode || start.seasonCode || "z",
-      seasonNumber: end.seasonNumber || start.seasonNumber || 99,
-      type: end.type || start.type || "z",
-    };
-
+    // collectionNo + type range
     return (
-      objekt.artist !== "idntt" &&
-      objektBreakdown.collectionNo >= startBreakdown.collectionNo &&
-      objektBreakdown.collectionNo <= endBreakdown.collectionNo &&
-      objektBreakdown.seasonCode >= startBreakdown.seasonCode &&
-      objektBreakdown.seasonCode <= endBreakdown.seasonCode &&
-      objektBreakdown.type >= startBreakdown.type &&
-      objektBreakdown.type <= endBreakdown.type &&
-      objektBreakdown.seasonNumber >= startBreakdown.seasonNumber &&
-      objektBreakdown.seasonNumber <= endBreakdown.seasonNumber
+      breakdown.collectionNo >= start.collectionNo &&
+      breakdown.collectionNo <= end.collectionNo &&
+      breakdown.type >= (start.type || "a") &&
+      breakdown.type <= (end.type || start.type || "z")
     );
   }
 
-  return objekt.tags?.some((value) => value.toLowerCase() === keyword);
+  return objekt.tags?.some((value) => value === keyword);
 }
 
 export function getSortDate(obj: ValidObjekt) {
@@ -110,25 +110,27 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
     }
   }
 
+  const memberSet = filters.member ? new Set(filters.member) : null;
+  const artistSet = filters.artist ? new Set(filters.artist.map((a) => a.toLowerCase())) : null;
+  const classSet = filters.class ? new Set(filters.class) : null;
+  const seasonSet = filters.season ? new Set(filters.season) : null;
+  const onOfflineSet = filters.on_offline ? new Set(filters.on_offline) : null;
+  const editionSet = filters.edition ? new Set(filters.edition) : null;
+
   return objekts.filter((a) => {
-    if (filters.member && !filters.member.includes(a.member)) return false;
+    if (memberSet && !memberSet.has(a.member)) return false;
 
-    if (
-      filters.artist &&
-      !filters.artist.map((b) => b.toLowerCase()).includes(a.artist.toLowerCase())
-    ) {
-      return false;
-    }
+    if (artistSet && !artistSet.has(a.artist.toLowerCase())) return false;
 
-    if (filters.class && !filters.class.includes(a.class)) return false;
+    if (classSet && !classSet.has(a.class)) return false;
 
-    if (filters.season && !filters.season.includes(a.season)) return false;
+    if (seasonSet && !seasonSet.has(a.season)) return false;
 
-    if (filters.on_offline && !filters.on_offline.includes(a.onOffline)) return false;
+    if (onOfflineSet && !onOfflineSet.has(a.onOffline)) return false;
 
     if (filters.transferable && isObjektOwned(a) && !a.transferable) return false;
 
-    if (filters.edition && (!a.edition || !filters.edition.includes(a.edition))) {
+    if (editionSet && (!a.edition || !editionSet.has(a.edition))) {
       return false;
     }
 
@@ -152,6 +154,7 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
         if (deltaE > (filters.colorSensitivity ?? 7)) return false;
       } catch {
         console.error(`Error parsing background color for ${a.slug}`, a.backgroundColor);
+        return false;
       }
     }
 
