@@ -116,4 +116,11 @@ export const shortformMembers: Record<string, string> = {
   hh: "HwanHee",
   jh: "JuHo",
   ti: "TaeIn",
+  cm: "CheongMyeong",
+  t: "Towa",
+  kh: "KyuHyuk",
+  nr: "NuRi",
+  sj: "SeongJun",
+  gb: "GyeongBeen",
+  es: "EunSoo",
 };

@@ -31,8 +31,12 @@ function makeCollectionTags(objekt: ValidObjekt) {
     ...getMemberShortKeys(objekt.member),
     objekt.artist,
     objekt.collectionNo, // 201z
-    `${seasonCodeRepeated}${objekt.collectionNo}`, // a201z, aa201z
-    `${seasonCodeRepeated}${collectionNoSliced}`, // a201, aa201
+    ...(objekt.artist === "idntt"
+      ? []
+      : [
+          `${seasonCodeRepeated}${objekt.collectionNo}`, // a201z, aa201z
+          `${seasonCodeRepeated}${collectionNoSliced}`, // a201, aa201
+        ]),
     collectionNoSliced, // 201
     objekt.member,
     objekt.class, // special
