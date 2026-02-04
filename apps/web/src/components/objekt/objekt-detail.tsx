@@ -280,12 +280,9 @@ function OwnedListPanel({
             <TableBody>
               {currentItems.map((item) => (
                 <TableRow key={item.id} id={item.id}>
-                  <TableCell
-                    className="flex cursor-pointer items-center gap-2"
-                    onClick={() => openTrades(item.serial)}
-                  >
-                    {item.serial}
-                    <div className="flex items-center gap-1">
+                  <TableCell className="cursor-pointer" onClick={() => openTrades(item.serial)}>
+                    <div className="inline-flex items-center gap-2">
+                      {item.serial}
                       {item.isPin && <PushPinIcon weight="regular" className="size-3" />}
                       {item.isLocked && <LockSimpleIcon weight="regular" className="size-3" />}
                     </div>

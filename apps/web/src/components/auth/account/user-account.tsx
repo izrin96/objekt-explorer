@@ -233,7 +233,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
         </span>
 
         <div className="flex">
-          <Button size="md" intent="outline" type="submit" isPending={mutation.isPending}>
+          <Button size="md" intent="primary" type="submit" isPending={mutation.isPending}>
             Save
           </Button>
         </div>
@@ -336,11 +336,11 @@ function ChangePassword() {
           <Button
             isDisabled={mutation.isPending}
             size="md"
-            intent="outline"
+            intent="primary"
             className="flex-none"
             type="submit"
           >
-            Save Password
+            Save
           </Button>
         </div>
       </div>
@@ -415,11 +415,11 @@ function ChangeEmail({ email }: { email: string }) {
           <Button
             isDisabled={mutation.isPending}
             size="md"
-            intent="outline"
+            intent="primary"
             className="flex-none"
             type="submit"
           >
-            Save Email
+            Save
           </Button>
         </div>
       </div>
