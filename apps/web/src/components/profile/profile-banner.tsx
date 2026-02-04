@@ -17,7 +17,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
     <>
       {/* banner */}
       <div className="absolute inset-0 top-12 -z-5 xl:top-0">
-        <div className="mx-auto w-full max-w-7xl lg:max-w-(--breakpoint-xl) 2xl:max-w-(--breakpoint-2xl)">
+        <div className="mx-auto w-full max-w-(--container-breakpoint) [--container-breakpoint:var(--breakpoint-2xl)]">
           <div
             ref={bannerRef}
             className={"relative aspect-[2.3/1] mask-x-from-100% xl:mask-x-from-97%"}
