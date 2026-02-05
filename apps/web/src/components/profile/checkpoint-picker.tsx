@@ -68,21 +68,6 @@ export default function CheckpointPicker() {
     currentValue ? toTime(currentValue) : toTime(now(TIME_ZONE)),
   );
 
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
-    if (open) {
-      // Reset to current values when opening
-      if (currentValue) {
-        setSelectedDate(toCalendarDate(currentValue));
-        setSelectedTime(toTime(currentValue));
-      } else {
-        const nowValue = now(TIME_ZONE);
-        setSelectedDate(toCalendarDate(nowValue));
-        setSelectedTime(toTime(nowValue));
-      }
-    }
-  };
-
   const handleApply = () => {
     if (!selectedDate || !selectedTime) return;
 
@@ -95,11 +80,11 @@ export default function CheckpointPicker() {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button intent="outline" data-selected={filters.at} onPress={() => handleOpenChange(true)}>
+      <Button intent="outline" data-selected={filters.at} onPress={() => setIsOpen(true)}>
         <ClockCounterClockwiseIcon data-slot="icon" />
         {formatCheckpointLabel(filters.at)}
       </Button>
-      <ModalContent size="sm" isOpen={isOpen} onOpenChange={handleOpenChange}>
+      <ModalContent size="sm" isOpen={isOpen} onOpenChange={setIsOpen}>
         <ModalHeader>
           <ModalTitle>Time Travel</ModalTitle>
           <ModalDescription>View collection at given time</ModalDescription>

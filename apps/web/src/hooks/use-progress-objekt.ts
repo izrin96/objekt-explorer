@@ -21,6 +21,7 @@ export function useProgressObjekts() {
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
     profile.address,
     selectedArtistIds,
+    filters.at ?? undefined,
   );
 
   // owned objekts

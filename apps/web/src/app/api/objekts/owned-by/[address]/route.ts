@@ -153,7 +153,7 @@ export async function GET(request: NextRequest, props: Params) {
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(
       and(
-        eq(objekts.owner, addr.toLowerCase()),
+        eq(objekts.owner, addr),
         ...(query.cursor
           ? [
               or(

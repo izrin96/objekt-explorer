@@ -34,21 +34,24 @@ function ProgressRender() {
   return (
     <ObjektColumnProvider>
       <ObjektModalProvider initialTab="owned">
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <Progress />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
+        <div className="flex flex-col gap-8">
+          <ProgressFilter />
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
+                  }
+                >
+                  <Progress />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        </div>
       </ObjektModalProvider>
     </ObjektColumnProvider>
   );
@@ -59,9 +62,7 @@ function Progress() {
   const { shaped, filters, ownedSlugs, hasNextPage } = useProgressObjekts();
 
   return (
-    <div className="flex flex-col gap-8">
-      <ProgressFilter />
-
+    <>
       {!filters.artist && !filters.member ? (
         <div className="text-muted-fg flex justify-center text-sm">
           Select at least 1 artist or 1 member
@@ -85,7 +86,7 @@ function Progress() {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
 

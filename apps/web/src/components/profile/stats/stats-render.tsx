@@ -33,21 +33,24 @@ export default dynamic(() => Promise.resolve(ProfileStatsRender), {
 
 function ProfileStatsRender() {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-          <Suspense
-            fallback={
-              <div className="flex justify-center">
-                <Loader variant="ring" />
-              </div>
-            }
-          >
-            <ProfileStats />
-          </Suspense>
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <div className="flex flex-col gap-4">
+      <StatsFilter />
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
+          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+            <Suspense
+              fallback={
+                <div className="flex justify-center">
+                  <Loader variant="ring" />
+                </div>
+              }
+            >
+              <ProfileStats />
+            </Suspense>
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </div>
   );
 }
 
@@ -55,10 +58,12 @@ function ProfileStats() {
   const profile = useTarget((a) => a.profile)!;
   const filter = useObjektFilter();
   const { selectedArtistIds } = useCosmoArtist();
+  const [filters] = useFilters();
 
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
     profile.address,
     selectedArtistIds,
+    filters.at ?? undefined,
   );
   const collectionQuery = useSuspenseQuery(collectionOptions(selectedArtistIds));
 
@@ -68,8 +73,6 @@ function ProfileStats() {
 
   return (
     <div className="flex flex-col gap-4">
-      <StatsFilter />
-
       {hasNextPage && (
         <div className="flex items-center gap-2 text-xs font-semibold">
           Loading objekts <Loader variant="ring" className="size-4" />
