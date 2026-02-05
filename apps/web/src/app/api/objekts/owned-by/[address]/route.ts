@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, props: Params) {
   const query = parseParams(searchParams);
 
   const owner = await db.query.userAddress.findFirst({
-    where: (q, { eq }) => eq(q.address, params.address),
+    where: { address: params.address },
     columns: {
       privateProfile: true,
     },

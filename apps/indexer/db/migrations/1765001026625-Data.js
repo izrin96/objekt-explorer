@@ -3,9 +3,7 @@ module.exports = class Data1765001026625 {
 
   async up(db) {
     // add block_number column to vote table
-    await db.query(
-      `ALTER TABLE "public"."vote" ADD COLUMN "block_number" int4;`,
-    );
+    await db.query(`ALTER TABLE "public"."vote" ADD COLUMN "block_number" int4;`);
 
     // add hash column to vote table
     await db.query(`ALTER TABLE "public"."vote" ADD COLUMN "hash" text;`);

@@ -13,8 +13,6 @@ module.exports = class Data1765524497497 {
 
   async down(db) {
     await db.query(`DROP INDEX IF EXISTS idx_objekt_transferable_count;`);
-    await db.query(
-      `CREATE INDEX "IDX_objekt_minted_at" ON "objekt" ("minted_at");`,
-    );
+    await db.query(`CREATE INDEX "IDX_objekt_minted_at" ON "objekt" ("minted_at");`);
   }
 };

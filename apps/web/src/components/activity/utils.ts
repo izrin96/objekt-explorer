@@ -8,7 +8,9 @@ export function filterData(
   type: ValidType,
   filters: Filters,
 ): ActivityData[] {
-  const artistSet = filters.artist?.length ? new Set(filters.artist.map((a) => a.toLowerCase())) : null;
+  const artistSet = filters.artist?.length
+    ? new Set(filters.artist.map((a) => a.toLowerCase()))
+    : null;
   const memberSet = filters.member?.length ? new Set(filters.member) : null;
   const seasonSet = filters.season?.length ? new Set(filters.season) : null;
   const classSet = filters.class?.length ? new Set(filters.class) : null;

@@ -26,7 +26,7 @@ export const listRouter = {
         hideUser: true,
         gridColumns: true,
       },
-      where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, session.user.id)),
+      where: { slug, userId: session.user.id },
     });
 
     if (!result) throw new ORPCError("NOT_FOUND");
@@ -45,7 +45,9 @@ export const listRouter = {
       const result = await db.query.lists.findFirst({
         with: {
           entries: {
-            orderBy: (entries, { desc }) => [desc(entries.id)],
+            orderBy: {
+              id: "desc",
+            },
             columns: {
               id: true,
               createdAt: true,
@@ -53,7 +55,7 @@ export const listRouter = {
             },
           },
         },
-        where: (lists, { eq }) => eq(lists.slug, slug),
+        where: { slug },
       });
 
       if (!result) throw new ORPCError("NOT_FOUND");
@@ -245,8 +247,8 @@ export const listRouter = {
       }
 
       // get both list
-      const lists = await db.query.lists.findMany({
-        where: (t, { inArray }) => inArray(t.slug, slugs),
+      const foundLists = await db.query.lists.findMany({
+        where: { slug: { in: slugs } },
         with: {
           entries: {
             columns: {
@@ -257,14 +259,14 @@ export const listRouter = {
       });
 
       const uniqueCollectionSlug = new Set(
-        lists.flatMap((a) => a.entries).map((a) => a.collectionSlug),
+        foundLists.flatMap((a) => a.entries).map((a) => a.collectionSlug),
       );
 
       if (uniqueCollectionSlug.size === 0) return { have: [], want: [] };
 
       // get all collections based on both list
-      const collections = await indexer.query.collections.findMany({
-        where: (t, { inArray }) => inArray(t.slug, Array.from(uniqueCollectionSlug)),
+      const foundCollections = await indexer.query.collections.findMany({
+        where: { slug: { in: Array.from(uniqueCollectionSlug) } },
         columns: {
           slug: true,
           season: true,
@@ -276,11 +278,11 @@ export const listRouter = {
         },
       });
 
-      const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
+      const collectionsMap = new Map(foundCollections.map((c) => [c.slug, c]));
 
       // entry for both list
-      const haveList = haveSlug ? lists.find((a) => a.slug === haveSlug) : undefined;
-      const wantList = wantSlug ? lists.find((a) => a.slug === wantSlug) : undefined;
+      const haveList = haveSlug ? foundLists.find((a) => a.slug === haveSlug) : undefined;
+      const wantList = wantSlug ? foundLists.find((a) => a.slug === wantSlug) : undefined;
 
       const have =
         haveList?.entries
@@ -322,7 +324,7 @@ export async function fetchList(slug: string): Promise<PublicList | null> {
         },
       },
     },
-    where: (lists, { eq }) => eq(lists.slug, slug),
+    where: { slug },
   });
 
   if (!result) return null;
@@ -331,7 +333,7 @@ export async function fetchList(slug: string): Promise<PublicList | null> {
     name: result.name,
     slug: result.slug,
     gridColumns: result.gridColumns,
-    user: result.hideUser ? null : mapPublicUser(result.user),
+    user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
   };
 }
 
@@ -341,8 +343,8 @@ export async function fetchOwnedLists(userId: string) {
       name: true,
       slug: true,
     },
-    where: (lists, { eq }) => eq(lists.userId, userId),
-    orderBy: (lists, { desc }) => [desc(lists.id)],
+    where: { userId },
+    orderBy: { id: "desc" },
   });
   return result;
 }
@@ -352,7 +354,7 @@ async function findOwnedList(slug: string, userId: string) {
     columns: {
       id: true,
     },
-    where: (lists, { eq, and }) => and(eq(lists.slug, slug), eq(lists.userId, userId)),
+    where: { slug, userId },
   });
 
   if (!list) throw new ORPCError("NOT_FOUND");

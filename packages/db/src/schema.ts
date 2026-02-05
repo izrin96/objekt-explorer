@@ -1,4 +1,3 @@
-import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -51,11 +50,6 @@ export const userAddress = pgTable(
   ],
 );
 
-export const userAddressRelations = relations(userAddress, ({ one, many }) => ({
-  user: one(user, { fields: [userAddress.userId], references: [user.id] }),
-  pins: many(pins),
-}));
-
 export const lists = pgTable(
   "lists",
   {
@@ -74,11 +68,6 @@ export const lists = pgTable(
   (t) => [uniqueIndex("lists_slug_idx").on(t.slug)],
 );
 
-export const listsRelations = relations(lists, ({ many, one }) => ({
-  entries: many(listEntries),
-  user: one(user, { fields: [lists.userId], references: [user.id] }),
-}));
-
 export const listEntries = pgTable(
   "list_entries",
   {
@@ -94,10 +83,6 @@ export const listEntries = pgTable(
   (t) => [index("list_entries_list_idx").on(t.listId)],
 );
 
-export const listEntriesRelations = relations(listEntries, ({ one }) => ({
-  list: one(lists, { fields: [listEntries.listId], references: [lists.id] }),
-}));
-
 export const profileLists = pgTable(
   "profile_list",
   {
@@ -109,14 +94,6 @@ export const profileLists = pgTable(
   },
   (t) => [uniqueIndex("profile_list_slug_idx").on(t.slug)],
 );
-
-export const profileListRelations = relations(profileLists, ({ many, one }) => ({
-  entries: many(profileListEntries),
-  user: one(userAddress, {
-    fields: [profileLists.address],
-    references: [userAddress.address],
-  }),
-}));
 
 export const profileListEntries = pgTable(
   "profile_list_entries",
@@ -134,13 +111,6 @@ export const profileListEntries = pgTable(
   (t) => [index("profile_list_entries_list_idx").on(t.listId)],
 );
 
-export const profileListEntriesRelations = relations(profileListEntries, ({ one }) => ({
-  list: one(profileLists, {
-    fields: [profileListEntries.listId],
-    references: [profileLists.id],
-  }),
-}));
-
 export const pins = pgTable(
   "pins",
   {
@@ -151,13 +121,6 @@ export const pins = pgTable(
   },
   (t) => [index("pins_address_idx").on(t.address), index("pins_token_id_idx").on(t.tokenId)],
 );
-
-export const pinsRelations = relations(pins, ({ one }) => ({
-  profile: one(userAddress, {
-    fields: [pins.address],
-    references: [userAddress.address],
-  }),
-}));
 
 export const lockedObjekts = pgTable(
   "locked_objekts",

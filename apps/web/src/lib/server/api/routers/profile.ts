@@ -102,7 +102,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
       hideTransfer: true,
       gridColumns: true,
     },
-    where: (q, { eq, and }) => and(eq(q.address, address), eq(q.userId, userId)),
+    where: { address, userId },
   });
 
   if (!profile)

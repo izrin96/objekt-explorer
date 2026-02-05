@@ -26,7 +26,7 @@ export async function fetchUserProfiles(id: string) {
       address: true,
       nickname: true,
     },
-    where: (t, { eq }) => eq(t.userId, id),
+    where: { userId: id },
   });
   return result;
 }

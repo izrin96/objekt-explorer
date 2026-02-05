@@ -97,12 +97,7 @@ export const bytes: Marshal<Uint8Array, string> = {
     if (Buffer.isBuffer(value)) {
       return "0x" + value.toString("hex");
     } else {
-      return (
-        "0x" +
-        Buffer.from(value.buffer, value.byteOffset, value.byteLength).toString(
-          "hex",
-        )
-      );
+      return "0x" + Buffer.from(value.buffer, value.byteOffset, value.byteLength).toString("hex");
     }
   },
 };
@@ -144,10 +139,7 @@ export const bigdecimalTransformer = {
   },
 };
 
-export function enumFromJson<E extends object>(
-  json: unknown,
-  enumObject: E,
-): E[keyof E] {
+export function enumFromJson<E extends object>(json: unknown, enumObject: E): E[keyof E] {
   assert(typeof json == "string", "invalid enum value");
   const val = (enumObject as any)[json];
   assert(typeof val == "string", `invalid enum value`);

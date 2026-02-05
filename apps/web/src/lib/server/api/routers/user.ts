@@ -24,7 +24,7 @@ export const userRouter = {
           accessToken: true,
           refreshToken: true,
         },
-        where: (t, { eq, and }) => and(eq(t.userId, user.id), eq(t.providerId, providerId)),
+        where: { userId: user.id, providerId },
       });
 
       if (!account)

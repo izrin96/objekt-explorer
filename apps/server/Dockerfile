@@ -13,7 +13,7 @@ WORKDIR /app
 
 # Copy lockfile and package.json's from pruned workspace
 COPY --from=pruner /app/out/json/ .
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Build the project
 COPY --from=pruner /app/out/full/ .

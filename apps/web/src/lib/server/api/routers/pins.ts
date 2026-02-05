@@ -15,8 +15,8 @@ export const pinsRouter = {
         tokenId: true,
         createdAt: true,
       },
-      where: (pins, { eq }) => eq(pins.address, address),
-      orderBy: (pins, { desc }) => desc(pins.id),
+      where: { address },
+      orderBy: { id: "desc" },
     });
     return result.map((a) => ({
       tokenId: a.tokenId.toString(),

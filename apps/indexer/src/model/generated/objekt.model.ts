@@ -1,11 +1,5 @@
-import {
-  Entity,
-  Column,
-  PrimaryColumn,
-  Index,
-  OneToMany,
-  ManyToOne,
-} from "typeorm";
+import { Entity, Column, PrimaryColumn, Index, OneToMany, ManyToOne } from "typeorm";
+
 import { Collection } from "./collection.model";
 import { Transfer } from "./transfer.model";
 

@@ -1,4 +1,5 @@
 import { Entity, Column, PrimaryColumn, Index } from "typeorm";
+
 import * as marshal from "./marshal";
 
 @Entity()

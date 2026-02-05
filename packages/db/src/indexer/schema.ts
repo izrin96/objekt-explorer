@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import {
   bigint,
   boolean,
@@ -46,11 +46,6 @@ export const collections = pgTable(
   ],
 );
 
-export const collectionRelations = relations(collections, ({ many }) => ({
-  transfers: many(transfers),
-  objekts: many(objekts),
-}));
-
 export const objekts = pgTable(
   "objekt",
   {
@@ -69,14 +64,6 @@ export const objekts = pgTable(
     index("collection_id_idx").on(table.collectionId),
   ],
 );
-
-export const objektRelations = relations(objekts, ({ many, one }) => ({
-  transfers: many(transfers),
-  collection: one(collections, {
-    fields: [objekts.collectionId],
-    references: [collections.id],
-  }),
-}));
 
 export const transfers = pgTable(
   "transfer",
@@ -103,17 +90,6 @@ export const transfers = pgTable(
     index("collection_id_idx").on(table.collectionId),
   ],
 );
-
-export const transferRelations = relations(transfers, ({ one }) => ({
-  objekt: one(objekts, {
-    fields: [transfers.objektId],
-    references: [objekts.id],
-  }),
-  collection: one(collections, {
-    fields: [transfers.collectionId],
-    references: [collections.id],
-  }),
-}));
 
 export const comoBalances = pgTable(
   "como_balance",

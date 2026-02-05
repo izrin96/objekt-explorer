@@ -1,9 +1,6 @@
+import type { EventParams as EParams, FunctionArguments, FunctionReturn } from "@subsquid/evm-abi";
+
 import { event, fun, viewFun, indexed, ContractBase } from "@subsquid/evm-abi";
-import type {
-  EventParams as EParams,
-  FunctionArguments,
-  FunctionReturn,
-} from "@subsquid/evm-abi";
 import * as p from "@subsquid/evm-codec";
 
 export const events = {
@@ -74,12 +71,7 @@ export const events = {
 };
 
 export const functions = {
-  DEFAULT_ADMIN_ROLE: viewFun(
-    "0xa217fddf",
-    "DEFAULT_ADMIN_ROLE()",
-    {},
-    p.bytes32,
-  ),
+  DEFAULT_ADMIN_ROLE: viewFun("0xa217fddf", "DEFAULT_ADMIN_ROLE()", {}, p.bytes32),
   ERROR_BLACKLISTED_MSG_SENDER: viewFun(
     "0x1111d78f",
     "ERROR_BLACKLISTED_MSG_SENDER()",
@@ -113,20 +105,10 @@ export const functions = {
   ),
   ERROR_NOT_MINTER: viewFun("0x459c035e", "ERROR_NOT_MINTER()", {}, p.string),
   ERROR_ONLY_OWNER: viewFun("0x41f1162d", "ERROR_ONLY_OWNER()", {}, p.string),
-  ERROR_SENDER_NOT_ADMIN: viewFun(
-    "0x1abd34e2",
-    "ERROR_SENDER_NOT_ADMIN()",
-    {},
-    p.string,
-  ),
+  ERROR_SENDER_NOT_ADMIN: viewFun("0x1abd34e2", "ERROR_SENDER_NOT_ADMIN()", {}, p.string),
   MINTER_ROLE: viewFun("0xd5391393", "MINTER_ROLE()", {}, p.bytes32),
   OPERATOR_ROLE: viewFun("0xf5b541a6", "OPERATOR_ROLE()", {}, p.bytes32),
-  UPGRADE_INTERFACE_VERSION: viewFun(
-    "0xad3cb1cc",
-    "UPGRADE_INTERFACE_VERSION()",
-    {},
-    p.string,
-  ),
+  UPGRADE_INTERFACE_VERSION: viewFun("0xad3cb1cc", "UPGRADE_INTERFACE_VERSION()", {}, p.string),
   approvalWhitelists: viewFun(
     "0x419e583d",
     "approvalWhitelists(address)",
@@ -137,36 +119,16 @@ export const functions = {
     to: p.address,
     tokenId: p.uint256,
   }),
-  balanceOf: viewFun(
-    "0x70a08231",
-    "balanceOf(address)",
-    { owner: p.address },
-    p.uint256,
-  ),
+  balanceOf: viewFun("0x70a08231", "balanceOf(address)", { owner: p.address }, p.uint256),
   batchUpdateObjektTransferability: fun(
     "0xbf62c2e8",
     "batchUpdateObjektTransferability(uint256[],bool)",
     { tokenIds: p.array(p.uint256), transferable: p.bool },
   ),
-  blacklists: viewFun(
-    "0x16c02129",
-    "blacklists(address)",
-    { _0: p.address },
-    p.bool,
-  ),
+  blacklists: viewFun("0x16c02129", "blacklists(address)", { _0: p.address }, p.bool),
   burn: fun("0x42966c68", "burn(uint256)", { tokenId: p.uint256 }),
-  getApproved: viewFun(
-    "0x081812fc",
-    "getApproved(uint256)",
-    { tokenId: p.uint256 },
-    p.address,
-  ),
-  getRoleAdmin: viewFun(
-    "0x248a9ca3",
-    "getRoleAdmin(bytes32)",
-    { role: p.bytes32 },
-    p.bytes32,
-  ),
+  getApproved: viewFun("0x081812fc", "getApproved(uint256)", { tokenId: p.uint256 }, p.address),
+  getRoleAdmin: viewFun("0x248a9ca3", "getRoleAdmin(bytes32)", { role: p.bytes32 }, p.bytes32),
   grantRole: fun("0x2f2ff15d", "grantRole(bytes32,address)", {
     role: p.bytes32,
     account: p.address,
@@ -202,12 +164,7 @@ export const functions = {
     transferable: p.bool,
   }),
   name: viewFun("0x06fdde03", "name()", {}, p.string),
-  ownerOf: viewFun(
-    "0x6352211e",
-    "ownerOf(uint256)",
-    { tokenId: p.uint256 },
-    p.address,
-  ),
+  ownerOf: viewFun("0x6352211e", "ownerOf(uint256)", { tokenId: p.uint256 }, p.address),
   proxiableUUID: viewFun("0x52d1902d", "proxiableUUID()", {}, p.bytes32),
   renounceRole: fun("0x36568abe", "renounceRole(bytes32,address)", {
     role: p.bytes32,
@@ -231,11 +188,10 @@ export const functions = {
     operator: p.address,
     approved: p.bool,
   }),
-  setApprovalWhitelist: fun(
-    "0xca0429e0",
-    "setApprovalWhitelist(address,bool)",
-    { addr: p.address, isWhitelisted: p.bool },
-  ),
+  setApprovalWhitelist: fun("0xca0429e0", "setApprovalWhitelist(address,bool)", {
+    addr: p.address,
+    isWhitelisted: p.bool,
+  }),
   setBaseURI: fun("0x55f804b3", "setBaseURI(string)", {
     _newBaseURI: p.string,
   }),
@@ -250,24 +206,14 @@ export const functions = {
     p.bool,
   ),
   symbol: viewFun("0x95d89b41", "symbol()", {}, p.string),
-  tokenByIndex: viewFun(
-    "0x4f6ccce7",
-    "tokenByIndex(uint256)",
-    { index: p.uint256 },
-    p.uint256,
-  ),
+  tokenByIndex: viewFun("0x4f6ccce7", "tokenByIndex(uint256)", { index: p.uint256 }, p.uint256),
   tokenOfOwnerByIndex: viewFun(
     "0x2f745c59",
     "tokenOfOwnerByIndex(address,uint256)",
     { owner: p.address, index: p.uint256 },
     p.uint256,
   ),
-  tokenURI: viewFun(
-    "0xc87b56dd",
-    "tokenURI(uint256)",
-    { tokenId: p.uint256 },
-    p.string,
-  ),
+  tokenURI: viewFun("0xc87b56dd", "tokenURI(uint256)", { tokenId: p.uint256 }, p.string),
   totalSupply: viewFun("0x18160ddd", "totalSupply()", {}, p.uint256),
   transferFrom: fun("0x23b872dd", "transferFrom(address,address,uint256)", {
     from: p.address,
@@ -419,12 +365,8 @@ export type TransferEventArgs = EParams<typeof events.Transfer>;
 export type UpgradedEventArgs = EParams<typeof events.Upgraded>;
 
 /// Function types
-export type DEFAULT_ADMIN_ROLEParams = FunctionArguments<
-  typeof functions.DEFAULT_ADMIN_ROLE
->;
-export type DEFAULT_ADMIN_ROLEReturn = FunctionReturn<
-  typeof functions.DEFAULT_ADMIN_ROLE
->;
+export type DEFAULT_ADMIN_ROLEParams = FunctionArguments<typeof functions.DEFAULT_ADMIN_ROLE>;
+export type DEFAULT_ADMIN_ROLEReturn = FunctionReturn<typeof functions.DEFAULT_ADMIN_ROLE>;
 
 export type ERROR_BLACKLISTED_MSG_SENDERParams = FunctionArguments<
   typeof functions.ERROR_BLACKLISTED_MSG_SENDER
@@ -454,12 +396,8 @@ export type ERROR_NON_TRANSFERABLE_OBJEKTReturn = FunctionReturn<
   typeof functions.ERROR_NON_TRANSFERABLE_OBJEKT
 >;
 
-export type ERROR_NOT_ADMINParams = FunctionArguments<
-  typeof functions.ERROR_NOT_ADMIN
->;
-export type ERROR_NOT_ADMINReturn = FunctionReturn<
-  typeof functions.ERROR_NOT_ADMIN
->;
+export type ERROR_NOT_ADMINParams = FunctionArguments<typeof functions.ERROR_NOT_ADMIN>;
+export type ERROR_NOT_ADMINReturn = FunctionReturn<typeof functions.ERROR_NOT_ADMIN>;
 
 export type ERROR_NOT_AUTHORIZED_APPROVALParams = FunctionArguments<
   typeof functions.ERROR_NOT_AUTHORIZED_APPROVAL
@@ -468,36 +406,22 @@ export type ERROR_NOT_AUTHORIZED_APPROVALReturn = FunctionReturn<
   typeof functions.ERROR_NOT_AUTHORIZED_APPROVAL
 >;
 
-export type ERROR_NOT_MINTERParams = FunctionArguments<
-  typeof functions.ERROR_NOT_MINTER
->;
-export type ERROR_NOT_MINTERReturn = FunctionReturn<
-  typeof functions.ERROR_NOT_MINTER
->;
+export type ERROR_NOT_MINTERParams = FunctionArguments<typeof functions.ERROR_NOT_MINTER>;
+export type ERROR_NOT_MINTERReturn = FunctionReturn<typeof functions.ERROR_NOT_MINTER>;
 
-export type ERROR_ONLY_OWNERParams = FunctionArguments<
-  typeof functions.ERROR_ONLY_OWNER
->;
-export type ERROR_ONLY_OWNERReturn = FunctionReturn<
-  typeof functions.ERROR_ONLY_OWNER
->;
+export type ERROR_ONLY_OWNERParams = FunctionArguments<typeof functions.ERROR_ONLY_OWNER>;
+export type ERROR_ONLY_OWNERReturn = FunctionReturn<typeof functions.ERROR_ONLY_OWNER>;
 
 export type ERROR_SENDER_NOT_ADMINParams = FunctionArguments<
   typeof functions.ERROR_SENDER_NOT_ADMIN
 >;
-export type ERROR_SENDER_NOT_ADMINReturn = FunctionReturn<
-  typeof functions.ERROR_SENDER_NOT_ADMIN
->;
+export type ERROR_SENDER_NOT_ADMINReturn = FunctionReturn<typeof functions.ERROR_SENDER_NOT_ADMIN>;
 
 export type MINTER_ROLEParams = FunctionArguments<typeof functions.MINTER_ROLE>;
 export type MINTER_ROLEReturn = FunctionReturn<typeof functions.MINTER_ROLE>;
 
-export type OPERATOR_ROLEParams = FunctionArguments<
-  typeof functions.OPERATOR_ROLE
->;
-export type OPERATOR_ROLEReturn = FunctionReturn<
-  typeof functions.OPERATOR_ROLE
->;
+export type OPERATOR_ROLEParams = FunctionArguments<typeof functions.OPERATOR_ROLE>;
+export type OPERATOR_ROLEReturn = FunctionReturn<typeof functions.OPERATOR_ROLE>;
 
 export type UPGRADE_INTERFACE_VERSIONParams = FunctionArguments<
   typeof functions.UPGRADE_INTERFACE_VERSION
@@ -506,12 +430,8 @@ export type UPGRADE_INTERFACE_VERSIONReturn = FunctionReturn<
   typeof functions.UPGRADE_INTERFACE_VERSION
 >;
 
-export type ApprovalWhitelistsParams = FunctionArguments<
-  typeof functions.approvalWhitelists
->;
-export type ApprovalWhitelistsReturn = FunctionReturn<
-  typeof functions.approvalWhitelists
->;
+export type ApprovalWhitelistsParams = FunctionArguments<typeof functions.approvalWhitelists>;
+export type ApprovalWhitelistsReturn = FunctionReturn<typeof functions.approvalWhitelists>;
 
 export type ApproveParams = FunctionArguments<typeof functions.approve>;
 export type ApproveReturn = FunctionReturn<typeof functions.approve>;
@@ -535,9 +455,7 @@ export type BurnReturn = FunctionReturn<typeof functions.burn>;
 export type GetApprovedParams = FunctionArguments<typeof functions.getApproved>;
 export type GetApprovedReturn = FunctionReturn<typeof functions.getApproved>;
 
-export type GetRoleAdminParams = FunctionArguments<
-  typeof functions.getRoleAdmin
->;
+export type GetRoleAdminParams = FunctionArguments<typeof functions.getRoleAdmin>;
 export type GetRoleAdminReturn = FunctionReturn<typeof functions.getRoleAdmin>;
 
 export type GrantRoleParams = FunctionArguments<typeof functions.grantRole>;
@@ -549,19 +467,11 @@ export type HasRoleReturn = FunctionReturn<typeof functions.hasRole>;
 export type InitializeParams = FunctionArguments<typeof functions.initialize>;
 export type InitializeReturn = FunctionReturn<typeof functions.initialize>;
 
-export type IsApprovedForAllParams = FunctionArguments<
-  typeof functions.isApprovedForAll
->;
-export type IsApprovedForAllReturn = FunctionReturn<
-  typeof functions.isApprovedForAll
->;
+export type IsApprovedForAllParams = FunctionArguments<typeof functions.isApprovedForAll>;
+export type IsApprovedForAllReturn = FunctionReturn<typeof functions.isApprovedForAll>;
 
-export type IsObjektTransferableParams = FunctionArguments<
-  typeof functions.isObjektTransferable
->;
-export type IsObjektTransferableReturn = FunctionReturn<
-  typeof functions.isObjektTransferable
->;
+export type IsObjektTransferableParams = FunctionArguments<typeof functions.isObjektTransferable>;
+export type IsObjektTransferableReturn = FunctionReturn<typeof functions.isObjektTransferable>;
 
 export type MintParams = FunctionArguments<typeof functions.mint>;
 export type MintReturn = FunctionReturn<typeof functions.mint>;
@@ -575,16 +485,10 @@ export type NameReturn = FunctionReturn<typeof functions.name>;
 export type OwnerOfParams = FunctionArguments<typeof functions.ownerOf>;
 export type OwnerOfReturn = FunctionReturn<typeof functions.ownerOf>;
 
-export type ProxiableUUIDParams = FunctionArguments<
-  typeof functions.proxiableUUID
->;
-export type ProxiableUUIDReturn = FunctionReturn<
-  typeof functions.proxiableUUID
->;
+export type ProxiableUUIDParams = FunctionArguments<typeof functions.proxiableUUID>;
+export type ProxiableUUIDReturn = FunctionReturn<typeof functions.proxiableUUID>;
 
-export type RenounceRoleParams = FunctionArguments<
-  typeof functions.renounceRole
->;
+export type RenounceRoleParams = FunctionArguments<typeof functions.renounceRole>;
 export type RenounceRoleReturn = FunctionReturn<typeof functions.renounceRole>;
 
 export type RevokeRoleParams = FunctionArguments<typeof functions.revokeRole>;
@@ -604,49 +508,29 @@ export type SafeTransferFromReturn_1 = FunctionReturn<
   (typeof functions)["safeTransferFrom(address,address,uint256,bytes)"]
 >;
 
-export type SetApprovalForAllParams = FunctionArguments<
-  typeof functions.setApprovalForAll
->;
-export type SetApprovalForAllReturn = FunctionReturn<
-  typeof functions.setApprovalForAll
->;
+export type SetApprovalForAllParams = FunctionArguments<typeof functions.setApprovalForAll>;
+export type SetApprovalForAllReturn = FunctionReturn<typeof functions.setApprovalForAll>;
 
-export type SetApprovalWhitelistParams = FunctionArguments<
-  typeof functions.setApprovalWhitelist
->;
-export type SetApprovalWhitelistReturn = FunctionReturn<
-  typeof functions.setApprovalWhitelist
->;
+export type SetApprovalWhitelistParams = FunctionArguments<typeof functions.setApprovalWhitelist>;
+export type SetApprovalWhitelistReturn = FunctionReturn<typeof functions.setApprovalWhitelist>;
 
 export type SetBaseURIParams = FunctionArguments<typeof functions.setBaseURI>;
 export type SetBaseURIReturn = FunctionReturn<typeof functions.setBaseURI>;
 
-export type SetBlacklistParams = FunctionArguments<
-  typeof functions.setBlacklist
->;
+export type SetBlacklistParams = FunctionArguments<typeof functions.setBlacklist>;
 export type SetBlacklistReturn = FunctionReturn<typeof functions.setBlacklist>;
 
-export type SupportsInterfaceParams = FunctionArguments<
-  typeof functions.supportsInterface
->;
-export type SupportsInterfaceReturn = FunctionReturn<
-  typeof functions.supportsInterface
->;
+export type SupportsInterfaceParams = FunctionArguments<typeof functions.supportsInterface>;
+export type SupportsInterfaceReturn = FunctionReturn<typeof functions.supportsInterface>;
 
 export type SymbolParams = FunctionArguments<typeof functions.symbol>;
 export type SymbolReturn = FunctionReturn<typeof functions.symbol>;
 
-export type TokenByIndexParams = FunctionArguments<
-  typeof functions.tokenByIndex
->;
+export type TokenByIndexParams = FunctionArguments<typeof functions.tokenByIndex>;
 export type TokenByIndexReturn = FunctionReturn<typeof functions.tokenByIndex>;
 
-export type TokenOfOwnerByIndexParams = FunctionArguments<
-  typeof functions.tokenOfOwnerByIndex
->;
-export type TokenOfOwnerByIndexReturn = FunctionReturn<
-  typeof functions.tokenOfOwnerByIndex
->;
+export type TokenOfOwnerByIndexParams = FunctionArguments<typeof functions.tokenOfOwnerByIndex>;
+export type TokenOfOwnerByIndexReturn = FunctionReturn<typeof functions.tokenOfOwnerByIndex>;
 
 export type TokenURIParams = FunctionArguments<typeof functions.tokenURI>;
 export type TokenURIReturn = FunctionReturn<typeof functions.tokenURI>;
@@ -654,14 +538,8 @@ export type TokenURIReturn = FunctionReturn<typeof functions.tokenURI>;
 export type TotalSupplyParams = FunctionArguments<typeof functions.totalSupply>;
 export type TotalSupplyReturn = FunctionReturn<typeof functions.totalSupply>;
 
-export type TransferFromParams = FunctionArguments<
-  typeof functions.transferFrom
->;
+export type TransferFromParams = FunctionArguments<typeof functions.transferFrom>;
 export type TransferFromReturn = FunctionReturn<typeof functions.transferFrom>;
 
-export type UpgradeToAndCallParams = FunctionArguments<
-  typeof functions.upgradeToAndCall
->;
-export type UpgradeToAndCallReturn = FunctionReturn<
-  typeof functions.upgradeToAndCall
->;
+export type UpgradeToAndCallParams = FunctionArguments<typeof functions.upgradeToAndCall>;
+export type UpgradeToAndCallReturn = FunctionReturn<typeof functions.upgradeToAndCall>;

@@ -48,7 +48,7 @@ export async function GET(_: Request, props: Params) {
     });
 
   const owner = await db.query.userAddress.findFirst({
-    where: (q, { eq }) => eq(q.address, result.owner!),
+    where: { address: result.owner! },
     columns: {
       privateSerial: true,
     },

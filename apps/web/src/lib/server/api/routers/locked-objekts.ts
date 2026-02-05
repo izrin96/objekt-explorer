@@ -15,8 +15,8 @@ export const lockedObjektsRouter = {
         id: true,
         tokenId: true,
       },
-      where: (q, { eq }) => eq(q.address, address),
-      orderBy: (q, { desc }) => desc(q.id),
+      where: { address },
+      orderBy: { id: "desc" },
     });
     return result.map((a) => ({
       tokenId: a.tokenId.toString(),

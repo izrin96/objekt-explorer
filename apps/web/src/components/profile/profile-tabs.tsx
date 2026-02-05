@@ -32,12 +32,7 @@ export default function ProfileTabs() {
     >
       <TabList className="border-b-0">
         {items.map((item) => (
-          <Tab
-            key={item.url}
-            id={item.url}
-            href={item.url}
-            aria-label={item.label}
-          >
+          <Tab key={item.url} id={item.url} href={item.url} aria-label={item.label}>
             {item.label}
           </Tab>
         ))}

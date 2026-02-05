@@ -176,8 +176,9 @@ export async function fetchUserByIdentifier(
         },
       },
     },
-    where: (t, { eq }) =>
-      eq(identifierIsAddress ? t.address : t.nickname, decodeURIComponent(identifier)),
+    where: {
+      [identifierIsAddress ? "address" : "nickname"]: decodeURIComponent(identifier),
+    },
   });
 
   if (cachedUser) {

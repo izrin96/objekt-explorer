@@ -1,9 +1,6 @@
+import type { EventParams as EParams, FunctionArguments, FunctionReturn } from "@subsquid/evm-abi";
+
 import { event, fun, viewFun, indexed, ContractBase } from "@subsquid/evm-abi";
-import type {
-  EventParams as EParams,
-  FunctionArguments,
-  FunctionReturn,
-} from "@subsquid/evm-abi";
 import * as p from "@subsquid/evm-codec";
 
 export const events = {
@@ -83,18 +80,8 @@ export const events = {
 };
 
 export const functions = {
-  DEFAULT_ADMIN_ROLE: viewFun(
-    "0xa217fddf",
-    "DEFAULT_ADMIN_ROLE()",
-    {},
-    p.bytes32,
-  ),
-  ERROR_ALREADY_WHITELISTED: viewFun(
-    "0x4b691084",
-    "ERROR_ALREADY_WHITELISTED()",
-    {},
-    p.string,
-  ),
+  DEFAULT_ADMIN_ROLE: viewFun("0xa217fddf", "DEFAULT_ADMIN_ROLE()", {}, p.bytes32),
+  ERROR_ALREADY_WHITELISTED: viewFun("0x4b691084", "ERROR_ALREADY_WHITELISTED()", {}, p.string),
   ERROR_TO_ADDRESS_NOT_IN_WHITELIST: viewFun(
     "0xc120e7ca",
     "ERROR_TO_ADDRESS_NOT_IN_WHITELIST()",
@@ -116,12 +103,7 @@ export const functions = {
   MANAGER_ROLE: viewFun("0xec87621c", "MANAGER_ROLE()", {}, p.bytes32),
   MINTER_ROLE: viewFun("0xd5391393", "MINTER_ROLE()", {}, p.bytes32),
   TRANSFERER_ROLE: viewFun("0x0ade7dc1", "TRANSFERER_ROLE()", {}, p.bytes32),
-  UPGRADE_INTERFACE_VERSION: viewFun(
-    "0xad3cb1cc",
-    "UPGRADE_INTERFACE_VERSION()",
-    {},
-    p.string,
-  ),
+  UPGRADE_INTERFACE_VERSION: viewFun("0xad3cb1cc", "UPGRADE_INTERFACE_VERSION()", {}, p.string),
   addWhitelist: fun("0x3e0b892a", "addWhitelist(uint256,address)", {
     id: p.uint256,
     addr: p.address,
@@ -143,12 +125,7 @@ export const functions = {
     id: p.uint256,
     value: p.uint256,
   }),
-  getRoleAdmin: viewFun(
-    "0x248a9ca3",
-    "getRoleAdmin(bytes32)",
-    { role: p.bytes32 },
-    p.bytes32,
-  ),
+  getRoleAdmin: viewFun("0x248a9ca3", "getRoleAdmin(bytes32)", { role: p.bytes32 }, p.bytes32),
   grantRole: fun("0x2f2ff15d", "grantRole(bytes32,address)", {
     role: p.bytes32,
     account: p.address,
@@ -202,17 +179,13 @@ export const functions = {
       data: p.bytes,
     },
   ),
-  safeTransferFrom: fun(
-    "0xf242432a",
-    "safeTransferFrom(address,address,uint256,uint256,bytes)",
-    {
-      from: p.address,
-      to: p.address,
-      id: p.uint256,
-      value: p.uint256,
-      data: p.bytes,
-    },
-  ),
+  safeTransferFrom: fun("0xf242432a", "safeTransferFrom(address,address,uint256,uint256,bytes)", {
+    from: p.address,
+    to: p.address,
+    id: p.uint256,
+    value: p.uint256,
+    data: p.bytes,
+  }),
   setApprovalForAll: fun("0xa22cb465", "setApprovalForAll(address,bool)", {
     operator: p.address,
     approved: p.bool,
@@ -233,12 +206,7 @@ export const functions = {
     data: p.bytes,
   }),
   uri: viewFun("0x0e89341c", "uri(uint256)", { id: p.uint256 }, p.string),
-  whitelists: viewFun(
-    "0xfe4d5add",
-    "whitelists(uint256)",
-    { _0: p.uint256 },
-    p.bool,
-  ),
+  whitelists: viewFun("0xfe4d5add", "whitelists(uint256)", { _0: p.uint256 }, p.bool),
 };
 
 export class Contract extends ContractBase {
@@ -282,10 +250,7 @@ export class Contract extends ContractBase {
     return this.eth_call(functions.balanceOf, { account, id });
   }
 
-  balanceOfBatch(
-    accounts: BalanceOfBatchParams["accounts"],
-    ids: BalanceOfBatchParams["ids"],
-  ) {
+  balanceOfBatch(accounts: BalanceOfBatchParams["accounts"], ids: BalanceOfBatchParams["ids"]) {
     return this.eth_call(functions.balanceOfBatch, { accounts, ids });
   }
 
@@ -333,12 +298,8 @@ export type URIEventArgs = EParams<typeof events.URI>;
 export type UpgradedEventArgs = EParams<typeof events.Upgraded>;
 
 /// Function types
-export type DEFAULT_ADMIN_ROLEParams = FunctionArguments<
-  typeof functions.DEFAULT_ADMIN_ROLE
->;
-export type DEFAULT_ADMIN_ROLEReturn = FunctionReturn<
-  typeof functions.DEFAULT_ADMIN_ROLE
->;
+export type DEFAULT_ADMIN_ROLEParams = FunctionArguments<typeof functions.DEFAULT_ADMIN_ROLE>;
+export type DEFAULT_ADMIN_ROLEReturn = FunctionReturn<typeof functions.DEFAULT_ADMIN_ROLE>;
 
 export type ERROR_ALREADY_WHITELISTEDParams = FunctionArguments<
   typeof functions.ERROR_ALREADY_WHITELISTED
@@ -368,20 +329,14 @@ export type ERROR_WHITELIST_NOT_INITIALIZEDReturn = FunctionReturn<
   typeof functions.ERROR_WHITELIST_NOT_INITIALIZED
 >;
 
-export type MANAGER_ROLEParams = FunctionArguments<
-  typeof functions.MANAGER_ROLE
->;
+export type MANAGER_ROLEParams = FunctionArguments<typeof functions.MANAGER_ROLE>;
 export type MANAGER_ROLEReturn = FunctionReturn<typeof functions.MANAGER_ROLE>;
 
 export type MINTER_ROLEParams = FunctionArguments<typeof functions.MINTER_ROLE>;
 export type MINTER_ROLEReturn = FunctionReturn<typeof functions.MINTER_ROLE>;
 
-export type TRANSFERER_ROLEParams = FunctionArguments<
-  typeof functions.TRANSFERER_ROLE
->;
-export type TRANSFERER_ROLEReturn = FunctionReturn<
-  typeof functions.TRANSFERER_ROLE
->;
+export type TRANSFERER_ROLEParams = FunctionArguments<typeof functions.TRANSFERER_ROLE>;
+export type TRANSFERER_ROLEReturn = FunctionReturn<typeof functions.TRANSFERER_ROLE>;
 
 export type UPGRADE_INTERFACE_VERSIONParams = FunctionArguments<
   typeof functions.UPGRADE_INTERFACE_VERSION
@@ -390,27 +345,19 @@ export type UPGRADE_INTERFACE_VERSIONReturn = FunctionReturn<
   typeof functions.UPGRADE_INTERFACE_VERSION
 >;
 
-export type AddWhitelistParams = FunctionArguments<
-  typeof functions.addWhitelist
->;
+export type AddWhitelistParams = FunctionArguments<typeof functions.addWhitelist>;
 export type AddWhitelistReturn = FunctionReturn<typeof functions.addWhitelist>;
 
 export type BalanceOfParams = FunctionArguments<typeof functions.balanceOf>;
 export type BalanceOfReturn = FunctionReturn<typeof functions.balanceOf>;
 
-export type BalanceOfBatchParams = FunctionArguments<
-  typeof functions.balanceOfBatch
->;
-export type BalanceOfBatchReturn = FunctionReturn<
-  typeof functions.balanceOfBatch
->;
+export type BalanceOfBatchParams = FunctionArguments<typeof functions.balanceOfBatch>;
+export type BalanceOfBatchReturn = FunctionReturn<typeof functions.balanceOfBatch>;
 
 export type BurnParams = FunctionArguments<typeof functions.burn>;
 export type BurnReturn = FunctionReturn<typeof functions.burn>;
 
-export type GetRoleAdminParams = FunctionArguments<
-  typeof functions.getRoleAdmin
->;
+export type GetRoleAdminParams = FunctionArguments<typeof functions.getRoleAdmin>;
 export type GetRoleAdminReturn = FunctionReturn<typeof functions.getRoleAdmin>;
 
 export type GrantRoleParams = FunctionArguments<typeof functions.grantRole>;
@@ -422,12 +369,8 @@ export type HasRoleReturn = FunctionReturn<typeof functions.hasRole>;
 export type InitializeParams = FunctionArguments<typeof functions.initialize>;
 export type InitializeReturn = FunctionReturn<typeof functions.initialize>;
 
-export type IsApprovedForAllParams = FunctionArguments<
-  typeof functions.isApprovedForAll
->;
-export type IsApprovedForAllReturn = FunctionReturn<
-  typeof functions.isApprovedForAll
->;
+export type IsApprovedForAllParams = FunctionArguments<typeof functions.isApprovedForAll>;
+export type IsApprovedForAllReturn = FunctionReturn<typeof functions.isApprovedForAll>;
 
 export type MintParams = FunctionArguments<typeof functions.mint>;
 export type MintReturn = FunctionReturn<typeof functions.mint>;
@@ -435,72 +378,38 @@ export type MintReturn = FunctionReturn<typeof functions.mint>;
 export type MintBatchParams = FunctionArguments<typeof functions.mintBatch>;
 export type MintBatchReturn = FunctionReturn<typeof functions.mintBatch>;
 
-export type ProxiableUUIDParams = FunctionArguments<
-  typeof functions.proxiableUUID
->;
-export type ProxiableUUIDReturn = FunctionReturn<
-  typeof functions.proxiableUUID
->;
+export type ProxiableUUIDParams = FunctionArguments<typeof functions.proxiableUUID>;
+export type ProxiableUUIDReturn = FunctionReturn<typeof functions.proxiableUUID>;
 
-export type RemoveWhitelistParams = FunctionArguments<
-  typeof functions.removeWhitelist
->;
-export type RemoveWhitelistReturn = FunctionReturn<
-  typeof functions.removeWhitelist
->;
+export type RemoveWhitelistParams = FunctionArguments<typeof functions.removeWhitelist>;
+export type RemoveWhitelistReturn = FunctionReturn<typeof functions.removeWhitelist>;
 
-export type RenounceRoleParams = FunctionArguments<
-  typeof functions.renounceRole
->;
+export type RenounceRoleParams = FunctionArguments<typeof functions.renounceRole>;
 export type RenounceRoleReturn = FunctionReturn<typeof functions.renounceRole>;
 
 export type RevokeRoleParams = FunctionArguments<typeof functions.revokeRole>;
 export type RevokeRoleReturn = FunctionReturn<typeof functions.revokeRole>;
 
-export type SafeBatchTransferFromParams = FunctionArguments<
-  typeof functions.safeBatchTransferFrom
->;
-export type SafeBatchTransferFromReturn = FunctionReturn<
-  typeof functions.safeBatchTransferFrom
->;
+export type SafeBatchTransferFromParams = FunctionArguments<typeof functions.safeBatchTransferFrom>;
+export type SafeBatchTransferFromReturn = FunctionReturn<typeof functions.safeBatchTransferFrom>;
 
-export type SafeTransferFromParams = FunctionArguments<
-  typeof functions.safeTransferFrom
->;
-export type SafeTransferFromReturn = FunctionReturn<
-  typeof functions.safeTransferFrom
->;
+export type SafeTransferFromParams = FunctionArguments<typeof functions.safeTransferFrom>;
+export type SafeTransferFromReturn = FunctionReturn<typeof functions.safeTransferFrom>;
 
-export type SetApprovalForAllParams = FunctionArguments<
-  typeof functions.setApprovalForAll
->;
-export type SetApprovalForAllReturn = FunctionReturn<
-  typeof functions.setApprovalForAll
->;
+export type SetApprovalForAllParams = FunctionArguments<typeof functions.setApprovalForAll>;
+export type SetApprovalForAllReturn = FunctionReturn<typeof functions.setApprovalForAll>;
 
 export type SetURIParams = FunctionArguments<typeof functions.setURI>;
 export type SetURIReturn = FunctionReturn<typeof functions.setURI>;
 
-export type SetWhitelistCheckParams = FunctionArguments<
-  typeof functions.setWhitelistCheck
->;
-export type SetWhitelistCheckReturn = FunctionReturn<
-  typeof functions.setWhitelistCheck
->;
+export type SetWhitelistCheckParams = FunctionArguments<typeof functions.setWhitelistCheck>;
+export type SetWhitelistCheckReturn = FunctionReturn<typeof functions.setWhitelistCheck>;
 
-export type SupportsInterfaceParams = FunctionArguments<
-  typeof functions.supportsInterface
->;
-export type SupportsInterfaceReturn = FunctionReturn<
-  typeof functions.supportsInterface
->;
+export type SupportsInterfaceParams = FunctionArguments<typeof functions.supportsInterface>;
+export type SupportsInterfaceReturn = FunctionReturn<typeof functions.supportsInterface>;
 
-export type UpgradeToAndCallParams = FunctionArguments<
-  typeof functions.upgradeToAndCall
->;
-export type UpgradeToAndCallReturn = FunctionReturn<
-  typeof functions.upgradeToAndCall
->;
+export type UpgradeToAndCallParams = FunctionArguments<typeof functions.upgradeToAndCall>;
+export type UpgradeToAndCallReturn = FunctionReturn<typeof functions.upgradeToAndCall>;
 
 export type UriParams = FunctionArguments<typeof functions.uri>;
 export type UriReturn = FunctionReturn<typeof functions.uri>;

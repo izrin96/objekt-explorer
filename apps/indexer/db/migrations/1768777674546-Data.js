@@ -17,8 +17,6 @@ module.exports = class Data1768777674546 {
   async down(db) {
     await db.query(`DROP INDEX IF EXISTS transfer_from_timestamp_id_idx;`);
     await db.query(`DROP INDEX IF EXISTS transfer_to_timestamp_id_idx;`);
-    await db.query(
-      `DROP INDEX IF EXISTS transfer_collection_timestamp_id_idx;`,
-    );
+    await db.query(`DROP INDEX IF EXISTS transfer_collection_timestamp_id_idx;`);
   }
 };

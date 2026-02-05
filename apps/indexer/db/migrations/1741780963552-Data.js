@@ -8,9 +8,7 @@ module.exports = class Data1741780963552 {
     );
 
     // 2. create an index for loading transfers
-    await db.query(
-      `CREATE INDEX idx_transfer_to_timestamp ON transfer("to", "timestamp" DESC);`,
-    );
+    await db.query(`CREATE INDEX idx_transfer_to_timestamp ON transfer("to", "timestamp" DESC);`);
 
     // 3. specifically add an initial page load index for @cosmo-spin
     await db.query(
@@ -18,14 +16,10 @@ module.exports = class Data1741780963552 {
     );
 
     // 4. improve collection join performance
-    await db.query(
-      `CREATE INDEX idx_transfer_collection_id ON transfer(collection_id);`,
-    );
+    await db.query(`CREATE INDEX idx_transfer_collection_id ON transfer(collection_id);`);
 
     // 5. improve objekt join performance
-    await db.query(
-      `CREATE INDEX idx_transfer_objekt_id ON transfer(objekt_id);`,
-    );
+    await db.query(`CREATE INDEX idx_transfer_objekt_id ON transfer(objekt_id);`);
   }
 
   async down(db) {
