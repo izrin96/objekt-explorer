@@ -3,7 +3,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { PropsWithChildren } from "react";
 
-import { ChecksIcon, HandPointingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChecksIcon, HandPointingIcon, BroomIcon } from "@phosphor-icons/react/dist/ssr";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import { useShallow } from "zustand/react/shallow";
@@ -33,7 +33,7 @@ export function SelectMode({ children, objekts }: Props) {
         Select all
       </Button>
       <Button intent="outline" onPress={reset}>
-        <XIcon weight="regular" data-slot="icon" />
+        <BroomIcon weight="regular" data-slot="icon" />
         Clear select
       </Button>
       {children}

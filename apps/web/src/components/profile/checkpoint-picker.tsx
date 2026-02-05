@@ -9,7 +9,7 @@ import {
   toCalendarDateTime,
   toTime,
 } from "@internationalized/date";
-import { ClockIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import { ClockCounterClockwiseIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
@@ -94,15 +94,15 @@ export default function CheckpointPicker() {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
       <Button intent="outline" data-selected={filters.at} onPress={() => handleOpenChange(true)}>
-        <ClockIcon data-slot="icon" />
+        <ClockCounterClockwiseIcon data-slot="icon" />
         {formatCheckpointLabel(filters.at)}
       </Button>
       <ModalContent size="sm" isOpen={isOpen} onOpenChange={handleOpenChange}>
         <ModalHeader>
           <ModalTitle>Time Travel</ModalTitle>
-          <ModalDescription>View your collection at given time</ModalDescription>
+          <ModalDescription>View collection at given time</ModalDescription>
         </ModalHeader>
         <ModalBody className="space-y-4 select-none">
           <div className="flex h-110 flex-col items-center gap-3 sm:h-86">
@@ -133,7 +133,7 @@ export default function CheckpointPicker() {
       {filters.at && (
         <Button intent="outline" onPress={() => setFilters({ at: null })}>
           <XIcon data-slot="icon" />
-          Clear
+          Reset
         </Button>
       )}
     </div>
