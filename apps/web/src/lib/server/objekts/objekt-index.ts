@@ -1,5 +1,5 @@
 import { collections } from "@repo/db/indexer/schema";
-import { getTableColumns } from "drizzle-orm";
+import { getColumns } from "drizzle-orm";
 
 export function getCollectionColumns() {
   const {
@@ -8,6 +8,6 @@ export function getCollectionColumns() {
     accentColor: _accentColor,
     thumbnailImage: _thumbnailImage,
     ...rest
-  } = getTableColumns(collections);
+  } = getColumns(collections);
   return rest;
 }

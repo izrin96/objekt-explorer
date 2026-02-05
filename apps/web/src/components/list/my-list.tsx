@@ -57,8 +57,8 @@ function MyList() {
           <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
           <div className="flex w-full gap-2">
-            <Button onClick={() => setAddOpen(true)}>Create list</Button>
-            <Button intent="outline" onClick={() => setGenOpen(true)}>
+            <Button onPress={() => setAddOpen(true)}>Create list</Button>
+            <Button intent="outline" onPress={() => setGenOpen(true)}>
               Generate Discord format
             </Button>
           </div>

@@ -11,7 +11,7 @@ export function FilterContainer({ children }: React.PropsWithChildren) {
   const [open, setOpen] = useState(false);
   return (
     <div className="group flex flex-col justify-center gap-6" data-show={open}>
-      <Button intent="outline" className="flex sm:hidden" onClick={() => setOpen(!open)}>
+      <Button intent="outline" className="flex sm:hidden" onPress={() => setOpen(!open)}>
         <FunnelIcon className="size-5" />
         {t("filters")}
       </Button>

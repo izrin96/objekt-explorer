@@ -10,7 +10,7 @@ import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { Container } from "@/components/ui/container";
 import { getUserByIdentifier } from "@/lib/client-fetching";
-import { getSession, toPublicUser } from "@/lib/server/auth";
+import { getSession } from "@/lib/server/auth";
 
 type Props = PropsWithChildren<{
   params: Promise<{
@@ -36,7 +36,7 @@ export default async function UserCollectionLayout(props: Props) {
     );
 
   return (
-    <ProfileProvider profiles={profiles} targetProfile={targetProfile} user={toPublicUser(session)}>
+    <ProfileProvider profiles={profiles} targetProfile={targetProfile}>
       <ProfileBanner profile={targetProfile} />
       {targetProfile.bannerImgUrl && (
         <Container className="[--container-breakpoint:var(--breakpoint-2xl)]">

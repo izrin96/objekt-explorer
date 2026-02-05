@@ -322,10 +322,10 @@ function Content() {
 
       <Portal to="#submit-form">
         <div className="flex gap-2">
-          <Button intent="outline" onClick={handleReset}>
+          <Button intent="outline" onPress={handleReset}>
             Reset
           </Button>
-          <Button isPending={generateDiscordFormat.isPending} onClick={onSubmit}>
+          <Button isPending={generateDiscordFormat.isPending} onPress={() => onSubmit()}>
             Generate
           </Button>
         </div>

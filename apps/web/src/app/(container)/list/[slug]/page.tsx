@@ -7,7 +7,7 @@ import { getList } from "@/lib/client-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchOwnedLists } from "@/lib/server/api/routers/list";
-import { getSession, toPublicUser } from "@/lib/server/auth";
+import { getSession } from "@/lib/server/auth";
 
 type Props = {
   params: Promise<{
@@ -41,7 +41,7 @@ export default async function Page(props: Props) {
   );
 
   return (
-    <ProfileProvider targetList={list} lists={lists} user={toPublicUser(session)}>
+    <ProfileProvider targetList={list} lists={lists}>
       <HydrateClient client={queryClient}>
         <div className="flex flex-col gap-4 pt-2 pb-36">
           <ListHeader />

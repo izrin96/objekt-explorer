@@ -23,6 +23,7 @@ export function useProfileObjekts() {
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
     profile.address,
     selectedArtistIds,
+    filters.at ?? undefined,
   );
 
   const [pinsQuery, lockedObjektQuery] = useSuspenseQueries({

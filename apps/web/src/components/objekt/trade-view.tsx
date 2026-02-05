@@ -141,7 +141,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
-          onClick={() => updateSerial("first")}
+          onPress={() => updateSerial("first")}
         >
           <CaretLineLeftIcon />
         </Button>
@@ -149,7 +149,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
-          onClick={() => updateSerial("prev")}
+          onPress={() => updateSerial("prev")}
         >
           <CaretLeftIcon />
         </Button>
@@ -157,7 +157,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
-          onClick={() => updateSerial("next")}
+          onPress={() => updateSerial("next")}
         >
           <CaretRightIcon />
         </Button>
@@ -165,7 +165,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
-          onClick={() => updateSerial("last")}
+          onPress={() => updateSerial("last")}
         >
           <CaretLineRightIcon />
         </Button>

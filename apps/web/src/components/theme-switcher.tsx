@@ -27,7 +27,7 @@ export function ThemeSwitcher({ intent = "plain", ...props }: React.ComponentPro
       size="sm"
       className="px-2 [--btn-icon:var(--color-fg)] sm:px-2"
       aria-label="Switch theme"
-      onClick={toggleTheme}
+      onPress={toggleTheme}
       {...props}
     >
       {theme === "light" ? <SunIcon /> : theme === "dark" ? <MoonIcon /> : <ComputerDesktopIcon />}

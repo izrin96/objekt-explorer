@@ -28,18 +28,18 @@ export const collectionOptions = (artistIds: ValidArtist[], enable = true) =>
     },
   });
 
-export const ownedCollectionOptions = (address: string, artistIds: ValidArtist[]) =>
+export const ownedCollectionOptions = (address: string, artistIds: ValidArtist[], at?: string) =>
   infiniteQueryOptions({
-    queryKey: ["owned-collections", address, artistIds],
+    queryKey: ["owned-collections", address, artistIds, at],
     queryFn: ({ pageParam }) =>
-      fetchOwnedObjektsByCursor(address, artistIds, pageParam).then((result) => ({
+      fetchOwnedObjektsByCursor(address, artistIds, pageParam, at).then((result) => ({
         objekts: result.objekts.map(mapObjektWithTag),
         nextCursor: result.nextCursor,
       })),
     initialPageParam: undefined as { receivedAt: string; id: string } | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60 * 5,
+    staleTime: at ? Infinity : 1000 * 60 * 5,
   });
 
 export const sessionOptions = queryOptions({

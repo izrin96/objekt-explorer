@@ -86,14 +86,14 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
       </div>
       <PullProfileModal provider={provider} open={pullOpen} setOpen={setPullOpen} />
       <div className="flex gap-2">
-        <Button intent="outline" size="xs" onClick={() => setPullOpen(true)}>
+        <Button intent="outline" size="xs" onPress={() => setPullOpen(true)}>
           <ArrowsClockwiseIcon data-slot="icon" />
           Refresh
         </Button>
         <Button
           intent="danger"
           size="xs"
-          onClick={() =>
+          onPress={() =>
             unlinkAccount.mutate({
               providerId: provider.id,
               accountId: accountId,
@@ -128,7 +128,7 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
       <span className="text-sm">{provider.label}</span>
-      <Button intent="outline" size="xs" onClick={() => linkAccount.mutate()}>
+      <Button intent="outline" size="xs" onPress={() => linkAccount.mutate()}>
         <LinkIcon data-slot="icon" />
         Link
       </Button>
@@ -171,7 +171,7 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
           intent="primary"
           type="submit"
           isPending={refreshProfile.isPending}
-          onClick={() => refreshProfile.mutate(provider.id)}
+          onPress={() => refreshProfile.mutate(provider.id)}
         >
           Continue
         </Button>

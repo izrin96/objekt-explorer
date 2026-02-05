@@ -15,7 +15,7 @@ export function AddToList({ size }: ObjektActionProps) {
   return (
     <>
       <AddToListModal open={addOpen} setOpen={setAddOpen} />
-      <Button size={size} intent="outline" onClick={() => handleAction(() => setAddOpen(true))}>
+      <Button size={size} intent="outline" onPress={() => handleAction(() => setAddOpen(true))}>
         <PlusIcon weight="regular" data-slot="icon" />
         {t("add_to_list")}
       </Button>
@@ -30,7 +30,7 @@ export function RemoveFromList({ size }: ObjektActionProps) {
   return (
     <>
       <RemoveFromListModal open={open} setOpen={setOpen} />
-      <Button size={size} intent="outline" onClick={() => handleAction(() => setOpen(true))}>
+      <Button size={size} intent="outline" onPress={() => handleAction(() => setOpen(true))}>
         <TrashSimpleIcon weight="regular" data-slot="icon" />
         {t("remove_from_list")}
       </Button>

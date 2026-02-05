@@ -34,7 +34,7 @@ export default function ColorFilter() {
           <ColorSensitivityFilter />
           <Button
             intent="outline"
-            onClick={() =>
+            onPress={() =>
               setFilters({
                 color: null,
                 colorSensitivity: null,

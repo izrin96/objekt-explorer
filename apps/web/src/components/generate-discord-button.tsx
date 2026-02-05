@@ -12,7 +12,7 @@ export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <>
       <GenerateDiscordFormatModal objekts={objekts} open={genOpen} setOpen={setGenOpen} />
-      <Button intent="outline" onClick={() => setGenOpen(true)}>
+      <Button intent="outline" onPress={() => setGenOpen(true)}>
         Discord format
       </Button>
     </>

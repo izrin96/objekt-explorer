@@ -21,7 +21,7 @@ export function LockObjekt({ size }: ObjektActionProps) {
     <Button
       size={size}
       intent="outline"
-      onClick={() =>
+      onPress={() =>
         handleAction(() => {
           batchLock.mutate({
             address: target.address,
@@ -48,7 +48,7 @@ export function UnlockObjekt({ size }: ObjektActionProps) {
     <Button
       size={size}
       intent="outline"
-      onClick={() => {
+      onPress={() => {
         handleAction(() => {
           batchUnlock.mutate({
             address: target.address,

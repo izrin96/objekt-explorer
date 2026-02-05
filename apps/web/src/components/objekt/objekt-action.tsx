@@ -27,7 +27,7 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
         "hidden bg-bg/80 px-2 text-fg hover:bg-bg group-hover:block",
         isSelected && "block",
       )}
-      onClick={() => objektSelect(objekt)}
+      onPress={() => objektSelect(objekt)}
     >
       <CheckIcon className="size-3" weight="bold" />
     </Button>

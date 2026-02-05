@@ -9,19 +9,21 @@ export async function fetchOwnedObjektsByCursor(
   address: string,
   artistIds: ValidArtist[],
   cursor?: OwnedObjektsResult["nextCursor"],
+  at?: string,
 ) {
   const url = new URL(`/api/objekts/owned-by/${address}`, getBaseURL());
   const result = await ofetch<OwnedObjektsResult>(url.toString(), {
     query: {
       artist: artistIds,
       cursor: cursor ? JSON.stringify(cursor) : undefined,
+      at,
     },
   });
   return result;
 }
 
 export async function fetchOwnedObjekts(address: string, artistIds: ValidArtist[]) {
-  let allObjekts: OwnedObjekt[] = [];
+  const allObjekts: OwnedObjekt[] = [];
   let cursor: OwnedObjektsResult["nextCursor"];
 
   // Loop until there are no more pages

@@ -91,7 +91,7 @@ export default function LinkRender() {
           <Button
             size="md"
             intent="outline"
-            onClick={() => {
+            onPress={() => {
               void queryClient.invalidateQueries({
                 queryKey: orpc.cosmoLink.getTicket.key(),
               });
@@ -144,7 +144,7 @@ function TicketRender() {
           className="fade-in zoom-in animate-in duration-200"
         />
         <span>{t("error_generating_qr")}</span>
-        <Button intent="outline" onClick={() => refetch()}>
+        <Button intent="outline" onPress={() => refetch()}>
           {t("try_again")}
         </Button>
       </div>
@@ -209,7 +209,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
           className="fade-in zoom-in animate-in duration-200"
         />
         <span>QR expired</span>
-        <Button intent="outline" onClick={refetch}>
+        <Button intent="outline" onPress={refetch}>
           Regenerate
         </Button>
       </div>
@@ -289,7 +289,7 @@ function RenderOtp({
         <span>{otpAndLink.error.message}</span>
         <Button
           intent="outline"
-          onClick={() => {
+          onPress={() => {
             reset();
             otpAndLink.reset();
           }}

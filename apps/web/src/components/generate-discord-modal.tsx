@@ -180,7 +180,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
         </Form>
       </ModalBody>
       <ModalFooter className="flex justify-end">
-        <Button type="submit" onClick={onSubmit}>
+        <Button type="submit" onPress={() => onSubmit()}>
           Generate
         </Button>
       </ModalFooter>

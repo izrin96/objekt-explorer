@@ -315,7 +315,7 @@ function OwnedListPanel({
             size="sq-md"
             intent="outline"
             isDisabled={currentPage <= 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
+            onPress={() => setCurrentPage(currentPage - 1)}
           >
             <CaretLeftIcon />
           </Button>
@@ -326,7 +326,7 @@ function OwnedListPanel({
             size="sq-md"
             intent="outline"
             isDisabled={currentPage >= totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
+            onPress={() => setCurrentPage(currentPage + 1)}
           >
             <CaretRightIcon />
           </Button>

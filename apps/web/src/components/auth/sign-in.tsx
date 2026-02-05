@@ -138,11 +138,11 @@ function SignInForm({
       </Form>
 
       <div className="flex flex-col gap-2">
-        <Button intent="outline" className="gap-2" onClick={() => setState("forgot-password")}>
+        <Button intent="outline" className="gap-2" onPress={() => setState("forgot-password")}>
           <EnvelopeSimpleIcon size={18} weight="light" />
           Forgot password
         </Button>
-        <Button intent="outline" className="gap-2" onClick={() => setState("sign-up")}>
+        <Button intent="outline" className="gap-2" onPress={() => setState("sign-up")}>
           <UserPlusIcon size={18} weight="light" />
           Create new account
         </Button>
@@ -170,7 +170,7 @@ function SignInWithDiscord() {
       intent="outline"
       className="gap-2"
       isDisabled={isPending}
-      onClick={() => {
+      onPress={() => {
         startTransition(async () => {
           await authClient.signIn.social({
             provider: "discord",
@@ -191,7 +191,7 @@ function SignInWithTwitter() {
       intent="outline"
       className="gap-2"
       isDisabled={isPending}
-      onClick={() => {
+      onPress={() => {
         startTransition(async () => {
           await authClient.signIn.social({
             provider: "twitter",
@@ -324,7 +324,7 @@ function SignUpForm({
         <Button type="submit" isDisabled={mutation.isPending}>
           Create Account
         </Button>
-        <Button intent="outline" onClick={() => setState("sign-in")}>
+        <Button intent="outline" onPress={() => setState("sign-in")}>
           Back to Sign In
         </Button>
       </div>
@@ -398,7 +398,7 @@ function ForgotPassword({
         <Button type="submit" isDisabled={mutation.isPending}>
           Send reset password email
         </Button>
-        <Button intent="outline" onClick={() => setState("sign-in")}>
+        <Button intent="outline" onPress={() => setState("sign-in")}>
           Back to Sign In
         </Button>
       </div>

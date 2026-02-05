@@ -83,7 +83,7 @@ function LiveControl() {
       <LiveDuration />
       <ParticipantCounter />
       <LiveVolumeControl />
-      <Button intent="outline" size="sq-sm" onClick={toggleFullscreen}>
+      <Button intent="outline" size="sq-sm" onPress={toggleFullscreen}>
         <CornersOutIcon />
       </Button>
     </>
@@ -169,7 +169,7 @@ const CustomLivestreamLayout = () => {
           />
           {!open && (
             <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
-              <Button intent="primary" onClick={() => setOpen((prev) => !prev)}>
+              <Button intent="primary" onPress={() => setOpen((prev) => !prev)}>
                 Unmute
               </Button>
             </div>

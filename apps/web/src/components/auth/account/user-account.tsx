@@ -1,7 +1,7 @@
 "use client";
 
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components";
@@ -39,8 +39,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { TextField } from "@/components/ui/text-field";
+import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
-import { sessionOptions } from "@/lib/query-options";
 
 import { ListAccounts } from "./link-account";
 
@@ -83,9 +83,9 @@ export default function UserAccountModal({ open, setOpen }: Props) {
 }
 
 function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const session = useSuspenseQuery(sessionOptions);
+  const { data: session } = useSession();
 
-  if (!session.data) return;
+  if (!session) return;
 
   return (
     <DisclosureGroup
@@ -95,14 +95,14 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       <Disclosure id="1">
         <DisclosureTrigger>General</DisclosureTrigger>
         <DisclosurePanel>
-          <UserAccountForm user={session.data.user} setOpen={setOpen} />
+          <UserAccountForm user={session.user} setOpen={setOpen} />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
         <DisclosureTrigger>Change Email</DisclosureTrigger>
         <DisclosurePanel>
-          <ChangeEmail email={session.data.user.email} />
+          <ChangeEmail email={session.user.email} />
         </DisclosurePanel>
       </Disclosure>
 
@@ -448,7 +448,7 @@ function DeleteAccount() {
 
   return (
     <>
-      <Button intent="danger" size="sm" onClick={() => setOpen(true)}>
+      <Button intent="danger" size="sm" onPress={() => setOpen(true)}>
         <TrashSimpleIcon data-slot="icon" />
         Delete Account
       </Button>
@@ -465,7 +465,7 @@ function DeleteAccount() {
             intent="danger"
             type="submit"
             isPending={mutation.isPending}
-            onClick={() => mutation.mutate()}
+            onPress={() => mutation.mutate()}
           >
             Continue
           </Button>

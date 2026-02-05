@@ -61,7 +61,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           <Button
             size="sm"
             intent="outline"
-            onClick={() => setEditOpen(true)}
+            onPress={() => setEditOpen(true)}
             className="w-full flex-none md:w-auto"
           >
             Edit Profile

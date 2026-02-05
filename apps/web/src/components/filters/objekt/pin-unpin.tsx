@@ -21,7 +21,7 @@ export function PinObjekt({ size }: ObjektActionProps) {
     <Button
       size={size}
       intent="outline"
-      onClick={() =>
+      onPress={() =>
         handleAction(() => {
           batchPin.mutate({
             address: target.address,
@@ -48,7 +48,7 @@ export function UnpinObjekt({ size }: ObjektActionProps) {
     <Button
       size={size}
       intent="outline"
-      onClick={() => {
+      onPress={() => {
         handleAction(() => {
           batchUnpin.mutate({
             address: target.address,

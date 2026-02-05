@@ -122,7 +122,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       </ModalBody>
       <ModalFooter>
         <ModalClose>Cancel</ModalClose>
-        <Button type="submit" isPending={createList.isPending} onClick={onSubmit}>
+        <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
           Create
         </Button>
       </ModalFooter>
@@ -165,7 +165,7 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
           intent="danger"
           type="submit"
           isPending={deleteList.isPending}
-          onClick={() => deleteList.mutate({ slug })}
+          onPress={() => deleteList.mutate({ slug })}
         >
           Continue
         </Button>
@@ -338,7 +338,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
         </span>
 
         <Portal to="#submit-form">
-          <Button isPending={editList.isPending} onClick={onSubmit}>
+          <Button isPending={editList.isPending} onPress={() => onSubmit()}>
             Save
           </Button>
         </Portal>

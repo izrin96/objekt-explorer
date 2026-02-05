@@ -78,7 +78,7 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
           intent="danger"
           type="submit"
           isPending={removeLink.isPending}
-          onClick={() => removeLink.mutate(address)}
+          onPress={() => removeLink.mutate(address)}
         >
           Continue
         </Button>
@@ -176,7 +176,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
       )}
       <div className="flex items-center justify-between">
         <span className="text-muted-fg truncate text-sm">Selected file: {droppedImage.name}</span>
-        <Button size="xs" intent="outline" onClick={onClear}>
+        <Button size="xs" intent="outline" onPress={onClear}>
           Clear
         </Button>
       </div>
@@ -461,7 +461,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         </span>
 
         <Portal to="#submit-form">
-          <Button intent="primary" isPending={isSubmitting} onClick={onSubmit}>
+          <Button intent="primary" isPending={isSubmitting} onPress={() => onSubmit()}>
             Save
           </Button>
         </Portal>

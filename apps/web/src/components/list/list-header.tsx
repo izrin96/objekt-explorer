@@ -12,7 +12,7 @@ import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
   const list = useTarget((a) => a.list)!;
-  const isListAuthed = useListAuthed(list.slug);
+  const isListAuthed = useListAuthed();
   const { user, name } = list;
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
@@ -65,7 +65,7 @@ function EditList({ slug }: { slug: string }) {
       <Button
         size="sm"
         intent="outline"
-        onClick={() => setOpen(true)}
+        onPress={() => setOpen(true)}
         className="w-full flex-none sm:w-auto"
       >
         Edit List

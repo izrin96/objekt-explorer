@@ -14,7 +14,7 @@ export default function LockedFilter() {
       intent="outline"
       data-selected={filters.locked}
       className="w-fit"
-      onClick={() =>
+      onPress={() =>
         setFilters((f) => ({
           locked: f.locked === true ? false : f.locked === false ? null : true,
         }))

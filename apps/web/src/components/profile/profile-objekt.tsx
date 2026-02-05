@@ -9,12 +9,13 @@ import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 
 import { useConfigStore } from "@/hooks/use-config";
+import { useFilters } from "@/hooks/use-filters";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
-import { useProfileAuthed, useUser } from "@/hooks/use-user";
+import { useProfileAuthed, useSession } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
@@ -37,6 +38,7 @@ import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import { Loader } from "../ui/loader";
+import CheckpointPicker from "./checkpoint-picker";
 import Filter from "./filter";
 
 export default dynamic(() => Promise.resolve(ProfileObjektRender), {
@@ -49,35 +51,102 @@ function ProfileObjektRender() {
     <ObjektColumnProvider initialColumn={profile.gridColumns}>
       <ObjektSelectProvider>
         <ObjektModalProvider initialTab="owned">
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="flex justify-center">
-                        <Loader variant="ring" />
+          <div className="flex flex-col gap-4">
+            <ProfileObjektFilters />
+            <QueryErrorResetBoundary>
+              {({ reset }) => (
+                <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                  <Suspense
+                    fallback={
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="flex justify-center">
+                          <Loader variant="ring" />
+                        </div>
                       </div>
-                    </div>
-                  }
-                >
-                  <ProfileObjekt />
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
+                    }
+                  >
+                    <ProfileObjekt />
+                  </Suspense>
+                </ErrorBoundary>
+              )}
+            </QueryErrorResetBoundary>
+          </div>
         </ObjektModalProvider>
       </ObjektSelectProvider>
     </ObjektColumnProvider>
   );
 }
 
-function ProfileObjekt() {
-  const { authenticated } = useUser();
+function ProfileObjektFilters() {
+  const { data: session } = useSession();
+  const [filters] = useFilters();
+
+  return (
+    <div className="mb-2 flex flex-col gap-6">
+      {session && !filters.at && (
+        <Suspense>
+          <FloatingSelectModeWrapper />
+        </Suspense>
+      )}
+      <FilterContainer>
+        <div className="flex w-full flex-col gap-6">
+          <Filter />
+          <CheckpointPicker />
+          {session && !filters.at && (
+            <Suspense>
+              <SelectModeWrapper />
+            </Suspense>
+          )}
+        </div>
+      </FilterContainer>
+    </div>
+  );
+}
+
+function FloatingSelectModeWrapper() {
   const isProfileAuthed = useProfileAuthed();
+  const { filtered } = useProfileObjekts();
+
+  return (
+    <FloatingSelectMode objekts={filtered}>
+      <AddToList size="sm" />
+      {isProfileAuthed && (
+        <>
+          <PinObjekt size="sm" />
+          <UnpinObjekt size="sm" />
+          <LockObjekt size="sm" />
+          <UnlockObjekt size="sm" />
+        </>
+      )}
+    </FloatingSelectMode>
+  );
+}
+
+function SelectModeWrapper() {
+  const isProfileAuthed = useProfileAuthed();
+  const { filtered } = useProfileObjekts();
+
+  return (
+    <SelectMode objekts={filtered}>
+      <AddToList />
+      {isProfileAuthed && (
+        <>
+          <PinObjekt />
+          <UnpinObjekt />
+          <LockObjekt />
+          <UnlockObjekt />
+        </>
+      )}
+    </SelectMode>
+  );
+}
+
+function ProfileObjekt() {
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered, grouped, filters, hasNextPage } = useProfileObjekts();
+  const { data: session } = useSession();
+  const isProfileAuthed = useProfileAuthed();
 
   const virtualList = useMemo(() => {
     return shaped.flatMap(([title, items]) => [
@@ -101,7 +170,8 @@ function ProfileObjekt() {
                   objekts={item}
                   showOwned
                   menu={
-                    authenticated && (
+                    session &&
+                    !filters.at && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
                         {isProfileAuthed && isOwned && (
@@ -127,7 +197,7 @@ function ProfileObjekt() {
                         showSerial={!filters.grouped}
                         isFade={!isOwned}
                       >
-                        {authenticated && (
+                        {session && !filters.at && (
                           <div className="flex items-start self-start justify-self-end">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
@@ -157,28 +227,10 @@ function ProfileObjekt() {
         ),
       }),
     ]);
-  }, [shaped, filters.grouped, columns, authenticated, isProfileAuthed, hideLabel]);
+  }, [shaped, filters.grouped, filters.at, columns, session, isProfileAuthed, hideLabel]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-6">
-        {authenticated && (
-          <FloatingSelectMode objekts={filtered}>
-            <AddToList size="sm" />
-            {isProfileAuthed && (
-              <>
-                <PinObjekt size="sm" />
-                <UnpinObjekt size="sm" />
-                <LockObjekt size="sm" />
-                <UnlockObjekt size="sm" />
-              </>
-            )}
-          </FloatingSelectMode>
-        )}
-        <FilterContainer>
-          <Filters authenticated={authenticated} isOwned={isProfileAuthed} objekts={filtered} />
-        </FilterContainer>
-      </div>
+    <>
       <span className="flex items-center gap-2 font-semibold">
         <span>
           {filtered.length.toLocaleString()} total
@@ -190,35 +242,6 @@ function ProfileObjekt() {
       <div className="[&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </div>
-    </div>
-  );
-}
-
-function Filters({
-  authenticated,
-  isOwned,
-  objekts,
-}: {
-  authenticated: boolean;
-  isOwned: boolean;
-  objekts: ValidObjekt[];
-}) {
-  return (
-    <div className="flex w-full flex-col gap-6">
-      <Filter objekts={objekts} />
-      {authenticated && (
-        <SelectMode objekts={objekts}>
-          <AddToList />
-          {isOwned && (
-            <>
-              <PinObjekt />
-              <UnpinObjekt />
-              <LockObjekt />
-              <UnlockObjekt />
-            </>
-          )}
-        </SelectMode>
-      )}
-    </div>
+    </>
   );
 }

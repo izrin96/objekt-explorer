@@ -3,10 +3,11 @@ import type { NextRequest } from "next/server";
 import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { collections, objekts } from "@repo/db/indexer/schema";
+import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
+import { isValid, parseISO } from "date-fns";
+import { and, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
@@ -22,6 +23,7 @@ const PER_PAGE = 10000;
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),
+  at: z.string().optional(),
   cursor: z
     .object({
       receivedAt: z.string().or(z.date()),
@@ -32,11 +34,12 @@ const schema = z.object({
 
 export async function GET(request: NextRequest, props: Params) {
   const [session, params] = await Promise.all([getSession(), props.params]);
+  const addr = params.address.toLowerCase();
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
 
   const owner = await db.query.userAddress.findFirst({
-    where: { address: params.address },
+    where: { address: addr },
     columns: {
       privateProfile: true,
     },
@@ -52,9 +55,7 @@ export async function GET(request: NextRequest, props: Params) {
   if (session && isPrivate) {
     const profiles = await fetchUserProfiles(session.user.id);
 
-    const isProfileAuthed = profiles.some(
-      (a) => a.address.toLowerCase() === params.address.toLowerCase(),
-    );
+    const isProfileAuthed = profiles.some((a) => a.address.toLowerCase() === addr);
 
     if (!isProfileAuthed)
       return Response.json({
@@ -62,6 +63,85 @@ export async function GET(request: NextRequest, props: Params) {
       });
   }
 
+  // snapshot
+  if (query.at) {
+    const targetTimestamp = parseISO(query.at);
+    if (!isValid(targetTimestamp)) return Response.json({ objekts: [] });
+
+    const latest = indexer.$with("latest").as(
+      indexer
+        .selectDistinctOn([transfers.objektId], {
+          objectId: transfers.objektId,
+          to: transfers.to,
+          timestamp: transfers.timestamp,
+        })
+        .from(transfers)
+        .where(
+          and(
+            lte(transfers.timestamp, targetTimestamp),
+            or(eq(transfers.from, addr), eq(transfers.to, addr)),
+          ),
+        )
+        .orderBy(transfers.objektId, desc(transfers.timestamp)),
+    );
+
+    const results = await indexer
+      .with(latest)
+      .select({
+        objekt: {
+          ...getColumns(objekts),
+          receivedAt: latest.timestamp,
+        },
+        collection: {
+          ...getCollectionColumns(),
+        },
+      })
+      .from(latest)
+      .innerJoin(objekts, eq(latest.objectId, objekts.id))
+      .innerJoin(collections, eq(collections.id, objekts.collectionId))
+      .where(
+        and(
+          eq(latest.to, addr),
+          ne(collections.slug, "empty-collection"),
+          ...(query.artist.length
+            ? [
+                inArray(
+                  collections.artist,
+                  query.artist.map((a) => a.toLowerCase()),
+                ),
+              ]
+            : []),
+          ...(query.cursor
+            ? [
+                or(
+                  lt(latest.timestamp, new Date(query.cursor.receivedAt)),
+                  and(
+                    eq(latest.timestamp, new Date(query.cursor.receivedAt)),
+                    lt(objekts.id, query.cursor.id),
+                  ),
+                ),
+              ]
+            : []),
+        ),
+      )
+      .orderBy(desc(latest.timestamp), desc(objekts.id))
+      .limit(PER_PAGE + 1);
+
+    const hasNext = results.length > PER_PAGE;
+    const nextCursor = hasNext
+      ? {
+          receivedAt: results[PER_PAGE - 1]!.objekt.receivedAt,
+          id: results[PER_PAGE - 1]!.objekt.id,
+        }
+      : undefined;
+
+    return Response.json({
+      nextCursor,
+      objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    });
+  }
+
+  // current owner
   const results = await indexer
     .select({
       objekt: objekts,
@@ -73,7 +153,7 @@ export async function GET(request: NextRequest, props: Params) {
     .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(
       and(
-        eq(objekts.owner, params.address.toLowerCase()),
+        eq(objekts.owner, addr.toLowerCase()),
         ...(query.cursor
           ? [
               or(
@@ -116,6 +196,7 @@ export async function GET(request: NextRequest, props: Params) {
 function parseParams(params: URLSearchParams): z.infer<typeof schema> {
   const result = schema.safeParse({
     artist: params.getAll("artist"),
+    at: params.get("at") ?? undefined,
     cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
   });
 

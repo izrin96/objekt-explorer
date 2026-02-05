@@ -15,7 +15,7 @@ import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
-import { useListAuthed, useUser } from "@/hooks/use-user";
+import { useListAuthed, useSession } from "@/hooks/use-user";
 
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -64,8 +64,8 @@ export default function ListRender() {
 }
 
 function ListView({ list }: { list: PublicList }) {
-  const { authenticated } = useUser();
-  const isOwned = useListAuthed(list.slug);
+  const { data: session } = useSession();
+  const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered, grouped, filters } = useListObjekts(list.slug);
@@ -90,7 +90,7 @@ function ListView({ list }: { list: PublicList }) {
                   key={objekt.id}
                   objekts={item}
                   menu={
-                    authenticated && (
+                    session && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
                         {isOwned && <RemoveFromListMenu objekt={objekt} />}
@@ -108,7 +108,7 @@ function ListView({ list }: { list: PublicList }) {
                         hideLabel={hideLabel}
                         showCount
                       >
-                        {authenticated && (
+                        {session && (
                           <div className="flex items-start self-start justify-self-end">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
@@ -127,19 +127,27 @@ function ListView({ list }: { list: PublicList }) {
         ),
       }),
     ]);
-  }, [shaped, columns, isOwned, authenticated, hideLabel]);
+  }, [shaped, columns, isOwned, session, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        {authenticated && (
+        {session && (
           <FloatingSelectMode objekts={filtered}>
             {isOwned && <RemoveFromList size="sm" />}
             <AddToList size="sm" />
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} isOwned={isOwned} objekts={filtered} />
+          <div className="flex w-full flex-col gap-6">
+            <Filter objekts={filtered} />
+            {session && (
+              <SelectMode objekts={filtered}>
+                {isOwned && <RemoveFromList />}
+                <AddToList />
+              </SelectMode>
+            )}
+          </div>
         </FilterContainer>
       </div>
       <span className="font-semibold">
@@ -150,28 +158,6 @@ function ListView({ list }: { list: PublicList }) {
       <div className="[&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </div>
-    </div>
-  );
-}
-
-function Filters({
-  authenticated,
-  isOwned,
-  objekts,
-}: {
-  authenticated: boolean;
-  isOwned: boolean;
-  objekts: ValidObjekt[];
-}) {
-  return (
-    <div className="flex w-full flex-col gap-6">
-      <Filter objekts={objekts} />
-      {authenticated && (
-        <SelectMode objekts={objekts}>
-          {isOwned && <RemoveFromList />}
-          <AddToList />
-        </SelectMode>
-      )}
     </div>
   );
 }

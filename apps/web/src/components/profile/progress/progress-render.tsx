@@ -19,7 +19,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
-import { useUser } from "@/hooks/use-user";
+import { useSession } from "@/hooks/use-user";
 import { unobtainables } from "@/lib/unobtainables";
 import { cn } from "@/utils/classes";
 
@@ -55,7 +55,6 @@ function ProgressRender() {
 }
 
 function Progress() {
-  const { authenticated } = useUser();
   const { columns } = useObjektColumn();
   const { shaped, filters, ownedSlugs, hasNextPage } = useProgressObjekts();
 
@@ -81,7 +80,6 @@ function Progress() {
               title={key}
               grouped={grouped}
               ownedSlugs={ownedSlugs}
-              authenticated={authenticated}
               columns={columns}
             />
           ))}
@@ -95,7 +93,6 @@ type ProgressGroupProps = {
   title: string;
   grouped: ValidObjekt[][];
   ownedSlugs: Set<string>;
-  authenticated: boolean;
   columns: number;
 };
 
@@ -126,7 +123,8 @@ interface ProgressCollapseProps extends ProgressGroupProps {
 }
 
 function ProgressCollapse(props: ProgressCollapseProps) {
-  const { title, columns, grouped, percentage, ownedSlugs, owned, filtered, authenticated } = props;
+  const { data: session } = useSession();
+  const { title, columns, grouped, percentage, ownedSlugs, owned, filtered } = props;
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const [showCount] = useShowCount();
   const [show, setShow] = useState(false);
@@ -183,7 +181,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                         objekts={objekts}
                         showOwned
                         menu={
-                          authenticated && (
+                          session && (
                             <ObjektStaticMenu>
                               <AddToListMenu objekt={objekt} />
                             </ObjektStaticMenu>
@@ -197,7 +195,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                           showCount={showCount}
                           hideLabel={hideLabel}
                         >
-                          {authenticated && (
+                          {session && (
                             <div className="flex items-start self-start justify-self-end">
                               <ObjektHoverMenu>
                                 <AddToListMenu objekt={objekt} />

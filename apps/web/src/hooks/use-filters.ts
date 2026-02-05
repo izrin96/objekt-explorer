@@ -46,6 +46,7 @@ export function useFilters() {
     colorSensitivity: parseAsFloat,
     collection: parseAsArrayOf(parseAsString),
     locked: parseAsBoolean,
+    at: parseAsString,
   });
 }
 
@@ -78,6 +79,7 @@ function isFiltering(filters: Filters) {
     filters.color !== null ||
     filters.colorSensitivity !== null ||
     filters.collection !== null ||
-    filters.locked !== null
+    filters.locked !== null ||
+    filters.at !== null
   );
 }

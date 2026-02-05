@@ -73,7 +73,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       <InputGroup>
         <Input ref={ref} placeholder={t("quick_search")} />
         {query.length > 0 ? (
-          <Button intent="plain" size="sq-xs" onClick={() => handleChange("")}>
+          <Button intent="plain" size="sq-xs" onPress={() => handleChange("")}>
             <XIcon data-slot="icon" />
           </Button>
         ) : (

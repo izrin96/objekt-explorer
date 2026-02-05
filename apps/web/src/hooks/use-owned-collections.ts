@@ -9,8 +9,8 @@ import { ownedCollectionOptions } from "@/lib/query-options";
  * Hook that fetches all owned objekts for a given address and artist IDs.
  * Automatically fetches all pages progressively and returns flattened data.
  */
-export function useOwnedCollections(address: string, artistIds: ValidArtist[]) {
-  const query = useSuspenseInfiniteQuery(ownedCollectionOptions(address, artistIds));
+export function useOwnedCollections(address: string, artistIds: ValidArtist[], at?: string) {
+  const query = useSuspenseInfiniteQuery(ownedCollectionOptions(address, artistIds, at));
 
   // Automatically fetch all pages
   useEffect(() => {

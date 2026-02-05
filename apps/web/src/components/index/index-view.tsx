@@ -13,7 +13,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
-import { useUser } from "@/hooks/use-user";
+import { useSession } from "@/hooks/use-user";
 
 import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-render";
 import { GroupLabelRender } from "../collection/label-render";
@@ -60,7 +60,7 @@ function IndexRender() {
 }
 
 function IndexView() {
-  const { authenticated } = useUser();
+  const { data: session } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered } = useCollectionObjekts();
@@ -85,7 +85,7 @@ function IndexView() {
                   key={objekt.id}
                   objekts={item}
                   menu={
-                    authenticated && (
+                    session && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekt={objekt} />
                         <AddToListMenu objekt={objekt} />
@@ -101,7 +101,7 @@ function IndexView() {
                         isSelected={isSelected}
                         hideLabel={hideLabel}
                       >
-                        {authenticated && (
+                        {session && (
                           <div className="flex items-start self-start justify-self-end">
                             <ObjektSelect objekt={objekt} />
                             <ObjektHoverMenu>
@@ -119,18 +119,25 @@ function IndexView() {
         ),
       }),
     ]);
-  }, [shaped, columns, authenticated, hideLabel]);
+  }, [shaped, columns, session, hideLabel]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-6">
-        {authenticated && (
+        {session && (
           <FloatingSelectMode objekts={filtered}>
             <AddToList size="sm" />
           </FloatingSelectMode>
         )}
         <FilterContainer>
-          <Filters authenticated={authenticated} objekts={filtered} />
+          <div className="flex w-full flex-col gap-6">
+            <Filter />
+            {session && (
+              <SelectMode objekts={filtered}>
+                <AddToList />
+              </SelectMode>
+            )}
+          </div>
         </FilterContainer>
       </div>
       <span className="font-semibold">{filtered.length.toLocaleString()} total</span>
@@ -138,19 +145,6 @@ function IndexView() {
       <div className="[&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>
       </div>
-    </div>
-  );
-}
-
-function Filters({ authenticated, objekts }: { authenticated: boolean; objekts: ValidObjekt[] }) {
-  return (
-    <div className="flex w-full flex-col gap-6">
-      <Filter />
-      {authenticated && (
-        <SelectMode objekts={objekts}>
-          <AddToList />
-        </SelectMode>
-      )}
     </div>
   );
 }

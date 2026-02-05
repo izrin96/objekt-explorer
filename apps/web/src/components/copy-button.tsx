@@ -10,7 +10,7 @@ export function CopyButton({ text }: { text: string }) {
   return (
     <Button
       intent="outline"
-      onClick={() => {
+      onPress={() => {
         setCopied(true);
         return copy(text).then(() => {
           setTimeout(() => setCopied(false), 2000);

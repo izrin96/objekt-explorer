@@ -10,7 +10,7 @@ import {
   UserIcon,
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -19,9 +19,9 @@ import { toast } from "sonner";
 import type { User } from "@/lib/server/auth";
 
 import UserAccountModal from "@/components/auth/account/user-account";
+import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
-import { sessionOptions } from "@/lib/query-options";
 import { parseNickname } from "@/lib/utils";
 
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
@@ -44,7 +44,7 @@ import {
 
 export default function UserNav() {
   const t = useTranslations("nav");
-  const { data } = useSuspenseQuery(sessionOptions);
+  const { data } = useSession();
 
   return (
     <div className="inline-flex gap-2 text-sm">

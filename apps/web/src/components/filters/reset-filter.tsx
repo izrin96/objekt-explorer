@@ -14,7 +14,7 @@ export default function ResetFilter({
 }) {
   const t = useTranslations("filter");
   return (
-    <Button intent="outline" onClick={onReset} isDisabled={isDisabled}>
+    <Button intent="outline" onPress={onReset} isDisabled={isDisabled}>
       <XIcon data-slot="icon" />
       {t("reset_filter")}
     </Button>

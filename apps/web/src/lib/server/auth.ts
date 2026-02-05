@@ -242,20 +242,6 @@ export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "a
 export type Session = typeof auth.$Infer.Session;
 export type User = Session["user"];
 
-export function toPublicUser(session: Session | null): PublicUser | undefined {
-  if (!session) return undefined;
-
-  return {
-    discord: session.user.showSocial ? session.user.discord : null,
-    twitter: session.user.showSocial ? session.user.twitter : null,
-    displayUsername: session.user.displayUsername,
-    image: session.user.image,
-    name: session.user.name,
-    username: session.user.username,
-    showSocial: session.user.showSocial,
-  };
-}
-
 export function mapPublicUser(user: PublicUser): PublicUser {
   return {
     ...user,

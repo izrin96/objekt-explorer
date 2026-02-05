@@ -148,7 +148,7 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           )}
         />
         <Portal to="#submit-form">
-          <Button isPending={addToList.isPending} onClick={onSubmit}>
+          <Button isPending={addToList.isPending} onPress={() => onSubmit()}>
             Add
           </Button>
         </Portal>
@@ -177,7 +177,7 @@ export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
           intent="danger"
           type="submit"
           isPending={removeObjektsFromList.isPending}
-          onClick={() => {
+          onPress={() => {
             removeObjektsFromList.mutate(
               {
                 slug: target.slug,

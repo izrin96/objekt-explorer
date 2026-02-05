@@ -24,17 +24,17 @@ export function SelectMode({ children, objekts }: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Toggle isSelected={mode} intent="outline" onClick={toggleMode}>
+      <Toggle isSelected={mode} intent="outline" onPress={toggleMode}>
         <HandPointingIcon weight="regular" data-slot="icon" />
         {t("select_mode")}
       </Toggle>
-      <Button intent="outline" onClick={() => batchSelect(objekts)}>
+      <Button intent="outline" onPress={() => batchSelect(objekts)}>
         <ChecksIcon weight="regular" data-slot="icon" />
         Select all
       </Button>
-      <Button intent="outline" onClick={reset}>
+      <Button intent="outline" onPress={reset}>
         <XIcon weight="regular" data-slot="icon" />
-        Deselect
+        Clear select
       </Button>
       {children}
     </div>
@@ -76,14 +76,14 @@ export function FloatingSelectMode({ children, objekts }: Props) {
             <span className="text-sm">{selected.length.toLocaleString()} selected</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <Button size="sm" intent="outline" onClick={() => batchSelect(objekts)}>
+            <Button size="sm" intent="outline" onPress={() => batchSelect(objekts)}>
               <ChecksIcon weight="regular" data-slot="icon" />
               Select all
             </Button>
 
             {children}
 
-            <Button size="sm" intent="plain" onClick={reset}>
+            <Button size="sm" intent="plain" onPress={reset}>
               Clear
             </Button>
           </div>
