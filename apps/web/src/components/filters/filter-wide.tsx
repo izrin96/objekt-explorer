@@ -16,7 +16,7 @@ export default function WideFilter() {
       intent="outline"
       isSelected={wide}
       onChange={setWide}
-      className="selected:border-border hidden xl:block"
+      className="selected:border-border hidden 2xl:block"
     >
       {wide ? "Compact" : "Wide"}
     </Toggle>
