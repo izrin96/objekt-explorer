@@ -62,7 +62,7 @@ services:
   # postgres database for indexer
   postgres-indexer:
     restart: always
-    image: postgres:18
+    image: postgres:18-alpine
     ports:
       - "5434:5432"
     environment:
@@ -164,7 +164,7 @@ services:
   # postgres database for web
   postgres:
     restart: always
-    image: postgres:18
+    image: postgres:18-alpine
     volumes:
       - postgres-data:/var/lib/postgresql
     ports:
