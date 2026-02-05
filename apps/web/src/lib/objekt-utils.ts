@@ -1,9 +1,4 @@
-import {
-  type OwnedObjekt,
-  type PinObjekt,
-  shortformMembers,
-  type ValidObjekt,
-} from "@repo/lib/types/objekt";
+import { type PinObjekt, shortformMembers, type ValidObjekt } from "@repo/lib/types/objekt";
 
 import { getCollectionEdition } from "./universal/collection-grid";
 import { replaceUrlSize } from "./utils";
@@ -48,23 +43,28 @@ function makeCollectionTags(objekt: ValidObjekt) {
   ].map((a) => a.toLowerCase());
 }
 
-export function mapObjektWithPinLock(
-  objekt: ValidObjekt,
+export function augmentObjektsWithPinLock(
+  objekts: ValidObjekt[],
   pins: PinObjekt[],
   locked: PinObjekt[],
-): ValidObjekt {
-  if (!isObjektOwned(objekt)) return objekt;
+): ValidObjekt[] {
+  const pinsMap = new Map(pins.map((pin) => [pin.tokenId, pin]));
+  const lockedMap = new Map(locked.map((lock) => [lock.tokenId, lock]));
 
-  const pinObjekt = pins.find((pin) => pin.tokenId === objekt.id);
-  const lockedObjekt = locked.find((lock) => lock.tokenId === objekt.id);
-  const isPin = pinObjekt !== undefined;
-  const isLocked = lockedObjekt !== undefined;
-  return {
-    ...objekt,
-    isPin,
-    isLocked,
-    pinOrder: isPin ? pinObjekt.order : null,
-  } satisfies OwnedObjekt;
+  return objekts.map((objekt) => {
+    if (!isObjektOwned(objekt)) return objekt;
+
+    const pinObjekt = pinsMap.get(objekt.id);
+    const lockedObjekt = lockedMap.get(objekt.id);
+    const isPin = pinObjekt !== undefined;
+    const isLocked = lockedObjekt !== undefined;
+
+    return Object.assign({}, objekt, {
+      isPin,
+      isLocked,
+      pinOrder: isPin ? pinObjekt.order : null,
+    });
+  });
 }
 
 export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {

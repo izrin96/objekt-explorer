@@ -2,7 +2,7 @@ import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { useDeferredValue } from "react";
 
-import { mapObjektWithPinLock } from "@/lib/objekt-utils";
+import { augmentObjektsWithPinLock } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions } from "@/lib/query-options";
 
@@ -43,10 +43,12 @@ export function useProfileObjekts() {
 
   const objektsQuery = useQuery(collectionOptions(selectedArtistIds, !hasNextPage));
 
-  // owned objekts
-  const ownedFiltered = filter(
-    allOwnedObjekts.map((a) => mapObjektWithPinLock(a, pinsQuery.data, lockedObjektQuery.data)),
-  );
+  // owned objekts - in checkpoint mode, skip pin/lock augmentation
+  const ownedWithPinLock = filters.at
+    ? allOwnedObjekts
+    : augmentObjektsWithPinLock(allOwnedObjekts, pinsQuery.data, lockedObjektQuery.data);
+
+  const ownedFiltered = filter(ownedWithPinLock);
 
   // find missing objekts based on owned slug
   const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
