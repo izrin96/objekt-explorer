@@ -87,10 +87,16 @@ export const profileLists = pgTable(
   "profile_list",
   {
     id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, {
+        onDelete: "cascade",
+      }),
     address: text("address").notNull(),
     slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    gridColumns: integer("grid_columns"),
   },
   (t) => [uniqueIndex("profile_list_slug_idx").on(t.slug)],
 );
@@ -104,11 +110,15 @@ export const profileListEntries = pgTable(
       .references(() => profileLists.id, {
         onDelete: "cascade",
       }),
+    objektId: varchar("objekt_id").notNull(),
     tokenId: integer("token_id").notNull(),
     receivedAt: timestamp("received_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("profile_list_entries_list_idx").on(t.listId)],
+  (t) => [
+    index("profile_list_entries_list_idx").on(t.listId),
+    uniqueIndex("profile_list_entries_objekt_id_unique").on(t.listId, t.objektId),
+  ],
 );
 
 export const pins = pgTable(
@@ -142,3 +152,5 @@ export type Account = typeof account.$inferSelect;
 export type Verification = typeof verification.$inferSelect;
 export type List = typeof lists.$inferSelect;
 export type ListEntry = typeof listEntries.$inferSelect;
+export type ProfileList = typeof profileLists.$inferSelect;
+export type ProfileListEntry = typeof profileListEntries.$inferSelect;
