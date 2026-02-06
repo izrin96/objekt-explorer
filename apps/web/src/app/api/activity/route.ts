@@ -4,7 +4,7 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
-import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
+import { type SQL, and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -41,38 +41,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ items: [], nextCursor: undefined });
   }
 
-  const transferResults = await indexer
-    .select({
-      transfer: {
-        id: transfers.id,
-        from: transfers.from,
-        to: transfers.to,
-        timestamp: transfers.timestamp,
-        hash: transfers.hash,
-      },
-      objekt: objekts,
-      collection: {
-        ...getCollectionColumns(),
-      },
-    })
-    .from(transfers)
-    .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-    .innerJoin(collections, eq(transfers.collectionId, collections.id))
-    .where(
-      and(
-        ...(query.cursor ? [lt(transfers.id, query.cursor.id)] : []),
-        ...(query.type === "mint" ? [eq(transfers.from, Addresses.NULL)] : []),
-        ...(query.type === "transfer"
-          ? [and(ne(transfers.from, Addresses.NULL), ne(transfers.to, Addresses.SPIN))]
-          : []),
-        ...(query.type === "spin" ? [eq(transfers.to, Addresses.SPIN)] : []),
-        ...(matchingCollectionIds !== null
-          ? [inArray(transfers.collectionId, matchingCollectionIds)]
-          : [ne(collections.slug, "empty-collection")]),
-      ),
-    )
-    .orderBy(desc(transfers.id))
-    .limit(PAGE_SIZE + 1);
+  const transferResults = await fetchTransfers(query, matchingCollectionIds);
 
   const slicedResults = transferResults.slice(0, PAGE_SIZE);
 
@@ -109,6 +78,66 @@ export async function GET(request: NextRequest) {
     items,
     nextCursor,
   });
+}
+
+const transferSelect = {
+  transfer: {
+    id: transfers.id,
+    from: transfers.from,
+    to: transfers.to,
+    timestamp: transfers.timestamp,
+    hash: transfers.hash,
+  },
+  objekt: objekts,
+  collection: {
+    ...getCollectionColumns(),
+  },
+};
+
+function getTypeFilters(type: ActivityParams["type"]): SQL[] {
+  const typeFilters = {
+    mint: [eq(transfers.from, Addresses.NULL)],
+    transfer: [ne(transfers.from, Addresses.NULL), ne(transfers.to, Addresses.SPIN)],
+    spin: [eq(transfers.to, Addresses.SPIN)],
+    all: [],
+  };
+  return typeFilters[type];
+}
+
+async function fetchTransfers(query: ActivityParams, matchingCollectionIds: string[] | null) {
+  const typeFilters = getTypeFilters(query.type);
+  const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
+
+  if (matchingCollectionIds !== null) {
+    // lean scan on transfer table only — forces (collection_id, id DESC) index
+    const ids = await indexer
+      .select({ id: transfers.id })
+      .from(transfers)
+      .where(and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, matchingCollectionIds)))
+      .orderBy(desc(transfers.id))
+      .limit(PAGE_SIZE + 1);
+
+    if (ids.length === 0) return [];
+
+    // full fetch by PK for matched IDs
+    return indexer
+      .select(transferSelect)
+      .from(transfers)
+      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+      .innerJoin(collections, eq(transfers.collectionId, collections.id))
+      .where(inArray(transfers.id, ids.map((t) => t.id)))
+      .orderBy(desc(transfers.id));
+  }
+
+  // no collection filters — PK scan is already optimal
+  return indexer
+    .select(transferSelect)
+    .from(transfers)
+    .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+    .innerJoin(collections, eq(transfers.collectionId, collections.id))
+    .where(and(...cursorFilter, ...typeFilters, ne(collections.slug, "empty-collection")))
+    .orderBy(desc(transfers.id))
+    .limit(PAGE_SIZE + 1);
 }
 
 function parseParams(params: URLSearchParams): ActivityParams {
