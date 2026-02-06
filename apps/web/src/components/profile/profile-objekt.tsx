@@ -4,7 +4,8 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { Suspense, useMemo } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 
@@ -26,6 +27,7 @@ import { AddToList } from "../filters/objekt/add-remove-list";
 import { LockObjekt, UnlockObjekt } from "../filters/objekt/lock-unlock";
 import { PinObjekt, UnpinObjekt } from "../filters/objekt/pin-unpin";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { GenerateDiscordButton } from "../generate-discord-button";
 import { ObjektHoverMenu, ObjektOverlay, ObjektSelect } from "../objekt/objekt-action";
 import {
   AddToListMenu,
@@ -47,12 +49,20 @@ export default dynamic(() => Promise.resolve(ProfileObjektRender), {
 
 function ProfileObjektRender() {
   const profile = useTarget((a) => a.profile)!;
+  const [floatingTarget, setFloatingTarget] = useState<HTMLDivElement | null>(null);
+  const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
+  const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
+
   return (
     <ObjektColumnProvider initialColumn={profile.gridColumns}>
       <ObjektSelectProvider>
         <ObjektModalProvider initialTab="owned">
           <div className="flex flex-col gap-4">
-            <ProfileObjektFilters />
+            <ProfileObjektFilters
+              floatingRef={setFloatingTarget}
+              selectRef={setSelectTarget}
+              discordRef={setDiscordTarget}
+            />
             <QueryErrorResetBoundary>
               {({ reset }) => (
                 <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
@@ -65,7 +75,11 @@ function ProfileObjektRender() {
                       </div>
                     }
                   >
-                    <ProfileObjekt />
+                    <ProfileObjekt
+                      floatingTarget={floatingTarget}
+                      selectTarget={selectTarget}
+                      discordTarget={discordTarget}
+                    />
                   </Suspense>
                 </ErrorBoundary>
               )}
@@ -77,71 +91,41 @@ function ProfileObjektRender() {
   );
 }
 
-function ProfileObjektFilters() {
+function ProfileObjektFilters({
+  floatingRef,
+  selectRef,
+  discordRef,
+}: {
+  floatingRef: (el: HTMLDivElement | null) => void;
+  selectRef: (el: HTMLDivElement | null) => void;
+  discordRef: (el: HTMLDivElement | null) => void;
+}) {
   const { data: session } = useSession();
   const [filters] = useFilters();
 
   return (
     <div className="mb-2 flex flex-col gap-6">
-      {session && !filters.at && (
-        <Suspense>
-          <FloatingSelectModeWrapper />
-        </Suspense>
-      )}
+      {session && !filters.at && <div ref={floatingRef} />}
       <FilterContainer>
         <div className="flex w-full flex-col gap-6">
-          <Filter />
+          <Filter discordRef={discordRef} />
           <CheckpointPicker />
-          {session && !filters.at && (
-            <Suspense>
-              <SelectModeWrapper />
-            </Suspense>
-          )}
+          {session && !filters.at && <div ref={selectRef} />}
         </div>
       </FilterContainer>
     </div>
   );
 }
 
-function FloatingSelectModeWrapper() {
-  const isProfileAuthed = useProfileAuthed();
-  const { filtered } = useProfileObjekts();
-
-  return (
-    <FloatingSelectMode objekts={filtered}>
-      <AddToList size="sm" />
-      {isProfileAuthed && (
-        <>
-          <PinObjekt size="sm" />
-          <UnpinObjekt size="sm" />
-          <LockObjekt size="sm" />
-          <UnlockObjekt size="sm" />
-        </>
-      )}
-    </FloatingSelectMode>
-  );
-}
-
-function SelectModeWrapper() {
-  const isProfileAuthed = useProfileAuthed();
-  const { filtered } = useProfileObjekts();
-
-  return (
-    <SelectMode objekts={filtered}>
-      <AddToList />
-      {isProfileAuthed && (
-        <>
-          <PinObjekt />
-          <UnpinObjekt />
-          <LockObjekt />
-          <UnlockObjekt />
-        </>
-      )}
-    </SelectMode>
-  );
-}
-
-function ProfileObjekt() {
+function ProfileObjekt({
+  floatingTarget,
+  selectTarget,
+  discordTarget,
+}: {
+  floatingTarget: HTMLDivElement | null;
+  selectTarget: HTMLDivElement | null;
+  discordTarget: HTMLDivElement | null;
+}) {
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered, grouped, filters, hasNextPage } = useProfileObjekts();
@@ -231,6 +215,40 @@ function ProfileObjekt() {
 
   return (
     <>
+      {floatingTarget &&
+        createPortal(
+          <FloatingSelectMode objekts={filtered}>
+            <AddToList size="sm" />
+            {isProfileAuthed && (
+              <>
+                <PinObjekt size="sm" />
+                <UnpinObjekt size="sm" />
+                <LockObjekt size="sm" />
+                <UnlockObjekt size="sm" />
+              </>
+            )}
+          </FloatingSelectMode>,
+          floatingTarget,
+        )}
+
+      {selectTarget &&
+        createPortal(
+          <SelectMode objekts={filtered}>
+            <AddToList />
+            {isProfileAuthed && (
+              <>
+                <PinObjekt />
+                <UnpinObjekt />
+                <LockObjekt />
+                <UnlockObjekt />
+              </>
+            )}
+          </SelectMode>,
+          selectTarget,
+        )}
+
+      {discordTarget && createPortal(<GenerateDiscordButton objekts={filtered} />, discordTarget)}
+
       <span className="flex items-center gap-2 font-semibold">
         <span>
           {filtered.length.toLocaleString()} total

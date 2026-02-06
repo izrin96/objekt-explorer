@@ -12,6 +12,7 @@ import { Analytics } from "@/components/analytics";
 import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import { FilterDataProvider } from "@/hooks/use-filter-data";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
@@ -124,7 +125,9 @@ function Providers({ children }: PropsWithChildren) {
   return (
     <HydrateClient client={queryClient}>
       <NextIntlClientProvider>
-        <CosmoArtistProvider artists={artists}>{children}</CosmoArtistProvider>
+        <CosmoArtistProvider artists={artists}>
+          <FilterDataProvider>{children}</FilterDataProvider>
+        </CosmoArtistProvider>
       </NextIntlClientProvider>
     </HydrateClient>
   );

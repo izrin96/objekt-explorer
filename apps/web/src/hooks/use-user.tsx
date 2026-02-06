@@ -52,4 +52,6 @@ export function useListAuthed() {
   return lists?.some((a) => a.slug === target?.slug) ?? false;
 }
 
-export const useSession = () => useSuspenseQuery(sessionOptions);
+export function useSession() {
+  return useSuspenseQuery(sessionOptions);
+}

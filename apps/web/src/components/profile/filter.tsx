@@ -26,9 +26,12 @@ import SortDirectionFilter from "../filters/filter-sort-direction";
 import TransferableFilter from "../filters/filter-transferable";
 import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
-import { GenerateDiscordButtonWithData } from "./filter-generate-button";
 
-export default function Filter() {
+export default function Filter({
+  discordRef,
+}: {
+  discordRef: (el: HTMLDivElement | null) => void;
+}) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
   return (
@@ -60,9 +63,7 @@ export default function Filter() {
         <WideFilter />
         <ColumnFilter />
         <SearchFilter />
-        <Suspense>
-          <GenerateDiscordButtonWithData />
-        </Suspense>
+        <div ref={discordRef} />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>

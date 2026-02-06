@@ -87,7 +87,7 @@ export default function CheckpointPicker() {
       <ModalContent size="sm" isOpen={isOpen} onOpenChange={setIsOpen}>
         <ModalHeader>
           <ModalTitle>Snapshot</ModalTitle>
-          <ModalDescription>Filter collection at given time</ModalDescription>
+          <ModalDescription>View collections at given time</ModalDescription>
         </ModalHeader>
         <ModalBody className="space-y-4 select-none">
           <div className="flex h-110 flex-col items-center gap-3 sm:h-86">

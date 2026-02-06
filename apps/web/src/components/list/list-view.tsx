@@ -7,8 +7,6 @@ import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 
-import type { PublicList } from "@/lib/universal/user";
-
 import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
@@ -52,7 +50,7 @@ export default function ListRender() {
                     </div>
                   }
                 >
-                  <ListView list={list} />
+                  <ListView />
                 </Suspense>
               </ErrorBoundary>
             )}
@@ -63,12 +61,12 @@ export default function ListRender() {
   );
 }
 
-function ListView({ list }: { list: PublicList }) {
+function ListView() {
   const { data: session } = useSession();
   const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
-  const { shaped, filtered, grouped, filters } = useListObjekts(list.slug);
+  const { shaped, filtered, grouped, filters } = useListObjekts();
 
   const virtualList = useMemo(() => {
     return shaped.flatMap(([title, items]) => [

@@ -8,14 +8,16 @@ import { orpc } from "@/lib/orpc/client";
 import { useFilters } from "./use-filters";
 import { useObjektFilter } from "./use-objekt-filter";
 import { useShapeObjekts } from "./use-shape-objekt";
+import { useTarget } from "./use-target";
 
-export function useListObjekts(slug: string) {
+export function useListObjekts() {
+  const list = useTarget((a) => a.list)!;
   const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const query = useSuspenseQuery(
     orpc.list.listEntries.queryOptions({
       input: {
-        slug,
+        slug: list.slug,
       },
       select: (data) => data.map(mapObjektWithTag),
     }),
