@@ -7,7 +7,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import * as z from "zod";
 
-import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
+import { getCollectionColumns } from "@/lib/server/objekts/utils";
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),

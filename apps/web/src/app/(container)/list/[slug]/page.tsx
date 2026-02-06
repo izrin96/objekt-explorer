@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
-import { getList } from "@/lib/client-fetching";
+import { getList } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { fetchOwnedLists } from "@/lib/server/api/routers/list";

@@ -4,7 +4,6 @@ import { cache } from "react";
 
 import { fetchList } from "./server/api/routers/list";
 import { fetchUserByIdentifier } from "./server/auth";
-import { parseSelectedArtists } from "./server/cookie";
 import { getAccessToken } from "./server/token";
 
 export const getUserByIdentifier = cache(async (identifier: string) => {
@@ -19,8 +18,6 @@ export const getLiveSession = cache(async (id: string) => {
   if (!live) notFound();
   return live;
 });
-
-export const getSelectedArtists = cache(parseSelectedArtists);
 
 export const getList = cache(async (slug: string) => {
   const list = await fetchList(slug);

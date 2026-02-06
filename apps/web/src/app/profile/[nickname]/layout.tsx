@@ -9,7 +9,7 @@ import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/prof
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { Container } from "@/components/ui/container";
-import { getUserByIdentifier } from "@/lib/client-fetching";
+import { getUserByIdentifier } from "@/lib/data-fetching";
 import { getSession } from "@/lib/server/auth";
 
 type Props = PropsWithChildren<{

@@ -11,8 +11,7 @@ import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
-import { cursorSchema } from "@/lib/server/common";
-import { getCollectionColumns } from "@/lib/server/objekts/objekt-index";
+import { getCollectionColumns } from "@/lib/server/objekts/utils";
 import { validType } from "@/lib/universal/transfers";
 
 const PER_PAGE = 150;
@@ -25,6 +24,11 @@ const transfersSchema = z.object({
   class: z.string().array(),
   on_offline: z.enum(validOnlineTypes).array(),
   collection: z.string().array(),
+  cursor: z
+    .object({
+      id: z.string(),
+    })
+    .optional(),
 });
 
 type TransferParams = z.infer<typeof transfersSchema>;
@@ -33,9 +37,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   const [session, params] = await Promise.all([getSession(), props.params]);
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
-  const cursor = cursorSchema.parse(
-    searchParams.get("cursor") ? JSON.parse(searchParams.get("cursor")!) : undefined,
-  );
 
   const owner = await db.query.userAddress.findFirst({
     where: { address: params.address },
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
               ),
             ]
           : []),
-        ...(cursor ? [lt(transfers.id, cursor.id)] : []),
+        ...(query.cursor ? [lt(transfers.id, query.cursor.id)] : []),
         ...(query.artist.length
           ? [
               inArray(
@@ -185,6 +186,7 @@ function parseParams(params: URLSearchParams): TransferParams {
     class: params.getAll("class"),
     on_offline: params.getAll("on_offline"),
     collection: params.getAll("collection"),
+    cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
   });
 
   return result.success
@@ -197,5 +199,6 @@ function parseParams(params: URLSearchParams): TransferParams {
         class: [],
         on_offline: [],
         collection: [],
+        cursor: undefined,
       };
 }
