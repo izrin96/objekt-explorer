@@ -17,11 +17,13 @@ export function useProgressObjekts() {
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const objektsQuery = useSuspenseQuery(collectionOptions(selectedArtistIds));
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
     profile.address,
     selectedArtistIds,
     filters.at ?? undefined,
+  );
+  const objektsQuery = useSuspenseQuery(
+    collectionOptions(selectedArtistIds, !hasNextPage, filters.at ?? undefined),
   );
 
   // owned objekts

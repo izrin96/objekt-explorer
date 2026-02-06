@@ -65,7 +65,9 @@ function ProfileStats() {
     selectedArtistIds,
     filters.at ?? undefined,
   );
-  const collectionQuery = useSuspenseQuery(collectionOptions(selectedArtistIds));
+  const collectionQuery = useSuspenseQuery(
+    collectionOptions(selectedArtistIds, !hasNextPage, filters.at ?? undefined),
+  );
 
   const objekts = filter(allOwnedObjekts);
 

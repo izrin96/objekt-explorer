@@ -41,7 +41,9 @@ export function useProfileObjekts() {
     ],
   });
 
-  const objektsQuery = useQuery(collectionOptions(selectedArtistIds, !hasNextPage));
+  const objektsQuery = useQuery(
+    collectionOptions(selectedArtistIds, !hasNextPage, filters.at ?? undefined),
+  );
 
   // owned objekts - in checkpoint mode, skip pin/lock augmentation
   const ownedWithPinLock = filters.at

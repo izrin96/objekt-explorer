@@ -10,9 +10,9 @@ import { authClient } from "./auth-client";
 import { mapObjektWithTag } from "./objekt-utils";
 import { getBaseURL } from "./utils";
 
-export const collectionOptions = (artistIds: ValidArtist[], enable = true) =>
+export const collectionOptions = (artistIds: ValidArtist[], enable = true, at?: string) =>
   queryOptions({
-    queryKey: ["collections", artistIds],
+    queryKey: ["collections", artistIds, at],
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     enabled: enable,
@@ -21,6 +21,7 @@ export const collectionOptions = (artistIds: ValidArtist[], enable = true) =>
       const result = await ofetch<CollectionResult>(url.toString(), {
         query: {
           artist: artistIds,
+          ...(at && { at }),
         },
       }).then((a) => a.collections);
 

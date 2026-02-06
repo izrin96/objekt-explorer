@@ -2,7 +2,8 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
-import { and, desc, inArray, ne } from "drizzle-orm";
+import { isValid, parseISO } from "date-fns";
+import { and, desc, inArray, lte, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { createHash } from "node:crypto";
 import * as z from "zod";
@@ -11,11 +12,22 @@ import { getCollectionColumns } from "@/lib/server/objekts/utils";
 
 const schema = z.object({
   artist: z.enum(validArtists).array(),
+  at: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
+
+  // checkpoint: validate and parse the target date
+  let targetTimestamp: Date | undefined;
+  if (query.at) {
+    targetTimestamp = parseISO(query.at);
+    if (!isValid(targetTimestamp))
+      return Response.json({
+        collections: [],
+      });
+  }
 
   const whereQuery = and(
     ...(query.artist.length
@@ -26,6 +38,7 @@ export async function GET(request: NextRequest) {
           ),
         ]
       : []),
+    ...(targetTimestamp ? [lte(collections.createdAt, targetTimestamp)] : []),
     ne(collections.slug, "empty-collection"),
   );
 
@@ -80,6 +93,7 @@ export async function GET(request: NextRequest) {
 function parseParams(params: URLSearchParams): z.infer<typeof schema> {
   const result = schema.safeParse({
     artist: params.getAll("artist"),
+    at: params.get("at") ?? undefined,
   });
 
   return result.success
