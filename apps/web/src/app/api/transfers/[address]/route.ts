@@ -12,7 +12,7 @@ import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
 import { resolveCollectionIds } from "@/lib/server/collection";
-import { getCollectionColumns } from "@/lib/server/objekts/utils";
+import { getCollectionColumns } from "@/lib/server/objekt";
 import { validType } from "@/lib/universal/transfers";
 
 const PER_PAGE = 150;

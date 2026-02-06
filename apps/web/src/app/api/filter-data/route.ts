@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { fetchFilterData } from "@/lib/server/objekts/filter-data";
+import { fetchFilterData } from "@/lib/server/objekt";
 
 export async function GET() {
   const result = await fetchFilterData();

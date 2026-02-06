@@ -9,7 +9,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
 import { resolveCollectionIds } from "@/lib/server/collection";
-import { getCollectionColumns } from "@/lib/server/objekts/utils";
+import { getCollectionColumns } from "@/lib/server/objekt";
 import { validType } from "@/lib/universal/activity";
 
 const PAGE_SIZE = 300;

@@ -3,11 +3,11 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import { type ValidFourSeason, validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { asc, ne } from "drizzle-orm";
+import { asc, getColumns, ne } from "drizzle-orm";
 
 import { classArtistMap } from "@/lib/universal/cosmo/filter-data";
 
-import { getCache } from "../redis";
+import { getCache } from "./redis";
 
 export async function fetchUniqueCollections() {
   const result = await indexer
@@ -86,4 +86,15 @@ export async function fetchFilterData() {
       classesMap: classArtistMap,
     };
   });
+}
+
+export function getCollectionColumns() {
+  const {
+    contract: _contract,
+    comoAmount: _comoAmount,
+    accentColor: _accentColor,
+    thumbnailImage: _thumbnailImage,
+    ...rest
+  } = getColumns(collections);
+  return rest;
 }

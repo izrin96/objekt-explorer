@@ -4,7 +4,7 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { cookies } from "next/headers";
 import * as z from "zod";
 
-import { fetchFilterData } from "../../objekts/filter-data";
+import { fetchFilterData } from "../../objekt";
 import { pub } from "../orpc";
 
 export const configRouter = {

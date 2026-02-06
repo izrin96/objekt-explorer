@@ -15,7 +15,7 @@ import type { PublicList } from "@/lib/universal/user";
 
 import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
-import { getCollectionColumns } from "../../objekts/utils";
+import { getCollectionColumns } from "../../objekt";
 import { authed, pub } from "../orpc";
 
 export const listRouter = {

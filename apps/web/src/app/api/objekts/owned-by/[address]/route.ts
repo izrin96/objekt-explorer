@@ -11,7 +11,7 @@ import { and, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
-import { getCollectionColumns } from "@/lib/server/objekts/utils";
+import { getCollectionColumns } from "@/lib/server/objekt";
 
 type Params = {
   params: Promise<{
