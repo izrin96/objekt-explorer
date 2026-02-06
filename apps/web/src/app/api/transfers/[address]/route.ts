@@ -7,10 +7,11 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
-import { and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
+import { type SQL, and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
+import { resolveCollectionIds } from "@/lib/server/collection";
 import { getCollectionColumns } from "@/lib/server/objekts/utils";
 import { validType } from "@/lib/universal/transfers";
 
@@ -68,83 +69,65 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       });
   }
 
-  const results = await indexer
-    .select({
-      transfer: {
-        id: transfers.id,
-        from: transfers.from,
-        to: transfers.to,
-        timestamp: transfers.timestamp,
-      },
-      objekt: objekts,
-      collection: {
-        ...getCollectionColumns(),
-      },
-    })
-    .from(transfers)
-    .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-    .innerJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(
-      and(
-        ...(query.type === "all"
-          ? [
-              or(
-                eq(transfers.from, params.address.toLowerCase()),
-                eq(transfers.to, params.address.toLowerCase()),
-              ),
-            ]
-          : []),
-        ...(query.type === "mint"
-          ? [
-              and(
-                eq(transfers.from, Addresses.NULL),
-                eq(transfers.to, params.address.toLowerCase()),
-              ),
-            ]
-          : []),
-        ...(query.type === "received"
-          ? [
-              and(
-                ne(transfers.from, Addresses.NULL),
-                eq(transfers.to, params.address.toLowerCase()),
-              ),
-            ]
-          : []),
-        ...(query.type === "sent"
-          ? [
-              and(
-                eq(transfers.from, params.address.toLowerCase()),
-                ne(transfers.to, Addresses.SPIN),
-              ),
-            ]
-          : []),
-        ...(query.type === "spin"
-          ? [
-              and(
-                eq(transfers.from, params.address.toLowerCase()),
-                eq(transfers.to, Addresses.SPIN),
-              ),
-            ]
-          : []),
-        ...(query.cursor ? [lt(transfers.id, query.cursor.id)] : []),
-        ...(query.artist.length
-          ? [
-              inArray(
-                collections.artist,
-                query.artist.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
-        ...(query.member.length ? [inArray(collections.member, query.member)] : []),
-        ...(query.season.length ? [inArray(collections.season, query.season)] : []),
-        ...(query.class.length ? [inArray(collections.class, query.class)] : []),
-        ...(query.on_offline.length ? [inArray(collections.onOffline, query.on_offline)] : []),
-        ...(query.collection.length ? [inArray(collections.collectionNo, query.collection)] : []),
-        ne(collections.slug, "empty-collection"),
-      ),
-    )
-    .orderBy(desc(transfers.id))
-    .limit(PER_PAGE + 1);
+  const matchingCollectionIds = await resolveCollectionIds(query);
+
+  if (matchingCollectionIds !== null && matchingCollectionIds.length === 0) {
+    return Response.json({ nextCursor: undefined, results: [] });
+  }
+
+  const addr = params.address.toLowerCase();
+
+  const transferSelect = {
+    transfer: {
+      id: transfers.id,
+      from: transfers.from,
+      to: transfers.to,
+      timestamp: transfers.timestamp,
+    },
+    objekt: objekts,
+    collection: {
+      ...getCollectionColumns(),
+    },
+  };
+
+  // each branch uses its own index (from, id DESC) or (to, id DESC)
+  // avoiding the OR that forces a 6M-row PK scan
+  const getTransfers = (...addressFilters: (SQL | undefined)[]) =>
+    indexer
+      .select(transferSelect)
+      .from(transfers)
+      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+      .innerJoin(collections, eq(transfers.collectionId, collections.id))
+      .where(
+        and(
+          ...addressFilters,
+          ...(query.cursor ? [lt(transfers.id, query.cursor.id)] : []),
+          ...(matchingCollectionIds !== null
+            ? [inArray(transfers.collectionId, matchingCollectionIds)]
+            : [ne(collections.slug, "empty-collection")]),
+        ),
+      )
+      .orderBy(desc(transfers.id))
+      .limit(PER_PAGE + 1);
+
+  let results: Awaited<ReturnType<typeof getTransfers>>;
+
+  if (query.type === "all") {
+    // split OR into two parallel queries — each uses its own index
+    const [fromResults, toResults] = await Promise.all([
+      getTransfers(eq(transfers.from, addr)),
+      getTransfers(eq(transfers.to, addr)),
+    ]);
+    results = mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1);
+  } else {
+    const typeFilters = {
+      mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
+      received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
+      sent: [eq(transfers.from, addr), ne(transfers.to, Addresses.SPIN)],
+      spin: [eq(transfers.from, addr), eq(transfers.to, Addresses.SPIN)],
+    };
+    results = await getTransfers(...typeFilters[query.type]);
+  }
 
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
@@ -175,6 +158,28 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       },
     })),
   });
+}
+
+/** Merge two arrays sorted by transfer.id DESC, deduplicate, return top `limit` */
+function mergeSortedTransfers<T extends { transfer: { id: string } }>(
+  a: T[],
+  b: T[],
+  limit: number,
+): T[] {
+  const result: T[] = [];
+  let i = 0;
+  let j = 0;
+
+  while (result.length < limit && (i < a.length || j < b.length)) {
+    const next =
+      j >= b.length || (i < a.length && a[i]!.transfer.id >= b[j]!.transfer.id) ? a[i++]! : b[j++]!;
+
+    if (result.at(-1)?.transfer.id !== next.transfer.id) {
+      result.push(next);
+    }
+  }
+
+  return result;
 }
 
 function parseParams(params: URLSearchParams): TransferParams {

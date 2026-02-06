@@ -8,6 +8,7 @@ import { and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
+import { resolveCollectionIds } from "@/lib/server/collection";
 import { getCollectionColumns } from "@/lib/server/objekts/utils";
 import { validType } from "@/lib/universal/activity";
 
@@ -34,6 +35,12 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
 
+  const matchingCollectionIds = await resolveCollectionIds(query);
+
+  if (matchingCollectionIds !== null && matchingCollectionIds.length === 0) {
+    return NextResponse.json({ items: [], nextCursor: undefined });
+  }
+
   const transferResults = await indexer
     .select({
       transfer: {
@@ -50,7 +57,7 @@ export async function GET(request: NextRequest) {
     })
     .from(transfers)
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-    .innerJoin(collections, eq(objekts.collectionId, collections.id))
+    .innerJoin(collections, eq(transfers.collectionId, collections.id))
     .where(
       and(
         ...(query.cursor ? [lt(transfers.id, query.cursor.id)] : []),
@@ -59,20 +66,9 @@ export async function GET(request: NextRequest) {
           ? [and(ne(transfers.from, Addresses.NULL), ne(transfers.to, Addresses.SPIN))]
           : []),
         ...(query.type === "spin" ? [eq(transfers.to, Addresses.SPIN)] : []),
-        ...(query.artist.length
-          ? [
-              inArray(
-                collections.artist,
-                query.artist.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
-        ...(query.member.length ? [inArray(collections.member, query.member)] : []),
-        ...(query.season.length ? [inArray(collections.season, query.season)] : []),
-        ...(query.class.length ? [inArray(collections.class, query.class)] : []),
-        ...(query.on_offline.length ? [inArray(collections.onOffline, query.on_offline)] : []),
-        ...(query.collection.length ? [inArray(collections.collectionNo, query.collection)] : []),
-        ne(collections.slug, "empty-collection"),
+        ...(matchingCollectionIds !== null
+          ? [inArray(transfers.collectionId, matchingCollectionIds)]
+          : [ne(collections.slug, "empty-collection")]),
       ),
     )
     .orderBy(desc(transfers.id))

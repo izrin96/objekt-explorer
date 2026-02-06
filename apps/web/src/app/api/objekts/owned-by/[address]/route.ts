@@ -71,7 +71,7 @@ export async function GET(request: NextRequest, props: Params) {
     const latest = indexer.$with("latest").as(
       indexer
         .selectDistinctOn([transfers.objektId], {
-          objectId: transfers.objektId,
+          objektId: transfers.objektId,
           to: transfers.to,
           timestamp: transfers.timestamp,
         })
@@ -97,7 +97,7 @@ export async function GET(request: NextRequest, props: Params) {
         },
       })
       .from(latest)
-      .innerJoin(objekts, eq(latest.objectId, objekts.id))
+      .innerJoin(objekts, eq(latest.objektId, objekts.id))
       .innerJoin(collections, eq(collections.id, objekts.collectionId))
       .where(
         and(
