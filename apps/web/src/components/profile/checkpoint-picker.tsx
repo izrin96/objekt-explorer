@@ -39,9 +39,9 @@ function safeParse(isoStr: string | null) {
 }
 
 function formatCheckpointLabel(isoStr: string | null) {
-  if (!isoStr) return "Time Travel";
+  if (!isoStr) return "Snapshot";
   const parsed = safeParse(isoStr);
-  if (!parsed) return "Time Travel";
+  if (!parsed) return "Snapshot";
 
   const date = parsed.toDate();
   return new Intl.DateTimeFormat(undefined, {
@@ -86,8 +86,8 @@ export default function CheckpointPicker() {
       </Button>
       <ModalContent size="sm" isOpen={isOpen} onOpenChange={setIsOpen}>
         <ModalHeader>
-          <ModalTitle>Time Travel</ModalTitle>
-          <ModalDescription>View collection at given time</ModalDescription>
+          <ModalTitle>Snapshot</ModalTitle>
+          <ModalDescription>Filter collection at given time</ModalDescription>
         </ModalHeader>
         <ModalBody className="space-y-4 select-none">
           <div className="flex h-110 flex-col items-center gap-3 sm:h-86">

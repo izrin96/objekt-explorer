@@ -165,19 +165,28 @@ const SelectYear = () => {
     timeZone: state.timeZone,
   });
 
+  // Determine year range from minValue/maxValue or default to ±20 years
+  const currentYear = state.focusedDate.year;
+  const minYear = state.minValue?.year ?? currentYear - 20;
+  const maxYear = state.maxValue?.year ?? currentYear + 20;
+
   const years: CalendarDropdown[] = [];
-  for (let i = -20; i <= 20; i++) {
-    const date = state.focusedDate.add({ years: i });
+  for (let year = minYear; year <= maxYear; year++) {
+    const date = state.focusedDate.set({ year });
     years.push({
       id: years.length,
       date,
       formatted: formatter.format(date.toDate(state.timeZone)),
     });
   }
+
+  // Find the index of the current focused year
+  const selectedIndex = years.findIndex((y) => y.date.year === state.focusedDate.year);
+
   return (
     <Select
       aria-label="Year"
-      value={20}
+      value={selectedIndex}
       onChange={(key) => {
         if (typeof key === "number") {
           state.setFocusedDate(years[key]!.date);
