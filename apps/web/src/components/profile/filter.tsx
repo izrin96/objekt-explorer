@@ -63,7 +63,7 @@ export default function Filter({
         <WideFilter />
         <ColumnFilter />
         <SearchFilter />
-        <div ref={discordRef} />
+        <div className="contents" ref={discordRef} />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>

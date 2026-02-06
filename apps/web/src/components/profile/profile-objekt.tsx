@@ -49,7 +49,6 @@ export default dynamic(() => Promise.resolve(ProfileObjektRender), {
 
 function ProfileObjektRender() {
   const profile = useTarget((a) => a.profile)!;
-  const [floatingTarget, setFloatingTarget] = useState<HTMLDivElement | null>(null);
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 
@@ -58,11 +57,7 @@ function ProfileObjektRender() {
       <ObjektSelectProvider>
         <ObjektModalProvider initialTab="owned">
           <div className="flex flex-col gap-4">
-            <ProfileObjektFilters
-              floatingRef={setFloatingTarget}
-              selectRef={setSelectTarget}
-              discordRef={setDiscordTarget}
-            />
+            <ProfileObjektFilters selectRef={setSelectTarget} discordRef={setDiscordTarget} />
             <QueryErrorResetBoundary>
               {({ reset }) => (
                 <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
@@ -75,11 +70,7 @@ function ProfileObjektRender() {
                       </div>
                     }
                   >
-                    <ProfileObjekt
-                      floatingTarget={floatingTarget}
-                      selectTarget={selectTarget}
-                      discordTarget={discordTarget}
-                    />
+                    <ProfileObjekt selectTarget={selectTarget} discordTarget={discordTarget} />
                   </Suspense>
                 </ErrorBoundary>
               )}
@@ -92,11 +83,9 @@ function ProfileObjektRender() {
 }
 
 function ProfileObjektFilters({
-  floatingRef,
   selectRef,
   discordRef,
 }: {
-  floatingRef: (el: HTMLDivElement | null) => void;
   selectRef: (el: HTMLDivElement | null) => void;
   discordRef: (el: HTMLDivElement | null) => void;
 }) {
@@ -105,12 +94,11 @@ function ProfileObjektFilters({
 
   return (
     <div className="mb-2 flex flex-col gap-6">
-      {session && !filters.at && <div ref={floatingRef} />}
       <FilterContainer>
         <div className="flex w-full flex-col gap-6">
           <Filter discordRef={discordRef} />
           <CheckpointPicker />
-          {session && !filters.at && <div ref={selectRef} />}
+          {session && !filters.at && <div className="contents" ref={selectRef} />}
         </div>
       </FilterContainer>
     </div>
@@ -118,11 +106,9 @@ function ProfileObjektFilters({
 }
 
 function ProfileObjekt({
-  floatingTarget,
   selectTarget,
   discordTarget,
 }: {
-  floatingTarget: HTMLDivElement | null;
   selectTarget: HTMLDivElement | null;
   discordTarget: HTMLDivElement | null;
 }) {
@@ -215,21 +201,17 @@ function ProfileObjekt({
 
   return (
     <>
-      {floatingTarget &&
-        createPortal(
-          <FloatingSelectMode objekts={filtered}>
-            <AddToList size="sm" />
-            {isProfileAuthed && (
-              <>
-                <PinObjekt size="sm" />
-                <UnpinObjekt size="sm" />
-                <LockObjekt size="sm" />
-                <UnlockObjekt size="sm" />
-              </>
-            )}
-          </FloatingSelectMode>,
-          floatingTarget,
+      <FloatingSelectMode objekts={filtered}>
+        <AddToList size="sm" />
+        {isProfileAuthed && (
+          <>
+            <PinObjekt size="sm" />
+            <UnpinObjekt size="sm" />
+            <LockObjekt size="sm" />
+            <UnlockObjekt size="sm" />
+          </>
         )}
+      </FloatingSelectMode>
 
       {selectTarget &&
         createPortal(
