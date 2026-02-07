@@ -1,16 +1,16 @@
 import { sql } from "drizzle-orm";
 import {
-  boolean,
-  index,
-  integer,
-  numeric,
   pgTable,
-  text,
-  timestamp,
-  unique,
-  uniqueIndex,
   uuid,
   varchar,
+  integer,
+  text,
+  timestamp,
+  numeric,
+  boolean,
+  index,
+  uniqueIndex,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const collections = pgTable(
@@ -72,35 +72,28 @@ export const objekts = pgTable(
   },
   (table) => [
     index("IDX_19209bac5cab521e9327f74013").using("btree", table.serial.asc().nullsLast()),
-    index("IDX_3d4c25bad83bb3fdae75fc0692").using("btree", table.receivedAt.asc().nullsLast()),
-    index("IDX_463f5339e811c02da943075d43").using(
-      "btree",
-      table.owner.asc().nullsLast(),
-      table.receivedAt.desc().nullsFirst(),
-    ),
     index("IDX_f47af96878c586b3fbb6d9439c").using("btree", table.transferable.asc().nullsLast()),
     index("IDX_objekt_collection_owner").using(
       "btree",
       table.collectionId.asc().nullsLast(),
       table.owner.asc().nullsLast(),
     ),
-    index("IDX_objekt_hourly_stats").using(
+    index("idx_objekt_collection_serial").using(
       "btree",
-      table.mintedAt.asc().nullsLast(),
       table.collectionId.asc().nullsLast(),
+      table.serial.asc().nullsLast(),
     ),
     index("idx_objekt_owner_collection_id").using(
       "btree",
       table.owner.asc().nullsLast(),
       table.collectionId.asc().nullsLast(),
     ),
-    index("idx_objekt_spin_serial")
-      .using("btree", table.serial.asc().nullsLast())
-      .where(sql`(owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
-    index("idx_objekt_transferable_count").using("btree", table.collectionId.asc().nullsLast()),
-    index("IDX_objekts_spin_initial")
-      .using("btree", table.receivedAt.desc().nullsFirst())
-      .where(sql`(owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
+    index("idx_objekt_owner_received_id").using(
+      "btree",
+      table.owner.asc().nullsLast(),
+      table.receivedAt.desc().nullsFirst(),
+      table.id.desc().nullsFirst(),
+    ),
   ],
 );
 
@@ -123,40 +116,37 @@ export const transfers = pgTable(
     }),
   },
   (table) => [
-    index("IDX_15a8d2966ae7e5e9b2ff47104f").using("btree", table.collectionId.asc().nullsLast()),
-    index("idx_transfer_from_timestamp").using(
-      "btree",
-      table.from.asc().nullsLast(),
-      table.timestamp.desc().nullsFirst(),
-    ),
-    index("idx_transfer_objekt_id").using("btree", table.objektId.asc().nullsLast()),
-    index("idx_transfer_timestamp_cosmo_spin")
-      .using("btree", table.timestamp.desc().nullsFirst())
-      .where(
-        sql`(("from" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text) OR ("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text))`,
-      ),
-    index("idx_transfer_to_timestamp").using(
-      "btree",
-      table.to.asc().nullsLast(),
-      table.timestamp.desc().nullsFirst(),
-    ),
-    index("transfer_collection_timestamp_id_idx").using(
+    index("idx_transfer_collection_id").using(
       "btree",
       table.collectionId.asc().nullsLast(),
-      table.timestamp.desc().nullsFirst(),
       table.id.desc().nullsFirst(),
     ),
-    index("transfer_from_timestamp_id_idx").using(
+    index("idx_transfer_from_id").using(
       "btree",
       table.from.asc().nullsLast(),
-      table.timestamp.desc().nullsFirst(),
       table.id.desc().nullsFirst(),
     ),
-    index("transfer_to_timestamp_id_idx").using(
+    index("idx_transfer_from_objekt_ts").using(
+      "btree",
+      table.from.asc().nullsLast(),
+      table.objektId.asc().nullsLast(),
+      table.timestamp.desc().nullsFirst(),
+    ),
+    index("idx_transfer_objekt_id_desc").using(
+      "btree",
+      table.objektId.asc().nullsLast(),
+      table.id.desc().nullsFirst(),
+    ),
+    index("idx_transfer_to_id").using(
       "btree",
       table.to.asc().nullsLast(),
-      table.timestamp.desc().nullsFirst(),
       table.id.desc().nullsFirst(),
+    ),
+    index("idx_transfer_to_objekt_ts").using(
+      "btree",
+      table.to.asc().nullsLast(),
+      table.objektId.asc().nullsLast(),
+      table.timestamp.desc().nullsFirst(),
     ),
   ],
 );
