@@ -76,6 +76,7 @@ function ProfileTrades() {
           class: filters.class ?? [],
           on_offline: filters.on_offline ?? [],
           collection: filters.collection ?? [],
+          at: filters.at ?? undefined,
         },
       });
     },

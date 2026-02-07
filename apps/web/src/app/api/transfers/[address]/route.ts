@@ -7,7 +7,8 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
-import { type SQL, and, desc, eq, inArray, lt, ne } from "drizzle-orm";
+import { isValid, parseISO } from "date-fns";
+import { type SQL, and, desc, eq, inArray, lt, lte, ne } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
@@ -25,6 +26,7 @@ const transfersSchema = z.object({
   class: z.string().array(),
   on_offline: z.enum(validOnlineTypes).array(),
   collection: z.string().array(),
+  at: z.string().optional(),
   cursor: z
     .object({
       id: z.string(),
@@ -77,6 +79,11 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
 
   const addr = params.address.toLowerCase();
 
+  const targetTimestamp = query.at ? parseISO(query.at) : undefined;
+  if (targetTimestamp && !isValid(targetTimestamp)) {
+    return Response.json({ nextCursor: undefined, results: [] });
+  }
+
   const transferSelect = {
     transfer: {
       id: transfers.id,
@@ -102,6 +109,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         and(
           ...addressFilters,
           ...(query.cursor ? [lt(transfers.id, query.cursor.id)] : []),
+          ...(targetTimestamp ? [lte(transfers.timestamp, targetTimestamp)] : []),
           ...(matchingCollectionIds !== null
             ? [inArray(transfers.collectionId, matchingCollectionIds)]
             : [ne(collections.slug, "empty-collection")]),
@@ -191,6 +199,7 @@ function parseParams(params: URLSearchParams): TransferParams {
     class: params.getAll("class"),
     on_offline: params.getAll("on_offline"),
     collection: params.getAll("collection"),
+    at: params.get("at") ?? undefined,
     cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
   });
 
