@@ -1,9 +1,9 @@
 "use client";
 
+import type { IconProps } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
-import { Addresses } from "@repo/lib";
 import {
   type InfiniteData,
   QueryErrorResetBoundary,
@@ -37,13 +37,42 @@ import { Loader } from "../ui/loader";
 import UserLink from "../user-link";
 import ActivityFilter from "./activity-filter";
 import { useTypeFilter } from "./filter-type";
-import { filterData } from "./utils";
+import { type EventType, filterData, getEventType } from "./utils";
 
 type WebSocketMessage =
   | { type: "transfer"; data: ActivityData[] }
   | { type: "history"; data: ActivityData[] };
 
 const ROW_HEIGHT = 42;
+const ANIMATION_DURATION = 1500;
+
+const EVENT_CONFIG: Record<
+  EventType,
+  {
+    icon: React.ComponentType<IconProps>;
+    label: string;
+    className: string;
+  }
+> = {
+  mint: {
+    icon: LeafIcon,
+    label: "Mint",
+    className:
+      "[--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]",
+  },
+  spin: {
+    icon: ArrowsClockwiseIcon,
+    label: "Spin",
+    className:
+      "[--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]",
+  },
+  transfer: {
+    icon: PaperPlaneTiltIcon,
+    label: "Transfer",
+    className:
+      "[--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]",
+  },
+};
 
 export default dynamic(() => Promise.resolve(ActivityRender), {
   ssr: false,
@@ -92,7 +121,6 @@ function Activity() {
   const [isHovering, setIsHovering] = useState(false);
   const [queuedTransfers, setQueuedTransfers] = useState<ActivityData[]>([]);
   const parentRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const isHoveringRef = useRef(false);
   const [currentObjekt, setCurrentObjekt] = useState<ValidObjekt[]>([]);
 
@@ -151,27 +179,31 @@ function Activity() {
     scrollMargin: parentRef.current?.offsetTop ?? 0,
   });
 
-  const addNewTransferIds = useCallback((data: ActivityData[]) => {
+  const markAsNew = useCallback((items: ActivityData[]) => {
+    const ids = items.map((d) => d.transfer.id);
+
     setNewTransferIds((prev) => {
-      const newSet = new Set(prev);
-      for (const d of data) {
-        newSet.add(d.transfer.id);
-      }
-      return newSet;
+      const next = new Set(prev);
+      for (const id of ids) next.add(id);
+      return next;
     });
+
+    // schedule removal after animation completes
+    setTimeout(() => {
+      setNewTransferIds((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) next.delete(id);
+        return next;
+      });
+    }, ANIMATION_DURATION);
   }, []);
 
   const handleWebSocketMessage = useCallback(
     (message: WebSocketMessage) => {
-      const latestData = queryClient.getQueryData<InfiniteData<ActivityResponse>>([
-        "activity",
-        type,
-        filters,
-        parsedSelectedArtistIds,
-      ]);
-
       const filtered = filterData(
-        message.data.map((item) => ({ ...item, objekt: mapObjektWithTag(item.objekt) })),
+        message.data.map((item) =>
+          Object.assign({}, item, { objekt: mapObjektWithTag(item.objekt) }),
+        ),
         type ?? "all",
         {
           ...filters,
@@ -181,31 +213,32 @@ function Activity() {
 
       if (message.type === "transfer") {
         if (isHoveringRef.current) {
-          // Queue transfers when hovering
           setQueuedTransfers((prev) => [...filtered, ...prev]);
         } else {
-          // Apply transfers immediately when not hovering
-          addNewTransferIds(filtered);
+          markAsNew(filtered);
           setRealtimeTransfers((prev) => [...filtered, ...prev]);
         }
       }
 
       if (message.type === "history") {
-        const existing = latestData?.pages[0]?.items ?? [];
-        const existHash = new Set(existing.map((a) => a.transfer.hash));
-        const historyFiltered = filtered.filter((a) => !existHash.has(a.transfer.hash));
+        const latestData = queryClient.getQueryData<InfiniteData<ActivityResponse>>([
+          "activity",
+          type,
+          filters,
+          parsedSelectedArtistIds,
+        ]);
+        const existHash = new Set((latestData?.pages[0]?.items ?? []).map((a) => a.transfer.hash));
+        const deduped = filtered.filter((a) => !existHash.has(a.transfer.hash));
 
         if (isHoveringRef.current) {
-          // Queue history updates when hovering
-          setQueuedTransfers(historyFiltered);
+          setQueuedTransfers(deduped);
         } else {
-          // Apply history updates immediately when not hovering
-          addNewTransferIds(historyFiltered);
-          setRealtimeTransfers(historyFiltered);
+          markAsNew(deduped);
+          setRealtimeTransfers(deduped);
         }
       }
     },
-    [type, filters, parsedSelectedArtistIds, addNewTransferIds, queryClient],
+    [type, filters, parsedSelectedArtistIds, markAsNew, queryClient],
   );
 
   // handle incoming message
@@ -226,50 +259,18 @@ function Activity() {
   useEffect(() => {
     if (isPending || isRefetching) return;
     if (status === "success") {
-      sendJsonMessage({
-        type: "request_history",
-      });
+      sendJsonMessage({ type: "request_history" });
     }
   }, [status, isPending, isRefetching, sendJsonMessage]);
-
-  // remove new transfer after animation completes
-  useEffect(() => {
-    if (newTransferIds.size === 0) return;
-
-    // Create timeouts only for new IDs that don't already have a timeout
-    Array.from(newTransferIds).forEach((id) => {
-      if (!timeoutRef.current.has(id)) {
-        const timeout = setTimeout(() => {
-          setNewTransferIds((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(id);
-            return newSet;
-          });
-          timeoutRef.current.delete(id);
-        }, 1500);
-        timeoutRef.current.set(id, timeout);
-      }
-    });
-
-    return () => {
-      // Clear timeouts for IDs that are no longer in newTransferIds
-      timeoutRef.current.forEach((timeout, id) => {
-        if (!newTransferIds.has(id)) {
-          clearTimeout(timeout);
-          timeoutRef.current.delete(id);
-        }
-      });
-    };
-  }, [newTransferIds]);
 
   // flush queued transfers when hover ends
   useEffect(() => {
     if (!isHovering && queuedTransfers.length > 0) {
-      addNewTransferIds(queuedTransfers);
+      markAsNew(queuedTransfers);
       setRealtimeTransfers((prev) => [...queuedTransfers, ...prev]);
       setQueuedTransfers([]);
     }
-  }, [isHovering, queuedTransfers, addNewTransferIds]);
+  }, [isHovering, queuedTransfers, markAsNew]);
 
   if (isPending || isRefetching) {
     return (
@@ -294,10 +295,8 @@ function Activity() {
 
           <ObjektModal objekts={currentObjekt}>
             <div
-              style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
-              }}
-              className="relative w-full *:will-change-transform"
+              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+              className="relative min-w-fit"
               role="region"
               aria-label="Activity list"
               onMouseEnter={() => {
@@ -315,7 +314,11 @@ function Activity() {
                 const isNew = newTransferIds.has(item.transfer.id);
                 return (
                   <div
-                    className="absolute top-0 left-0 grid w-full"
+                    className={cn(
+                      "absolute top-0 left-0 min-w-full overflow-hidden will-change-transform",
+                      isNew &&
+                        "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
+                    )}
                     key={item.transfer.id}
                     style={{
                       height: `${virtualRow.size}px`,
@@ -324,14 +327,7 @@ function Activity() {
                       }px)`,
                     }}
                   >
-                    <div
-                      className={cn(
-                        isNew &&
-                          "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
-                      )}
-                    >
-                      <ActivityRow item={item} setCurrentObjekt={setCurrentObjekt} />
-                    </div>
+                    <ActivityRow item={item} setCurrentObjekt={setCurrentObjekt} />
                   </div>
                 );
               })}
@@ -371,53 +367,16 @@ const ActivityRow = memo(function ActivityRow({
     ctx.handleClick();
   }, [item.objekt, setCurrentObjekt, ctx]);
 
-  const event =
-    item.transfer.from === Addresses.NULL
-      ? "mint"
-      : item.transfer.to === Addresses.SPIN
-        ? "spin"
-        : "transfer";
-
-  const from =
-    event === "mint" ? (
-      <span className="text-muted-fg font-mono">COSMO</span>
-    ) : (
-      <UserLink address={item.transfer.from} nickname={item.nickname.from} />
-    );
-
-  const to =
-    event === "spin" ? (
-      <span className="text-muted-fg font-mono">COSMO Spin</span>
-    ) : (
-      <UserLink address={item.transfer.to} nickname={item.nickname.to} />
-    );
+  const event = getEventType(item.transfer.from, item.transfer.to);
+  const config = EVENT_CONFIG[event];
+  const Icon = config.icon;
 
   return (
-    <div className="flex w-full items-center border-b">
+    <div className="flex min-w-fit items-center border-b">
       <div className="min-w-[120px] flex-1 px-3 py-2.5">
         <div className="flex items-center gap-2 font-semibold">
-          {event === "mint" ? (
-            <>
-              <LeafIcon size={18} weight="light" />
-              <Badge className="text-xs [--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]">
-                Mint
-              </Badge>
-            </>
-          ) : event === "spin" ? (
-            <>
-              <ArrowsClockwiseIcon size={18} weight="light" />
-              <Badge className="text-xs [--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]">
-                Spin
-              </Badge>
-            </>
-          ) : (
-            <>
-              <PaperPlaneTiltIcon size={18} weight="light" />
-              <Badge className="text-xs [--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]">
-                Transfer
-              </Badge>
-            </>
-          )}
+          <Icon size={18} weight="light" />
+          <Badge className={cn("text-xs", config.className)}>{config.label}</Badge>
         </div>
       </div>
       <div
@@ -428,8 +387,20 @@ const ActivityRow = memo(function ActivityRow({
         {item.objekt.collectionId}
       </div>
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
-      <div className="min-w-[300px] flex-1 px-3 py-2.5">{from}</div>
-      <div className="min-w-[300px] flex-1 px-3 py-2.5">{to}</div>
+      <div className="min-w-[300px] flex-1 px-3 py-2.5">
+        {event === "mint" ? (
+          <span className="text-muted-fg font-mono">COSMO</span>
+        ) : (
+          <UserLink address={item.transfer.from} nickname={item.nickname.from} />
+        )}
+      </div>
+      <div className="min-w-[300px] flex-1 px-3 py-2.5">
+        {event === "spin" ? (
+          <span className="text-muted-fg font-mono">COSMO Spin</span>
+        ) : (
+          <UserLink address={item.transfer.to} nickname={item.nickname.to} />
+        )}
+      </div>
       <div className="min-w-[250px] flex-1 px-3 py-2.5">
         {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
       </div>

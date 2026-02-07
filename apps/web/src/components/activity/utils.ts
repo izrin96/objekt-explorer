@@ -1,7 +1,16 @@
 import { Addresses } from "@repo/lib";
 
 import type { Filters } from "@/hooks/use-filters";
-import type { ActivityData, ValidType } from "@/lib/universal/activity";
+import type { ValidType } from "@/lib/universal/activity";
+import type { ActivityData } from "@/lib/universal/activity";
+
+export type EventType = "mint" | "spin" | "transfer";
+
+export function getEventType(from: string, to: string): EventType {
+  if (from === Addresses.NULL) return "mint";
+  if (to === Addresses.SPIN) return "spin";
+  return "transfer";
+}
 
 export function filterData(
   data: ActivityData[],
@@ -19,13 +28,8 @@ export function filterData(
 
   return data.filter((item) => {
     if (type !== "all") {
-      const isMint = item.transfer.from === Addresses.NULL;
-      const isSpin = item.transfer.to === Addresses.SPIN;
-      const isTransfer = !isMint && !isSpin;
-
-      if (type === "mint" && !isMint) return false;
-      if (type === "spin" && !isSpin) return false;
-      if (type === "transfer" && !isTransfer) return false;
+      const eventType = getEventType(item.transfer.from, item.transfer.to);
+      if (type !== eventType) return false;
     }
 
     if (artistSet && !artistSet.has(item.objekt.artist.toLowerCase())) return false;
