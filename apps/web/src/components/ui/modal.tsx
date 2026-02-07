@@ -60,7 +60,6 @@ const ModalContent = ({
   ...props
 }: ModalContentProps) => {
   const isDismissable = isDismissableInternal ?? role !== "alertdialog";
-
   return (
     <ModalOverlay
       data-slot="modal-overlay"

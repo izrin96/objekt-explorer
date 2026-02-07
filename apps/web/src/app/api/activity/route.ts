@@ -113,7 +113,13 @@ async function fetchTransfers(query: ActivityParams, matchingCollectionIds: stri
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
-      .where(and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, matchingCollectionIds)))
+      .where(
+        and(
+          ...cursorFilter,
+          ...typeFilters,
+          inArray(transfers.collectionId, matchingCollectionIds),
+        ),
+      )
       .orderBy(desc(transfers.id))
       .limit(PAGE_SIZE + 1);
 
@@ -125,7 +131,12 @@ async function fetchTransfers(query: ActivityParams, matchingCollectionIds: stri
       .from(transfers)
       .innerJoin(objekts, eq(transfers.objektId, objekts.id))
       .innerJoin(collections, eq(transfers.collectionId, collections.id))
-      .where(inArray(transfers.id, ids.map((t) => t.id)))
+      .where(
+        inArray(
+          transfers.id,
+          ids.map((t) => t.id),
+        ),
+      )
       .orderBy(desc(transfers.id));
   }
 

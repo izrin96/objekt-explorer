@@ -98,7 +98,6 @@ const CommandMenu = ({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [shortcut, onOpenChange]);
-
   return (
     <CommandMenuContext value={{ isPending: isPending, escapeButton: escapeButton }}>
       <ModalContext value={{ isOpen: props.isOpen, onOpenChange: onOpenChange }}>

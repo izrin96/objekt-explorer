@@ -55,7 +55,6 @@ const SheetContent = ({
   ...props
 }: SheetContentProps) => {
   const isDismissable = isDismissableInternal ?? role !== "alertdialog";
-
   return (
     <ModalOverlay
       isDismissable={isDismissable}
