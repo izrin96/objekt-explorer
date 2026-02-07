@@ -24,6 +24,7 @@
   },
   "packageManager": "bun@1.3.8",
   "patchedDependencies": {
-    "@subsquid/typeorm-store@1.6.0": "patches/@subsquid%2Ftypeorm-store@1.6.0.patch"
+    "@subsquid/typeorm-store@1.6.0": "patches/@subsquid%2Ftypeorm-store@1.6.0.patch",
+    "@react-aria/utils@3.33.0": "patches/@react-aria%2Futils@3.33.0.patch"
   }
 }

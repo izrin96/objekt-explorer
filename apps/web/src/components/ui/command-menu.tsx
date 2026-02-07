@@ -99,9 +99,6 @@ const CommandMenu = ({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [shortcut, onOpenChange]);
 
-  // temporary fix issue: https://github.com/adobe/react-spectrum/issues/8786
-  if (props.isOpen !== undefined && !props.isOpen) return;
-
   return (
     <CommandMenuContext value={{ isPending: isPending, escapeButton: escapeButton }}>
       <ModalContext value={{ isOpen: props.isOpen, onOpenChange: onOpenChange }}>

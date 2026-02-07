@@ -55,8 +55,6 @@ const SheetContent = ({
   ...props
 }: SheetContentProps) => {
   const isDismissable = isDismissableInternal ?? role !== "alertdialog";
-  // temporary fix issue: https://github.com/adobe/react-spectrum/issues/8786
-  if (props.isOpen !== undefined && !props.isOpen) return;
 
   return (
     <ModalOverlay

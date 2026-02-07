@@ -1,0 +1,61 @@
+diff --git a/node_modules/@react-aria/utils/.bun-tag-70a1f1f1a10bb6a6 b/.bun-tag-70a1f1f1a10bb6a6
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/@react-aria/utils/.bun-tag-b13fb3857700fb94 b/.bun-tag-b13fb3857700fb94
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/node_modules/@react-aria/utils/.bun-tag-d9ab1091f9d33d2b b/.bun-tag-d9ab1091f9d33d2b
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/animation.main.js b/dist/animation.main.js
+index f2a8b2a112b8bd92e9a528ae1cec87db48f3956e..fe61ca8b4a864dcef6583ff72c717ed59d3aa98c 100644
+--- a/dist/animation.main.js
++++ b/dist/animation.main.js
+@@ -77,7 +77,7 @@ function $5bd06107f98811f5$var$useAnimation(ref, isActive, onEnd) {
+                 return;
+             }
+             let canceled = false;
+-            Promise.all(animations.map((a)=>a.finished)).then(()=>{
++            Promise.allSettled(animations.map((a)=>a.finished)).then(()=>{
+                 if (!canceled) (0, $bsryd$reactdom.flushSync)(()=>{
+                     onEnd();
+                 });
+diff --git a/dist/animation.mjs b/dist/animation.mjs
+index b563f359cc6867bef96e767db5b7714f345a0f62..d088449acbd4b8f44beded2015f102e84cb84a37 100644
+--- a/dist/animation.mjs
++++ b/dist/animation.mjs
+@@ -70,7 +70,7 @@ function $d3f049242431219c$var$useAnimation(ref, isActive, onEnd) {
+                 return;
+             }
+             let canceled = false;
+-            Promise.all(animations.map((a)=>a.finished)).then(()=>{
++            Promise.allSettled(animations.map((a)=>a.finished)).then(()=>{
+                 if (!canceled) (0, $jJMAe$flushSync)(()=>{
+                     onEnd();
+                 });
+diff --git a/dist/animation.module.js b/dist/animation.module.js
+index 3e3b6259a856f5aeefb3ce959093c19c6003bdb9..a0e2ef223e53b31e95dae59dc7d666600b0c6fcb 100644
+--- a/dist/animation.module.js
++++ b/dist/animation.module.js
+@@ -70,7 +70,7 @@ function $d3f049242431219c$var$useAnimation(ref, isActive, onEnd) {
+                 return;
+             }
+             let canceled = false;
+-            Promise.all(animations.map((a)=>a.finished)).then(()=>{
++            Promise.allSettled(animations.map((a)=>a.finished)).then(()=>{
+                 if (!canceled) (0, $jJMAe$flushSync)(()=>{
+                     onEnd();
+                 });
+diff --git a/src/animation.ts b/src/animation.ts
+index c613b451163316e042fc7b9fba75ce5c22616db8..6aa4887dd32f798191a318c8bcd64a8c1a12cb5c 100644
+--- a/src/animation.ts
++++ b/src/animation.ts
+@@ -87,7 +87,7 @@ function useAnimation(ref: RefObject<HTMLElement | null>, isActive: boolean, onE
+       }
+ 
+       let canceled = false;
+-      Promise.all(animations.map(a => a.finished)).then(() => {
++      Promise.allSettled(animations.map(a => a.finished)).then(() => {
+         if (!canceled) {
+           flushSync(() => {
+             onEnd();
