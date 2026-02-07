@@ -7,7 +7,7 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
 import { isValid, parseISO } from "date-fns";
-import { and, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
+import { and, desc, eq, getColumns, inArray, lte, ne, or, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
@@ -113,13 +113,7 @@ export async function GET(request: NextRequest, props: Params) {
             : []),
           ...(query.cursor
             ? [
-                or(
-                  lt(latest.timestamp, new Date(query.cursor.receivedAt)),
-                  and(
-                    eq(latest.timestamp, new Date(query.cursor.receivedAt)),
-                    lt(objekts.id, query.cursor.id),
-                  ),
-                ),
+                sql`(${latest.timestamp}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
               ]
             : []),
         ),
@@ -156,13 +150,7 @@ export async function GET(request: NextRequest, props: Params) {
         eq(objekts.owner, addr),
         ...(query.cursor
           ? [
-              or(
-                lt(objekts.receivedAt, new Date(query.cursor.receivedAt)),
-                and(
-                  eq(objekts.receivedAt, new Date(query.cursor.receivedAt)),
-                  lt(objekts.id, query.cursor.id),
-                ),
-              ),
+              sql`(${objekts.receivedAt}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
             ]
           : []),
         ...(query.artist.length
