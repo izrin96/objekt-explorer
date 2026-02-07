@@ -3,15 +3,15 @@ FROM oven/bun:alpine AS base
 # Prune the monorepo to only include server and its dependencies
 FROM base AS pruner
 WORKDIR /app
-RUN bun add --global turbo
 COPY . .
-RUN turbo prune server --docker
+RUN bunx turbo@2.8.3 prune server --docker
 
 # Install dependencies only for pruned workspace
 FROM base AS installer
 WORKDIR /app
 
 # Copy lockfile and package.json's from pruned workspace
+COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
 RUN bun install
 
@@ -19,23 +19,18 @@ RUN bun install
 COPY --from=pruner /app/out/full/ .
 RUN bun run build --filter=server
 
-# Production image - copy only what's needed to run
+# Production image - copy only the bundle
 FROM base AS runner
 
 # Install curl for healthchecks
 RUN apk add --no-cache curl
 
-WORKDIR /app
+WORKDIR /app/apps/server
 ENV NODE_ENV=production
 
-# Copy built application
-COPY --from=installer /app/apps/server/dist ./apps/server/dist
-COPY --from=installer /app/apps/server/package.json ./apps/server/package.json
-COPY --from=installer /app/node_modules ./node_modules
-COPY --from=installer /app/packages ./packages
-
-WORKDIR /app/apps/server
+# Only the bundled output is needed - bun build bundles all deps
+COPY --from=installer /app/apps/server/dist ./dist
 
 EXPOSE 3000/tcp
 
-CMD ["bun", "run", "start"]
+CMD ["bun", "run", "dist/index.js"]
