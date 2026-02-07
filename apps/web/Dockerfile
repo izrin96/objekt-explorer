@@ -4,12 +4,12 @@ WORKDIR /app
 # prune monorepo
 FROM base AS prune
 COPY . .
-RUN bun install turbo --global
 ENV TURBO_TELEMETRY_DISABLED=1
-RUN turbo prune web --docker
+RUN bunx turbo@2.8.3 prune web --docker
 
 # dependencies & build
 FROM base AS build
+COPY --from=prune /app/out/bun.lock ./bun.lock
 COPY --from=prune /app/out/json/ .
 RUN bun install
 COPY --from=prune /app/out/full/ .
