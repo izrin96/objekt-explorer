@@ -12,20 +12,6 @@ import { useInterval } from "usehooks-ts";
 
 import type { TicketAuth, TicketSuccess } from "@/lib/universal/cosmo/shop/qr-auth";
 
-import AxolotlIcon from "@/assets/icon-axolotl.png";
-import BearIcon from "@/assets/icon-bear.png";
-import CarpenterIcon from "@/assets/icon-carpenter.png";
-import CatIcon from "@/assets/icon-cat.png";
-import DeerIcon from "@/assets/icon-deer.png";
-import IconError from "@/assets/icon-error.png";
-import GiraffeIcon from "@/assets/icon-giraffe.png";
-import PandaIcon from "@/assets/icon-panda.png";
-import QRCodeIcon from "@/assets/icon-qrcode.png";
-import SmartphoneIcon from "@/assets/icon-smartphone.png";
-import SquirrelIcon from "@/assets/icon-squirrel.png";
-import TrashIcon from "@/assets/icon-trash.png";
-import WelcomeIcon from "@/assets/icon-welcome.png";
-import WhiteFoxIcon from "@/assets/icon-white-fox.png";
 import { orpc } from "@/lib/orpc/client";
 import { msToCountdown, SITE_NAME } from "@/lib/utils";
 
@@ -56,7 +42,7 @@ export default function LinkRender() {
             {locale === "ko" && "Cosmo 프로필을 연결하세요"}
           </h2>
           <Image
-            src={SmartphoneIcon.src}
+            src="/assets/icon-smartphone.png"
             alt="Smartphone"
             width={220}
             height={220}
@@ -121,7 +107,7 @@ function TicketRender() {
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          src={QRCodeIcon.src}
+          src="/assets/icon-qrcode.png"
           alt="Loading"
           width={220}
           height={220}
@@ -137,7 +123,7 @@ function TicketRender() {
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          src={CarpenterIcon.src}
+          src="/assets/icon-carpenter.png"
           alt="Carpenter"
           width={220}
           height={220}
@@ -202,7 +188,7 @@ function StepRender({ ticketAuth, refetch }: { ticketAuth: TicketAuth; refetch: 
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          src={TrashIcon.src}
+          src="/assets/icon-trash.png"
           alt="Trash"
           width={220}
           height={220}
@@ -246,14 +232,14 @@ function RenderOtp({
 
   const [randomIcon] = useState(() => {
     const icons = [
-      { src: AxolotlIcon.src, alt: "Axolotl" },
-      { src: DeerIcon.src, alt: "Deer" },
-      { src: PandaIcon.src, alt: "Panda" },
-      { src: SquirrelIcon.src, alt: "Squirrel" },
-      { src: BearIcon.src, alt: "Bear" },
-      { src: CatIcon.src, alt: "Cat" },
-      { src: GiraffeIcon.src, alt: "Giraffe" },
-      { src: WhiteFoxIcon.src, alt: "White Fox" },
+      { src: "/assets/icon-axolotl.png", alt: "Axolotl" },
+      { src: "/assets/icon-deer.png", alt: "Deer" },
+      { src: "/assets/icon-panda.png", alt: "Panda" },
+      { src: "/assets/icon-squirrel.png", alt: "Squirrel" },
+      { src: "/assets/icon-bear.png", alt: "Bear" },
+      { src: "/assets/icon-cat.png", alt: "Cat" },
+      { src: "/assets/icon-giraffe.png", alt: "Giraffe" },
+      { src: "/assets/icon-white-fox.png", alt: "White Fox" },
     ];
     return icons[Math.floor(Math.random() * icons.length)];
   });
@@ -280,7 +266,7 @@ function RenderOtp({
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          src={IconError.src}
+          src="/assets/icon-error.png"
           alt="Error"
           width={220}
           height={220}
@@ -304,7 +290,7 @@ function RenderOtp({
     return (
       <div className="flex flex-col items-center gap-2">
         <Image
-          src={WelcomeIcon.src}
+          src="/assets/icon-welcome.png"
           width={220}
           height={220}
           alt="Welcome"
