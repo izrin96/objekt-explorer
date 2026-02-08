@@ -1,7 +1,7 @@
 import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
-import { type UserAddress, userAddress } from "@repo/db/schema";
+import { userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -220,9 +220,15 @@ export async function fetchUserByIdentifier(
   };
 }
 
-export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "address">[]) {
+export async function cacheUsers(
+  newAddresses: { nickname: string; address: string; cosmoId?: number }[],
+) {
   if (newAddresses.length > 0) {
-    const values = newAddresses.map((a) => ({ nickname: a.nickname, address: a.address }));
+    const values = newAddresses.map((a) => ({
+      nickname: a.nickname,
+      address: a.address,
+      cosmoId: a.cosmoId ?? null,
+    }));
     try {
       await db
         .insert(userAddress)
@@ -231,6 +237,7 @@ export async function cacheUsers(newAddresses: Pick<UserAddress, "nickname" | "a
           target: userAddress.address,
           set: {
             nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
+            cosmoId: sql`coalesce(excluded.${sql.raw(userAddress.cosmoId.name)}, ${userAddress.cosmoId})`,
           },
         });
     } catch (err) {

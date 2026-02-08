@@ -135,11 +135,19 @@
     "my_cosmo": "My Cosmo",
     "link_cosmo": "Link Cosmo",
     "continue": "Continue",
-    "generating_qr": "Generating QR code",
-    "error_generating_qr": "Error generating QR ticket",
     "try_again": "Try again",
     "submit": "Submit",
     "success": "Success. Cosmo {nickname} linked.",
-    "go_to_cosmo": "Go to your Cosmo"
+    "go_to_cosmo": "Go to your Cosmo",
+    "enter_nickname": "Cosmo ID",
+    "nickname_placeholder": "Your Cosmo ID",
+    "nickname_required": "Cosmo ID is required.",
+    "nickname_not_found": "Cosmo ID not found",
+    "search": "Search",
+    "verify": "Verify",
+    "start_over": "Start over",
+    "code_instructions": "Add this code to your {artist} Cosmo profile bio, then click Verify below.",
+    "code_expired": "Verification code has expired. Please start over.",
+    "verification_failed": "Verification code not found in bio. Please check and try again."
   }
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "user_address" ADD COLUMN "cosmo_id" integer;

@@ -9,7 +9,6 @@ export const env = createEnv({
     DISCORD_CLIENT_SECRET: z.string().min(1),
     TWITTER_CLIENT_ID: z.string().min(1),
     TWITTER_CLIENT_SECRET: z.string().min(1),
-    BROWSER_CDP_URL: z.string().min(1),
     S3_ENDPOINT: z.string().min(1),
     S3_ACCESS_KEY: z.string().min(1),
     S3_SECRET_KEY: z.string().min(1),

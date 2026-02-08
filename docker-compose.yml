@@ -119,7 +119,6 @@ services:
         - DISCORD_CLIENT_SECRET
         - TWITTER_CLIENT_ID
         - TWITTER_CLIENT_SECRET
-        - BROWSER_CDP_URL=ws://browserless:3000
         - NEXT_PUBLIC_SITE_URL
         - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
         - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
@@ -142,7 +141,6 @@ services:
       - DISCORD_CLIENT_SECRET
       - TWITTER_CLIENT_ID
       - TWITTER_CLIENT_SECRET
-      - BROWSER_CDP_URL=ws://browserless:3000
       - NEXT_PUBLIC_SITE_URL
       - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
       - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer

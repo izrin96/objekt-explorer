@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       force_build_all:
-        description: 'Force build all apps regardless of changes'
+        description: "Force build all apps regardless of changes"
         required: false
-        default: 'false'
+        default: "false"
         type: choice
         options:
-          - 'true'
-          - 'false'
+          - "true"
+          - "false"
 
 permissions:
   contents: read
@@ -190,7 +190,6 @@ jobs:
             discord_client_secret=${{ secrets.DISCORD_CLIENT_SECRET }}
             twitter_client_id=${{ secrets.TWITTER_CLIENT_ID }}
             twitter_client_secret=${{ secrets.TWITTER_CLIENT_SECRET }}
-            browser_cdp_url=${{ secrets.BROWSER_CDP_URL }}
             site_url=${{ secrets.NEXT_PUBLIC_SITE_URL }}
             database_url=${{ secrets.DATABASE_URL }}
             indexer_database_url=${{ secrets.INDEXER_DATABASE_URL }}

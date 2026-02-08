@@ -24,7 +24,6 @@ RUN --mount=type=secret,id=umami_script_url \
     --mount=type=secret,id=discord_client_secret \
     --mount=type=secret,id=twitter_client_id \
     --mount=type=secret,id=twitter_client_secret \
-    --mount=type=secret,id=browser_cdp_url \
     --mount=type=secret,id=site_url \
     --mount=type=secret,id=database_url \
     --mount=type=secret,id=indexer_database_url \
@@ -46,7 +45,6 @@ RUN --mount=type=secret,id=umami_script_url \
     DISCORD_CLIENT_SECRET=$(cat /run/secrets/discord_client_secret 2>/dev/null || echo "") \
     TWITTER_CLIENT_ID=$(cat /run/secrets/twitter_client_id 2>/dev/null || echo "") \
     TWITTER_CLIENT_SECRET=$(cat /run/secrets/twitter_client_secret 2>/dev/null || echo "") \
-    BROWSER_CDP_URL=$(cat /run/secrets/browser_cdp_url 2>/dev/null || echo "") \
     NEXT_PUBLIC_SITE_URL=$(cat /run/secrets/site_url 2>/dev/null || echo "") \
     DATABASE_URL=$(cat /run/secrets/database_url 2>/dev/null || echo "") \
     INDEXER_DATABASE_URL=$(cat /run/secrets/indexer_database_url 2>/dev/null || echo "") \

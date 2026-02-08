@@ -21,7 +21,13 @@ export async function GET(request: NextRequest) {
     // caching user address
     if (results.results.length > 0) {
       after(async () => {
-        await cacheUsers(results.results);
+        await cacheUsers(
+          results.results.map((u) => ({
+            nickname: u.nickname,
+            address: u.address,
+            cosmoId: u.id,
+          })),
+        );
       });
     }
 
