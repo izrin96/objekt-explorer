@@ -18,7 +18,7 @@ import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
 
 import { navMenuItems } from "./navbar";
-import { ThemeSwitcher } from "./theme-switcher";
+import { SettingsButton } from "./settings-button";
 import { Container } from "./ui/container";
 import { MenuLabel } from "./ui/menu";
 
@@ -106,7 +106,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
           <Suspense>
             <UserNav />
           </Suspense>
-          <ThemeSwitcher />
+          <SettingsButton />
           <Suspense>
             <SelectedArtistFilter />
           </Suspense>

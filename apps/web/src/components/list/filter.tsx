@@ -15,14 +15,12 @@ import CombineDuplicateFilter from "../filters/filter-combine-duplicate";
 import EditionFilter from "../filters/filter-edition";
 import GroupDirectionFilter from "../filters/filter-group-direction";
 import GroupByFilter from "../filters/filter-groupby";
-import HideLabelFilter from "../filters/filter-hide-label";
 import MemberFilter from "../filters/filter-member";
 import OnlineFilter from "../filters/filter-online";
 import SearchFilter from "../filters/filter-search";
 import SeasonFilter from "../filters/filter-season";
 import SortFilter from "../filters/filter-sort";
 import SortDirectionFilter from "../filters/filter-sort-direction";
-import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
 import { GenerateDiscordButton } from "../generate-discord-button";
 
@@ -50,8 +48,6 @@ export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
         <GroupDirectionFilter />
       </div>
       <div className="flex flex-wrap gap-2">
-        <HideLabelFilter />
-        <WideFilter />
         <ColumnFilter />
         <SearchFilter />
         <GenerateDiscordButton objekts={objekts} />

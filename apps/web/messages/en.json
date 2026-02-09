@@ -486,6 +486,29 @@
       "toggle": "Toggle Menu",
       "label": "Navigation",
       "home": "Home"
+    },
+    "settings": {
+      "title": "Settings",
+      "theme": {
+        "label": "Theme",
+        "desc": "Select your preferred color scheme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "language": {
+        "label": "Language",
+        "desc": "Choose your display language",
+        "en": "English",
+        "ko": "한국어"
+      },
+      "filters": {
+        "label": "Display",
+        "wide": "Wide layout",
+        "wide_desc": "Use full width for collection grid",
+        "hide_label": "Hide labels",
+        "hide_label_desc": "Hide collection labels on objekts"
+      }
     }
   },
   "generate_discord": {

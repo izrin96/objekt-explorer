@@ -12,7 +12,7 @@ import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import { MobileNavigation } from "./mobile-navigation";
-import { ThemeSwitcher } from "./theme-switcher";
+import { SettingsButton } from "./settings-button";
 import { Container } from "./ui/container";
 
 export default function Navbar() {
@@ -44,7 +44,7 @@ export default function Navbar() {
             <Suspense>
               <UserNav />
             </Suspense>
-            <ThemeSwitcher />
+            <SettingsButton />
             <Suspense>
               <SelectedArtistFilter />
             </Suspense>

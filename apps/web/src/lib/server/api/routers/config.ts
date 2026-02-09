@@ -4,6 +4,9 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { cookies } from "next/headers";
 import * as z from "zod";
 
+import { locales } from "@/i18n/config";
+
+import { setUserLocale } from "../../locale";
 import { fetchFilterData } from "../../objekt";
 import { pub } from "../orpc";
 
@@ -31,5 +34,9 @@ export const configRouter = {
       httpOnly: true,
       secure: true,
     });
+  }),
+
+  setLocale: pub.input(z.enum(locales)).handler(async ({ input: locale }) => {
+    await setUserLocale(locale);
   }),
 };

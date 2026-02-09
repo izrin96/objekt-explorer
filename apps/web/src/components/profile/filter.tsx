@@ -13,7 +13,6 @@ import CombineDuplicateFilter from "../filters/filter-combine-duplicate";
 import EditionFilter from "../filters/filter-edition";
 import GroupDirectionFilter from "../filters/filter-group-direction";
 import GroupByFilter from "../filters/filter-groupby";
-import HideLabelFilter from "../filters/filter-hide-label";
 import HidePinFilter from "../filters/filter-hide-pin";
 import LockedFilter from "../filters/filter-locked";
 import MemberFilter from "../filters/filter-member";
@@ -24,7 +23,6 @@ import SeasonFilter from "../filters/filter-season";
 import SortFilter from "../filters/filter-sort";
 import SortDirectionFilter from "../filters/filter-sort-direction";
 import TransferableFilter from "../filters/filter-transferable";
-import WideFilter from "../filters/filter-wide";
 import ResetFilter from "../filters/reset-filter";
 
 export default function Filter({
@@ -59,8 +57,6 @@ export default function Filter({
         <HidePinFilter />
         <LockedFilter />
         <MissingFilter />
-        <HideLabelFilter />
-        <WideFilter />
         <ColumnFilter />
         <SearchFilter />
         <div className="contents" ref={discordRef} />
