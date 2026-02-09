@@ -1,6 +1,7 @@
 "use client";
 
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useTarget } from "@/hooks/use-target";
@@ -59,6 +60,7 @@ export default function ListHeader() {
 
 function EditList({ slug }: { slug: string }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("list.card");
   return (
     <>
       <EditListModal slug={slug} open={open} setOpen={setOpen} />
@@ -68,7 +70,7 @@ function EditList({ slug }: { slug: string }) {
         onPress={() => setOpen(true)}
         className="w-full flex-none sm:w-auto"
       >
-        Edit List
+        {t("edit_list")}
       </Button>
     </>
   );

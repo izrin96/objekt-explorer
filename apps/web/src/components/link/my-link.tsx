@@ -66,6 +66,7 @@ type LinkCardProps = {
 };
 
 function LinkCard({ link }: LinkCardProps) {
+  const t = useTranslations("link.card");
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const nickname = parseNickname(link.address, link.nickname);
@@ -95,10 +96,10 @@ function LinkCard({ link }: LinkCardProps) {
               <EllipsisVerticalIcon className="size-5" />
             </Button>
             <MenuContent className="sm:min-w-56">
-              <MenuItem href={`/@${link.nickname ?? link.address}`}>Open</MenuItem>
-              <MenuItem onAction={() => setEditOpen(true)}>Edit</MenuItem>
+              <MenuItem href={`/@${link.nickname ?? link.address}`}>{t("open")}</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
               <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
-                Unlink
+                {t("unlink")}
               </MenuItem>
             </MenuContent>
           </Menu>

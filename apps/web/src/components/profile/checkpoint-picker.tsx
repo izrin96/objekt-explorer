@@ -10,6 +10,7 @@ import {
   toTime,
 } from "@internationalized/date";
 import { ClockCounterClockwiseIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
@@ -38,10 +39,10 @@ function safeParse(isoStr: string | null) {
   }
 }
 
-function formatCheckpointLabel(isoStr: string | null) {
-  if (!isoStr) return "Snapshot";
+function formatCheckpointLabel(isoStr: string | null, defaultLabel: string) {
+  if (!isoStr) return defaultLabel;
   const parsed = safeParse(isoStr);
-  if (!parsed) return "Snapshot";
+  if (!parsed) return defaultLabel;
 
   const date = parsed.toDate();
   return new Intl.DateTimeFormat(undefined, {
@@ -56,6 +57,7 @@ function formatCheckpointLabel(isoStr: string | null) {
 }
 
 export default function CheckpointPicker() {
+  const t = useTranslations("checkpoint");
   const [filters, setFilters] = useFilters();
   const currentValue = safeParse(filters.at);
 
@@ -82,12 +84,12 @@ export default function CheckpointPicker() {
     <div className="flex flex-wrap gap-2">
       <Button intent="outline" data-selected={filters.at} onPress={() => setIsOpen(true)}>
         <ClockCounterClockwiseIcon data-slot="icon" />
-        {formatCheckpointLabel(filters.at)}
+        {formatCheckpointLabel(filters.at, t("title"))}
       </Button>
       <ModalContent size="sm" isOpen={isOpen} onOpenChange={setIsOpen}>
         <ModalHeader>
-          <ModalTitle>Snapshot</ModalTitle>
-          <ModalDescription>View collections at given time</ModalDescription>
+          <ModalTitle>{t("title")}</ModalTitle>
+          <ModalDescription>{t("description")}</ModalDescription>
         </ModalHeader>
         <ModalBody className="space-y-4 select-none">
           <div className="flex h-110 flex-col items-center gap-3 sm:h-86">
@@ -108,9 +110,9 @@ export default function CheckpointPicker() {
           </div>
         </ModalBody>
         <ModalFooter>
-          <ModalClose>Close</ModalClose>
+          <ModalClose>{t("close")}</ModalClose>
           <Button onPress={handleApply} isDisabled={!selectedDate || !selectedTime}>
-            Apply
+            {t("apply")}
           </Button>
         </ModalFooter>
       </ModalContent>
@@ -118,7 +120,7 @@ export default function CheckpointPicker() {
       {filters.at && (
         <Button intent="outline" onPress={() => setFilters({ at: null })}>
           <XIcon data-slot="icon" />
-          Reset
+          {t("reset")}
         </Button>
       )}
     </div>

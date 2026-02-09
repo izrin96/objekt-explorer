@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { Form } from "react-aria-components";
@@ -45,6 +46,8 @@ type CreateListModalProps = {
 };
 
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
+  const t = useTranslations("list.create");
+  const tCommon = useTranslations("common.modal");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       name: "",
@@ -56,13 +59,13 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
     orpc.list.create.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success("List created");
+        toast.success(t("success"));
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error("Error creating list");
+        toast.error(t("error"));
       },
     }),
   );
@@ -77,7 +80,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Create list</ModalTitle>
+        <ModalTitle>{t("title")}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <Form onSubmit={onSubmit}>
@@ -86,7 +89,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
               control={control}
               name="name"
               rules={{
-                required: "Name is required.",
+                required: t("name_required"),
               }}
               render={({
                 field: { name, value, onChange, onBlur },
@@ -101,8 +104,8 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                   onBlur={onBlur}
                   isInvalid={invalid}
                 >
-                  <Label>Name</Label>
-                  <Input placeholder="My list" />
+                  <Label>{t("name_label")}</Label>
+                  <Input placeholder={t("name_placeholder")} />
                   <FieldError>{error?.message}</FieldError>
                 </TextField>
               )}
@@ -112,8 +115,8 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
               name="hideUser"
               render={({ field: { name, value, onChange, onBlur } }) => (
                 <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-                  <Label>Hide User</Label>
-                  <Description>Hide {SITE_NAME} account from this list</Description>
+                  <Label>{t("hide_user_label")}</Label>
+                  <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
                 </Checkbox>
               )}
             />
@@ -121,9 +124,9 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
         </Form>
       </ModalBody>
       <ModalFooter>
-        <ModalClose>Cancel</ModalClose>
+        <ModalClose>{tCommon("cancel")}</ModalClose>
         <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
-          Create
+          {t("submit")}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -137,37 +140,37 @@ type DeleteListModalProps = {
 };
 
 export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
+  const t = useTranslations("list.delete");
+  const tCommon = useTranslations("common.modal");
   const deleteList = useMutation(
     orpc.list.delete.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success("List deleted");
+        toast.success(t("success"));
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error("Error deleting list");
+        toast.error(t("error"));
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Delete list</ModalTitle>
-        <ModalDescription>
-          This will permanently delete the selected list. Continue?
-        </ModalDescription>
+        <ModalTitle>{t("title")}</ModalTitle>
+        <ModalDescription>{t("description")}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>Cancel</ModalClose>
+        <ModalClose>{tCommon("cancel")}</ModalClose>
         <Button
           intent="danger"
           type="submit"
           isPending={deleteList.isPending}
           onPress={() => deleteList.mutate({ slug })}
         >
-          Continue
+          {t("submit")}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -181,11 +184,13 @@ type EditListModalProps = {
 };
 
 export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
+  const t = useTranslations("list.edit");
+  const tCommon = useTranslations("common.modal");
   return (
     <SheetContent className="sm:max-w-sm" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>Edit list</SheetTitle>
-        <SheetDescription>Manage your list</SheetDescription>
+        <SheetTitle>{t("title")}</SheetTitle>
+        <SheetDescription>{t("description")}</SheetDescription>
       </SheetHeader>
       <SheetBody>
         <QueryErrorResetBoundary>
@@ -205,7 +210,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
         </QueryErrorResetBoundary>
       </SheetBody>
       <SheetFooter id="submit-form">
-        <SheetClose>Cancel</SheetClose>
+        <SheetClose>{tCommon("cancel")}</SheetClose>
       </SheetFooter>
     </SheetContent>
   );
@@ -213,6 +218,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
 
 function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
   const router = useRouter();
+  const t = useTranslations("list.edit");
   const { data } = useSuspenseQuery(
     orpc.list.find.queryOptions({
       input: slug,
@@ -223,11 +229,11 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
     orpc.list.edit.mutationOptions({
       onSuccess: () => {
         setOpen(false);
-        toast.success("List updated");
+        toast.success(t("success"));
         router.refresh();
       },
       onError: () => {
-        toast.error("Error editing list");
+        toast.error(t("error"));
       },
     }),
   );
@@ -259,7 +265,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="name"
           rules={{
-            required: "Name is required.",
+            required: t("name_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -274,8 +280,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>Name</Label>
-              <Input placeholder="My list" />
+              <Label>{t("name_label")}</Label>
+              <Input placeholder={t("name_placeholder")} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -286,8 +292,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>Hide User</Label>
-              <Description>Hide {SITE_NAME} account from this list</Description>
+              <Label>{t("hide_user_label")}</Label>
+              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}
         />
@@ -300,24 +306,24 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label="Objekt Columns"
-              placeholder="Objekt Columns"
+              aria-label={t("objekt_columns_label")}
+              placeholder={t("objekt_columns_label")}
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>Objekt Columns</Label>
-              <Description>
-                Number of columns to use on visit. Visitor are still allowed to change to any
-                columns they want. Pro tips: can also override using URL params (?column=).
-              </Description>
+              <Label>{t("objekt_columns_label")}</Label>
+              <Description>{t("objekt_columns_desc")}</Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
-                  { id: 0, name: "Not set" },
-                  ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
+                  { id: 0, name: t("objekt_columns_not_set") },
+                  ...validColumns.map((a) => ({
+                    id: a,
+                    name: t("objekt_columns_count", { count: String(a) }),
+                  })),
                 ].map((item) => (
                   <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
                     {item.name}
@@ -330,16 +336,18 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
         />
 
         <span className="text-muted-fg text-sm">
-          To delete this list, visit{" "}
-          <Link href="/list" className="underline">
-            Manage list
-          </Link>{" "}
-          page.
+          {t.rich("delete_note", {
+            link: (chunks) => (
+              <Link href="/list" className="underline">
+                {chunks}
+              </Link>
+            ),
+          })}
         </span>
 
         <Portal to="#submit-form">
           <Button isPending={editList.isPending} onPress={() => onSubmit()}>
-            Save
+            {t("submit")}
           </Button>
         </Portal>
       </div>

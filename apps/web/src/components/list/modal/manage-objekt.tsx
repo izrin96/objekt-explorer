@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
@@ -35,10 +36,12 @@ import { orpc } from "@/lib/orpc/client";
 import ErrorFallbackRender from "../../error-boundary";
 
 export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
+  const t = useTranslations("list.manage_objekt");
+  const tCommon = useTranslations("common.modal");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Add to list</ModalTitle>
+        <ModalTitle>{t("add_title")}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <QueryErrorResetBoundary>
@@ -58,7 +61,7 @@ export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
         </QueryErrorResetBoundary>
       </ModalBody>
       <ModalFooter id="submit-form">
-        <ModalClose>Cancel</ModalClose>
+        <ModalClose>{tCommon("cancel")}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
@@ -68,6 +71,7 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const t = useTranslations("list.manage_objekt");
 
   const { handleSubmit, control } = useForm({
     defaultValues: {
@@ -94,9 +98,9 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   if (data.length === 0)
     return (
       <Note intent="default">
-        You don&apos;t have any list yet.{" "}
+        {t("no_list_message")}{" "}
         <Link className="underline" href="/list">
-          Create one here
+          {t("create_one_here")}
         </Link>
         .
       </Note>
@@ -109,14 +113,14 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="slug"
           rules={{
-            required: "List is required.",
+            required: t("list_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
             fieldState: { invalid, error },
           }) => (
             <Select
-              placeholder="Select a list"
+              placeholder={t("list_placeholder")}
               name={name}
               value={value}
               onChange={onChange}
@@ -124,7 +128,7 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               isRequired
               isInvalid={invalid}
             >
-              <Label>My List</Label>
+              <Label>{t("list_label")}</Label>
               <SelectTrigger />
               <SelectContent>
                 {data.map((item) => (
@@ -142,14 +146,14 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           name="skipDups"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} onChange={onChange} onBlur={onBlur} isSelected={value}>
-              <Label>Prevent duplicate</Label>
-              <Description>Skip the same objekt when adding</Description>
+              <Label>{t("skip_dups_label")}</Label>
+              <Description>{t("skip_dups_desc")}</Description>
             </Checkbox>
           )}
         />
         <Portal to="#submit-form">
           <Button isPending={addToList.isPending} onPress={() => onSubmit()}>
-            Add
+            {t("add_button")}
           </Button>
         </Portal>
       </div>
@@ -162,16 +166,16 @@ export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
   const reset = useObjektSelect((a) => a.reset);
+  const t = useTranslations("list.manage_objekt");
+  const tCommon = useTranslations("common.modal");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Remove objekt</ModalTitle>
-        <ModalDescription>
-          This will permanently remove the selected objekt from the list. Continue?
-        </ModalDescription>
+        <ModalTitle>{t("remove_title")}</ModalTitle>
+        <ModalDescription>{t("remove_description")}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>Cancel</ModalClose>
+        <ModalClose>{tCommon("cancel")}</ModalClose>
 
         <Button
           intent="danger"
@@ -192,7 +196,7 @@ export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
             );
           }}
         >
-          Continue
+          {t("continue_button")}
         </Button>
       </ModalFooter>
     </ModalContent>

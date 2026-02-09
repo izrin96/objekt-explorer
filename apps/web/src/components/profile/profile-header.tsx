@@ -1,6 +1,7 @@
 "use client";
 
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -20,6 +21,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
+  const t = useTranslations("profile.header");
 
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
@@ -32,7 +34,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             className="text-fg cursor-pointer"
             onClick={async () => {
               await copy(user.address);
-              toast.success("Address copied");
+              toast.success(t("address_copied"));
             }}
           />
         </div>
@@ -47,7 +49,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         href={`https://apollo.cafe/@${user.nickname ?? user.address}`}
         target="_blank"
       >
-        View in Apollo
+        {t("view_in_apollo")}
       </Link>
 
       {isProfileAuthed && (
@@ -64,7 +66,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             onPress={() => setEditOpen(true)}
             className="w-full flex-none md:w-auto"
           >
-            Edit Profile
+            {t("edit_profile")}
           </Button>
         </>
       )}

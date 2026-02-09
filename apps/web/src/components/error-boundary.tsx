@@ -1,4 +1,7 @@
+"use client";
+
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 
 import { Button } from "./ui/button";
 
@@ -7,16 +10,18 @@ export default function ErrorFallbackRender({
 }: {
   resetErrorBoundary: () => void;
 }) {
-  return <ErrorRender onRetry={resetErrorBoundary} message="Error loading data" />;
+  const t = useTranslations("common.error");
+  return <ErrorRender onRetry={resetErrorBoundary} message={t("loading_data")} />;
 }
 
 export function ErrorRender({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const t = useTranslations("common.error");
   return (
     <div className="flex flex-col items-center justify-center gap-3">
       <HeartBreakIcon size={64} weight="light" />
       <p>{message}</p>
       <Button intent="outline" onPress={onRetry}>
-        Retry
+        {t("retry")}
       </Button>
     </div>
   );

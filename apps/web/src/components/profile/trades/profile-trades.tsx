@@ -6,6 +6,7 @@ import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/rea
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -57,6 +58,7 @@ function ProfileTradesRender() {
 }
 
 function ProfileTrades() {
+  const t = useTranslations("trades");
   const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
   const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
@@ -93,7 +95,7 @@ function ProfileTrades() {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <p>Trade History Private</p>
+        <p>{t("history_private")}</p>
       </div>
     );
   }
@@ -120,6 +122,7 @@ function ProfileTradesVirtualizer({
   rows: AggregatedTransfer[];
   address: string;
 }) {
+  const t = useTranslations("trades.table_headers");
   const parentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
@@ -131,11 +134,11 @@ function ProfileTradesVirtualizer({
   return (
     <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
       <div className="flex min-w-fit border-b">
-        <div className="min-w-[210px] flex-1 px-3 py-2.5">Date</div>
-        <div className="min-w-[240px] flex-1 px-3 py-2.5">Objekt</div>
-        <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">Serial</div>
-        <div className="min-w-[130px] flex-1 px-3 py-2.5">Action</div>
-        <div className="min-w-[200px] flex-1 px-3 py-2.5">User</div>
+        <div className="min-w-[210px] flex-1 px-3 py-2.5">{t("date")}</div>
+        <div className="min-w-[240px] flex-1 px-3 py-2.5">{t("objekt")}</div>
+        <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{t("serial")}</div>
+        <div className="min-w-[130px] flex-1 px-3 py-2.5">{t("action")}</div>
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">{t("user")}</div>
       </div>
 
       <div
@@ -180,17 +183,18 @@ const RowsRender = memo(function RowsRender({
 });
 
 function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }) {
+  const t = useTranslations("trades");
   const ctx = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const user = isReceiver ? (
     row.transfer.from === Addresses.NULL ? (
-      <span className="text-muted-fg font-mono">COSMO</span>
+      <span className="text-muted-fg font-mono">{t("cosmo")}</span>
     ) : (
       <UserLink address={row.transfer.from} nickname={row.nickname.from} />
     )
   ) : row.transfer.to === Addresses.SPIN ? (
-    <span className="text-muted-fg font-mono">COSMO Spin</span>
+    <span className="text-muted-fg font-mono">{t("cosmo_spin")}</span>
   ) : (
     <UserLink address={row.transfer.to} nickname={row.nickname.to} />
   );
@@ -210,7 +214,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
       <div className="min-w-[130px] flex-1 px-3 py-2.5">
         <Badge className="text-xs" intent={isReceiver ? "info" : "danger"}>
-          {isReceiver ? "Received From" : "Sent To"}
+          {isReceiver ? t("actions.received_from") : t("actions.sent_to")}
         </Badge>
       </div>
       <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>

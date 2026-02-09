@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import LiveStreamingRender from "@/components/live/live-render";
@@ -17,10 +18,15 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const live = await getLiveSession(params.id);
+  const [live, t] = await Promise.all([
+    getLiveSession(params.id),
+    getTranslations("page_titles"),
+  ]);
+
+  const title = t("live_detail", { title: live.title, channel: live.channel.name });
 
   return {
-    title: `${live.title} · ${live.channel.name} Live`,
+    title,
     openGraph: {
       description: `${live.title} · Watch ${live.channel.name} live`,
       images: live.thumbnailImage
@@ -33,7 +39,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${live.title} · ${live.channel.name} Live`,
+      title,
       description: `${live.title} · Watch ${live.channel.name} live`,
       images: live.thumbnailImage ? [live.thumbnailImage] : undefined,
     },

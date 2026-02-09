@@ -3,6 +3,7 @@
 import type { PopoverProps } from "react-aria-components";
 
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from "react-aria-components";
@@ -27,6 +28,7 @@ interface ResponsiveNavigationProps {
 }
 
 export function MobileNavigation({ className, popover }: ResponsiveNavigationProps) {
+  const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -60,7 +62,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
                     )}
                   />
                 </span>
-                <span className="sr-only">Toggle Menu</span>
+                <span className="sr-only">{t("toggle_menu")}</span>
               </span>
             </Button>
             <Popover
@@ -79,15 +81,15 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
             >
               <Menu className="-mt-2 outline-hidden">
                 <MenuSection>
-                  <NavHeading>Navigation</NavHeading>
+                  <NavHeading>{t("navigation")}</NavHeading>
                   <NavLink href="/">
                     <CubeIcon className="size-5" weight="fill" />
-                    <MenuLabel>Home</MenuLabel>
+                    <MenuLabel>{t("home")}</MenuLabel>
                   </NavLink>
                   {navMenuItems.map((menu) => (
                     <NavLink key={menu.href} href={menu.href}>
                       {menu.icon && <menu.icon className="size-5" weight="regular" />}
-                      <MenuLabel>{menu.label}</MenuLabel>
+                      <MenuLabel>{t(menu.translationKey)}</MenuLabel>
                     </NavLink>
                   ))}
                 </MenuSection>

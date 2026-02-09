@@ -1,6 +1,7 @@
 "use client";
 
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ObjektActionProps } from "@/components/filters/objekt/common";
@@ -13,6 +14,7 @@ import { useTarget } from "@/hooks/use-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function LockObjekt({ size }: ObjektActionProps) {
+  const t = useTranslations("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -34,12 +36,13 @@ export function LockObjekt({ size }: ObjektActionProps) {
       }
     >
       <LockSimpleIcon data-slot="icon" />
-      Lock
+      {t("lock")}
     </Button>
   );
 }
 
 export function UnlockObjekt({ size }: ObjektActionProps) {
+  const t = useTranslations("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -61,7 +64,7 @@ export function UnlockObjekt({ size }: ObjektActionProps) {
       }}
     >
       <LockSimpleOpenIcon data-slot="icon" />
-      Unlock
+      {t("unlock")}
     </Button>
   );
 }

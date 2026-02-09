@@ -4,6 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -60,6 +61,7 @@ function IndexRender() {
 }
 
 function IndexView() {
+  const t = useTranslations("common.count");
   const { data: session } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
@@ -140,7 +142,9 @@ function IndexView() {
           </div>
         </FilterContainer>
       </div>
-      <span className="font-semibold">{filtered.length.toLocaleString()} total</span>
+      <span className="font-semibold">
+        {t("total", { count: filtered.length.toLocaleString() })}
+      </span>
 
       <div className="[&>*>*]:will-change-transform">
         <WindowVirtualizer>{virtualList}</WindowVirtualizer>

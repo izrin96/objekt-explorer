@@ -107,7 +107,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
               <ArchiveXIcon strokeWidth={1} size={64} />
-              <p>Not owned</p>
+              <p>{t("not_owned")}</p>
             </div>
           )}
         </TabPanel>
@@ -200,6 +200,7 @@ function OwnedListPanel({
   objekts: OwnedObjekt[];
   setSerial: (serial: number) => void;
 }) {
+  const t = useTranslations("objekt");
   const [currentPage, setCurrentPage] = useState(1);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
 
@@ -269,13 +270,13 @@ function OwnedListPanel({
           >
             <TableHeader>
               <TableColumn id="serial" allowsSorting isRowHeader maxWidth={110}>
-                Serial
+                {t("serial")}
               </TableColumn>
-              <TableColumn>Token ID</TableColumn>
+              <TableColumn>{t("token_id")}</TableColumn>
               <TableColumn id="receivedAt" allowsSorting minWidth={200}>
-                Received
+                {t("received")}
               </TableColumn>
-              <TableColumn>Transferable</TableColumn>
+              <TableColumn>{t("transferable")}</TableColumn>
             </TableHeader>
             <TableBody>
               {currentItems.map((item) => (
@@ -300,7 +301,7 @@ function OwnedListPanel({
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
                   <TableCell>
                     <Badge intent={item.transferable ? "info" : "danger"}>
-                      {item.transferable ? "Yes" : "No"}
+                      {item.transferable ? t("yes") : t("no")}
                     </Badge>
                   </TableCell>
                 </TableRow>

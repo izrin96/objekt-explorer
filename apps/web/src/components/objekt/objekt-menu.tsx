@@ -14,6 +14,7 @@ import {
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
@@ -43,6 +44,7 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
   const { data } = useQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
+  const t = useTranslations("objekt_menu");
 
   const handleAction = (slug: string) => {
     addToList.mutate({
@@ -55,7 +57,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
     <MenuSubMenu>
       <MenuItem>
         <PlusIcon data-slot="icon" />
-        <MenuLabel>Add to list</MenuLabel>
+        <MenuLabel>{t("add_to_list")}</MenuLabel>
       </MenuItem>
       <MenuContent placement="bottom">
         {!data && (
@@ -68,7 +70,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
         {data && data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
-              <span>No list found</span>
+              <span>{t("no_list_found")}</span>
             </MenuLabel>
           </MenuItem>
         )}
@@ -85,6 +87,7 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
 export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
   const target = useTarget((a) => a.list)!;
   const removeObjektsFromList = useRemoveFromList();
+  const t = useTranslations("objekt_menu");
 
   return (
     <MenuItem
@@ -97,7 +100,7 @@ export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
       intent="danger"
     >
       <TrashSimpleIcon data-slot="icon" />
-      <MenuLabel>Remove from list</MenuLabel>
+      <MenuLabel>{t("remove_from_list")}</MenuLabel>
     </MenuItem>
   );
 }
@@ -112,6 +115,7 @@ export function TogglePinMenuItem({
   const profile = useTarget((a) => a.profile)!;
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
+  const t = useTranslations("objekt_menu");
   return (
     <MenuItem
       onAction={() => {
@@ -129,7 +133,7 @@ export function TogglePinMenuItem({
       }}
     >
       {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
-      <MenuLabel>{isPin ? "Unpin" : "Pin"}</MenuLabel>
+      <MenuLabel>{isPin ? t("unpin") : t("pin")}</MenuLabel>
     </MenuItem>
   );
 }
@@ -144,6 +148,7 @@ export function ToggleLockMenuItem({
   const profile = useTarget((a) => a.profile)!;
   const lock = useBatchLock();
   const unlock = useBatchUnlock();
+  const t = useTranslations("objekt_menu");
   return (
     <MenuItem
       onAction={() => {
@@ -161,7 +166,7 @@ export function ToggleLockMenuItem({
       }}
     >
       {isLocked ? <LockSimpleOpenIcon data-slot="icon" /> : <LockSimpleIcon data-slot="icon" />}
-      <MenuLabel>{isLocked ? "Unlock" : "Lock"}</MenuLabel>
+      <MenuLabel>{isLocked ? t("unlock") : t("lock")}</MenuLabel>
     </MenuItem>
   );
 }
@@ -169,10 +174,11 @@ export function ToggleLockMenuItem({
 export function SelectMenuItem({ objekt }: { objekt: ValidObjekt }) {
   const objektSelect = useObjektSelect((a) => a.select);
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
+  const t = useTranslations("objekt_menu");
   return (
     <MenuItem onAction={() => objektSelect(objekt)}>
       <CheckIcon data-slot="icon" />
-      <MenuLabel>{isSelected ? "Unselect" : "Select"}</MenuLabel>
+      <MenuLabel>{isSelected ? t("unselect") : t("select")}</MenuLabel>
     </MenuItem>
   );
 }

@@ -2,6 +2,7 @@
 
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -42,24 +43,25 @@ function MyList() {
   const [addOpen, setAddOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
+  const t = useTranslations("list");
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-xl font-semibold">My List</div>
+      <div className="text-xl font-semibold">{t("title")}</div>
 
       <Tabs aria-label="Navbar" className="w-full">
         <TabList className="w-fit">
-          <Tab id="a">Normal List</Tab>
-          <Tab id="b">Profile List</Tab>
+          <Tab id="a">{t("tabs.normal")}</Tab>
+          <Tab id="b">{t("tabs.profile")}</Tab>
         </TabList>
         <TabPanel id="a" className="flex flex-col gap-4">
           <CreateListModal open={addOpen} setOpen={setAddOpen} />
           <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
           <div className="flex w-full gap-2">
-            <Button onPress={() => setAddOpen(true)}>Create list</Button>
+            <Button onPress={() => setAddOpen(true)}>{t("create_button")}</Button>
             <Button intent="outline" onPress={() => setGenOpen(true)}>
-              Generate Discord format
+              {t("generate_discord_button")}
             </Button>
           </div>
 
@@ -70,7 +72,7 @@ function MyList() {
           </div>
         </TabPanel>
         <TabPanel id="b">
-          <Note>This feature is not yet available</Note>
+          <Note>{t("feature_not_available")}</Note>
         </TabPanel>
       </Tabs>
     </div>
@@ -87,6 +89,7 @@ type ListCardProps = {
 function ListCard({ list }: ListCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const t = useTranslations("list.card");
   return (
     <>
       <EditListModal slug={list.slug} open={editOpen} setOpen={setEditOpen} />
@@ -102,10 +105,10 @@ function ListCard({ list }: ListCardProps) {
                 <EllipsisVerticalIcon className="size-5" />
               </Button>
               <MenuContent className="sm:min-w-56">
-                <MenuItem href={`/list/${list.slug}`}>Open</MenuItem>
-                <MenuItem onAction={() => setEditOpen(true)}>Edit</MenuItem>
+                <MenuItem href={`/list/${list.slug}`}>{t("open")}</MenuItem>
+                <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
                 <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
-                  Delete
+                  {t("delete")}
                 </MenuItem>
               </MenuContent>
             </Menu>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { getTranslations } from "next-intl/server";
+
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
@@ -17,9 +19,15 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const data = await getList(params.slug);
+  const [data, t] = await Promise.all([
+    getList(params.slug),
+    getTranslations("page_titles"),
+  ]);
+
   return {
-    title: `${data.name}${data.user ? ` · ${data.user.name}'s` : ""} List`,
+    title: data.user
+      ? t("list_detail_with_user", { name: data.name, user: data.user.name })
+      : t("list_detail", { name: data.name }),
   };
 }
 

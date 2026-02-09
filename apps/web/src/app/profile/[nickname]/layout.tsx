@@ -2,6 +2,7 @@ import type { PropsWithChildren } from "react";
 
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 import { fetchUserProfiles } from "@repo/lib/server/user";
+import { getTranslations } from "next-intl/server";
 
 import DynamicContainer from "@/components/dynamic-container";
 import { ProfileProvider } from "@/components/profile-provider";
@@ -27,13 +28,15 @@ export default async function UserCollectionLayout(props: Props) {
 
   const isOwned = profiles?.some((a) => a.address === targetProfile.address) ?? false;
 
-  if (targetProfile.privateProfile && !isOwned)
+  if (targetProfile.privateProfile && !isOwned) {
+    const t = await getTranslations("profile");
     return (
       <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
         <LockIcon size={72} weight="thin" />
-        Profile Private
+        {t("profile_private")}
       </div>
     );
+  }
 
   return (
     <ProfileProvider profiles={profiles} targetProfile={targetProfile}>

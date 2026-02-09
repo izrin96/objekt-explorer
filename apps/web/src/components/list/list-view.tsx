@@ -3,6 +3,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
@@ -62,6 +63,7 @@ export default function ListRender() {
 }
 
 function ListView() {
+  const t = useTranslations("common.count");
   const { data: session } = useSession();
   const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -149,8 +151,10 @@ function ListView() {
         </FilterContainer>
       </div>
       <span className="font-semibold">
-        {filtered.length.toLocaleString()} total
-        {filters.grouped ? ` (${grouped.length.toLocaleString()} types)` : ""}
+        {t("total", { count: filtered.length.toLocaleString() })}
+        {filters.grouped
+          ? ` (${t("types", { count: grouped.length.toLocaleString() })})`
+          : ""}
       </span>
 
       <div className="[&>*>*]:will-change-transform">

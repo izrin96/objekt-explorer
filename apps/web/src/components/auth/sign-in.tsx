@@ -7,6 +7,7 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Form } from "react-aria-components";
@@ -40,6 +41,7 @@ function SignInForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
+  const t = useTranslations("auth.sign_in");
 
   const { handleSubmit, control } = useForm({
     defaultValues: {
@@ -58,14 +60,14 @@ function SignInForm({
       return result.data;
     },
     onSuccess: async (_, _v, _o, { client }) => {
-      toast.success("Signed in successfully");
+      toast.success(t("success"));
       void client.refetchQueries({
         queryKey: ["session"],
       });
       router.push("/");
     },
     onError: (error) => {
-      toast.error(`Sign in error. ${error.message}`);
+      toast.error(t("error", { message: error.message }));
     },
   });
 
@@ -76,17 +78,15 @@ function SignInForm({
   return (
     <>
       <div className="flex flex-col">
-        <h2 className="text-lg/8 font-semibold">Sign In</h2>
-        <span className="text-muted-fg text-sm">
-          Please enter your credentials to access your account.
-        </span>
+        <h2 className="text-lg/8 font-semibold">{t("title")}</h2>
+        <span className="text-muted-fg text-sm">{t("description")}</span>
       </div>
       <Form onSubmit={onSubmit} className="flex flex-col gap-4">
         <Controller
           control={control}
           name="email"
           rules={{
-            required: "Email is required.",
+            required: t("email_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -101,8 +101,8 @@ function SignInForm({
               isRequired
               isInvalid={invalid}
             >
-              <Label>Email</Label>
-              <Input placeholder="your@email.com" />
+              <Label>{t("email_label")}</Label>
+              <Input placeholder={t("email_placeholder")} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -111,7 +111,7 @@ function SignInForm({
           control={control}
           name="password"
           rules={{
-            required: "Password is required.",
+            required: t("password_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -126,25 +126,25 @@ function SignInForm({
               isRequired
               isInvalid={invalid}
             >
-              <Label>Password</Label>
-              <Input placeholder="•••••••" />
+              <Label>{t("password_label")}</Label>
+              <Input placeholder={t("password_placeholder")} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
         <Button type="submit" intent="primary" isDisabled={mutation.isPending}>
-          Sign in with Email
+          {t("submit")}
         </Button>
       </Form>
 
       <div className="flex flex-col gap-2">
         <Button intent="outline" className="gap-2" onPress={() => setState("forgot-password")}>
           <EnvelopeSimpleIcon size={18} weight="light" />
-          Forgot password
+          {t("forgot_password")}
         </Button>
         <Button intent="outline" className="gap-2" onPress={() => setState("sign-up")}>
           <UserPlusIcon size={18} weight="light" />
-          Create new account
+          {t("create_account")}
         </Button>
       </div>
 
@@ -152,7 +152,7 @@ function SignInForm({
         <div className="absolute inset-0 flex items-center">
           <div className="bg-border h-px w-full shrink-0"></div>
         </div>
-        <span className="bg-bg relative px-3">Or continue with</span>
+        <span className="bg-bg relative px-3">{t("or_continue")}</span>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -165,6 +165,7 @@ function SignInForm({
 
 function SignInWithDiscord() {
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations("auth.sign_in");
   return (
     <Button
       intent="outline"
@@ -179,13 +180,14 @@ function SignInWithDiscord() {
       }}
     >
       <DiscordLogoIcon size={18} weight="light" />
-      Sign in with Discord
+      {t("sign_in_discord")}
     </Button>
   );
 }
 
 function SignInWithTwitter() {
   const [isPending, startTransition] = useTransition();
+  const t = useTranslations("auth.sign_in");
   return (
     <Button
       intent="outline"
@@ -200,7 +202,7 @@ function SignInWithTwitter() {
       }}
     >
       <XLogoIcon size={18} weight="light" />
-      Sign in with Twitter (X)
+      {t("sign_in_twitter")}
     </Button>
   );
 }
@@ -211,6 +213,7 @@ function SignUpForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
+  const t = useTranslations("auth.sign_up");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       name: "",
@@ -228,14 +231,14 @@ function SignUpForm({
       return result.data;
     },
     onSuccess: async (_, _v, _o, { client }) => {
-      toast.success("Account created successfully.");
+      toast.success(t("success"));
       void client.refetchQueries({
         queryKey: ["session"],
       });
       router.push("/");
     },
     onError: (error) => {
-      toast.error(`Account creation error. ${error.message}`);
+      toast.error(t("error", { message: error.message }));
     },
   });
 
@@ -250,7 +253,7 @@ function SignUpForm({
           control={control}
           name="name"
           rules={{
-            required: "Name is required.",
+            required: t("name_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -265,8 +268,8 @@ function SignUpForm({
               isRequired
               isInvalid={invalid}
             >
-              <Label>Name</Label>
-              <Input placeholder="Your name" />
+              <Label>{t("name_label")}</Label>
+              <Input placeholder={t("name_placeholder")} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -275,7 +278,7 @@ function SignUpForm({
           control={control}
           name="email"
           rules={{
-            required: "Email is required.",
+            required: t("email_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -290,8 +293,8 @@ function SignUpForm({
               isRequired
               isInvalid={invalid}
             >
-              <Label>Email</Label>
-              <Input placeholder="your@email.com" />
+              <Label>{t("email_label")}</Label>
+              <Input placeholder={t("email_placeholder")} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -300,7 +303,7 @@ function SignUpForm({
           control={control}
           name="password"
           rules={{
-            required: "Password is required.",
+            required: t("password_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -315,17 +318,17 @@ function SignUpForm({
               isRequired
               isInvalid={invalid}
             >
-              <Label>Password</Label>
+              <Label>{t("password_label")}</Label>
               <Input />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
         <Button type="submit" isDisabled={mutation.isPending}>
-          Create Account
+          {t("submit")}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
-          Back to Sign In
+          {t("back")}
         </Button>
       </div>
     </Form>
@@ -337,6 +340,7 @@ function ForgotPassword({
 }: {
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
+  const t = useTranslations("auth.forgot_password");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email: "",
@@ -355,11 +359,11 @@ function ForgotPassword({
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Reset password email sent, check your email");
+      toast.success(t("success"));
       setState("sign-in");
     },
     onError: (error) => {
-      toast.error(`Reset password email request error. ${error.message}`);
+      toast.error(t("error", { message: error.message }));
     },
   });
 
@@ -374,7 +378,7 @@ function ForgotPassword({
           control={control}
           name="email"
           rules={{
-            required: "Email is required.",
+            required: t("email_required"),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -389,17 +393,17 @@ function ForgotPassword({
               isRequired
               isInvalid={invalid}
             >
-              <Label>Email</Label>
-              <Input placeholder="your@email.com" />
+              <Label>{t("email_label")}</Label>
+              <Input placeholder={t("email_placeholder")} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
         <Button type="submit" isDisabled={mutation.isPending}>
-          Send reset password email
+          {t("submit")}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
-          Back to Sign In
+          {t("back")}
         </Button>
       </div>
     </Form>

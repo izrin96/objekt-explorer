@@ -1,4 +1,5 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 
 import { parseNickname } from "@/lib/utils";
 
@@ -12,6 +13,7 @@ export default function UserLink({
   address?: string | null;
   nickname?: string | null;
 }) {
+  const t = useTranslations("user_link");
   return (
     <div className="inline-flex gap-2">
       {address ? (
@@ -19,15 +21,15 @@ export default function UserLink({
           <Link href={`/@${nickname ?? address}`}>{parseNickname(address, nickname)}</Link>
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
-              <TooltipTrigger aria-label="Preview">
+              <TooltipTrigger aria-label={t("preview")}>
                 <InfoIcon size={16} />
               </TooltipTrigger>
-              <TooltipContent inverse>Nickname not available.</TooltipContent>
+              <TooltipContent inverse>{t("nickname_not_available")}</TooltipContent>
             </Tooltip>
           )}
         </>
       ) : (
-        <span className="text-muted-fg font-mono">(deleted)</span>
+        <span className="text-muted-fg font-mono">{t("deleted")}</span>
       )}
     </div>
   );

@@ -5,7 +5,7 @@ import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user"
 import type { Selection } from "react-aria-components";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { ofetch } from "ofetch";
 import { useState } from "react";
@@ -35,7 +35,6 @@ type CodeData = {
 
 export default function LinkRender() {
   const queryClient = useQueryClient();
-  const locale = useLocale();
   const [step, setStep] = useState(0);
   const [searchData, setSearchData] = useState<SearchData | null>(null);
   const [artistId, setArtistId] = useState<ValidArtist | null>(null);
@@ -43,7 +42,7 @@ export default function LinkRender() {
 
   return (
     <div className="flex flex-col items-center justify-center gap-5">
-      {step === 0 && <IntroStep locale={locale} onContinue={() => setStep(1)} />}
+      {step === 0 && <IntroStep onContinue={() => setStep(1)} />}
       {step === 1 && (
         <NicknameStep
           onSuccess={(data) => {
@@ -90,13 +89,11 @@ export default function LinkRender() {
   );
 }
 
-function IntroStep({ locale, onContinue }: { locale: string; onContinue: () => void }) {
+function IntroStep({ onContinue }: { onContinue: () => void }) {
+  const t = useTranslations("link");
   return (
     <div className="flex max-w-xl flex-col items-center justify-center gap-4">
-      <h2 className="text-lg font-semibold">
-        {locale === "en" && "Link your Cosmo profile"}
-        {locale === "ko" && "Cosmo 프로필을 연결하세요"}
-      </h2>
+      <h2 className="text-lg font-semibold">{t("process.intro_title")}</h2>
       <Image
         src="/assets/icon-smartphone.png"
         alt="Smartphone"
@@ -104,19 +101,11 @@ function IntroStep({ locale, onContinue }: { locale: string; onContinue: () => v
         height={220}
         className="fade-in zoom-in animate-in duration-200"
       />
-      {locale === "en" && (
-        <div className="flex flex-col gap-2 text-center text-sm">
-          You need to download the Cosmo app and sign in with the Cosmo ID you want to link before
-          continue.
-        </div>
-      )}
-      {locale === "ko" && (
-        <div className="flex flex-col gap-2">
-          <p>계속 진행하기 전에 Cosmo 앱을 다운로드하고 연결하려는 Cosmo ID로 로그인해야 합니다.</p>
-        </div>
-      )}
+      <div className="flex flex-col gap-2 text-center text-sm">
+        <p>{t("process.intro_description")}</p>
+      </div>
       <Button size="md" intent="outline" onPress={onContinue}>
-        {locale === "ko" ? "계속하기" : "Continue"}
+        {t("continue")}
       </Button>
     </div>
   );
@@ -124,7 +113,6 @@ function IntroStep({ locale, onContinue }: { locale: string; onContinue: () => v
 
 function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) {
   const t = useTranslations("link");
-  const locale = useLocale();
   const [inputValue, setInputValue] = useState("");
   const [debouncedQuery] = useDebounceValue(inputValue, 350);
 
@@ -174,10 +162,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
         height={220}
         className="fade-in zoom-in animate-in duration-200"
       />
-      <span className="text-center">
-        {locale === "en" && "Search your Cosmo ID to get started."}
-        {locale === "ko" && "시작하려면 Cosmo ID를 검색하세요."}
-      </span>
+      <span className="text-center">{t("process.nickname_step_prompt")}</span>
       <SearchField
         value={inputValue}
         onChange={setInputValue}
@@ -221,7 +206,6 @@ function ArtistStep({
   onBack: () => void;
 }) {
   const t = useTranslations("link");
-  const locale = useLocale();
   const { artists } = useCosmoArtist();
 
   const generateMutation = useMutation(
@@ -258,21 +242,9 @@ function ArtistStep({
         className="fade-in zoom-in animate-in duration-200"
       />
       <span>
-        {locale === "en" && (
-          <>
-            Cosmo ID: <span className="font-bold">{searchData.nickname}</span>
-          </>
-        )}
-        {locale === "ko" && (
-          <>
-            Cosmo ID: <span className="font-bold">{searchData.nickname}</span>
-          </>
-        )}
+        {t("process.artist_step_cosmo_id")} <span className="font-bold">{searchData.nickname}</span>
       </span>
-      <p className="text-center text-sm">
-        {locale === "en" && "Select the artist profile to use for verification."}
-        {locale === "ko" && "인증에 사용할 아티스트 프로필을 선택하세요."}
-      </p>
+      <p className="text-center text-sm">{t("process.artist_step_select")}</p>
       <div className="flex gap-2">
         {artists.map((artist) => (
           <Button
@@ -309,7 +281,6 @@ function VerifyStep({
   onStartOver: () => void;
 }) {
   const t = useTranslations("link");
-  const locale = useLocale();
   const { getArtist } = useCosmoArtist();
   const artistTitle = getArtist(artistId)?.title ?? artistId;
 
@@ -393,18 +364,11 @@ function VerifyStep({
         className="fade-in zoom-in animate-in duration-200"
       />
       <span>
-        {locale === "en" && (
-          <>
-            Verifying <span className="font-bold">{searchData.nickname}</span> on{" "}
-            <span className="font-bold">{artistTitle}</span> Cosmo profile
-          </>
-        )}
-        {locale === "ko" && (
-          <>
-            <span className="font-bold">{artistTitle}</span> Cosmo 프로필에서{" "}
-            <span className="font-bold">{searchData.nickname}</span> 인증 중
-          </>
-        )}
+        {t.rich("process.verify_step_verifying", {
+          nickname: searchData.nickname,
+          artist: artistTitle,
+          bold: (chunks) => <span className="font-bold">{chunks}</span>,
+        })}
       </span>
 
       <div className="bg-muted rounded-lg p-4 text-center font-mono text-2xl tracking-widest select-all">
@@ -459,6 +423,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
 }
 
 function Countdown({ deadline, onExpire }: { deadline: number; onExpire: () => void }) {
+  const t = useTranslations("link.process");
   const [remaining, setRemaining] = useState(() => Math.max(deadline - Date.now(), 0));
 
   useInterval(
@@ -472,5 +437,5 @@ function Countdown({ deadline, onExpire }: { deadline: number; onExpire: () => v
     remaining > 0 ? 1000 : null,
   );
 
-  return <span className="text-sm">Remaining {msToCountdown(remaining)}</span>;
+  return <span className="text-sm">{t("countdown_remaining", { countdown: msToCountdown(remaining) })}</span>;
 }

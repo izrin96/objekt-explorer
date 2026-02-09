@@ -30,11 +30,11 @@ export function SelectMode({ children, objekts }: Props) {
       </Toggle>
       <Button intent="outline" onPress={() => batchSelect(objekts)}>
         <ChecksIcon weight="regular" data-slot="icon" />
-        Select all
+        {t("select_all")}
       </Button>
       <Button intent="outline" onPress={reset}>
         <BroomIcon weight="regular" data-slot="icon" />
-        Clear select
+        {t("clear_select")}
       </Button>
       {children}
     </div>
@@ -42,6 +42,7 @@ export function SelectMode({ children, objekts }: Props) {
 }
 
 export function FloatingSelectMode({ children, objekts }: Props) {
+  const t = useTranslations("filter");
   const mode = useObjektSelect((a) => a.mode);
   const batchSelect = useObjektSelect((a) => a.batchSelect);
   const reset = useObjektSelect((a) => a.reset);
@@ -73,18 +74,18 @@ export function FloatingSelectMode({ children, objekts }: Props) {
               )}
             </div>
 
-            <span className="text-sm">{selected.length.toLocaleString()} selected</span>
+            <span className="text-sm">{t("selected_count", { count: selected.length.toLocaleString() })}</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button size="sm" intent="outline" onPress={() => batchSelect(objekts)}>
               <ChecksIcon weight="regular" data-slot="icon" />
-              Select all
+              {t("select_all")}
             </Button>
 
             {children}
 
             <Button size="sm" intent="plain" onPress={reset}>
-              Clear
+              {t("clear")}
             </Button>
           </div>
         </motion.div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
@@ -41,10 +42,11 @@ type Props = {
 };
 
 export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
+  const t = useTranslations("generate_discord");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Generate Discord Format</ModalTitle>
+        <ModalTitle>{t("title")}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <QueryErrorResetBoundary>
@@ -72,6 +74,7 @@ function Content() {
   const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
+  const t = useTranslations("generate_discord");
 
   const { handleSubmit, control, reset } = useForm({
     defaultValues: {
@@ -89,7 +92,7 @@ function Content() {
   const generateDiscordFormat = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
       onError: () => {
-        toast.error("Error generating Discord format");
+        toast.error(t("error"));
       },
     }),
   );
@@ -101,7 +104,7 @@ function Content() {
 
   const onSubmit = handleSubmit((formData) => {
     if (!formData.haveSlug && !formData.wantSlug) {
-      toast.error("Please select at least one list");
+      toast.error(t("select_at_least_one"));
       return;
     }
 
@@ -170,14 +173,14 @@ function Content() {
         name="haveSlug"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder="Select a list (optional)"
+            placeholder={t("list_placeholder")}
             name={name}
             value={value}
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
           >
-            <Label>Have list</Label>
+            <Label>{t("have_list_label")}</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -195,14 +198,14 @@ function Content() {
         name="wantSlug"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder="Select a list (optional)"
+            placeholder={t("list_placeholder")}
             name={name}
             value={value}
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
           >
-            <Label>Want list</Label>
+            <Label>{t("want_list_label")}</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -220,7 +223,7 @@ function Content() {
         name="showCount"
         render={({ field: { name, value, onChange, onBlur } }) => (
           <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-            <Label>Show count</Label>
+            <Label>{t("show_count")}</Label>
           </Checkbox>
         )}
       />
@@ -229,7 +232,7 @@ function Content() {
         name="includeLink"
         render={({ field: { name, value, onChange, onBlur } }) => (
           <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-            <Label>Include link</Label>
+            <Label>{t("include_link")}</Label>
           </Checkbox>
         )}
       />
@@ -238,7 +241,7 @@ function Content() {
         name="lowercase"
         render={({ field: { name, value, onChange, onBlur } }) => (
           <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-            <Label>Lower case</Label>
+            <Label>{t("lower_case")}</Label>
           </Checkbox>
         )}
       />
@@ -253,7 +256,7 @@ function Content() {
             onBlur={onBlur}
             isInvalid={invalid}
           >
-            <Label>Bulleted list</Label>
+            <Label>{t("bulleted_list")}</Label>
           </Checkbox>
         )}
       />
@@ -266,19 +269,19 @@ function Content() {
             value={value}
             onChange={onChange}
             onBlur={onBlur}
-            placeholder="Select grouping mode"
+            placeholder={t("group_by_placeholder")}
           >
-            <Label>Group by</Label>
+            <Label>{t("group_by_label")}</Label>
             <SelectTrigger />
             <SelectContent>
               <SelectItem id="none" textValue="none">
-                None (member → collection)
+                {t("group_by_none")}
               </SelectItem>
               <SelectItem id="season" textValue="season">
-                Season (member → season → collection)
+                {t("group_by_season")}
               </SelectItem>
               <SelectItem id="season-first" textValue="season-first">
-                Season first (season → member → collection)
+                {t("group_by_season_first")}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -293,23 +296,23 @@ function Content() {
             value={value}
             onChange={onChange}
             onBlur={onBlur}
-            placeholder="Select style"
+            placeholder={t("style_placeholder")}
           >
-            <Label>Style</Label>
+            <Label>{t("style_label")}</Label>
             <SelectTrigger />
             <SelectContent>
               <SelectItem id="default" textValue="default">
-                Default
+                {t("style_default")}
               </SelectItem>
               <SelectItem id="compact" textValue="compact">
-                Compact
+                {t("style_compact")}
               </SelectItem>
             </SelectContent>
           </Select>
         )}
       />
       <TextField>
-        <Label>Formatted discord text</Label>
+        <Label>{t("formatted_text_label")}</Label>
         <Textarea
           value={formatText}
           onChange={(e) => setFormatText(e.target.value)}
@@ -323,10 +326,10 @@ function Content() {
       <Portal to="#submit-form">
         <div className="flex gap-2">
           <Button intent="outline" onPress={handleReset}>
-            Reset
+            {t("reset_button")}
           </Button>
           <Button isPending={generateDiscordFormat.isPending} onPress={() => onSubmit()}>
-            Generate
+            {t("generate_button")}
           </Button>
         </div>
       </Portal>

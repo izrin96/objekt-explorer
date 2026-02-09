@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
@@ -14,6 +15,7 @@ import { TextField } from "../ui/text-field";
 
 export default function ResetPassword({ token }: { token: string }) {
   const router = useRouter();
+  const t = useTranslations("auth.reset_password");
 
   const { handleSubmit, control } = useForm({
     defaultValues: {
@@ -31,11 +33,11 @@ export default function ResetPassword({ token }: { token: string }) {
       return result.data;
     },
     onSuccess: () => {
-      toast.success("Password reset successfully");
+      toast.success(t("success"));
       router.push("/login");
     },
     onError: ({ message }) => {
-      toast.error(`Password reset error. ${message}`);
+      toast.error(t("error", { message }));
     },
   });
 
@@ -48,14 +50,14 @@ export default function ResetPassword({ token }: { token: string }) {
   return (
     <div className="flex flex-col pt-2 pb-36">
       <div className="flex w-full max-w-xl flex-col gap-4 self-center">
-        <div className="text-xl font-semibold">Reset Password</div>
+        <div className="text-xl font-semibold">{t("title")}</div>
         <Form onSubmit={onSubmit}>
           <div className="flex flex-col gap-4">
             <Controller
               control={control}
               name="password"
               rules={{
-                required: "Password is required.",
+                required: t("password_required"),
               }}
               render={({
                 field: { name, value, onChange, onBlur },
@@ -70,13 +72,13 @@ export default function ResetPassword({ token }: { token: string }) {
                   onBlur={onBlur}
                   isInvalid={invalid}
                 >
-                  <Label>Password</Label>
+                  <Label>{t("password_label")}</Label>
                   <FieldError>{error?.message}</FieldError>
                 </TextField>
               )}
             />
             <Button type="submit" isDisabled={mutation.isPending}>
-              Reset Password
+              {t("submit")}
             </Button>
           </div>
         </Form>

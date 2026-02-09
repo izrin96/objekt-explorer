@@ -1,5 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
+import { useTranslations } from "next-intl";
 import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
@@ -34,6 +35,7 @@ export default function ObjektView({
   hideLabel = false,
   children,
 }: Props) {
+  const t = useTranslations("objekt");
   const [ref, { width }] = useElementSize();
   const [loaded, setLoaded] = useState(false);
   const [objekt] = objekts;
@@ -94,7 +96,7 @@ export default function ObjektView({
           </Badge>
           {unobtainable && (
             <Badge className="text-xs font-semibold" intent="danger">
-              Unobtainable
+              {t("unobtainable")}
             </Badge>
           )}
         </div>

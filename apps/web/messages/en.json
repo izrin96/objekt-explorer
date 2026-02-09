@@ -70,6 +70,29 @@
       "mint": "Mint",
       "transfer": "Transfer",
       "spin": "Spin"
+    },
+    "select_all": "Select all",
+    "clear_select": "Clear select",
+    "selected_count": "{count} selected",
+    "wide": "Wide",
+    "compact": "Compact",
+    "show_label": "Show label",
+    "hide_label": "Hide label",
+    "show_count": "Show Count",
+    "search_help": {
+      "intro": "This quick search supports:",
+      "or_operation": "OR query operation by comma",
+      "and_operation": "AND query operation by space",
+      "not_operation": "NOT query operation by starting with an exclamation mark (example: !seoyeon, !d201-202)",
+      "artist_names": "Artist names (example: triples)",
+      "member_short_names": "Member short names (example: naky, yy)",
+      "class": "Class (example: special, sco)",
+      "season": "Season (example: atom)",
+      "collection_numbers": "Collection numbers (example: d207)",
+      "collection_ranges": "Collection number ranges (example: 301z-302z)",
+      "serial_numbers": "Serial numbers (example: #1)",
+      "serial_ranges": "Serial number ranges (example: #1-20)",
+      "example": "Example: yy c201-204 !c202 #1-200, jw 201z, yb sco divine"
     }
   },
   "objekt": {
@@ -97,10 +120,22 @@
     "token_id": "Token ID",
     "transferable": "Transferable",
     "unobtainable": "Unobtainable",
-    "date": "Date"
+    "date": "Date",
+    "not_owned": "Not owned",
+    "serial": "Serial",
+    "received": "Received",
+    "yes": "Yes",
+    "no": "No",
+    "error_fetching_metadata": "Error fetching metadata",
+    "objekt_private": "Objekt Private",
+    "not_found_objekt": "Not found",
+    "token_id_copied": "Token ID copied"
   },
   "nav": {
     "activity": "Activity",
+    "home": "Home",
+    "navigation": "Navigation",
+    "toggle_menu": "Toggle Menu",
     "my_list": "My List",
     "my_cosmo_link": "My Cosmo Link",
     "no_cosmo_found": "No Cosmo found",
@@ -108,28 +143,169 @@
     "account": "Account",
     "sign_out": "Sign out",
     "sign_in": "Sign in",
+    "sign_out_success": "Sign out successful",
+    "open_menu": "Open Menu",
+    "no_list_found": "No list found",
+    "create_list": "Create list",
+    "discord_format": "Discord format",
+    "manage_list": "Manage list",
     "search_user": {
       "label": "Search user",
       "placeholder": "Search user...",
       "result_label": "Results",
-      "recent_label": "Recents"
-    }
-  },
-  "edit_profile": {
-    "title": "Edit Profile",
-    "desc": "Currently editing {nickname} Cosmo profile",
-    "hide_user": {
-      "title": "Hide User",
-      "desc": "Hide Objekt Tracker account from Cosmo profile"
+      "recent_label": "Recents",
+      "clear_history": "Clear history"
     }
   },
   "auth": {
+    "sign_in": {
+      "title": "Sign In",
+      "description": "Please enter your credentials to access your account.",
+      "email_label": "Email",
+      "email_placeholder": "your@email.com",
+      "email_required": "Email is required.",
+      "password_label": "Password",
+      "password_placeholder": "•••••••",
+      "password_required": "Password is required.",
+      "submit": "Sign in with Email",
+      "forgot_password": "Forgot password",
+      "create_account": "Create new account",
+      "or_continue": "Or continue with",
+      "sign_in_discord": "Sign in with Discord",
+      "sign_in_twitter": "Sign in with Twitter (X)",
+      "success": "Signed in successfully",
+      "error": "Sign in error. {message}"
+    },
+    "sign_up": {
+      "name_label": "Name",
+      "name_placeholder": "Your name",
+      "name_required": "Name is required.",
+      "email_label": "Email",
+      "email_placeholder": "your@email.com",
+      "email_required": "Email is required.",
+      "password_label": "Password",
+      "password_required": "Password is required.",
+      "submit": "Create Account",
+      "back": "Back to Sign In",
+      "success": "Account created successfully.",
+      "error": "Account creation error. {message}"
+    },
+    "forgot_password": {
+      "email_label": "Email",
+      "email_placeholder": "your@email.com",
+      "email_required": "Email is required.",
+      "submit": "Send reset password email",
+      "back": "Back to Sign In",
+      "success": "Reset password email sent, check your email",
+      "error": "Reset password email request error. {message}"
+    },
     "reset_password": {
+      "title": "Reset Password",
+      "password_label": "Password",
+      "password_required": "Password is required.",
+      "submit": "Reset Password",
+      "success": "Password reset successfully",
+      "error": "Password reset error. {message}",
       "invalid_token": "Invalid token"
     },
     "verified": {
       "email_verified": "Email has been verified"
+    },
+    "account": {
+      "title": "Account",
+      "description": "Manage your account",
+      "general": "General",
+      "change_email": "Change Email",
+      "change_password": "Change Password",
+      "social_link": "Social Link",
+      "name_label": "Name",
+      "name_placeholder": "Your name",
+      "name_required": "Name is required.",
+      "show_social_label": "Show Social",
+      "show_social_desc": "Display your social account such as Discord username in List and Cosmo profile",
+      "profile_pic_help": "Profile picture can only be set by pulling from X or Discord in the Social Link section below by clicking Refresh.",
+      "save": "Save",
+      "current_password_label": "Current Password",
+      "current_password_placeholder": "Your current password",
+      "current_password_required": "Current password is required.",
+      "new_password_label": "New Password",
+      "new_password_placeholder": "Your new password",
+      "new_password_required": "New password is required.",
+      "password_min_length": "Password must be at least 8 characters",
+      "email_label": "Email",
+      "email_placeholder": "Your email",
+      "email_required": "Email is required.",
+      "email_verification_desc": "Verification email will be sent to verify your new email address",
+      "delete_account_description": "You will be sent a verification email for confirmation. Continue?",
+      "continue": "Continue",
+      "account_updated": "Account updated",
+      "account_update_error": "Error edit account",
+      "password_changed": "Password changed successfully",
+      "password_change_error": "Error changing password",
+      "email_verification_sent": "Email verification has been sent",
+      "email_verification_error": "Error sending email verification",
+      "verification_email_sent": "Verification email sent",
+      "delete_account_error": "Delete account error",
+      "delete_account": "Delete Account",
+      "remove_profile_picture": "Remove Profile Picture",
+      "link_accounts": {
+        "refresh": "Refresh",
+        "unlink": "Unlink",
+        "link": "Link",
+        "unlinked": "{provider} unlinked",
+        "unlink_error": "Error unlink from {provider}",
+        "profile_updated": "Profile updated",
+        "profile_update_error": "Error updating profile. {message}",
+        "update_profile_title": "Update Profile from {provider}",
+        "update_profile_desc": "This will update your {provider} username and profile picture. Continue?",
+        "cancel": "Cancel",
+        "continue": "Continue"
+      }
     }
+  },
+  "profile": {
+    "header": {
+      "address_copied": "Address copied",
+      "view_in_apollo": "View in Apollo",
+      "edit_profile": "Edit Profile"
+    },
+    "tabs": {
+      "collection": "Collection",
+      "trade_history": "Trade History",
+      "progress": "Progress",
+      "statistics": "Statistics"
+    },
+    "edit": {
+      "title": "Edit Profile",
+      "desc": "Currently editing <bold>{nickname}</bold> Cosmo profile",
+      "hide_user_label": "Hide User",
+      "hide_user_desc": "Hide {siteName} account from Cosmo profile",
+      "hide_nickname_label": "Hide Cosmo ID",
+      "hide_nickname_desc": "Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile.",
+      "private_serial_label": "Hide from Serial Lookup",
+      "private_serial_desc": "Prevent others from finding your objekt via serial number. Only you can see it.",
+      "hide_transfer_label": "Hide Trade History",
+      "hide_transfer_desc": "Hide your profile trade history. Only you can see it.",
+      "private_profile_label": "Private Profile",
+      "private_profile_desc": "Make your Cosmo profile private. Only you can see it.",
+      "grid_columns_label": "Objekt Columns",
+      "grid_columns_desc": "Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=).",
+      "grid_columns_not_set": "Not set",
+      "grid_columns_count": "{count} columns",
+      "banner_label": "Banner Image",
+      "banner_selected": "Selected file: {name}",
+      "banner_clear": "Clear",
+      "banner_recommendation": "Recommended aspect ratio is 2.3:1",
+      "remove_banner_label": "Remove Banner",
+      "unlink_note": "To unlink this Cosmo profile from your account, visit <link>Manage Cosmo link</link> page.",
+      "submit": "Save",
+      "success": "Cosmo profile updated",
+      "error": "Error edit Cosmo profile",
+      "upload_error": "Failed to upload image",
+      "file_too_large": "File \"{name}\" exceeds 10 MB limit."
+    },
+    "not_found": "User not found",
+    "profile_private": "Profile Private"
   },
   "link": {
     "my_cosmo": "My Cosmo",
@@ -148,6 +324,339 @@
     "start_over": "Start over",
     "code_instructions": "Add this code to your {artist} Cosmo profile bio, then click Verify below.",
     "code_expired": "Verification code has expired. Please start over.",
-    "verification_failed": "Verification code not found in bio. Please check and try again."
+    "verification_failed": "Verification code not found in bio. Please check and try again.",
+    "process": {
+      "intro_title": "Link your Cosmo profile",
+      "intro_description": "You need to download the Cosmo app and sign in with the Cosmo ID you want to link before continue.",
+      "nickname_step_prompt": "Search your Cosmo ID to get started.",
+      "artist_step_cosmo_id": "Cosmo ID:",
+      "artist_step_select": "Select the artist profile to use for verification.",
+      "verify_step_verifying": "Verifying <bold>{nickname}</bold> on <bold>{artist}</bold> Cosmo profile",
+      "countdown_remaining": "Remaining {countdown}"
+    },
+    "card": {
+      "open": "Open",
+      "edit": "Edit",
+      "unlink": "Unlink"
+    },
+    "unlink": {
+      "title": "Unlink Cosmo",
+      "description": "This will unlink your Cosmo from this account. You can link it again later. Continue?",
+      "submit": "Continue",
+      "success": "Cosmo unlinked",
+      "error": "Error unlink cosmo"
+    }
+  },
+  "list": {
+    "title": "My List",
+    "tabs": {
+      "normal": "Normal List",
+      "profile": "Profile List"
+    },
+    "create_button": "Create list",
+    "generate_discord_button": "Generate Discord format",
+    "feature_not_available": "This feature is not yet available",
+    "no_list_found": "No list found",
+    "create": {
+      "title": "Create list",
+      "name_label": "Name",
+      "name_placeholder": "My list",
+      "name_required": "Name is required.",
+      "hide_user_label": "Hide User",
+      "hide_user_desc": "Hide {siteName} account from this list",
+      "submit": "Create",
+      "success": "List created",
+      "error": "Error creating list"
+    },
+    "edit": {
+      "title": "Edit list",
+      "description": "Manage your list",
+      "name_label": "Name",
+      "name_placeholder": "My list",
+      "name_required": "Name is required.",
+      "hide_user_label": "Hide User",
+      "hide_user_desc": "Hide {siteName} account from this list",
+      "objekt_columns_label": "Objekt Columns",
+      "objekt_columns_desc": "Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=).",
+      "objekt_columns_not_set": "Not set",
+      "objekt_columns_count": "{count} columns",
+      "delete_note": "To delete this list, visit <link>Manage list</link> page.",
+      "submit": "Save",
+      "success": "List updated",
+      "error": "Error editing list"
+    },
+    "delete": {
+      "title": "Delete list",
+      "description": "This will permanently delete the selected list. Continue?",
+      "submit": "Continue",
+      "success": "List deleted",
+      "error": "Error deleting list"
+    },
+    "card": {
+      "open": "Open",
+      "edit": "Edit",
+      "edit_list": "Edit List",
+      "delete": "Delete"
+    },
+    "manage_objekt": {
+      "add_title": "Add to list",
+      "remove_title": "Remove objekt",
+      "no_list_message": "You don't have any list yet.",
+      "create_one_here": "Create one here",
+      "list_label": "My List",
+      "list_placeholder": "Select a list",
+      "list_required": "List is required.",
+      "skip_dups_label": "Prevent duplicate",
+      "skip_dups_desc": "Skip the same objekt when adding",
+      "add_button": "Add",
+      "remove_description": "This will permanently remove the selected objekt from the list. Continue?",
+      "continue_button": "Continue"
+    }
+  },
+  "objekt_menu": {
+    "add_to_list": "Add to list",
+    "remove_from_list": "Remove from list",
+    "pin": "Pin",
+    "unpin": "Unpin",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "select": "Select",
+    "unselect": "Unselect",
+    "no_list_found": "No list found"
+  },
+  "actions": {
+    "pin": {
+      "success_single": "Objekt pinned",
+      "success_multiple": "{count} objekts pinned",
+      "error_single": "Error pin objekt",
+      "error_multiple": "Error pin {count} objekts"
+    },
+    "unpin": {
+      "success_single": "Objekt unpinned",
+      "success_multiple": "{count} objekts unpinned",
+      "error_single": "Error unpin objekt",
+      "error_multiple": "Error unpin {count} objekts"
+    },
+    "lock": {
+      "success_single": "Objekt locked",
+      "success_multiple": "{count} objekts locked",
+      "error_single": "Error lock objekt",
+      "error_multiple": "Error lock {count} objekts"
+    },
+    "unlock": {
+      "success_single": "Objekt unlocked",
+      "success_multiple": "{count} objekts unlocked",
+      "error_single": "Error unlock objekt",
+      "error_multiple": "Error unlock {count} objekts"
+    },
+    "add_to_list": {
+      "success_single": "Objekt added to list",
+      "success_multiple": "{count} objekts added to list",
+      "error": "Error add objekts to list"
+    },
+    "remove_from_list": {
+      "success_single": "Objekt removed from list",
+      "success_multiple": "{count} objekts removed from list",
+      "error": "Error remove objekts from list"
+    }
+  },
+  "common": {
+    "modal": {
+      "close": "Close",
+      "cancel": "Cancel"
+    },
+    "copy": {
+      "button": "Copy",
+      "copied": "Copied!"
+    },
+    "count": {
+      "total": "{count} total",
+      "types": "{count} types"
+    },
+    "error": {
+      "loading_page": "Error loading page",
+      "loading_data": "Error loading data",
+      "retry": "Retry"
+    },
+    "theme_switcher": {
+      "label": "Switch theme"
+    },
+    "mobile_navigation": {
+      "toggle": "Toggle Menu",
+      "label": "Navigation",
+      "home": "Home"
+    }
+  },
+  "generate_discord": {
+    "title": "Generate Discord Format",
+    "error": "Error generating Discord format",
+    "select_at_least_one": "Please select at least one list",
+    "list_placeholder": "Select a list (optional)",
+    "have_list_label": "Have list",
+    "want_list_label": "Want list",
+    "show_count": "Show count",
+    "include_link": "Include link",
+    "lower_case": "Lower case",
+    "bulleted_list": "Bulleted list",
+    "group_by_label": "Group by",
+    "group_by_placeholder": "Select grouping mode",
+    "group_by_none": "None (member → collection)",
+    "group_by_season": "Season (member → season → collection)",
+    "group_by_season_first": "Season first (season → member → collection)",
+    "style_label": "Style",
+    "style_placeholder": "Select style",
+    "style_default": "Default",
+    "style_compact": "Compact",
+    "formatted_text_label": "Formatted discord text",
+    "reset_button": "Reset",
+    "generate_button": "Generate"
+  },
+  "activity": {
+    "title": "Objekt Activity",
+    "description": "Latest objekt activity in realtime",
+    "beta": "Beta",
+    "event_type": {
+      "mint": "Mint",
+      "spin": "Spin",
+      "transfer": "Transfer"
+    },
+    "table": {
+      "event": "Event",
+      "objekt": "Objekt",
+      "serial": "Serial",
+      "from": "From",
+      "to": "To",
+      "time": "Time",
+      "aria_label": "Activity list"
+    },
+    "paused_on_hover": "Paused on hover",
+    "cosmo": "COSMO",
+    "cosmo_spin": "COSMO Spin"
+  },
+  "not_found": {
+    "list": "List not found",
+    "live": "Live not found",
+    "page": "Page not found"
+  },
+  "live": {
+    "title": "Cosmo Live",
+    "alpha": "Alpha",
+    "description": "Live by member from Cosmo app",
+    "tabs_label": "Recipe App",
+    "no_live": "No live available at this moment",
+    "live_badge": "Live",
+    "live_stream_ended": "Live stream ended"
+  },
+  "user_link": {
+    "preview": "Preview",
+    "nickname_not_available": "Nickname not available.",
+    "deleted": "(deleted)"
+  },
+  "discord_format_modal": {
+    "title": "Generate Discord Format",
+    "description": "List of objekt is based on current filter.",
+    "button": "Discord format",
+    "generate": "Generate"
+  },
+  "checkpoint": {
+    "title": "Snapshot",
+    "description": "View collections at given time",
+    "close": "Close",
+    "apply": "Apply",
+    "reset": "Reset"
+  },
+  "progress": {
+    "select_prompt": "Select at least 1 artist or 1 member",
+    "loading_objekts": "Loading objekts",
+    "progress_bar_label": "Progress Bar"
+  },
+  "stats": {
+    "loading_objekts": "Loading objekts",
+    "breakdown_member": {
+      "title": "Objekt Breakdown By Member",
+      "description": "Total objekt by member"
+    },
+    "breakdown_season": {
+      "title": "Objekt Breakdown By Season",
+      "description": "Total objekt by season"
+    },
+    "member_progress": {
+      "title": "Member Progress",
+      "description": "Progress by member",
+      "percentage_label": "Percentage"
+    }
+  },
+  "trades": {
+    "filter_type": {
+      "label": "Event",
+      "all": "All",
+      "mint": "Mint",
+      "received": "Received",
+      "sent": "Sent",
+      "spin": "Spin"
+    },
+    "history_private": "Trade History Private",
+    "table_headers": {
+      "date": "Date",
+      "objekt": "Objekt",
+      "serial": "Serial",
+      "action": "Action",
+      "user": "User"
+    },
+    "actions": {
+      "received_from": "Received From",
+      "sent_to": "Sent To"
+    },
+    "cosmo": "COSMO",
+    "cosmo_spin": "COSMO Spin"
+  },
+  "terms_privacy": {
+    "title": "Terms and Privacy",
+    "heading": "Terms and Privacy",
+    "points": {
+      "login_info": "When you log in with Twitter (X) or Discord, we get your public profile info (like your name and username).",
+      "no_post": "We do not post anything or access your private data.",
+      "no_sell": "We do not sell or share your data.",
+      "only_app": "We only use your info to make the app work.",
+      "delete_anytime": "You can ask us to delete your data anytime.",
+      "open_source_prefix": "{siteName} is open source. Github link",
+      "available_here": "available here"
+    }
+  },
+  "error": {
+    "profile_loading": "Error loading profile",
+    "list_loading": "Error loading list"
+  },
+  "api_errors": {
+    "cosmo_link": {
+      "already_linked_self": "This Cosmo ID is already linked to your account.",
+      "already_linked_other": "This Cosmo ID is already linked to another account.",
+      "rate_limit": "Too many attempts. Please wait before trying again.",
+      "verification_expired": "Verification expired. Please start over.",
+      "profile_mismatch": "Profile data mismatch. Please start over.",
+      "code_not_found": "Verification code not found in bio. Please check and try again."
+    },
+    "profile": {
+      "not_linked": "This Cosmo not linked with your account",
+      "not_found": "Profile not found or not link with this account"
+    },
+    "user": {
+      "not_linked_provider": "User not link with provider",
+      "failed_get_info": "Failed to get info. Please sign in with {provider} and try again."
+    }
+  },
+  "page_titles": {
+    "activity": "Activity",
+    "live": "Live",
+    "live_detail": "{title} · {channel} Live",
+    "login": "Sign In",
+    "my_list": "My List",
+    "my_cosmo_link": "My Cosmo Link",
+    "profile_collection": "{nickname}'s Collection",
+    "profile_progress": "{nickname}'s Progress",
+    "profile_stats": "{nickname}'s Stats",
+    "profile_trades": "{nickname}'s Trades",
+    "list_detail": "{name} List",
+    "list_detail_with_user": "{name} · {user}'s List"
   }
 }

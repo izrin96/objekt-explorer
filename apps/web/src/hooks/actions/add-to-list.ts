@@ -1,9 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
 export function useAddToList() {
+  const t = useTranslations("actions.add_to_list");
+
   const addToList = useMutation(
     orpc.list.addObjektsToList.mutationOptions({
       onSuccess: (rows, { slug }, _o, { client }) => {
@@ -12,10 +15,11 @@ export function useAddToList() {
           return [...rows, ...old];
         });
 
-        toast.success(`${rows.length.toLocaleString()} objekt added to the list`);
+        const key = rows.length > 1 ? "success_multiple" : "success_single";
+        toast.success(t(key, { count: rows.length.toLocaleString() }));
       },
       onError: () => {
-        toast.error("Error adding objekt to list");
+        toast.error(t("error"));
       },
     }),
   );

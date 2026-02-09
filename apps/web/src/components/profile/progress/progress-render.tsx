@@ -4,6 +4,7 @@ import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -58,6 +59,7 @@ function ProgressRender() {
 }
 
 function Progress() {
+  const t = useTranslations("progress");
   const { columns } = useObjektColumn();
   const { shaped, filters, ownedSlugs, hasNextPage } = useProgressObjekts();
 
@@ -65,13 +67,13 @@ function Progress() {
     <>
       {!filters.artist && !filters.member ? (
         <div className="text-muted-fg flex justify-center text-sm">
-          Select at least 1 artist or 1 member
+          {t("select_prompt")}
         </div>
       ) : (
         <div className="flex flex-col gap-8">
           {hasNextPage && (
             <div className="flex items-center gap-2 text-xs font-semibold">
-              Loading objekts <Loader variant="ring" className="size-4" />
+              {t("loading_objekts")} <Loader variant="ring" className="size-4" />
             </div>
           )}
 
@@ -124,6 +126,7 @@ interface ProgressCollapseProps extends ProgressGroupProps {
 }
 
 function ProgressCollapse(props: ProgressCollapseProps) {
+  const t = useTranslations("progress");
   const { data: session } = useSession();
   const { title, columns, grouped, percentage, ownedSlugs, owned, filtered } = props;
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -144,7 +147,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           {title}
         </div>
         <ProgressBar
-          aria-label="Progress Bar"
+          aria-label={t("progress_bar_label")}
           className="flex w-fit min-w-[240px] items-center gap-2"
           valueLabel={`${owned.length}/${filtered.length} (${percentage}%)`}
           value={percentage}

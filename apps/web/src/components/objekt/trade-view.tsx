@@ -191,10 +191,13 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     staleTime: 0,
   });
 
-  const handleCopy = useCallback(async (tokenId: string | undefined) => {
-    await copy(tokenId ?? "");
-    toast.success("Token ID copied");
-  }, []);
+  const handleCopy = useCallback(
+    async (tokenId: string | undefined) => {
+      await copy(tokenId ?? "");
+      toast.success(t("token_id_copied"));
+    },
+    [copy, t],
+  );
 
   const list = useAsyncList<TransferItem>({
     async load() {
@@ -247,7 +250,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <p>Objekt Private</p>
+        <p>{t("objekt_private")}</p>
       </div>
     );
   }
@@ -256,7 +259,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <QuestionMarkIcon size={64} weight="light" />
-        <p>Not found</p>
+        <p>{t("not_found_objekt")}</p>
       </div>
     );
   }
@@ -289,7 +292,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold">{t("transferable")}</span>
           <Badge intent={data.transferable ? "info" : "danger"}>
-            {data.transferable ? "Yes" : "No"}
+            {data.transferable ? t("yes") : t("no")}
           </Badge>
         </div>
       </div>

@@ -6,9 +6,11 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import crypto from "node:crypto";
 import * as z from "zod";
 
+import { getUserLocale } from "../../locale";
 import { redis } from "../../redis";
 import { getAccessToken } from "../../token";
 import { authed } from "../orpc";
@@ -34,11 +36,11 @@ async function assertAddressNotLinked(address: string, userId: string) {
     .limit(1);
 
   if (existing) {
+    const locale = await getUserLocale();
+    const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
     throw new ORPCError("BAD_REQUEST", {
       message:
-        existing.userId === userId
-          ? "This Cosmo ID is already linked to your account."
-          : "This Cosmo ID is already linked to another account.",
+        existing.userId === userId ? t("already_linked_self") : t("already_linked_other"),
     });
   }
 }
@@ -79,8 +81,10 @@ export const cosmoLinkRouter = {
         await redis.expire(rateLimitKey, 30);
       }
       if (attempts > 5) {
+        const locale = await getUserLocale();
+        const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
         throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many attempts. Please wait before trying again.",
+          message: t("rate_limit"),
         });
       }
 
@@ -109,11 +113,14 @@ export const cosmoLinkRouter = {
   verifyStatusMessage: authed
     .input(z.string())
     .handler(async ({ input: address, context: { session } }) => {
+      const locale = await getUserLocale();
+      const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
+
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);
       if (!raw) {
         throw new ORPCError("BAD_REQUEST", {
-          message: "Verification expired. Please start over.",
+          message: t("verification_expired"),
         });
       }
 
@@ -129,13 +136,13 @@ export const cosmoLinkRouter = {
       // validate that the fetched profile matches claimed data
       if (profile.nickname.toLowerCase() !== data.nickname.toLowerCase()) {
         throw new ORPCError("BAD_REQUEST", {
-          message: "Profile data mismatch. Please start over.",
+          message: t("profile_mismatch"),
         });
       }
 
       if (!profile.statusMessage?.toLowerCase().includes(data.code)) {
         throw new ORPCError("BAD_REQUEST", {
-          message: "Verification code not found in bio. Please check and try again.",
+          message: t("code_not_found"),
         });
       }
 

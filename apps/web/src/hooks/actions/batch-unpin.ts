@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import type { PinListOutput } from "@/lib/server/api/routers/pins";
@@ -6,6 +7,8 @@ import type { PinListOutput } from "@/lib/server/api/routers/pins";
 import { orpc } from "@/lib/orpc/client";
 
 export function useBatchUnpin() {
+  const t = useTranslations("actions.unpin");
+
   const batchUnpin = useMutation(
     orpc.pins.batchUnpin.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
@@ -19,21 +22,15 @@ export function useBatchUnpin() {
         return { previousPins };
       },
       onSuccess: (_, { tokenIds }) => {
-        toast.success(
-          tokenIds.length > 1
-            ? `${tokenIds.length.toLocaleString()} objekts unpinned`
-            : "Objekt unpinned",
-        );
+        const key = tokenIds.length > 1 ? "success_multiple" : "success_single";
+        toast.success(t(key, { count: tokenIds.length.toLocaleString() }));
       },
       onError: (_err, { tokenIds, address }, context, { client }) => {
         if (context?.previousPins) {
           client.setQueryData(orpc.pins.list.queryKey({ input: address }), context.previousPins);
         }
-        toast.error(
-          tokenIds.length > 1
-            ? `Error unpin ${tokenIds.length.toLocaleString()} objekts`
-            : "Error unpin objekt",
-        );
+        const key = tokenIds.length > 1 ? "error_multiple" : "error_single";
+        toast.error(t(key, { count: tokenIds.length.toLocaleString() }));
       },
     }),
   );

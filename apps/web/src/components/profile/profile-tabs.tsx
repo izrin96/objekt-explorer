@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -8,16 +9,17 @@ import { useTarget } from "@/hooks/use-target";
 import { Tab, TabList, Tabs } from "../ui/tabs";
 
 export default function ProfileTabs() {
+  const t = useTranslations("profile.tabs");
   const router = useRouter();
   const profile = useTarget((a) => a.profile)!;
   const pathname = usePathname();
   const path = profile.nickname ?? profile.address;
 
   const items = [
-    { url: `/@${path}`, label: "Collection" },
-    { url: `/@${path}/trades`, label: "Trade History" },
-    { url: `/@${path}/progress`, label: "Progress" },
-    { url: `/@${path}/stats`, label: "Statistics" },
+    { url: `/@${path}`, translationKey: "collection" as const },
+    { url: `/@${path}/trades`, translationKey: "trade_history" as const },
+    { url: `/@${path}/progress`, translationKey: "progress" as const },
+    { url: `/@${path}/stats`, translationKey: "statistics" as const },
   ];
 
   useEffect(() => {
@@ -32,8 +34,8 @@ export default function ProfileTabs() {
     >
       <TabList className="border-b-0">
         {items.map((item) => (
-          <Tab key={item.url} id={item.url} href={item.url} aria-label={item.label}>
-            {item.label}
+          <Tab key={item.url} id={item.url} href={item.url} aria-label={t(item.translationKey)}>
+            {t(item.translationKey)}
           </Tab>
         ))}
       </TabList>

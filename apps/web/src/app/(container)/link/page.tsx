@@ -9,8 +9,9 @@ import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("page_titles");
   return {
-    title: "My Cosmo Link",
+    title: t("my_cosmo_link"),
   };
 }
 

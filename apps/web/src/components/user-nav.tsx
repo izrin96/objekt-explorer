@@ -73,7 +73,7 @@ function UserMenu({ user }: { user: User }) {
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
 
       <Menu>
-        <MenuTrigger aria-label="Open Menu">
+        <MenuTrigger aria-label={t("open_menu")}>
           <Avatar
             alt={user.name}
             initials={user.name.charAt(0)}
@@ -114,7 +114,7 @@ function UserMenu({ user }: { user: User }) {
 
           <MenuItem onAction={() => setAccountOpen(true)}>
             <UserIcon data-slot="icon" />
-            <MenuLabel>Account</MenuLabel>
+            <MenuLabel>{t("account")}</MenuLabel>
           </MenuItem>
 
           <MenuSeparator />
@@ -127,7 +127,7 @@ function UserMenu({ user }: { user: User }) {
                     void queryClient.refetchQueries({
                       queryKey: ["session"],
                     });
-                    toast("Sign out successful");
+                    toast(t("sign_out_success"));
                     router.refresh();
                   },
                 },
@@ -151,11 +151,12 @@ function MyListMenuItem({
   openDiscordFormat: () => void;
 }) {
   const { data } = useQuery(orpc.list.list.queryOptions());
+  const t = useTranslations("nav");
   return (
     <MenuSubMenu>
       <MenuItem>
         <HeartIcon data-slot="icon" />
-        <MenuLabel>My List</MenuLabel>
+        <MenuLabel>{t("my_list")}</MenuLabel>
       </MenuItem>
       <MenuContent>
         {!data && (
@@ -168,7 +169,7 @@ function MyListMenuItem({
         {data && data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
-              <span>No list found</span>
+              <span>{t("no_list_found")}</span>
             </MenuLabel>
           </MenuItem>
         )}
@@ -179,15 +180,15 @@ function MyListMenuItem({
         ))}
         <MenuItem onAction={openCreateList}>
           <PlusIcon data-slot="icon" />
-          <MenuLabel>Create list</MenuLabel>
+          <MenuLabel>{t("create_list")}</MenuLabel>
         </MenuItem>
         <MenuItem onAction={openDiscordFormat}>
           <DiscordLogoIcon data-slot="icon" />
-          <MenuLabel>Discord format</MenuLabel>
+          <MenuLabel>{t("discord_format")}</MenuLabel>
         </MenuItem>
         <MenuItem href={`/list`}>
           <GearSixIcon data-slot="icon" />
-          <MenuLabel>Manage list</MenuLabel>
+          <MenuLabel>{t("manage_list")}</MenuLabel>
         </MenuItem>
       </MenuContent>
     </MenuSubMenu>

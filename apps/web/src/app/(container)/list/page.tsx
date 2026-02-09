@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import MyListRender from "@/components/list/my-list";
@@ -8,8 +9,9 @@ import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("page_titles");
   return {
-    title: `My List`,
+    title: t("my_list"),
   };
 }
 

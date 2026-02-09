@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -50,37 +51,38 @@ type RemoveLinkModalProps = {
 };
 
 export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps) {
+  const t = useTranslations("link.unlink");
+  const tCommon = useTranslations("common.modal");
+
   const removeLink = useMutation(
     orpc.cosmoLink.removeLink.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success("Cosmo unlinked");
+        toast.success(t("success"));
         void client.invalidateQueries({
           queryKey: orpc.profile.list.key(),
         });
       },
       onError: () => {
-        toast.error("Error unlink cosmo");
+        toast.error(t("error"));
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Unlink Cosmo</ModalTitle>
-        <ModalDescription>
-          This will unlink your Cosmo from this account. You can link it again later. Continue?
-        </ModalDescription>
+        <ModalTitle>{t("title")}</ModalTitle>
+        <ModalDescription>{t("description")}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>Cancel</ModalClose>
+        <ModalClose>{tCommon("cancel")}</ModalClose>
         <Button
           intent="danger"
           type="submit"
           isPending={removeLink.isPending}
           onPress={() => removeLink.mutate(address)}
         >
-          Continue
+          {t("submit")}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -95,12 +97,18 @@ type EditProfileModalProps = {
 };
 
 export function EditProfileModal({ nickname, address, open, setOpen }: EditProfileModalProps) {
+  const t = useTranslations("profile.edit");
+  const tCommon = useTranslations("common.modal");
+
   return (
     <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>Edit Profile</SheetTitle>
+        <SheetTitle>{t("title")}</SheetTitle>
         <SheetDescription>
-          Currently editing <span className="text-fg">{nickname}</span> Cosmo profile
+          {t.rich("desc", {
+            bold: (chunks) => <span className="text-fg">{chunks}</span>,
+            nickname,
+          })}
         </SheetDescription>
       </SheetHeader>
       <SheetBody>
@@ -121,7 +129,7 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
         </QueryErrorResetBoundary>
       </SheetBody>
       <SheetFooter id="submit-form">
-        <SheetClose>Cancel</SheetClose>
+        <SheetClose>{tCommon("cancel")}</SheetClose>
       </SheetFooter>
     </SheetContent>
   );
@@ -140,6 +148,7 @@ type BannerImageProps = {
 
 function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const t = useTranslations("profile.edit");
 
   useEffect(() => {
     if (droppedImage) {
@@ -175,9 +184,11 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         </div>
       )}
       <div className="flex items-center justify-between">
-        <span className="text-muted-fg truncate text-sm">Selected file: {droppedImage.name}</span>
+        <span className="text-muted-fg truncate text-sm">
+          {t("banner_selected", { name: droppedImage.name })}
+        </span>
         <Button size="xs" intent="outline" onPress={onClear}>
-          Clear
+          {t("banner_clear")}
         </Button>
       </div>
     </>
@@ -188,6 +199,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
   const router = useRouter();
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
+  const t = useTranslations("profile.edit");
 
   const { data } = useSuspenseQuery(
     orpc.profile.find.queryOptions({
@@ -220,11 +232,11 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
       onSuccess: () => {
         setOpen(false);
         setDroppedImage(null);
-        toast.success("Cosmo profile updated");
+        toast.success(t("success"));
         router.refresh();
       },
       onError: () => {
-        toast.error("Error edit Cosmo profile");
+        toast.error(t("error"));
       },
     }),
   );
@@ -232,7 +244,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
   const getPresignedPost = useMutation(
     orpc.profile.getPresignedPost.mutationOptions({
       onError: () => {
-        toast.error("Failed to upload image");
+        toast.error(t("upload_error"));
       },
       retry: 2,
     }),
@@ -254,27 +266,30 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         });
 
         if (!response.ok) {
-          throw new Error("Failed to upload image");
+          throw new Error(t("upload_error"));
         }
       } catch {
-        throw new Error("Failed to upload image");
+        throw new Error(t("upload_error"));
       }
     },
     [],
   );
 
-  const handleSelectImage = useCallback((e: FileList | null) => {
-    const files = Array.from(e ?? []);
-    const item = files[0];
-    if (!item) return;
+  const handleSelectImage = useCallback(
+    (e: FileList | null) => {
+      const files = Array.from(e ?? []);
+      const item = files[0];
+      if (!item) return;
 
-    if (item.size > MAX_FILE_SIZE) {
-      toast.error(`File "${item.name}" exceeds 10 MB limit.`);
-      return;
-    }
+      if (item.size > MAX_FILE_SIZE) {
+        toast.error(t("file_too_large", { name: item.name }));
+        return;
+      }
 
-    setDroppedImage(item);
-  }, []);
+      setDroppedImage(item);
+    },
+    [t],
+  );
 
   const generateCroppedImage = useCallback(() => {
     if (!cropperRef.current || !droppedImage) return null;
@@ -308,7 +323,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
       try {
         await handleUpload(url, fields, croppedFile ?? droppedImage);
       } catch {
-        toast.error("Failed to upload image");
+        toast.error(t("upload_error"));
         return;
       }
 
@@ -348,8 +363,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>Hide User</Label>
-              <Description>Hide {SITE_NAME} account from Cosmo profile</Description>
+              <Label>{t("hide_user_label")}</Label>
+              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}
         />
@@ -358,10 +373,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="hideNickname"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>Hide Cosmo ID</Label>
-              <Description>
-                Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile.
-              </Description>
+              <Label>{t("hide_nickname_label")}</Label>
+              <Description>{t("hide_nickname_desc")}</Description>
             </Checkbox>
           )}
         />
@@ -370,10 +383,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="privateSerial"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>Hide from Serial Lookup</Label>
-              <Description>
-                Prevent others from finding your objekt via serial number. Only you can see it.
-              </Description>
+              <Label>{t("private_serial_label")}</Label>
+              <Description>{t("private_serial_desc")}</Description>
             </Checkbox>
           )}
         />
@@ -382,8 +393,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="hideTransfer"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>Hide Trade History</Label>
-              <Description>Hide your profile trade history. Only you can see it.</Description>
+              <Label>{t("hide_transfer_label")}</Label>
+              <Description>{t("hide_transfer_desc")}</Description>
             </Checkbox>
           )}
         />
@@ -392,8 +403,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="privateProfile"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>Private Profile</Label>
-              <Description>Make your Cosmo profile private. Only you can see it.</Description>
+              <Label>{t("private_profile_label")}</Label>
+              <Description>{t("private_profile_desc")}</Description>
             </Checkbox>
           )}
         />
@@ -403,23 +414,23 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="gridColumns"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Select
-              aria-label="Objekt Columns"
-              placeholder="Objekt Columns"
+              aria-label={t("grid_columns_label")}
+              placeholder={t("grid_columns_label")}
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
             >
-              <Label>Objekt Columns</Label>
-              <Description>
-                Number of columns to use on visit. Visitor are still allowed to change to any
-                columns they want. Pro tips: can also override using URL params (?column=).
-              </Description>
+              <Label>{t("grid_columns_label")}</Label>
+              <Description>{t("grid_columns_desc")}</Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
-                  { id: 0, name: "Not set" },
-                  ...validColumns.map((a) => ({ id: a, name: `${a} columns` })),
+                  { id: 0, name: t("grid_columns_not_set") },
+                  ...validColumns.map((a) => ({
+                    id: a,
+                    name: t("grid_columns_count", { count: String(a) }),
+                  })),
                 ].map((item) => (
                   <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
                     {item.name}
@@ -431,7 +442,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         />
 
         <div className="group flex flex-col gap-y-2">
-          <Label>Banner Image</Label>
+          <Label>{t("banner_label")}</Label>
           <FileTrigger
             acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
             onSelect={handleSelectImage}
@@ -441,28 +452,30 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
             cropperRef={cropperRef}
             onClear={() => setDroppedImage(null)}
           />
-          <span className="text-muted-fg text-sm">Recommended aspect ratio is 2.3:1</span>
+          <span className="text-muted-fg text-sm">{t("banner_recommendation")}</span>
         </div>
         <Controller
           control={control}
           name="removeBanner"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>Remove Banner</Label>
+              <Label>{t("remove_banner_label")}</Label>
             </Checkbox>
           )}
         />
         <span className="text-muted-fg text-sm">
-          To unlink this Cosmo profile from your account, visit{" "}
-          <Link href="/link" className="underline">
-            Manage Cosmo link
-          </Link>{" "}
-          page.
+          {t.rich("unlink_note", {
+            link: (chunks) => (
+              <Link href="/link" className="underline">
+                {chunks}
+              </Link>
+            ),
+          })}
         </span>
 
         <Portal to="#submit-form">
           <Button intent="primary" isPending={isSubmitting} onPress={() => onSubmit()}>
-            Save
+            {t("submit")}
           </Button>
         </Portal>
       </div>

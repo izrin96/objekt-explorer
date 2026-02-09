@@ -93,11 +93,11 @@ export default function UserSearch() {
                 ? [
                     <CommandMenuItem
                       key="clear"
-                      textValue="Clear all"
+                      textValue={t("clear_history")}
                       onAction={() => clearAll()}
                       intent="danger"
                     >
-                      Clear history
+                      {t("clear_history")}
                     </CommandMenuItem>,
                   ]
                 : []),

@@ -1,4 +1,7 @@
+"use client";
+
 import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -7,6 +10,7 @@ import { Button } from "./ui/button";
 export function CopyButton({ text }: { text: string }) {
   const [, copy] = useCopyToClipboard();
   const [copied, setCopied] = useState(false);
+  const t = useTranslations("common.copy");
   return (
     <Button
       intent="outline"
@@ -20,7 +24,7 @@ export function CopyButton({ text }: { text: string }) {
       className="flex items-center gap-1.5"
     >
       <CopyIcon data-slot="icon" />
-      {copied ? "Copied!" : "Copy"}
+      {copied ? t("copied") : t("button")}
     </Button>
   );
 }

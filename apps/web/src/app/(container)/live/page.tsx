@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 
 import LiveSessionListRender from "@/components/live/session-list";
@@ -14,8 +15,9 @@ type Props = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("page_titles");
   return {
-    title: "Live",
+    title: t("live"),
   };
 }
 

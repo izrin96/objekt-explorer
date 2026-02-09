@@ -13,6 +13,7 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -50,25 +51,25 @@ const EVENT_CONFIG: Record<
   EventType,
   {
     icon: React.ComponentType<IconProps>;
-    label: string;
+    labelKey: string;
     className: string;
   }
 > = {
   mint: {
     icon: LeafIcon,
-    label: "Mint",
+    labelKey: "activity.event_type.mint",
     className:
       "[--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]",
   },
   spin: {
     icon: ArrowsClockwiseIcon,
-    label: "Spin",
+    labelKey: "activity.event_type.spin",
     className:
       "[--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]",
   },
   transfer: {
     icon: PaperPlaneTiltIcon,
-    label: "Transfer",
+    labelKey: "activity.event_type.transfer",
     className:
       "[--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]",
   },
@@ -79,14 +80,15 @@ export default dynamic(() => Promise.resolve(ActivityRender), {
 });
 
 function ActivityRender() {
+  const t = useTranslations("activity");
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Objekt Activity</h2>
-          <Badge intent="primary">Beta</Badge>
+          <h2 className="text-xl font-semibold">{t("title")}</h2>
+          <Badge intent="primary">{t("beta")}</Badge>
         </div>
-        <p className="text-muted-fg text-sm">Latest objekt activity in realtime</p>
+        <p className="text-muted-fg text-sm">{t("description")}</p>
       </div>
       <ObjektModalProvider initialTab="trades">
         <ActivityFilter />
@@ -112,6 +114,7 @@ function ActivityRender() {
 }
 
 function Activity() {
+  const t = useTranslations("activity");
   const queryClient = useQueryClient();
   const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
@@ -285,12 +288,12 @@ function Activity() {
       <Card className="py-0">
         <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
           <div className="flex min-w-fit border-b">
-            <div className="min-w-[120px] flex-1 px-3 py-2.5">Event</div>
-            <div className="min-w-[250px] flex-1 px-3 py-2.5">Objekt</div>
-            <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">Serial</div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">From</div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">To</div>
-            <div className="min-w-[250px] flex-1 px-3 py-2.5">Time</div>
+            <div className="min-w-[120px] flex-1 px-3 py-2.5">{t("table.event")}</div>
+            <div className="min-w-[250px] flex-1 px-3 py-2.5">{t("table.objekt")}</div>
+            <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{t("table.serial")}</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">{t("table.from")}</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">{t("table.to")}</div>
+            <div className="min-w-[250px] flex-1 px-3 py-2.5">{t("table.time")}</div>
           </div>
 
           <ObjektModal objekts={currentObjekt}>
@@ -298,7 +301,7 @@ function Activity() {
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
               className="relative min-w-fit"
               role="region"
-              aria-label="Activity list"
+              aria-label={t("table.aria_label")}
               onMouseEnter={() => {
                 setIsHovering(true);
                 isHoveringRef.current = true;
@@ -337,7 +340,7 @@ function Activity() {
           {isHovering && (
             <div className="bg-fg/10 pointer-events-none fixed right-0 bottom-0 left-0 flex h-12 w-full flex-col justify-center px-2 py-3 backdrop-blur-md">
               <span className="text-center font-mono text-sm leading-tight uppercase">
-                Paused on hover
+                {t("paused_on_hover")}
               </span>
             </div>
           )}
@@ -360,6 +363,7 @@ const ActivityRow = memo(function ActivityRow({
   item: ActivityData;
   setCurrentObjekt: (objekts: ValidObjekt[]) => void;
 }) {
+  const t = useTranslations();
   const ctx = useObjektModal();
 
   const openObjekt = useCallback(() => {
@@ -376,7 +380,9 @@ const ActivityRow = memo(function ActivityRow({
       <div className="min-w-[120px] flex-1 px-3 py-2.5">
         <div className="flex items-center gap-2 font-semibold">
           <Icon size={18} weight="light" />
-          <Badge className={cn("text-xs", config.className)}>{config.label}</Badge>
+          <Badge className={cn("text-xs", config.className)}>
+            {t(config.labelKey as any)}
+          </Badge>
         </div>
       </div>
       <div
@@ -389,14 +395,14 @@ const ActivityRow = memo(function ActivityRow({
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">
         {event === "mint" ? (
-          <span className="text-muted-fg font-mono">COSMO</span>
+          <span className="text-muted-fg font-mono">{t("activity.cosmo")}</span>
         ) : (
           <UserLink address={item.transfer.from} nickname={item.nickname.from} />
         )}
       </div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">
         {event === "spin" ? (
-          <span className="text-muted-fg font-mono">COSMO Spin</span>
+          <span className="text-muted-fg font-mono">{t("activity.cosmo_spin")}</span>
         ) : (
           <UserLink address={item.transfer.to} nickname={item.nickname.to} />
         )}

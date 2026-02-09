@@ -2,6 +2,7 @@
 
 import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -60,6 +61,7 @@ type LinkedAccountProps = {
 };
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
+  const t = useTranslations("auth.account.link_accounts");
   const [pullOpen, setPullOpen] = useState(false);
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
@@ -70,10 +72,10 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
         void client.invalidateQueries({
           queryKey: ["accounts"],
         });
-        toast.success(`${provider.label} unlinked`);
+        toast.success(t("unlinked", { provider: provider.label }));
       },
       onError: () => {
-        toast.error(`Error unlink from ${provider.label}`);
+        toast.error(t("unlink_error", { provider: provider.label }));
       },
     }),
   );
@@ -88,7 +90,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
       <div className="flex gap-2">
         <Button intent="outline" size="xs" onPress={() => setPullOpen(true)}>
           <ArrowsClockwiseIcon data-slot="icon" />
-          Refresh
+          {t("refresh")}
         </Button>
         <Button
           intent="danger"
@@ -101,7 +103,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
           }
         >
           <LinkBreakIcon data-slot="icon" />
-          Unlink
+          {t("unlink")}
         </Button>
       </div>
     </div>
@@ -113,6 +115,7 @@ type UnlinkedAccountProps = {
 };
 
 function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
+  const t = useTranslations("auth.account.link_accounts");
   const linkAccount = useMutation({
     mutationFn: async () => {
       const result = await authClient.linkSocial({
@@ -130,7 +133,7 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
       <span className="text-sm">{provider.label}</span>
       <Button intent="outline" size="xs" onPress={() => linkAccount.mutate()}>
         <LinkIcon data-slot="icon" />
-        Link
+        {t("link")}
       </Button>
     </div>
   );
@@ -143,6 +146,7 @@ type PullProfileProps = {
 };
 
 function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
+  const t = useTranslations("auth.account.link_accounts");
   const refreshProfile = useMutation(
     orpc.user.refreshProfile.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
@@ -150,30 +154,30 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
           queryKey: ["session"],
         });
         setOpen(false);
-        toast.success("Profile updated");
+        toast.success(t("profile_updated"));
       },
       onError: ({ message }) => {
-        toast.error(`Error updating profile. ${message}`);
+        toast.error(t("profile_update_error", { message }));
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Update Profile from {provider.label}</ModalTitle>
+        <ModalTitle>{t("update_profile_title", { provider: provider.label })}</ModalTitle>
         <ModalDescription>
-          This will update your {provider.label} username and profile picture. Continue?
+          {t("update_profile_desc", { provider: provider.label })}
         </ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>Cancel</ModalClose>
+        <ModalClose>{t("cancel")}</ModalClose>
         <Button
           intent="primary"
           type="submit"
           isPending={refreshProfile.isPending}
           onPress={() => refreshProfile.mutate(provider.id)}
         >
-          Continue
+          {t("continue")}
         </Button>
       </ModalFooter>
     </ModalContent>

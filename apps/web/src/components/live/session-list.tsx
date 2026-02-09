@@ -4,6 +4,7 @@ import type { LiveSession } from "@repo/cosmo/server/live";
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense } from "react";
@@ -20,20 +21,21 @@ import { Loader } from "../ui/loader";
 import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
 
 export default function LiveSessionListRender() {
+  const t = useTranslations("live");
   const { selectedArtists } = useCosmoArtist();
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">Cosmo Live</h2>
-          <Badge intent="warning">Alpha</Badge>
+          <h2 className="text-xl font-semibold">{t("title")}</h2>
+          <Badge intent="warning">{t("alpha")}</Badge>
         </div>
-        <p className="text-muted-fg text-sm">Live by member from Cosmo app</p>
+        <p className="text-muted-fg text-sm">{t("description")}</p>
       </div>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Tabs aria-label="Recipe App" className="w-full">
+            <Tabs aria-label={t("tabs_label")} className="w-full">
               <TabList className="w-fit">
                 {selectedArtists.map((artist) => (
                   <Tab key={artist.id} id={artist.id} aria-label={artist.name}>
@@ -63,6 +65,7 @@ export default function LiveSessionListRender() {
 }
 
 function LiveSessionList({ artistId }: { artistId: string }) {
+  const t = useTranslations("live");
   const query = useSuspenseQuery({
     queryKey: ["live-session", artistId],
     queryFn: async () => {
@@ -85,13 +88,14 @@ function LiveSessionList({ artistId }: { artistId: string }) {
         ))}
       </div>
       {query.data.length === 0 && (
-        <div className="flex justify-center">No live available at this moment</div>
+        <div className="flex justify-center">{t("no_live")}</div>
       )}
     </>
   );
 }
 
 function LiveSessionCard({ live }: { live: LiveSession }) {
+  const t = useTranslations("live");
   const searchParams = useSearchParams();
   return (
     <Link
@@ -107,7 +111,7 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
           />
           {live.status === "in_progress" && (
             <div className="absolute top-2 left-2 rounded-lg bg-rose-500 px-1.5 py-0.5 text-sm font-semibold text-white shadow">
-              Live
+              {t("live_badge")}
             </div>
           )}
         </div>

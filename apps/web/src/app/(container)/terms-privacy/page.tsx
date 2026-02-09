@@ -1,37 +1,38 @@
 import type { Metadata } from "next";
 
+import { getTranslations } from "next-intl/server";
+
 import { Link } from "@/components/ui/link";
 import { SITE_NAME } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("terms_privacy");
   return {
-    title: "Terms and Privacy",
+    title: t("title"),
   };
 }
 
-export default function TermsPrivacy() {
+export default async function TermsPrivacy() {
+  const t = await getTranslations("terms_privacy");
   return (
     <div className="flex flex-col items-center gap-6 py-8">
-      <h2 className="text-lg font-semibold">Terms and Privacy</h2>
+      <h2 className="text-lg font-semibold">{t("heading")}</h2>
 
       <div className="text-fg text-sm">
         <ul className="list-disc leading-8">
+          <li>{t("points.login_info")}</li>
+          <li>{t("points.no_post")}</li>
+          <li>{t("points.no_sell")}</li>
+          <li>{t("points.only_app")}</li>
+          <li>{t("points.delete_anytime")}</li>
           <li>
-            When you log in with Twitter (X) or Discord, we get your public profile info (like your
-            name and username).
-          </li>
-          <li>We do not post anything or access your private data.</li>
-          <li>We do not sell or share your data.</li>
-          <li>We only use your info to make the app work.</li>
-          <li>You can ask us to delete your data anytime.</li>
-          <li>
-            {SITE_NAME} is open source. Github link{" "}
+            {t("points.open_source_prefix", { siteName: SITE_NAME })}{" "}
             <Link
               href="https://github.com/izrin96/objekt-explorer"
               className="underline"
               target="_blank"
             >
-              available here
+              {t("points.available_here")}
             </Link>
             .
           </li>

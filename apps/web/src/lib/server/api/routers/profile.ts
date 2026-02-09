@@ -3,8 +3,10 @@ import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, eq } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import * as z from "zod";
 
+import { getUserLocale } from "../../locale";
 import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3";
 import { authed } from "../orpc";
 
@@ -82,10 +84,13 @@ export async function checkAddressOwned(address: string, userId: string) {
     and(eq(userAddress.address, address), eq(userAddress.userId, userId)),
   );
 
-  if (count < 1)
+  if (count < 1) {
+    const locale = await getUserLocale();
+    const t = await getTranslations({ locale, namespace: "api_errors.profile" });
     throw new ORPCError("UNAUTHORIZED", {
-      message: "This Cosmo not linked with your account",
+      message: t("not_linked"),
     });
+  }
 }
 
 async function fetchOwnedProfile(address: string, userId: string) {
@@ -105,10 +110,13 @@ async function fetchOwnedProfile(address: string, userId: string) {
     where: { address, userId },
   });
 
-  if (!profile)
+  if (!profile) {
+    const locale = await getUserLocale();
+    const t = await getTranslations({ locale, namespace: "api_errors.profile" });
     throw new ORPCError("NOT_FOUND", {
-      message: "Profile not found or not link with this account",
+      message: t("not_found"),
     });
+  }
 
   return profile;
 }

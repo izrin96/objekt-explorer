@@ -70,6 +70,29 @@
       "mint": "민팅",
       "transfer": "전송",
       "spin": "스핀"
+    },
+    "select_all": "모두 선택",
+    "clear_select": "선택 해제",
+    "selected_count": "{count}개 선택됨",
+    "wide": "넓게",
+    "compact": "좁게",
+    "show_label": "라벨 표시",
+    "hide_label": "라벨 숨김",
+    "show_count": "개수 표시",
+    "search_help": {
+      "intro": "이 빠른 검색에서는 다음을 지원합니다:",
+      "or_operation": "쉼표(,)로 OR 조건 검색",
+      "and_operation": "공백으로 AND 조건 검색",
+      "not_operation": "느낌표(!)로 NOT 조건 검색 (예: !seoyeon, !d201-202)",
+      "artist_names": "아티스트 이름 (예: triples)",
+      "member_short_names": "멤버 약칭 (예: naky, yy)",
+      "class": "클래스 (예: special, sco)",
+      "season": "시즌 (예: atom)",
+      "collection_numbers": "컬렉션 번호 (예: d207)",
+      "collection_ranges": "컬렉션 번호 범위 (예: 301z-302z)",
+      "serial_numbers": "시리얼 번호 (예: #1)",
+      "serial_ranges": "시리얼 번호 범위 (예: #1-20)",
+      "example": "예시: yy c201-204 !c202 #1-200, jw 201z, yb sco divine"
     }
   },
   "objekt": {
@@ -97,10 +120,22 @@
     "token_id": "토큰 ID",
     "transferable": "전송 가능",
     "unobtainable": "획득 불가",
-    "date": "날짜"
+    "date": "날짜",
+    "not_owned": "보유하지 않음",
+    "serial": "시리얼",
+    "received": "받은 날짜",
+    "yes": "예",
+    "no": "아니오",
+    "error_fetching_metadata": "메타데이터 가져오기 오류",
+    "objekt_private": "비공개 Objekt",
+    "not_found_objekt": "찾을 수 없음",
+    "token_id_copied": "토큰 ID 복사됨"
   },
   "nav": {
     "activity": "활동",
+    "home": "홈",
+    "navigation": "내비게이션",
+    "toggle_menu": "메뉴 토글",
     "my_list": "내 목록",
     "my_cosmo_link": "내 Cosmo 링크",
     "no_cosmo_found": "Cosmo를 찾을 수 없습니다",
@@ -108,28 +143,169 @@
     "account": "계정",
     "sign_out": "로그아웃",
     "sign_in": "로그인",
+    "sign_out_success": "로그아웃되었습니다",
+    "open_menu": "메뉴 열기",
+    "no_list_found": "목록을 찾을 수 없습니다",
+    "create_list": "목록 만들기",
+    "discord_format": "Discord 형식",
+    "manage_list": "목록 관리",
     "search_user": {
       "label": "사용자 검색",
       "placeholder": "사용자를 검색하세요...",
       "result_label": "검색 결과",
-      "recent_label": "최근 검색"
-    }
-  },
-  "edit_profile": {
-    "title": "프로필 편집",
-    "desc": "현재 {nickname}님의 Cosmo 프로필을 편집 중입니다",
-    "hide_user": {
-      "title": "사용자 숨기기",
-      "desc": "Cosmo 프로필에서 Objekt Tracker 계정을 숨깁니다"
+      "recent_label": "최근 검색",
+      "clear_history": "검색 기록 삭제"
     }
   },
   "auth": {
+    "sign_in": {
+      "title": "로그인",
+      "description": "계정에 접속하려면 인증 정보를 입력하세요.",
+      "email_label": "이메일",
+      "email_placeholder": "your@email.com",
+      "email_required": "이메일을 입력해주세요.",
+      "password_label": "비밀번호",
+      "password_placeholder": "•••••••",
+      "password_required": "비밀번호를 입력해주세요.",
+      "submit": "이메일로 로그인",
+      "forgot_password": "비밀번호 찾기",
+      "create_account": "새 계정 만들기",
+      "or_continue": "또는 다음으로 계속",
+      "sign_in_discord": "Discord로 로그인",
+      "sign_in_twitter": "Twitter (X)로 로그인",
+      "success": "로그인되었습니다",
+      "error": "로그인 오류. {message}"
+    },
+    "sign_up": {
+      "name_label": "이름",
+      "name_placeholder": "이름을 입력하세요",
+      "name_required": "이름을 입력해주세요.",
+      "email_label": "이메일",
+      "email_placeholder": "your@email.com",
+      "email_required": "이메일을 입력해주세요.",
+      "password_label": "비밀번호",
+      "password_required": "비밀번호를 입력해주세요.",
+      "submit": "계정 만들기",
+      "back": "로그인으로 돌아가기",
+      "success": "계정이 생성되었습니다.",
+      "error": "계정 생성 오류. {message}"
+    },
+    "forgot_password": {
+      "email_label": "이메일",
+      "email_placeholder": "your@email.com",
+      "email_required": "이메일을 입력해주세요.",
+      "submit": "비밀번호 재설정 이메일 보내기",
+      "back": "로그인으로 돌아가기",
+      "success": "비밀번호 재설정 이메일이 전송되었습니다. 이메일을 확인하세요",
+      "error": "비밀번호 재설정 이메일 요청 오류. {message}"
+    },
     "reset_password": {
+      "title": "비밀번호 재설정",
+      "password_label": "비밀번호",
+      "password_required": "비밀번호를 입력해주세요.",
+      "submit": "비밀번호 재설정",
+      "success": "비밀번호가 재설정되었습니다",
+      "error": "비밀번호 재설정 오류. {message}",
       "invalid_token": "유효하지 않은 토큰입니다"
     },
     "verified": {
       "email_verified": "이메일이 인증되었습니다"
+    },
+    "account": {
+      "title": "계정",
+      "description": "계정을 관리하세요",
+      "general": "일반",
+      "change_email": "이메일 변경",
+      "change_password": "비밀번호 변경",
+      "social_link": "소셜 연결",
+      "name_label": "이름",
+      "name_placeholder": "이름을 입력하세요",
+      "name_required": "이름을 입력해주세요.",
+      "show_social_label": "소셜 표시",
+      "show_social_desc": "목록 및 Cosmo 프로필에 Discord 사용자명과 같은 소셜 계정을 표시합니다",
+      "profile_pic_help": "프로필 사진은 아래 소셜 연결 섹션에서 새로 고침을 클릭하여 X 또는 Discord에서 가져와 설정할 수 있습니다.",
+      "save": "저장",
+      "current_password_label": "현재 비밀번호",
+      "current_password_placeholder": "현재 비밀번호를 입력하세요",
+      "current_password_required": "현재 비밀번호를 입력해주세요.",
+      "new_password_label": "새 비밀번호",
+      "new_password_placeholder": "새 비밀번호를 입력하세요",
+      "new_password_required": "새 비밀번호를 입력해주세요.",
+      "password_min_length": "비밀번호는 최소 8자 이상이어야 합니다",
+      "email_label": "이메일",
+      "email_placeholder": "이메일을 입력하세요",
+      "email_required": "이메일을 입력해주세요.",
+      "email_verification_desc": "새 이메일 주소를 확인하기 위한 인증 이메일이 전송됩니다",
+      "delete_account_description": "확인을 위한 인증 이메일이 전송됩니다. 계속하시겠습니까?",
+      "continue": "계속",
+      "account_updated": "계정이 업데이트되었습니다",
+      "account_update_error": "계정 수정 오류",
+      "password_changed": "비밀번호가 변경되었습니다",
+      "password_change_error": "비밀번호 변경 오류",
+      "email_verification_sent": "이메일 인증이 전송되었습니다",
+      "email_verification_error": "이메일 인증 전송 오류",
+      "verification_email_sent": "인증 이메일이 전송되었습니다",
+      "delete_account_error": "계정 삭제 오류",
+      "delete_account": "계정 삭제",
+      "remove_profile_picture": "프로필 사진 제거",
+      "link_accounts": {
+        "refresh": "새로 고침",
+        "unlink": "연결 해제",
+        "link": "연결",
+        "unlinked": "{provider} 연결이 해제되었습니다",
+        "unlink_error": "{provider}에서 연결 해제 오류",
+        "profile_updated": "프로필이 업데이트되었습니다",
+        "profile_update_error": "프로필 업데이트 오류. {message}",
+        "update_profile_title": "{provider}에서 프로필 업데이트",
+        "update_profile_desc": "{provider} 사용자명과 프로필 사진이 업데이트됩니다. 계속하시겠습니까?",
+        "cancel": "취소",
+        "continue": "계속"
+      }
     }
+  },
+  "profile": {
+    "header": {
+      "address_copied": "주소가 복사되었습니다",
+      "view_in_apollo": "Apollo에서 보기",
+      "edit_profile": "프로필 편집"
+    },
+    "tabs": {
+      "collection": "컬렉션",
+      "trade_history": "거래 내역",
+      "progress": "진행 상황",
+      "statistics": "통계"
+    },
+    "edit": {
+      "title": "프로필 편집",
+      "desc": "현재 <bold>{nickname}</bold>님의 Cosmo 프로필을 편집 중입니다",
+      "hide_user_label": "사용자 숨기기",
+      "hide_user_desc": "Cosmo 프로필에서 {siteName} 계정을 숨깁니다",
+      "hide_nickname_label": "Cosmo ID 숨기기",
+      "hide_nickname_desc": "활동, 거래 내역, 시리얼 조회 및 프로필에서 Cosmo ID를 숨깁니다.",
+      "private_serial_label": "시리얼 조회에서 숨기기",
+      "private_serial_desc": "다른 사람이 시리얼 번호로 objekt를 찾지 못하도록 합니다. 본인만 볼 수 있습니다.",
+      "hide_transfer_label": "거래 내역 숨기기",
+      "hide_transfer_desc": "프로필 거래 내역을 숨깁니다. 본인만 볼 수 있습니다.",
+      "private_profile_label": "비공개 프로필",
+      "private_profile_desc": "Cosmo 프로필을 비공개로 설정합니다. 본인만 볼 수 있습니다.",
+      "grid_columns_label": "Objekt 열",
+      "grid_columns_desc": "방문 시 사용할 열 수입니다. 방문자는 여전히 원하는 열로 변경할 수 있습니다. 팁: URL 파라미터(?column=)로도 재정의할 수 있습니다.",
+      "grid_columns_not_set": "설정 안 됨",
+      "grid_columns_count": "{count}열",
+      "banner_label": "배너 이미지",
+      "banner_selected": "선택된 파일: {name}",
+      "banner_clear": "지우기",
+      "banner_recommendation": "권장 비율은 2.3:1입니다",
+      "remove_banner_label": "배너 제거",
+      "unlink_note": "이 Cosmo 프로필과 계정의 연결을 해제하려면 <link>Cosmo 링크 관리</link> 페이지를 방문하세요.",
+      "submit": "저장",
+      "success": "Cosmo 프로필이 업데이트되었습니다",
+      "error": "Cosmo 프로필 수정 오류",
+      "upload_error": "이미지 업로드 실패",
+      "file_too_large": "파일 \"{name}\"이(가) 10MB 제한을 초과합니다."
+    },
+    "not_found": "사용자를 찾을 수 없습니다",
+    "profile_private": "비공개 프로필"
   },
   "link": {
     "my_cosmo": "내 Cosmo",
@@ -148,6 +324,339 @@
     "start_over": "처음부터 다시",
     "code_instructions": "이 코드를 {artist} Cosmo 프로필 바이오에 추가한 후 아래의 인증 버튼을 눌러주세요.",
     "code_expired": "인증 코드가 만료되었습니다. 처음부터 다시 시도해주세요.",
-    "verification_failed": "프로필 바이오에서 인증 코드를 찾을 수 없습니다. 확인 후 다시 시도해주세요."
+    "verification_failed": "프로필 바이오에서 인증 코드를 찾을 수 없습니다. 확인 후 다시 시도해주세요.",
+    "process": {
+      "intro_title": "Cosmo 프로필을 연결하세요",
+      "intro_description": "계속 진행하기 전에 Cosmo 앱을 다운로드하고 연결하려는 Cosmo ID로 로그인해야 합니다.",
+      "nickname_step_prompt": "시작하려면 Cosmo ID를 검색하세요.",
+      "artist_step_cosmo_id": "Cosmo ID:",
+      "artist_step_select": "인증에 사용할 아티스트 프로필을 선택하세요.",
+      "verify_step_verifying": "<bold>{artist}</bold> Cosmo 프로필에서 <bold>{nickname}</bold> 인증 중",
+      "countdown_remaining": "남은 시간 {countdown}"
+    },
+    "card": {
+      "open": "열기",
+      "edit": "편집",
+      "unlink": "연결 해제"
+    },
+    "unlink": {
+      "title": "Cosmo 연결 해제",
+      "description": "이 계정에서 Cosmo 연결이 해제됩니다. 나중에 다시 연결할 수 있습니다. 계속하시겠습니까?",
+      "submit": "계속",
+      "success": "Cosmo 연결이 해제되었습니다",
+      "error": "Cosmo 연결 해제 오류"
+    }
+  },
+  "list": {
+    "title": "내 목록",
+    "tabs": {
+      "normal": "일반 목록",
+      "profile": "프로필 목록"
+    },
+    "create_button": "목록 만들기",
+    "generate_discord_button": "Discord 형식 생성",
+    "feature_not_available": "이 기능은 아직 사용할 수 없습니다",
+    "no_list_found": "목록을 찾을 수 없습니다",
+    "create": {
+      "title": "목록 만들기",
+      "name_label": "이름",
+      "name_placeholder": "내 목록",
+      "name_required": "이름을 입력해주세요.",
+      "hide_user_label": "사용자 숨기기",
+      "hide_user_desc": "이 목록에서 {siteName} 계정을 숨깁니다",
+      "submit": "만들기",
+      "success": "목록이 생성되었습니다",
+      "error": "목록 생성 오류"
+    },
+    "edit": {
+      "title": "목록 편집",
+      "description": "목록을 관리하세요",
+      "name_label": "이름",
+      "name_placeholder": "내 목록",
+      "name_required": "이름을 입력해주세요.",
+      "hide_user_label": "사용자 숨기기",
+      "hide_user_desc": "이 목록에서 {siteName} 계정을 숨깁니다",
+      "objekt_columns_label": "Objekt 열",
+      "objekt_columns_desc": "방문 시 사용할 열 수입니다. 방문자는 여전히 원하는 열로 변경할 수 있습니다. 팁: URL 파라미터(?column=)로도 재정의할 수 있습니다.",
+      "objekt_columns_not_set": "설정 안 됨",
+      "objekt_columns_count": "{count}열",
+      "delete_note": "이 목록을 삭제하려면 <link>목록 관리</link> 페이지를 방문하세요.",
+      "submit": "저장",
+      "success": "목록이 업데이트되었습니다",
+      "error": "목록 수정 오류"
+    },
+    "delete": {
+      "title": "목록 삭제",
+      "description": "선택한 목록이 영구적으로 삭제됩니다. 계속하시겠습니까?",
+      "submit": "계속",
+      "success": "목록이 삭제되었습니다",
+      "error": "목록 삭제 오류"
+    },
+    "card": {
+      "open": "열기",
+      "edit": "편집",
+      "edit_list": "목록 편집",
+      "delete": "삭제"
+    },
+    "manage_objekt": {
+      "add_title": "목록에 추가",
+      "remove_title": "objekt 제거",
+      "no_list_message": "아직 목록이 없습니다.",
+      "create_one_here": "여기서 만들기",
+      "list_label": "내 목록",
+      "list_placeholder": "목록 선택",
+      "list_required": "목록을 선택해주세요.",
+      "skip_dups_label": "중복 방지",
+      "skip_dups_desc": "추가할 때 동일한 objekt 건너뛰기",
+      "add_button": "추가",
+      "remove_description": "목록에서 선택한 objekt가 영구적으로 제거됩니다. 계속하시겠습니까?",
+      "continue_button": "계속"
+    }
+  },
+  "objekt_menu": {
+    "add_to_list": "목록에 추가",
+    "remove_from_list": "목록에서 제거",
+    "pin": "고정",
+    "unpin": "고정 해제",
+    "lock": "잠금",
+    "unlock": "잠금 해제",
+    "select": "선택",
+    "unselect": "선택 해제",
+    "no_list_found": "목록을 찾을 수 없습니다"
+  },
+  "actions": {
+    "pin": {
+      "success_single": "Objekt가 고정되었습니다",
+      "success_multiple": "{count}개의 objekt가 고정되었습니다",
+      "error_single": "Objekt 고정 오류",
+      "error_multiple": "{count}개의 objekt 고정 오류"
+    },
+    "unpin": {
+      "success_single": "Objekt 고정이 해제되었습니다",
+      "success_multiple": "{count}개의 objekt 고정이 해제되었습니다",
+      "error_single": "Objekt 고정 해제 오류",
+      "error_multiple": "{count}개의 objekt 고정 해제 오류"
+    },
+    "lock": {
+      "success_single": "Objekt가 잠겼습니다",
+      "success_multiple": "{count}개의 objekt가 잠겼습니다",
+      "error_single": "Objekt 잠금 오류",
+      "error_multiple": "{count}개의 objekt 잠금 오류"
+    },
+    "unlock": {
+      "success_single": "Objekt 잠금이 해제되었습니다",
+      "success_multiple": "{count}개의 objekt 잠금이 해제되었습니다",
+      "error_single": "Objekt 잠금 해제 오류",
+      "error_multiple": "{count}개의 objekt 잠금 해제 오류"
+    },
+    "add_to_list": {
+      "success_single": "Objekt가 목록에 추가되었습니다",
+      "success_multiple": "{count}개의 objekt가 목록에 추가되었습니다",
+      "error": "Objekt 목록 추가 오류"
+    },
+    "remove_from_list": {
+      "success_single": "Objekt가 목록에서 제거되었습니다",
+      "success_multiple": "{count}개의 objekt가 목록에서 제거되었습니다",
+      "error": "Objekt 목록 제거 오류"
+    }
+  },
+  "common": {
+    "modal": {
+      "close": "닫기",
+      "cancel": "취소"
+    },
+    "copy": {
+      "button": "복사",
+      "copied": "복사됨!"
+    },
+    "count": {
+      "total": "총 {count}개",
+      "types": "{count}가지 종류"
+    },
+    "error": {
+      "loading_page": "페이지 로딩 오류",
+      "loading_data": "데이터 로딩 오류",
+      "retry": "다시 시도"
+    },
+    "theme_switcher": {
+      "label": "테마 전환"
+    },
+    "mobile_navigation": {
+      "toggle": "메뉴 토글",
+      "label": "내비게이션",
+      "home": "홈"
+    }
+  },
+  "generate_discord": {
+    "title": "Discord 형식 생성",
+    "error": "Discord 형식 생성 오류",
+    "select_at_least_one": "최소 하나의 목록을 선택하세요",
+    "list_placeholder": "목록 선택 (선택사항)",
+    "have_list_label": "보유 목록",
+    "want_list_label": "원하는 목록",
+    "show_count": "개수 표시",
+    "include_link": "링크 포함",
+    "lower_case": "소문자",
+    "bulleted_list": "글머리 기호 목록",
+    "group_by_label": "그룹 기준",
+    "group_by_placeholder": "그룹 모드 선택",
+    "group_by_none": "없음 (멤버 → 컬렉션)",
+    "group_by_season": "시즌 (멤버 → 시즌 → 컬렉션)",
+    "group_by_season_first": "시즌 우선 (시즌 → 멤버 → 컬렉션)",
+    "style_label": "스타일",
+    "style_placeholder": "스타일 선택",
+    "style_default": "기본",
+    "style_compact": "간결",
+    "formatted_text_label": "형식화된 Discord 텍스트",
+    "reset_button": "초기화",
+    "generate_button": "생성"
+  },
+  "activity": {
+    "title": "Objekt 활동",
+    "description": "실시간 최신 objekt 활동",
+    "beta": "베타",
+    "event_type": {
+      "mint": "민팅",
+      "spin": "스핀",
+      "transfer": "전송"
+    },
+    "table": {
+      "event": "이벤트",
+      "objekt": "Objekt",
+      "serial": "시리얼",
+      "from": "보낸 사람",
+      "to": "받는 사람",
+      "time": "시간",
+      "aria_label": "활동 목록"
+    },
+    "paused_on_hover": "마우스 오버 시 일시 정지",
+    "cosmo": "COSMO",
+    "cosmo_spin": "COSMO 스핀"
+  },
+  "not_found": {
+    "list": "목록을 찾을 수 없습니다",
+    "live": "라이브를 찾을 수 없습니다",
+    "page": "페이지를 찾을 수 없습니다"
+  },
+  "live": {
+    "title": "Cosmo Live",
+    "alpha": "알파",
+    "description": "Cosmo 앱의 멤버별 라이브",
+    "tabs_label": "Recipe 앱",
+    "no_live": "현재 이용 가능한 라이브가 없습니다",
+    "live_badge": "라이브",
+    "live_stream_ended": "라이브 스트림 종료"
+  },
+  "user_link": {
+    "preview": "미리보기",
+    "nickname_not_available": "닉네임을 사용할 수 없습니다.",
+    "deleted": "(삭제됨)"
+  },
+  "discord_format_modal": {
+    "title": "Discord 형식 생성",
+    "description": "Objekt 목록은 현재 필터를 기반으로 합니다.",
+    "button": "Discord 형식",
+    "generate": "생성"
+  },
+  "checkpoint": {
+    "title": "스냅샷",
+    "description": "특정 시점의 컬렉션 보기",
+    "close": "닫기",
+    "apply": "적용",
+    "reset": "초기화"
+  },
+  "progress": {
+    "select_prompt": "최소 1명의 아티스트 또는 1명의 멤버를 선택하세요",
+    "loading_objekts": "Objekt 로딩 중",
+    "progress_bar_label": "진행률 바"
+  },
+  "stats": {
+    "loading_objekts": "Objekt 로딩 중",
+    "breakdown_member": {
+      "title": "멤버별 Objekt 분석",
+      "description": "멤버별 총 objekt"
+    },
+    "breakdown_season": {
+      "title": "시즌별 Objekt 분석",
+      "description": "시즌별 총 objekt"
+    },
+    "member_progress": {
+      "title": "멤버 진행률",
+      "description": "멤버별 진행률",
+      "percentage_label": "퍼센트"
+    }
+  },
+  "trades": {
+    "filter_type": {
+      "label": "이벤트",
+      "all": "전체",
+      "mint": "민팅",
+      "received": "받음",
+      "sent": "보냄",
+      "spin": "스핀"
+    },
+    "history_private": "거래 내역 비공개",
+    "table_headers": {
+      "date": "날짜",
+      "objekt": "Objekt",
+      "serial": "시리얼",
+      "action": "행동",
+      "user": "사용자"
+    },
+    "actions": {
+      "received_from": "받은 사람",
+      "sent_to": "보낸 사람"
+    },
+    "cosmo": "COSMO",
+    "cosmo_spin": "COSMO 스핀"
+  },
+  "terms_privacy": {
+    "title": "이용약관 및 개인정보처리방침",
+    "heading": "이용약관 및 개인정보처리방침",
+    "points": {
+      "login_info": "Twitter (X) 또는 Discord로 로그인하면 이름 및 사용자명과 같은 공개 프로필 정보를 수집합니다.",
+      "no_post": "게시물을 올리거나 개인 데이터에 액세스하지 않습니다.",
+      "no_sell": "데이터를 판매하거나 공유하지 않습니다.",
+      "only_app": "앱이 작동하도록 하기 위해서만 정보를 사용합니다.",
+      "delete_anytime": "언제든지 데이터 삭제를 요청할 수 있습니다.",
+      "open_source_prefix": "{siteName}은(는) 오픈 소스입니다. Github 링크",
+      "available_here": "여기"
+    }
+  },
+  "error": {
+    "profile_loading": "프로필 로드 중 오류 발생",
+    "list_loading": "리스트 로드 중 오류 발생"
+  },
+  "api_errors": {
+    "cosmo_link": {
+      "already_linked_self": "이 Cosmo ID는 이미 귀하의 계정에 연결되어 있습니다.",
+      "already_linked_other": "이 Cosmo ID는 이미 다른 계정에 연결되어 있습니다.",
+      "rate_limit": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.",
+      "verification_expired": "인증이 만료되었습니다. 처음부터 다시 시작해주세요.",
+      "profile_mismatch": "프로필 데이터가 일치하지 않습니다. 처음부터 다시 시작해주세요.",
+      "code_not_found": "상태 메시지에서 인증 코드를 찾을 수 없습니다. 확인 후 다시 시도해주세요."
+    },
+    "profile": {
+      "not_linked": "이 Cosmo는 귀하의 계정에 연결되어 있지 않습니다",
+      "not_found": "프로필을 찾을 수 없거나 이 계정에 연결되어 있지 않습니다"
+    },
+    "user": {
+      "not_linked_provider": "사용자가 제공업체에 연결되어 있지 않습니다",
+      "failed_get_info": "정보를 가져오는 데 실패했습니다. {provider}(으)로 로그인한 후 다시 시도해주세요."
+    }
+  },
+  "page_titles": {
+    "activity": "활동",
+    "live": "라이브",
+    "live_detail": "{title} · {channel} 라이브",
+    "login": "로그인",
+    "my_list": "내 리스트",
+    "my_cosmo_link": "내 Cosmo 링크",
+    "profile_collection": "{nickname}님의 컬렉션",
+    "profile_progress": "{nickname}님의 진행상황",
+    "profile_stats": "{nickname}님의 통계",
+    "profile_trades": "{nickname}님의 거래",
+    "list_detail": "{name} 리스트",
+    "list_detail_with_user": "{name} · {user}님의 리스트"
   }
 }

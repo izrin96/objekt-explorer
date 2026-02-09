@@ -2,6 +2,7 @@
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
+import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { ModalBody, ModalClose, ModalContent, ModalFooter } from "../ui/modal";
@@ -22,6 +23,7 @@ export const useObjektModal = () => use(ObjektModalContext);
 
 export default function ObjektModal({ children, showOwned, objekts, menu }: Props) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("common.modal");
 
   const handleClick = () => setOpen(true);
 
@@ -33,7 +35,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
           <ObjektDetail objekts={objekts} showOwned={showOwned} />
         </ModalBody>
         <ModalFooter className="sm:hidden">
-          <ModalClose>Close</ModalClose>
+          <ModalClose>{t("close")}</ModalClose>
         </ModalFooter>
       </ModalContent>
       {children}

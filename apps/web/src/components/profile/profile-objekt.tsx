@@ -4,6 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { Suspense, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
@@ -112,6 +113,7 @@ function ProfileObjekt({
   selectTarget: HTMLDivElement | null;
   discordTarget: HTMLDivElement | null;
 }) {
+  const t = useTranslations("common.count");
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered, grouped, filters, hasNextPage } = useProfileObjekts();
@@ -233,8 +235,10 @@ function ProfileObjekt({
 
       <span className="flex items-center gap-2 font-semibold">
         <span>
-          {filtered.length.toLocaleString()} total
-          {filters.grouped ? ` (${grouped.length.toLocaleString()} types)` : ""}
+          {t("total", { count: filtered.length.toLocaleString() })}
+          {filters.grouped
+            ? ` (${t("types", { count: grouped.length.toLocaleString() })})`
+            : ""}
         </span>
         {hasNextPage && <Loader variant="ring" className="size-4" />}
       </span>

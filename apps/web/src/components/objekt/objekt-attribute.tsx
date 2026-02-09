@@ -42,7 +42,7 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   }
 
   if (status === "error") {
-    return <Badge intent="danger">Error fetching metadata</Badge>;
+    return <Badge intent="danger">{t("error_fetching_metadata")}</Badge>;
   }
 
   if (status === "success") {

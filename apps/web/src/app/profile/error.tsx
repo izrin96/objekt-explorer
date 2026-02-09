@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { ErrorRender } from "@/components/error-boundary";
 
 function refresh() {
@@ -7,5 +9,6 @@ function refresh() {
 }
 
 export default function IndexError() {
-  return <ErrorRender onRetry={refresh} message="Error loading profile" />;
+  const t = useTranslations("error");
+  return <ErrorRender onRetry={refresh} message={t("profile_loading")} />;
 }
