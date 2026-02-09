@@ -131,6 +131,7 @@ export function ObjektCard({
 
   const [flipped, setFlipped] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [backLoaded, setBackLoaded] = useState(false);
   const [ref, { width }] = useElementSize();
 
   const css = {
@@ -184,7 +185,13 @@ export function ObjektCard({
             loading="eager"
             src={urls.backUrl}
             alt={objekt.collectionId}
+            onLoad={() => setBackLoaded(true)}
           />
+          {!backLoaded && (
+            <div className="aspect-photocard relative flex size-full bg-white">
+              <div className="h-[88%] w-[91%] animate-pulse self-center rounded-r-lg bg-(--objekt-bg-color) p-5"></div>
+            </div>
+          )}
         </div>
       </div>
     </div>
