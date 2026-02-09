@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 
 import "@/app/globals.css";
+import { getLocale } from "next-intl/server";
 import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
 import { type PropsWithChildren } from "react";
-import { preconnect } from "react-dom";
 
 import "@/lib/orpc/server";
+import { preconnect } from "react-dom";
+
 import { Analytics } from "@/components/analytics";
 import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
@@ -91,9 +93,11 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   preconnect("https://resources.cosmo.fans");
   preconnect("https://static.cosmo.fans");
 
+  const locale = await getLocale();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable}`}
     >

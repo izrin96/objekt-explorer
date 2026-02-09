@@ -56,7 +56,7 @@
     "add_to_list": "목록에 추가",
     "remove_from_list": "목록에서 제거",
     "reset_filter": "필터 초기화",
-    "quick_search": "빠른 검색..",
+    "quick_search": "빠른 검색",
     "disable_pin": "고정 해제",
     "only_locked": "잠긴 항목만",
     "only_unlocked": "잠기지 않은 항목만",
@@ -81,9 +81,9 @@
     "show_count": "개수 표시",
     "search_help": {
       "intro": "이 빠른 검색에서는 다음을 지원합니다:",
-      "or_operation": "쉼표(,)로 OR 조건 검색",
-      "and_operation": "공백으로 AND 조건 검색",
-      "not_operation": "느낌표(!)로 NOT 조건 검색 (예: !seoyeon, !d201-202)",
+      "or_operation": "항목을 쉼표(,)로 구분하여 OR 검색",
+      "and_operation": "항목을 공백으로 구분하여 AND 검색",
+      "not_operation": "느낌표(!)를 앞에 붙여 제외 검색 (예: !seoyeon, !d201-202)",
       "artist_names": "아티스트 이름 (예: triples)",
       "member_short_names": "멤버 약칭 (예: naky, yy)",
       "class": "클래스 (예: special, sco)",
@@ -129,7 +129,8 @@
     "error_fetching_metadata": "메타데이터 가져오기 오류",
     "objekt_private": "비공개 Objekt",
     "not_found_objekt": "찾을 수 없음",
-    "token_id_copied": "토큰 ID 복사됨"
+    "token_id_copied": "토큰 ID 복사됨",
+    "must_select_one": "최소 1개의 Objekt를 선택해야 합니다"
   },
   "nav": {
     "activity": "활동",
@@ -151,7 +152,7 @@
     "manage_list": "목록 관리",
     "search_user": {
       "label": "사용자 검색",
-      "placeholder": "사용자를 검색하세요...",
+      "placeholder": "사용자를 검색하세요",
       "result_label": "검색 결과",
       "recent_label": "최근 검색",
       "clear_history": "검색 기록 삭제"
@@ -400,7 +401,7 @@
     },
     "manage_objekt": {
       "add_title": "목록에 추가",
-      "remove_title": "objekt 제거",
+      "remove_title": "Objekt 제거",
       "no_list_message": "아직 목록이 없습니다.",
       "create_one_here": "여기서 만들기",
       "list_label": "내 목록",
@@ -634,7 +635,7 @@
       "rate_limit": "시도 횟수가 너무 많습니다. 잠시 후 다시 시도해주세요.",
       "verification_expired": "인증이 만료되었습니다. 처음부터 다시 시작해주세요.",
       "profile_mismatch": "프로필 데이터가 일치하지 않습니다. 처음부터 다시 시작해주세요.",
-      "code_not_found": "상태 메시지에서 인증 코드를 찾을 수 없습니다. 확인 후 다시 시도해주세요."
+      "code_not_found": "프로필 바이오에서 인증 코드를 찾을 수 없습니다. 확인 후 다시 시도해주세요."
     },
     "profile": {
       "not_linked": "이 Cosmo는 귀하의 계정에 연결되어 있지 않습니다",

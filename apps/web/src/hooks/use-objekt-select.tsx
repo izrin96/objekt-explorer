@@ -2,6 +2,7 @@
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
+import { useTranslations } from "next-intl";
 import { createContext, type PropsWithChildren, useContext, useRef } from "react";
 import { toast } from "sonner";
 import { createStore, type StoreApi, useStore } from "zustand";
@@ -19,7 +20,7 @@ type ObjektSelectedState = {
   handleSelect: (objekt: ValidObjekt, callback: () => void) => void;
 };
 
-const createObjektSelectStore = () =>
+const createObjektSelectStore = (errorMessage: string) =>
   createStore<ObjektSelectedState>()((set, get) => ({
     mode: false,
 
@@ -57,7 +58,7 @@ const createObjektSelectStore = () =>
 
     handleAction: (callback: () => void) => {
       if (get().selected.size === 0) {
-        toast.error("Must select at least one objekt");
+        toast.error(errorMessage);
       } else {
         callback();
       }
@@ -75,9 +76,10 @@ const createObjektSelectStore = () =>
 const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(null);
 
 export function ObjektSelectProvider({ children }: PropsWithChildren) {
+  const t = useTranslations("objekt");
   const storeRef = useRef<StoreApi<ObjektSelectedState> | null>(null);
   if (!storeRef.current) {
-    storeRef.current = createObjektSelectStore();
+    storeRef.current = createObjektSelectStore(t("must_select_one"));
   }
 
   return <ObjektSelectContext value={storeRef.current}>{children}</ObjektSelectContext>;

@@ -56,7 +56,7 @@
     "add_to_list": "Add to list",
     "remove_from_list": "Remove from list",
     "reset_filter": "Reset filter",
-    "quick_search": "Quick search..",
+    "quick_search": "Quick search",
     "disable_pin": "Disable pin",
     "only_locked": "Only locked",
     "only_unlocked": "Only unlocked",
@@ -81,9 +81,9 @@
     "show_count": "Show Count",
     "search_help": {
       "intro": "This quick search supports:",
-      "or_operation": "OR query operation by comma",
-      "and_operation": "AND query operation by space",
-      "not_operation": "NOT query operation by starting with an exclamation mark (example: !seoyeon, !d201-202)",
+      "or_operation": "Separate terms with a comma for an OR search",
+      "and_operation": "Separate terms with a space for an AND search",
+      "not_operation": "Exclude search results by prefixing a term with an exclamation mark (example: !seoyeon, !d201-202)",
       "artist_names": "Artist names (example: triples)",
       "member_short_names": "Member short names (example: naky, yy)",
       "class": "Class (example: special, sco)",
@@ -129,7 +129,8 @@
     "error_fetching_metadata": "Error fetching metadata",
     "objekt_private": "Objekt Private",
     "not_found_objekt": "Not found",
-    "token_id_copied": "Token ID copied"
+    "token_id_copied": "Token ID copied",
+    "must_select_one": "Must select at least 1 objekt"
   },
   "nav": {
     "activity": "Activity",
@@ -151,7 +152,7 @@
     "manage_list": "Manage list",
     "search_user": {
       "label": "Search user",
-      "placeholder": "Search user...",
+      "placeholder": "Search user",
       "result_label": "Results",
       "recent_label": "Recents",
       "clear_history": "Clear history"
