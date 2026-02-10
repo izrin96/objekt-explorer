@@ -74,10 +74,6 @@
     "select_all": "Select all",
     "clear_select": "Clear select",
     "selected_count": "{count} selected",
-    "wide": "Wide",
-    "compact": "Compact",
-    "show_label": "Show label",
-    "hide_label": "Hide label",
     "show_count": "Show Count",
     "search_help": {
       "intro": "This quick search supports:",

@@ -74,10 +74,6 @@
     "select_all": "모두 선택",
     "clear_select": "선택 해제",
     "selected_count": "{count}개 선택됨",
-    "wide": "넓게",
-    "compact": "좁게",
-    "show_label": "라벨 표시",
-    "hide_label": "라벨 숨김",
     "show_count": "개수 표시",
     "search_help": {
       "intro": "이 빠른 검색에서는 다음을 지원합니다:",
