@@ -74,7 +74,9 @@ export function FloatingSelectMode({ children, objekts }: Props) {
               )}
             </div>
 
-            <span className="text-sm">{t("selected_count", { count: selected.length.toLocaleString() })}</span>
+            <span className="text-sm">
+              {t("selected_count", { count: selected.length.toLocaleString() })}
+            </span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button size="sm" intent="outline" onPress={() => batchSelect(objekts)}>

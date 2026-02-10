@@ -39,8 +39,7 @@ async function assertAddressNotLinked(address: string, userId: string) {
     const locale = await getUserLocale();
     const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
     throw new ORPCError("BAD_REQUEST", {
-      message:
-        existing.userId === userId ? t("already_linked_self") : t("already_linked_other"),
+      message: existing.userId === userId ? t("already_linked_self") : t("already_linked_other"),
     });
   }
 }

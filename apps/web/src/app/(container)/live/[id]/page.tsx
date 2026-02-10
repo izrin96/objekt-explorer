@@ -18,10 +18,7 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const [live, t] = await Promise.all([
-    getLiveSession(params.id),
-    getTranslations("page_titles"),
-  ]);
+  const [live, t] = await Promise.all([getLiveSession(params.id), getTranslations("page_titles")]);
 
   const title = t("live_detail", { title: live.title, channel: live.channel.name });
 

@@ -19,10 +19,7 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const [data, t] = await Promise.all([
-    getList(params.slug),
-    getTranslations("page_titles"),
-  ]);
+  const [data, t] = await Promise.all([getList(params.slug), getTranslations("page_titles")]);
 
   return {
     title: data.user

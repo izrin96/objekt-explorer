@@ -3,8 +3,8 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";

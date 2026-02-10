@@ -3,8 +3,8 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -66,9 +66,7 @@ function Progress() {
   return (
     <>
       {!filters.artist && !filters.member ? (
-        <div className="text-muted-fg flex justify-center text-sm">
-          {t("select_prompt")}
-        </div>
+        <div className="text-muted-fg flex justify-center text-sm">{t("select_prompt")}</div>
       ) : (
         <div className="flex flex-col gap-8">
           {hasNextPage && (

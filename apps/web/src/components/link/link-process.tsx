@@ -437,5 +437,9 @@ function Countdown({ deadline, onExpire }: { deadline: number; onExpire: () => v
     remaining > 0 ? 1000 : null,
   );
 
-  return <span className="text-sm">{t("countdown_remaining", { countdown: msToCountdown(remaining) })}</span>;
+  return (
+    <span className="text-sm">
+      {t("countdown_remaining", { countdown: msToCountdown(remaining) })}
+    </span>
+  );
 }

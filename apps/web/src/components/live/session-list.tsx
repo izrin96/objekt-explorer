@@ -3,8 +3,8 @@
 import type { LiveSession } from "@repo/cosmo/server/live";
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense } from "react";
@@ -87,9 +87,7 @@ function LiveSessionList({ artistId }: { artistId: string }) {
           <LiveSessionCard key={live.id} live={live} />
         ))}
       </div>
-      {query.data.length === 0 && (
-        <div className="flex justify-center">{t("no_live")}</div>
-      )}
+      {query.data.length === 0 && <div className="flex justify-center">{t("no_live")}</div>}
     </>
   );
 }

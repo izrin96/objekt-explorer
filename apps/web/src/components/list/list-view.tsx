@@ -152,9 +152,7 @@ function ListView() {
       </div>
       <span className="font-semibold">
         {t("total", { count: filtered.length.toLocaleString() })}
-        {filters.grouped
-          ? ` (${t("types", { count: grouped.length.toLocaleString() })})`
-          : ""}
+        {filters.grouped ? ` (${t("types", { count: grouped.length.toLocaleString() })})` : ""}
       </span>
 
       <div className="[&>*>*]:will-change-transform">

@@ -12,8 +12,8 @@ import {
 } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -290,7 +290,9 @@ function Activity() {
           <div className="flex min-w-fit border-b">
             <div className="min-w-[120px] flex-1 px-3 py-2.5">{t("table.event")}</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">{t("table.objekt")}</div>
-            <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{t("table.serial")}</div>
+            <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">
+              {t("table.serial")}
+            </div>
             <div className="min-w-[300px] flex-1 px-3 py-2.5">{t("table.from")}</div>
             <div className="min-w-[300px] flex-1 px-3 py-2.5">{t("table.to")}</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">{t("table.time")}</div>
@@ -380,9 +382,7 @@ const ActivityRow = memo(function ActivityRow({
       <div className="min-w-[120px] flex-1 px-3 py-2.5">
         <div className="flex items-center gap-2 font-semibold">
           <Icon size={18} weight="light" />
-          <Badge className={cn("text-xs", config.className)}>
-            {t(config.labelKey as any)}
-          </Badge>
+          <Badge className={cn("text-xs", config.className)}>{t(config.labelKey as any)}</Badge>
         </div>
       </div>
       <div
