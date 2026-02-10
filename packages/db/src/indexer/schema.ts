@@ -168,6 +168,14 @@ export const transfers = pgTable(
       table.objektId.asc().nullsLast(),
       table.id.desc().nullsFirst(),
     ),
+    index("idx_transfer_to_from_id_cosmo_spin")
+      .using(
+        "btree",
+        table.to.asc().nullsLast(),
+        table.from.asc().nullsLast(),
+        table.id.desc().nullsFirst(),
+      )
+      .where(sql`("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
     index("idx_transfer_to_id").using(
       "btree",
       table.to.asc().nullsLast(),
