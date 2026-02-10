@@ -14,7 +14,8 @@ export default function GroupDirectionFilter() {
   return (
     <Toggle
       intent="outline"
-      className="selected:border-border w-fit"
+      className="w-fit"
+      data-no-border
       isSelected={filters.group_dir === "asc"}
       onChange={(v) =>
         setFilters({

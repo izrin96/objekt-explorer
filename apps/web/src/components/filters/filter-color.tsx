@@ -78,7 +78,7 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
         <Popover>
           <Button
             data-selected={color}
-            className="selected:border-(--objekt-color)"
+            className="[--accent-solid:var(--objekt-color)]"
             intent="outline"
             data-slot="control"
           >

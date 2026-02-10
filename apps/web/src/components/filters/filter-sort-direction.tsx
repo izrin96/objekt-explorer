@@ -13,7 +13,8 @@ export default function SortDirectionFilter() {
   return (
     <Toggle
       intent="outline"
-      className="selected:border-border w-fit"
+      className="w-fit"
+      data-no-border
       isSelected={filters.sort_dir === "asc"}
       onChange={(v) =>
         setFilters({
