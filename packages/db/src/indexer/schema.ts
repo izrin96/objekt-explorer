@@ -56,6 +56,25 @@ export const collections = pgTable(
   ],
 );
 
+export const comoBalances = pgTable(
+  "como_balance",
+  {
+    id: uuid().primaryKey(),
+    owner: text().notNull(),
+    amount: numeric().notNull(),
+    tokenId: numeric("token_id").notNull(),
+  },
+  (table) => [
+    index("IDX_como_balance_owner_token_id").using(
+      "btree",
+      table.owner.asc().nullsLast(),
+      table.tokenId.asc().nullsLast(),
+    ),
+    index("IDX_d840d7bff36ad3e0d91ea8b680").using("btree", table.amount.asc().nullsLast()),
+    unique("UQ_como_balance_owner_token_id").on(table.owner, table.tokenId),
+  ],
+);
+
 export const objekts = pgTable(
   "objekt",
   {
@@ -116,9 +135,21 @@ export const transfers = pgTable(
     }),
   },
   (table) => [
+    index("idx_transfer_collection_from_id").using(
+      "btree",
+      table.collectionId.asc().nullsLast(),
+      table.from.asc().nullsLast(),
+      table.id.desc().nullsFirst(),
+    ),
     index("idx_transfer_collection_id").using(
       "btree",
       table.collectionId.asc().nullsLast(),
+      table.id.desc().nullsFirst(),
+    ),
+    index("idx_transfer_collection_to_id").using(
+      "btree",
+      table.collectionId.asc().nullsLast(),
+      table.to.asc().nullsLast(),
       table.id.desc().nullsFirst(),
     ),
     index("idx_transfer_from_id").using(
@@ -148,25 +179,6 @@ export const transfers = pgTable(
       table.objektId.asc().nullsLast(),
       table.timestamp.desc().nullsFirst(),
     ),
-  ],
-);
-
-export const comoBalances = pgTable(
-  "como_balance",
-  {
-    id: uuid().primaryKey(),
-    owner: text().notNull(),
-    amount: numeric().notNull(),
-    tokenId: numeric("token_id").notNull(),
-  },
-  (table) => [
-    index("IDX_como_balance_owner_token_id").using(
-      "btree",
-      table.owner.asc().nullsLast(),
-      table.tokenId.asc().nullsLast(),
-    ),
-    index("IDX_d840d7bff36ad3e0d91ea8b680").using("btree", table.amount.asc().nullsLast()),
-    unique("UQ_como_balance_owner_token_id").on(table.owner, table.tokenId),
   ],
 );
 
