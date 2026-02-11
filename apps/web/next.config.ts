@@ -31,6 +31,10 @@ const nextConfig: NextConfig = {
         source: "/@:nickname/stats",
         destination: "/profile/:nickname/stats",
       },
+      {
+        source: "/@:nickname/list/:slug",
+        destination: "/profile-list/:nickname/:slug",
+      },
     ];
   },
   images: {
