@@ -69,6 +69,9 @@ function ListView() {
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { columns } = useObjektColumn();
   const { shaped, filtered, grouped, filters } = useListObjekts();
+  const list = useTarget((a) => a.list)!;
+
+  const isProfileList = list.listType === "profile";
 
   const virtualList = useMemo(() => {
     return shaped.flatMap(([title, items]) => [
@@ -107,6 +110,7 @@ function ListView() {
                         isSelected={isSelected}
                         hideLabel={hideLabel}
                         showCount
+                        showSerial={isProfileList}
                       >
                         {session && (
                           <div className="flex items-start self-start justify-self-end">

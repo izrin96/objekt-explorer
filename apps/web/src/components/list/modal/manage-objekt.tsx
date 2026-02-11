@@ -8,8 +8,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 
-import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
-
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,7 +33,15 @@ import { orpc } from "@/lib/orpc/client";
 
 import ErrorFallbackRender from "../../error-boundary";
 
-export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
+export function AddToListModal({
+  open,
+  setOpen,
+  address,
+}: {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+  address?: string;
+}) {
   const t = useTranslations("list.manage_objekt");
   const tCommon = useTranslations("common.modal");
   return (
@@ -54,7 +60,7 @@ export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
                   </div>
                 }
               >
-                <AddToListForm setOpen={setOpen} />
+                <AddToListForm setOpen={setOpen} address={address} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -67,8 +73,14 @@ export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
   );
 }
 
-function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
+function AddToListForm({
+  setOpen,
+  address,
+}: {
+  setOpen: (val: boolean) => void;
+  address?: string;
+}) {
+  const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const t = useTranslations("list.manage_objekt");
@@ -80,12 +92,32 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     },
   });
 
+  const availableLists = lists.filter((list) => {
+    if (address) {
+      return (
+        list.listType === "normal" ||
+        (list.listType === "profile" && list.profileAddress === address.toLowerCase())
+      );
+    } else {
+      return list.listType === "normal";
+    }
+  });
+
   const onSubmit = handleSubmit((data) => {
+    const selectedList = lists.find((l) => l.slug === data.slug);
+
     addToList.mutate(
       {
         slug: data.slug,
         skipDups: data.skipDups,
-        collectionSlugs: selected.map((a) => a.slug),
+        objekts:
+          selectedList?.listType === "profile"
+            ? selected.map((a) => ({
+                objektId: a.id,
+              }))
+            : undefined,
+        collectionSlugs:
+          selectedList?.listType === "normal" ? selected.map((a) => a.slug) : undefined,
       },
       {
         onSuccess: () => {
@@ -95,7 +127,7 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     );
   });
 
-  if (data.length === 0)
+  if (availableLists.length === 0)
     return (
       <Note intent="default">
         {t("no_list_message")}{" "}
@@ -131,9 +163,12 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               <Label>{t("list_label")}</Label>
               <SelectTrigger />
               <SelectContent>
-                {data.map((item) => (
+                {availableLists.map((item) => (
                   <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                     {item.name}
+                    {item.listType === "profile" && (
+                      <span className="text-muted-fg ml-2 text-xs">(Profile)</span>
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -161,7 +196,13 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   );
 }
 
-export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
+export function RemoveFromListModal({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+}) {
   const target = useTarget((a) => a.list)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();

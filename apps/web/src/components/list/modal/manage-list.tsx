@@ -26,6 +26,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
+import { Radio, RadioGroup } from "@/components/ui/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import {
   SheetBody,
@@ -37,8 +38,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { TextField } from "@/components/ui/text-field";
+import { useUserProfiles } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
-import { SITE_NAME, validColumns } from "@/lib/utils";
+import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
 
 type CreateListModalProps = {
   open: boolean;
@@ -48,12 +50,17 @@ type CreateListModalProps = {
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
   const t = useTranslations("list.create");
   const tCommon = useTranslations("common.modal");
-  const { handleSubmit, control } = useForm({
+  const { data: profiles } = useUserProfiles();
+  const { handleSubmit, control, watch } = useForm({
     defaultValues: {
       name: "",
       hideUser: true,
+      listType: "normal" as "normal" | "profile",
+      profileAddress: "",
     },
   });
+
+  const watchedListType = watch("listType");
 
   const createList = useMutation(
     orpc.list.create.mutationOptions({
@@ -74,6 +81,8 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
     createList.mutate({
       name: data.name,
       hideUser: data.hideUser,
+      listType: data.listType,
+      profileAddress: data.listType === "profile" ? data.profileAddress : undefined,
     });
   });
 
@@ -110,6 +119,67 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                 </TextField>
               )}
             />
+            <Controller
+              control={control}
+              name="listType"
+              render={({ field: { name, value, onChange } }) => (
+                <RadioGroup name={name} value={value} onChange={onChange}>
+                  <Label>List Type</Label>
+                  <Description>Choose between a normal or profile-bound list</Description>
+                  <Radio value="normal">
+                    <Label>Normal List</Label>
+                    <Description>
+                      Collection-based, not tied to a profile. For want-to-buy lists.
+                    </Description>
+                  </Radio>
+                  <Radio value="profile">
+                    <Label>Profile List</Label>
+                    <Description>
+                      Bound to a profile, shows serial numbers. Auto-removes on transfer.
+                    </Description>
+                  </Radio>
+                </RadioGroup>
+              )}
+            />
+            {watchedListType === "profile" && (
+              <Controller
+                control={control}
+                name="profileAddress"
+                rules={{
+                  required: watchedListType === "profile" ? "Profile required" : false,
+                }}
+                render={({
+                  field: { name, value, onChange, onBlur },
+                  fieldState: { invalid, error },
+                }) => (
+                  <Select
+                    aria-label="Profile"
+                    placeholder="Select a profile"
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    isInvalid={invalid}
+                  >
+                    <Label>Profile</Label>
+                    <Description>Select which profile's objekts this list will track</Description>
+                    <SelectTrigger />
+                    <SelectContent>
+                      {profiles?.map((profile) => (
+                        <SelectItem
+                          key={profile.address}
+                          id={profile.address}
+                          textValue={parseNickname(profile.address, profile.nickname)}
+                        >
+                          {parseNickname(profile.address, profile.nickname)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                    <FieldError>{error?.message}</FieldError>
+                  </Select>
+                )}
+              />
+            )}
             <Controller
               control={control}
               name="hideUser"

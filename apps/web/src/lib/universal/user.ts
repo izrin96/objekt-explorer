@@ -8,6 +8,7 @@ export type PublicProfile = {
   privateProfile?: boolean | null;
   gridColumns?: number | null;
   user?: PublicUser | null;
+  isOwned?: boolean;
 };
 
 export type PublicUser = Pick<
@@ -37,4 +38,7 @@ export type PublicList = {
   name: string;
   gridColumns?: number | null;
   user?: PublicUser | null;
+  isOwned?: boolean;
+  listType?: "normal" | "profile";
+  profileAddress?: string | null;
 };

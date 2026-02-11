@@ -3,9 +3,9 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { collections } from "@repo/db/indexer/schema";
+import { collections, objekts } from "@repo/db/indexer/schema";
 import { type ListEntry, listEntries, lists } from "@repo/db/schema";
-import { overrideCollection } from "@repo/lib/server/objekt";
+import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
@@ -25,6 +25,8 @@ export const listRouter = {
         name: true,
         hideUser: true,
         gridColumns: true,
+        listType: true,
+        profileAddress: true,
       },
       where: { slug, userId: session.user.id },
     });
@@ -43,6 +45,10 @@ export const listRouter = {
     .handler(async ({ input: { slug } }) => {
       const artists = await parseSelectedArtists();
       const result = await db.query.lists.findFirst({
+        columns: {
+          listType: true,
+          profileAddress: true,
+        },
         with: {
           entries: {
             orderBy: {
@@ -52,6 +58,7 @@ export const listRouter = {
               id: true,
               createdAt: true,
               collectionSlug: true,
+              objektId: true,
             },
           },
         },
@@ -60,6 +67,34 @@ export const listRouter = {
 
       if (!result) throw new ORPCError("NOT_FOUND");
 
+      // Handle profile lists differently
+      if (result.listType === "profile") {
+        const objektIds = result.entries.map((e) => e.objektId).filter(Boolean) as string[];
+        if (objektIds.length === 0) return [];
+
+        // Fetch full objekt data from indexer
+        const objektsData = await indexer.query.objekts.findMany({
+          where: { id: { in: objektIds } },
+          with: {
+            collection: true,
+          },
+        });
+
+        // Map to OwnedObjekt format
+        return result.entries
+          .map((entry) => {
+            const data = objektsData.find((o) => o.id === entry.objektId);
+            if (!data || !data.collection) return null;
+            const ownedObjekt = mapOwnedObjekt(data, data.collection);
+            return Object.assign(ownedObjekt, {
+              entryId: entry.id.toString(),
+              createdAt: entry.createdAt,
+            });
+          })
+          .filter((item): item is NonNullable<typeof item> => item !== null);
+      }
+
+      // Handle normal lists
       return mapEntriesCollection(result.entries, artists);
     }),
 
@@ -74,18 +109,83 @@ export const listRouter = {
       z.object({
         slug: z.string(),
         skipDups: z.boolean(),
-        collectionSlugs: z.string().array(),
+        collectionSlugs: z.string().array().optional(),
+        objekts: z
+          .object({
+            objektId: z.string(),
+          })
+          .array()
+          .optional(),
       }),
     )
     .handler(
       async ({
-        input: { slug, skipDups, collectionSlugs },
+        input: { slug, skipDups, collectionSlugs, objekts: inputObjekts },
         context: {
           session: { user },
         },
       }) => {
         const artists = await parseSelectedArtists();
         const list = await findOwnedList(slug, user.id);
+
+        // Handle profile lists
+        if (list.listType === "profile") {
+          if (!inputObjekts || inputObjekts.length === 0) {
+            throw new ORPCError("BAD_REQUEST", {
+              message: "objekts required for profile lists",
+            });
+          }
+
+          // Verify objekts are owned by the profile
+          const objektIds = inputObjekts.map((o) => o.objektId);
+          const currentObjekts = await indexer
+            .select({ id: objekts.id, owner: objekts.owner })
+            .from(objekts)
+            .where(inArray(objekts.id, objektIds));
+
+          const notOwned = currentObjekts.filter(
+            (o) => o.owner.toLowerCase() !== list.profileAddress!.toLowerCase(),
+          );
+
+          if (notOwned.length > 0) {
+            throw new ORPCError("BAD_REQUEST", {
+              message: `Objekts not owned by profile: ${notOwned.map((o) => o.id).join(", ")}`,
+            });
+          }
+
+          // Insert objekt entries
+          const values = inputObjekts.map((o) => ({
+            listId: list.id,
+            objektId: o.objektId,
+          }));
+
+          if (skipDups) {
+            // Get existing objektIds
+            const existing = await db
+              .select({ objektId: listEntries.objektId })
+              .from(listEntries)
+              .where(eq(listEntries.listId, list.id));
+
+            const existingSet = new Set(existing.map((e) => e.objektId).filter(Boolean));
+            const filtered = values.filter((v) => !existingSet.has(v.objektId));
+
+            if (filtered.length === 0) return [];
+
+            await db.insert(listEntries).values(filtered);
+          } else {
+            await db.insert(listEntries).values(values).onConflictDoNothing();
+          }
+
+          // Return empty array for now (frontend will refetch)
+          return [];
+        }
+
+        // Handle normal lists (existing logic)
+        if (!collectionSlugs || collectionSlugs.length === 0) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "collectionSlugs required for normal lists",
+          });
+        }
 
         if (skipDups) {
           const uniqueCollectionSlugs = Array.from(new Set(collectionSlugs));
@@ -118,8 +218,6 @@ export const listRouter = {
             artists,
           );
         }
-
-        if (collectionSlugs.length === 0) return [];
 
         const result = await db
           .insert(listEntries)
@@ -213,20 +311,46 @@ export const listRouter = {
       z.object({
         name: z.string().min(1),
         hideUser: z.boolean(),
+        listType: z.enum(["normal", "profile"]).default("normal"),
+        profileAddress: z.string().optional(),
       }),
     )
     .handler(
       async ({
-        input: { name, hideUser },
+        input: { name, hideUser, listType, profileAddress },
         context: {
           session: { user },
         },
       }) => {
+        // Validate profile ownership for profile lists
+        if (listType === "profile") {
+          if (!profileAddress) {
+            throw new ORPCError("BAD_REQUEST", {
+              message: "Profile address required for profile lists",
+            });
+          }
+
+          const owned = await db.query.userAddress.findFirst({
+            where: {
+              address: profileAddress.toLowerCase(),
+              userId: user.id,
+            },
+          });
+
+          if (!owned) {
+            throw new ORPCError("FORBIDDEN", {
+              message: "Profile not owned by user",
+            });
+          }
+        }
+
         await db.insert(lists).values({
           name: name,
           userId: user.id,
           slug: nanoid(9),
           hideUser: hideUser,
+          listType: listType,
+          profileAddress: profileAddress?.toLowerCase(),
         });
       },
     ),
@@ -259,7 +383,10 @@ export const listRouter = {
       });
 
       const uniqueCollectionSlug = new Set(
-        foundLists.flatMap((a) => a.entries).map((a) => a.collectionSlug),
+        foundLists
+          .flatMap((a) => a.entries)
+          .map((a) => a.collectionSlug)
+          .filter((slug): slug is string => slug !== null),
       );
 
       if (uniqueCollectionSlug.size === 0) return { have: [], want: [] };
@@ -286,12 +413,14 @@ export const listRouter = {
 
       const have =
         haveList?.entries
-          .map((a) => collectionsMap.get(a.collectionSlug))
+          .filter((a) => a.collectionSlug !== null)
+          .map((a) => collectionsMap.get(a.collectionSlug!))
           .filter((c) => c !== undefined) ?? [];
 
       const want =
         wantList?.entries
-          .map((a) => collectionsMap.get(a.collectionSlug))
+          .filter((a) => a.collectionSlug !== null)
+          .map((a) => collectionsMap.get(a.collectionSlug!))
           .filter((c) => c !== undefined) ?? [];
 
       return {
@@ -303,13 +432,16 @@ export const listRouter = {
 
 export type ListEntriesOutput = Outputs["list"]["listEntries"];
 
-export async function fetchList(slug: string): Promise<PublicList | null> {
+export async function fetchList(slug: string, userId?: string): Promise<PublicList | null> {
   const result = await db.query.lists.findFirst({
     columns: {
       slug: true,
       name: true,
       hideUser: true,
       gridColumns: true,
+      userId: true,
+      listType: true,
+      profileAddress: true,
     },
     with: {
       user: {
@@ -334,6 +466,9 @@ export async function fetchList(slug: string): Promise<PublicList | null> {
     slug: result.slug,
     gridColumns: result.gridColumns,
     user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
+    isOwned: userId ? result.userId === userId : undefined,
+    listType: result.listType,
+    profileAddress: result.profileAddress,
   };
 }
 
@@ -342,6 +477,8 @@ export async function fetchOwnedLists(userId: string) {
     columns: {
       name: true,
       slug: true,
+      listType: true,
+      profileAddress: true,
     },
     where: { userId },
     orderBy: { id: "desc" },
@@ -353,6 +490,8 @@ async function findOwnedList(slug: string, userId: string) {
   const list = await db.query.lists.findFirst({
     columns: {
       id: true,
+      listType: true,
+      profileAddress: true,
     },
     where: { slug, userId },
   });
@@ -393,14 +532,16 @@ async function mapEntriesCollection(
   result: Pick<ListEntry, "collectionSlug" | "id" | "createdAt">[],
   artists: ValidArtist[],
 ) {
-  const slugs = result.map((a) => a.collectionSlug);
+  const validEntries = result.filter((a) => a.collectionSlug !== null);
+
+  const slugs = validEntries.map((a) => a.collectionSlug!);
   const collections = await fetchCollections(slugs, artists);
   const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
 
-  return result
-    .filter((a) => collectionsMap.has(a.collectionSlug))
+  return validEntries
+    .filter((a) => collectionsMap.has(a.collectionSlug!))
     .map(({ collectionSlug, id, createdAt }) =>
-      Object.assign({}, collectionsMap.get(collectionSlug)!, {
+      Object.assign({}, collectionsMap.get(collectionSlug!), {
         id: id.toString(),
         createdAt,
       }),

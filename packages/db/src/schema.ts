@@ -65,8 +65,16 @@ export const lists = pgTable(
     hideUser: boolean("hide_user").default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     gridColumns: integer("grid_columns"),
+    listType: varchar("list_type", { length: 20 })
+      .notNull()
+      .default("normal")
+      .$type<"normal" | "profile">(),
+    profileAddress: citext("profile_address", { length: 42 }),
   },
-  (t) => [uniqueIndex("lists_slug_idx").on(t.slug)],
+  (t) => [
+    uniqueIndex("lists_slug_idx").on(t.slug),
+    index("lists_profile_address_idx").on(t.profileAddress),
+  ],
 );
 
 export const listEntries = pgTable(
@@ -78,47 +86,13 @@ export const listEntries = pgTable(
       .references(() => lists.id, {
         onDelete: "cascade",
       }),
-    collectionSlug: varchar("collection_slug", { length: 255 }).notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (t) => [index("list_entries_list_idx").on(t.listId)],
-);
-
-export const profileLists = pgTable(
-  "profile_list",
-  {
-    id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, {
-        onDelete: "cascade",
-      }),
-    address: text("address").notNull(),
-    slug: varchar("slug", { length: 12 }).notNull(),
-    name: text("name").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    gridColumns: integer("grid_columns"),
-  },
-  (t) => [uniqueIndex("profile_list_slug_idx").on(t.slug)],
-);
-
-export const profileListEntries = pgTable(
-  "profile_list_entries",
-  {
-    id: serial("id").primaryKey(),
-    listId: integer("list_id")
-      .notNull()
-      .references(() => profileLists.id, {
-        onDelete: "cascade",
-      }),
-    objektId: varchar("objekt_id").notNull(),
-    tokenId: integer("token_id").notNull(),
-    receivedAt: timestamp("received_at").notNull(),
+    collectionSlug: varchar("collection_slug", { length: 255 }),
+    objektId: varchar("objekt_id", { length: 255 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [
-    index("profile_list_entries_list_idx").on(t.listId),
-    uniqueIndex("profile_list_entries_objekt_id_unique").on(t.listId, t.objektId),
+    index("list_entries_list_idx").on(t.listId),
+    index("list_entries_objekt_idx").on(t.objektId),
   ],
 );
 
@@ -153,5 +127,3 @@ export type Account = typeof account.$inferSelect;
 export type Verification = typeof verification.$inferSelect;
 export type List = typeof lists.$inferSelect;
 export type ListEntry = typeof listEntries.$inferSelect;
-export type ProfileList = typeof profileLists.$inferSelect;
-export type ProfileListEntry = typeof profileListEntries.$inferSelect;

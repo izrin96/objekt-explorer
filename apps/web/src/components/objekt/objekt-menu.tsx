@@ -41,18 +41,31 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
   );
 }
 
-export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
-  const { data } = useQuery(orpc.list.list.queryOptions());
+export function AddToListMenu({ objekt, address }: { objekt: ValidObjekt; address?: string }) {
+  const { data: lists } = useQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const t = useTranslations("objekt_menu");
 
-  const handleAction = (slug: string) => {
+  const availableLists = lists?.filter((list) => {
+    if (address) {
+      return (
+        list.listType === "normal" ||
+        (list.listType === "profile" && list.profileAddress === address.toLowerCase())
+      );
+    } else {
+      return list.listType === "normal";
+    }
+  });
+
+  const handleAction = (slug: string, listType: "normal" | "profile") => {
     addToList.mutate({
       slug: slug,
       skipDups: false,
-      collectionSlugs: [objekt.slug],
+      objekts: listType === "profile" ? [{ objektId: objekt.id }] : undefined,
+      collectionSlugs: listType === "normal" ? [objekt.slug] : undefined,
     });
   };
+
   return (
     <MenuSubMenu>
       <MenuItem>
@@ -60,22 +73,22 @@ export function AddToListMenu({ objekt }: { objekt: ValidObjekt }) {
         <MenuLabel>{t("add_to_list")}</MenuLabel>
       </MenuItem>
       <MenuContent placement="bottom">
-        {!data && (
+        {!availableLists && (
           <MenuItem isDisabled>
             <MenuLabel>
               <Loader variant="ring" />
             </MenuLabel>
           </MenuItem>
         )}
-        {data && data.length === 0 && (
+        {availableLists && availableLists.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
               <span>{t("no_list_found")}</span>
             </MenuLabel>
           </MenuItem>
         )}
-        {data?.map((a) => (
-          <MenuItem key={a.slug} onAction={() => handleAction(a.slug)}>
+        {availableLists?.map((a) => (
+          <MenuItem key={a.slug} onAction={() => handleAction(a.slug, a.listType)}>
             <MenuLabel>{a.name}</MenuLabel>
           </MenuItem>
         ))}

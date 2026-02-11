@@ -71,7 +71,11 @@ function ProfileObjektRender() {
                       </div>
                     }
                   >
-                    <ProfileObjekt selectTarget={selectTarget} discordTarget={discordTarget} />
+                    <ProfileObjekt
+                      selectTarget={selectTarget}
+                      discordTarget={discordTarget}
+                      address={profile.address}
+                    />
                   </Suspense>
                 </ErrorBoundary>
               )}
@@ -109,9 +113,11 @@ function ProfileObjektFilters({
 function ProfileObjekt({
   selectTarget,
   discordTarget,
+  address,
 }: {
   selectTarget: HTMLDivElement | null;
   discordTarget: HTMLDivElement | null;
+  address: string;
 }) {
   const t = useTranslations("common.count");
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -152,7 +158,7 @@ function ProfileObjekt({
                             <ToggleLockMenuItem isLocked={objekt.isLocked} tokenId={objekt.id} />
                           </>
                         )}
-                        <AddToListMenu objekt={objekt} />
+                        <AddToListMenu objekt={objekt} address={address} />
                       </ObjektStaticMenu>
                     )
                   }
@@ -182,7 +188,7 @@ function ProfileObjekt({
                                   />
                                 </>
                               )}
-                              <AddToListMenu objekt={objekt} />
+                              <AddToListMenu objekt={objekt} address={address} />
                             </ObjektHoverMenu>
                           </div>
                         )}
@@ -199,12 +205,12 @@ function ProfileObjekt({
         ),
       }),
     ]);
-  }, [shaped, filters.grouped, filters.at, columns, session, isProfileAuthed, hideLabel]);
+  }, [shaped, filters.grouped, filters.at, columns, session, isProfileAuthed, hideLabel, address]);
 
   return (
     <>
       <FloatingSelectMode objekts={filtered}>
-        <AddToList size="sm" />
+        <AddToList size="sm" address={address} />
         {isProfileAuthed && (
           <>
             <PinObjekt size="sm" />
@@ -218,7 +224,7 @@ function ProfileObjekt({
       {selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>
-            <AddToList />
+            <AddToList address={address} />
             {isProfileAuthed && (
               <>
                 <PinObjekt />
