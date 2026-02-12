@@ -64,6 +64,7 @@
     "react-use-websocket": "^4.13.0",
     "recharts": "^3.7.0",
     "server-only": "^0.0.1",
+    "slugify": "^1.6.6",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",

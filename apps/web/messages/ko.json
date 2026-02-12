@@ -270,7 +270,8 @@
       "collection": "컬렉션",
       "trade_history": "거래 내역",
       "progress": "진행 상황",
-      "statistics": "통계"
+      "statistics": "통계",
+      "lists": "목록"
     },
     "edit": {
       "title": "프로필 편집",
@@ -354,6 +355,10 @@
     "generate_discord_button": "Discord 형식 생성",
     "feature_not_available": "이 기능은 아직 사용할 수 없습니다",
     "no_list_found": "목록을 찾을 수 없습니다",
+    "back_to_profile": "{name}(으)로 돌아가기",
+    "profile_list_badge": "프로필 목록",
+    "bound_list_badge": "프로필 연결 목록",
+    "profile_context": "프로필: @{nickname} ({address})",
     "create": {
       "title": "목록 만들기",
       "name_label": "이름",

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 import { getTranslations } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
-import { getList } from "@/lib/data-fetching";
+import { getList, getUserByIdentifier } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
@@ -36,6 +36,12 @@ export default async function Page(props: Props) {
 
   if (list.listType === "profile") {
     notFound();
+  }
+
+  // Redirect normal lists bound to a profile
+  if (list.displayProfileAddress) {
+    const profile = await getUserByIdentifier(list.displayProfileAddress);
+    redirect(`/@${profile.nickname || profile.address}/list/${params.slug}`);
   }
 
   void queryClient.prefetchQuery(

@@ -270,7 +270,8 @@
       "collection": "Collection",
       "trade_history": "Trade History",
       "progress": "Progress",
-      "statistics": "Statistics"
+      "statistics": "Statistics",
+      "lists": "Lists"
     },
     "edit": {
       "title": "Edit Profile",
@@ -354,6 +355,10 @@
     "generate_discord_button": "Generate Discord format",
     "feature_not_available": "This feature is not yet available",
     "no_list_found": "No list found",
+    "back_to_profile": "Back to {name}",
+    "profile_list_badge": "Profile List",
+    "bound_list_badge": "Profile-Bound List",
+    "profile_context": "Profile: @{nickname} ({address})",
     "create": {
       "title": "Create list",
       "name_label": "Name",

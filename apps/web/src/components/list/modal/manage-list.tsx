@@ -57,6 +57,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       hideUser: true,
       listType: "normal" as "normal" | "profile",
       profileAddress: "",
+      displayProfileAddress: "",
     },
   });
 
@@ -83,6 +84,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       hideUser: data.hideUser,
       listType: data.listType,
       profileAddress: data.listType === "profile" ? data.profileAddress : undefined,
+      displayProfileAddress: data.listType === "normal" ? data.displayProfileAddress : undefined,
     });
   });
 
@@ -165,6 +167,47 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                     <Description>Select which profile's objekts this list will track</Description>
                     <SelectTrigger />
                     <SelectContent>
+                      {profiles?.map((profile) => (
+                        <SelectItem
+                          key={profile.address}
+                          id={profile.address}
+                          textValue={parseNickname(profile.address, profile.nickname)}
+                        >
+                          {parseNickname(profile.address, profile.nickname)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                    <FieldError>{error?.message}</FieldError>
+                  </Select>
+                )}
+              />
+            )}
+            {watchedListType === "normal" && (
+              <Controller
+                control={control}
+                name="displayProfileAddress"
+                render={({
+                  field: { name, value, onChange, onBlur },
+                  fieldState: { invalid, error },
+                }) => (
+                  <Select
+                    aria-label="Display in Profile"
+                    placeholder="None"
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    isInvalid={invalid}
+                  >
+                    <Label>Display in Profile (optional)</Label>
+                    <Description>
+                      Choose a profile to display this list in its Lists tab
+                    </Description>
+                    <SelectTrigger />
+                    <SelectContent>
+                      <SelectItem id="" textValue="None">
+                        None
+                      </SelectItem>
                       {profiles?.map((profile) => (
                         <SelectItem
                           key={profile.address}

@@ -8,6 +8,7 @@ import { type ListEntry, listEntries, lists } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import slugify from "slugify";
 import * as z from "zod";
 
 import type { Outputs } from "@/lib/orpc/server";
@@ -17,6 +18,30 @@ import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
 import { getCollectionColumns } from "../../objekt";
 import { authed, pub } from "../orpc";
+
+/**
+ * Generate a unique, human-readable slug for a profile list.
+ * Handles collisions by appending -2, -3, etc.
+ */
+async function generateProfileListSlug(name: string, profileAddress: string): Promise<string> {
+  const baseSlug = slugify(name, { lower: true, strict: true });
+  let slug = baseSlug;
+  let counter = 2;
+
+  // Check for collisions within this profile's lists
+  while (true) {
+    const existing = await db.query.lists.findFirst({
+      where: { profileAddress, slug, listType: "profile" },
+      columns: { id: true },
+    });
+
+    if (!existing) break;
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  return slug;
+}
 
 export const listRouter = {
   find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
@@ -103,6 +128,40 @@ export const listRouter = {
     const result = await fetchOwnedLists(user.id);
     return result;
   }),
+
+  profileLists: pub
+    .input(
+      z.object({
+        profileAddress: z.string(),
+      }),
+    )
+    .handler(async ({ input: { profileAddress } }) => {
+      const result = await db.query.lists.findMany({
+        columns: {
+          name: true,
+          slug: true,
+          listType: true,
+          profileAddress: true,
+          displayProfileAddress: true,
+          createdAt: true,
+          userId: true,
+        },
+        where: {
+          OR: [
+            {
+              listType: "profile",
+              profileAddress: profileAddress.toLowerCase(),
+            },
+            {
+              displayProfileAddress: profileAddress.toLowerCase(),
+            },
+          ],
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return result;
+    }),
 
   addObjektsToList: authed
     .input(
@@ -313,11 +372,12 @@ export const listRouter = {
         hideUser: z.boolean(),
         listType: z.enum(["normal", "profile"]).default("normal"),
         profileAddress: z.string().optional(),
+        displayProfileAddress: z.string().optional(),
       }),
     )
     .handler(
       async ({
-        input: { name, hideUser, listType, profileAddress },
+        input: { name, hideUser, listType, profileAddress, displayProfileAddress },
         context: {
           session: { user },
         },
@@ -344,13 +404,38 @@ export const listRouter = {
           }
         }
 
+        // Validate display profile ownership if provided for normal list
+        if (listType === "normal" && displayProfileAddress) {
+          const owned = await db.query.userAddress.findFirst({
+            where: {
+              address: displayProfileAddress.toLowerCase(),
+              userId: user.id,
+            },
+          });
+
+          if (!owned) {
+            throw new ORPCError("FORBIDDEN", {
+              message: "Display profile not owned by user",
+            });
+          }
+        }
+
+        // Generate appropriate slug
+        let slug: string;
+        if (listType === "profile" && profileAddress) {
+          slug = await generateProfileListSlug(name, profileAddress.toLowerCase());
+        } else {
+          slug = nanoid(9);
+        }
+
         await db.insert(lists).values({
           name: name,
           userId: user.id,
-          slug: nanoid(9),
+          slug: slug,
           hideUser: hideUser,
           listType: listType,
           profileAddress: profileAddress?.toLowerCase(),
+          displayProfileAddress: displayProfileAddress?.toLowerCase(),
         });
       },
     ),
@@ -442,6 +527,7 @@ export async function fetchList(slug: string, userId?: string): Promise<PublicLi
       userId: true,
       listType: true,
       profileAddress: true,
+      displayProfileAddress: true,
     },
     with: {
       user: {
@@ -469,6 +555,7 @@ export async function fetchList(slug: string, userId?: string): Promise<PublicLi
     isOwned: userId ? result.userId === userId : undefined,
     listType: result.listType,
     profileAddress: result.profileAddress,
+    displayProfileAddress: result.displayProfileAddress,
   };
 }
 
@@ -479,6 +566,7 @@ export async function fetchOwnedLists(userId: string) {
       slug: true,
       listType: true,
       profileAddress: true,
+      displayProfileAddress: true,
     },
     where: { userId },
     orderBy: { id: "desc" },

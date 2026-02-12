@@ -39,12 +39,15 @@ export default async function ProfileListPage(props: Props) {
     getUserByIdentifier(params.nickname, session?.user.id),
   ]);
 
-  if (list.listType !== "profile") {
-    notFound();
-  }
+  // Validate list belongs to this profile
+  const isProfileList =
+    list.listType === "profile" &&
+    list.profileAddress?.toLowerCase() === profile.address.toLowerCase();
+  const isBoundNormalList =
+    list.listType === "normal" &&
+    list.displayProfileAddress?.toLowerCase() === profile.address.toLowerCase();
 
-  // Verify the list belongs to this profile
-  if (list.profileAddress?.toLowerCase() !== profile.address.toLowerCase()) {
+  if (!isProfileList && !isBoundNormalList) {
     notFound();
   }
 

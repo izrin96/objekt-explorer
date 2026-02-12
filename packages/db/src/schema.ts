@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -60,7 +61,7 @@ export const lists = pgTable(
       .references(() => user.id, {
         onDelete: "cascade",
       }),
-    slug: varchar("slug", { length: 12 }).notNull(),
+    slug: varchar("slug", { length: 100 }).notNull(),
     name: text("name").notNull(),
     hideUser: boolean("hide_user").default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -70,10 +71,17 @@ export const lists = pgTable(
       .default("normal")
       .$type<"normal" | "profile">(),
     profileAddress: citext("profile_address", { length: 42 }),
+    displayProfileAddress: citext("display_profile_address", { length: 42 }),
   },
   (t) => [
-    uniqueIndex("lists_slug_idx").on(t.slug),
+    uniqueIndex("lists_slug_idx")
+      .on(t.slug)
+      .where(sql`list_type = 'normal'`),
+    uniqueIndex("lists_profile_slug_idx")
+      .on(t.profileAddress, t.slug)
+      .where(sql`list_type = 'profile'`),
     index("lists_profile_address_idx").on(t.profileAddress),
+    index("lists_display_profile_address_idx").on(t.displayProfileAddress),
   ],
 );
 

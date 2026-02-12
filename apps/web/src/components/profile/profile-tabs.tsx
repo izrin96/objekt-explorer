@@ -20,6 +20,7 @@ export default function ProfileTabs() {
     { url: `/@${path}/trades`, translationKey: "trade_history" as const },
     { url: `/@${path}/progress`, translationKey: "progress" as const },
     { url: `/@${path}/stats`, translationKey: "statistics" as const },
+    { url: `/@${path}/list`, translationKey: "lists" as const },
   ];
 
   useEffect(() => {

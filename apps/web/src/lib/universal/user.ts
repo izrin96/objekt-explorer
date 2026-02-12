@@ -41,4 +41,5 @@ export type PublicList = {
   isOwned?: boolean;
   listType?: "normal" | "profile";
   profileAddress?: string | null;
+  displayProfileAddress?: string | null;
 };
