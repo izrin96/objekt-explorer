@@ -10,7 +10,6 @@ import { useListAuthed } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 
 import { Avatar } from "../ui/avatar-custom";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { EditListModal } from "./modal/manage-list";
 
@@ -18,7 +17,6 @@ export default function ListHeader() {
   const list = useTarget((a) => a.list)!;
   const profile = useTarget((a) => a.profile);
   const isListAuthed = useListAuthed();
-  const t = useTranslations("list");
 
   const isProfileList = list.listType === "profile";
   const isProfileContext =
@@ -35,7 +33,6 @@ export default function ListHeader() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">{list.name}</span>
-              {isProfileList && <Badge intent="secondary">{t("profile_list_badge")}</Badge>}
             </div>
             <div className="text-muted-fg text-sm">
               <Link
