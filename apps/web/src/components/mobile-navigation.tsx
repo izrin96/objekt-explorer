@@ -1,7 +1,5 @@
 "use client";
 
-import type { PopoverProps } from "react-aria-components";
-
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
@@ -22,12 +20,7 @@ import { SettingsButton } from "./settings-button";
 import { Container } from "./ui/container";
 import { MenuLabel } from "./ui/menu";
 
-interface ResponsiveNavigationProps {
-  className?: string;
-  popover?: Pick<PopoverProps, "className">;
-}
-
-export function MobileNavigation({ className, popover }: ResponsiveNavigationProps) {
+export function MobileNavigation() {
   const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -37,7 +30,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
   }, [pathname]);
 
   return (
-    <nav className={twMerge("bg-bg sticky top-0 z-40 flex h-12 items-center lg:hidden", className)}>
+    <nav className="bg-bg sticky top-0 z-40 flex h-12 items-center lg:hidden">
       <Container className="flex items-center [--container-breakpoint:var(--breakpoint-2xl)]">
         <div className="flex items-center gap-x-2">
           <MenuTrigger>
@@ -74,8 +67,7 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
                 "min-h-screen placement-bottom:entering:slide-in-from-top-1 -mt-1.5 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
                 "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
                 "slide-out-to-top-1 slide-in-from-top-1",
-                pathname === "/" && "from-blue-50 dark:from-[#151518]",
-                popover?.className,
+                pathname === "/" ? "from-blue-50 dark:from-[#151518]" : "",
               )}
               containerPadding={0}
             >
@@ -110,7 +102,9 @@ export function MobileNavigation({ className, popover }: ResponsiveNavigationPro
           <Suspense>
             <SelectedArtistFilter />
           </Suspense>
-          <UserSearch />
+          <Suspense>
+            <UserSearch />
+          </Suspense>
         </div>
       </Container>
     </nav>

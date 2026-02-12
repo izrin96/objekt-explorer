@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
@@ -48,6 +48,10 @@ export default async function ProfileListPage(props: Props) {
     list.displayProfileAddress?.toLowerCase() === profile.address.toLowerCase();
 
   if (!isProfileList && !isBoundNormalList) {
+    // If it's a normal list that's not bound to this profile, redirect to normal list route
+    if (list.listType === "normal") {
+      redirect(`/list/${params.slug}`);
+    }
     notFound();
   }
 

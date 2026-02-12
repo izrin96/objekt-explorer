@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ export default async function ProfileListsPage(props: Props) {
   const [params, session] = await Promise.all([props.params, getSession()]);
   const profile = await getUserByIdentifier(params.nickname, session?.user.id);
   const queryClient = getQueryClient();
+  const t = await getTranslations("list");
 
   // Fetch lists for this profile
   const lists = await queryClient.ensureQueryData(
@@ -27,18 +29,10 @@ export default async function ProfileListsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Lists</h2>
-      </div>
-
       {lists.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-          <p className="text-muted-fg">No lists found for this profile</p>
-          {profile.isOwned && (
-            <p className="text-muted-fg text-sm">
-              Create a profile list or set a normal list to display in this profile
-            </p>
-          )}
+          <p className="text-muted-fg">{t("no_lists_found")}</p>
+          {profile.isOwned && <p className="text-muted-fg text-sm">{t("no_lists_hint")}</p>}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -54,15 +48,10 @@ export default async function ProfileListsPage(props: Props) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold">{list.name}</h3>
-                  <Badge intent={isProfileList ? "primary" : "secondary"} className="text-xs">
-                    {isProfileList ? "Profile" : "Normal"}
+                  <Badge intent="secondary" className="text-xs">
+                    {isProfileList ? t("badge_profile") : t("badge_normal")}
                   </Badge>
                 </div>
-                <p className="text-muted-fg text-sm">
-                  {isProfileList
-                    ? `Shows objekts owned by ${profile.nickname || profile.address}`
-                    : "Collection-based list"}
-                </p>
               </Link>
             );
           })}

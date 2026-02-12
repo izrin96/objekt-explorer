@@ -35,10 +35,9 @@ export default function ListHeader() {
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">{list.name}</span>
-              <Badge>{isProfileList ? t("profile_list_badge") : t("bound_list_badge")}</Badge>
+              {isProfileList && <Badge intent="secondary">{t("profile_list_badge")}</Badge>}
             </div>
             <div className="text-muted-fg text-sm">
-              by{" "}
               <Link
                 href={`/@${profile.nickname || profile.address}`}
                 className="text-fg hover:underline"

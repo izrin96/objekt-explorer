@@ -7,7 +7,7 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { orpc } from "@/lib/orpc/client";
-import { getListHref } from "@/lib/utils";
+import { getListHref, parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Button } from "../ui/button";
@@ -109,6 +109,7 @@ function ListCard({ list }: ListCardProps) {
   const t = useTranslations("list.card");
 
   const href = getListHref(list);
+  const isProfileList = list.listType === "profile";
 
   return (
     <>
@@ -118,7 +119,14 @@ function ListCard({ list }: ListCardProps) {
         href={href}
         className="hover:bg-muted relative flex flex-col gap-3 rounded-lg border p-4 transition-colors"
       >
-        <h3 className="pr-8 font-semibold">{list.name}</h3>
+        <div className="flex flex-col gap-2 pr-8">
+          <h3 className="font-semibold">{list.name}</h3>
+          {isProfileList && list.profileAddress && (
+            <span className="text-muted-fg text-sm">
+              {parseNickname(list.profileAddress, list.nickname)}
+            </span>
+          )}
+        </div>
         <div className="absolute top-4 right-4" onClick={(e) => e.stopPropagation()}>
           <Menu>
             <Button intent="outline" size="sq-xs">

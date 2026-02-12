@@ -1,5 +1,7 @@
 import type { PropsWithChildren } from "react";
 
+import { Suspense } from "react";
+
 import DynamicContainer from "@/components/dynamic-container";
 import { PrivateProfileGuard, ProfileProvider } from "@/components/profile-provider";
 import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/profile-banner";
@@ -31,7 +33,9 @@ export default async function UserCollectionLayout(props: Props) {
         <DynamicContainer>
           <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
             <ProfileHeader user={targetProfile} />
-            <ProfileTabs />
+            <Suspense>
+              <ProfileTabs />
+            </Suspense>
             {props.children}
           </div>
         </DynamicContainer>

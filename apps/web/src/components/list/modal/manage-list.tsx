@@ -165,8 +165,8 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                     <SelectContent>
                       {profiles?.map((profile) => (
                         <SelectItem
-                          key={profile.address}
-                          id={profile.address}
+                          key={profile.address.toLowerCase()}
+                          id={profile.address.toLowerCase()}
                           textValue={parseNickname(profile.address, profile.nickname)}
                         >
                           {parseNickname(profile.address, profile.nickname)}
@@ -204,8 +204,8 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                       </SelectItem>
                       {profiles?.map((profile) => (
                         <SelectItem
-                          key={profile.address}
-                          id={profile.address}
+                          key={profile.address.toLowerCase()}
+                          id={profile.address.toLowerCase()}
                           textValue={parseNickname(profile.address, profile.nickname)}
                         >
                           {parseNickname(profile.address, profile.nickname)}
@@ -434,8 +434,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
                   </SelectItem>
                   {profiles?.map((profile) => (
                     <SelectItem
-                      key={profile.address}
-                      id={profile.address}
+                      key={profile.address.toLowerCase()}
+                      id={profile.address.toLowerCase()}
                       textValue={parseNickname(profile.address, profile.nickname)}
                     >
                       {parseNickname(profile.address, profile.nickname)}
