@@ -22,7 +22,7 @@ import UserAccountModal from "@/components/auth/account/user-account";
 import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
-import { parseNickname } from "@/lib/utils";
+import { getListHref, parseNickname } from "@/lib/utils";
 
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
@@ -174,7 +174,7 @@ function MyListMenuItem({
           </MenuItem>
         )}
         {data?.map((a) => (
-          <MenuItem key={a.slug} href={`/list/${a.slug}`}>
+          <MenuItem key={a.slug} href={getListHref(a)}>
             <MenuLabel>{a.name}</MenuLabel>
           </MenuItem>
         ))}
@@ -220,7 +220,7 @@ function MyCosmoProfileMenuItem() {
           </MenuItem>
         )}
         {data?.map((a) => (
-          <MenuItem key={a.address} href={`/@${a.nickname ?? a.address}`}>
+          <MenuItem key={a.address} href={`/@${a.nickname || a.address}`}>
             <MenuLabel>{parseNickname(a.address, a.nickname)}</MenuLabel>
           </MenuItem>
         ))}

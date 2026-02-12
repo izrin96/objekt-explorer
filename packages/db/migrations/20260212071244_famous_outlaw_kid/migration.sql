@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "list_entries_list_objekt_uniq" ON "list_entries" ("list_id","objekt_id") WHERE objekt_id IS NOT NULL;

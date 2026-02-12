@@ -126,19 +126,15 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
               name="listType"
               render={({ field: { name, value, onChange } }) => (
                 <RadioGroup name={name} value={value} onChange={onChange}>
-                  <Label>List Type</Label>
-                  <Description>Choose between a normal or profile-bound list</Description>
+                  <Label>{t("list_type_label")}</Label>
+                  <Description>{t("list_type_desc")}</Description>
                   <Radio value="normal">
-                    <Label>Normal List</Label>
-                    <Description>
-                      Collection-based, not tied to a profile. For want-to-buy lists.
-                    </Description>
+                    <Label>{t("normal_list_label")}</Label>
+                    <Description>{t("normal_list_desc")}</Description>
                   </Radio>
                   <Radio value="profile">
-                    <Label>Profile List</Label>
-                    <Description>
-                      Bound to a profile, shows serial numbers. Auto-removes on transfer.
-                    </Description>
+                    <Label>{t("profile_list_label")}</Label>
+                    <Description>{t("profile_list_desc")}</Description>
                   </Radio>
                 </RadioGroup>
               )}
@@ -148,23 +144,23 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                 control={control}
                 name="profileAddress"
                 rules={{
-                  required: watchedListType === "profile" ? "Profile required" : false,
+                  required: watchedListType === "profile" ? t("profile_required") : false,
                 }}
                 render={({
                   field: { name, value, onChange, onBlur },
                   fieldState: { invalid, error },
                 }) => (
                   <Select
-                    aria-label="Profile"
-                    placeholder="Select a profile"
+                    aria-label={t("profile_label")}
+                    placeholder={t("profile_placeholder")}
                     name={name}
                     value={value}
                     onChange={onChange}
                     onBlur={onBlur}
                     isInvalid={invalid}
                   >
-                    <Label>Profile</Label>
-                    <Description>Select which profile's objekts this list will track</Description>
+                    <Label>{t("profile_label")}</Label>
+                    <Description>{t("profile_desc")}</Description>
                     <SelectTrigger />
                     <SelectContent>
                       {profiles?.map((profile) => (
@@ -191,22 +187,20 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                   fieldState: { invalid, error },
                 }) => (
                   <Select
-                    aria-label="Display in Profile"
-                    placeholder="None"
+                    aria-label={t("display_profile_label")}
+                    placeholder={t("display_profile_none")}
                     name={name}
                     value={value}
                     onChange={onChange}
                     onBlur={onBlur}
                     isInvalid={invalid}
                   >
-                    <Label>Display in Profile (optional)</Label>
-                    <Description>
-                      Choose a profile to display this list in its Lists tab
-                    </Description>
+                    <Label>{t("display_profile_label")}</Label>
+                    <Description>{t("display_profile_desc")}</Description>
                     <SelectTrigger />
                     <SelectContent>
-                      <SelectItem id="" textValue="None">
-                        None
+                      <SelectItem id="" textValue={t("display_profile_none")}>
+                        {t("display_profile_none")}
                       </SelectItem>
                       {profiles?.map((profile) => (
                         <SelectItem
@@ -332,6 +326,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
 function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
   const router = useRouter();
   const t = useTranslations("list.edit");
+  const { data: profiles } = useUserProfiles();
   const { data } = useSuspenseQuery(
     orpc.list.find.queryOptions({
       input: slug,
@@ -355,6 +350,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
     name: data.name,
     hideUser: data.hideUser ?? false,
     gridColumns: data.gridColumns ?? 0,
+    displayProfileAddress: data.displayProfileAddress ?? "",
   };
 
   const { handleSubmit, control } = useForm({
@@ -368,6 +364,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
       name: data.name,
       hideUser: data.hideUser,
       gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
+      displayProfileAddress: data.displayProfileAddress === "" ? null : data.displayProfileAddress,
     });
   });
 
@@ -410,6 +407,46 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             </Checkbox>
           )}
         />
+
+        {data.listType === "normal" && (
+          <Controller
+            control={control}
+            name="displayProfileAddress"
+            render={({
+              field: { name, value, onChange, onBlur },
+              fieldState: { invalid, error },
+            }) => (
+              <Select
+                aria-label={t("display_profile_label")}
+                placeholder={t("display_profile_none")}
+                name={name}
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+              >
+                <Label>{t("display_profile_label")}</Label>
+                <Description>{t("display_profile_desc")}</Description>
+                <SelectTrigger />
+                <SelectContent>
+                  <SelectItem id="" textValue={t("display_profile_none")}>
+                    {t("display_profile_none")}
+                  </SelectItem>
+                  {profiles?.map((profile) => (
+                    <SelectItem
+                      key={profile.address}
+                      id={profile.address}
+                      textValue={parseNickname(profile.address, profile.nickname)}
+                    >
+                      {parseNickname(profile.address, profile.nickname)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+                <FieldError>{error?.message}</FieldError>
+              </Select>
+            )}
+          />
+        )}
 
         <Controller
           control={control}

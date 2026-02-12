@@ -18,7 +18,7 @@ export default function UserLink({
     <div className="inline-flex gap-2">
       {address ? (
         <>
-          <Link href={`/@${nickname ?? address}`}>{parseNickname(address, nickname)}</Link>
+          <Link href={`/@${nickname || address}`}>{parseNickname(address, nickname)}</Link>
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
               <TooltipTrigger aria-label={t("preview")}>

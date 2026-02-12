@@ -43,6 +43,68 @@ async function generateProfileListSlug(name: string, profileAddress: string): Pr
   return slug;
 }
 
+/**
+ * Fetch collections from a list (supports both normal and profile lists).
+ * Returns collections with overrides applied.
+ */
+async function fetchListCollections(slug: string | undefined) {
+  if (!slug) return [];
+
+  const list = await db.query.lists.findFirst({
+    where: { slug },
+    with: {
+      entries: {
+        columns: {
+          collectionSlug: true,
+          objektId: true,
+        },
+      },
+    },
+  });
+
+  if (!list) return [];
+
+  if (list.listType === "profile") {
+    // Profile lists: fetch via objektId → objekts → collections
+    const objektIds = list.entries
+      .map((e: { objektId: string | null }) => e.objektId)
+      .filter((id: string | null): id is string => id !== null);
+
+    if (objektIds.length === 0) return [];
+
+    const objektsData = await indexer.query.objekts.findMany({
+      where: { id: { in: objektIds } },
+      with: { collection: true },
+    });
+
+    // Extract collections from objekts (deduplicate by collectionId)
+    const collectionMap = new Map();
+    for (const objekt of objektsData) {
+      if (objekt.collection) {
+        collectionMap.set(objekt.collection.collectionId, objekt.collection);
+      }
+    }
+
+    return Array.from(collectionMap.values()).map((collection) => overrideCollection(collection));
+  } else {
+    // Normal lists: fetch via collectionSlug → collections
+    const slugs = list.entries
+      .map((e: { collectionSlug: string | null }) => e.collectionSlug)
+      .filter((s: string | null): s is string => s !== null);
+
+    if (slugs.length === 0) return [];
+
+    const foundCollections = await indexer
+      .select({
+        ...getCollectionColumns(),
+      })
+      .from(collections)
+      .where(inArray(collections.slug, slugs));
+
+    return foundCollections.map((collection) => overrideCollection(collection));
+  }
+}
+
 export const listRouter = {
   find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
     const result = await db.query.lists.findFirst({
@@ -52,6 +114,7 @@ export const listRouter = {
         gridColumns: true,
         listType: true,
         profileAddress: true,
+        displayProfileAddress: true,
       },
       where: { slug, userId: session.user.id },
     });
@@ -112,7 +175,7 @@ export const listRouter = {
             if (!data || !data.collection) return null;
             const ownedObjekt = mapOwnedObjekt(data, data.collection);
             return Object.assign(ownedObjekt, {
-              entryId: entry.id.toString(),
+              id: entry.id.toString(),
               createdAt: entry.createdAt,
             });
           })
@@ -160,7 +223,29 @@ export const listRouter = {
         orderBy: { createdAt: "desc" },
       });
 
-      return result;
+      // Batch-fetch nicknames for profile addresses
+      const addresses = result
+        .flatMap((l) => [l.profileAddress, l.displayProfileAddress])
+        .filter((a): a is string => a !== null);
+
+      if (addresses.length === 0) {
+        return result.map((l) => Object.assign({}, l, { nickname: null as string | null }));
+      }
+
+      const profiles = await db.query.userAddress.findMany({
+        columns: { address: true, nickname: true },
+        where: { address: { in: addresses } },
+      });
+
+      const nicknameMap = new Map(profiles.map((p) => [p.address.toLowerCase(), p.nickname]));
+
+      return result.map((l) =>
+        Object.assign({}, l, {
+          nickname: l.profileAddress
+            ? (nicknameMap.get(l.profileAddress.toLowerCase()) ?? null)
+            : null,
+        }),
+      );
     }),
 
   addObjektsToList: authed
@@ -213,27 +298,25 @@ export const listRouter = {
           }
 
           // Insert objekt entries
+          // For profile lists, ALWAYS skip duplicates (ignore skipDups flag)
           const values = inputObjekts.map((o) => ({
             listId: list.id,
             objektId: o.objektId,
           }));
 
-          if (skipDups) {
-            // Get existing objektIds
-            const existing = await db
-              .select({ objektId: listEntries.objektId })
-              .from(listEntries)
-              .where(eq(listEntries.listId, list.id));
+          // Get existing objektIds to prevent duplicates
+          const existing = await db
+            .select({ objektId: listEntries.objektId })
+            .from(listEntries)
+            .where(eq(listEntries.listId, list.id));
 
-            const existingSet = new Set(existing.map((e) => e.objektId).filter(Boolean));
-            const filtered = values.filter((v) => !existingSet.has(v.objektId));
+          const existingSet = new Set(existing.map((e) => e.objektId).filter(Boolean));
+          const filtered = values.filter((v) => !existingSet.has(v.objektId));
 
-            if (filtered.length === 0) return [];
+          if (filtered.length === 0) return [];
 
-            await db.insert(listEntries).values(filtered);
-          } else {
-            await db.insert(listEntries).values(values).onConflictDoNothing();
-          }
+          // Use onConflictDoNothing as safety net in case of race conditions
+          await db.insert(listEntries).values(filtered).onConflictDoNothing();
 
           // Return empty array for now (frontend will refetch)
           return [];
@@ -326,21 +409,40 @@ export const listRouter = {
         name: z.string().min(1).optional(),
         hideUser: z.boolean().optional(),
         gridColumns: z.number().min(2).max(18).optional().nullable(),
+        displayProfileAddress: z.string().optional().nullable(),
       }),
     )
     .handler(
       async ({
-        input: { slug, ...rest },
+        input: { slug, displayProfileAddress, ...rest },
         context: {
           session: { user },
         },
       }) => {
         const list = await findOwnedList(slug, user.id);
 
+        // Validate display profile ownership if provided
+        // Only for normal lists (profile lists don't use displayProfileAddress)
+        if (list.listType === "normal" && displayProfileAddress) {
+          const owned = await db.query.userAddress.findFirst({
+            where: {
+              address: displayProfileAddress.toLowerCase(),
+              userId: user.id,
+            },
+          });
+
+          if (!owned) {
+            throw new ORPCError("FORBIDDEN", {
+              message: "Display profile not owned by user",
+            });
+          }
+        }
+
         await db
           .update(lists)
           .set({
             ...rest,
+            displayProfileAddress: displayProfileAddress?.toLowerCase() ?? null,
           })
           .where(eq(lists.id, list.id));
       },
@@ -448,70 +550,12 @@ export const listRouter = {
       }),
     )
     .handler(async ({ input: { haveSlug, wantSlug } }) => {
-      // get slugs to query
-      const slugs = [haveSlug, wantSlug].filter((s) => s !== undefined);
+      const [have, want] = await Promise.all([
+        fetchListCollections(haveSlug),
+        fetchListCollections(wantSlug),
+      ]);
 
-      if (slugs.length === 0) {
-        return { have: [], want: [] };
-      }
-
-      // get both list
-      const foundLists = await db.query.lists.findMany({
-        where: { slug: { in: slugs } },
-        with: {
-          entries: {
-            columns: {
-              collectionSlug: true,
-            },
-          },
-        },
-      });
-
-      const uniqueCollectionSlug = new Set(
-        foundLists
-          .flatMap((a) => a.entries)
-          .map((a) => a.collectionSlug)
-          .filter((slug): slug is string => slug !== null),
-      );
-
-      if (uniqueCollectionSlug.size === 0) return { have: [], want: [] };
-
-      // get all collections based on both list
-      const foundCollections = await indexer.query.collections.findMany({
-        where: { slug: { in: Array.from(uniqueCollectionSlug) } },
-        columns: {
-          slug: true,
-          season: true,
-          collectionNo: true,
-          member: true,
-          artist: true,
-          collectionId: true,
-          class: true,
-        },
-      });
-
-      const collectionsMap = new Map(foundCollections.map((c) => [c.slug, c]));
-
-      // entry for both list
-      const haveList = haveSlug ? foundLists.find((a) => a.slug === haveSlug) : undefined;
-      const wantList = wantSlug ? foundLists.find((a) => a.slug === wantSlug) : undefined;
-
-      const have =
-        haveList?.entries
-          .filter((a) => a.collectionSlug !== null)
-          .map((a) => collectionsMap.get(a.collectionSlug!))
-          .filter((c) => c !== undefined) ?? [];
-
-      const want =
-        wantList?.entries
-          .filter((a) => a.collectionSlug !== null)
-          .map((a) => collectionsMap.get(a.collectionSlug!))
-          .filter((c) => c !== undefined) ?? [];
-
-      return {
-        have,
-        want,
-      };
+      return { have, want };
     }),
 };
 
@@ -571,7 +615,24 @@ export async function fetchOwnedLists(userId: string) {
     where: { userId },
     orderBy: { id: "desc" },
   });
-  return result;
+
+  // Batch-fetch nicknames for profile addresses
+  const addresses = result.map((l) => l.profileAddress).filter((a): a is string => a !== null);
+
+  if (addresses.length === 0) return result.map((l) => ({ ...l, nickname: null as string | null }));
+
+  const profiles = await db.query.userAddress.findMany({
+    columns: { address: true, nickname: true },
+    where: { address: { in: addresses } },
+  });
+
+  const nicknameMap = new Map(profiles.map((p) => [p.address.toLowerCase(), p.nickname]));
+
+  return result.map((l) =>
+    Object.assign({}, l, {
+      nickname: l.profileAddress ? (nicknameMap.get(l.profileAddress.toLowerCase()) ?? null) : null,
+    }),
+  );
 }
 
 async function findOwnedList(slug: string, userId: string) {

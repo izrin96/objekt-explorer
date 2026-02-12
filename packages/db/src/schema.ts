@@ -101,6 +101,9 @@ export const listEntries = pgTable(
   (t) => [
     index("list_entries_list_idx").on(t.listId),
     index("list_entries_objekt_idx").on(t.objektId),
+    uniqueIndex("list_entries_list_objekt_uniq")
+      .on(t.listId, t.objektId)
+      .where(sql`objekt_id IS NOT NULL`),
   ],
 );
 

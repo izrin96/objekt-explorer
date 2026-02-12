@@ -15,7 +15,19 @@ export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
 
 export function parseNickname(address: string, nickname?: string | null) {
   if (nickname?.toLowerCase() === address.toLowerCase()) return `${address.substring(0, 8)}...`;
-  return nickname ?? `${address.substring(0, 8)}...`;
+  return nickname || `${address.substring(0, 8)}...`;
+}
+
+export function getListHref(list: {
+  listType?: "normal" | "profile";
+  slug: string;
+  nickname?: string | null;
+  profileAddress?: string | null;
+}) {
+  if (list.listType === "profile" && (list.nickname || list.profileAddress)) {
+    return `/@${list.nickname || list.profileAddress}/list/${list.slug}`;
+  }
+  return `/list/${list.slug}`;
 }
 
 export function getBaseURL() {

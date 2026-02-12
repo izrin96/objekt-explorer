@@ -46,7 +46,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           className: "w-full flex-none md:w-auto",
           intent: "outline",
         })}
-        href={`https://apollo.cafe/@${user.nickname ?? user.address}`}
+        href={`https://apollo.cafe/@${user.nickname || user.address}`}
         target="_blank"
       >
         {t("view_in_apollo")}

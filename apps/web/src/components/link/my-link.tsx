@@ -11,7 +11,6 @@ import { parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Button, buttonStyles } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
 import { Menu, MenuContent, MenuItem } from "../ui/menu";
@@ -70,33 +69,30 @@ function LinkCard({ link }: LinkCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const nickname = parseNickname(link.address, link.nickname);
+  const href = `/@${link.nickname || link.address}`;
+
   return (
-    <Card>
-      <CardContent className="flex justify-between">
-        <Link
-          href={`/@${link.nickname ?? link.address}`}
-          className="flex min-w-0 flex-1 flex-col gap-1 text-base"
-        >
-          <span className="truncate text-lg font-semibold">{nickname}</span>
-          <span className="text-muted-fg truncate font-mono text-xs">{link.address}</span>
-        </Link>
-
-        <RemoveLinkModal address={link.address} open={removeOpen} setOpen={setRemoveOpen} />
-
-        <EditProfileModal
-          address={link.address}
-          nickname={nickname}
-          open={editOpen}
-          setOpen={setEditOpen}
-        />
-
-        <div className="flex items-center">
+    <>
+      <RemoveLinkModal address={link.address} open={removeOpen} setOpen={setRemoveOpen} />
+      <EditProfileModal
+        address={link.address}
+        nickname={nickname}
+        open={editOpen}
+        setOpen={setEditOpen}
+      />
+      <Link
+        href={href}
+        className="hover:bg-muted relative flex flex-col gap-3 rounded-lg border p-4 transition-colors"
+      >
+        <h3 className="truncate pr-8 font-semibold">{nickname}</h3>
+        <p className="text-muted-fg truncate font-mono text-xs">{link.address}</p>
+        <div className="absolute top-4 right-4" onClick={(e) => e.stopPropagation()}>
           <Menu>
             <Button intent="outline" size="sq-xs">
               <EllipsisVerticalIcon className="size-5" />
             </Button>
             <MenuContent className="sm:min-w-56">
-              <MenuItem href={`/@${link.nickname ?? link.address}`}>{t("open")}</MenuItem>
+              <MenuItem href={href}>{t("open")}</MenuItem>
               <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
               <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
                 {t("unlink")}
@@ -104,7 +100,7 @@ function LinkCard({ link }: LinkCardProps) {
             </MenuContent>
           </Menu>
         </div>
-      </CardContent>
-    </Card>
+      </Link>
+    </>
   );
 }

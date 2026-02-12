@@ -1,8 +1,8 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "1a6b8e53-7931-4697-8076-b0feaf082c70",
-  "prevIds": ["b615b620-57f1-484e-8328-856fbb0779c7"],
+  "id": "6ec0faa3-795c-4e89-9619-2f650f9ede79",
+  "prevIds": ["1a6b8e53-7931-4697-8076-b0feaf082c70"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -1142,6 +1142,34 @@
       "method": "btree",
       "concurrently": false,
       "name": "list_entries_objekt_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "list_entries"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "list_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "objekt_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "objekt_id IS NOT NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "list_entries_list_objekt_uniq",
       "entityType": "indexes",
       "schema": "public",
       "table": "list_entries"

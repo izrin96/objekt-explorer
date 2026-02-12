@@ -5,6 +5,7 @@ import { getUserByIdentifier } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
+import { getListHref } from "@/lib/utils";
 
 type Props = {
   params: Promise<{
@@ -43,9 +44,7 @@ export default async function ProfileListsPage(props: Props) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {lists.map((list) => {
             const isProfileList = list.listType === "profile";
-            const href = isProfileList
-              ? `/@${profile.nickname || profile.address}/list/${list.slug}`
-              : `/list/${list.slug}`;
+            const href = getListHref(list);
 
             return (
               <Link

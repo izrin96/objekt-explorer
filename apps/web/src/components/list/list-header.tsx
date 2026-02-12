@@ -1,12 +1,13 @@
 "use client";
 
-import { ArrowLeftIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
+import { parseNickname } from "@/lib/utils";
 
 import { Avatar } from "../ui/avatar-custom";
 import { Badge } from "../ui/badge";
@@ -20,24 +21,14 @@ export default function ListHeader() {
   const t = useTranslations("list");
 
   const isProfileList = list.listType === "profile";
-  const isProfileContext = isProfileList || (list.listType === "normal" && list.displayProfileAddress);
+  const isProfileContext =
+    isProfileList || (list.listType === "normal" && list.displayProfileAddress);
 
   // Use profile info when in profile context
   const displayUser = isProfileContext && profile ? profile.user : list.user;
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Back button for profile context */}
-      {isProfileContext && profile && (
-        <Link
-          href={`/@${profile.nickname || profile.address}`}
-          className="inline-flex w-fit items-center gap-2 text-sm hover:underline"
-        >
-          <ArrowLeftIcon size={16} weight="bold" />
-          {t("back_to_profile", { name: profile.nickname || profile.address })}
-        </Link>
-      )}
-
       <div className="flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
         {/* Profile context: show nickname/address without avatar */}
         {isProfileContext && profile ? (
@@ -47,10 +38,13 @@ export default function ListHeader() {
               <Badge>{isProfileList ? t("profile_list_badge") : t("bound_list_badge")}</Badge>
             </div>
             <div className="text-muted-fg text-sm">
-              {t("profile_context", {
-                nickname: profile.nickname || "—",
-                address: `${profile.address.slice(0, 6)}...${profile.address.slice(profile.address.length - 4, profile.address.length)}`,
-              })}
+              by{" "}
+              <Link
+                href={`/@${profile.nickname || profile.address}`}
+                className="text-fg hover:underline"
+              >
+                {parseNickname(profile.address, profile.nickname)}
+              </Link>
             </div>
           </div>
         ) : (
