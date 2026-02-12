@@ -25,12 +25,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
   return (
     <RouterProvider navigate={router.push}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          enableSystem
-          attribute="class"
-          defaultTheme="system"
-          themes={["light", "dark"]}
-        >
+        <ThemeProvider>
           <NuqsAdapter>
             <Toast />
             {children}
