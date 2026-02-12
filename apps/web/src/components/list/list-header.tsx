@@ -30,14 +30,14 @@ export default function ListHeader() {
       <div className="flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
         {/* Profile context: show nickname/address without avatar */}
         {isProfileContext && profile ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">{list.name}</span>
             </div>
             <div className="text-muted-fg text-sm">
               <Link
                 href={`/@${profile.nickname || profile.address}`}
-                className="text-fg hover:underline"
+                className="text-muted-fg hover:underline"
               >
                 {parseNickname(profile.address, profile.nickname)}
               </Link>
@@ -55,13 +55,13 @@ export default function ListHeader() {
                 initials={displayUser.name.charAt(0)}
               />
             )}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{list.name}</span>
               </div>
               {displayUser && (
                 <div className="flex items-center gap-2">
-                  <span className="text-fg text-sm">{displayUser.name}</span>
+                  <span className="text-muted-fg text-sm">{displayUser.name}</span>
                   {displayUser.showSocial && (
                     <>
                       {displayUser.discord && (
