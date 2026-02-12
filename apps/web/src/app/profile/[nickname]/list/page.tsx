@@ -46,11 +46,13 @@ export default async function ProfileListsPage(props: Props) {
                 href={href}
                 className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{list.name}</h3>
-                  <Badge intent="secondary" className="text-xs">
-                    {isProfileList ? t("badge_profile") : t("badge_normal")}
-                  </Badge>
+                  {isProfileList && (
+                    <Badge intent="info" className="text-xs">
+                      {t("badge_profile")}
+                    </Badge>
+                  )}
                 </div>
               </Link>
             );

@@ -117,29 +117,30 @@ function ListCard({ list }: ListCardProps) {
       <DeleteListModal slug={list.slug} open={deleteOpen} setOpen={setDeleteOpen} />
       <Link
         href={href}
-        className="hover:bg-muted relative flex flex-col gap-3 rounded-lg border p-4 transition-colors"
+        className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
       >
-        <div className="flex flex-col gap-2 pr-8">
-          <h3 className="font-semibold">{list.name}</h3>
-          {isProfileList && list.profileAddress && (
-            <span className="text-muted-fg text-sm">
-              {parseNickname(list.profileAddress, list.nickname)}
-            </span>
-          )}
-        </div>
-        <div className="absolute top-4 right-4" onClick={(e) => e.stopPropagation()}>
-          <Menu>
-            <Button intent="outline" size="sq-xs">
-              <EllipsisVerticalIcon className="size-5" />
-            </Button>
-            <MenuContent className="sm:min-w-56">
-              <MenuItem href={href}>{t("open")}</MenuItem>
-              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
-              <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
-                {t("delete")}
-              </MenuItem>
-            </MenuContent>
-          </Menu>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-1 flex-col gap-2">
+            <h3 className="font-semibold">{list.name}</h3>
+            {isProfileList && list.profileAddress && (
+              <span className="text-muted-fg text-sm">
+                {parseNickname(list.profileAddress, list.nickname)}
+              </span>
+            )}
+          </div>
+          <div onClick={(e) => e.stopPropagation()}>
+            <Menu>
+              <Button intent="outline" size="sq-xs">
+                <EllipsisVerticalIcon className="size-5" />
+              </Button>
+              <MenuContent className="sm:min-w-56">
+                <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
+                <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
+                  {t("delete")}
+                </MenuItem>
+              </MenuContent>
+            </Menu>
+          </div>
         </div>
       </Link>
     </>

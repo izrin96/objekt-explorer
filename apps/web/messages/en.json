@@ -333,7 +333,6 @@
       "countdown_remaining": "Remaining {countdown}"
     },
     "card": {
-      "open": "Open",
       "edit": "Edit",
       "unlink": "Unlink"
     },
@@ -358,7 +357,6 @@
     "no_lists_found": "No lists found for this profile",
     "no_lists_hint": "Create a profile list or set a normal list to display in this profile",
     "badge_profile": "Profile",
-    "badge_normal": "Normal",
     "create": {
       "title": "Create list",
       "name_label": "Name",
@@ -369,7 +367,7 @@
       "normal_list_label": "Normal List",
       "normal_list_desc": "Collection-based, not tied to a profile. For want-to-buy lists.",
       "profile_list_label": "Profile List",
-      "profile_list_desc": "Bound to a profile, shows serial numbers. Auto-removes on transfer.",
+      "profile_list_desc": "Bound to a profile, shows serial numbers. Auto-removes on transfer. For want-to-sell lists.",
       "profile_required": "Profile is required.",
       "profile_label": "Profile",
       "profile_placeholder": "Select a profile",
@@ -411,7 +409,6 @@
       "error": "Error deleting list"
     },
     "card": {
-      "open": "Open",
       "edit": "Edit",
       "edit_list": "Edit List",
       "delete": "Delete"
