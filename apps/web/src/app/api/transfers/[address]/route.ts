@@ -133,7 +133,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
           ne(collections.slug, "empty-collection"),
         ),
       )
-      .orderBy(desc(transfers.id))
+      .orderBy(desc(transfers.timestamp), desc(transfers.id))
       .limit(PER_PAGE + 1);
 
   let results: Awaited<ReturnType<typeof runQuery>>;
@@ -155,7 +155,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
           ),
         )
         .where(and(...addressFilters, ...cursorFilter, ...tsFilter))
-        .orderBy(desc(transfers.id))
+        .orderBy(desc(transfers.timestamp), desc(transfers.id))
         .limit(PER_PAGE + 1);
 
     let ids: { id: string }[];
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
           ids.map((r) => r.id),
         ),
       )
-      .orderBy(desc(transfers.id));
+      .orderBy(desc(transfers.timestamp), desc(transfers.id));
   } else if (query.type === "all") {
     // No collection filters — split OR into two parallel queries
     const [fromResults, toResults] = await Promise.all([
