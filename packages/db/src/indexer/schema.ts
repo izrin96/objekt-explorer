@@ -163,18 +163,24 @@ export const transfers = pgTable(
       table.objektId.asc().nullsLast(),
       table.timestamp.desc().nullsFirst(),
     ),
+    index("idx_transfer_mint_collection_id")
+      .using("btree", table.collectionId.asc().nullsLast(), table.id.desc().nullsFirst())
+      .where(sql`("from" = '0x0000000000000000000000000000000000000000'::text)`),
+    index("idx_transfer_mint_id_collection")
+      .using("btree", table.id.desc().nullsFirst(), table.collectionId.asc().nullsLast())
+      .where(sql`("from" = '0x0000000000000000000000000000000000000000'::text)`),
+    index("idx_transfer_mint_id_cosmo_spin")
+      .using("btree", table.id.desc().nullsFirst())
+      .where(
+        sql`(("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text) AND ("from" = '0x0000000000000000000000000000000000000000'::text))`,
+      ),
     index("idx_transfer_objekt_id_desc").using(
       "btree",
       table.objektId.asc().nullsLast(),
       table.id.desc().nullsFirst(),
     ),
-    index("idx_transfer_to_from_id_cosmo_spin")
-      .using(
-        "btree",
-        table.to.asc().nullsLast(),
-        table.from.asc().nullsLast(),
-        table.id.desc().nullsFirst(),
-      )
+    index("idx_transfer_spin_id_collection")
+      .using("btree", table.id.desc().nullsFirst(), table.collectionId.asc().nullsLast())
       .where(sql`("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
     index("idx_transfer_to_id").using(
       "btree",

@@ -4,7 +4,7 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
-import { type SQL, and, desc, eq, exists, inArray, lt, ne, sql } from "drizzle-orm";
+import { type SQL, and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
@@ -118,6 +118,15 @@ async function fetchTransfers(query: ActivityParams) {
     collectionFilters.push(inArray(collections.collectionNo, query.collection));
 
   if (collectionFilters.length > 0) {
+    // Inverted query pattern: find matching collections first, then transfers
+    // More efficient because collections table is smaller and well-indexed
+    const matchingCollections = await indexer
+      .select({ id: collections.id })
+      .from(collections)
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+
+    if (matchingCollections.length === 0) return [];
+
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
@@ -125,17 +134,9 @@ async function fetchTransfers(query: ActivityParams) {
         and(
           ...cursorFilter,
           ...typeFilters,
-          exists(
-            indexer
-              .select({ _: sql`1` })
-              .from(collections)
-              .where(
-                and(
-                  eq(collections.id, transfers.collectionId),
-                  ne(collections.slug, "empty-collection"),
-                  ...collectionFilters,
-                ),
-              ),
+          inArray(
+            transfers.collectionId,
+            matchingCollections.map((c) => c.id),
           ),
         ),
       )
