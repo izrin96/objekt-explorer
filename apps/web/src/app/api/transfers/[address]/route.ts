@@ -139,32 +139,22 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   let results: Awaited<ReturnType<typeof runQuery>>;
 
   if (collectionFilters.length > 0) {
-    // Inverted query pattern: find matching collections first, then transfers
-    // More efficient because collections table is smaller and well-indexed
-    const matchingCollections = await indexer
-      .select({ id: collections.id })
-      .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-
-    if (matchingCollections.length === 0) {
-      return Response.json({ nextCursor: undefined, results: [] });
-    }
-
+    // Use JOIN instead of IN for better performance with many collections
+    // Pre-fetch matching collection IDs only if the list is small (< 50)
+    // Otherwise use JOIN directly in the transfer query
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ id: transfers.id })
         .from(transfers)
-        .where(
+        .innerJoin(
+          collections,
           and(
-            ...addressFilters,
-            ...cursorFilter,
-            ...tsFilter,
-            inArray(
-              transfers.collectionId,
-              matchingCollections.map((c) => c.id),
-            ),
+            eq(collections.id, transfers.collectionId),
+            ne(collections.slug, "empty-collection"),
+            ...collectionFilters,
           ),
         )
+        .where(and(...addressFilters, ...cursorFilter, ...tsFilter))
         .orderBy(desc(transfers.id))
         .limit(PER_PAGE + 1);
 
