@@ -21,8 +21,7 @@ import { authed, pub } from "../orpc";
 
 export const listRouter = {
   find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
-    // Try by slug first
-    let result = await db.query.lists.findFirst({
+    const result = await db.query.lists.findFirst({
       columns: {
         name: true,
         hideUser: true,
@@ -30,28 +29,9 @@ export const listRouter = {
         listType: true,
         profileAddress: true,
         displayProfileAddress: true,
-        slug: true,
-        profileSlug: true,
       },
       where: { slug, userId: session.user.id },
     });
-
-    // If not found, try by profileSlug (for profile lists with null slug)
-    if (!result) {
-      result = await db.query.lists.findFirst({
-        columns: {
-          name: true,
-          hideUser: true,
-          gridColumns: true,
-          listType: true,
-          profileAddress: true,
-          displayProfileAddress: true,
-          slug: true,
-          profileSlug: true,
-        },
-        where: { profileSlug: slug, userId: session.user.id },
-      });
-    }
 
     if (!result) throw new ORPCError("NOT_FOUND");
 
@@ -343,7 +323,7 @@ export const listRouter = {
     )
     .handler(
       async ({
-        input: { slug, displayProfileAddress, name, ...rest },
+        input: { slug, displayProfileAddress, ...rest },
         context: {
           session: { user },
         },
@@ -356,43 +336,11 @@ export const listRouter = {
           await checkProfileOwnership(displayProfileAddress, user.id);
         }
 
-        // Determine if we need to generate/update profileSlug
-        let profileSlug: string | undefined;
-
-        // Generate profileSlug when binding a normal list to a profile
-        if (list.listType === "normal" && displayProfileAddress && !list.profileSlug) {
-          const listName = name || list.name;
-          profileSlug = await generateProfileListSlug(
-            listName,
-            displayProfileAddress.toLowerCase(),
-            "normal",
-          );
-        }
-
-        // Regenerate profileSlug if name changes and list is profile-scoped
-        if (name && name !== list.name) {
-          if (list.listType === "profile" && list.profileAddress) {
-            profileSlug = await generateProfileListSlug(
-              name,
-              list.profileAddress.toLowerCase(),
-              "profile",
-            );
-          } else if (
-            list.listType === "normal" &&
-            (list.displayProfileAddress || displayProfileAddress)
-          ) {
-            const address = (displayProfileAddress || list.displayProfileAddress)!.toLowerCase();
-            profileSlug = await generateProfileListSlug(name, address, "normal");
-          }
-        }
-
         await db
           .update(lists)
           .set({
             ...rest,
-            name,
             displayProfileAddress: displayProfileAddress?.toLowerCase() ?? null,
-            ...(profileSlug !== undefined && { profileSlug }),
           })
           .where(eq(lists.id, list.id));
       },
@@ -450,28 +398,11 @@ export const listRouter = {
           await checkProfileOwnership(displayProfileAddress, user.id);
         }
 
-        // Generate appropriate slug and profileSlug
-        let slug: string | null;
-        let profileSlug: string | undefined;
-
+        // Generate appropriate slug
+        let slug: string;
         if (listType === "profile" && profileAddress) {
-          // Profile lists: ONLY profileSlug, no slug
-          profileSlug = await generateProfileListSlug(
-            name,
-            profileAddress.toLowerCase(),
-            "profile",
-          );
-          slug = nanoid(9);
-        } else if (listType === "normal" && displayProfileAddress) {
-          // Bound normal lists: both slug and profileSlug
-          profileSlug = await generateProfileListSlug(
-            name,
-            displayProfileAddress.toLowerCase(),
-            "normal",
-          );
-          slug = nanoid(9);
+          slug = await generateProfileListSlug(name, profileAddress.toLowerCase());
         } else {
-          // Unbound normal lists: only slug
           slug = nanoid(9);
         }
 
@@ -479,7 +410,6 @@ export const listRouter = {
           name,
           userId: user.id,
           slug,
-          profileSlug,
           hideUser,
           listType,
           profileAddress: profileAddress?.toLowerCase(),
@@ -535,27 +465,17 @@ async function checkProfileOwnership(address: string, userId: string): Promise<v
   }
 }
 
-async function generateProfileListSlug(
-  name: string,
-  profileAddress: string,
-  listType: "profile" | "normal",
-): Promise<string> {
+async function generateProfileListSlug(name: string, profileAddress: string): Promise<string> {
   const baseSlug = slugify(name, { lower: true, strict: true });
   let slug = baseSlug;
   let counter = 2;
 
   // Check for collisions within this profile's lists
   while (true) {
-    const existing =
-      listType === "profile"
-        ? await db.query.lists.findFirst({
-            where: { profileAddress, profileSlug: slug, listType: "profile" },
-            columns: { id: true },
-          })
-        : await db.query.lists.findFirst({
-            where: { displayProfileAddress: profileAddress, profileSlug: slug, listType: "normal" },
-            columns: { id: true },
-          });
+    const existing = await db.query.lists.findFirst({
+      where: { profileAddress, slug, listType: "profile" },
+      columns: { id: true },
+    });
 
     if (!existing) break;
     slug = `${baseSlug}-${counter}`;
@@ -624,11 +544,9 @@ async function fetchListCollections(slug: string | undefined) {
 }
 
 export async function fetchList(slug: string, userId?: string): Promise<PublicList | null> {
-  // Try to find by slug first, then by profileSlug
-  let result = await db.query.lists.findFirst({
+  const result = await db.query.lists.findFirst({
     columns: {
       slug: true,
-      profileSlug: true,
       name: true,
       hideUser: true,
       gridColumns: true,
@@ -653,43 +571,11 @@ export async function fetchList(slug: string, userId?: string): Promise<PublicLi
     where: { slug },
   });
 
-  // If not found by slug, try by profileSlug
-  if (!result) {
-    result = await db.query.lists.findFirst({
-      columns: {
-        slug: true,
-        profileSlug: true,
-        name: true,
-        hideUser: true,
-        gridColumns: true,
-        userId: true,
-        listType: true,
-        profileAddress: true,
-        displayProfileAddress: true,
-      },
-      with: {
-        user: {
-          columns: {
-            name: true,
-            username: true,
-            image: true,
-            discord: true,
-            twitter: true,
-            displayUsername: true,
-            showSocial: true,
-          },
-        },
-      },
-      where: { profileSlug: slug },
-    });
-  }
-
   if (!result) return null;
 
   return {
     name: result.name,
     slug: result.slug,
-    profileSlug: result.profileSlug,
     gridColumns: result.gridColumns,
     user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
     isOwned: userId ? result.userId === userId : undefined,
@@ -729,35 +615,14 @@ export async function fetchOwnedLists(userId: string) {
 }
 
 async function findOwnedList(slug: string, userId: string) {
-  // Try by slug first
-  let list = await db.query.lists.findFirst({
+  const list = await db.query.lists.findFirst({
     columns: {
       id: true,
       listType: true,
       profileAddress: true,
-      displayProfileAddress: true,
-      profileSlug: true,
-      name: true,
-      slug: true,
     },
     where: { slug, userId },
   });
-
-  // If not found, try by profileSlug (for profile lists with null slug)
-  if (!list) {
-    list = await db.query.lists.findFirst({
-      columns: {
-        id: true,
-        listType: true,
-        profileAddress: true,
-        displayProfileAddress: true,
-        profileSlug: true,
-        name: true,
-        slug: true,
-      },
-      where: { profileSlug: slug, userId },
-    });
-  }
 
   if (!list) throw new ORPCError("NOT_FOUND");
 

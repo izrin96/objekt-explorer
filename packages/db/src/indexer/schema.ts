@@ -193,9 +193,6 @@ export const transfers = pgTable(
       table.objektId.asc().nullsLast(),
       table.timestamp.desc().nullsFirst(),
     ),
-    index("idx_transfer_mint_id_collection")
-      .using("btree", table.id.desc().nullsFirst(), table.collectionId.asc().nullsLast())
-      .where(sql`("from" = '0x0000000000000000000000000000000000000000'::text)`),
   ],
 );
 
