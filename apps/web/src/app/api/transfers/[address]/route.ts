@@ -8,7 +8,7 @@ import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { isValid, parseISO } from "date-fns";
-import { type SQL, and, desc, eq, exists, inArray, lt, lte, ne, sql } from "drizzle-orm";
+import { type SQL, and, desc, eq, inArray, lt, lte, ne } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
@@ -139,9 +139,17 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   let results: Awaited<ReturnType<typeof runQuery>>;
 
   if (collectionFilters.length > 0) {
-    // EXISTS lean scan — avoids JOIN overhead so PostgreSQL can use
-    // address-specific indexes with LIMIT pushdown. Critical for
-    // high-volume addresses (e.g. SPIN address with millions of rows).
+    // Inverted query pattern: find matching collections first, then transfers
+    // More efficient because collections table is smaller and well-indexed
+    const matchingCollections = await indexer
+      .select({ id: collections.id })
+      .from(collections)
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+
+    if (matchingCollections.length === 0) {
+      return Response.json({ nextCursor: undefined, results: [] });
+    }
+
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ id: transfers.id })
@@ -151,17 +159,9 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
             ...addressFilters,
             ...cursorFilter,
             ...tsFilter,
-            exists(
-              indexer
-                .select({ _: sql`1` })
-                .from(collections)
-                .where(
-                  and(
-                    eq(collections.id, transfers.collectionId),
-                    ne(collections.slug, "empty-collection"),
-                    ...collectionFilters,
-                  ),
-                ),
+            inArray(
+              transfers.collectionId,
+              matchingCollections.map((c) => c.id),
             ),
           ),
         )
