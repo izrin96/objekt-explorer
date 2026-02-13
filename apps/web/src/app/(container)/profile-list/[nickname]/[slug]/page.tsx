@@ -50,7 +50,7 @@ export default async function ProfileListPage(props: Props) {
   if (!isProfileList && !isBoundNormalList) {
     // If it's a normal list that's not bound to this profile, redirect to normal list route
     if (list.listType === "normal") {
-      redirect(`/list/${params.slug}`);
+      redirect(`/list/${list.slug}`);
     }
     notFound();
   }

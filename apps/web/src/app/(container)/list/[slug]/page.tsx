@@ -41,7 +41,8 @@ export default async function Page(props: Props) {
   // Redirect normal lists bound to a profile
   if (list.displayProfileAddress) {
     const profile = await getUserByIdentifier(list.displayProfileAddress);
-    redirect(`/@${profile.nickname || profile.address}/list/${params.slug}`);
+    const urlSlug = list.profileSlug || params.slug; // Use profileSlug if available
+    redirect(`/@${profile.nickname || profile.address}/list/${urlSlug}`);
   }
 
   void queryClient.prefetchQuery(

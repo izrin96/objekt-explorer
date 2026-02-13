@@ -21,11 +21,18 @@ export function parseNickname(address: string, nickname?: string | null) {
 export function getListHref(list: {
   listType?: "normal" | "profile";
   slug: string;
+  profileSlug?: string | null;
   nickname?: string | null;
   profileAddress?: string | null;
+  displayProfileAddress?: string | null;
 }) {
-  if (list.listType === "profile" && (list.nickname || list.profileAddress)) {
-    return `/@${list.nickname || list.profileAddress}/list/${list.slug}`;
+  const isProfileScoped =
+    list.listType === "profile" || (list.listType === "normal" && list.displayProfileAddress);
+
+  if (isProfileScoped && (list.nickname || list.profileAddress || list.displayProfileAddress)) {
+    const address = list.profileAddress || list.displayProfileAddress;
+    const urlSlug = list.profileSlug || list.slug; // Prefer profileSlug
+    return `/@${list.nickname || address}/list/${urlSlug}`;
   }
   return `/list/${list.slug}`;
 }

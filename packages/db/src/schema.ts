@@ -72,6 +72,7 @@ export const lists = pgTable(
       .$type<"normal" | "profile">(),
     profileAddress: citext("profile_address", { length: 42 }),
     displayProfileAddress: citext("display_profile_address", { length: 42 }),
+    profileSlug: varchar("profile_slug", { length: 100 }),
   },
   (t) => [
     uniqueIndex("lists_slug_idx")
@@ -80,8 +81,23 @@ export const lists = pgTable(
     uniqueIndex("lists_profile_slug_idx")
       .on(t.profileAddress, t.slug)
       .where(sql`list_type = 'profile'`),
-    index("lists_profile_address_idx").on(t.profileAddress),
-    index("lists_display_profile_address_idx").on(t.displayProfileAddress),
+    uniqueIndex("lists_profile_slug_uniq")
+      .on(t.profileAddress, t.profileSlug)
+      .where(sql`list_type = 'profile' AND profile_slug IS NOT NULL`),
+    uniqueIndex("lists_display_profile_slug_uniq")
+      .on(t.displayProfileAddress, t.profileSlug)
+      .where(
+        sql`list_type = 'normal' AND display_profile_address IS NOT NULL AND profile_slug IS NOT NULL`,
+      ),
+    index("lists_profile_address_idx")
+      .on(t.profileAddress)
+      .where(sql`profile_address IS NOT NULL`),
+    index("lists_display_profile_address_idx")
+      .on(t.displayProfileAddress)
+      .where(sql`display_profile_address IS NOT NULL`),
+    index("lists_profile_slug_idx")
+      .on(t.profileSlug)
+      .where(sql`profile_slug IS NOT NULL`),
   ],
 );
 
