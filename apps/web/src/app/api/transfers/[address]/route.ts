@@ -8,11 +8,10 @@ import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { isValid, parseISO } from "date-fns";
-import { type SQL, and, desc, eq, inArray, lt, lte, ne } from "drizzle-orm";
+import { type SQL, and, desc, eq, exists, inArray, lt, lte, ne, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth";
-import { resolveCollectionIds } from "@/lib/server/collection";
 import { getCollectionColumns } from "@/lib/server/objekt";
 import { validType } from "@/lib/universal/transfers";
 
@@ -35,6 +34,23 @@ const transfersSchema = z.object({
 });
 
 type TransferParams = z.infer<typeof transfersSchema>;
+
+function getCollectionFilters(query: TransferParams): SQL[] {
+  const filters: SQL[] = [];
+  if (query.artist.length)
+    filters.push(
+      inArray(
+        collections.artist,
+        query.artist.map((a) => a.toLowerCase()),
+      ),
+    );
+  if (query.member.length) filters.push(inArray(collections.member, query.member));
+  if (query.season.length) filters.push(inArray(collections.season, query.season));
+  if (query.class.length) filters.push(inArray(collections.class, query.class));
+  if (query.on_offline.length) filters.push(inArray(collections.onOffline, query.on_offline));
+  if (query.collection.length) filters.push(inArray(collections.collectionNo, query.collection));
+  return filters;
+}
 
 export async function GET(request: NextRequest, props: { params: Promise<{ address: string }> }) {
   const [session, params] = await Promise.all([getSession(), props.params]);
@@ -71,12 +87,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       });
   }
 
-  const matchingCollectionIds = await resolveCollectionIds(query);
-
-  if (matchingCollectionIds !== null && matchingCollectionIds.length === 0) {
-    return Response.json({ nextCursor: undefined, results: [] });
-  }
-
   const addr = params.address.toLowerCase();
 
   const targetTimestamp = query.at ? parseISO(query.at) : undefined;
@@ -97,9 +107,19 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
     },
   };
 
-  // each branch uses its own index (from, id DESC) or (to, id DESC)
-  // avoiding the OR that forces a 6M-row PK scan
-  const getTransfers = (...addressFilters: (SQL | undefined)[]) =>
+  const collectionFilters = getCollectionFilters(query);
+  const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
+  const tsFilter = targetTimestamp ? [lte(transfers.timestamp, targetTimestamp)] : [];
+
+  const typeFilters = {
+    all: null,
+    mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
+    received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
+    sent: [eq(transfers.from, addr), ne(transfers.to, Addresses.SPIN)],
+    spin: [eq(transfers.from, addr), eq(transfers.to, Addresses.SPIN)],
+  };
+
+  const runQuery = (...addressFilters: (SQL | undefined)[]) =>
     indexer
       .select(transferSelect)
       .from(transfers)
@@ -108,33 +128,87 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       .where(
         and(
           ...addressFilters,
-          ...(query.cursor ? [lt(transfers.id, query.cursor.id)] : []),
-          ...(targetTimestamp ? [lte(transfers.timestamp, targetTimestamp)] : []),
-          ...(matchingCollectionIds !== null
-            ? [inArray(transfers.collectionId, matchingCollectionIds)]
-            : [ne(collections.slug, "empty-collection")]),
+          ...cursorFilter,
+          ...tsFilter,
+          ne(collections.slug, "empty-collection"),
         ),
       )
       .orderBy(desc(transfers.id))
       .limit(PER_PAGE + 1);
 
-  let results: Awaited<ReturnType<typeof getTransfers>>;
+  let results: Awaited<ReturnType<typeof runQuery>>;
 
-  if (query.type === "all") {
-    // split OR into two parallel queries — each uses its own index
+  if (collectionFilters.length > 0) {
+    // EXISTS lean scan — avoids JOIN overhead so PostgreSQL can use
+    // address-specific indexes with LIMIT pushdown. Critical for
+    // high-volume addresses (e.g. SPIN address with millions of rows).
+    const getIds = (...addressFilters: (SQL | undefined)[]) =>
+      indexer
+        .select({ id: transfers.id })
+        .from(transfers)
+        .where(
+          and(
+            ...addressFilters,
+            ...cursorFilter,
+            ...tsFilter,
+            exists(
+              indexer
+                .select({ _: sql`1` })
+                .from(collections)
+                .where(
+                  and(
+                    eq(collections.id, transfers.collectionId),
+                    ne(collections.slug, "empty-collection"),
+                    ...collectionFilters,
+                  ),
+                ),
+            ),
+          ),
+        )
+        .orderBy(desc(transfers.id))
+        .limit(PER_PAGE + 1);
+
+    let ids: { id: string }[];
+
+    if (query.type === "all") {
+      const [fromIds, toIds] = await Promise.all([
+        getIds(eq(transfers.from, addr)),
+        getIds(eq(transfers.to, addr)),
+      ]);
+      ids = mergeSortedTransfers(
+        fromIds.map((r) => ({ transfer: r })),
+        toIds.map((r) => ({ transfer: r })),
+        PER_PAGE + 1,
+      ).map((r) => r.transfer);
+    } else {
+      ids = await getIds(...typeFilters[query.type]!);
+    }
+
+    if (ids.length === 0) {
+      return Response.json({ nextCursor: undefined, results: [] });
+    }
+
+    results = await indexer
+      .select(transferSelect)
+      .from(transfers)
+      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+      .innerJoin(collections, eq(transfers.collectionId, collections.id))
+      .where(
+        inArray(
+          transfers.id,
+          ids.map((r) => r.id),
+        ),
+      )
+      .orderBy(desc(transfers.id));
+  } else if (query.type === "all") {
+    // No collection filters — split OR into two parallel queries
     const [fromResults, toResults] = await Promise.all([
-      getTransfers(eq(transfers.from, addr)),
-      getTransfers(eq(transfers.to, addr)),
+      runQuery(eq(transfers.from, addr)),
+      runQuery(eq(transfers.to, addr)),
     ]);
     results = mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1);
   } else {
-    const typeFilters = {
-      mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
-      received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
-      sent: [eq(transfers.from, addr), ne(transfers.to, Addresses.SPIN)],
-      spin: [eq(transfers.from, addr), eq(transfers.to, Addresses.SPIN)],
-    };
-    results = await getTransfers(...typeFilters[query.type]);
+    results = await runQuery(...typeFilters[query.type]!);
   }
 
   const hasNext = results.length > PER_PAGE;

@@ -4,11 +4,10 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
-import { type SQL, and, desc, eq, inArray, lt, ne } from "drizzle-orm";
+import { type SQL, and, desc, eq, exists, inArray, lt, ne, sql } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
 
-import { resolveCollectionIds } from "@/lib/server/collection";
 import { getCollectionColumns } from "@/lib/server/objekt";
 import { validType } from "@/lib/universal/activity";
 
@@ -35,13 +34,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
 
-  const matchingCollectionIds = await resolveCollectionIds(query);
-
-  if (matchingCollectionIds !== null && matchingCollectionIds.length === 0) {
-    return NextResponse.json({ items: [], nextCursor: undefined });
-  }
-
-  const transferResults = await fetchTransfers(query, matchingCollectionIds);
+  const transferResults = await fetchTransfers(query);
 
   const slicedResults = transferResults.slice(0, PAGE_SIZE);
 
@@ -104,12 +97,27 @@ function getTypeFilters(type: ActivityParams["type"]): SQL[] {
   return typeFilters[type];
 }
 
-async function fetchTransfers(query: ActivityParams, matchingCollectionIds: string[] | null) {
+async function fetchTransfers(query: ActivityParams) {
   const typeFilters = getTypeFilters(query.type);
   const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
 
-  if (matchingCollectionIds !== null) {
-    // lean scan on transfer table only — forces (collection_id, id DESC) index
+  const collectionFilters: SQL[] = [];
+  if (query.artist.length)
+    collectionFilters.push(
+      inArray(
+        collections.artist,
+        query.artist.map((a) => a.toLowerCase()),
+      ),
+    );
+  if (query.member.length) collectionFilters.push(inArray(collections.member, query.member));
+  if (query.season.length) collectionFilters.push(inArray(collections.season, query.season));
+  if (query.class.length) collectionFilters.push(inArray(collections.class, query.class));
+  if (query.on_offline.length)
+    collectionFilters.push(inArray(collections.onOffline, query.on_offline));
+  if (query.collection.length)
+    collectionFilters.push(inArray(collections.collectionNo, query.collection));
+
+  if (collectionFilters.length > 0) {
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
@@ -117,7 +125,18 @@ async function fetchTransfers(query: ActivityParams, matchingCollectionIds: stri
         and(
           ...cursorFilter,
           ...typeFilters,
-          inArray(transfers.collectionId, matchingCollectionIds),
+          exists(
+            indexer
+              .select({ _: sql`1` })
+              .from(collections)
+              .where(
+                and(
+                  eq(collections.id, transfers.collectionId),
+                  ne(collections.slug, "empty-collection"),
+                  ...collectionFilters,
+                ),
+              ),
+          ),
         ),
       )
       .orderBy(desc(transfers.id))
@@ -125,7 +144,6 @@ async function fetchTransfers(query: ActivityParams, matchingCollectionIds: stri
 
     if (ids.length === 0) return [];
 
-    // full fetch by PK for matched IDs
     return indexer
       .select(transferSelect)
       .from(transfers)
@@ -140,7 +158,7 @@ async function fetchTransfers(query: ActivityParams, matchingCollectionIds: stri
       .orderBy(desc(transfers.id));
   }
 
-  // no collection filters — PK scan is already optimal
+  // No collection filters — scan transfer index directly
   return indexer
     .select(transferSelect)
     .from(transfers)
