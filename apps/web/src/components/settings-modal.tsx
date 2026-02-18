@@ -9,6 +9,7 @@ import { useTransition } from "react";
 import type { Locale } from "@/i18n/config";
 
 import { useConfigStore } from "@/hooks/use-config";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
 import { orpc } from "@/lib/orpc/client";
 
@@ -36,6 +37,7 @@ export function SettingsModal({
   const locale = useLocale() as Locale;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const isCompact = useMediaQuery("(max-width: 1560px)");
 
   const setLocale = useMutation(orpc.config.setLocale.mutationOptions());
   const { wide, setWide } = useWide();
@@ -95,10 +97,12 @@ export function SettingsModal({
         <div className="space-y-4">
           <h3 className="text-sm font-medium">{t("filters.label")}</h3>
 
-          <Switch isSelected={wide} onChange={setWide}>
-            <Label>{t("filters.wide")}</Label>
-            <Description>{t("filters.wide_desc")}</Description>
-          </Switch>
+          {!isCompact && (
+            <Switch isSelected={wide} onChange={setWide}>
+              <Label>{t("filters.wide")}</Label>
+              <Description>{t("filters.wide_desc")}</Description>
+            </Switch>
+          )}
 
           <Switch isSelected={hideLabel} onChange={setHideLabel}>
             <Label>{t("filters.hide_label")}</Label>

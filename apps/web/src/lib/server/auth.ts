@@ -180,6 +180,9 @@ export async function fetchUserByIdentifier(
     where: {
       [identifierIsAddress ? "address" : "nickname"]: decodeURIComponent(identifier),
     },
+    orderBy: {
+      id: "desc",
+    },
   });
 
   if (cachedUser) {
