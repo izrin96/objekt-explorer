@@ -310,6 +310,7 @@ export async function fetchList(slug: string): Promise<PublicList | null> {
       name: true,
       hideUser: true,
       gridColumns: true,
+      userId: true,
     },
     with: {
       user: {
@@ -334,6 +335,7 @@ export async function fetchList(slug: string): Promise<PublicList | null> {
     slug: result.slug,
     gridColumns: result.gridColumns,
     user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
+    ownerId: result.userId,
   };
 }
 

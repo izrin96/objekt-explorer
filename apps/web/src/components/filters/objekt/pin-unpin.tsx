@@ -4,7 +4,7 @@ import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
 import { useShallow } from "zustand/react/shallow";
 
-import type { ObjektActionProps } from "@/components/filters/objekt/common";
+import type { ButtonProps } from "@/components/ui/button";
 
 import { Button } from "@/components/ui/button";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
@@ -13,7 +13,7 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
-export function PinObjekt({ size }: ObjektActionProps) {
+export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
   const t = useTranslations("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
@@ -41,7 +41,7 @@ export function PinObjekt({ size }: ObjektActionProps) {
   );
 }
 
-export function UnpinObjekt({ size }: ObjektActionProps) {
+export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
   const t = useTranslations("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));

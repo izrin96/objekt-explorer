@@ -8,8 +8,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 
-import type { ObjektActionModalProps } from "@/components/filters/objekt/common";
-
 import Portal from "@/components/portal";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,7 +33,13 @@ import { orpc } from "@/lib/orpc/client";
 
 import ErrorFallbackRender from "../../error-boundary";
 
-export function AddToListModal({ open, setOpen }: ObjektActionModalProps) {
+export function AddToListModal({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+}) {
   const t = useTranslations("list.manage_objekt");
   const tCommon = useTranslations("common.modal");
   return (
@@ -161,7 +165,13 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   );
 }
 
-export function RemoveFromListModal({ open, setOpen }: ObjektActionModalProps) {
+export function RemoveFromListModal({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: (val: boolean) => void;
+}) {
   const target = useTarget((a) => a.list)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();

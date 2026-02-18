@@ -162,6 +162,7 @@ export async function fetchUserByIdentifier(
       privateProfile: true,
       hideNickname: true,
       gridColumns: true,
+      userId: true,
     },
     with: {
       user: {
@@ -190,6 +191,7 @@ export async function fetchUserByIdentifier(
       privateProfile: cachedUser.privateProfile,
       gridColumns: cachedUser.gridColumns,
       user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
+      ownerId: cachedUser.userId,
     };
   }
 
