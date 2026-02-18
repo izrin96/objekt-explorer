@@ -2,6 +2,8 @@ import type { PropsWithChildren } from "react";
 
 import { Suspense } from "react";
 
+import type { PublicProfile } from "@/lib/universal/user";
+
 import DynamicContainer from "@/components/dynamic-container";
 import { PrivateProfileGuard, ProfileProvider } from "@/components/profile-provider";
 import { ProfileBanner, ProfileBannerClearance } from "@/components/profile/profile-banner";
@@ -19,22 +21,26 @@ type Props = PropsWithChildren<{
 
 export default async function UserCollectionLayout(props: Props) {
   const [params, session] = await Promise.all([props.params, getSession()]);
-  const targetProfile = await getUserByIdentifier(params.nickname);
-  targetProfile.isOwned =
-    targetProfile.ownerId && session?.user.id ? targetProfile.ownerId === session.user.id : false;
+  const result = await getUserByIdentifier(params.nickname);
+
+  const { ownerId, ...targetProfile } = result;
+  const safeProfile: PublicProfile = {
+    ...targetProfile,
+    isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
+  };
 
   return (
-    <ProfileProvider targetProfile={targetProfile}>
-      <PrivateProfileGuard profile={targetProfile}>
-        <ProfileBanner profile={targetProfile} />
-        {targetProfile.bannerImgUrl && (
+    <ProfileProvider targetProfile={safeProfile}>
+      <PrivateProfileGuard profile={safeProfile}>
+        <ProfileBanner profile={safeProfile} />
+        {safeProfile.bannerImgUrl && (
           <Container className="[--container-breakpoint:var(--breakpoint-2xl)]">
             <ProfileBannerClearance />
           </Container>
         )}
         <DynamicContainer>
           <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
-            <ProfileHeader user={targetProfile} />
+            <ProfileHeader user={safeProfile} />
             <Suspense>
               <ProfileTabs />
             </Suspense>

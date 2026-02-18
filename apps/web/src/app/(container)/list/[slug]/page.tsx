@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { getTranslations } from "next-intl/server";
 
+import type { PublicList } from "@/lib/universal/user";
+
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
@@ -31,8 +33,13 @@ export default async function Page(props: Props) {
   const queryClient = getQueryClient();
   const [params, session] = await Promise.all([props.params, getSession()]);
 
-  const list = await getList(params.slug);
-  list.isOwned = list.ownerId && session?.user.id ? list.ownerId === session.user.id : false;
+  const result = await getList(params.slug);
+
+  const { ownerId, ...safeList } = result;
+  const list: PublicList = {
+    ...safeList,
+    isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
+  };
 
   void queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({
