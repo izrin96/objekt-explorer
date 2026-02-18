@@ -543,7 +543,7 @@ async function fetchListCollections(slug: string | undefined) {
   }
 }
 
-export async function fetchList(slug: string, userId?: string): Promise<PublicList | null> {
+export async function fetchList(slug: string): Promise<PublicList | null> {
   const result = await db.query.lists.findFirst({
     columns: {
       slug: true,
@@ -578,10 +578,10 @@ export async function fetchList(slug: string, userId?: string): Promise<PublicLi
     slug: result.slug,
     gridColumns: result.gridColumns,
     user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
-    isOwned: userId ? result.userId === userId : undefined,
     listType: result.listType,
     profileAddress: result.profileAddress,
     displayProfileAddress: result.displayProfileAddress,
+    ownerId: result.userId,
   };
 }
 

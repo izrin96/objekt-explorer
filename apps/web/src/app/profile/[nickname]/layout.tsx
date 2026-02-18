@@ -19,7 +19,9 @@ type Props = PropsWithChildren<{
 
 export default async function UserCollectionLayout(props: Props) {
   const [params, session] = await Promise.all([props.params, getSession()]);
-  const targetProfile = await getUserByIdentifier(params.nickname, session?.user.id);
+  const targetProfile = await getUserByIdentifier(params.nickname);
+  targetProfile.isOwned =
+    targetProfile.ownerId && session?.user.id ? targetProfile.ownerId === session.user.id : false;
 
   return (
     <ProfileProvider targetProfile={targetProfile}>

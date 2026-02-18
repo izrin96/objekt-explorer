@@ -32,7 +32,8 @@ export default async function Page(props: Props) {
   const queryClient = getQueryClient();
   const [params, session] = await Promise.all([props.params, getSession()]);
 
-  const list = await getList(params.slug, session?.user.id);
+  const list = await getList(params.slug);
+  list.isOwned = list.ownerId && session?.user.id ? list.ownerId === session.user.id : false;
 
   if (list.listType === "profile") {
     notFound();

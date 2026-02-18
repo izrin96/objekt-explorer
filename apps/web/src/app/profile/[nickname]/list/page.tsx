@@ -16,9 +16,11 @@ type Props = {
 
 export default async function ProfileListsPage(props: Props) {
   const [params, session] = await Promise.all([props.params, getSession()]);
-  const profile = await getUserByIdentifier(params.nickname, session?.user.id);
+  const profile = await getUserByIdentifier(params.nickname);
   const queryClient = getQueryClient();
   const t = await getTranslations("list");
+  profile.isOwned =
+    profile.ownerId && session?.user.id ? profile.ownerId === session.user.id : false;
 
   // Fetch lists for this profile
   const lists = await queryClient.ensureQueryData(

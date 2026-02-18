@@ -35,9 +35,13 @@ export default async function ProfileListPage(props: Props) {
   const [params, session] = await Promise.all([props.params, getSession()]);
 
   const [list, profile] = await Promise.all([
-    getList(params.slug, session?.user.id),
-    getUserByIdentifier(params.nickname, session?.user.id),
+    getList(params.slug),
+    getUserByIdentifier(params.nickname),
   ]);
+
+  profile.isOwned =
+    profile.ownerId && session?.user.id ? profile.ownerId === session.user.id : false;
+  list.isOwned = list.ownerId && session?.user.id ? list.ownerId === session.user.id : false;
 
   // Validate list belongs to this profile
   const isProfileList =
