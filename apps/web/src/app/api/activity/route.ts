@@ -118,28 +118,19 @@ async function fetchTransfers(query: ActivityParams) {
     collectionFilters.push(inArray(collections.collectionNo, query.collection));
 
   if (collectionFilters.length > 0) {
-    // Inverted query pattern: find matching collections first, then transfers
-    // More efficient because collections table is smaller and well-indexed
-    const matchingCollections = await indexer
-      .select({ id: collections.id })
-      .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-
-    if (matchingCollections.length === 0) return [];
-
+    // Use JOIN instead of IN for better performance with many collections
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
-      .where(
+      .innerJoin(
+        collections,
         and(
-          ...cursorFilter,
-          ...typeFilters,
-          inArray(
-            transfers.collectionId,
-            matchingCollections.map((c) => c.id),
-          ),
+          eq(collections.id, transfers.collectionId),
+          ne(collections.slug, "empty-collection"),
+          ...collectionFilters,
         ),
       )
+      .where(and(...cursorFilter, ...typeFilters))
       .orderBy(desc(transfers.id))
       .limit(PAGE_SIZE + 1);
 
