@@ -1,8 +1,7 @@
 "use client";
 
-import type { TagGroupProps, TagListProps, TagProps } from "react-aria-components";
-
 import { XCircleIcon } from "@heroicons/react/16/solid";
+import type { TagGroupProps, TagListProps, TagProps } from "react-aria-components";
 import {
   Button,
   Tag as PrimitiveTag,

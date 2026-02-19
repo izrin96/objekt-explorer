@@ -1,5 +1,7 @@
 "use client";
 
+import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import { createContext, use, useEffect } from "react";
 import type {
   AutocompleteProps,
   CollectionRenderer,
@@ -8,9 +10,6 @@ import type {
   ModalOverlayProps,
   SearchFieldProps,
 } from "react-aria-components";
-
-import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
-import { createContext, use, useEffect } from "react";
 import {
   Autocomplete,
   Button,

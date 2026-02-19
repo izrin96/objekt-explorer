@@ -1,9 +1,8 @@
 "use client";
 
 import type { IconProps } from "@phosphor-icons/react";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
-
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import {
   type InfiniteData,
   QueryErrorResetBoundary,
@@ -19,13 +18,12 @@ import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 
-import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
-
 import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
+import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { getBaseURL } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 

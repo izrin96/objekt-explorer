@@ -1,11 +1,10 @@
 "use client";
 
-import type { PopoverProps } from "react-aria-components";
-
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import type { PopoverProps } from "react-aria-components";
 import { Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
 

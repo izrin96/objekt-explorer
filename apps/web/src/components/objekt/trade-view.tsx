@@ -1,7 +1,5 @@
 "use client";
 
-import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/types/objekt";
-
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import {
   CaretLeftIcon,
@@ -14,6 +12,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
 import { Addresses } from "@repo/lib";
+import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";

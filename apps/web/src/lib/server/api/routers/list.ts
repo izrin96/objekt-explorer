@@ -1,6 +1,5 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
-
 import { ORPCError } from "@orpc/server";
+import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";

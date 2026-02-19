@@ -1,8 +1,7 @@
 "use client";
 
-import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components";
-
 import { CheckIcon } from "@heroicons/react/20/solid";
+import type { ListBoxItemProps, ListBoxProps, ListBoxSectionProps } from "react-aria-components";
 import {
   composeRenderProps,
   ListBoxItem as ListBoxItemPrimitive,

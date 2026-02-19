@@ -2,9 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import type { PinListOutput } from "@/lib/server/api/routers/pins";
-
 import { orpc } from "@/lib/orpc/client";
+import type { PinListOutput } from "@/lib/server/api/routers/pins";
 
 export function useBatchUnpin() {
   const t = useTranslations("actions.unpin");

@@ -1,5 +1,4 @@
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
-
 import {
   type ValidArtist,
   type ValidEdition,

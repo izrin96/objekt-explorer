@@ -11,8 +11,6 @@ import { ofetch } from "ofetch";
 import { memo, Suspense, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
-
 import ErrorFallbackRender from "@/components/error-boundary";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
 import ObjektModal, { useObjektModal } from "@/components/objekt/objekt-modal";
@@ -24,6 +22,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useTarget } from "@/hooks/use-target";
+import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
 import { getBaseURL } from "@/lib/utils";
 
 import { useTypeFilter } from "./filter-type";

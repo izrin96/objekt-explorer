@@ -1,13 +1,12 @@
 "use client";
 
+import { use } from "react";
 import type {
   ButtonProps,
   DisclosureGroupProps,
   DisclosurePanelProps,
   DisclosureProps,
 } from "react-aria-components";
-
-import { use } from "react";
 import {
   Button,
   composeRenderProps,

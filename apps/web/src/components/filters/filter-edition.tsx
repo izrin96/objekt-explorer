@@ -1,10 +1,9 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-
 import { type ValidEdition, validEdition } from "@repo/cosmo/types/common";
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
+import type { Selection } from "react-aria-components";
 
 import { useFilters } from "@/hooks/use-filters";
 import { getEditionStr } from "@/lib/utils";

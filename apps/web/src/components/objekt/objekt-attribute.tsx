@@ -1,5 +1,4 @@
 import type { CollectionMetadata, ValidObjekt } from "@repo/lib/types/objekt";
-
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";

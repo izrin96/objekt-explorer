@@ -1,5 +1,4 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
-
 import { type ValidFourSeason, validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";

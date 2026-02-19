@@ -1,8 +1,7 @@
 "use client";
 
-import type { DateValue, RangeCalendarProps } from "react-aria-components";
-
 import { getLocalTimeZone, today } from "@internationalized/date";
+import type { DateValue, RangeCalendarProps } from "react-aria-components";
 import {
   CalendarCell,
   CalendarGrid,

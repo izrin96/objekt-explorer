@@ -1,7 +1,6 @@
 "use client";
 
 import type { LiveSession } from "@repo/cosmo/server/live";
-
 import { createContext, type PropsWithChildren, useContext } from "react";
 
 type ContextProps = {

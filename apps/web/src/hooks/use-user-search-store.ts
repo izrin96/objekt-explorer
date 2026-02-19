@@ -1,5 +1,4 @@
 import type { CosmoPublicUser } from "@repo/cosmo/types/user";
-
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

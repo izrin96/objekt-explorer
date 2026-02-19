@@ -1,5 +1,4 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
-
 import { validArtists } from "@repo/cosmo/types/common";
 import { cookies } from "next/headers";
 import * as z from "zod";

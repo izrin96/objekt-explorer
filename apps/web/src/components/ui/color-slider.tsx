@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColorSliderProps, SliderOutputProps, SliderTrackProps } from "react-aria-components";
-
 import {
   ColorSlider as PrimitiveColorSlider,
   SliderOutput,

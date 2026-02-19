@@ -1,6 +1,5 @@
 import type { CosmoArtistWithMembersBFF } from "@repo/cosmo/types/artists";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-
 import { groupBy } from "es-toolkit";
 
 // Minimal type for discord formatting - only the fields we actually use

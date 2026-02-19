@@ -14,7 +14,6 @@ import { cache } from "react";
 import { env } from "@/env";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
-
 import { getBaseURL, SITE_NAME } from "../utils";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 

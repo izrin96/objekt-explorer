@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
 
 import ProgressRender from "@/components/profile/progress/progress-render";

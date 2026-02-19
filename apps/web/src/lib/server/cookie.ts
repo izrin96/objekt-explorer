@@ -1,5 +1,4 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
-
 import { cookies } from "next/headers";
 
 export async function parseSelectedArtists() {

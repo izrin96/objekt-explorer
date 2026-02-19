@@ -2,9 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
-
 import { orpc } from "@/lib/orpc/client";
+import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
 
 export function useBatchUnlock() {
   const t = useTranslations("actions.unlock");

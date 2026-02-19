@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { createContext, use } from "react";
 import type {
   CellProps,
   ColumnProps,
@@ -9,9 +11,6 @@ import type {
   TableBodyProps,
   TableProps as TablePrimitiveProps,
 } from "react-aria-components";
-
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { createContext, use } from "react";
 import {
   Button,
   Cell,

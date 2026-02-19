@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import type {
   ButtonProps,
   MenuItemProps as MenuItemPrimitiveProps,
@@ -7,8 +8,6 @@ import type {
   MenuSectionProps as MenuSectionPrimitiveProps,
   MenuTriggerProps as MenuTriggerPrimitiveProps,
 } from "react-aria-components";
-
-import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import {
   Button,
   Collection,

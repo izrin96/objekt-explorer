@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-
 import { NextIntlClientProvider } from "next-intl";
 
 import "@/app/globals.css";

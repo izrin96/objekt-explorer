@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/ui/button";
-
 import { Button } from "@/components/ui/button";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
