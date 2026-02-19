@@ -19,8 +19,8 @@ export const getLiveSession = cache(async (id: string) => {
   return live;
 });
 
-export const getList = cache(async (slug: string) => {
-  const list = await fetchList(slug);
+export const getList = cache(async (slug: string, profileAddress?: string) => {
+  const list = await fetchList(slug, profileAddress);
   if (!list) notFound();
   return list;
 });

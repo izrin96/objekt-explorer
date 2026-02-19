@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-
 import { notFound, redirect } from "next/navigation";
 
 import ListHeader from "@/components/list/list-header";
@@ -20,10 +19,8 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const [list, profile] = await Promise.all([
-    getList(params.slug),
-    getUserByIdentifier(params.nickname),
-  ]);
+  const profile = await getUserByIdentifier(params.nickname);
+  const list = await getList(params.slug, profile.address);
 
   return {
     title: `${list.name} - ${parseNickname(profile.address, profile.nickname)}`,
@@ -34,10 +31,8 @@ export default async function ProfileListPage(props: Props) {
   const queryClient = getQueryClient();
   const [params, session] = await Promise.all([props.params, getSession()]);
 
-  const [list, profile] = await Promise.all([
-    getList(params.slug),
-    getUserByIdentifier(params.nickname),
-  ]);
+  const profile = await getUserByIdentifier(params.nickname);
+  const list = await getList(params.slug, profile.address);
 
   profile.isOwned =
     profile.ownerId && session?.user.id ? profile.ownerId === session.user.id : false;
@@ -63,6 +58,7 @@ export default async function ProfileListPage(props: Props) {
     orpc.list.listEntries.queryOptions({
       input: {
         slug: params.slug,
+        profileAddress: profile.address,
       },
     }),
   );

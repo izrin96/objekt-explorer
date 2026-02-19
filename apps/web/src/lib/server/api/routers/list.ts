@@ -41,9 +41,10 @@ export const listRouter = {
     .input(
       z.object({
         slug: z.string(),
+        profileAddress: z.string().optional(),
       }),
     )
-    .handler(async ({ input: { slug } }) => {
+    .handler(async ({ input: { slug, profileAddress } }) => {
       const artists = await parseSelectedArtists();
       const result = await db.query.lists.findFirst({
         columns: {
@@ -63,7 +64,7 @@ export const listRouter = {
             },
           },
         },
-        where: { slug },
+        where: profileAddress ? { slug, profileAddress: profileAddress.toLowerCase() } : { slug },
       });
 
       if (!result) throw new ORPCError("NOT_FOUND");
@@ -542,7 +543,7 @@ async function fetchListCollections(slug: string | undefined) {
   }
 }
 
-export async function fetchList(slug: string): Promise<PublicList | null> {
+export async function fetchList(slug: string, profileAddress?: string): Promise<PublicList | null> {
   const result = await db.query.lists.findFirst({
     columns: {
       slug: true,
@@ -567,7 +568,7 @@ export async function fetchList(slug: string): Promise<PublicList | null> {
         },
       },
     },
-    where: { slug },
+    where: profileAddress ? { slug, profileAddress: profileAddress.toLowerCase() } : { slug },
   });
 
   if (!result) return null;
