@@ -1,8 +1,7 @@
 "use client";
 
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
 import {
-  ArchiveBoxIcon,
   CaretLeftIcon,
   CaretRightIcon,
   LockSimpleIcon,
@@ -108,7 +107,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
             <OwnedListPanel setSerial={setSerial} objekts={objekts.filter(isObjektOwned)} />
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
-              <ArchiveBoxIcon weight="thin" size={64} />
+              <ArchiveBoxXMarkIcon className="size-16" strokeWidth={1} />
               <p>{t("not_owned")}</p>
             </div>
           )}
