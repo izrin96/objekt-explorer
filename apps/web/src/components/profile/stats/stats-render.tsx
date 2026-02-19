@@ -5,6 +5,7 @@ import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import type React from "react";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -26,7 +27,11 @@ import { cn } from "@/utils/classes";
 
 import StatsFilter from "./stats-filter";
 
-export default function ProfileStatsRender() {
+export default dynamic(() => Promise.resolve(ProfileStatsRender), {
+  ssr: false,
+});
+
+export function ProfileStatsRender() {
   return (
     <div className="flex flex-col gap-4">
       <StatsFilter />

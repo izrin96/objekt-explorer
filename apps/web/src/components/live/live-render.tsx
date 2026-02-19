@@ -2,6 +2,7 @@
 
 import type { LiveSession } from "@repo/cosmo/server/live";
 import { StreamVideo, StreamVideoClient, type User } from "@stream-io/video-react-sdk";
+import dynamic from "next/dynamic";
 
 import { env } from "@/env";
 import { LiveSessionProvider } from "@/hooks/use-live-session";
@@ -19,7 +20,11 @@ type Props = {
   live: LiveSession;
 };
 
-export default function LiveStreamingRender({ live }: Props) {
+export default dynamic(() => Promise.resolve(LiveStreamingRender), {
+  ssr: false,
+});
+
+export function LiveStreamingRender({ live }: Props) {
   return (
     <LiveSessionProvider live={live}>
       <StreamVideo client={client}>
