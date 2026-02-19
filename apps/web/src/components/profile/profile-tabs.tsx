@@ -24,7 +24,7 @@ export default function ProfileTabs() {
 
   useEffect(() => {
     items.forEach((item) => router.prefetch(item.url));
-  }, [items, router]);
+  }, [path, router]);
 
   return (
     <Tabs

@@ -2,10 +2,15 @@
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
-import { Cropper, type CropperRef } from "react-advanced-cropper";
+import type { CropperRef } from "react-advanced-cropper";
+
+const Cropper = dynamic(() => import("react-advanced-cropper").then((mod) => mod.Cropper), {
+  ssr: false,
+});
 import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";

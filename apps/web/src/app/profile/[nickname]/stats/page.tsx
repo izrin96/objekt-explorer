@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
+import dynamic from "next/dynamic";
 
-import ProfileStatsRender from "@/components/profile/stats/stats-render";
 import { getUserByIdentifier } from "@/lib/data-fetching";
+
+const ProfileStatsRender = dynamic(() => import("@/components/profile/stats/stats-render"), {
+  ssr: false,
+});
 import { parseNickname } from "@/lib/utils";
 
 type Props = {

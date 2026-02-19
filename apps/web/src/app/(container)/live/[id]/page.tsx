@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
+import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 
-import LiveStreamingRender from "@/components/live/live-render";
 import { env } from "@/env";
+
+const LiveStreamingRender = dynamic(() => import("@/components/live/live-render"), {
+  ssr: false,
+});
 import { getLiveSession } from "@/lib/data-fetching";
 
 type Props = {
