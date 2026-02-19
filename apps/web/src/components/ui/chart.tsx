@@ -1,21 +1,5 @@
 "use client";
 
-import type {
-  CartesianGridProps as CartesianGridPrimitiveProps,
-  CartesianGridProps,
-  LegendPayload,
-  LegendProps,
-  XAxisProps as XAxisPropsPrimitive,
-  YAxisProps as YAxisPrimitiveProps,
-} from "recharts";
-import type { ContentType as LegendContentType } from "recharts/types/component/DefaultLegendContent";
-import type {
-  NameType,
-  Props as TooltipContentProps,
-  ValueType,
-} from "recharts/types/component/DefaultTooltipContent";
-import type { ContentType as TooltipContentType } from "recharts/types/component/Tooltip";
-
 import {
   createContext,
   type ReactElement,
@@ -30,6 +14,14 @@ import {
   ToggleButtonGroup,
   type ToggleButtonGroupProps,
 } from "react-aria-components";
+import type {
+  CartesianGridProps as CartesianGridPrimitiveProps,
+  CartesianGridProps,
+  LegendPayload,
+  LegendProps,
+  XAxisProps as XAxisPropsPrimitive,
+  YAxisProps as YAxisPrimitiveProps,
+} from "recharts";
 import {
   CartesianGrid as CartesianGridPrimitive,
   Legend as LegendPrimitive,
@@ -38,6 +30,13 @@ import {
   XAxis as XAxisPrimitive,
   YAxis as YAxisPrimitive,
 } from "recharts";
+import type { ContentType as LegendContentType } from "recharts/types/component/DefaultLegendContent";
+import type {
+  NameType,
+  Props as TooltipContentProps,
+  ValueType,
+} from "recharts/types/component/DefaultTooltipContent";
+import type { ContentType as TooltipContentType } from "recharts/types/component/Tooltip";
 import { twJoin, twMerge } from "tailwind-merge";
 
 import { useIsMobile } from "@/hooks/use-mobile";

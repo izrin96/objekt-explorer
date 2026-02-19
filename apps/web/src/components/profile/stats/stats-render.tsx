@@ -1,13 +1,12 @@
 "use client";
 
-import type React from "react";
-
 import { seasonColors } from "@repo/cosmo/types/common";
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
+import type React from "react";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
@@ -32,7 +31,7 @@ export default dynamic(() => Promise.resolve(ProfileStatsRender), {
   ssr: false,
 });
 
-function ProfileStatsRender() {
+export function ProfileStatsRender() {
   return (
     <div className="flex flex-col gap-4">
       <StatsFilter />

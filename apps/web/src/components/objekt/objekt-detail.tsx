@@ -1,8 +1,6 @@
 "use client";
 
-import type { SortDescriptor } from "react-aria-components";
-
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
 import {
   CaretLeftIcon,
   CaretRightIcon,
@@ -13,10 +11,10 @@ import { useAsyncList } from "@react-stately/data";
 import { Addresses } from "@repo/lib";
 import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
-import { ArchiveXIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import NextImage from "next/image";
 import { Suspense, useCallback, useState } from "react";
+import type { SortDescriptor } from "react-aria-components";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
@@ -72,13 +70,16 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
 function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
   const [objekt] = objekts;
-  if (!objekt) return null;
-
   const t = useTranslations("objekt");
-  const isOwned = isObjektOwned(objekt);
   const currentTab = useObjektModal((a) => a.currentTab);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
-  const [serial, setSerial] = useState(isOwned ? objekt.serial : null);
+  const [serial, setSerial] = useState(() => {
+    return objekt && isObjektOwned(objekt) ? objekt.serial : null;
+  });
+
+  if (!objekt) return null;
+
+  const isOwned = isObjektOwned(objekt);
 
   return (
     <Tabs
@@ -106,7 +107,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
             <OwnedListPanel setSerial={setSerial} objekts={objekts.filter(isObjektOwned)} />
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
-              <ArchiveXIcon strokeWidth={1} size={64} />
+              <ArchiveBoxXMarkIcon className="size-16" strokeWidth={1} />
               <p>{t("not_owned")}</p>
             </div>
           )}
@@ -127,12 +128,12 @@ export function ObjektCard({
   urls: ReturnType<typeof getObjektImageUrls>;
 }) {
   const [objekt] = objekts;
-  if (!objekt) return null;
-
   const [flipped, setFlipped] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [backLoaded, setBackLoaded] = useState(false);
   const [ref, { width }] = useElementSize();
+
+  if (!objekt) return null;
 
   const css = {
     "--width": `${width}px`,

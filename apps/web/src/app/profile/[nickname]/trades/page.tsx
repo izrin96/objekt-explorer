@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
 
 import ProfileTradesRender from "@/components/profile/trades/profile-trades";

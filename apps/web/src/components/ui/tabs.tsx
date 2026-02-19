@@ -1,5 +1,6 @@
 "use client";
 
+import { createContext, use } from "react";
 import type {
   TabListProps as TabListPrimitiveProps,
   TabPanelProps as TabPanelPrimitiveProps,
@@ -7,8 +8,6 @@ import type {
   TabProps as TabPrimitiveProps,
   TabsProps as TabsPrimitiveProps,
 } from "react-aria-components";
-
-import { createContext, use } from "react";
 import {
   composeRenderProps,
   TabPanels as PrimitiveTabPanels,

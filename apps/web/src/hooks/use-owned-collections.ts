@@ -1,5 +1,4 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
-
 import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 

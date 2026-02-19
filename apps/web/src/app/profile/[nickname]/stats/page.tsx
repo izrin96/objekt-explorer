@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
 
-import ProfileStatsRender from "@/components/profile/stats/stats-render";
+import { ProfileStatsRender } from "@/components/profile/stats/stats-render";
 import { getUserByIdentifier } from "@/lib/data-fetching";
 import { parseNickname } from "@/lib/utils";
 

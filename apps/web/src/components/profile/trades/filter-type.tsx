@@ -1,10 +1,9 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-
 import { useTranslations } from "next-intl";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { useMemo } from "react";
+import type { Selection } from "react-aria-components";
 
 import { Button } from "@/components/ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui/menu";

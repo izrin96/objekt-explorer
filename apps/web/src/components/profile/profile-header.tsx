@@ -6,9 +6,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import type { PublicProfile } from "@/lib/universal/user";
-
 import { useProfileAuthed } from "@/hooks/use-user";
+import type { PublicProfile } from "@/lib/universal/user";
 import { parseNickname } from "@/lib/utils";
 
 import { EditProfileModal } from "../link/modal/manage-link";

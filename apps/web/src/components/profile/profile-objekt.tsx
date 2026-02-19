@@ -1,7 +1,6 @@
 "use client";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";

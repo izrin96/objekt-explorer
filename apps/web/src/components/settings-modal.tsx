@@ -6,11 +6,10 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
-import type { Locale } from "@/i18n/config";
-
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
+import type { Locale } from "@/i18n/config";
 import { orpc } from "@/lib/orpc/client";
 
 import { Description, Label } from "./ui/field";

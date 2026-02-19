@@ -2,9 +2,8 @@
 
 import Image from "next/image";
 
-import type { PublicProfile } from "@/lib/universal/user";
-
 import { useElementSize } from "@/hooks/use-element-size";
+import type { PublicProfile } from "@/lib/universal/user";
 
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();

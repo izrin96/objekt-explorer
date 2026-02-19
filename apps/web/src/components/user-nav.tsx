@@ -16,12 +16,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { User } from "@/lib/server/auth";
-
 import UserAccountModal from "@/components/auth/account/user-account";
 import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
+import type { User } from "@/lib/server/auth";
 import { getListHref, parseNickname } from "@/lib/utils";
 
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";

@@ -1,9 +1,8 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-
 import { useTranslations } from "next-intl";
 import { useCallback } from "react";
+import type { Selection } from "react-aria-components";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";

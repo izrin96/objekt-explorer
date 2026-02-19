@@ -1,7 +1,6 @@
 "use client";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-
 import { Suspense } from "react";
 
 import { useIsFiltering } from "@/hooks/use-filters";

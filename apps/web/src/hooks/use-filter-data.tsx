@@ -1,8 +1,7 @@
 "use client";
 
-import type { PropsWithChildren } from "react";
-
 import { useSuspenseQuery } from "@tanstack/react-query";
+import type { PropsWithChildren } from "react";
 import { createContext, useContext, useMemo } from "react";
 
 import { orpc } from "@/lib/orpc/client";

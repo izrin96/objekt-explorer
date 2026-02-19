@@ -1,9 +1,8 @@
 "use client";
 
-import type { Selection } from "react-aria-components";
-
 import { useTranslations } from "next-intl";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
+import type { Selection } from "react-aria-components";
 
 import { type ValidType, validType } from "@/lib/universal/activity";
 

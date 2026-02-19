@@ -1,5 +1,4 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-
 import chroma from "chroma-js";
 
 import type { Filters } from "@/hooks/use-filters";

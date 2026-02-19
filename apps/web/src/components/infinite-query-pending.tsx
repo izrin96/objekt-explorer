@@ -1,6 +1,5 @@
-import type { QueryStatus } from "@tanstack/react-query";
-
 import { CaretDownIcon, FlagBannerFoldIcon } from "@phosphor-icons/react/dist/ssr";
+import type { QueryStatus } from "@tanstack/react-query";
 import { InView } from "react-intersection-observer";
 
 import { Loader } from "./ui/loader";

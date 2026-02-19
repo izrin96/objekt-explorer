@@ -1,8 +1,7 @@
 "use client";
 
-import type { HeadingProps, TextProps } from "react-aria-components";
-
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import type { HeadingProps, TextProps } from "react-aria-components";
 import {
   Heading,
   Button as PrimitiveButton,

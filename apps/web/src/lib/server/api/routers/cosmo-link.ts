@@ -1,13 +1,13 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
+import crypto from "node:crypto";
 
 import { ORPCError } from "@orpc/server";
 import { fetchUserProfile } from "@repo/cosmo/server/user";
+import type { ValidArtist } from "@repo/cosmo/types/common";
 import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
-import crypto from "node:crypto";
 import * as z from "zod";
 
 import { getUserLocale } from "../../locale";

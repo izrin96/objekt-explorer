@@ -2,13 +2,12 @@
 
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
-import type { Selection } from "react-aria-components";
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { ofetch } from "ofetch";
 import { useState } from "react";
+import type { Selection } from "react-aria-components";
 import { toast } from "sonner";
 import { useDebounceValue, useInterval } from "usehooks-ts";
 

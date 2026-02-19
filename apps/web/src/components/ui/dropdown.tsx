@@ -1,13 +1,12 @@
 "use client";
 
+import { CheckIcon } from "@heroicons/react/16/solid";
 import type {
   ListBoxItemProps,
   ListBoxSectionProps,
   SeparatorProps,
   TextProps,
 } from "react-aria-components";
-
-import { CheckIcon } from "@heroicons/react/16/solid";
 import {
   Collection,
   composeRenderProps,

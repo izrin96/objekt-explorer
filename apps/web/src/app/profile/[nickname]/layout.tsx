@@ -1,8 +1,5 @@
 import type { PropsWithChildren } from "react";
-
 import { Suspense } from "react";
-
-import type { PublicProfile } from "@/lib/universal/user";
 
 import DynamicContainer from "@/components/dynamic-container";
 import { PrivateProfileGuard, ProfileProvider } from "@/components/profile-provider";
@@ -12,6 +9,7 @@ import ProfileTabs from "@/components/profile/profile-tabs";
 import { Container } from "@/components/ui/container";
 import { getUserByIdentifier } from "@/lib/data-fetching";
 import { getSession } from "@/lib/server/auth";
+import type { PublicProfile } from "@/lib/universal/user";
 
 type Props = PropsWithChildren<{
   params: Promise<{

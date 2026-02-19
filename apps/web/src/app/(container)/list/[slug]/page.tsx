@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
-
-import type { PublicList } from "@/lib/universal/user";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
@@ -12,6 +9,7 @@ import { getList, getUserByIdentifier } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
+import type { PublicList } from "@/lib/universal/user";
 
 type Props = {
   params: Promise<{

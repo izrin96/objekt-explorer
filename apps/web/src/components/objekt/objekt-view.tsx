@@ -1,5 +1,4 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-
 import { useTranslations } from "next-intl";
 import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";

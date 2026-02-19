@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import type { DateDuration } from "@internationalized/date";
 import type {
   DatePickerProps as DatePickerPrimitiveProps,
@@ -7,8 +8,6 @@ import type {
   GroupProps,
   PopoverProps,
 } from "react-aria-components";
-
-import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { Button, DatePicker as DatePickerPrimitive } from "react-aria-components";
 import { twJoin } from "tailwind-merge";
 

@@ -2,7 +2,6 @@
 
 import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@repo/cosmo/types/artists";
 import type { ValidArtist } from "@repo/cosmo/types/common";
-
 import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
 
 import { useSelectedArtists } from "./use-selected-artists";

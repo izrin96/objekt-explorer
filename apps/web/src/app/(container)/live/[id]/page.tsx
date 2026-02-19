@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
-import LiveStreamingRender from "@/components/live/live-render";
+import { LiveStreamingRender } from "@/components/live/live-render";
 import { env } from "@/env";
 import { getLiveSession } from "@/lib/data-fetching";
 

@@ -1,13 +1,11 @@
 "use client";
 
-import type { PropsWithChildren } from "react";
-
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
-
-import type { PublicList, PublicProfile } from "@/lib/universal/user";
+import type { PropsWithChildren } from "react";
 
 import { TargetProvider } from "@/hooks/use-target";
+import type { PublicList, PublicProfile } from "@/lib/universal/user";
 
 type Props = {
   targetProfile?: PublicProfile;

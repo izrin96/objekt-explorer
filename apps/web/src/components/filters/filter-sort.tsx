@@ -1,10 +1,9 @@
 "use client";
 
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
-import type { Selection } from "react-aria-components";
-
 import { validCustomSorts } from "@repo/cosmo/types/common";
 import { useTranslations } from "next-intl";
+import type { Selection } from "react-aria-components";
 
 import { useFilters } from "@/hooks/use-filters";
 

@@ -1,7 +1,6 @@
 "use client";
 
 import type { LiveSession } from "@repo/cosmo/server/live";
-
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import Image from "next/image";

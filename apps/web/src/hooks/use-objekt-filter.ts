@@ -1,5 +1,4 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-
 import { useCallback } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";

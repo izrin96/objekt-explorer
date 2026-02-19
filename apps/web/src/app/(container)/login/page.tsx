@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-
 import { getTranslations } from "next-intl/server";
 
 import SignIn from "@/components/auth/sign-in";
