@@ -23,7 +23,6 @@
     "typescript/unbound-method": "off",
     "typescript/restrict-template-expressions": "off",
     "no-await-in-loop": "off",
-    "no-unnecessary-type-assertion": "off",
     "no-shadow": "off"
   }
 }

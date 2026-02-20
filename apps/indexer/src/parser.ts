@@ -1,15 +1,13 @@
-import type { BlockData } from "@subsquid/evm-processor";
-
 import { Addresses } from "@repo/lib";
 import { addr } from "@repo/lib";
+import type { BlockData } from "@subsquid/evm-processor";
 import { v7 as randomUUID } from "uuid";
-
-import type { Fields, Log, Transaction } from "./processor";
 
 import * as ABI_COMO from "./abi/como";
 import * as ABI_GRAVITY from "./abi/gravity";
 import * as ABI_OBJEKT from "./abi/objekt";
 import { Transfer } from "./model";
+import type { Fields, Log, Transaction } from "./processor";
 
 const transferability = ABI_OBJEKT.functions.batchUpdateObjektTransferability;
 const reveal = ABI_GRAVITY.functions.reveal;

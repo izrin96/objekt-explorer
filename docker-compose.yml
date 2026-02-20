@@ -7,8 +7,10 @@ services:
       dockerfile: ./apps/worker/Dockerfile
     depends_on:
       - postgres-indexer
+      - valkey
     environment:
       - INDEXER_DATABASE_URL=postgresql://postgres:postgres@postgres-indexer:5432/indexer
+      - REDIS_PUBSUB_URL=redis://valkey:6379
     healthcheck:
       test: test ! -f /tmp/drain
       interval: 5s

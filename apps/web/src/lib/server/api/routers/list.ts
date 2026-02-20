@@ -5,6 +5,11 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { type ListEntry, listEntries, lists } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
+import {
+  addProfileListToCache,
+  invalidateProfileList,
+  updateProfileListObjektIds,
+} from "@repo/lib/server/redis-profile-lists";
 import { and, eq, getColumns, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
@@ -223,6 +228,13 @@ export const listRouter = {
           // Use onConflictDoNothing as safety net in case of race conditions
           await db.insert(listEntries).values(filtered).onConflictDoNothing();
 
+          // Update Redis cache
+          const allObjektIds = [
+            ...existing.map((e) => e.objektId).filter(filterNonNull),
+            ...filtered.map((v) => v.objektId),
+          ];
+          await updateProfileListObjektIds(list.profileAddress!, list.id, allObjektIds);
+
           // Return empty array for now (frontend will refetch)
           return [];
         }
@@ -304,6 +316,20 @@ export const listRouter = {
         await db
           .delete(listEntries)
           .where(and(inArray(listEntries.id, ids), eq(listEntries.listId, list.id)));
+
+        // Update Redis cache for profile lists
+        if (list.listType === "profile" && list.profileAddress) {
+          const remaining = await db
+            .select({ objektId: listEntries.objektId })
+            .from(listEntries)
+            .where(eq(listEntries.listId, list.id));
+
+          await updateProfileListObjektIds(
+            list.profileAddress,
+            list.id,
+            remaining.map((r) => r.objektId).filter(filterNonNull),
+          );
+        }
       },
     ),
 
@@ -353,7 +379,7 @@ export const listRouter = {
           // Unbinding: profileSlug stays null
         } else if (list.listType === "normal" && isBound && name && name !== list.name) {
           // Name changed while bound: regenerate slug with new name
-          newProfileSlug = await generateProfileListSlug(name, newProfileAddress!.toLowerCase());
+          newProfileSlug = await generateProfileListSlug(name, newProfileAddress.toLowerCase());
         } else if (list.listType === "normal" && wasBound && isBound) {
           // Already bound and not changing - keep existing profileSlug
           newProfileSlug = list.profileSlug;
@@ -387,6 +413,11 @@ export const listRouter = {
         const list = await findOwnedList(slug, user.id);
 
         await db.delete(lists).where(eq(lists.id, list.id));
+
+        // Invalidate Redis cache only for profile lists
+        if (list.listType === "profile" && list.profileAddress) {
+          await invalidateProfileList(list.profileAddress);
+        }
       },
     ),
 
@@ -431,15 +462,29 @@ export const listRouter = {
           profileSlug = await generateProfileListSlug(name, profileAddress.toLowerCase());
         }
 
-        await db.insert(lists).values({
-          name,
-          userId: user.id,
-          slug,
-          profileSlug,
-          hideUser,
-          listType,
-          profileAddress: profileAddress?.toLowerCase(),
-        });
+        const [result] = await db
+          .insert(lists)
+          .values({
+            name,
+            userId: user.id,
+            slug,
+            profileSlug,
+            hideUser,
+            listType,
+            profileAddress: profileAddress?.toLowerCase(),
+          })
+          .returning({ insertedId: lists.id });
+
+        // Add to Redis cache only for profile lists
+        if (listType === "profile" && profileAddress) {
+          if (result) {
+            await addProfileListToCache({
+              listId: result.insertedId,
+              profileAddress: profileAddress.toLowerCase(),
+              objektIds: [],
+            });
+          }
+        }
       },
     ),
 

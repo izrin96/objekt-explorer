@@ -6,7 +6,6 @@ import type {
   CosmoPollChoices,
   CosmoUpcomingGravity,
 } from "../types/gravity";
-
 import { cosmo } from "./http";
 
 type CosmoGravityList = {

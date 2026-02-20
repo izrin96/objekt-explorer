@@ -1,5 +1,4 @@
 import type { RefreshTokenResult } from "../types/auth";
-
 import { cosmo } from "./http";
 
 /**

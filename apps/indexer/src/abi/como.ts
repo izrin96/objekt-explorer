@@ -1,5 +1,4 @@
 import type { EventParams as EParams, FunctionArguments, FunctionReturn } from "@subsquid/evm-abi";
-
 import { event, fun, viewFun, indexed, ContractBase } from "@subsquid/evm-abi";
 import * as p from "@subsquid/evm-codec";
 

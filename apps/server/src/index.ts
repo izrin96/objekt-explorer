@@ -1,8 +1,7 @@
 import type { Collection, Objekt, Transfer } from "@repo/db/indexer/schema";
-import type { OwnedObjekt } from "@repo/lib/types/objekt";
-
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
+import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { serve, type ServerWebSocket } from "bun";
 
 import { redisPubSub } from "./lib/redis";
