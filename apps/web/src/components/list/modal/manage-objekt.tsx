@@ -119,12 +119,7 @@ function AddToListForm({
       {
         slug: data.slug,
         skipDups: data.skipDups,
-        objekts:
-          selectedList?.listType === "profile"
-            ? selected.map((a) => ({
-                objektId: a.id,
-              }))
-            : undefined,
+        objekts: selectedList?.listType === "profile" ? selected.map((a) => a.id) : undefined,
         collectionSlugs:
           selectedList?.listType === "normal" ? selected.map((a) => a.slug) : undefined,
       },

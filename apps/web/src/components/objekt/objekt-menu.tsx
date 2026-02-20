@@ -61,7 +61,7 @@ export function AddToListMenu({ objekt, address }: { objekt: ValidObjekt; addres
     addToList.mutate({
       slug: slug,
       skipDups: false,
-      objekts: listType === "profile" ? [{ objektId: objekt.id }] : undefined,
+      objekts: listType === "profile" ? [objekt.id] : undefined,
       collectionSlugs: listType === "normal" ? [objekt.slug] : undefined,
     });
   };

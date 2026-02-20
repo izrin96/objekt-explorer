@@ -159,12 +159,7 @@ export const listRouter = {
         slug: z.string(),
         skipDups: z.boolean(),
         collectionSlugs: z.string().array().optional(),
-        objekts: z
-          .object({
-            objektId: z.string(),
-          })
-          .array()
-          .optional(),
+        objekts: z.string().array().optional(),
       }),
     )
     .handler(
@@ -186,11 +181,10 @@ export const listRouter = {
           }
 
           // Verify objekts are owned by the profile
-          const objektIds = inputObjekts.map((o) => o.objektId);
           const currentObjekts = await indexer
             .select({ id: objekts.id, owner: objekts.owner })
             .from(objekts)
-            .where(inArray(objekts.id, objektIds));
+            .where(inArray(objekts.id, inputObjekts));
 
           const notOwned = currentObjekts.filter(
             (o) => o.owner.toLowerCase() !== list.profileAddress!.toLowerCase(),
@@ -204,9 +198,9 @@ export const listRouter = {
 
           // Insert objekt entries
           // For profile lists, ALWAYS skip duplicates (ignore skipDups flag)
-          const values = inputObjekts.map((o) => ({
+          const values = inputObjekts.map((objektId) => ({
             listId: list.id,
-            objektId: o.objektId,
+            objektId,
           }));
 
           // Get existing objektIds to prevent duplicates
