@@ -19,8 +19,7 @@ export default function ListHeader() {
   const isListAuthed = useListAuthed();
 
   const isProfileList = list.listType === "profile";
-  const isProfileContext =
-    isProfileList || (list.listType === "normal" && list.displayProfileAddress);
+  const isProfileContext = isProfileList || (list.listType === "normal" && list.profileAddress);
 
   // Use profile info when in profile context
   const displayUser = isProfileContext && profile ? profile.user : list.user;

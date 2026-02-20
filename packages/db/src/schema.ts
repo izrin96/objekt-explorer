@@ -71,17 +71,15 @@ export const lists = pgTable(
       .default("normal")
       .$type<"normal" | "profile">(),
     profileAddress: citext("profile_address", { length: 42 }),
-    displayProfileAddress: citext("display_profile_address", { length: 42 }),
   },
   (t) => [
     uniqueIndex("lists_slug_idx")
       .on(t.slug)
-      .where(sql`list_type = 'normal'`),
+      .where(sql`list_type = 'normal' AND profile_address IS NULL`),
     uniqueIndex("lists_profile_slug_idx")
       .on(t.profileAddress, t.slug)
-      .where(sql`list_type = 'profile'`),
+      .where(sql`profile_address IS NOT NULL`),
     index("lists_profile_address_idx").on(t.profileAddress),
-    index("lists_display_profile_address_idx").on(t.displayProfileAddress),
   ],
 );
 

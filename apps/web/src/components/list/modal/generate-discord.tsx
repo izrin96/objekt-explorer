@@ -78,8 +78,8 @@ function Content() {
 
   const { handleSubmit, control, reset } = useForm({
     defaultValues: {
-      haveSlug: "",
-      wantSlug: "",
+      haveList: "",
+      wantList: "",
       includeLink: false,
       showCount: false,
       lowercase: false,
@@ -103,26 +103,33 @@ function Content() {
   };
 
   const onSubmit = handleSubmit((formData) => {
-    if (!formData.haveSlug && !formData.wantSlug) {
+    const haveListId = formData.haveList ? Number(formData.haveList) : undefined;
+    const wantListId = formData.wantList ? Number(formData.wantList) : undefined;
+
+    if (!haveListId && !wantListId) {
       toast.error(t("select_at_least_one"));
       return;
     }
 
+    // Get selected list info for building links
+    const haveList = data.find((l) => l.id === haveListId);
+    const wantList = data.find((l) => l.id === wantListId);
+
     generateDiscordFormat.mutate(
       {
-        haveSlug: formData.haveSlug,
-        wantSlug: formData.wantSlug,
+        haveListId,
+        wantListId,
       },
       {
         onSuccess: async (data) => {
-          const { have, want } = data;
+          const { have: haveCollections, want: wantCollections } = data;
           const output: string[] = [];
 
           // Format have list if selected
-          if (formData.haveSlug && have.length > 0) {
-            const haveMembers = makeMemberOrderedList(have, artists);
-            const haveCollections = mapByMember(have, haveMembers);
-            const haveFormatted = format(haveCollections, {
+          if (haveListId && haveCollections.length > 0) {
+            const haveMembers = makeMemberOrderedList(haveCollections, artists);
+            const haveCollectionsMap = mapByMember(haveCollections, haveMembers);
+            const haveFormatted = format(haveCollectionsMap, {
               showQuantity: formData.showCount,
               lowercase: formData.lowercase,
               bullet: formData.bullet,
@@ -132,20 +139,23 @@ function Content() {
 
             output.push("## Have", "", haveFormatted);
 
-            if (formData.includeLink) {
-              output.push("", `[View this list](<${getBaseURL()}/list/${formData.haveSlug}>)`);
+            if (formData.includeLink && haveList) {
+              output.push(
+                "",
+                `[View this list](<${getBaseURL()}${haveList.profileAddress ? `/@${haveList.profileAddress}/list/` : "/list/"}${haveList.slug}>)`,
+              );
             }
           }
 
           // Format want list if selected
-          if (formData.wantSlug && want.length > 0) {
+          if (wantListId && wantCollections.length > 0) {
             if (output.length > 0) {
               output.push(""); // Add spacing between sections
             }
 
-            const wantMembers = makeMemberOrderedList(want, artists);
-            const wantCollections = mapByMember(want, wantMembers);
-            const wantFormatted = format(wantCollections, {
+            const wantMembers = makeMemberOrderedList(wantCollections, artists);
+            const wantCollectionsMap = mapByMember(wantCollections, wantMembers);
+            const wantFormatted = format(wantCollectionsMap, {
               showQuantity: formData.showCount,
               lowercase: formData.lowercase,
               bullet: formData.bullet,
@@ -155,8 +165,11 @@ function Content() {
 
             output.push("## Want", "", wantFormatted);
 
-            if (formData.includeLink) {
-              output.push("", `[View this list](<${getBaseURL()}/list/${formData.wantSlug}>)`);
+            if (formData.includeLink && wantList) {
+              output.push(
+                "",
+                `[View this list](<${getBaseURL()}${wantList.profileAddress ? `/@${wantList.profileAddress}/list/` : "/list/"}${wantList.slug}>)`,
+              );
             }
           }
 
@@ -170,7 +183,7 @@ function Content() {
     <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
       <Controller
         control={control}
-        name="haveSlug"
+        name="haveList"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
             placeholder={t("list_placeholder")}
@@ -184,7 +197,7 @@ function Content() {
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
-                <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
+                <SelectItem key={item.id} id={String(item.id)} textValue={String(item.id)}>
                   {item.name}
                 </SelectItem>
               ))}
@@ -195,7 +208,7 @@ function Content() {
       />
       <Controller
         control={control}
-        name="wantSlug"
+        name="wantList"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
             placeholder={t("list_placeholder")}
@@ -209,7 +222,7 @@ function Content() {
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
-                <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
+                <SelectItem key={item.id} id={String(item.id)} textValue={String(item.id)}>
                   {item.name}
                 </SelectItem>
               ))}

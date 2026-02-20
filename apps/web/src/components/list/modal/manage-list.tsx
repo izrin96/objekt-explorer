@@ -57,7 +57,6 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       hideUser: true,
       listType: "normal" as "normal" | "profile",
       profileAddress: "",
-      displayProfileAddress: "",
     },
   });
 
@@ -83,8 +82,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       name: data.name,
       hideUser: data.hideUser,
       listType: data.listType,
-      profileAddress: data.listType === "profile" ? data.profileAddress : undefined,
-      displayProfileAddress: data.listType === "normal" ? data.displayProfileAddress : undefined,
+      profileAddress: data.profileAddress || undefined,
     });
   });
 
@@ -139,7 +137,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                 </RadioGroup>
               )}
             />
-            {watchedListType === "profile" && (
+            {(watchedListType === "profile" || watchedListType === "normal") && (
               <Controller
                 control={control}
                 name="profileAddress"
@@ -160,48 +158,18 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                     isInvalid={invalid}
                   >
                     <Label>{t("profile_label")}</Label>
-                    <Description>{t("profile_desc")}</Description>
+                    <Description>
+                      {watchedListType === "profile"
+                        ? t("profile_desc")
+                        : t("display_profile_desc")}
+                    </Description>
                     <SelectTrigger />
                     <SelectContent>
-                      {profiles?.map((profile) => (
-                        <SelectItem
-                          key={profile.address.toLowerCase()}
-                          id={profile.address.toLowerCase()}
-                          textValue={parseNickname(profile.address, profile.nickname)}
-                        >
-                          {parseNickname(profile.address, profile.nickname)}
+                      {watchedListType === "normal" && (
+                        <SelectItem id="" textValue={t("display_profile_none")}>
+                          {t("display_profile_none")}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                    <FieldError>{error?.message}</FieldError>
-                  </Select>
-                )}
-              />
-            )}
-            {watchedListType === "normal" && (
-              <Controller
-                control={control}
-                name="displayProfileAddress"
-                render={({
-                  field: { name, value, onChange, onBlur },
-                  fieldState: { invalid, error },
-                }) => (
-                  <Select
-                    aria-label={t("display_profile_label")}
-                    placeholder={t("display_profile_none")}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    onBlur={onBlur}
-                    isInvalid={invalid}
-                  >
-                    <Label>{t("display_profile_label")}</Label>
-                    <Description>{t("display_profile_desc")}</Description>
-                    <SelectTrigger />
-                    <SelectContent>
-                      <SelectItem id="" textValue={t("display_profile_none")}>
-                        {t("display_profile_none")}
-                      </SelectItem>
+                      )}
                       {profiles?.map((profile) => (
                         <SelectItem
                           key={profile.address.toLowerCase()}
@@ -335,10 +303,15 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   );
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (result) => {
         setOpen(false);
         toast.success(t("success"));
-        router.refresh();
+        // Redirect to new slug if changed
+        if (result?.slug && result.slug !== slug) {
+          router.push(`/list/${result.slug}`);
+        } else {
+          router.refresh();
+        }
       },
       onError: () => {
         toast.error(t("error"));
@@ -350,7 +323,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
     name: data.name,
     hideUser: data.hideUser ?? false,
     gridColumns: data.gridColumns ?? 0,
-    displayProfileAddress: data.displayProfileAddress ?? "",
+    profileAddress: data.profileAddress ?? "",
   };
 
   const { handleSubmit, control } = useForm({
@@ -364,7 +337,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
       name: data.name,
       hideUser: data.hideUser,
       gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
-      displayProfileAddress: data.displayProfileAddress === "" ? null : data.displayProfileAddress,
+      profileAddress: data.profileAddress === "" ? null : data.profileAddress,
     });
   });
 
@@ -411,7 +384,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
         {data.listType === "normal" && (
           <Controller
             control={control}
-            name="displayProfileAddress"
+            name="profileAddress"
             render={({
               field: { name, value, onChange, onBlur },
               fieldState: { invalid, error },

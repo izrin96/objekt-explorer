@@ -45,8 +45,8 @@ export default async function Page(props: Props) {
   }
 
   // Redirect normal lists bound to a profile
-  if (list.displayProfileAddress) {
-    const profile = await getUserByIdentifier(list.displayProfileAddress);
+  if (list.profileAddress) {
+    const profile = await getUserByIdentifier(list.profileAddress);
     redirect(`/@${profile.nickname || profile.address}/list/${params.slug}`);
   }
 

@@ -44,7 +44,7 @@ export default async function ProfileListPage(props: Props) {
     list.profileAddress?.toLowerCase() === profile.address.toLowerCase();
   const isBoundNormalList =
     list.listType === "normal" &&
-    list.displayProfileAddress?.toLowerCase() === profile.address.toLowerCase();
+    list.profileAddress?.toLowerCase() === profile.address.toLowerCase();
 
   if (!isProfileList && !isBoundNormalList) {
     // If it's a normal list that's not bound to this profile, redirect to normal list route

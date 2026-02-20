@@ -5,7 +5,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { type ListEntry, listEntries, lists } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, getColumns, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import * as z from "zod";
@@ -27,7 +27,6 @@ export const listRouter = {
         gridColumns: true,
         listType: true,
         profileAddress: true,
-        displayProfileAddress: true,
       },
       where: { slug, userId: session.user.id },
     });
@@ -75,12 +74,16 @@ export const listRouter = {
         if (objektIds.length === 0) return [];
 
         // Fetch full objekt data from indexer
-        const objektsData = await indexer.query.objekts.findMany({
-          where: { id: { in: objektIds } },
-          with: {
-            collection: true,
-          },
-        });
+        const objektsData = await indexer
+          .select({
+            ...getColumns(objekts),
+            collection: {
+              ...getCollectionColumns(),
+            },
+          })
+          .from(objekts)
+          .innerJoin(collections, eq(collections.id, objekts.collectionId))
+          .where(inArray(objekts.id, objektIds));
 
         // Map to OwnedObjekt format
         return result.entries
@@ -119,28 +122,17 @@ export const listRouter = {
           slug: true,
           listType: true,
           profileAddress: true,
-          displayProfileAddress: true,
           createdAt: true,
           userId: true,
         },
         where: {
-          OR: [
-            {
-              listType: "profile",
-              profileAddress: profileAddress.toLowerCase(),
-            },
-            {
-              displayProfileAddress: profileAddress.toLowerCase(),
-            },
-          ],
+          profileAddress: profileAddress.toLowerCase(),
         },
         orderBy: { createdAt: "desc" },
       });
 
       // Batch-fetch nicknames for profile addresses
-      const addresses = result
-        .flatMap((l) => [l.profileAddress, l.displayProfileAddress])
-        .filter(filterNonNull);
+      const addresses = result.map((l) => l.profileAddress).filter(filterNonNull);
 
       const nicknameMap = await fetchNicknamesForAddresses(addresses);
 
@@ -318,31 +310,55 @@ export const listRouter = {
         name: z.string().min(1).optional(),
         hideUser: z.boolean().optional(),
         gridColumns: z.number().min(2).max(18).optional().nullable(),
-        displayProfileAddress: z.string().optional().nullable(),
+        profileAddress: z.string().optional().nullable(),
       }),
     )
     .handler(
       async ({
-        input: { slug, displayProfileAddress, ...rest },
+        input: { slug, name, profileAddress, ...rest },
         context: {
           session: { user },
         },
       }) => {
         const list = await findOwnedList(slug, user.id);
 
-        // Validate display profile ownership if provided
-        // Only for normal lists (profile lists don't use displayProfileAddress)
-        if (list.listType === "normal" && displayProfileAddress) {
-          await checkProfileOwnership(displayProfileAddress, user.id);
+        // Validate profile ownership if provided
+        // Only for normal lists (profile lists have their profileAddress set on create)
+        if (list.listType === "normal" && profileAddress) {
+          await checkProfileOwnership(profileAddress, user.id);
+        }
+
+        // Regenerate slug when binding/unbinding normal list
+        let newSlug = slug;
+        const wasBound = list.profileAddress !== null;
+        const isBound = profileAddress !== null && profileAddress !== "";
+
+        if (list.listType === "normal" && wasBound !== isBound) {
+          if (isBound) {
+            // Binding to profile: generate slugified name
+            const listName = name || list.name;
+            newSlug = await generateProfileListSlug(listName, profileAddress!.toLowerCase());
+          } else {
+            // Unbinding from profile: generate nanoid
+            newSlug = nanoid(9);
+          }
+        } else if (list.listType === "normal" && isBound && name && name !== list.name) {
+          // Name changed while bound: regenerate slug with new name
+          newSlug = await generateProfileListSlug(name, profileAddress!.toLowerCase());
         }
 
         await db
           .update(lists)
           .set({
             ...rest,
-            displayProfileAddress: displayProfileAddress?.toLowerCase() ?? null,
+            name: name ?? list.name,
+            profileAddress: profileAddress?.toLowerCase() ?? null,
+            slug: newSlug,
           })
           .where(eq(lists.id, list.id));
+
+        // Return the new slug so client can update URL if needed
+        return { slug: newSlug };
       },
     ),
 
@@ -372,12 +388,11 @@ export const listRouter = {
         hideUser: z.boolean(),
         listType: z.enum(["normal", "profile"]).default("normal"),
         profileAddress: z.string().optional(),
-        displayProfileAddress: z.string().optional(),
       }),
     )
     .handler(
       async ({
-        input: { name, hideUser, listType, profileAddress, displayProfileAddress },
+        input: { name, hideUser, listType, profileAddress },
         context: {
           session: { user },
         },
@@ -393,14 +408,15 @@ export const listRouter = {
           await checkProfileOwnership(profileAddress, user.id);
         }
 
-        // Validate display profile ownership if provided for normal list
-        if (listType === "normal" && displayProfileAddress) {
-          await checkProfileOwnership(displayProfileAddress, user.id);
+        // Validate profile ownership if provided for normal list (binding to profile)
+        if (listType === "normal" && profileAddress) {
+          await checkProfileOwnership(profileAddress, user.id);
         }
 
         // Generate appropriate slug
+        // For profile lists and bound normal lists, use slugified name
         let slug: string;
-        if (listType === "profile" && profileAddress) {
+        if ((listType === "profile" || profileAddress) && profileAddress) {
           slug = await generateProfileListSlug(name, profileAddress.toLowerCase());
         } else {
           slug = nanoid(9);
@@ -413,7 +429,6 @@ export const listRouter = {
           hideUser,
           listType,
           profileAddress: profileAddress?.toLowerCase(),
-          displayProfileAddress: displayProfileAddress?.toLowerCase(),
         });
       },
     ),
@@ -421,17 +436,17 @@ export const listRouter = {
   generateDiscordFormat: authed
     .input(
       z.object({
-        haveSlug: z.string().optional(),
-        wantSlug: z.string().optional(),
+        haveListId: z.number().optional(),
+        wantListId: z.number().optional(),
       }),
     )
-    .handler(async ({ input: { haveSlug, wantSlug } }) => {
-      const [have, want] = await Promise.all([
-        fetchListCollections(haveSlug),
-        fetchListCollections(wantSlug),
+    .handler(async ({ input: { haveListId, wantListId } }) => {
+      const [haveCollections, wantCollections] = await Promise.all([
+        haveListId ? fetchListCollectionsById(haveListId) : [],
+        wantListId ? fetchListCollectionsById(wantListId) : [],
       ]);
 
-      return { have, want };
+      return { have: haveCollections, want: wantCollections };
     }),
 };
 
@@ -485,11 +500,9 @@ async function generateProfileListSlug(name: string, profileAddress: string): Pr
   return slug;
 }
 
-async function fetchListCollections(slug: string | undefined) {
-  if (!slug) return [];
-
+async function fetchListCollectionsById(listId: number) {
   const list = await db.query.lists.findFirst({
-    where: { slug },
+    where: { id: listId },
     with: {
       entries: {
         columns: {
@@ -503,19 +516,23 @@ async function fetchListCollections(slug: string | undefined) {
   if (!list) return [];
 
   if (list.listType === "profile") {
-    // Profile lists: fetch via objektId → objekts → collections
     const objektIds = list.entries
       .map((e: { objektId: string | null }) => e.objektId)
       .filter(filterNonNull);
 
     if (objektIds.length === 0) return [];
 
-    const objektsData = await indexer.query.objekts.findMany({
-      where: { id: { in: objektIds } },
-      with: { collection: true },
-    });
+    const objektsData = await indexer
+      .select({
+        ...getColumns(objekts),
+        collection: {
+          ...getCollectionColumns(),
+        },
+      })
+      .from(objekts)
+      .innerJoin(collections, eq(collections.id, objekts.collectionId))
+      .where(inArray(objekts.id, objektIds));
 
-    // Extract collections from objekts (deduplicate by collectionId)
     const collectionMap = new Map();
     for (const objekt of objektsData) {
       if (objekt.collection) {
@@ -525,7 +542,6 @@ async function fetchListCollections(slug: string | undefined) {
 
     return Array.from(collectionMap.values()).map((collection) => overrideCollection(collection));
   } else {
-    // Normal lists: fetch via collectionSlug → collections
     const slugs = list.entries
       .map((e: { collectionSlug: string | null }) => e.collectionSlug)
       .filter(filterNonNull);
@@ -553,7 +569,6 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
       userId: true,
       listType: true,
       profileAddress: true,
-      displayProfileAddress: true,
     },
     with: {
       user: {
@@ -580,7 +595,6 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
     user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
     listType: result.listType,
     profileAddress: result.profileAddress,
-    displayProfileAddress: result.displayProfileAddress,
     ownerId: result.userId,
   };
 }
@@ -588,11 +602,11 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
 export async function fetchOwnedLists(userId: string) {
   const result = await db.query.lists.findMany({
     columns: {
+      id: true,
       name: true,
       slug: true,
       listType: true,
       profileAddress: true,
-      displayProfileAddress: true,
     },
     where: { userId },
     orderBy: { id: "desc" },
@@ -618,6 +632,7 @@ async function findOwnedList(slug: string, userId: string) {
   const list = await db.query.lists.findFirst({
     columns: {
       id: true,
+      name: true,
       listType: true,
       profileAddress: true,
     },
