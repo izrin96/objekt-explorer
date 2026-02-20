@@ -10,7 +10,7 @@ import {
   invalidateProfileList,
   updateProfileListObjektIds,
 } from "@repo/lib/server/redis-profile-lists";
-import { and, eq, getColumns, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import * as z from "zod";
@@ -583,37 +583,46 @@ async function fetchListCollectionsBySlug(listSlug: string) {
 
     const objektsData = await indexer
       .select({
-        ...getColumns(objekts),
+        id: objekts.id,
         collection: getCollectionColumns(),
       })
       .from(objekts)
       .innerJoin(collections, eq(collections.id, objekts.collectionId))
       .where(inArray(objekts.id, objektIds));
 
-    const collectionMap = new Map();
-    for (const objekt of objektsData) {
-      if (objekt.collection) {
-        collectionMap.set(objekt.collection.collectionId, objekt.collection);
-      }
-    }
+    const objektToCollection = new Map(objektsData.map((o) => [o.id, o.collection]));
 
-    return Array.from(collectionMap.values()).map((collection) => overrideCollection(collection));
-  } else {
-    const slugs = list.entries
-      .map((e: { collectionSlug: string | null }) => e.collectionSlug)
-      .filter(filterNonNull);
-
-    if (slugs.length === 0) return [];
-
-    const foundCollections = await indexer
-      .select({
-        ...getCollectionColumns(),
+    return list.entries
+      .filter((e: { objektId: string | null }) => e.objektId !== null)
+      .map((e: { objektId: string | null }) => {
+        const collection = objektToCollection.get(e.objektId!);
+        return collection ? overrideCollection(collection) : null;
       })
-      .from(collections)
-      .where(inArray(collections.slug, slugs));
-
-    return foundCollections.map((collection) => overrideCollection(collection));
+      .filter(filterNonNull);
   }
+
+  const slugs = list.entries
+    .map((e: { collectionSlug: string | null }) => e.collectionSlug)
+    .filter(filterNonNull);
+
+  if (slugs.length === 0) return [];
+
+  const foundCollections = await indexer
+    .select({
+      ...getCollectionColumns(),
+    })
+    .from(collections)
+    .where(inArray(collections.slug, slugs));
+
+  const slugToCollection = new Map(foundCollections.map((c) => [c.slug, c]));
+
+  return list.entries
+    .filter((e: { collectionSlug: string | null }) => e.collectionSlug !== null)
+    .map((e: { collectionSlug: string | null }) => {
+      const collection = slugToCollection.get(e.collectionSlug!);
+      return collection ? overrideCollection(collection) : null;
+    })
+    .filter(filterNonNull);
 }
 
 export async function fetchList(slug: string, profileAddress?: string): Promise<PublicList | null> {

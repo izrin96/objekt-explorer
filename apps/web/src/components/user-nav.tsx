@@ -176,7 +176,7 @@ function MyListMenuItem({
           <MenuItem key={a.slug} href={getListHref(a)}>
             <MenuLabel>
               {a.name}{" "}
-              {a.listType === "profile" && a.profileAddress && (
+              {a.profileAddress && (
                 <span className="text-muted-fg text-xs">
                   ({parseNickname(a.profileAddress, a.nickname)})
                 </span>

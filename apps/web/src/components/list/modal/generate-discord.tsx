@@ -22,7 +22,13 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { Textarea } from "@/components/ui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
@@ -34,7 +40,7 @@ import {
   mapByMember,
 } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
-import { getBaseURL, getListHref } from "@/lib/utils";
+import { getBaseURL, getListHref, parseNickname } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -192,7 +198,14 @@ function Content() {
             <SelectContent>
               {data.map((item) => (
                 <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
-                  {item.name}
+                  <SelectLabel>
+                    {item.name}{" "}
+                    {item.profileAddress && (
+                      <span className="text-muted-fg text-xs">
+                        ({parseNickname(item.profileAddress, item.nickname)})
+                      </span>
+                    )}
+                  </SelectLabel>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -217,7 +230,14 @@ function Content() {
             <SelectContent>
               {data.map((item) => (
                 <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
-                  {item.name}
+                  <SelectLabel>
+                    {item.name}{" "}
+                    {item.profileAddress && (
+                      <span className="text-muted-fg text-xs">
+                        ({parseNickname(item.profileAddress, item.nickname)})
+                      </span>
+                    )}
+                  </SelectLabel>
                 </SelectItem>
               ))}
             </SelectContent>
