@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "b615b620-57f1-484e-8328-856fbb0779c7",
+  "id": "18ac5d1a-a068-49ca-a948-8be32b7f0ad7",
   "prevIds": ["1419bb67-6b89-42c2-a56b-38b23b2bb098"],
   "ddl": [
     {
@@ -364,7 +364,7 @@
       "table": "lists"
     },
     {
-      "type": "varchar(12)",
+      "type": "varchar(100)",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
@@ -450,6 +450,19 @@
       "generated": null,
       "identity": null,
       "name": "profile_address",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "lists"
+    },
+    {
+      "type": "varchar(100)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "profile_slug",
       "entityType": "columns",
       "schema": "public",
       "table": "lists"
@@ -1137,6 +1150,34 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "list_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "objekt_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "objekt_id IS NOT NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "list_entries_list_objekt_uniq",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "list_entries"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
           "value": "slug",
           "isExpression": false,
           "asc": true,
@@ -1150,6 +1191,34 @@
       "method": "btree",
       "concurrently": false,
       "name": "lists_slug_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "lists"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "profile_address",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "profile_slug",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": "profile_address IS NOT NULL AND profile_slug IS NOT NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "lists_profile_slug_idx",
       "entityType": "indexes",
       "schema": "public",
       "table": "lists"
