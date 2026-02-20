@@ -2,7 +2,7 @@
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
@@ -39,6 +39,7 @@ import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../../error-boundary";
+import { CreateListModal } from "./manage-list";
 
 export function AddToListModal({
   open,
@@ -87,6 +88,7 @@ function AddToListForm({
   setOpen: (val: boolean) => void;
   address?: string;
 }) {
+  const [createListOpen, setCreateListOpen] = useState(false);
   const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
@@ -136,13 +138,16 @@ function AddToListForm({
 
   if (availableLists.length === 0)
     return (
-      <Note intent="default">
-        {t("no_list_message")}{" "}
-        <Link className="underline" href="/list">
-          {t("create_one_here")}
-        </Link>
-        .
-      </Note>
+      <>
+        <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
+        <Note intent="default">
+          {t("no_list_message")}{" "}
+          <Link className="cursor-pointer underline" onPress={() => setCreateListOpen(true)}>
+            {t("create_one_here")}
+          </Link>
+          .
+        </Note>
+      </>
     );
 
   return (
