@@ -45,9 +45,9 @@ export default async function Page(props: Props) {
   }
 
   // Redirect normal lists bound to a profile
-  if (list.profileAddress) {
+  if (list.profileAddress && (list.profileSlug || list.slug)) {
     const profile = await getUserByIdentifier(list.profileAddress);
-    redirect(`/@${profile.nickname || profile.address}/list/${params.slug}`);
+    redirect(`/@${profile.nickname || profile.address}/list/${list.profileSlug || list.slug}`);
   }
 
   void queryClient.prefetchQuery(

@@ -34,7 +34,7 @@ import {
   mapByMember,
 } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
-import { getBaseURL } from "@/lib/utils";
+import { getBaseURL, getListHref } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -103,22 +103,22 @@ function Content() {
   };
 
   const onSubmit = handleSubmit((formData) => {
-    const haveListId = formData.haveList ? Number(formData.haveList) : undefined;
-    const wantListId = formData.wantList ? Number(formData.wantList) : undefined;
+    const haveListSlug = formData.haveList || undefined;
+    const wantListSlug = formData.wantList || undefined;
 
-    if (!haveListId && !wantListId) {
+    if (!haveListSlug && !wantListSlug) {
       toast.error(t("select_at_least_one"));
       return;
     }
 
     // Get selected list info for building links
-    const haveList = data.find((l) => l.id === haveListId);
-    const wantList = data.find((l) => l.id === wantListId);
+    const haveList = data.find((l) => l.slug === haveListSlug);
+    const wantList = data.find((l) => l.slug === wantListSlug);
 
     generateDiscordFormat.mutate(
       {
-        haveListId,
-        wantListId,
+        haveListSlug,
+        wantListSlug,
       },
       {
         onSuccess: async (data) => {
@@ -126,7 +126,7 @@ function Content() {
           const output: string[] = [];
 
           // Format have list if selected
-          if (haveListId && haveCollections.length > 0) {
+          if (haveListSlug && haveCollections.length > 0) {
             const haveMembers = makeMemberOrderedList(haveCollections, artists);
             const haveCollectionsMap = mapByMember(haveCollections, haveMembers);
             const haveFormatted = format(haveCollectionsMap, {
@@ -140,15 +140,12 @@ function Content() {
             output.push("## Have", "", haveFormatted);
 
             if (formData.includeLink && haveList) {
-              output.push(
-                "",
-                `[View this list](<${getBaseURL()}${haveList.profileAddress ? `/@${haveList.profileAddress}/list/` : "/list/"}${haveList.slug}>)`,
-              );
+              output.push("", `[View this list](<${getBaseURL()}${getListHref(haveList)}>)`);
             }
           }
 
           // Format want list if selected
-          if (wantListId && wantCollections.length > 0) {
+          if (wantListSlug && wantCollections.length > 0) {
             if (output.length > 0) {
               output.push(""); // Add spacing between sections
             }
@@ -166,10 +163,7 @@ function Content() {
             output.push("## Want", "", wantFormatted);
 
             if (formData.includeLink && wantList) {
-              output.push(
-                "",
-                `[View this list](<${getBaseURL()}${wantList.profileAddress ? `/@${wantList.profileAddress}/list/` : "/list/"}${wantList.slug}>)`,
-              );
+              output.push("", `[View this list](<${getBaseURL()}${getListHref(wantList)}>)`);
             }
           }
 
@@ -197,7 +191,7 @@ function Content() {
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
-                <SelectItem key={item.id} id={String(item.id)} textValue={String(item.id)}>
+                <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                   {item.name}
                 </SelectItem>
               ))}
@@ -222,7 +216,7 @@ function Content() {
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
-                <SelectItem key={item.id} id={String(item.id)} textValue={String(item.id)}>
+                <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                   {item.name}
                 </SelectItem>
               ))}

@@ -6,10 +6,6 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   compress: false,
   experimental: {
-    staleTimes: {
-      dynamic: 30,
-      static: 180,
-    },
     optimizePackageImports: ["react-aria-components", "@phosphor-icons/react"],
   },
   async rewrites() {

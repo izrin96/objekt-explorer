@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
@@ -37,22 +36,6 @@ export default async function ProfileListPage(props: Props) {
   profile.isOwned =
     profile.ownerId && session?.user.id ? profile.ownerId === session.user.id : false;
   list.isOwned = list.ownerId && session?.user.id ? list.ownerId === session.user.id : false;
-
-  // Validate list belongs to this profile
-  const isProfileList =
-    list.listType === "profile" &&
-    list.profileAddress?.toLowerCase() === profile.address.toLowerCase();
-  const isBoundNormalList =
-    list.listType === "normal" &&
-    list.profileAddress?.toLowerCase() === profile.address.toLowerCase();
-
-  if (!isProfileList && !isBoundNormalList) {
-    // If it's a normal list that's not bound to this profile, redirect to normal list route
-    if (list.listType === "normal") {
-      redirect(`/list/${params.slug}`);
-    }
-    notFound();
-  }
 
   void queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({

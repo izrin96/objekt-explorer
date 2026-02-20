@@ -303,15 +303,10 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   );
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
-      onSuccess: (result) => {
+      onSuccess: (_, { slug }) => {
         setOpen(false);
         toast.success(t("success"));
-        // Redirect to new slug if changed
-        if (result?.slug && result.slug !== slug) {
-          router.push(`/list/${result.slug}`);
-        } else {
-          router.refresh();
-        }
+        router.replace(`/list/${slug}`);
       },
       onError: () => {
         toast.error(t("error"));

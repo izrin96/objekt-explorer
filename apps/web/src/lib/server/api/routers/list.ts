@@ -27,6 +27,7 @@ export const listRouter = {
         gridColumns: true,
         listType: true,
         profileAddress: true,
+        profileSlug: true,
       },
       where: { slug, userId: session.user.id },
     });
@@ -63,7 +64,9 @@ export const listRouter = {
             },
           },
         },
-        where: profileAddress ? { slug, profileAddress: profileAddress.toLowerCase() } : { slug },
+        where: profileAddress
+          ? { profileSlug: slug, profileAddress: profileAddress.toLowerCase() }
+          : { slug },
       });
 
       if (!result) throw new ORPCError("NOT_FOUND");
@@ -120,6 +123,7 @@ export const listRouter = {
         columns: {
           name: true,
           slug: true,
+          profileSlug: true,
           listType: true,
           profileAddress: true,
           createdAt: true,
@@ -328,23 +332,31 @@ export const listRouter = {
           await checkProfileOwnership(profileAddress, user.id);
         }
 
-        // Regenerate slug when binding/unbinding normal list
-        let newSlug = slug;
+        // Treat undefined as "keep existing value", null or "" as "unbind"
+        const newProfileAddress =
+          profileAddress === undefined ? list.profileAddress : (profileAddress ?? null);
+
+        // Generate profileSlug when binding/unbinding normal list
+        let newProfileSlug: string | null = null;
         const wasBound = list.profileAddress !== null;
-        const isBound = profileAddress !== null && profileAddress !== "";
+        const isBound = newProfileAddress !== null && newProfileAddress !== "";
 
         if (list.listType === "normal" && wasBound !== isBound) {
-          if (isBound) {
+          if (isBound && newProfileAddress) {
             // Binding to profile: generate slugified name
             const listName = name || list.name;
-            newSlug = await generateProfileListSlug(listName, profileAddress!.toLowerCase());
-          } else {
-            // Unbinding from profile: generate nanoid
-            newSlug = nanoid(9);
+            newProfileSlug = await generateProfileListSlug(
+              listName,
+              newProfileAddress.toLowerCase(),
+            );
           }
+          // Unbinding: profileSlug stays null
         } else if (list.listType === "normal" && isBound && name && name !== list.name) {
           // Name changed while bound: regenerate slug with new name
-          newSlug = await generateProfileListSlug(name, profileAddress!.toLowerCase());
+          newProfileSlug = await generateProfileListSlug(name, newProfileAddress!.toLowerCase());
+        } else if (list.listType === "normal" && wasBound && isBound) {
+          // Already bound and not changing - keep existing profileSlug
+          newProfileSlug = list.profileSlug;
         }
 
         await db
@@ -352,13 +364,10 @@ export const listRouter = {
           .set({
             ...rest,
             name: name ?? list.name,
-            profileAddress: profileAddress?.toLowerCase() ?? null,
-            slug: newSlug,
+            profileAddress: newProfileAddress?.toLowerCase() ?? null,
+            profileSlug: newProfileSlug,
           })
           .where(eq(lists.id, list.id));
-
-        // Return the new slug so client can update URL if needed
-        return { slug: newSlug };
       },
     ),
 
@@ -413,19 +422,20 @@ export const listRouter = {
           await checkProfileOwnership(profileAddress, user.id);
         }
 
-        // Generate appropriate slug
-        // For profile lists and bound normal lists, use slugified name
-        let slug: string;
+        // Generate slug and profileSlug
+        // slug is always nanoid (for /list/[slug] route)
+        // profileSlug is slugified name (for /profile-list/[nickname]/[profileSlug] route)
+        const slug = nanoid(9);
+        let profileSlug: string | null = null;
         if ((listType === "profile" || profileAddress) && profileAddress) {
-          slug = await generateProfileListSlug(name, profileAddress.toLowerCase());
-        } else {
-          slug = nanoid(9);
+          profileSlug = await generateProfileListSlug(name, profileAddress.toLowerCase());
         }
 
         await db.insert(lists).values({
           name,
           userId: user.id,
           slug,
+          profileSlug,
           hideUser,
           listType,
           profileAddress: profileAddress?.toLowerCase(),
@@ -436,14 +446,14 @@ export const listRouter = {
   generateDiscordFormat: authed
     .input(
       z.object({
-        haveListId: z.number().optional(),
-        wantListId: z.number().optional(),
+        haveListSlug: z.string().optional(),
+        wantListSlug: z.string().optional(),
       }),
     )
-    .handler(async ({ input: { haveListId, wantListId } }) => {
+    .handler(async ({ input: { haveListSlug, wantListSlug } }) => {
       const [haveCollections, wantCollections] = await Promise.all([
-        haveListId ? fetchListCollectionsById(haveListId) : [],
-        wantListId ? fetchListCollectionsById(wantListId) : [],
+        haveListSlug ? fetchListCollectionsBySlug(haveListSlug) : [],
+        wantListSlug ? fetchListCollectionsBySlug(wantListSlug) : [],
       ]);
 
       return { have: haveCollections, want: wantCollections };
@@ -500,9 +510,9 @@ async function generateProfileListSlug(name: string, profileAddress: string): Pr
   return slug;
 }
 
-async function fetchListCollectionsById(listId: number) {
+async function fetchListCollectionsBySlug(listSlug: string) {
   const list = await db.query.lists.findFirst({
-    where: { id: listId },
+    where: { slug: listSlug },
     with: {
       entries: {
         columns: {
@@ -569,6 +579,7 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
       userId: true,
       listType: true,
       profileAddress: true,
+      profileSlug: true,
     },
     with: {
       user: {
@@ -583,7 +594,9 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
         },
       },
     },
-    where: profileAddress ? { slug, profileAddress: profileAddress.toLowerCase() } : { slug },
+    where: profileAddress
+      ? { profileSlug: slug, profileAddress: profileAddress.toLowerCase() }
+      : { slug },
   });
 
   if (!result) return null;
@@ -591,6 +604,7 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
   return {
     name: result.name,
     slug: result.slug,
+    profileSlug: result.profileSlug,
     gridColumns: result.gridColumns,
     user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
     listType: result.listType,
@@ -602,9 +616,9 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
 export async function fetchOwnedLists(userId: string) {
   const result = await db.query.lists.findMany({
     columns: {
-      id: true,
       name: true,
       slug: true,
+      profileSlug: true,
       listType: true,
       profileAddress: true,
     },
@@ -633,8 +647,10 @@ async function findOwnedList(slug: string, userId: string) {
     columns: {
       id: true,
       name: true,
+      slug: true,
       listType: true,
       profileAddress: true,
+      profileSlug: true,
     },
     where: { slug, userId },
   });
