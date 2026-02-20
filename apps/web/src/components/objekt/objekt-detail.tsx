@@ -298,11 +298,11 @@ function OwnedListPanel({
                   </TableCell>
                   <TableCell>
                     <Link
-                      href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${item.id}`}
+                      href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${item.tokenId}`}
                       className="inline-flex cursor-pointer items-center gap-2"
                       target="_blank"
                     >
-                      {item.id}
+                      {item.tokenId}
                       <ArrowTopRightOnSquareIcon className="size-4" />
                     </Link>
                   </TableCell>

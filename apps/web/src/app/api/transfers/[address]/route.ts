@@ -101,9 +101,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       timestamp: transfers.timestamp,
     },
     objekt: objekts,
-    collection: {
-      ...getCollectionColumns(),
-    },
+    collection: getCollectionColumns(),
   };
 
   const collectionFilters = getCollectionFilters(query);
@@ -170,7 +168,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         PER_PAGE + 1,
       ).map((r) => r.transfer);
     } else {
-      ids = await getIds(...typeFilters[query.type]!);
+      ids = await getIds(...typeFilters[query.type]);
     }
 
     if (ids.length === 0) {
@@ -197,7 +195,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
     ]);
     results = mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1);
   } else {
-    results = await runQuery(...typeFilters[query.type]!);
+    results = await runQuery(...typeFilters[query.type]);
   }
 
   const hasNext = results.length > PER_PAGE;

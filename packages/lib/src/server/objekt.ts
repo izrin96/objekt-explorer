@@ -83,5 +83,6 @@ export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt): Owned
     receivedAt: objekt.receivedAt,
     mintedAt: objekt.mintedAt,
     transferable: objekt.transferable,
+    tokenId: objekt.id,
   };
 }

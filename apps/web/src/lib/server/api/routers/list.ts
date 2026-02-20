@@ -46,10 +46,9 @@ export const listRouter = {
     .input(
       z.object({
         slug: z.string(),
-        profileAddress: z.string().optional(),
       }),
     )
-    .handler(async ({ input: { slug, profileAddress } }) => {
+    .handler(async ({ input: { slug } }) => {
       const artists = await parseSelectedArtists();
       const result = await db.query.lists.findFirst({
         columns: {
@@ -69,9 +68,7 @@ export const listRouter = {
             },
           },
         },
-        where: profileAddress
-          ? { profileSlug: slug, profileAddress: profileAddress.toLowerCase() }
-          : { slug },
+        where: { slug },
       });
 
       if (!result) throw new ORPCError("NOT_FOUND");
@@ -84,10 +81,8 @@ export const listRouter = {
         // Fetch full objekt data from indexer
         const objektsData = await indexer
           .select({
-            ...getColumns(objekts),
-            collection: {
-              ...getCollectionColumns(),
-            },
+            objekt: objekts,
+            collection: getCollectionColumns(),
           })
           .from(objekts)
           .innerJoin(collections, eq(collections.id, objekts.collectionId))
@@ -96,15 +91,15 @@ export const listRouter = {
         // Map to OwnedObjekt format
         return result.entries
           .map((entry) => {
-            const data = objektsData.find((o) => o.id === entry.objektId);
+            const data = objektsData.find((o) => o.objekt.id === entry.objektId);
             if (!data || !data.collection) return null;
-            const ownedObjekt = mapOwnedObjekt(data, data.collection);
+            const ownedObjekt = mapOwnedObjekt(data.objekt, data.collection);
             return Object.assign(ownedObjekt, {
               id: entry.id.toString(),
               createdAt: entry.createdAt,
             });
           })
-          .filter((item): item is NonNullable<typeof item> => item !== null);
+          .filter(filterNonNull);
       }
 
       // Handle normal lists
@@ -358,16 +353,8 @@ export const listRouter = {
           await checkProfileOwnership(profileAddress, user.id);
         }
 
-        // For profile lists, profileAddress cannot be changed
-        if (list.listType === "profile" && profileAddress !== undefined) {
-          throw new ORPCError("BAD_REQUEST", {
-            message: "Cannot change profile address for profile lists",
-          });
-        }
-
-        // Treat undefined as "keep existing value", null or "" as "unbind"
         const newProfileAddress =
-          profileAddress === undefined ? list.profileAddress : (profileAddress ?? null);
+          list.listType === "profile" ? list.profileAddress : (profileAddress ?? null);
 
         // Generate profileSlug when binding/unbinding normal list
         let newProfileSlug: string | null = null;
@@ -597,9 +584,7 @@ async function fetchListCollectionsBySlug(listSlug: string) {
     const objektsData = await indexer
       .select({
         ...getColumns(objekts),
-        collection: {
-          ...getCollectionColumns(),
-        },
+        collection: getCollectionColumns(),
       })
       .from(objekts)
       .innerJoin(collections, eq(collections.id, objekts.collectionId))

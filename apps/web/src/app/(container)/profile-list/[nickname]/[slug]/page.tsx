@@ -40,8 +40,7 @@ export default async function ProfileListPage(props: Props) {
   void queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({
       input: {
-        slug: params.slug,
-        profileAddress: profile.address,
+        slug: list.slug,
       },
     }),
   );

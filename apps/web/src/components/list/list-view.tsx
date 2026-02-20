@@ -36,10 +36,12 @@ import Filter from "./filter";
 
 export default function ListRender() {
   const list = useTarget((a) => a.list)!;
+  const isProfileList = list.listType === "profile";
+
   return (
     <ObjektColumnProvider initialColumn={list.gridColumns}>
       <ObjektSelectProvider>
-        <ObjektModalProvider initialTab="trades">
+        <ObjektModalProvider initialTab={isProfileList ? "owned" : "trades"}>
           <QueryErrorResetBoundary>
             {({ reset }) => (
               <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
@@ -91,6 +93,7 @@ function ListView() {
                 <ObjektModal
                   key={objekt.id}
                   objekts={item}
+                  showOwned={isProfileList}
                   menu={
                     session && (
                       <ObjektStaticMenu>

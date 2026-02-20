@@ -109,7 +109,6 @@ function ListCard({ list }: ListCardProps) {
   const t = useTranslations("list.card");
 
   const href = getListHref(list);
-  const isProfileList = list.listType === "profile";
 
   return (
     <>
@@ -122,7 +121,7 @@ function ListCard({ list }: ListCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-1 flex-col gap-2">
             <h3 className="font-semibold">{list.name}</h3>
-            {isProfileList && list.profileAddress && (
+            {list.profileAddress && (
               <span className="text-muted-fg text-sm">
                 {parseNickname(list.profileAddress, list.nickname)}
               </span>

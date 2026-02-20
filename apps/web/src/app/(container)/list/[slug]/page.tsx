@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
@@ -40,10 +40,6 @@ export default async function Page(props: Props) {
     isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
   };
 
-  if (list.listType === "profile") {
-    notFound();
-  }
-
   // Redirect normal lists bound to a profile
   if (list.profileAddress && (list.profileSlug || list.slug)) {
     const profile = await getUserByIdentifier(list.profileAddress);
@@ -53,7 +49,7 @@ export default async function Page(props: Props) {
   void queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({
       input: {
-        slug: params.slug,
+        slug: list.slug,
       },
     }),
   );

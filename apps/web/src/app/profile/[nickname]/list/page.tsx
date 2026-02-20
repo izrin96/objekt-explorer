@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
 import { getUserByIdentifier } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient } from "@/lib/query/hydration";
@@ -39,7 +38,6 @@ export default async function ProfileListsPage(props: Props) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {lists.map((list) => {
-            const isProfileList = list.listType === "profile";
             const href = getListHref(list);
 
             return (
@@ -50,11 +48,6 @@ export default async function ProfileListsPage(props: Props) {
               >
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{list.name}</h3>
-                  {isProfileList && (
-                    <Badge intent="success" className="text-xs">
-                      {t("badge_profile")}
-                    </Badge>
-                  )}
                 </div>
               </Link>
             );

@@ -20,6 +20,7 @@ export function useListObjekts() {
         slug: list.slug,
       },
       select: (data) => data.map(mapObjektWithTag),
+      staleTime: 0,
     }),
   );
   const [filters] = useFilters();

@@ -21,8 +21,9 @@ export type IndexedObjekt = Omit<
 
 // Owned objekt - collection + ownership info
 export type OwnedObjekt = IndexedObjekt &
-  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> &
-  OwnedExtra;
+  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> & {
+    tokenId: string;
+  } & OwnedExtra;
 
 // Union type for functions that accept either indexed or owned objekts
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
