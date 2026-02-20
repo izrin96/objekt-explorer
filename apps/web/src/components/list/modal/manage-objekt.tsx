@@ -24,12 +24,19 @@ import {
   ModalTitle,
 } from "@/components/ui/modal";
 import { Note } from "@/components/ui/note";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
+import { parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../../error-boundary";
 
@@ -165,10 +172,14 @@ function AddToListForm({
               <SelectContent>
                 {availableLists.map((item) => (
                   <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
-                    {item.name}
-                    {item.listType === "profile" && (
-                      <span className="text-muted-fg ml-2 text-xs">(Profile)</span>
-                    )}
+                    <SelectLabel>
+                      {item.name}{" "}
+                      {item.listType === "profile" && item.profileAddress && (
+                        <span className="text-muted-fg text-xs">
+                          ({parseNickname(item.profileAddress, item.nickname)})
+                        </span>
+                      )}
+                    </SelectLabel>
                   </SelectItem>
                 ))}
               </SelectContent>

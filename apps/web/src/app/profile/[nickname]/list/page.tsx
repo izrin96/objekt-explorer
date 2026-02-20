@@ -51,7 +51,7 @@ export default async function ProfileListsPage(props: Props) {
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{list.name}</h3>
                   {isProfileList && (
-                    <Badge intent="info" className="text-xs">
+                    <Badge intent="success" className="text-xs">
                       {t("badge_profile")}
                     </Badge>
                   )}

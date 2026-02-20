@@ -174,7 +174,14 @@ function MyListMenuItem({
         )}
         {data?.map((a) => (
           <MenuItem key={a.slug} href={getListHref(a)}>
-            <MenuLabel>{a.name}</MenuLabel>
+            <MenuLabel>
+              {a.name}{" "}
+              {a.listType === "profile" && a.profileAddress && (
+                <span className="text-muted-fg text-xs">
+                  ({parseNickname(a.profileAddress, a.nickname)})
+                </span>
+              )}
+            </MenuLabel>
           </MenuItem>
         ))}
         <MenuItem onAction={openCreateList}>
