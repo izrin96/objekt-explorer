@@ -186,7 +186,7 @@ export const listRouter = {
         if (list.listType === "profile") {
           if (!inputObjekts || inputObjekts.length === 0) {
             throw new ORPCError("BAD_REQUEST", {
-              message: "objekts required for profile lists",
+              message: "Objekts required for profile lists",
             });
           }
 
@@ -242,7 +242,7 @@ export const listRouter = {
         // Handle normal lists (existing logic)
         if (!collectionSlugs || collectionSlugs.length === 0) {
           throw new ORPCError("BAD_REQUEST", {
-            message: "collectionSlugs required for normal lists",
+            message: "Collections required for normal lists",
           });
         }
 
@@ -358,6 +358,13 @@ export const listRouter = {
           await checkProfileOwnership(profileAddress, user.id);
         }
 
+        // For profile lists, profileAddress cannot be changed
+        if (list.listType === "profile" && profileAddress !== undefined) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Cannot change profile address for profile lists",
+          });
+        }
+
         // Treat undefined as "keep existing value", null or "" as "unbind"
         const newProfileAddress =
           profileAddress === undefined ? list.profileAddress : (profileAddress ?? null);
@@ -383,6 +390,16 @@ export const listRouter = {
         } else if (list.listType === "normal" && wasBound && isBound) {
           // Already bound and not changing - keep existing profileSlug
           newProfileSlug = list.profileSlug;
+        } else if (list.listType === "profile") {
+          // Profile list: regenerate slug if name changed, otherwise keep existing
+          if (name && name !== list.name) {
+            newProfileSlug = await generateProfileListSlug(
+              name,
+              list.profileAddress!.toLowerCase(),
+            );
+          } else {
+            newProfileSlug = list.profileSlug;
+          }
         }
 
         await db
