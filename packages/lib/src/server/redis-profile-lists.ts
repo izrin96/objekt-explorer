@@ -1,6 +1,6 @@
 import { RedisClient } from "bun";
 
-const redis = new RedisClient(process.env.REDIS_PUBSUB_URL || "");
+const redis = new RedisClient(process.env.REDIS_URL || "");
 
 const CACHE_TTL_SECONDS = 3600; // 1 hour
 const CACHE_KEY_PREFIX = "profile-lists:";
