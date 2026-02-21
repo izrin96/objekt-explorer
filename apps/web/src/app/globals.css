@@ -92,6 +92,8 @@
       background-color: initial;
     }
   }
+
+  --color-accent-solid: var(--accent-solid);
 }
 
 :root {

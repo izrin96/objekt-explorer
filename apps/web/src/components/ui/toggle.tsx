@@ -17,7 +17,7 @@ export const toggleStyles = tv({
     "pressed:*:data-[slot=icon]:text-(--toggle-icon-active) *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--toggle-icon) hover:*:data-[slot=icon]:text-(--toggle-icon-active)/90 focus-visible:*:data-[slot=icon]:text-(--toggle-icon-active)/80 forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
     "forced-colors:[--toggle-icon:ButtonText] forced-colors:hover:[--toggle-icon:ButtonText]",
     // custom
-    "selected:[&:not([data-no-border])]:border-(--accent-solid) selected:[&:not([data-no-border])]:shadow-(color:--accent-solid)/20 selected:[&:not([data-no-border])]:shadow-lg",
+    "selected:[&:not([data-no-border])]:border-accent-solid selected:[&:not([data-no-border])]:shadow-accent-solid/20 selected:[&:not([data-no-border])]:shadow-lg",
   ],
   variants: {
     intent: {

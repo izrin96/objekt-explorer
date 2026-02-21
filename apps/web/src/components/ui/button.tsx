@@ -19,7 +19,7 @@ export const buttonStyles = tv({
     "pending:opacity-50 disabled:opacity-50 disabled:forced-colors:text-[GrayText]",
     "*:data-[slot=color-swatch]:-mx-0.5 *:data-[slot=color-swatch]:shrink-0 *:data-[slot=color-swatch]:self-center *:data-[slot=color-swatch]:[--color-swatch-size:--spacing(5)]",
     // custom
-    "selected:border-(--accent-solid) selected:shadow-(color:--accent-solid)/20 selected:shadow-lg",
+    "selected:border-accent-solid selected:shadow-accent-solid/20 selected:shadow-lg",
   ],
   variants: {
     intent: {
