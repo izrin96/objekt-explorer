@@ -112,7 +112,7 @@ function ListView() {
                         isSelected={isSelected}
                         hideLabel={hideLabel}
                         showCount
-                        showSerial={isProfileList}
+                        showSerial={!filters.grouped && isProfileList}
                       >
                         {session && (
                           <div className="flex items-start self-start justify-self-end">
