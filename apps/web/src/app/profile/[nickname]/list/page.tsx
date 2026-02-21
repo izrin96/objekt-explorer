@@ -32,7 +32,7 @@ export default async function ProfileListsPage(props: Props) {
     <div className="flex flex-col gap-6">
       {lists.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-          <p className="text-muted-fg">{t("no_lists_found")}</p>
+          <p className="text-muted-fg text-sm">{t("no_lists_found")}</p>
           {profile.isOwned && <p className="text-muted-fg text-sm">{t("no_lists_hint")}</p>}
         </div>
       ) : (

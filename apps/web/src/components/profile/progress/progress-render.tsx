@@ -5,7 +5,7 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
@@ -35,7 +35,7 @@ function ProgressRender() {
   return (
     <ObjektColumnProvider>
       <ObjektModalProvider initialTab="owned">
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-4">
           <ProgressFilter />
           <QueryErrorResetBoundary>
             {({ reset }) => (
@@ -61,7 +61,7 @@ function ProgressRender() {
 function Progress() {
   const t = useTranslations("progress");
   const { columns } = useObjektColumn();
-  const { shaped, filters, ownedSlugs, hasNextPage } = useProgressObjekts();
+  const { shaped, filters, ownedSlugs, hasNextPage, stats } = useProgressObjekts();
 
   return (
     <>
@@ -75,15 +75,21 @@ function Progress() {
             </div>
           )}
 
-          {shaped.map(([key, grouped]) => (
-            <ProgressGroup
-              key={key}
-              title={key}
-              grouped={grouped}
-              ownedSlugs={ownedSlugs}
-              columns={columns}
-            />
-          ))}
+          <div className="text-sm font-semibold">
+            {stats.owned}/{stats.total} ({stats.percentage}%)
+          </div>
+
+          <div className="flex flex-col gap-8">
+            {shaped.map(([key, grouped]) => (
+              <ProgressGroup
+                key={key}
+                title={key}
+                grouped={grouped}
+                ownedSlugs={ownedSlugs}
+                columns={columns}
+              />
+            ))}
+          </div>
         </div>
       )}
     </>
@@ -98,23 +104,20 @@ type ProgressGroupProps = {
 };
 
 function ProgressGroup(props: ProgressGroupProps) {
-  const filtered = props.grouped
-    .map(([objekt]) => objekt)
-    .filter((a): a is ValidObjekt => a !== undefined && !unobtainables.includes(a.slug));
+  const { percentage, owned, filtered } = useMemo(() => {
+    const filtered = props.grouped
+      .map(([objekt]) => objekt)
+      .filter((a): a is ValidObjekt => a !== undefined && !unobtainables.includes(a.slug));
 
-  const owned = filtered.filter((a) => props.ownedSlugs.has(a.slug));
+    const owned = filtered.filter((a) => props.ownedSlugs.has(a.slug));
 
-  const percentage =
-    filtered.length > 0 ? Number(((owned.length / filtered.length) * 100).toFixed(1)) : 0;
+    const percentage =
+      filtered.length > 0 ? Number(((owned.length / filtered.length) * 100).toFixed(1)) : 0;
 
-  const collapseProps = {
-    ...props,
-    percentage,
-    owned,
-    filtered,
-  };
+    return { percentage, owned, filtered };
+  }, [props.grouped, props.ownedSlugs]);
 
-  return <ProgressCollapse {...collapseProps} />;
+  return <ProgressCollapse {...props} percentage={percentage} owned={owned} filtered={filtered} />;
 }
 
 interface ProgressCollapseProps extends ProgressGroupProps {
@@ -136,7 +139,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
       <div
         role="none"
         className={cn(
-          "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-overlay p-4 py-4 ring-1 ring-fg/10 transition hover:bg-muted",
+          "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-overlay p-4 ring-1 ring-fg/10 transition hover:bg-muted",
           percentage >= 100 && "ring-primary",
         )}
         onClick={() => setShow(!show)}
