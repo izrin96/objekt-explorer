@@ -45,34 +45,6 @@ export async function invalidateProfileList(address: string): Promise<void> {
   await redis.del(key);
 }
 
-export async function updateProfileListObjektIds(
-  address: string,
-  listId: number,
-  objektIds: string[],
-): Promise<void> {
-  if (!redis) return;
-
-  const key = `${CACHE_KEY_PREFIX}${address.toLowerCase()}`;
-  const existing = await getProfileLists(address);
-
-  if (!existing) {
-    return;
-  }
-
-  const entryIndex = existing.findIndex((e) => e.listId === listId);
-  if (entryIndex === -1) return;
-
-  const target = existing[entryIndex]!;
-  const updated = [
-    ...existing.slice(0, entryIndex),
-    { listId: target.listId, profileAddress: target.profileAddress, objektIds },
-    ...existing.slice(entryIndex + 1),
-  ];
-
-  await redis.set(key, JSON.stringify(updated));
-  await redis.expire(key, CACHE_TTL_SECONDS);
-}
-
 export async function removeObjektFromProfileLists(
   address: string,
   objektIdsToRemove: string[],
@@ -106,4 +78,60 @@ export async function addProfileListToCache(entry: ProfileListCacheEntry): Promi
   } else {
     await setProfileLists(address, [...existing, entry]);
   }
+}
+
+export async function addObjektIdsToProfileList(
+  address: string,
+  listId: number,
+  newObjektIds: string[],
+): Promise<void> {
+  if (!redis || newObjektIds.length === 0) return;
+
+  const existing = await getProfileLists(address);
+  if (!existing) return;
+
+  const entryIndex = existing.findIndex((e) => e.listId === listId);
+  if (entryIndex === -1) return;
+
+  const target = existing[entryIndex]!;
+  const existingSet = new Set(target.objektIds);
+  for (const id of newObjektIds) {
+    existingSet.add(id);
+  }
+
+  const updated = [
+    ...existing.slice(0, entryIndex),
+    { ...target, objektIds: [...existingSet] },
+    ...existing.slice(entryIndex + 1),
+  ];
+
+  await redis.set(`${CACHE_KEY_PREFIX}${address.toLowerCase()}`, JSON.stringify(updated));
+  await redis.expire(`${CACHE_KEY_PREFIX}${address.toLowerCase()}`, CACHE_TTL_SECONDS);
+}
+
+export async function removeObjektIdsFromProfileList(
+  address: string,
+  listId: number,
+  objektIdsToRemove: string[],
+): Promise<void> {
+  if (!redis || objektIdsToRemove.length === 0) return;
+
+  const existing = await getProfileLists(address);
+  if (!existing) return;
+
+  const entryIndex = existing.findIndex((e) => e.listId === listId);
+  if (entryIndex === -1) return;
+
+  const target = existing[entryIndex]!;
+  const removeSet = new Set(objektIdsToRemove);
+  const filteredObjektIds = target.objektIds.filter((id) => !removeSet.has(id));
+
+  const updated = [
+    ...existing.slice(0, entryIndex),
+    { ...target, objektIds: filteredObjektIds },
+    ...existing.slice(entryIndex + 1),
+  ];
+
+  await redis.set(`${CACHE_KEY_PREFIX}${address.toLowerCase()}`, JSON.stringify(updated));
+  await redis.expire(`${CACHE_KEY_PREFIX}${address.toLowerCase()}`, CACHE_TTL_SECONDS);
 }

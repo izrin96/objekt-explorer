@@ -6,9 +6,10 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { type ListEntry, listEntries, lists } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import {
+  addObjektIdsToProfileList,
   addProfileListToCache,
   invalidateProfileList,
-  updateProfileListObjektIds,
+  removeObjektIdsFromProfileList,
 } from "@repo/lib/server/redis-profile-lists";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -224,15 +225,13 @@ export const listRouter = {
 
           if (filtered.length === 0) return [];
 
-          // Use onConflictDoNothing as safety net in case of race conditions
           await db.insert(listEntries).values(filtered).onConflictDoNothing();
 
-          // Update Redis cache
-          const allObjektIds = [
-            ...existing.map((e) => e.objektId).filter(filterNonNull),
-            ...filtered.map((v) => v.objektId),
-          ];
-          await updateProfileListObjektIds(list.profileAddress!, list.id, allObjektIds);
+          await addObjektIdsToProfileList(
+            list.profileAddress!,
+            list.id,
+            filtered.map((v) => v.objektId),
+          );
 
           // Return empty array for now (frontend will refetch)
           return [];
@@ -314,22 +313,17 @@ export const listRouter = {
 
         if (ids.length === 0) return;
 
-        await db
+        const result = await db
           .delete(listEntries)
-          .where(and(inArray(listEntries.id, ids), eq(listEntries.listId, list.id)));
+          .where(and(inArray(listEntries.id, ids), eq(listEntries.listId, list.id)))
+          .returning({
+            objektId: listEntries.objektId,
+          });
 
-        // Update Redis cache for profile lists
         if (list.listType === "profile" && list.profileAddress) {
-          const remaining = await db
-            .select({ objektId: listEntries.objektId })
-            .from(listEntries)
-            .where(eq(listEntries.listId, list.id));
-
-          await updateProfileListObjektIds(
-            list.profileAddress,
-            list.id,
-            remaining.map((r) => r.objektId).filter(filterNonNull),
-          );
+          if (result.length === 0) return;
+          const objektIdsToRemove = result.map((e) => e.objektId).filter(filterNonNull);
+          await removeObjektIdsFromProfileList(list.profileAddress, list.id, objektIdsToRemove);
         }
       },
     ),
