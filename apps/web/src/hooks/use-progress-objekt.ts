@@ -1,7 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useDeferredValue } from "react";
+import { useDeferredValue, useMemo } from "react";
 
 import { collectionOptions } from "@/lib/query-options";
+import { unobtainables } from "@/lib/unobtainables";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
@@ -37,10 +38,26 @@ export function useProgressObjekts() {
   // combine both
   const filtered = [...ownedFiltered, ...missingFiltered];
 
+  const stats = useMemo(() => {
+    const allObjekts = filtered.filter(
+      (obj) => !unobtainables.includes(obj.slug) && !["Welcome", "Zero"].includes(obj.class),
+    );
+    const owned = allObjekts.filter((obj) => ownedSlugs.has(obj.slug));
+    const percentage =
+      allObjekts.length > 0 ? Number(((owned.length / allObjekts.length) * 100).toFixed(1)) : 0;
+
+    return {
+      owned: owned.length,
+      total: allObjekts.length,
+      percentage,
+    };
+  }, [filtered, ownedSlugs]);
+
   return useDeferredValue({
     shaped: shape(filtered),
     filters,
     ownedSlugs,
     hasNextPage,
+    stats,
   });
 }

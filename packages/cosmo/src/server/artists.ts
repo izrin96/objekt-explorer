@@ -1,6 +1,5 @@
 import type { CosmoArtist, CosmoArtistWithMembersBFF } from "../types/artists";
 import type { ValidArtist } from "../types/common";
-
 import { cosmo } from "./http";
 
 /**

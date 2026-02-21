@@ -270,7 +270,8 @@
       "collection": "Collection",
       "trade_history": "Trade History",
       "progress": "Progress",
-      "statistics": "Statistics"
+      "statistics": "Statistics",
+      "lists": "Lists"
     },
     "edit": {
       "title": "Edit Profile",
@@ -332,7 +333,6 @@
       "countdown_remaining": "Remaining {countdown}"
     },
     "card": {
-      "open": "Open",
       "edit": "Edit",
       "unlink": "Unlink"
     },
@@ -354,11 +354,27 @@
     "generate_discord_button": "Generate Discord format",
     "feature_not_available": "This feature is not yet available",
     "no_list_found": "No list found",
+    "no_lists_found": "No lists found for this profile",
+    "no_lists_hint": "Create a profile list or set a normal list to display in this profile",
+    "badge_profile": "Profile",
     "create": {
       "title": "Create list",
       "name_label": "Name",
       "name_placeholder": "My list",
       "name_required": "Name is required.",
+      "list_type_label": "List Type",
+      "list_type_desc": "Choose between a normal or profile-bound list",
+      "normal_list_label": "Normal List",
+      "normal_list_desc": "Collection-based, not tied to a profile. For want-to-buy lists.",
+      "profile_list_label": "Profile List",
+      "profile_list_desc": "Bound to a profile, shows serial numbers. Auto-removes on transfer. For want-to-sell lists.",
+      "profile_required": "Profile is required.",
+      "profile_label": "Profile",
+      "profile_placeholder": "Select a profile",
+      "profile_desc": "Select which profile's objekts this list will track",
+      "display_profile_label": "Display in Profile (optional)",
+      "display_profile_desc": "Choose a profile to display this list in its Lists tab",
+      "display_profile_none": "None",
       "hide_user_label": "Hide User",
       "hide_user_desc": "Hide {siteName} account from this list",
       "submit": "Create",
@@ -373,6 +389,9 @@
       "name_required": "Name is required.",
       "hide_user_label": "Hide User",
       "hide_user_desc": "Hide {siteName} account from this list",
+      "display_profile_label": "Display in Profile (optional)",
+      "display_profile_desc": "Choose a profile to display this list in its Lists tab",
+      "display_profile_none": "None",
       "objekt_columns_label": "Objekt Columns",
       "objekt_columns_desc": "Number of columns to use on visit. Visitor are still allowed to change to any columns they want. Pro tips: can also override using URL params (?column=).",
       "objekt_columns_not_set": "Not set",
@@ -390,7 +409,6 @@
       "error": "Error deleting list"
     },
     "card": {
-      "open": "Open",
       "edit": "Edit",
       "edit_list": "Edit List",
       "delete": "Delete"

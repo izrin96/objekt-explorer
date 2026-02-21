@@ -22,8 +22,8 @@
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/unbound-method": "off",
     "typescript/restrict-template-expressions": "off",
+    "typescript/no-unnecessary-type-assertion": "off",
     "no-await-in-loop": "off",
-    "no-unnecessary-type-assertion": "off",
     "no-shadow": "off"
   }
 }

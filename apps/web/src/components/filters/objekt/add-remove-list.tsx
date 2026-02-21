@@ -7,13 +7,13 @@ import type { ButtonProps } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 
-export function AddToList({ size }: { size?: ButtonProps["size"] }) {
+export function AddToList({ size, address }: { size?: ButtonProps["size"]; address?: string }) {
   const t = useTranslations("filter");
   const [addOpen, setAddOpen] = useState(false);
   const handleAction = useObjektSelect((a) => a.handleAction);
   return (
     <>
-      <AddToListModal open={addOpen} setOpen={setAddOpen} />
+      <AddToListModal open={addOpen} setOpen={setAddOpen} address={address} />
       <Button size={size} intent="outline" onPress={() => handleAction(() => setAddOpen(true))}>
         <PlusIcon weight="regular" data-slot="icon" />
         {t("add_to_list")}

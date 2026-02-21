@@ -91,9 +91,7 @@ export async function GET(request: NextRequest, props: Params) {
           ...getColumns(objekts),
           receivedAt: latest.timestamp,
         },
-        collection: {
-          ...getCollectionColumns(),
-        },
+        collection: getCollectionColumns(),
       })
       .from(latest)
       .innerJoin(objekts, eq(latest.objektId, objekts.id))
@@ -138,9 +136,7 @@ export async function GET(request: NextRequest, props: Params) {
   const results = await indexer
     .select({
       objekt: objekts,
-      collection: {
-        ...getCollectionColumns(),
-      },
+      collection: getCollectionColumns(),
     })
     .from(objekts)
     .innerJoin(collections, eq(objekts.collectionId, collections.id))

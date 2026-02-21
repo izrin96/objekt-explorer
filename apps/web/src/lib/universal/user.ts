@@ -36,9 +36,12 @@ export const providersMap: Record<ProviderId, Provider> = {
 
 export type PublicList = {
   slug: string;
+  profileSlug?: string | null;
   name: string;
   gridColumns?: number | null;
   user?: PublicUser | null;
+  listType?: "normal" | "profile";
+  profileAddress?: string | null;
   ownerId?: string | null;
   isOwned?: boolean;
 };

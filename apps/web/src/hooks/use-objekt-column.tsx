@@ -37,7 +37,8 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   const columnStore = useBreakpointColumnStore((a) => a.columns);
   const isFirst = useRef(true);
 
-  // responsive value
+  // responsive value - only compute when media queries have resolved
+  const breakpointReady = isDesktop !== undefined && isTablet !== undefined;
   const responsiveColumn = isDesktop
     ? GRID_COLUMNS
     : isTablet
@@ -59,16 +60,15 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   }, [initialColumn, queryColumn]);
 
   useEffect(() => {
-    if (!hasHydrated) return;
+    if (!hasHydrated || !breakpointReady) return;
 
     if (isFirst.current) {
-      // first time user
       if (initial) {
         setColumnStore(responsiveColumn);
       }
       isFirst.current = false;
     }
-  }, [hasHydrated, initial, responsiveColumn, setColumnStore]);
+  }, [hasHydrated, initial, responsiveColumn, setColumnStore, breakpointReady]);
 
   return (
     <ObjektColumnContext

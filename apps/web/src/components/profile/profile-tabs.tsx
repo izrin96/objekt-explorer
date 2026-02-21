@@ -13,13 +13,14 @@ export default function ProfileTabs() {
   const router = useRouter();
   const profile = useTarget((a) => a.profile)!;
   const pathname = usePathname();
-  const path = profile.nickname ?? profile.address;
+  const path = profile.nickname || profile.address;
 
   const items = [
     { url: `/@${path}`, translationKey: "collection" as const },
     { url: `/@${path}/trades`, translationKey: "trade_history" as const },
     { url: `/@${path}/progress`, translationKey: "progress" as const },
     { url: `/@${path}/stats`, translationKey: "statistics" as const },
+    { url: `/@${path}/list`, translationKey: "lists" as const },
   ];
 
   useEffect(() => {

@@ -26,6 +26,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/ui/modal";
+import { Radio, RadioGroup } from "@/components/ui/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import {
   SheetBody,
@@ -37,8 +38,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { TextField } from "@/components/ui/text-field";
+import { useUserProfiles } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
-import { SITE_NAME, validColumns } from "@/lib/utils";
+import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
 
 type CreateListModalProps = {
   open: boolean;
@@ -48,12 +50,17 @@ type CreateListModalProps = {
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
   const t = useTranslations("list.create");
   const tCommon = useTranslations("common.modal");
-  const { handleSubmit, control } = useForm({
+  const { data: profiles } = useUserProfiles();
+  const { handleSubmit, control, watch } = useForm({
     defaultValues: {
       name: "",
       hideUser: true,
+      listType: "normal" as "normal" | "profile",
+      profileAddress: "",
     },
   });
+
+  const watchedListType = watch("listType");
 
   const createList = useMutation(
     orpc.list.create.mutationOptions({
@@ -74,6 +81,8 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
     createList.mutate({
       name: data.name,
       hideUser: data.hideUser,
+      listType: data.listType,
+      profileAddress: data.profileAddress || undefined,
     });
   });
 
@@ -110,6 +119,72 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
                 </TextField>
               )}
             />
+            <Controller
+              control={control}
+              name="listType"
+              render={({ field: { name, value, onChange } }) => (
+                <RadioGroup name={name} value={value} onChange={onChange}>
+                  <Label>{t("list_type_label")}</Label>
+                  <Description>{t("list_type_desc")}</Description>
+                  <Radio value="normal">
+                    <Label>{t("normal_list_label")}</Label>
+                    <Description>{t("normal_list_desc")}</Description>
+                  </Radio>
+                  <Radio value="profile">
+                    <Label>{t("profile_list_label")}</Label>
+                    <Description>{t("profile_list_desc")}</Description>
+                  </Radio>
+                </RadioGroup>
+              )}
+            />
+            {(watchedListType === "profile" || watchedListType === "normal") && (
+              <Controller
+                control={control}
+                name="profileAddress"
+                rules={{
+                  required: watchedListType === "profile" ? t("profile_required") : false,
+                }}
+                render={({
+                  field: { name, value, onChange, onBlur },
+                  fieldState: { invalid, error },
+                }) => (
+                  <Select
+                    aria-label={t("profile_label")}
+                    placeholder={t("profile_placeholder")}
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    isInvalid={invalid}
+                  >
+                    <Label>{t("profile_label")}</Label>
+                    <Description>
+                      {watchedListType === "profile"
+                        ? t("profile_desc")
+                        : t("display_profile_desc")}
+                    </Description>
+                    <SelectTrigger />
+                    <SelectContent>
+                      {watchedListType === "normal" && (
+                        <SelectItem id="" textValue={t("display_profile_none")}>
+                          {t("display_profile_none")}
+                        </SelectItem>
+                      )}
+                      {profiles?.map((profile) => (
+                        <SelectItem
+                          key={profile.address.toLowerCase()}
+                          id={profile.address.toLowerCase()}
+                          textValue={parseNickname(profile.address, profile.nickname)}
+                        >
+                          {parseNickname(profile.address, profile.nickname)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                    <FieldError>{error?.message}</FieldError>
+                  </Select>
+                )}
+              />
+            )}
             <Controller
               control={control}
               name="hideUser"
@@ -219,6 +294,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
 function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
   const router = useRouter();
   const t = useTranslations("list.edit");
+  const { data: profiles } = useUserProfiles();
   const { data } = useSuspenseQuery(
     orpc.list.find.queryOptions({
       input: slug,
@@ -227,10 +303,13 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   );
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_, { slug }, _o, { client }) => {
         setOpen(false);
         toast.success(t("success"));
-        router.refresh();
+        router.replace(`/list/${slug}`);
+        void client.invalidateQueries({
+          queryKey: orpc.list.list.key(),
+        });
       },
       onError: () => {
         toast.error(t("error"));
@@ -242,6 +321,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
     name: data.name,
     hideUser: data.hideUser ?? false,
     gridColumns: data.gridColumns ?? 0,
+    profileAddress: data.profileAddress ?? "",
   };
 
   const { handleSubmit, control } = useForm({
@@ -255,6 +335,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
       name: data.name,
       hideUser: data.hideUser,
       gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
+      profileAddress: data.profileAddress === "" ? null : data.profileAddress,
     });
   });
 
@@ -297,6 +378,46 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             </Checkbox>
           )}
         />
+
+        {data.listType === "normal" && (
+          <Controller
+            control={control}
+            name="profileAddress"
+            render={({
+              field: { name, value, onChange, onBlur },
+              fieldState: { invalid, error },
+            }) => (
+              <Select
+                aria-label={t("display_profile_label")}
+                placeholder={t("display_profile_none")}
+                name={name}
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+              >
+                <Label>{t("display_profile_label")}</Label>
+                <Description>{t("display_profile_desc")}</Description>
+                <SelectTrigger />
+                <SelectContent>
+                  <SelectItem id="" textValue={t("display_profile_none")}>
+                    {t("display_profile_none")}
+                  </SelectItem>
+                  {profiles?.map((profile) => (
+                    <SelectItem
+                      key={profile.address.toLowerCase()}
+                      id={profile.address.toLowerCase()}
+                      textValue={parseNickname(profile.address, profile.nickname)}
+                    >
+                      {parseNickname(profile.address, profile.nickname)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+                <FieldError>{error?.message}</FieldError>
+              </Select>
+            )}
+          />
+        )}
 
         <Controller
           control={control}

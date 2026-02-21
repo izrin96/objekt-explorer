@@ -1,50 +1,41 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import { redirect } from "next/navigation";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
-import { getList, getUserByIdentifier } from "@/lib/data-fetching";
+import { getUserByIdentifier, getList } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
-import type { PublicList } from "@/lib/universal/user";
+import { parseNickname } from "@/lib/utils";
 
 type Props = {
   params: Promise<{
+    nickname: string;
     slug: string;
   }>;
 };
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const [data, t] = await Promise.all([getList(params.slug), getTranslations("page_titles")]);
+  const profile = await getUserByIdentifier(params.nickname);
+  const list = await getList(params.slug, profile.address);
 
   return {
-    title: data.user
-      ? t("list_detail_with_user", { name: data.name, user: data.user.name })
-      : t("list_detail", { name: data.name }),
+    title: `${list.name} - ${parseNickname(profile.address, profile.nickname)}`,
   };
 }
 
-export default async function Page(props: Props) {
+export default async function ProfileListPage(props: Props) {
   const queryClient = getQueryClient();
   const [params, session] = await Promise.all([props.params, getSession()]);
 
-  const result = await getList(params.slug);
+  const profile = await getUserByIdentifier(params.nickname);
+  const list = await getList(params.slug, profile.address);
 
-  const { ownerId, ...safeList } = result;
-  const list: PublicList = {
-    ...safeList,
-    isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
-  };
-
-  // Redirect normal lists bound to a profile
-  if (list.profileAddress && (list.profileSlug || list.slug)) {
-    const profile = await getUserByIdentifier(list.profileAddress);
-    redirect(`/@${profile.nickname || profile.address}/list/${list.profileSlug || list.slug}`);
-  }
+  profile.isOwned =
+    profile.ownerId && session?.user.id ? profile.ownerId === session.user.id : false;
+  list.isOwned = list.ownerId && session?.user.id ? list.ownerId === session.user.id : false;
 
   void queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({
@@ -55,7 +46,7 @@ export default async function Page(props: Props) {
   );
 
   return (
-    <ProfileProvider targetList={list}>
+    <ProfileProvider targetProfile={profile} targetList={list}>
       <HydrateClient client={queryClient}>
         <div className="flex flex-col gap-4 pt-2 pb-36">
           <ListHeader />

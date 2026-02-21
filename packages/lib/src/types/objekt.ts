@@ -4,12 +4,14 @@ import type { Collection, Objekt } from "@repo/db/indexer/schema";
 type CollectionExtra = {
   tags?: string[];
   edition?: 1 | 2 | 3 | null;
+  entryAt?: Date;
 };
 
 type OwnedExtra = {
   isPin?: boolean;
   isLocked?: boolean;
   pinOrder?: number | null;
+  tokenId?: string;
 };
 
 // Indexed collection - base collection info without ownership

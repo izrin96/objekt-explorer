@@ -48,7 +48,9 @@ export default function Navbar() {
             <Suspense>
               <SelectedArtistFilter />
             </Suspense>
-            <UserSearch />
+            <Suspense>
+              <UserSearch />
+            </Suspense>
           </div>
         </Container>
       </nav>

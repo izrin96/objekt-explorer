@@ -82,9 +82,7 @@ const transferSelect = {
     hash: transfers.hash,
   },
   objekt: objekts,
-  collection: {
-    ...getCollectionColumns(),
-  },
+  collection: getCollectionColumns(),
 };
 
 function getTypeFilters(type: ActivityParams["type"]): SQL[] {

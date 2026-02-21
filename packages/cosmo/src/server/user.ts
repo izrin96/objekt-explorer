@@ -1,6 +1,5 @@
 import type { ValidArtist } from "../types/common";
 import type { CosmoByNickname, CosmoSearchResult, CosmoUserProfile } from "../types/user";
-
 import { cosmo } from "./http";
 
 /**

@@ -27,19 +27,6 @@ export const relations = defineRelations(schema, (r) => ({
       to: r.lists.id,
     }),
   },
-  profileLists: {
-    entries: r.many.profileListEntries(),
-    userAddess: r.one.userAddress({
-      from: r.profileLists.address,
-      to: r.userAddress.address,
-    }),
-  },
-  profileListEntries: {
-    list: r.one.profileLists({
-      from: r.profileListEntries.listId,
-      to: r.profileLists.id,
-    }),
-  },
   pins: {
     userAddress: r.one.userAddress({
       from: r.pins.address,

@@ -1,5 +1,4 @@
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
-
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";

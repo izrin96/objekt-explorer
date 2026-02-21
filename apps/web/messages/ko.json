@@ -270,7 +270,8 @@
       "collection": "컬렉션",
       "trade_history": "거래 내역",
       "progress": "진행 상황",
-      "statistics": "통계"
+      "statistics": "통계",
+      "lists": "목록"
     },
     "edit": {
       "title": "프로필 편집",
@@ -332,7 +333,6 @@
       "countdown_remaining": "남은 시간 {countdown}"
     },
     "card": {
-      "open": "열기",
       "edit": "편집",
       "unlink": "연결 해제"
     },
@@ -354,11 +354,27 @@
     "generate_discord_button": "Discord 형식 생성",
     "feature_not_available": "이 기능은 아직 사용할 수 없습니다",
     "no_list_found": "목록을 찾을 수 없습니다",
+    "no_lists_found": "이 프로필에서 목록을 찾을 수 없습니다",
+    "no_lists_hint": "프로필 목록을 만들거나 일반 목록을 이 프로필에 표시하도록 설정하세요",
+    "badge_profile": "프로필",
     "create": {
       "title": "목록 만들기",
       "name_label": "이름",
       "name_placeholder": "내 목록",
       "name_required": "이름을 입력해주세요.",
+      "list_type_label": "목록 유형",
+      "list_type_desc": "일반 목록 또는 프로필 연결 목록 중 선택하세요",
+      "normal_list_label": "일반 목록",
+      "normal_list_desc": "컬렉션 기반, 프로필에 연결되지 않습니다. 구매 희망 목록에 적합합니다.",
+      "profile_list_label": "프로필 목록",
+      "profile_list_desc": "프로필에 연결되며 시리얼 번호를 표시합니다. 전송 시 자동으로 제거됩니다. 판매 희망 목록에 적합합니다.",
+      "profile_required": "프로필을 선택해주세요.",
+      "profile_label": "프로필",
+      "profile_placeholder": "프로필 선택",
+      "profile_desc": "이 목록이 추적할 프로필의 objekt를 선택하세요",
+      "display_profile_label": "프로필에 표시 (선택사항)",
+      "display_profile_desc": "이 목록을 표시할 프로필의 목록 탭을 선택하세요",
+      "display_profile_none": "없음",
       "hide_user_label": "사용자 숨기기",
       "hide_user_desc": "이 목록에서 {siteName} 계정을 숨깁니다",
       "submit": "만들기",
@@ -373,6 +389,9 @@
       "name_required": "이름을 입력해주세요.",
       "hide_user_label": "사용자 숨기기",
       "hide_user_desc": "이 목록에서 {siteName} 계정을 숨깁니다",
+      "display_profile_label": "프로필에 표시 (선택사항)",
+      "display_profile_desc": "이 목록을 표시할 프로필의 목록 탭을 선택하세요",
+      "display_profile_none": "없음",
       "objekt_columns_label": "Objekt 열",
       "objekt_columns_desc": "방문 시 사용할 열 수입니다. 방문자는 여전히 원하는 열로 변경할 수 있습니다. 팁: URL 파라미터(?column=)로도 재정의할 수 있습니다.",
       "objekt_columns_not_set": "설정 안 됨",
@@ -390,7 +409,6 @@
       "error": "목록 삭제 오류"
     },
     "card": {
-      "open": "열기",
       "edit": "편집",
       "edit_list": "목록 편집",
       "delete": "삭제"

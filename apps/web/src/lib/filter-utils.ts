@@ -81,9 +81,11 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
 }
 
 export function getSortDate(obj: ValidObjekt) {
-  return isObjektOwned(obj)
-    ? new Date(obj.receivedAt).getTime()
-    : new Date(obj.createdAt).getTime();
+  return obj.entryAt
+    ? new Date(obj.entryAt).getTime()
+    : isObjektOwned(obj)
+      ? new Date(obj.receivedAt).getTime()
+      : new Date(obj.createdAt).getTime();
 }
 
 export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidObjekt[] {

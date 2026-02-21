@@ -2,7 +2,7 @@
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
@@ -24,21 +24,31 @@ import {
   ModalTitle,
 } from "@/components/ui/modal";
 import { Note } from "@/components/ui/note";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+} from "@/components/ui/select";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
+import { parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../../error-boundary";
+import { CreateListModal } from "./manage-list";
 
 export function AddToListModal({
   open,
   setOpen,
+  address,
 }: {
   open: boolean;
   setOpen: (val: boolean) => void;
+  address?: string;
 }) {
   const t = useTranslations("list.manage_objekt");
   const tCommon = useTranslations("common.modal");
@@ -58,7 +68,7 @@ export function AddToListModal({
                   </div>
                 }
               >
-                <AddToListForm setOpen={setOpen} />
+                <AddToListForm setOpen={setOpen} address={address} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -71,8 +81,15 @@ export function AddToListModal({
   );
 }
 
-function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
+function AddToListForm({
+  setOpen,
+  address,
+}: {
+  setOpen: (val: boolean) => void;
+  address?: string;
+}) {
+  const [createListOpen, setCreateListOpen] = useState(false);
+  const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const t = useTranslations("list.manage_objekt");
@@ -84,12 +101,27 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     },
   });
 
+  const availableLists = lists.filter((list) => {
+    if (address) {
+      return (
+        list.listType === "normal" ||
+        (list.listType === "profile" && list.profileAddress === address.toLowerCase())
+      );
+    } else {
+      return list.listType === "normal";
+    }
+  });
+
   const onSubmit = handleSubmit((data) => {
+    const selectedList = lists.find((l) => l.slug === data.slug);
+
     addToList.mutate(
       {
         slug: data.slug,
         skipDups: data.skipDups,
-        collectionSlugs: selected.map((a) => a.slug),
+        objekts: selectedList?.listType === "profile" ? selected.map((a) => a.id) : undefined,
+        collectionSlugs:
+          selectedList?.listType === "normal" ? selected.map((a) => a.slug) : undefined,
       },
       {
         onSuccess: () => {
@@ -99,15 +131,18 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     );
   });
 
-  if (data.length === 0)
+  if (availableLists.length === 0)
     return (
-      <Note intent="default">
-        {t("no_list_message")}{" "}
-        <Link className="underline" href="/list">
-          {t("create_one_here")}
-        </Link>
-        .
-      </Note>
+      <>
+        <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
+        <Note intent="default">
+          {t("no_list_message")}{" "}
+          <Link className="cursor-pointer underline" onPress={() => setCreateListOpen(true)}>
+            {t("create_one_here")}
+          </Link>
+          .
+        </Note>
+      </>
     );
 
   return (
@@ -135,9 +170,16 @@ function AddToListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               <Label>{t("list_label")}</Label>
               <SelectTrigger />
               <SelectContent>
-                {data.map((item) => (
+                {availableLists.map((item) => (
                   <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
-                    {item.name}
+                    <SelectLabel>
+                      {item.name}{" "}
+                      {item.profileAddress && (
+                        <span className="text-muted-fg text-xs">
+                          ({parseNickname(item.profileAddress, item.nickname)})
+                        </span>
+                      )}
+                    </SelectLabel>
                   </SelectItem>
                 ))}
               </SelectContent>
