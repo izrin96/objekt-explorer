@@ -8,9 +8,10 @@ import {
   getProfileLists,
 } from "@repo/lib/server/redis-profile-lists";
 import { RedisClient } from "bun";
-import { inArray, eq } from "drizzle-orm";
+import { inArray, eq, and } from "drizzle-orm";
 
-const redisPubSub = new RedisClient(process.env.REDIS_PUBSUB_URL || "");
+const redisPubSubUrl = process.env.REDIS_PUBSUB_URL;
+const redisPubSub = redisPubSubUrl ? new RedisClient(redisPubSubUrl) : null;
 
 type TransferData = {
   from: string;
@@ -22,6 +23,11 @@ type TransferData = {
 };
 
 void (async () => {
+  if (!redisPubSub) {
+    console.warn("[Profile List Cleanup] REDIS_PUBSUB_URL not set, skipping subscription");
+    return;
+  }
+
   console.log("[Profile List Cleanup] Subscribing to transfers channel");
 
   await redisPubSub.subscribe("transfers", async (message, channel) => {
@@ -54,9 +60,15 @@ async function handleTransfers(transfers: TransferData[]) {
     addressToObjektIds.get(from)!.push(objektId);
   }
 
-  for (const [address, objektIds] of addressToObjektIds) {
-    await cleanupProfileListOnTransfer(address, objektIds);
-  }
+  await Promise.all(
+    Array.from(addressToObjektIds.entries()).map(async ([address, objektIds]) => {
+      try {
+        await cleanupProfileListOnTransfer(address, objektIds);
+      } catch (error) {
+        console.error(`[Profile List Cleanup] Error cleaning up for ${address}:`, error);
+      }
+    }),
+  );
 }
 
 async function cleanupProfileListOnTransfer(address: string, objektIds: string[]) {
@@ -85,7 +97,7 @@ async function cleanupProfileListOnTransfer(address: string, objektIds: string[]
     .select({ id: listEntries.id })
     .from(listEntries)
     .innerJoin(lists, eq(lists.id, listEntries.listId))
-    .where(inArray(listEntries.objektId, objektIdsToCleanup));
+    .where(and(inArray(listEntries.objektId, objektIdsToCleanup), eq(lists.listType, "profile")));
 
   if (entriesToRemove.length > 0) {
     await db.delete(listEntries).where(
@@ -123,26 +135,45 @@ export async function cleanupProfileLists() {
 
   console.log(`[Profile List Cleanup] Found ${profileLists.length} profile lists to check`);
 
+  // Collect all unique objektIds across all lists
+  const allObjektIds = new Set<string>();
+  for (const list of profileLists) {
+    for (const entry of list.entries) {
+      if (entry.objektId) allObjektIds.add(entry.objektId);
+    }
+  }
+
+  if (allObjektIds.size === 0) {
+    console.log("[Profile List Cleanup] No objekt IDs to check");
+    return;
+  }
+
+  // Single batch query to indexer
+  const currentObjekts = await indexer
+    .select({ id: objekts.id, owner: objekts.owner })
+    .from(objekts)
+    .where(inArray(objekts.id, Array.from(allObjektIds)));
+
+  // Build a map of objektId -> owner (lowercase)
+  const objektOwnerMap = new Map<string, string>();
+  for (const obj of currentObjekts) {
+    objektOwnerMap.set(obj.id, obj.owner.toLowerCase());
+  }
+
   let totalEntriesRemoved = 0;
 
   for (const list of profileLists) {
-    const objektIds = list.entries.map((e) => e.objektId).filter(Boolean) as string[];
+    if (!list.profileAddress) continue;
 
-    if (objektIds.length === 0) continue;
-
-    const currentObjekts = await indexer
-      .select({ id: objekts.id, owner: objekts.owner })
-      .from(objekts)
-      .where(inArray(objekts.id, objektIds));
-
-    const ownedSet = new Set(
-      currentObjekts
-        .filter((o) => o.owner.toLowerCase() === list.profileAddress!.toLowerCase())
-        .map((o) => o.id),
-    );
+    const profileAddressLower = list.profileAddress.toLowerCase();
 
     const staleEntryIds = list.entries
-      .filter((e) => e.objektId && !ownedSet.has(e.objektId))
+      .filter((e) => {
+        if (!e.objektId) return false;
+        const owner = objektOwnerMap.get(e.objektId);
+        // If owner doesn't exist in map (objekt burned/removed) or owner is different
+        return !owner || owner !== profileAddressLower;
+      })
       .map((e) => e.id);
 
     if (staleEntryIds.length > 0) {

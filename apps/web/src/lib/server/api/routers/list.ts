@@ -140,10 +140,6 @@ export const listRouter = {
 
       const nicknameMap = await fetchNicknamesForAddresses(addresses);
 
-      if (addresses.length === 0) {
-        return result.map((l) => Object.assign({}, l, { nickname: null as string | null }));
-      }
-
       return result.map((l) =>
         Object.assign({}, l, {
           nickname: l.profileAddress
@@ -169,7 +165,6 @@ export const listRouter = {
           session: { user },
         },
       }) => {
-        const artists = await parseSelectedArtists();
         const list = await findOwnedList(slug, user.id);
 
         // Handle profile lists
@@ -181,18 +176,21 @@ export const listRouter = {
           }
 
           // Verify objekts are owned by the profile
-          const currentObjekts = await indexer
-            .select({ id: objekts.id, owner: objekts.owner })
+          const ownedCount = await indexer
+            .select({ id: objekts.id })
             .from(objekts)
-            .where(inArray(objekts.id, inputObjekts));
+            .where(
+              and(
+                inArray(objekts.id, inputObjekts),
+                eq(objekts.owner, list.profileAddress!.toLowerCase()),
+              ),
+            );
 
-          const notOwned = currentObjekts.filter(
-            (o) => o.owner.toLowerCase() !== list.profileAddress!.toLowerCase(),
-          );
-
-          if (notOwned.length > 0) {
+          if (ownedCount.length !== inputObjekts.length) {
+            const ownedSet = new Set(ownedCount.map((o) => o.id));
+            const notOwned = inputObjekts.filter((id) => !ownedSet.has(id));
             throw new ORPCError("BAD_REQUEST", {
-              message: `Objekts not owned by profile: ${notOwned.map((o) => o.id).join(", ")}`,
+              message: `Objekts not owned by profile: ${notOwned.join(", ")}`,
             });
           }
 
@@ -234,6 +232,8 @@ export const listRouter = {
             message: "Collections required for normal lists",
           });
         }
+
+        const artists = await parseSelectedArtists();
 
         if (skipDups) {
           const uniqueCollectionSlugs = Array.from(new Set(collectionSlugs));
@@ -541,7 +541,7 @@ async function generateProfileListSlug(name: string, profileAddress: string): Pr
   // Check for collisions within this profile's lists
   while (true) {
     const existing = await db.query.lists.findFirst({
-      where: { profileAddress, slug, listType: "profile" },
+      where: { profileAddress, profileSlug: slug },
       columns: { id: true },
     });
 
@@ -680,10 +680,6 @@ export async function fetchOwnedLists(userId: string) {
   const addresses = result.map((l) => l.profileAddress).filter(filterNonNull);
 
   const nicknameMap = await fetchNicknamesForAddresses(addresses);
-
-  if (addresses.length === 0) {
-    return result.map((l) => Object.assign({}, l, { nickname: null as string | null }));
-  }
 
   return result.map((l) =>
     Object.assign({}, l, {

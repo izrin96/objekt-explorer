@@ -1,6 +1,7 @@
 import { RedisClient } from "bun";
 
-const redis = new RedisClient(process.env.REDIS_URL || "");
+const redisUrl = process.env.REDIS_URL;
+const redis = redisUrl ? new RedisClient(redisUrl) : null;
 
 const CACHE_TTL_SECONDS = 3600; // 1 hour
 const CACHE_KEY_PREFIX = "profile-lists:";
@@ -12,6 +13,8 @@ interface ProfileListCacheEntry {
 }
 
 export async function getProfileLists(address: string): Promise<ProfileListCacheEntry[] | null> {
+  if (!redis) return null;
+
   const key = `${CACHE_KEY_PREFIX}${address.toLowerCase()}`;
   const data = await redis.get(key);
 
@@ -28,12 +31,16 @@ export async function setProfileLists(
   address: string,
   data: ProfileListCacheEntry[],
 ): Promise<void> {
+  if (!redis) return;
+
   const key = `${CACHE_KEY_PREFIX}${address.toLowerCase()}`;
   await redis.set(key, JSON.stringify(data));
   await redis.expire(key, CACHE_TTL_SECONDS);
 }
 
 export async function invalidateProfileList(address: string): Promise<void> {
+  if (!redis) return;
+
   const key = `${CACHE_KEY_PREFIX}${address.toLowerCase()}`;
   await redis.del(key);
 }
@@ -43,6 +50,8 @@ export async function updateProfileListObjektIds(
   listId: number,
   objektIds: string[],
 ): Promise<void> {
+  if (!redis) return;
+
   const key = `${CACHE_KEY_PREFIX}${address.toLowerCase()}`;
   const existing = await getProfileLists(address);
 
@@ -53,9 +62,12 @@ export async function updateProfileListObjektIds(
   const entryIndex = existing.findIndex((e) => e.listId === listId);
   if (entryIndex === -1) return;
 
-  const updated = [...existing];
-  const target = updated[entryIndex] as ProfileListCacheEntry;
-  updated[entryIndex] = Object.assign(target, { objektIds });
+  const target = existing[entryIndex]!;
+  const updated = [
+    ...existing.slice(0, entryIndex),
+    { listId: target.listId, profileAddress: target.profileAddress, objektIds },
+    ...existing.slice(entryIndex + 1),
+  ];
 
   await redis.set(key, JSON.stringify(updated));
   await redis.expire(key, CACHE_TTL_SECONDS);
@@ -74,7 +86,7 @@ export async function removeObjektFromProfileLists(
   for (const entry of existing) {
     const filteredObjektIds = entry.objektIds.filter((id) => !objektIdSet.has(id));
     if (filteredObjektIds.length > 0) {
-      updated.push(Object.assign(entry, { objektIds: filteredObjektIds }));
+      updated.push({ ...entry, objektIds: filteredObjektIds });
     }
   }
 
@@ -92,7 +104,6 @@ export async function addProfileListToCache(entry: ProfileListCacheEntry): Promi
   if (!existing) {
     await setProfileLists(address, [entry]);
   } else {
-    const updated = [...existing, entry];
-    await setProfileLists(address, updated);
+    await setProfileLists(address, [...existing, entry]);
   }
 }
