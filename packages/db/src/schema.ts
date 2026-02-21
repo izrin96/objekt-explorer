@@ -61,7 +61,7 @@ export const lists = pgTable(
       .references(() => user.id, {
         onDelete: "cascade",
       }),
-    slug: varchar("slug", { length: 100 }).notNull(),
+    slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
     hideUser: boolean("hide_user").default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
