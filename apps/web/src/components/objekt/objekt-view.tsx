@@ -86,7 +86,7 @@ export default function ObjektView({
         <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
           <Badge
             intent="secondary"
-            className="cursor-pointer font-semibold"
+            className="text-fg bg-muted cursor-pointer text-[0.65rem] sm:text-xs"
             onClick={ctx.handleClick}
             isCircle={false}
           >
@@ -94,7 +94,7 @@ export default function ObjektView({
             {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
           </Badge>
           {unobtainable && (
-            <Badge className="text-xs font-semibold" intent="danger">
+            <Badge intent="danger" isCircle={false}>
               {t("unobtainable")}
             </Badge>
           )}

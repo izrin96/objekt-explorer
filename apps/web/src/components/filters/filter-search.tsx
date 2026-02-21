@@ -80,22 +80,24 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
             <Button aria-label="Info" intent="plain" size="sq-xs">
               <QuestionMarkIcon data-slot="icon" />
             </Button>
-            <PopoverContent className="flex max-w-sm flex-col gap-2 overflow-auto p-6">
-              <span>{t("search_help.intro")}</span>
-              <ul className="list-inside list-disc leading-6">
-                <li>{t("search_help.or_operation")}</li>
-                <li>{t("search_help.and_operation")}</li>
-                <li>{t("search_help.not_operation")}</li>
-                <li>{t("search_help.artist_names")}</li>
-                <li>{t("search_help.member_short_names")}</li>
-                <li>{t("search_help.class")}</li>
-                <li>{t("search_help.season")}</li>
-                <li>{t("search_help.collection_numbers")}</li>
-                <li>{t("search_help.collection_ranges")}</li>
-                <li>{t("search_help.serial_numbers")}</li>
-                <li>{t("search_help.serial_ranges")}</li>
-              </ul>
-              <span>{t("search_help.example")}</span>
+            <PopoverContent className="max-w-sm">
+              <div className="flex flex-col gap-2 p-6 text-sm">
+                <span>{t("search_help.intro")}</span>
+                <ul className="list-inside list-disc leading-6">
+                  <li>{t("search_help.or_operation")}</li>
+                  <li>{t("search_help.and_operation")}</li>
+                  <li>{t("search_help.not_operation")}</li>
+                  <li>{t("search_help.artist_names")}</li>
+                  <li>{t("search_help.member_short_names")}</li>
+                  <li>{t("search_help.class")}</li>
+                  <li>{t("search_help.season")}</li>
+                  <li>{t("search_help.collection_numbers")}</li>
+                  <li>{t("search_help.collection_ranges")}</li>
+                  <li>{t("search_help.serial_numbers")}</li>
+                  <li>{t("search_help.serial_ranges")}</li>
+                </ul>
+                <span>{t("search_help.example")}</span>
+              </div>
             </PopoverContent>
           </Popover>
         )}

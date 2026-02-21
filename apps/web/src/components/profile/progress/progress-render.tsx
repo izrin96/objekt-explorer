@@ -139,8 +139,8 @@ function ProgressCollapse(props: ProgressCollapseProps) {
       <div
         role="none"
         className={cn(
-          "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-overlay p-4 ring-1 ring-fg/10 transition hover:bg-muted",
-          percentage >= 100 && "ring-primary",
+          "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-muted/20 p-4 border transition hover:bg-muted",
+          percentage >= 100 && "border-(--accent-solid) shadow-lg shadow-(color:--accent-solid)/20",
         )}
         onClick={() => setShow(!show)}
       >
