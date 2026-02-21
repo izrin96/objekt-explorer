@@ -4,12 +4,14 @@ import type { Collection, Objekt } from "@repo/db/indexer/schema";
 type CollectionExtra = {
   tags?: string[];
   edition?: 1 | 2 | 3 | null;
+  entryAt?: Date;
 };
 
 type OwnedExtra = {
   isPin?: boolean;
   isLocked?: boolean;
   pinOrder?: number | null;
+  tokenId?: string;
 };
 
 // Indexed collection - base collection info without ownership
@@ -21,9 +23,8 @@ export type IndexedObjekt = Omit<
 
 // Owned objekt - collection + ownership info
 export type OwnedObjekt = IndexedObjekt &
-  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> & {
-    tokenId: string;
-  } & OwnedExtra;
+  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> &
+  OwnedExtra;
 
 // Union type for functions that accept either indexed or owned objekts
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;

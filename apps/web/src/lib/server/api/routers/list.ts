@@ -107,9 +107,9 @@ export const listRouter = {
             const data = objektsData.find((o) => o.objekt.id === entry.objektId);
             if (!data || !data.collection) return null;
             const ownedObjekt = mapOwnedObjekt(data.objekt, data.collection);
-            return Object.assign(ownedObjekt, {
+            return Object.assign({}, ownedObjekt, {
               id: entry.id.toString(),
-              createdAt: entry.createdAt,
+              entryAt: entry.createdAt,
             });
           })
           .filter(filterNonNull);
@@ -754,7 +754,7 @@ async function mapEntriesCollection(
     .map(({ collectionSlug, id, createdAt }) =>
       Object.assign({}, collectionsMap.get(collectionSlug!), {
         id: id.toString(),
-        createdAt,
+        entryAt: createdAt,
       }),
     );
 }
