@@ -86,7 +86,19 @@ export const listRouter = {
           })
           .from(objekts)
           .innerJoin(collections, eq(collections.id, objekts.collectionId))
-          .where(inArray(objekts.id, objektIds));
+          .where(
+            and(
+              inArray(objekts.id, objektIds),
+              ...(artists.length
+                ? [
+                    inArray(
+                      collections.artist,
+                      artists.map((a) => a.toLowerCase()),
+                    ),
+                  ]
+                : []),
+            ),
+          );
 
         // Map to OwnedObjekt format
         return result.entries
