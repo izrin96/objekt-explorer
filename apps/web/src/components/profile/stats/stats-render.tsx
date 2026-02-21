@@ -22,7 +22,7 @@ import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useTarget } from "@/hooks/use-target";
 import { collectionOptions } from "@/lib/query-options";
-import { unobtainables } from "@/lib/unobtainables";
+import { tradeableFilter } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import StatsFilter from "./stats-filter";
@@ -292,17 +292,10 @@ function MemberProgressChart({
     return members
       .map((member) => {
         const owned = grouped.filter(([objekt]) => {
-          return (
-            objekt?.member === member.name &&
-            !unobtainables.includes(objekt?.slug ?? "") &&
-            !["Welcome", "Zero"].includes(objekt?.class ?? "")
-          );
+          return objekt?.member === member.name && tradeableFilter(objekt);
         }).length;
         const total = collections.filter(
-          (a) =>
-            a.member === member.name &&
-            !unobtainables.includes(a.slug) &&
-            !["Welcome", "Zero"].includes(a.class),
+          (a) => a.member === member.name && tradeableFilter(a),
         ).length;
         const percentage = total > 0 ? (owned / total) * 100 : 0;
 

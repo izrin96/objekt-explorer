@@ -1,8 +1,9 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
 
 import { collectionOptions } from "@/lib/query-options";
-import { unobtainables } from "@/lib/unobtainables";
+import { tradeableFilter } from "@/lib/utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
@@ -30,28 +31,30 @@ export function useProgressObjekts() {
   // owned objekts
   const ownedFiltered = filter(allOwnedObjekts);
 
+  // all collections filtered
+  const collectionsFiltered = filter(objektsQuery.data);
+
   // find missing objekts based on owned slug
   const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
-  const missingObjekts = objektsQuery.data.filter((obj) => !ownedSlugs.has(obj.slug));
-  const missingFiltered = filter(missingObjekts);
+  const missingObjekts = collectionsFiltered.filter((obj) => !ownedSlugs.has(obj.slug));
 
   // combine both
-  const filtered = [...ownedFiltered, ...missingFiltered];
+  const filtered = [...ownedFiltered, ...missingObjekts];
 
   const stats = useMemo(() => {
-    const allObjekts = filtered.filter(
-      (obj) => !unobtainables.includes(obj.slug) && !["Welcome", "Zero"].includes(obj.class),
-    );
-    const owned = allObjekts.filter((obj) => ownedSlugs.has(obj.slug));
-    const percentage =
-      allObjekts.length > 0 ? Number(((owned.length / allObjekts.length) * 100).toFixed(1)) : 0;
+    const ownedGrouped = Object.values(groupBy(ownedFiltered, (obj) => obj.collectionId));
+    const owned = ownedGrouped.filter(([objekt]) => objekt && tradeableFilter(objekt)).length;
+
+    const total = collectionsFiltered.filter(tradeableFilter).length;
+
+    const percentage = total > 0 ? Number(((owned / total) * 100).toFixed(1)) : 0;
 
     return {
-      owned: owned.length,
-      total: allObjekts.length,
+      owned,
+      total,
       percentage,
     };
-  }, [filtered, ownedSlugs]);
+  }, [ownedFiltered, collectionsFiltered]);
 
   return useDeferredValue({
     shaped: shape(filtered),

@@ -1,4 +1,8 @@
+import type { ValidObjekt } from "@repo/lib/types/objekt";
+
 import { env } from "@/env";
+
+import { unobtainables } from "./unobtainables";
 
 export const SITE_NAME = "Objekt Tracker";
 
@@ -41,6 +45,10 @@ export function getBaseURL() {
 
 export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
   return url.replace(/(4x|3x|2x|thumbnail|original)$/i, size);
+}
+
+export function tradeableFilter(obj: ValidObjekt) {
+  return !unobtainables.includes(obj.slug) && !["Welcome", "Zero"].includes(obj.class);
 }
 
 export function msToCountdown(ms: number) {

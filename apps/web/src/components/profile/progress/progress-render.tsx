@@ -154,7 +154,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           value={percentage}
         >
           <div className="relative">
-            <ProgressBarTrack className="h-2 min-w-32" />
+            <ProgressBarTrack className="h-2 min-w-32 [--progress-content-bg:var(--color-accent-solid)]" />
           </div>
           <ProgressBarValue className="text-muted-fg flex-none text-sm tabular-nums" />
         </ProgressBar>
