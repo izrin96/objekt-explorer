@@ -41,9 +41,12 @@ async function handleTransfers(transfers: TransferData[]) {
 
   for (const transfer of transfers) {
     const from = transfer.from.toLowerCase();
+    const to = transfer.to.toLowerCase();
     const objektId = transfer.objekt?.id;
 
     if (!objektId) continue;
+
+    if (from === to) continue;
 
     if (!addressToObjektIds.has(from)) {
       addressToObjektIds.set(from, []);

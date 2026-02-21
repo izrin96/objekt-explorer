@@ -6,10 +6,12 @@ services:
       context: .
       dockerfile: ./apps/worker/Dockerfile
     depends_on:
-      - postgres-indexer
+      - pgbouncer
+      - pgbouncer-indexer
       - valkey
     environment:
-      - INDEXER_DATABASE_URL=postgresql://postgres:postgres@postgres-indexer:5432/indexer
+      - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
+      - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
       - REDIS_PUBSUB_URL=redis://valkey:6379
       - REDIS_URL=redis://valkey:6379
     healthcheck:
@@ -108,8 +110,6 @@ services:
       - pgbouncer
       - pgbouncer-indexer
       - valkey
-      - browserless
-      - rustfs
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
@@ -204,14 +204,6 @@ services:
     image: valkey/valkey:alpine
     ports:
       - "6379:6379"
-
-  # browserless
-  browserless:
-    image: ghcr.io/browserless/chromium
-    ports:
-      - "9222:3000"
-    environment:
-      - TOKEN=your-token-here
 
   # s3 compatible image
   rustfs:
