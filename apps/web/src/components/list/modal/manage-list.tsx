@@ -50,6 +50,24 @@ type CreateListModalProps = {
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
   const t = useTranslations("list.create");
   const tCommon = useTranslations("common.modal");
+
+  return (
+    <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalHeader>
+        <ModalTitle>{t("title")}</ModalTitle>
+      </ModalHeader>
+      <ModalBody>
+        <CreateListForm setOpen={setOpen} />
+      </ModalBody>
+      <ModalFooter id="submit-form">
+        <ModalClose>{tCommon("cancel")}</ModalClose>
+      </ModalFooter>
+    </ModalContent>
+  );
+}
+
+function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
+  const t = useTranslations("list.create");
   const { data: profiles } = useUserProfiles();
   const { handleSubmit, control, watch } = useForm({
     defaultValues: {
@@ -87,124 +105,115 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
   });
 
   return (
-    <ModalContent isOpen={open} onOpenChange={setOpen}>
-      <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
-      </ModalHeader>
-      <ModalBody>
-        <Form onSubmit={onSubmit}>
-          <div className="flex flex-col gap-6">
-            <Controller
-              control={control}
-              name="name"
-              rules={{
-                required: t("name_required"),
-              }}
-              render={({
-                field: { name, value, onChange, onBlur },
-                fieldState: { invalid, error },
-              }) => (
-                <TextField
-                  isRequired
-                  autoFocus
-                  name={name}
-                  value={value}
-                  onChange={onChange}
-                  onBlur={onBlur}
-                  isInvalid={invalid}
-                >
-                  <Label>{t("name_label")}</Label>
-                  <Input placeholder={t("name_placeholder")} />
-                  <FieldError>{error?.message}</FieldError>
-                </TextField>
-              )}
-            />
-            <Controller
-              control={control}
-              name="listType"
-              render={({ field: { name, value, onChange } }) => (
-                <RadioGroup name={name} value={value} onChange={onChange}>
-                  <Label>{t("list_type_label")}</Label>
-                  <Description>{t("list_type_desc")}</Description>
-                  <Radio value="normal">
-                    <Label>{t("normal_list_label")}</Label>
-                    <Description>{t("normal_list_desc")}</Description>
-                  </Radio>
-                  <Radio value="profile">
-                    <Label>{t("profile_list_label")}</Label>
-                    <Description>{t("profile_list_desc")}</Description>
-                  </Radio>
-                </RadioGroup>
-              )}
-            />
-            {(watchedListType === "profile" || watchedListType === "normal") && (
-              <Controller
-                control={control}
-                name="profileAddress"
-                rules={{
-                  required: watchedListType === "profile" ? t("profile_required") : false,
-                }}
-                render={({
-                  field: { name, value, onChange, onBlur },
-                  fieldState: { invalid, error },
-                }) => (
-                  <Select
-                    aria-label={t("profile_label")}
-                    placeholder={t("profile_placeholder")}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    onBlur={onBlur}
-                    isInvalid={invalid}
-                  >
-                    <Label>{t("profile_label")}</Label>
-                    <Description>
-                      {watchedListType === "profile"
-                        ? t("profile_desc")
-                        : t("display_profile_desc")}
-                    </Description>
-                    <SelectTrigger />
-                    <SelectContent>
-                      {watchedListType === "normal" && (
-                        <SelectItem id="" textValue={t("display_profile_none")}>
-                          {t("display_profile_none")}
-                        </SelectItem>
-                      )}
-                      {profiles?.map((profile) => (
-                        <SelectItem
-                          key={profile.address.toLowerCase()}
-                          id={profile.address.toLowerCase()}
-                          textValue={parseNickname(profile.address, profile.nickname)}
-                        >
-                          {parseNickname(profile.address, profile.nickname)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                    <FieldError>{error?.message}</FieldError>
-                  </Select>
-                )}
-              />
+    <Form onSubmit={onSubmit}>
+      <div className="flex flex-col gap-6">
+        <Controller
+          control={control}
+          name="name"
+          rules={{
+            required: t("name_required"),
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <TextField
+              isRequired
+              autoFocus
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+            >
+              <Label>{t("name_label")}</Label>
+              <Input placeholder={t("name_placeholder")} />
+              <FieldError>{error?.message}</FieldError>
+            </TextField>
+          )}
+        />
+        <Controller
+          control={control}
+          name="listType"
+          render={({ field: { name, value, onChange } }) => (
+            <RadioGroup name={name} value={value} onChange={onChange}>
+              <Label>{t("list_type_label")}</Label>
+              <Description>{t("list_type_desc")}</Description>
+              <Radio value="normal">
+                <Label>{t("normal_list_label")}</Label>
+                <Description>{t("normal_list_desc")}</Description>
+              </Radio>
+              <Radio value="profile">
+                <Label>{t("profile_list_label")}</Label>
+                <Description>{t("profile_list_desc")}</Description>
+              </Radio>
+            </RadioGroup>
+          )}
+        />
+        {(watchedListType === "profile" || watchedListType === "normal") && (
+          <Controller
+            control={control}
+            name="profileAddress"
+            rules={{
+              required: watchedListType === "profile" ? t("profile_required") : false,
+            }}
+            render={({
+              field: { name, value, onChange, onBlur },
+              fieldState: { invalid, error },
+            }) => (
+              <Select
+                aria-label={t("profile_label")}
+                placeholder={t("profile_placeholder")}
+                name={name}
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+              >
+                <Label>{t("profile_label")}</Label>
+                <Description>
+                  {watchedListType === "profile" ? t("profile_desc") : t("display_profile_desc")}
+                </Description>
+                <SelectTrigger />
+                <SelectContent>
+                  {watchedListType === "normal" && (
+                    <SelectItem id="" textValue={t("display_profile_none")}>
+                      {t("display_profile_none")}
+                    </SelectItem>
+                  )}
+                  {profiles?.map((profile) => (
+                    <SelectItem
+                      key={profile.address.toLowerCase()}
+                      id={profile.address.toLowerCase()}
+                      textValue={parseNickname(profile.address, profile.nickname)}
+                    >
+                      {parseNickname(profile.address, profile.nickname)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+                <FieldError>{error?.message}</FieldError>
+              </Select>
             )}
-            <Controller
-              control={control}
-              name="hideUser"
-              render={({ field: { name, value, onChange, onBlur } }) => (
-                <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-                  <Label>{t("hide_user_label")}</Label>
-                  <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
-                </Checkbox>
-              )}
-            />
-          </div>
-        </Form>
-      </ModalBody>
-      <ModalFooter>
-        <ModalClose>{tCommon("cancel")}</ModalClose>
-        <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
-          {t("submit")}
-        </Button>
-      </ModalFooter>
-    </ModalContent>
+          />
+        )}
+        <Controller
+          control={control}
+          name="hideUser"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>{t("hide_user_label")}</Label>
+              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
+            </Checkbox>
+          )}
+        />
+
+        <Portal to="#submit-form">
+          <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
+            {t("submit")}
+          </Button>
+        </Portal>
+      </div>
+    </Form>
   );
 }
 
