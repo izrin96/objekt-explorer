@@ -139,13 +139,11 @@ export const listRouter = {
           profileSlug: true,
           listType: true,
           profileAddress: true,
-          createdAt: true,
-          userId: true,
         },
         where: {
           profileAddress: profileAddress.toLowerCase(),
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: { id: "desc" },
       });
 
       // Batch-fetch nicknames for profile addresses
