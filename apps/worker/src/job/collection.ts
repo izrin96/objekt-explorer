@@ -49,7 +49,7 @@ async function processObjekt(objekt: { id: string }) {
   // fetch metadata
   const metadata = await fetchMetadata(objekt.id);
 
-  if (metadata === null) return;
+  if (metadata === null || metadata.objekt.objektNo === 0) return;
 
   const slug = slugifyObjekt(metadata.objekt.collectionId);
 
@@ -64,7 +64,7 @@ async function processObjekt(objekt: { id: string }) {
   // if not found, skip, just wait indexer processor create it
   // rarely happen
   if (!collection) {
-    console.log(`Collection not yet exist for token ID ${objekt.id}`);
+    console.log(`[fix metadata] Collection not yet exist for token ID ${objekt.id}`);
     return;
   }
 
@@ -91,7 +91,7 @@ async function processObjekt(objekt: { id: string }) {
     })
     .where(eq(transfers.objektId, objekt.id));
 
-  console.log(`Update missing metadata for token ID ${objekt.id}`);
+  console.log(`[fix metadata] Update missing metadata for token ID ${objekt.id}`);
 }
 
 /**

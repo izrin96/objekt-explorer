@@ -35,5 +35,7 @@ export async function updateTransferableCosmoSpin() {
     await Promise.all(batches);
   }
 
-  console.log(`Update transferable status for ${spinObjekts.length} objekts. Reason: cosmo-spin`);
+  console.log(
+    `[fix cosmo-spin transferable] Update transferable status for ${spinObjekts.length} objekts. Reason: cosmo-spin`,
+  );
 }

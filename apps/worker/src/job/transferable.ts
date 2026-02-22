@@ -33,7 +33,9 @@ async function fetchMetadata(tokenId: string) {
 }
 
 async function processBatch(batch: { id: string }[], batchNumber: number, totalBatches: number) {
-  console.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`);
+  console.log(
+    `[fix transferable] Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`,
+  );
 
   // fetch metadata for all objekts in batch
   const metadataResults = await Promise.all(
@@ -55,7 +57,7 @@ async function processBatch(batch: { id: string }[], batchNumber: number, totalB
     }));
 
   if (updates.length === 0) {
-    console.log(`Batch ${batchNumber}/${totalBatches}: No updates needed`);
+    console.log(`[fix transferable] Batch ${batchNumber}/${totalBatches}: No updates needed`);
     return;
   }
 
@@ -73,5 +75,7 @@ async function processBatch(batch: { id: string }[], batchNumber: number, totalB
     );
   });
 
-  console.log(`Batch ${batchNumber}/${totalBatches}: Updated ${updates.length} objekts`);
+  console.log(
+    `[fix transferable] Batch ${batchNumber}/${totalBatches}: Updated ${updates.length} objekts`,
+  );
 }

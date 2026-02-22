@@ -190,7 +190,7 @@ export function ObjektCard({
           />
           {!backLoaded && (
             <div className="aspect-photocard relative flex size-full bg-white">
-              <div className="h-[88%] w-[91%] animate-pulse self-center rounded-r-lg bg-(--objekt-bg-color) p-5"></div>
+              <div className="h-[88%] w-[91%] self-center rounded-r-lg bg-(--objekt-bg-color) p-5"></div>
             </div>
           )}
         </div>
