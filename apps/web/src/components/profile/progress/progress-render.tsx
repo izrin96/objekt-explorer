@@ -73,16 +73,16 @@ function Progress() {
 
   return (
     <>
+      {hasNextPage && (
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          {t("loading_objekts")} <Loader variant="ring" className="size-4" />
+        </div>
+      )}
+
       {!filters.artist && !filters.member ? (
         <MemberProgressChart objekts={ownedFiltered} collections={collectionsFiltered} />
       ) : (
         <div className="flex flex-col gap-8">
-          {hasNextPage && (
-            <div className="flex items-center gap-2 text-xs font-semibold">
-              {t("loading_objekts")} <Loader variant="ring" className="size-4" />
-            </div>
-          )}
-
           <div className="text-sm font-semibold">
             {stats.owned}/{stats.total} ({stats.percentage}%)
           </div>

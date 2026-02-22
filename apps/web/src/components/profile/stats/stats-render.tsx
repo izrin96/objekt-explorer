@@ -77,7 +77,7 @@ function ProfileStats() {
   return (
     <div className="flex flex-col gap-4">
       {hasNextPage && (
-        <div className="flex items-center gap-2 text-xs font-semibold">
+        <div className="flex items-center gap-2 text-sm font-semibold">
           {t("loading_objekts")} <Loader variant="ring" className="size-4" />
         </div>
       )}
