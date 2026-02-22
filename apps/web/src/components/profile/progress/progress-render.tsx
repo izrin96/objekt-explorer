@@ -2,11 +2,14 @@
 
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
+import type React from "react";
 import { Suspense, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -14,14 +17,18 @@ import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
 import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
 import ObjektModal from "@/components/objekt/objekt-modal";
 import ObjektView from "@/components/objekt/objekt-view";
+import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Loader } from "@/components/ui/loader";
 import { ProgressBar, ProgressBarTrack, ProgressBarValue } from "@/components/ui/progress-bar";
 import { useConfigStore } from "@/hooks/use-config";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
 import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useSession } from "@/hooks/use-user";
 import { unobtainables } from "@/lib/unobtainables";
+import { tradeableFilter } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import { useShowCount } from "./filter-showcount";
@@ -61,12 +68,13 @@ function ProgressRender() {
 function Progress() {
   const t = useTranslations("progress");
   const { columns } = useObjektColumn();
-  const { shaped, filters, ownedSlugs, hasNextPage, stats } = useProgressObjekts();
+  const { shaped, filters, ownedSlugs, hasNextPage, stats, ownedFiltered, collectionsFiltered } =
+    useProgressObjekts();
 
   return (
     <>
       {!filters.artist && !filters.member ? (
-        <div className="text-muted-fg flex justify-center text-sm">{t("select_prompt")}</div>
+        <MemberProgressChart objekts={ownedFiltered} collections={collectionsFiltered} />
       ) : (
         <div className="flex flex-col gap-8">
           {hasNextPage && (
@@ -218,5 +226,131 @@ function ProgressCollapse(props: ProgressCollapseProps) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function MemberProgressChart({
+  objekts,
+  collections,
+}: {
+  objekts: ValidObjekt[];
+  collections: ValidObjekt[];
+}) {
+  const t = useTranslations("stats.member_progress");
+  const { selectedArtists } = useCosmoArtist();
+  const [_, setFilters] = useFilters();
+
+  const chartData = useMemo(() => {
+    const members = selectedArtists
+      .flatMap((a) => a.artistMembers)
+      .map((a) => ({ color: a.primaryColorHex, name: a.name }));
+
+    const grouped = Object.values(groupBy(objekts, (a) => a.collectionId));
+
+    return members
+      .map((member) => {
+        const owned = grouped.filter(([objekt]) => {
+          return objekt?.member === member.name && tradeableFilter(objekt);
+        }).length;
+        const total = collections.filter(
+          (a) => a.member === member.name && tradeableFilter(a),
+        ).length;
+        const percentage = total > 0 ? (owned / total) * 100 : 0;
+
+        return {
+          name: member.name,
+          count: owned,
+          total,
+          percentage: Number(percentage.toFixed(1)),
+          fill: member.color,
+        };
+      })
+      .toSorted((a, b) => b.percentage - a.percentage);
+  }, [selectedArtists, objekts, collections]);
+
+  const chartConfig = {
+    percentage: {
+      label: t("percentage_label"),
+      color: "var(--chart-1)",
+    },
+  } satisfies ChartConfig;
+
+  return (
+    <Chart
+      layout="vertical"
+      data={chartData}
+      dataKey="percentage"
+      config={chartConfig}
+      containerHeight={chartData.length * 40}
+      className="w-full"
+    >
+      <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={32}>
+        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={90} />
+        <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
+        <Bar
+          animationBegin={0}
+          animationDuration={500}
+          dataKey="percentage"
+          radius={5}
+          className="cursor-pointer"
+          shape={(props: any) => (
+            <>
+              <Rectangle
+                {...props}
+                onClick={() => {
+                  return setFilters({
+                    member: [props.name],
+                  });
+                }}
+              />
+              <text
+                x={props.background.width + props.x - 10}
+                y={props.y + 20}
+                textAnchor="end"
+                fill="var(--fg)"
+              >
+                {props.count}/{props.total} ({props.percentage}%)
+              </text>
+            </>
+          )}
+        />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              labelSeparator={false}
+              accessibilityLayer
+              indicator="line"
+              formatter={(value, _name, _item, _index, payload) => (
+                <>
+                  <div
+                    className={cn(
+                      "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                      "w-1",
+                    )}
+                    style={
+                      {
+                        "--color-bg": (payload as any).fill,
+                        "--color-border": (payload as any).fill,
+                      } as React.CSSProperties
+                    }
+                  />
+                  <div className={cn("flex flex-1 justify-between leading-none", "items-center")}>
+                    <div className="grid gap-1.5">
+                      {(payload as any).name}
+                      <span className="text-fg">
+                        {(payload as any).count}/{(payload as any).total}
+                      </span>
+                    </div>
+                    <span className="text-fg font-mono font-medium tabular-nums">
+                      {value?.toLocaleString()}%
+                    </span>
+                  </div>
+                </>
+              )}
+            />
+          }
+        />
+      </BarChart>
+    </Chart>
   );
 }

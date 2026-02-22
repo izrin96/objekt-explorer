@@ -333,7 +333,7 @@ function MemberProgressChart({
           className="w-full"
         >
           <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={32}>
-            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} />
+            <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={90} />
             <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
             <Bar
               animationBegin={0}
@@ -355,7 +355,6 @@ function MemberProgressChart({
               )}
             />
             <ChartTooltip
-              cursor={false}
               content={
                 <ChartTooltipContent
                   labelSeparator={false}

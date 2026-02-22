@@ -62,5 +62,7 @@ export function useProgressObjekts() {
     ownedSlugs,
     hasNextPage,
     stats,
+    ownedFiltered,
+    collectionsFiltered,
   });
 }
