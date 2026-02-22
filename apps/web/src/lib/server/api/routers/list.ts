@@ -33,7 +33,6 @@ export const listRouter = {
         gridColumns: true,
         listType: true,
         profileAddress: true,
-        profileSlug: true,
       },
       where: { slug, userId: session.user.id },
     });
@@ -582,7 +581,15 @@ async function fetchListCollectionsBySlug(listSlug: string) {
     const objektsData = await indexer
       .select({
         id: objekts.id,
-        collection: getCollectionColumns(),
+        collection: {
+          slug: collections.slug,
+          season: collections.season,
+          collectionNo: collections.collectionNo,
+          member: collections.member,
+          artist: collections.artist,
+          collectionId: collections.collectionId,
+          class: collections.class,
+        },
       })
       .from(objekts)
       .innerJoin(collections, eq(collections.id, objekts.collectionId))
@@ -594,7 +601,7 @@ async function fetchListCollectionsBySlug(listSlug: string) {
       .filter((e: { objektId: string | null }) => e.objektId !== null)
       .map((e: { objektId: string | null }) => {
         const collection = objektToCollection.get(e.objektId!);
-        return collection ? overrideCollection(collection) : null;
+        return collection ?? null;
       })
       .filter(filterNonNull);
   }
@@ -607,7 +614,13 @@ async function fetchListCollectionsBySlug(listSlug: string) {
 
   const foundCollections = await indexer
     .select({
-      ...getCollectionColumns(),
+      slug: collections.slug,
+      season: collections.season,
+      collectionNo: collections.collectionNo,
+      member: collections.member,
+      artist: collections.artist,
+      collectionId: collections.collectionId,
+      class: collections.class,
     })
     .from(collections)
     .where(inArray(collections.slug, slugs));
@@ -618,7 +631,7 @@ async function fetchListCollectionsBySlug(listSlug: string) {
     .filter((e: { collectionSlug: string | null }) => e.collectionSlug !== null)
     .map((e: { collectionSlug: string | null }) => {
       const collection = slugToCollection.get(e.collectionSlug!);
-      return collection ? overrideCollection(collection) : null;
+      return collection ?? null;
     })
     .filter(filterNonNull);
 }
@@ -697,7 +710,6 @@ async function findOwnedList(slug: string, userId: string) {
     columns: {
       id: true,
       name: true,
-      slug: true,
       listType: true,
       profileAddress: true,
       profileSlug: true,
