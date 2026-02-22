@@ -1,74 +1,59 @@
-import { validGroupBy } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 
 import { compareByArray } from "@/lib/filter-utils";
 
-import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilterData } from "./use-filter-data";
-import { useFilters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
+
+export type ShapedProgress = [string, [string, ValidObjekt[][]][]][];
 
 export function useShapeProgress() {
   const { seasons, classes } = useFilterData();
-  const [filters] = useFilters();
-  const { getArtist } = useCosmoArtist();
   const compareMember = useCompareMember();
 
   return useCallback(
-    (data: ValidObjekt[]): [string, ValidObjekt[][]][] => {
+    (data: ValidObjekt[]): ShapedProgress => {
       const objekts = data.filter((a) => !["Welcome", "Zero"].includes(a.class));
 
-      const groupBys = filters.group_bys?.toSorted(
-        (a, b) => validGroupBy.indexOf(a) - validGroupBy.indexOf(b),
-      ) ?? ["member", "season", "class"];
+      const byMemberSeason = groupBy(objekts, (objekt) => `${objekt.member} ${objekt.season}`);
 
-      const grouped = groupBy(objekts, (objekt) =>
-        groupBys
-          .map((key) =>
-            key === "artist"
-              ? (getArtist(objekt.artist)?.title ?? objekt.artist)
-              : objekt[key as keyof typeof objekt],
-          )
-          .join(" "),
+      let memberSeasonEntries = Object.entries(byMemberSeason).filter(
+        ([, objekts]) => objekts.length > 0,
       );
 
-      // group sorting
-      let entries = Object.entries(grouped).filter(([, objekts]) => objekts.length > 0);
+      memberSeasonEntries = memberSeasonEntries.toSorted(([, [objektA]], [, [objektB]]) =>
+        compareByArray(seasons, objektB?.season ?? "", objektA?.season ?? ""),
+      );
 
-      if (groupBys.includes("class")) {
-        entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
+      memberSeasonEntries = memberSeasonEntries.toSorted(([, [objektA]], [, [objektB]]) =>
+        compareMember(objektA?.member ?? "", objektB?.member ?? ""),
+      );
+
+      return memberSeasonEntries.map(([memberSeasonKey, memberSeasonObjekts]) => {
+        const byClass = groupBy(memberSeasonObjekts, (objekt) => objekt.class);
+
+        let classEntries = Object.entries(byClass).filter(([, objekts]) => objekts.length > 0);
+
+        classEntries = classEntries.toSorted(([, [objektA]], [, [objektB]]) =>
           compareByArray(classes, objektA?.class ?? "", objektB?.class ?? ""),
         );
-      }
 
-      if (groupBys.includes("season")) {
-        entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
-          compareByArray(seasons, objektB?.season ?? "", objektA?.season ?? ""),
-        );
-      }
+        const classGroups = classEntries.map(([classKey, classObjekts]) => {
+          const sorted = classObjekts
+            .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+            .toSorted((a, b) => compareByArray(seasons, a.season, b.season));
 
-      if (groupBys.includes("member")) {
-        entries = entries.toSorted(([, [objektA]], [, [objektB]]) =>
-          compareMember(objektA?.member ?? "", objektB?.member ?? ""),
-        );
-      }
+          return [classKey, Object.values(groupBy(sorted, (a) => a.collectionId))] as [
+            string,
+            ValidObjekt[][],
+          ];
+        });
 
-      // objekt sorting
-      return entries
-        .map(
-          ([key, objekts]) =>
-            [
-              key,
-              objekts
-                .toSorted((a, b) => compareMember(a.member, b.member))
-                .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-                .toSorted((a, b) => compareByArray(seasons, a.season, b.season)),
-            ] as const,
-        )
-        .map(([key, objekts]) => [key, Object.values(groupBy(objekts, (a) => a.collectionId))]);
+        return [memberSeasonKey, classGroups] as [string, [string, ValidObjekt[][]][]];
+      });
     },
-    [filters, getArtist, compareMember, seasons, classes],
+    [compareMember, seasons, classes],
   );
 }

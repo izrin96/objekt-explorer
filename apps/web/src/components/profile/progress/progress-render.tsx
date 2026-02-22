@@ -87,17 +87,22 @@ function Progress() {
             {stats.owned}/{stats.total} ({stats.percentage}%)
           </div>
 
-          <div className="flex flex-col gap-8">
-            {shaped.map(([key, grouped]) => (
-              <ProgressGroup
-                key={key}
-                title={key}
-                grouped={grouped}
-                ownedSlugs={ownedSlugs}
-                columns={columns}
-              />
-            ))}
-          </div>
+          {shaped.map(([memberSeasonKey, classGroups]) => (
+            <div key={memberSeasonKey} className="flex flex-col gap-4">
+              <div className="text-base font-semibold">{memberSeasonKey}</div>
+              <div className="flex flex-col gap-6">
+                {classGroups.map(([classKey, grouped]) => (
+                  <ProgressGroup
+                    key={`${memberSeasonKey}-${classKey}`}
+                    title={classKey}
+                    grouped={grouped}
+                    ownedSlugs={ownedSlugs}
+                    columns={columns}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </>

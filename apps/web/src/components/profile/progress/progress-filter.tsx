@@ -15,7 +15,6 @@ import CheckpointPicker from "@/components/profile/checkpoint-picker";
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 
-import GroupBysFilter from "./filter-groupbys";
 import ShowCountFilter from "./filter-showcount";
 
 export default function ProgressFilter() {
@@ -35,7 +34,6 @@ export default function ProgressFilter() {
         <FilterClass hideEtc />
         <EditionFilter />
         <FilterOnline />
-        <GroupBysFilter />
         <ColumnFilter />
         <ShowCountFilter />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />

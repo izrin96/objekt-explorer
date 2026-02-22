@@ -34,7 +34,6 @@ export function useFilters() {
     search: parseAsString,
     grouped: parseAsBoolean,
     group_by: parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy)),
-    group_bys: parseAsArrayOf(parseAsStringEnum<ValidGroupBy>(Object.values(validGroupBy))),
     sort_dir: parseAsStringEnum<ValidSortDirection>(Object.values(validSortDirection)),
     group_dir: parseAsStringEnum<ValidSortDirection>(Object.values(validSortDirection)),
     unowned: parseAsBoolean,
@@ -68,7 +67,6 @@ function isFiltering(filters: Filters) {
     filters.search !== null ||
     filters.grouped !== null ||
     filters.group_by !== null ||
-    filters.group_bys !== null ||
     filters.sort_dir !== null ||
     filters.group_dir !== null ||
     filters.unowned !== null ||
