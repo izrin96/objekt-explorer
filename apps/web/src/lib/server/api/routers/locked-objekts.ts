@@ -12,15 +12,13 @@ export const lockedObjektsRouter = {
   list: pub.input(z.string()).handler(async ({ input: address }) => {
     const result = await db.query.lockedObjekts.findMany({
       columns: {
-        id: true,
         tokenId: true,
       },
       where: { address },
-      orderBy: { id: "desc" },
+      orderBy: { id: "asc" },
     });
     return result.map((a) => ({
       tokenId: a.tokenId.toString(),
-      order: a.id,
     }));
   }),
 

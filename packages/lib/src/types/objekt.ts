@@ -4,7 +4,7 @@ import type { Collection, Objekt } from "@repo/db/indexer/schema";
 type CollectionExtra = {
   tags?: string[];
   edition?: 1 | 2 | 3 | null;
-  entryAt?: Date;
+  order?: number;
 };
 
 type OwnedExtra = {
@@ -33,6 +33,11 @@ export type ValidObjekt = OwnedObjekt | IndexedObjekt;
 export type PinObjekt = {
   tokenId: string;
   order: number | null;
+};
+
+// Lock info
+export type LockObjekt = {
+  tokenId: string;
 };
 
 // Collection metadata

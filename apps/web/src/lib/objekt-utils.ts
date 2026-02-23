@@ -1,4 +1,9 @@
-import { type PinObjekt, shortformMembers, type ValidObjekt } from "@repo/lib/types/objekt";
+import {
+  type PinObjekt,
+  type LockObjekt,
+  shortformMembers,
+  type ValidObjekt,
+} from "@repo/lib/types/objekt";
 
 import { getCollectionEdition } from "./universal/collection-grid";
 import { replaceUrlSize } from "./utils";
@@ -46,7 +51,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
 export function augmentObjektsWithPinLock(
   objekts: ValidObjekt[],
   pins: PinObjekt[],
-  locked: PinObjekt[],
+  locked: LockObjekt[],
 ): ValidObjekt[] {
   const pinsMap = new Map(pins.map((pin) => [pin.tokenId, pin]));
   const lockedMap = new Map(locked.map((lock) => [lock.tokenId, lock]));

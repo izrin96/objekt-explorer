@@ -13,14 +13,13 @@ export const pinsRouter = {
     const result = await db.query.pins.findMany({
       columns: {
         tokenId: true,
-        createdAt: true,
       },
       where: { address },
-      orderBy: { id: "desc" },
+      orderBy: { id: "asc" },
     });
-    return result.map((a) => ({
+    return result.map((a, index) => ({
       tokenId: a.tokenId.toString(),
-      order: a.createdAt.getTime(),
+      order: index + 1,
     }));
   }),
 
@@ -40,10 +39,9 @@ export const pinsRouter = {
       await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
 
       await db.insert(pins).values(
-        tokenIds.map((tokenId, index) => ({
+        tokenIds.map((tokenId) => ({
           address,
           tokenId,
-          createdAt: new Date(Date.now() + index),
         })),
       );
     }),

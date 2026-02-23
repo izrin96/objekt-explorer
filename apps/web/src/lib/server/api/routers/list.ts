@@ -58,11 +58,10 @@ export const listRouter = {
         with: {
           entries: {
             orderBy: {
-              id: "desc",
+              id: "asc",
             },
             columns: {
               id: true,
-              createdAt: true,
               collectionSlug: true,
               objektId: true,
             },
@@ -102,13 +101,13 @@ export const listRouter = {
 
         // Map to OwnedObjekt format
         return result.entries
-          .map((entry) => {
+          .map((entry, index) => {
             const data = objektsData.find((o) => o.objekt.id === entry.objektId);
             if (!data || !data.collection) return null;
             const ownedObjekt = mapOwnedObjekt(data.objekt, data.collection);
             return Object.assign({}, ownedObjekt, {
               id: entry.id.toString(),
-              entryAt: entry.createdAt,
+              order: index + 1,
             });
           })
           .filter(filterNonNull);
@@ -269,10 +268,7 @@ export const listRouter = {
             )
             .returning();
 
-          return mapEntriesCollection(
-            result.toSorted((a, b) => b.id - a.id),
-            artists,
-          );
+          return mapEntriesCollection(result, artists);
         }
 
         const result = await db
@@ -285,10 +281,7 @@ export const listRouter = {
           )
           .returning();
 
-        return mapEntriesCollection(
-          result.toSorted((a, b) => b.id - a.id),
-          artists,
-        );
+        return mapEntriesCollection(result, artists);
       },
     ),
 
@@ -750,10 +743,12 @@ async function fetchCollections(slugs: string[], artists: ValidArtist[]) {
 }
 
 async function mapEntriesCollection(
-  result: Pick<ListEntry, "collectionSlug" | "id" | "createdAt">[],
+  result: Pick<ListEntry, "collectionSlug" | "id">[],
   artists: ValidArtist[],
 ) {
-  const validEntries = result.filter((a) => a.collectionSlug !== null);
+  const validEntries = result
+    .toSorted((a, b) => a.id - b.id)
+    .filter((a) => a.collectionSlug !== null);
 
   const slugs = validEntries.map((a) => a.collectionSlug!);
   const collections = await fetchCollections(slugs, artists);
@@ -761,10 +756,10 @@ async function mapEntriesCollection(
 
   return validEntries
     .filter((a) => collectionsMap.has(a.collectionSlug!))
-    .map(({ collectionSlug, id, createdAt }) =>
+    .map(({ collectionSlug, id }, index) =>
       Object.assign({}, collectionsMap.get(collectionSlug!), {
         id: id.toString(),
-        entryAt: createdAt,
+        order: index + 1,
       }),
     );
 }
