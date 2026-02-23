@@ -101,13 +101,13 @@ export const listRouter = {
 
         // Map to OwnedObjekt format
         return result.entries
-          .map((entry, index) => {
+          .map((entry) => {
             const data = objektsData.find((o) => o.objekt.id === entry.objektId);
             if (!data || !data.collection) return null;
             const ownedObjekt = mapOwnedObjekt(data.objekt, data.collection);
             return Object.assign({}, ownedObjekt, {
               id: entry.id.toString(),
-              order: index + 1,
+              order: entry.id,
             });
           })
           .filter(filterNonNull);
@@ -756,10 +756,10 @@ async function mapEntriesCollection(
 
   return validEntries
     .filter((a) => collectionsMap.has(a.collectionSlug!))
-    .map(({ collectionSlug, id }, index) =>
+    .map(({ collectionSlug, id }) =>
       Object.assign({}, collectionsMap.get(collectionSlug!), {
         id: id.toString(),
-        order: index + 1,
+        order: id,
       }),
     );
 }

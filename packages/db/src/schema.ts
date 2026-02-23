@@ -122,7 +122,10 @@ export const lockedObjekts = pgTable(
     address: citext("address", { length: 42 }).notNull(),
     tokenId: integer("token_id").notNull(),
   },
-  (t) => [index("locked_objekts_address_idx").on(t.address)],
+  (t) => [
+    index("locked_objekts_address_idx").on(t.address),
+    index("locked_objekts_token_id_idx").on(t.tokenId),
+  ],
 );
 
 export type AccessToken = typeof accessToken.$inferSelect;

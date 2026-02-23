@@ -12,14 +12,15 @@ export const pinsRouter = {
   list: pub.input(z.string()).handler(async ({ input: address }) => {
     const result = await db.query.pins.findMany({
       columns: {
+        id: true,
         tokenId: true,
       },
       where: { address },
       orderBy: { id: "asc" },
     });
-    return result.map((a, index) => ({
+    return result.map((a) => ({
       tokenId: a.tokenId.toString(),
-      order: index + 1,
+      order: a.id,
     }));
   }),
 

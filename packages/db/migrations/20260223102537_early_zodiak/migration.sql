@@ -1,0 +1,1 @@
+CREATE INDEX "locked_objekts_token_id_idx" ON "locked_objekts" ("token_id");
