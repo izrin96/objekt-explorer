@@ -4,7 +4,6 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
-import { isValid, parseISO } from "date-fns";
 import { and, desc, inArray, lte, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import * as z from "zod";
@@ -20,16 +19,6 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
 
-  // checkpoint: validate and parse the target date
-  let targetTimestamp: Date | undefined;
-  if (query.at) {
-    targetTimestamp = parseISO(query.at);
-    if (!isValid(targetTimestamp))
-      return Response.json({
-        collections: [],
-      });
-  }
-
   const whereQuery = and(
     ...(query.artist.length
       ? [
@@ -39,7 +28,7 @@ export async function GET(request: NextRequest) {
           ),
         ]
       : []),
-    ...(targetTimestamp ? [lte(collections.createdAt, targetTimestamp)] : []),
+    ...(query.at ? [lte(collections.createdAt, query.at)] : []),
     ne(collections.slug, "empty-collection"),
   );
 

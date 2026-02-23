@@ -87,7 +87,7 @@ export async function GET(_: Request, props: Params) {
     transfers: results.map((result) => ({
       id: result.id,
       to: result.to,
-      timestamp: result.timestamp,
+      timestamp: new Date(result.timestamp).toISOString(),
       nickname: knownAddresses.find(
         (a) => a.address.toLowerCase() === result.to.toLowerCase() && !a.hideNickname,
       )?.nickname,

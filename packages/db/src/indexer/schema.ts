@@ -18,7 +18,7 @@ export const collections = pgTable(
   {
     id: uuid().primaryKey(),
     contract: text().notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull(),
     slug: text().notNull(),
     collectionId: text("collection_id").notNull(),
     season: text().notNull(),
@@ -80,8 +80,8 @@ export const objekts = pgTable(
   {
     id: varchar().primaryKey(),
     owner: text().notNull(),
-    mintedAt: timestamp("minted_at", { withTimezone: true }).notNull(),
-    receivedAt: timestamp("received_at", { withTimezone: true }).notNull(),
+    mintedAt: timestamp("minted_at", { withTimezone: true, mode: "string" }).notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true, mode: "string" }).notNull(),
     serial: integer().notNull(),
     transferable: boolean().notNull(),
     collectionId: uuid("collection_id").references(() => collections.id, {
@@ -122,7 +122,7 @@ export const transfers = pgTable(
     id: uuid().primaryKey(),
     from: text().notNull(),
     to: text().notNull(),
-    timestamp: timestamp({ withTimezone: true }).notNull(),
+    timestamp: timestamp({ withTimezone: true, mode: "string" }).notNull(),
     tokenId: text("token_id").notNull(),
     hash: text().notNull(),
     objektId: varchar("objekt_id").references(() => objekts.id, {
@@ -216,7 +216,7 @@ export const votes = pgTable(
   {
     id: uuid().primaryKey(),
     from: text().notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true, mode: "string" }).notNull(),
     pollId: integer("poll_id").notNull(),
     amount: numeric().notNull(),
     blockNumber: integer("block_number"),

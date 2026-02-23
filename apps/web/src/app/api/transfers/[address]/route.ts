@@ -3,9 +3,8 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { mapOwnedObjekt } from "@repo/lib/server/objekt";
+import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
-import { isValid, parseISO } from "date-fns";
 import { type SQL, and, desc, eq, inArray, lt, lte, ne } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import * as z from "zod";
@@ -88,11 +87,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
 
   const addr = params.address.toLowerCase();
 
-  const targetTimestamp = query.at ? parseISO(query.at) : undefined;
-  if (targetTimestamp && !isValid(targetTimestamp)) {
-    return Response.json({ nextCursor: undefined, results: [] });
-  }
-
   const transferSelect = {
     transfer: {
       id: transfers.id,
@@ -106,7 +100,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
 
   const collectionFilters = getCollectionFilters(query);
   const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
-  const tsFilter = targetTimestamp ? [lte(transfers.timestamp, targetTimestamp)] : [];
+  const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
 
   const typeFilters = {
     all: null,
@@ -215,7 +209,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   return Response.json({
     nextCursor,
     results: slicedResults.map((row) => ({
-      transfer: row.transfer,
+      transfer: mapTransfer(row.transfer),
       objekt: mapOwnedObjekt(row.objekt, row.collection),
       nickname: {
         from: knownAddresses.find(

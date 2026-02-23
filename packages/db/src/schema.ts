@@ -31,7 +31,7 @@ export const userAddress = pgTable(
     userId: text("user_id").references(() => user.id, {
       onDelete: "set null",
     }),
-    linkedAt: timestamp("linked_at"),
+    linkedAt: timestamp("linked_at", { mode: "string" }),
     bannerImgUrl: text("banner_img_url"),
     bannerImgType: text("banner_img_type"),
     hideUser: boolean("hide_user").default(true),
@@ -64,7 +64,7 @@ export const lists = pgTable(
     slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
     hideUser: boolean("hide_user").default(true),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
     gridColumns: integer("grid_columns"),
     listType: varchar("list_type", { length: 20 })
       .notNull()
@@ -93,7 +93,7 @@ export const listEntries = pgTable(
       }),
     collectionSlug: varchar("collection_slug", { length: 255 }),
     objektId: varchar("objekt_id", { length: 255 }),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   },
   (t) => [
     index("list_entries_list_idx").on(t.listId),
@@ -110,7 +110,7 @@ export const pins = pgTable(
     id: serial("id").primaryKey(),
     address: citext("address", { length: 42 }).notNull(),
     tokenId: integer("token_id").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   },
   (t) => [index("pins_address_idx").on(t.address), index("pins_token_id_idx").on(t.tokenId)],
 );

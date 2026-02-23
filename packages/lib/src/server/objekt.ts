@@ -1,6 +1,6 @@
-import type { Objekt } from "@repo/db/indexer/schema";
+import type { Objekt, Transfer } from "@repo/db/indexer/schema";
 
-import type { IndexedObjekt, OwnedObjekt, ValidObjekt } from "../types/objekt";
+import type { IndexedObjekt, ValidObjekt } from "../types/objekt";
 
 /**
  * Override color for some collection
@@ -61,7 +61,7 @@ function getBandImageUrl(objekt: ValidObjekt) {
 /**
  * Apply color and band image overrides to any objekt type
  */
-export function overrideCollection<T extends ValidObjekt>(collection: T): T {
+export function overrideCollection<T extends ValidObjekt>(collection: T) {
   const overrides = collectionOverrides[collection.slug as keyof typeof collectionOverrides];
   const bandImageUrl = getBandImageUrl(collection);
 
@@ -69,20 +69,28 @@ export function overrideCollection<T extends ValidObjekt>(collection: T): T {
     ...collection,
     ...overrides,
     bandImageUrl,
+    createdAt: new Date(collection.createdAt).toISOString(),
   };
 }
 
 /**
  * Map database Objekt + Collection to OwnedObjekt type
  */
-export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt): OwnedObjekt {
+export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
   return {
     ...overrideCollection(collection),
     id: objekt.id,
     serial: objekt.serial,
-    receivedAt: objekt.receivedAt,
-    mintedAt: objekt.mintedAt,
+    receivedAt: new Date(objekt.receivedAt).toISOString(),
+    mintedAt: new Date(objekt.mintedAt).toISOString(),
     transferable: objekt.transferable,
     tokenId: objekt.id,
+  };
+}
+
+export function mapTransfer(transfer: Partial<Transfer>) {
+  return {
+    ...transfer,
+    timestamp: transfer.timestamp ? new Date(transfer.timestamp).toISOString() : null,
   };
 }

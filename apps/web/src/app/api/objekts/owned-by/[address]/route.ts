@@ -4,7 +4,6 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { isValid, parseISO } from "date-fns";
 import { and, desc, eq, getColumns, inArray, lte, ne, or, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import * as z from "zod";
@@ -64,9 +63,6 @@ export async function GET(request: NextRequest, props: Params) {
 
   // snapshot
   if (query.at) {
-    const targetTimestamp = parseISO(query.at);
-    if (!isValid(targetTimestamp)) return Response.json({ objekts: [] });
-
     const latest = indexer.$with("latest").as(
       indexer
         .selectDistinctOn([transfers.objektId], {
@@ -77,7 +73,7 @@ export async function GET(request: NextRequest, props: Params) {
         .from(transfers)
         .where(
           and(
-            lte(transfers.timestamp, targetTimestamp),
+            lte(transfers.timestamp, query.at),
             or(eq(transfers.from, addr), eq(transfers.to, addr)),
           ),
         )

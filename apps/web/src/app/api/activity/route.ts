@@ -2,7 +2,7 @@ import { validArtists, validOnlineTypes } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
-import { mapOwnedObjekt } from "@repo/lib/server/objekt";
+import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { type SQL, and, desc, eq, inArray, lt, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
         from: from?.hideNickname ? undefined : from?.nickname,
         to: to?.hideNickname ? undefined : to?.nickname,
       },
-      transfer: t.transfer,
+      transfer: mapTransfer(t.transfer),
       objekt: mapOwnedObjekt(t.objekt, t.collection),
     };
   });
