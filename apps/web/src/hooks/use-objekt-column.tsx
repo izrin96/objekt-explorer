@@ -60,14 +60,20 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   );
 
   useEffect(() => {
-    setOverrideColumn(queryColumn ?? initialColumn);
-  }, [initialColumn, queryColumn]);
+    if (!hasHydrated) return;
 
-  useEffect(() => {
-    if (overrideColumn !== null && overrideColumn !== undefined && !toastShown.current) {
+    const newOverride = queryColumn ?? initialColumn;
+    setOverrideColumn(newOverride);
+
+    if (
+      newOverride !== null &&
+      newOverride !== undefined &&
+      newOverride !== columnStore &&
+      !toastShown.current
+    ) {
       toastShown.current = true;
       toast.info(t("title"), {
-        description: t("description", { count: String(overrideColumn) }),
+        description: t("description", { count: String(newOverride) }),
         action: {
           label: t("revert"),
           onClick: () => setOverrideColumn(null),
@@ -75,10 +81,10 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
         closeButton: true,
         duration: 15000,
       });
-    } else if (overrideColumn === null || overrideColumn === undefined) {
+    } else if (newOverride === null || newOverride === undefined) {
       toastShown.current = false;
     }
-  }, [overrideColumn, t]);
+  }, [hasHydrated, initialColumn, queryColumn, columnStore, t]);
 
   useEffect(() => {
     if (!hasHydrated || !breakpointReady) return;
