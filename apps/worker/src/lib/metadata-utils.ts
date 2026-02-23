@@ -52,9 +52,9 @@ export async function fetchMetadata(tokenId: string): Promise<CosmoObjektMetadat
     }
 
     // if 404 error, proceed with v3
-    console.log(
-      `[fetchMetadata] Error fetching v1 metadata (status: ${error.status}). Trying with v3..`,
-    );
+    // console.log(
+    //   `[fetchMetadata] Error fetching v1 metadata (status: ${error.status}). Trying with v3..`,
+    // );
   }
 
   try {
