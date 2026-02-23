@@ -158,7 +158,7 @@ export const listRouter = {
         profileSlug: l.profileSlug,
         listType: l.listType,
         profileAddress: l.profileAddress,
-        nickname: l.userAddress?.hideNickname ? l.userAddress.nickname : null,
+        nickname: l.userAddress?.hideNickname ? null : (l.userAddress?.nickname ?? null),
       }));
     }),
 
@@ -708,7 +708,7 @@ export async function fetchOwnedLists(userId: string) {
     profileSlug: l.profileSlug,
     listType: l.listType,
     profileAddress: l.profileAddress,
-    nickname: l.userAddress?.hideNickname ? l.userAddress.nickname : null,
+    nickname: l.userAddress?.hideNickname ? null : (l.userAddress?.nickname ?? null),
   }));
 }
 
