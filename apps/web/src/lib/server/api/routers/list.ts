@@ -11,7 +11,7 @@ import {
   invalidateProfileList,
   removeObjektIdsFromProfileList,
 } from "@repo/lib/server/redis-profile-lists";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 import * as z from "zod";
@@ -142,20 +142,24 @@ export const listRouter = {
           profileAddress: profileAddress.toLowerCase(),
         },
         orderBy: { id: "desc" },
+        with: {
+          userAddress: {
+            columns: {
+              hideNickname: true,
+              nickname: true,
+            },
+          },
+        },
       });
 
-      // Batch-fetch nicknames for profile addresses
-      const addresses = result.map((l) => l.profileAddress).filter(filterNonNull);
-
-      const nicknameMap = await fetchNicknamesForAddresses(addresses);
-
-      return result.map((l) =>
-        Object.assign({}, l, {
-          nickname: l.profileAddress
-            ? (nicknameMap.get(l.profileAddress.toLowerCase()) ?? null)
-            : null,
-        }),
-      );
+      return result.map((l) => ({
+        name: l.name,
+        slug: l.slug,
+        profileSlug: l.profileSlug,
+        listType: l.listType,
+        profileAddress: l.profileAddress,
+        nickname: l.userAddress?.hideNickname ? l.userAddress.nickname : null,
+      }));
     }),
 
   addObjektsToList: authed
@@ -346,37 +350,42 @@ export const listRouter = {
         const newProfileAddress =
           list.listType === "profile" ? list.profileAddress : (profileAddress ?? null);
 
-        // Generate profileSlug when binding/unbinding normal list
         let newProfileSlug: string | null = null;
         const wasBound = list.profileAddress !== null;
         const isBound = newProfileAddress !== null && newProfileAddress !== "";
 
         if (list.listType === "normal" && wasBound !== isBound) {
           if (isBound && newProfileAddress) {
-            // Binding to profile: generate slugified name
-            const listName = name || list.name;
-            newProfileSlug = await generateProfileListSlug(
-              listName,
+            newProfileSlug = await generateProfileSlug(
+              name ?? list.name,
               newProfileAddress.toLowerCase(),
+              list.id,
             );
           }
-          // Unbinding: profileSlug stays null
-        } else if (list.listType === "normal" && isBound && name && name !== list.name) {
-          // Name changed while bound: regenerate slug with new name
-          newProfileSlug = await generateProfileListSlug(name, newProfileAddress.toLowerCase());
-        } else if (list.listType === "normal" && wasBound && isBound) {
-          // Already bound and not changing - keep existing profileSlug
-          newProfileSlug = list.profileSlug;
-        } else if (list.listType === "profile") {
-          // Profile list: regenerate slug if name changed, otherwise keep existing
-          if (name && name !== list.name) {
-            newProfileSlug = await generateProfileListSlug(
+        } else if (list.listType === "normal" && isBound && name) {
+          if (slugifyName(name) !== slugifyName(list.name)) {
+            newProfileSlug = await generateProfileSlug(
               name,
-              list.profileAddress!.toLowerCase(),
+              newProfileAddress!.toLowerCase(),
+              list.id,
             );
           } else {
             newProfileSlug = list.profileSlug;
           }
+        } else if (list.listType === "normal" && wasBound && isBound) {
+          newProfileSlug = list.profileSlug;
+        } else if (list.listType === "profile" && name) {
+          if (slugifyName(name) !== slugifyName(list.name)) {
+            newProfileSlug = await generateProfileSlug(
+              name,
+              list.profileAddress!.toLowerCase(),
+              list.id,
+            );
+          } else {
+            newProfileSlug = list.profileSlug;
+          }
+        } else {
+          newProfileSlug = list.profileSlug;
         }
 
         await db
@@ -453,7 +462,7 @@ export const listRouter = {
         const slug = nanoid(9);
         let profileSlug: string | null = null;
         if ((listType === "profile" || profileAddress) && profileAddress) {
-          profileSlug = await generateProfileListSlug(name, profileAddress.toLowerCase());
+          profileSlug = await generateProfileSlug(name, profileAddress.toLowerCase());
         }
 
         const [result] = await db
@@ -499,21 +508,6 @@ export const listRouter = {
     }),
 };
 
-async function fetchNicknamesForAddresses(
-  addresses: string[],
-): Promise<Map<string, string | null>> {
-  if (addresses.length === 0) {
-    return new Map();
-  }
-
-  const profiles = await db.query.userAddress.findMany({
-    columns: { address: true, nickname: true },
-    where: { address: { in: addresses } },
-  });
-
-  return new Map(profiles.map((p) => [p.address.toLowerCase(), p.nickname]));
-}
-
 async function checkProfileOwnership(address: string, userId: string): Promise<void> {
   const owned = await db.query.userAddress.findFirst({
     where: {
@@ -529,19 +523,33 @@ async function checkProfileOwnership(address: string, userId: string): Promise<v
   }
 }
 
-async function generateProfileListSlug(name: string, profileAddress: string): Promise<string> {
-  const baseSlug = slugify(name, { lower: true, strict: true });
+function slugifyName(name: string): string {
+  return slugify(name, { lower: true, strict: true });
+}
+
+async function generateProfileSlug(
+  name: string,
+  profileAddress: string,
+  excludeListId?: number,
+): Promise<string> {
+  const baseSlug = slugifyName(name);
   let slug = baseSlug;
   let counter = 2;
 
-  // Check for collisions within this profile's lists
   while (true) {
-    const existing = await db.query.lists.findFirst({
-      where: { profileAddress, profileSlug: slug },
-      columns: { id: true },
-    });
+    const existing = await db
+      .select({ id: lists.id })
+      .from(lists)
+      .where(
+        and(
+          eq(lists.profileAddress, profileAddress),
+          eq(lists.profileSlug, slug),
+          ...(excludeListId ? [ne(lists.id, excludeListId)] : []),
+        ),
+      )
+      .limit(1);
 
-    if (!existing) break;
+    if (existing.length === 0) break;
     slug = `${baseSlug}-${counter}`;
     counter++;
   }
@@ -684,18 +692,24 @@ export async function fetchOwnedLists(userId: string) {
     },
     where: { userId },
     orderBy: { id: "desc" },
+    with: {
+      userAddress: {
+        columns: {
+          hideNickname: true,
+          nickname: true,
+        },
+      },
+    },
   });
 
-  // Batch-fetch nicknames for profile addresses
-  const addresses = result.map((l) => l.profileAddress).filter(filterNonNull);
-
-  const nicknameMap = await fetchNicknamesForAddresses(addresses);
-
-  return result.map((l) =>
-    Object.assign({}, l, {
-      nickname: l.profileAddress ? (nicknameMap.get(l.profileAddress.toLowerCase()) ?? null) : null,
-    }),
-  );
+  return result.map((l) => ({
+    name: l.name,
+    slug: l.slug,
+    profileSlug: l.profileSlug,
+    listType: l.listType,
+    profileAddress: l.profileAddress,
+    nickname: l.userAddress?.hideNickname ? l.userAddress.nickname : null,
+  }));
 }
 
 async function findOwnedList(slug: string, userId: string) {

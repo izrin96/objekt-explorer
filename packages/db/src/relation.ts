@@ -10,6 +10,7 @@ export const relations = defineRelations(schema, (r) => ({
     }),
     pins: r.many.pins(),
     locks: r.many.lockedObjekts(),
+    lists: r.many.lists(),
   },
   user: {
     userAddresses: r.many.userAddress(),
@@ -19,6 +20,10 @@ export const relations = defineRelations(schema, (r) => ({
     user: r.one.user({
       from: r.lists.userId,
       to: r.user.id,
+    }),
+    userAddress: r.one.userAddress({
+      from: r.lists.profileAddress,
+      to: r.userAddress.address,
     }),
   },
   listEntries: {
