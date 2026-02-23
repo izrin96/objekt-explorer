@@ -683,6 +683,11 @@
       "failed_get_info": "Failed to get info. Please sign in with {provider} and try again."
     }
   },
+  "column_override": {
+    "title": "Column setting overridden",
+    "description": "Using {count} columns set by owner",
+    "revert": "Revert"
+  },
   "page_titles": {
     "activity": "Activity",
     "live": "Live",
