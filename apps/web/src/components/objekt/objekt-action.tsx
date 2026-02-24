@@ -24,7 +24,7 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
       intent="plain"
       className={cn(
         "hidden bg-bg/80 px-2 text-fg hover:bg-bg group-hover:block",
-        isSelected && "block",
+        isSelected && "block bg-fg text-bg hover:bg-fg",
       )}
       onPress={() => objektSelect(objekt)}
     >
