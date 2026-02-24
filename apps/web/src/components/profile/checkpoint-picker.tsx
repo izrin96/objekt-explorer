@@ -11,21 +11,21 @@ import {
 } from "@internationalized/date";
 import { ClockCounterClockwiseIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
 
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
 import {
-  ModalBody,
-  ModalClose,
-  ModalContent,
-  ModalDescription,
-  ModalFooter,
-  ModalHeader,
-  ModalTitle,
-} from "../ui/modal";
+  PopoverBody,
+  PopoverClose,
+  PopoverContent,
+  PopoverDescription,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+} from "../ui/popover";
 import { TimeField, TimeInput } from "../ui/time-field";
 
 const TIME_ZONE = getLocalTimeZone();
@@ -60,6 +60,7 @@ export default function CheckpointPicker() {
   const t = useTranslations("checkpoint");
   const [filters, setFilters] = useFilters();
   const currentValue = safeParse(filters.at);
+  const triggerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -82,17 +83,27 @@ export default function CheckpointPicker() {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button intent="outline" data-selected={filters.at} onPress={() => setIsOpen(true)}>
+      <Button
+        ref={triggerRef}
+        intent="outline"
+        data-selected={filters.at}
+        onPress={() => setIsOpen(true)}
+      >
         <ClockCounterClockwiseIcon data-slot="icon" />
         {formatCheckpointLabel(filters.at, t("title"))}
       </Button>
-      <ModalContent size="sm" isOpen={isOpen} onOpenChange={setIsOpen}>
-        <ModalHeader>
-          <ModalTitle>{t("title")}</ModalTitle>
-          <ModalDescription>{t("description")}</ModalDescription>
-        </ModalHeader>
-        <ModalBody className="space-y-4 select-none">
-          <div className="flex h-110 flex-col items-center gap-3 sm:h-86">
+      <PopoverContent
+        placement="bottom left"
+        triggerRef={triggerRef}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+      >
+        <PopoverHeader>
+          <PopoverTitle>{t("title")}</PopoverTitle>
+          <PopoverDescription>{t("description")}</PopoverDescription>
+        </PopoverHeader>
+        <PopoverBody className="space-y-4 select-none">
+          <div className="flex flex-col items-center gap-3">
             <Calendar
               value={selectedDate}
               onChange={setSelectedDate}
@@ -108,14 +119,14 @@ export default function CheckpointPicker() {
               <TimeInput />
             </TimeField>
           </div>
-        </ModalBody>
-        <ModalFooter>
-          <ModalClose>{t("close")}</ModalClose>
+        </PopoverBody>
+        <PopoverFooter>
+          <PopoverClose onPress={() => setIsOpen(false)}>{t("close")}</PopoverClose>
           <Button onPress={handleApply} isDisabled={!selectedDate || !selectedTime}>
             {t("apply")}
           </Button>
-        </ModalFooter>
-      </ModalContent>
+        </PopoverFooter>
+      </PopoverContent>
 
       {filters.at && (
         <Button intent="outline" onPress={() => setFilters({ at: null })}>
