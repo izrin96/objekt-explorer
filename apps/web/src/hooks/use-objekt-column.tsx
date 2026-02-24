@@ -79,7 +79,8 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
           onClick: () => setOverrideColumn(null),
         },
         closeButton: true,
-        duration: 5000,
+        duration: 7000,
+        position: "bottom-center",
       });
     } else if (newOverride === null || newOverride === undefined) {
       toastShown.current = false;
