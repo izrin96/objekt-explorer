@@ -156,7 +156,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
                         className={cn("flex flex-1 justify-between leading-none", "items-center")}
                       >
                         <div className="grid gap-1.5">
-                          <span className="text-muted-fg">{(payload as any).name}</span>
+                          <span className="text-fg">{(payload as any).name}</span>
                         </div>
                         <span className="text-fg font-medium tabular-nums">
                           {(payload as any).percentage}% ({value?.toLocaleString()})
@@ -244,7 +244,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
                         className={cn("flex flex-1 justify-between leading-none", "items-center")}
                       >
                         <div className="grid gap-1.5">
-                          <span className="text-muted-fg">{(payload as any).name}</span>
+                          <span className="text-fg">{(payload as any).name}</span>
                         </div>
                         <span className="text-fg font-medium tabular-nums">
                           {(payload as any).percentage}% ({value?.toLocaleString()})
