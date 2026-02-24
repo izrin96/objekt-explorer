@@ -247,7 +247,7 @@ function ProfileObjekt({
       </span>
 
       <div className="[&>*>*]:will-change-transform">
-        <WindowVirtualizer>{virtualList}</WindowVirtualizer>
+        <WindowVirtualizer key={columns}>{virtualList}</WindowVirtualizer>
       </div>
     </>
   );

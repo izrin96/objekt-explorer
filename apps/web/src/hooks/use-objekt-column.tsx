@@ -72,14 +72,20 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
       !toastShown.current
     ) {
       toastShown.current = true;
-      toast.info(t("title"), {
+      toast(t("title"), {
         description: t("description", { count: String(newOverride) }),
         action: {
           label: t("revert"),
           onClick: () => setOverrideColumn(null),
         },
-        closeButton: true,
-        duration: 7000,
+        classNames: {
+          cancelButton: "!bg-muted",
+        },
+        cancel: {
+          label: t("dismiss"),
+          onClick: () => {},
+        },
+        duration: 5000,
         position: "bottom-center",
       });
     } else if (newOverride === null || newOverride === undefined) {

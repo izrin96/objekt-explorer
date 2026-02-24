@@ -686,7 +686,8 @@
   "column_override": {
     "title": "Column setting overridden",
     "description": "Using {count} columns set by owner",
-    "revert": "Revert"
+    "revert": "Revert",
+    "dismiss": "Dismiss"
   },
   "page_titles": {
     "activity": "Activity",

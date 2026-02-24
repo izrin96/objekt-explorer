@@ -686,7 +686,8 @@
   "column_override": {
     "title": "열 설정 재정의됨",
     "description": "소유자가 설정한 {count}열을 사용 중입니다",
-    "revert": "되돌리기"
+    "revert": "되돌리기",
+    "dismiss": "닫기"
   },
   "page_titles": {
     "activity": "활동",
