@@ -79,7 +79,7 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
           onClick: () => setOverrideColumn(null),
         },
         closeButton: true,
-        duration: 15000,
+        duration: 5000,
       });
     } else if (newOverride === null || newOverride === undefined) {
       toastShown.current = false;
