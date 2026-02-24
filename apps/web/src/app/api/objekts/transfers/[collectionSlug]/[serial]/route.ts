@@ -52,6 +52,9 @@ export async function GET(_: Request, props: Params) {
     columns: {
       privateSerial: true,
     },
+    orderBy: {
+      id: "desc",
+    },
   });
 
   const isPrivate = owner?.privateSerial ?? false;

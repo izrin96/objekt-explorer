@@ -61,6 +61,9 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       privateProfile: true,
       hideTransfer: true,
     },
+    orderBy: {
+      id: "desc",
+    },
   });
 
   const isPrivate = (owner?.privateProfile ?? false) || (owner?.hideTransfer ?? false);

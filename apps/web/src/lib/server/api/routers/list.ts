@@ -11,6 +11,7 @@ import {
   invalidateProfileList,
   removeObjektIdsFromProfileList,
 } from "@repo/lib/server/redis-profile-lists";
+import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import slugify from "slugify";
@@ -142,15 +143,10 @@ export const listRouter = {
           profileAddress: profileAddress.toLowerCase(),
         },
         orderBy: { id: "desc" },
-        with: {
-          userAddress: {
-            columns: {
-              hideNickname: true,
-              nickname: true,
-            },
-          },
-        },
       });
+      const knownAddresses = await fetchKnownAddresses(
+        result.map((a) => a.profileAddress).filter(filterNonNull),
+      );
 
       return result.map((l) => ({
         name: l.name,
@@ -158,7 +154,9 @@ export const listRouter = {
         profileSlug: l.profileSlug,
         listType: l.listType,
         profileAddress: l.profileAddress,
-        nickname: l.userAddress?.hideNickname ? null : (l.userAddress?.nickname ?? null),
+        nickname: knownAddresses.find(
+          (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
+        )?.nickname,
       }));
     }),
 
@@ -692,15 +690,10 @@ export async function fetchOwnedLists(userId: string) {
     },
     where: { userId },
     orderBy: { id: "desc" },
-    with: {
-      userAddress: {
-        columns: {
-          hideNickname: true,
-          nickname: true,
-        },
-      },
-    },
   });
+  const knownAddresses = await fetchKnownAddresses(
+    result.map((a) => a.profileAddress).filter(filterNonNull),
+  );
 
   return result.map((l) => ({
     name: l.name,
@@ -708,7 +701,9 @@ export async function fetchOwnedLists(userId: string) {
     profileSlug: l.profileSlug,
     listType: l.listType,
     profileAddress: l.profileAddress,
-    nickname: l.userAddress?.hideNickname ? null : (l.userAddress?.nickname ?? null),
+    nickname: knownAddresses.find(
+      (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
+    )?.nickname,
   }));
 }
 

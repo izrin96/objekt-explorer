@@ -1,7 +1,7 @@
 import { search } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { like } from "drizzle-orm";
+import { desc, like } from "drizzle-orm";
 import { after, type NextRequest } from "next/server";
 
 import { cacheUsers } from "@/lib/server/auth";
@@ -38,13 +38,14 @@ export async function GET(request: NextRequest) {
 
   // fallback to db
   const users = await db
-    .select({
+    .selectDistinctOn([userAddress.nickname], {
       id: userAddress.id,
       nickname: userAddress.nickname,
       address: userAddress.address,
     })
     .from(userAddress)
     .where(like(userAddress.nickname, `${query}%`))
+    .orderBy(desc(userAddress.id))
     .limit(100);
 
   return Response.json({

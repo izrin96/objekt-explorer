@@ -108,6 +108,9 @@ async function fetchOwnedProfile(address: string, userId: string) {
       gridColumns: true,
     },
     where: { address, userId },
+    orderBy: {
+      id: "desc",
+    },
   });
 
   if (!profile) {

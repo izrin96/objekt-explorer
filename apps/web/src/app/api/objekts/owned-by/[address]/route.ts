@@ -41,6 +41,9 @@ export async function GET(request: NextRequest, props: Params) {
     columns: {
       privateProfile: true,
     },
+    orderBy: {
+      id: "desc",
+    },
   });
 
   const isPrivate = owner?.privateProfile ?? false;

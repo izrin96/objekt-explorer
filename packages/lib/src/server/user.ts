@@ -1,6 +1,6 @@
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { inArray } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 
 export async function fetchKnownAddresses(addresses: string[]) {
   if (addresses.length === 0) return [];
@@ -16,17 +16,19 @@ export async function fetchKnownAddresses(addresses: string[]) {
         userAddress.address,
         addresses.map((a) => a.toLowerCase()),
       ),
-    );
+    )
+    .orderBy(desc(userAddress.id));
   return result;
 }
 
 export async function fetchUserProfiles(id: string) {
-  const result = await db.query.userAddress.findMany({
-    columns: {
-      address: true,
-      nickname: true,
-    },
-    where: { userId: id },
-  });
+  const result = await db
+    .select({
+      address: userAddress.address,
+      nickname: userAddress.nickname,
+    })
+    .from(userAddress)
+    .where(eq(userAddress.userId, id))
+    .orderBy(desc(userAddress.id));
   return result;
 }
