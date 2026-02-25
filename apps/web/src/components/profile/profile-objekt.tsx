@@ -138,7 +138,7 @@ function ProfileObjekt({
             rowIndex={rowIndex}
             items={items}
           >
-            {({ item, index }) => {
+            {({ item }) => {
               const [objekt] = item as [ValidObjekt];
               const isOwned = isObjektOwned(objekt);
               return (
@@ -166,7 +166,6 @@ function ProfileObjekt({
                     {({ isSelected }) => (
                       <ObjektView
                         objekts={item}
-                        priority={index < columns * 3}
                         isSelected={isSelected}
                         hideLabel={hideLabel}
                         // for profile

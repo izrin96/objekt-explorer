@@ -87,7 +87,7 @@ function ListView() {
             rowIndex={rowIndex}
             items={items}
           >
-            {({ item, index }) => {
+            {({ item }) => {
               const [objekt] = item as [ValidObjekt];
               return (
                 <ObjektModal
@@ -108,7 +108,6 @@ function ListView() {
                     {({ isSelected }) => (
                       <ObjektView
                         objekts={item}
-                        priority={index < columns * 3}
                         isSelected={isSelected}
                         hideLabel={hideLabel}
                         showCount

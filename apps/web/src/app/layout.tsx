@@ -7,8 +7,6 @@ import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/f
 import { type PropsWithChildren } from "react";
 
 import "@/lib/orpc/server";
-import { preconnect } from "react-dom";
-
 import { Analytics } from "@/components/analytics";
 import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
@@ -88,10 +86,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  preconnect("https://imagedelivery.net");
-  preconnect("https://resources.cosmo.fans");
-  preconnect("https://static.cosmo.fans");
-
   const locale = await getLocale();
 
   return (

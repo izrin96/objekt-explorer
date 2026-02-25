@@ -15,7 +15,6 @@ import ObjektSidebar from "./objekt-sidebar";
 type Props = PropsWithChildren<{
   objekts: ValidObjekt[];
   isFade?: boolean;
-  priority?: boolean;
   unobtainable?: boolean;
   showCount?: boolean;
   showSerial?: boolean;
@@ -25,7 +24,6 @@ type Props = PropsWithChildren<{
 
 export default function ObjektView({
   objekts,
-  priority = false,
   isFade = false,
   unobtainable = false,
   showCount = false,
@@ -65,7 +63,6 @@ export default function ObjektView({
         <NextImage
           draggable={false}
           onClick={ctx.handleClick}
-          priority={priority}
           className="h-full w-full object-cover"
           src={resizedUrl}
           width={582}

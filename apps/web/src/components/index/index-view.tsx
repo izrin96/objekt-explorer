@@ -79,7 +79,7 @@ function IndexView() {
             rowIndex={rowIndex}
             items={items}
           >
-            {({ item, index }) => {
+            {({ item }) => {
               const [objekt] = item as [ValidObjekt];
               return (
                 <ObjektModal
@@ -96,12 +96,7 @@ function IndexView() {
                 >
                   <ObjektViewSelectable objekt={objekt}>
                     {({ isSelected }) => (
-                      <ObjektView
-                        objekts={item}
-                        priority={index < columns * 3}
-                        isSelected={isSelected}
-                        hideLabel={hideLabel}
-                      >
+                      <ObjektView objekts={item} isSelected={isSelected} hideLabel={hideLabel}>
                         {session && (
                           <div className="flex items-start self-start justify-self-end">
                             <ObjektSelect objekt={objekt} />

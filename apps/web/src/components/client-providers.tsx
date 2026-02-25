@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type PropsWithChildren, useState } from "react";
 import { RouterProvider } from "react-aria-components";
+import { preconnect } from "react-dom";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { createQueryClient } from "@/lib/query/client";
@@ -19,6 +20,10 @@ declare module "react-aria-components" {
 }
 
 export default function ClientProviders({ children }: PropsWithChildren) {
+  preconnect("https://imagedelivery.net", { crossOrigin: "" });
+  preconnect("https://resources.cosmo.fans", { crossOrigin: "" });
+  preconnect("https://static.cosmo.fans", { crossOrigin: "" });
+
   const router = useRouter();
   const [queryClient] = useState(() => createQueryClient());
 
