@@ -191,12 +191,13 @@ export function ToggleLockMenuItem({
   );
 }
 
-export function SelectMenuItem({ objekt }: { objekt: ValidObjekt }) {
-  const objektSelect = useObjektSelect((a) => a.select);
+export function SelectMenuItem({ objekts }: { objekts: ValidObjekt[] }) {
+  const [objekt] = objekts as [ValidObjekt];
+  const objektSelect = useObjektSelect((a) => a.batchSelect);
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
   const t = useTranslations("objekt_menu");
   return (
-    <MenuItem onAction={() => objektSelect(objekt)}>
+    <MenuItem onAction={() => objektSelect(objekts)}>
       <CheckIcon data-slot="icon" />
       <MenuLabel>{isSelected ? t("unselect") : t("select")}</MenuLabel>
     </MenuItem>

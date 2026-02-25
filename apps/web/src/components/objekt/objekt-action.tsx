@@ -15,9 +15,10 @@ import { cn } from "@/utils/classes";
 import { Button } from "../ui/button";
 import { Menu, MenuContent } from "../ui/menu";
 
-export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
+export function ObjektSelect({ objekts }: { objekts: ValidObjekt[] }) {
+  const [objekt] = objekts as [ValidObjekt];
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
-  const objektSelect = useObjektSelect((a) => a.select);
+  const objektSelect = useObjektSelect((a) => a.batchSelect);
   return (
     <Button
       size="sq-xs"
@@ -26,7 +27,7 @@ export function ObjektSelect({ objekt }: { objekt: ValidObjekt }) {
         "hidden bg-bg/80 px-2 text-fg hover:bg-bg group-hover:block",
         isSelected && "block bg-fg text-bg hover:bg-fg",
       )}
-      onPress={() => objektSelect(objekt)}
+      onPress={() => objektSelect(objekts)}
     >
       <CheckIcon className="size-3" weight="bold" />
     </Button>

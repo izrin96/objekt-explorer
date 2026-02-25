@@ -150,7 +150,7 @@ function ProfileObjekt({
                     session &&
                     !filters.at && (
                       <ObjektStaticMenu>
-                        <SelectMenuItem objekt={objekt} />
+                        <SelectMenuItem objekts={item} />
                         {isProfileAuthed && isOwned && (
                           <>
                             <TogglePinMenuItem isPin={objekt.isPin} tokenId={objekt.id} />
@@ -175,7 +175,7 @@ function ProfileObjekt({
                       >
                         {session && !filters.at && (
                           <div className="flex items-start self-start justify-self-end">
-                            <ObjektSelect objekt={objekt} />
+                            <ObjektSelect objekts={item} />
                             <ObjektHoverMenu>
                               {isProfileAuthed && isOwned && (
                                 <>

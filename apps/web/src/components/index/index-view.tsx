@@ -88,7 +88,7 @@ function IndexView() {
                   menu={
                     session && (
                       <ObjektStaticMenu>
-                        <SelectMenuItem objekt={objekt} />
+                        <SelectMenuItem objekts={item} />
                         <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
                     )
@@ -99,7 +99,7 @@ function IndexView() {
                       <ObjektView objekts={item} isSelected={isSelected} hideLabel={hideLabel}>
                         {session && (
                           <div className="flex items-start self-start justify-self-end">
-                            <ObjektSelect objekt={objekt} />
+                            <ObjektSelect objekts={item} />
                             <ObjektHoverMenu>
                               <AddToListMenu objekt={objekt} />
                             </ObjektHoverMenu>

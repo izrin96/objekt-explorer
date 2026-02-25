@@ -97,7 +97,7 @@ function ListView() {
                   menu={
                     session && (
                       <ObjektStaticMenu>
-                        <SelectMenuItem objekt={objekt} />
+                        <SelectMenuItem objekts={item} />
                         {isOwned && <RemoveFromListMenu objekt={objekt} />}
                         <AddToListMenu objekt={objekt} />
                       </ObjektStaticMenu>
@@ -115,7 +115,7 @@ function ListView() {
                       >
                         {session && (
                           <div className="flex items-start self-start justify-self-end">
-                            <ObjektSelect objekt={objekt} />
+                            <ObjektSelect objekts={item} />
                             <ObjektHoverMenu>
                               {isOwned && <RemoveFromListMenu objekt={objekt} />}
                               <AddToListMenu objekt={objekt} />
