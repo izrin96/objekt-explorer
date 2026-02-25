@@ -11,12 +11,12 @@ type ObjektSelectedState = {
   toggleMode: () => void;
   selected: Map<string, ValidObjekt>;
   getSelected: () => ValidObjekt[];
-  select: (selected: ValidObjekt) => void;
+  select: (selected: ValidObjekt[]) => void;
   batchSelect: (selected: ValidObjekt[]) => void;
   isSelected: (selected: ValidObjekt) => boolean;
   reset: () => void;
   handleAction: (callback: () => void) => void;
-  handleSelect: (objekt: ValidObjekt, callback: () => void) => void;
+  handleSelect: (objekts: ValidObjekt[], callback: () => void) => void;
 };
 
 const createObjektSelectStore = (errorMessage: string) =>
@@ -35,10 +35,12 @@ const createObjektSelectStore = (errorMessage: string) =>
     select: (selected) =>
       set((state) => {
         const map = new Map(state.selected);
-        if (map.has(selected.id)) {
-          map.delete(selected.id);
-        } else {
-          map.set(selected.id, selected);
+        for (const item of selected) {
+          if (map.has(item.id)) {
+            map.delete(item.id);
+          } else {
+            map.set(item.id, item);
+          }
         }
         return { selected: map, mode: map.size > 0 };
       }),
@@ -55,7 +57,7 @@ const createObjektSelectStore = (errorMessage: string) =>
 
     reset: () => set(() => ({ selected: new Map(), mode: false })),
 
-    handleAction: (callback: () => void) => {
+    handleAction: (callback) => {
       if (get().selected.size === 0) {
         toast.error(errorMessage);
       } else {
@@ -63,9 +65,9 @@ const createObjektSelectStore = (errorMessage: string) =>
       }
     },
 
-    handleSelect: (objekt: ValidObjekt, callback: () => void) => {
+    handleSelect: (objekts, callback) => {
       if (get().mode) {
-        get().select(objekt);
+        get().select(objekts);
       } else {
         callback();
       }

@@ -157,12 +157,12 @@ function ProfileObjekt({
                             <ToggleLockMenuItem isLocked={objekt.isLocked} tokenId={objekt.id} />
                           </>
                         )}
-                        <AddToListMenu objekt={objekt} address={address} />
+                        <AddToListMenu objekts={[objekt]} address={address} />
                       </ObjektStaticMenu>
                     )
                   }
                 >
-                  <ObjektViewSelectable objekt={objekt}>
+                  <ObjektViewSelectable objekts={item}>
                     {({ isSelected }) => (
                       <ObjektView
                         objekts={item}
@@ -186,7 +186,7 @@ function ProfileObjekt({
                                   />
                                 </>
                               )}
-                              <AddToListMenu objekt={objekt} address={address} />
+                              <AddToListMenu objekts={[objekt]} address={address} />
                             </ObjektHoverMenu>
                           </div>
                         )}

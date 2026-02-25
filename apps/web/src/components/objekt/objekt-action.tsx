@@ -18,7 +18,7 @@ import { Menu, MenuContent } from "../ui/menu";
 export function ObjektSelect({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts as [ValidObjekt];
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
-  const objektSelect = useObjektSelect((a) => a.batchSelect);
+  const objektSelect = useObjektSelect((a) => a.select);
   return (
     <Button
       size="sq-xs"

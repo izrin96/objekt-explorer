@@ -55,6 +55,7 @@
     "clear": "초기화",
     "add_to_list": "목록에 추가",
     "remove_from_list": "목록에서 제거",
+    "set_price": "가격 설정",
     "reset_filter": "필터 초기화",
     "quick_search": "빠른 검색",
     "disable_pin": "고정 해제",
@@ -123,10 +124,10 @@
     "yes": "예",
     "no": "아니오",
     "error_fetching_metadata": "메타데이터 가져오기 오류",
-    "objekt_private": "비공개 Objekt",
+    "objekt_private": "비공개 오브젝트",
     "not_found_objekt": "찾을 수 없음",
     "token_id_copied": "토큰 ID 복사됨",
-    "must_select_one": "최소 1개의 Objekt를 선택해야 합니다"
+    "must_select_one": "최소 1개의 오브젝트를 선택해야 합니다"
   },
   "nav": {
     "activity": "활동",
@@ -281,12 +282,12 @@
       "hide_nickname_label": "Cosmo ID 숨기기",
       "hide_nickname_desc": "활동, 거래 내역, 시리얼 조회 및 프로필에서 Cosmo ID를 숨깁니다.",
       "private_serial_label": "시리얼 조회에서 숨기기",
-      "private_serial_desc": "다른 사람이 시리얼 번호로 objekt를 찾지 못하도록 합니다. 본인만 볼 수 있습니다.",
+      "private_serial_desc": "다른 사람이 시리얼 번호로 오브젝트를 찾지 못하도록 합니다. 본인만 볼 수 있습니다.",
       "hide_transfer_label": "거래 내역 숨기기",
       "hide_transfer_desc": "프로필 거래 내역을 숨깁니다. 본인만 볼 수 있습니다.",
       "private_profile_label": "비공개 프로필",
       "private_profile_desc": "Cosmo 프로필을 비공개로 설정합니다. 본인만 볼 수 있습니다.",
-      "grid_columns_label": "Objekt 열",
+      "grid_columns_label": "오브젝트 열",
       "grid_columns_desc": "방문 시 사용할 열 수입니다. 방문자는 여전히 원하는 열로 변경할 수 있습니다. 팁: URL 파라미터(?column=)로도 재정의할 수 있습니다.",
       "grid_columns_not_set": "설정 안 됨",
       "grid_columns_count": "{count}열",
@@ -362,6 +363,11 @@
       "name_label": "이름",
       "name_placeholder": "내 목록",
       "name_required": "이름을 입력해주세요.",
+      "description_label": "설명",
+      "description_placeholder": "설명 (선택 사항)",
+      "currency_label": "통화",
+      "currency_placeholder": "없음",
+      "currency_desc": "이 목록의 오브젝트 가격에 사용할 통화",
       "list_type_label": "목록 유형",
       "list_type_desc": "일반 목록 또는 프로필 연결 목록 중 선택하세요",
       "normal_list_label": "일반 목록",
@@ -371,8 +377,8 @@
       "profile_required": "프로필을 선택해주세요.",
       "profile_label": "프로필",
       "profile_placeholder": "프로필 선택",
-      "profile_desc": "이 목록이 추적할 프로필의 objekt를 선택하세요",
-      "display_profile_label": "프로필에 표시 (선택사항)",
+      "profile_desc": "이 목록이 추적할 프로필의 오브젝트를 선택하세요",
+      "display_profile_label": "프로필에 표시",
       "display_profile_desc": "이 목록을 표시할 프로필의 목록 탭을 선택하세요",
       "display_profile_none": "없음",
       "hide_user_label": "사용자 숨기기",
@@ -385,14 +391,19 @@
       "title": "목록 편집",
       "description": "목록을 관리하세요",
       "name_label": "이름",
+      "description_label": "설명",
+      "description_placeholder": "설명 (선택 사항)",
+      "currency_label": "통화",
+      "currency_placeholder": "없음",
+      "currency_desc": "이 목록의 오브젝트 가격에 사용할 통화",
       "name_placeholder": "내 목록",
       "name_required": "이름을 입력해주세요.",
       "hide_user_label": "사용자 숨기기",
       "hide_user_desc": "이 목록에서 {siteName} 계정을 숨깁니다",
-      "display_profile_label": "프로필에 표시 (선택사항)",
+      "display_profile_label": "프로필에 표시",
       "display_profile_desc": "이 목록을 표시할 프로필의 목록 탭을 선택하세요",
       "display_profile_none": "없음",
-      "objekt_columns_label": "Objekt 열",
+      "objekt_columns_label": "오브젝트 열",
       "objekt_columns_desc": "방문 시 사용할 열 수입니다. 방문자는 여전히 원하는 열로 변경할 수 있습니다. 팁: URL 파라미터(?column=)로도 재정의할 수 있습니다.",
       "objekt_columns_not_set": "설정 안 됨",
       "objekt_columns_count": "{count}열",
@@ -415,22 +426,30 @@
     },
     "manage_objekt": {
       "add_title": "목록에 추가",
-      "remove_title": "Objekt 제거",
+      "remove_title": "오브젝트 제거",
+      "set_price_title": "가격 설정",
+      "set_price_label": "가격",
+      "set_price_desc": "선택한 모든 오브젝트에 동일한 가격 설정",
+      "set_price_success": "가격이 업데이트되었습니다",
+      "set_price_error": "가격 업데이트 오류",
+      "set_price_qyop": "가격 제안",
+      "set_price_clear": "가격 초기화",
       "no_list_message": "아직 목록이 없습니다.",
       "create_one_here": "여기서 만들기",
       "list_label": "내 목록",
       "list_placeholder": "목록 선택",
       "list_required": "목록을 선택해주세요.",
       "skip_dups_label": "중복 방지",
-      "skip_dups_desc": "추가할 때 동일한 objekt 건너뛰기",
+      "skip_dups_desc": "추가할 때 동일한 오브젝트 건너뛰기",
       "add_button": "추가",
-      "remove_description": "목록에서 선택한 objekt가 영구적으로 제거됩니다. 계속하시겠습니까?",
+      "remove_description": "목록에서 선택한 오브젝트가 영구적으로 제거됩니다. 계속하시겠습니까?",
       "continue_button": "계속"
     }
   },
   "objekt_menu": {
     "add_to_list": "목록에 추가",
     "remove_from_list": "목록에서 제거",
+    "set_price": "가격 설정",
     "pin": "고정",
     "unpin": "고정 해제",
     "lock": "잠금",
@@ -441,38 +460,38 @@
   },
   "actions": {
     "pin": {
-      "success_single": "Objekt가 고정되었습니다",
-      "success_multiple": "{count}개의 objekt가 고정되었습니다",
-      "error_single": "Objekt 고정 오류",
-      "error_multiple": "{count}개의 objekt 고정 오류"
+      "success_single": "오브젝트가 고정되었습니다",
+      "success_multiple": "{count}개의 오브젝트가 고정되었습니다",
+      "error_single": "오브젝트 고정 오류",
+      "error_multiple": "{count}개의 오브젝트 고정 오류"
     },
     "unpin": {
-      "success_single": "Objekt 고정이 해제되었습니다",
-      "success_multiple": "{count}개의 objekt 고정이 해제되었습니다",
-      "error_single": "Objekt 고정 해제 오류",
-      "error_multiple": "{count}개의 objekt 고정 해제 오류"
+      "success_single": "오브젝트 고정이 해제되었습니다",
+      "success_multiple": "{count}개의 오브젝트 고정이 해제되었습니다",
+      "error_single": "오브젝트 고정 해제 오류",
+      "error_multiple": "{count}개의 오브젝트 고정 해제 오류"
     },
     "lock": {
-      "success_single": "Objekt가 잠겼습니다",
-      "success_multiple": "{count}개의 objekt가 잠겼습니다",
-      "error_single": "Objekt 잠금 오류",
-      "error_multiple": "{count}개의 objekt 잠금 오류"
+      "success_single": "오브젝트가 잠겼습니다",
+      "success_multiple": "{count}개의 오브젝트가 잠겼습니다",
+      "error_single": "오브젝트 잠금 오류",
+      "error_multiple": "{count}개의 오브젝트 잠금 오류"
     },
     "unlock": {
-      "success_single": "Objekt 잠금이 해제되었습니다",
-      "success_multiple": "{count}개의 objekt 잠금이 해제되었습니다",
-      "error_single": "Objekt 잠금 해제 오류",
-      "error_multiple": "{count}개의 objekt 잠금 해제 오류"
+      "success_single": "오브젝트 잠금이 해제되었습니다",
+      "success_multiple": "{count}개의 오브젝트 잠금이 해제되었습니다",
+      "error_single": "오브젝트 잠금 해제 오류",
+      "error_multiple": "{count}개의 오브젝트 잠금 해제 오류"
     },
     "add_to_list": {
-      "success_single": "Objekt가 목록에 추가되었습니다",
-      "success_multiple": "{count}개의 objekt가 목록에 추가되었습니다",
-      "error": "Objekt 목록 추가 오류"
+      "success_single": "오브젝트가 목록에 추가되었습니다",
+      "success_multiple": "{count}개의 오브젝트가 목록에 추가되었습니다",
+      "error": "오브젝트 목록 추가 오류"
     },
     "remove_from_list": {
-      "success_single": "Objekt가 목록에서 제거되었습니다",
-      "success_multiple": "{count}개의 objekt가 목록에서 제거되었습니다",
-      "error": "Objekt 목록 제거 오류"
+      "success_single": "오브젝트가 목록에서 제거되었습니다",
+      "success_multiple": "{count}개의 오브젝트가 목록에서 제거되었습니다",
+      "error": "오브젝트 목록 제거 오류"
     }
   },
   "common": {
@@ -521,7 +540,7 @@
         "wide": "넓은 레이아웃",
         "wide_desc": "컬렉션 그리드에 전체 너비 사용",
         "hide_label": "라벨 숨김",
-        "hide_label_desc": "Objekt의 컬렉션 라벨 숨김"
+        "hide_label_desc": "오브젝트의 컬렉션 라벨 숨김"
       }
     }
   },
@@ -550,8 +569,8 @@
     "generate_button": "생성"
   },
   "activity": {
-    "title": "Objekt 활동",
-    "description": "실시간 최신 objekt 활동",
+    "title": "오브젝트 활동",
+    "description": "실시간 최신 오브젝트 활동",
     "beta": "베타",
     "event_type": {
       "mint": "민팅",
@@ -560,7 +579,7 @@
     },
     "table": {
       "event": "이벤트",
-      "objekt": "Objekt",
+      "objekt": "오브젝트",
       "serial": "시리얼",
       "from": "보낸 사람",
       "to": "받는 사람",
@@ -592,7 +611,7 @@
   },
   "discord_format_modal": {
     "title": "Discord 형식 생성",
-    "description": "Objekt 목록은 현재 필터를 기반으로 합니다.",
+    "description": "오브젝트 목록은 현재 필터를 기반으로 합니다.",
     "button": "Discord 형식",
     "generate": "생성"
   },
@@ -605,18 +624,18 @@
   },
   "progress": {
     "select_prompt": "최소 1명의 아티스트 또는 1명의 멤버를 선택하세요",
-    "loading_objekts": "Objekt 로딩 중",
+    "loading_objekts": "오브젝트 로딩 중",
     "progress_bar_label": "진행률 바"
   },
   "stats": {
-    "loading_objekts": "Objekt 로딩 중",
+    "loading_objekts": "오브젝트 로딩 중",
     "breakdown_member": {
-      "title": "멤버별 Objekt 분석",
-      "description": "멤버별 총 objekt"
+      "title": "멤버별 오브젝트 분석",
+      "description": "멤버별 총 오브젝트"
     },
     "breakdown_season": {
-      "title": "시즌별 Objekt 분석",
-      "description": "시즌별 총 objekt"
+      "title": "시즌별 오브젝트 분석",
+      "description": "시즌별 총 오브젝트"
     },
     "member_progress": {
       "title": "멤버 진행률",
@@ -636,14 +655,14 @@
     "history_private": "거래 내역 비공개",
     "table_headers": {
       "date": "날짜",
-      "objekt": "Objekt",
+      "objekt": "오브젝트",
       "serial": "시리얼",
       "action": "행동",
       "user": "사용자"
     },
     "actions": {
-      "received_from": "받은 사람",
-      "sent_to": "보낸 사람"
+      "received_from": "받음",
+      "sent_to": "보냄"
     },
     "cosmo": "COSMO",
     "cosmo_spin": "COSMO 스핀"

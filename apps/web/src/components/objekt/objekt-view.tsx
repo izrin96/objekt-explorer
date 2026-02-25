@@ -1,3 +1,4 @@
+import { NumberFormatter } from "@internationalized/number";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useTranslations } from "next-intl";
 import NextImage from "next/image";
@@ -12,6 +13,17 @@ import { Badge } from "../ui/badge";
 import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
 
+function formatListPrice(price: number, currency: string): string {
+  try {
+    return new NumberFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
+      style: "currency",
+      currency,
+    }).format(price);
+  } catch {
+    return `${price.toLocaleString()} ${currency}`;
+  }
+}
+
 type Props = PropsWithChildren<{
   objekts: ValidObjekt[];
   isFade?: boolean;
@@ -20,6 +32,7 @@ type Props = PropsWithChildren<{
   showSerial?: boolean;
   isSelected?: boolean;
   hideLabel?: boolean;
+  listCurrency?: string | null;
 }>;
 
 export default function ObjektView({
@@ -30,6 +43,7 @@ export default function ObjektView({
   showSerial = false,
   isSelected = false,
   hideLabel = false,
+  listCurrency,
   children,
 }: Props) {
   const t = useTranslations("objekt");
@@ -49,9 +63,8 @@ export default function ObjektView({
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
   return (
-    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")}>
+    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")} style={css}>
       <div
-        style={css}
         ref={ref}
         className={cn(
           "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md transition-all",
@@ -69,6 +82,7 @@ export default function ObjektView({
           height={900}
           alt={objekt.collectionId}
           onLoad={() => setLoaded(true)}
+          fetchPriority="high"
         />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
@@ -79,8 +93,8 @@ export default function ObjektView({
 
         {children}
       </div>
-      {!hideLabel && (
-        <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
+      <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
+        {!hideLabel && (
           <Badge
             intent="secondary"
             className="text-fg bg-muted cursor-pointer text-[0.65rem] sm:text-xs"
@@ -90,13 +104,30 @@ export default function ObjektView({
             {getCollectionShortId(objekt)}
             {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
           </Badge>
-          {unobtainable && (
-            <Badge intent="danger" isCircle={false}>
-              {t("unobtainable")}
+        )}
+
+        {objekt.isQyop ? (
+          <Badge intent="secondary" className="font-semibold">
+            QYOP
+          </Badge>
+        ) : (
+          objekt.listPrice !== undefined &&
+          objekt.listPrice !== null &&
+          listCurrency && (
+            <Badge
+              intent="outline"
+              className="bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)"
+            >
+              {formatListPrice(objekt.listPrice, listCurrency)}
             </Badge>
-          )}
-        </div>
-      )}
+          )
+        )}
+        {unobtainable && (
+          <Badge intent="danger" isCircle={false}>
+            {t("unobtainable")}
+          </Badge>
+        )}
+      </div>
     </div>
   );
 }

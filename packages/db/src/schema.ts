@@ -4,6 +4,7 @@ import {
   index,
   integer,
   pgTable,
+  real,
   serial,
   text,
   timestamp,
@@ -72,6 +73,8 @@ export const lists = pgTable(
       .$type<"normal" | "profile">(),
     profileAddress: citext("profile_address", { length: 42 }),
     profileSlug: varchar("profile_slug", { length: 100 }),
+    description: text("description"),
+    currency: varchar("currency", { length: 10 }),
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),
@@ -93,6 +96,8 @@ export const listEntries = pgTable(
       }),
     collectionSlug: varchar("collection_slug", { length: 255 }),
     objektId: varchar("objekt_id", { length: 255 }),
+    price: real("price"),
+    isQyop: boolean("is_qyop").notNull().default(false),
     createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   },
   (t) => [

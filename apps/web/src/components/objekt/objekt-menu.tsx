@@ -2,6 +2,7 @@
 
 import {
   CheckIcon,
+  CurrencyDollarIcon,
   DotsThreeVerticalIcon,
   LockSimpleIcon,
   LockSimpleOpenIcon,
@@ -13,7 +14,7 @@ import {
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import type { PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
@@ -41,7 +42,7 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
   );
 }
 
-export function AddToListMenu({ objekt, address }: { objekt: ValidObjekt; address?: string }) {
+export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; address?: string }) {
   const { data: lists } = useQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const t = useTranslations("objekt_menu");
@@ -61,8 +62,8 @@ export function AddToListMenu({ objekt, address }: { objekt: ValidObjekt; addres
     addToList.mutate({
       slug: slug,
       skipDups: false,
-      objekts: listType === "profile" ? [objekt.id] : undefined,
-      collectionSlugs: listType === "normal" ? [objekt.slug] : undefined,
+      objekts: listType === "profile" ? objekts.map((a) => a.id) : undefined,
+      collectionSlugs: listType === "normal" ? objekts.map((a) => a.slug) : undefined,
     });
   };
 
@@ -104,7 +105,7 @@ export function AddToListMenu({ objekt, address }: { objekt: ValidObjekt; addres
   );
 }
 
-export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
+export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
   const target = useTarget((a) => a.list)!;
   const removeObjektsFromList = useRemoveFromList();
   const t = useTranslations("objekt_menu");
@@ -114,7 +115,7 @@ export function RemoveFromListMenu({ objekt }: { objekt: ValidObjekt }) {
       onAction={() =>
         removeObjektsFromList.mutate({
           slug: target.slug,
-          ids: [Number(objekt.id)],
+          ids: objekts.map((a) => Number(a.id)),
         })
       }
       intent="danger"
@@ -191,9 +192,19 @@ export function ToggleLockMenuItem({
   );
 }
 
+export function SetPriceMenuItem({ onAction }: { onAction: () => void }) {
+  const t = useTranslations("objekt_menu");
+  return (
+    <MenuItem onAction={onAction}>
+      <CurrencyDollarIcon data-slot="icon" />
+      <MenuLabel>{t("set_price")}</MenuLabel>
+    </MenuItem>
+  );
+}
+
 export function SelectMenuItem({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts as [ValidObjekt];
-  const objektSelect = useObjektSelect((a) => a.batchSelect);
+  const objektSelect = useObjektSelect((a) => a.select);
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
   const t = useTranslations("objekt_menu");
   return (

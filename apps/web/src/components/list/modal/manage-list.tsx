@@ -1,6 +1,11 @@
 "use client";
 
-import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  QueryErrorResetBoundary,
+  useMutation,
+  useSuspenseQueries,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
@@ -38,6 +43,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { TextField } from "@/components/ui/text-field";
+import { Textarea } from "@/components/ui/textarea";
 import { useUserProfiles } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
@@ -69,9 +75,12 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
 function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   const t = useTranslations("list.create");
   const { data: profiles } = useUserProfiles();
+  const { data: currencies } = useSuspenseQuery(orpc.meta.supportedCurrencies.queryOptions());
   const { handleSubmit, control, watch } = useForm({
     defaultValues: {
       name: "",
+      description: "",
+      currency: "",
       hideUser: true,
       listType: "normal" as "normal" | "profile",
       profileAddress: "",
@@ -98,6 +107,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   const onSubmit = handleSubmit((data) => {
     createList.mutate({
       name: data.name,
+      description: data.description || null,
+      currency: data.currency || null,
       hideUser: data.hideUser,
       listType: data.listType,
       profileAddress: data.profileAddress || undefined,
@@ -130,6 +141,49 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               <Input placeholder={t("name_placeholder")} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
+          )}
+        />
+        <Controller
+          control={control}
+          name="description"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
+              <Label>{t("description_label")}</Label>
+              <Textarea placeholder={t("description_placeholder")} rows={3} />
+            </TextField>
+          )}
+        />
+        <Controller
+          control={control}
+          name="currency"
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <Select
+              aria-label={t("currency_label")}
+              placeholder={t("currency_placeholder")}
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+            >
+              <Label>{t("currency_label")}</Label>
+              <Description>{t("currency_desc")}</Description>
+              <SelectTrigger />
+              <SelectContent>
+                <SelectItem id="" textValue="None">
+                  None
+                </SelectItem>
+                {currencies.map((currency) => (
+                  <SelectItem key={currency} id={currency} textValue={currency}>
+                    {currency}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+              <FieldError>{error?.message}</FieldError>
+            </Select>
           )}
         />
         <Controller
@@ -304,12 +358,15 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   const router = useRouter();
   const t = useTranslations("list.edit");
   const { data: profiles } = useUserProfiles();
-  const { data } = useSuspenseQuery(
-    orpc.list.find.queryOptions({
-      input: slug,
-      staleTime: 0,
-    }),
-  );
+  const [{ data: currencies }, { data }] = useSuspenseQueries({
+    queries: [
+      orpc.meta.supportedCurrencies.queryOptions(),
+      orpc.list.find.queryOptions({
+        input: slug,
+        staleTime: 0,
+      }),
+    ],
+  });
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
       onSuccess: (_, { slug }, _o, { client }) => {
@@ -328,6 +385,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
 
   const values = {
     name: data.name,
+    description: data.description ?? "",
+    currency: data.currency ?? "",
     hideUser: data.hideUser ?? false,
     gridColumns: data.gridColumns ?? 0,
     profileAddress: data.profileAddress ?? "",
@@ -342,6 +401,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
     editList.mutate({
       slug,
       name: data.name,
+      description: data.description || null,
+      currency: data.currency || null,
       hideUser: data.hideUser,
       gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
       profileAddress: data.profileAddress === "" ? null : data.profileAddress,
@@ -379,12 +440,46 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
 
         <Controller
           control={control}
-          name="hideUser"
+          name="description"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_user_label")}</Label>
-              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
-            </Checkbox>
+            <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
+              <Label>{t("description_label")}</Label>
+              <Textarea placeholder={t("description_placeholder")} rows={3} />
+            </TextField>
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="currency"
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <Select
+              aria-label={t("currency_label")}
+              placeholder={t("currency_placeholder")}
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+            >
+              <Label>{t("currency_label")}</Label>
+              <Description>{t("currency_desc")}</Description>
+              <SelectTrigger />
+              <SelectContent>
+                <SelectItem id="" textValue="None">
+                  None
+                </SelectItem>
+                {currencies.map((currency) => (
+                  <SelectItem key={currency} id={currency} textValue={currency}>
+                    {currency}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+              <FieldError>{error?.message}</FieldError>
+            </Select>
           )}
         />
 
@@ -427,6 +522,17 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             )}
           />
         )}
+
+        <Controller
+          control={control}
+          name="hideUser"
+          render={({ field: { name, value, onChange, onBlur } }) => (
+            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+              <Label>{t("hide_user_label")}</Label>
+              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
+            </Checkbox>
+          )}
+        />
 
         <Controller
           control={control}

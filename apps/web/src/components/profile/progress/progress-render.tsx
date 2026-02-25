@@ -201,7 +201,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                         menu={
                           session && (
                             <ObjektStaticMenu>
-                              <AddToListMenu objekt={objekt} />
+                              <AddToListMenu objekts={[objekt]} />
                             </ObjektStaticMenu>
                           )
                         }
@@ -216,7 +216,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                           {session && (
                             <div className="flex items-start self-start justify-self-end">
                               <ObjektHoverMenu>
-                                <AddToListMenu objekt={objekt} />
+                                <AddToListMenu objekts={[objekt]} />
                               </ObjektHoverMenu>
                             </div>
                           )}

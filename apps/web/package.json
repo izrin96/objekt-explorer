@@ -20,6 +20,7 @@
     "@base-ui/react": "^1.2.0",
     "@heroicons/react": "^2.2.0",
     "@internationalized/date": "^3.11.0",
+    "@internationalized/number": "^3.6.5",
     "@orpc/client": "^1.13.5",
     "@orpc/server": "^1.13.5",
     "@orpc/tanstack-query": "^1.13.5",

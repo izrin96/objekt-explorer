@@ -1,0 +1,1 @@
+ALTER TABLE "list_entries" ADD COLUMN "is_qyop" boolean DEFAULT false NOT NULL;

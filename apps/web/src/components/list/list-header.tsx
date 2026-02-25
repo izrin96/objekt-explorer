@@ -82,9 +82,11 @@ export default function ListHeader() {
             </div>
           </div>
         )}
-
         {isListAuthed && <EditList slug={list.slug} />}
       </div>
+      {list.description && (
+        <p className="text-fg text-sm whitespace-pre-wrap">{list.description}</p>
+      )}
     </div>
   );
 }

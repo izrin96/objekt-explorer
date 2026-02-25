@@ -5,6 +5,8 @@ type CollectionExtra = {
   tags?: string[];
   edition?: 1 | 2 | 3 | null;
   order?: number;
+  listPrice?: number | null;
+  isQyop?: boolean;
 };
 
 type OwnedExtra = {

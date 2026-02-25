@@ -52,8 +52,8 @@ export async function GET(request: NextRequest) {
 
     return {
       nickname: {
-        from: from?.hideNickname ? undefined : from?.nickname,
-        to: to?.hideNickname ? undefined : to?.nickname,
+        from: from?.hideNickname ? undefined : (from?.nickname ?? undefined),
+        to: to?.hideNickname ? undefined : (to?.nickname ?? undefined),
       },
       transfer: mapTransfer(t.transfer),
       objekt: mapOwnedObjekt(t.objekt, t.collection),

@@ -3,7 +3,8 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { Suspense, useMemo } from "react";
+import { type PropsWithChildren, use } from "react";
+import { createContext, Suspense, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { WindowVirtualizer } from "virtua";
 
@@ -19,7 +20,7 @@ import { makeObjektRows, ObjektsRenderRow } from "../collection/collection-rende
 import { GroupLabelRender } from "../collection/label-render";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
-import { AddToList, RemoveFromList } from "../filters/objekt/add-remove-list";
+import { AddToList, RemoveFromList, SetPrice } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
 import {
@@ -27,12 +28,14 @@ import {
   ObjektStaticMenu,
   RemoveFromListMenu,
   SelectMenuItem,
+  SetPriceMenuItem,
 } from "../objekt/objekt-menu";
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
 import { Loader } from "../ui/loader";
 import Filter from "./filter";
+import { SetPriceModal } from "./modal/set-price-modal";
 
 export default function ListRender() {
   const list = useTarget((a) => a.list)!;
@@ -42,21 +45,23 @@ export default function ListRender() {
     <ObjektColumnProvider initialColumn={list.gridColumns}>
       <ObjektSelectProvider>
         <ObjektModalProvider initialTab={isProfileList ? "owned" : "trades"}>
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center">
-                      <Loader variant="ring" />
-                    </div>
-                  }
-                >
-                  <ListView />
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
+          <SetPriceProvider>
+            <QueryErrorResetBoundary>
+              {({ reset }) => (
+                <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                  <Suspense
+                    fallback={
+                      <div className="flex justify-center">
+                        <Loader variant="ring" />
+                      </div>
+                    }
+                  >
+                    <ListView />
+                  </Suspense>
+                </ErrorBoundary>
+              )}
+            </QueryErrorResetBoundary>
+          </SetPriceProvider>
         </ObjektModalProvider>
       </ObjektSelectProvider>
     </ObjektColumnProvider>
@@ -71,6 +76,7 @@ function ListView() {
   const { columns } = useObjektColumn();
   const { shaped, filtered, grouped, filters } = useListObjekts();
   const list = useTarget((a) => a.list)!;
+  const { openSetPrice } = use(SetPriceContext);
 
   const isProfileList = list.listType === "profile";
 
@@ -98,13 +104,16 @@ function ListView() {
                     session && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekts={item} />
-                        {isOwned && <RemoveFromListMenu objekt={objekt} />}
-                        <AddToListMenu objekt={objekt} />
+                        {isOwned && <RemoveFromListMenu objekts={item} />}
+                        {isOwned && list.currency && (
+                          <SetPriceMenuItem onAction={() => openSetPrice(item)} />
+                        )}
+                        <AddToListMenu objekts={[objekt]} />
                       </ObjektStaticMenu>
                     )
                   }
                 >
-                  <ObjektViewSelectable objekt={objekt}>
+                  <ObjektViewSelectable objekts={item}>
                     {({ isSelected }) => (
                       <ObjektView
                         objekts={item}
@@ -112,13 +121,17 @@ function ListView() {
                         hideLabel={hideLabel}
                         showCount
                         showSerial={!filters.grouped && isProfileList}
+                        listCurrency={list.currency}
                       >
                         {session && (
                           <div className="flex items-start self-start justify-self-end">
                             <ObjektSelect objekts={item} />
                             <ObjektHoverMenu>
-                              {isOwned && <RemoveFromListMenu objekt={objekt} />}
-                              <AddToListMenu objekt={objekt} />
+                              {isOwned && <RemoveFromListMenu objekts={item} />}
+                              {isOwned && list.currency && (
+                                <SetPriceMenuItem onAction={() => openSetPrice(item)} />
+                              )}
+                              <AddToListMenu objekts={[objekt]} />
                             </ObjektHoverMenu>
                           </div>
                         )}
@@ -132,7 +145,7 @@ function ListView() {
         ),
       }),
     ]);
-  }, [shaped, columns, isOwned, session, hideLabel]);
+  }, [shaped, columns, isOwned, session, hideLabel, list.currency, openSetPrice]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -140,6 +153,7 @@ function ListView() {
         {session && (
           <FloatingSelectMode objekts={filtered}>
             {isOwned && <RemoveFromList size="sm" />}
+            {isOwned && list.currency && <SetPrice size="sm" />}
             <AddToList size="sm" />
           </FloatingSelectMode>
         )}
@@ -149,6 +163,7 @@ function ListView() {
             {session && (
               <SelectMode objekts={filtered}>
                 {isOwned && <RemoveFromList />}
+                {isOwned && list.currency && <SetPrice />}
                 <AddToList />
               </SelectMode>
             )}
@@ -164,5 +179,28 @@ function ListView() {
         <WindowVirtualizer key={columns}>{virtualList}</WindowVirtualizer>
       </div>
     </div>
+  );
+}
+
+const SetPriceContext = createContext<{ openSetPrice: (val: ValidObjekt[]) => void }>({
+  openSetPrice: () => {},
+});
+
+function SetPriceProvider({ children }: PropsWithChildren) {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<ValidObjekt[]>([]);
+
+  return (
+    <SetPriceContext
+      value={{
+        openSetPrice: (val) => {
+          setSelected(val);
+          setOpen(true);
+        },
+      }}
+    >
+      <SetPriceModal open={open} setOpen={setOpen} objekts={selected} />
+      {children}
+    </SetPriceContext>
   );
 }

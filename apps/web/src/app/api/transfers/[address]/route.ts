@@ -215,12 +215,14 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
       transfer: mapTransfer(row.transfer),
       objekt: mapOwnedObjekt(row.objekt, row.collection),
       nickname: {
-        from: knownAddresses.find(
-          (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
-        )?.nickname,
-        to: knownAddresses.find(
-          (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
-        )?.nickname,
+        from:
+          knownAddresses.find(
+            (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
+          )?.nickname ?? undefined,
+        to:
+          knownAddresses.find(
+            (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
+          )?.nickname ?? undefined,
       },
     })),
   });

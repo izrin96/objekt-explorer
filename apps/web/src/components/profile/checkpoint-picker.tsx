@@ -1,7 +1,10 @@
 "use client";
 
-import { type Time, CalendarDate, GregorianCalendar } from "@internationalized/date";
 import {
+  type Time,
+  CalendarDate,
+  DateFormatter,
+  GregorianCalendar,
   getLocalTimeZone,
   now,
   parseAbsolute,
@@ -45,7 +48,7 @@ function formatCheckpointLabel(isoStr: string | null, defaultLabel: string) {
   if (!parsed) return defaultLabel;
 
   const date = parsed.toDate();
-  return new Intl.DateTimeFormat(undefined, {
+  return new DateFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
     month: "long",
     day: "numeric",
     year: "numeric",

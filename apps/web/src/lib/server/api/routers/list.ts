@@ -34,6 +34,8 @@ export const listRouter = {
         gridColumns: true,
         listType: true,
         profileAddress: true,
+        description: true,
+        currency: true,
       },
       where: { slug, userId: session.user.id },
     });
@@ -65,6 +67,8 @@ export const listRouter = {
               id: true,
               collectionSlug: true,
               objektId: true,
+              price: true,
+              isQyop: true,
             },
           },
         },
@@ -109,6 +113,8 @@ export const listRouter = {
             return Object.assign({}, ownedObjekt, {
               id: entry.id.toString(),
               order: entry.id,
+              listPrice: entry.price ?? undefined,
+              isQyop: entry.isQyop ?? undefined,
             });
           })
           .filter(filterNonNull);
@@ -154,9 +160,10 @@ export const listRouter = {
         profileSlug: l.profileSlug,
         listType: l.listType,
         profileAddress: l.profileAddress,
-        nickname: knownAddresses.find(
-          (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
-        )?.nickname,
+        nickname:
+          knownAddresses.find(
+            (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
+          )?.nickname ?? undefined,
       }));
     }),
 
@@ -328,6 +335,8 @@ export const listRouter = {
         hideUser: z.boolean().optional(),
         gridColumns: z.number().min(2).max(18).optional().nullable(),
         profileAddress: z.string().optional().nullable(),
+        description: z.string().optional().nullable(),
+        currency: z.string().max(10).optional().nullable(),
       }),
     )
     .handler(
@@ -429,11 +438,13 @@ export const listRouter = {
         hideUser: z.boolean(),
         listType: z.enum(["normal", "profile"]).default("normal"),
         profileAddress: z.string().optional(),
+        description: z.string().optional().nullable(),
+        currency: z.string().max(10).optional().nullable(),
       }),
     )
     .handler(
       async ({
-        input: { name, hideUser, listType, profileAddress },
+        input: { name, hideUser, listType, profileAddress, description, currency },
         context: {
           session: { user },
         },
@@ -473,6 +484,8 @@ export const listRouter = {
             hideUser,
             listType,
             profileAddress: profileAddress?.toLowerCase(),
+            description,
+            currency,
           })
           .returning({ insertedId: lists.id });
 
@@ -485,6 +498,39 @@ export const listRouter = {
               objektIds: [],
             });
           }
+        }
+      },
+    ),
+
+  updateEntryPrices: authed
+    .input(
+      z.object({
+        slug: z.string(),
+        updates: z.array(
+          z.object({
+            entryId: z.number(),
+            price: z.number().nullable(),
+            isQyop: z.boolean(),
+          }),
+        ),
+      }),
+    )
+    .handler(
+      async ({
+        input: { slug, updates },
+        context: {
+          session: { user },
+        },
+      }) => {
+        if (updates.length === 0) return;
+
+        const list = await findOwnedList(slug, user.id);
+
+        for (const { entryId, price, isQyop } of updates) {
+          await db
+            .update(listEntries)
+            .set({ price, isQyop })
+            .where(and(eq(listEntries.id, entryId), eq(listEntries.listId, list.id)));
         }
       },
     ),
@@ -646,6 +692,8 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
       listType: true,
       profileAddress: true,
       profileSlug: true,
+      description: true,
+      currency: true,
     },
     with: {
       user: {
@@ -676,6 +724,8 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
     listType: result.listType,
     profileAddress: result.profileAddress,
     ownerId: result.userId,
+    description: result.description,
+    currency: result.currency,
   };
 }
 
@@ -701,9 +751,10 @@ export async function fetchOwnedLists(userId: string) {
     profileSlug: l.profileSlug,
     listType: l.listType,
     profileAddress: l.profileAddress,
-    nickname: knownAddresses.find(
-      (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
-    )?.nickname,
+    nickname:
+      knownAddresses.find(
+        (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
+      )?.nickname ?? undefined,
   }));
 }
 
@@ -752,7 +803,7 @@ async function fetchCollections(slugs: string[], artists: ValidArtist[]) {
 }
 
 async function mapEntriesCollection(
-  result: Pick<ListEntry, "collectionSlug" | "id">[],
+  result: Pick<ListEntry, "collectionSlug" | "id" | "price" | "isQyop">[],
   artists: ValidArtist[],
 ) {
   const validEntries = result
@@ -765,10 +816,12 @@ async function mapEntriesCollection(
 
   return validEntries
     .filter((a) => collectionsMap.has(a.collectionSlug!))
-    .map(({ collectionSlug, id }) =>
+    .map(({ collectionSlug, id, price, isQyop }) =>
       Object.assign({}, collectionsMap.get(collectionSlug!), {
         id: id.toString(),
         order: id,
+        listPrice: price ?? undefined,
+        isQyop: isQyop ?? undefined,
       }),
     );
 }

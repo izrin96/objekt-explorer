@@ -44,4 +44,6 @@ export type PublicList = {
   profileAddress?: string | null;
   ownerId?: string | null;
   isOwned?: boolean;
+  description?: string | null;
+  currency?: string | null;
 };

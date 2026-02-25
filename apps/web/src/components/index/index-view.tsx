@@ -89,19 +89,19 @@ function IndexView() {
                     session && (
                       <ObjektStaticMenu>
                         <SelectMenuItem objekts={item} />
-                        <AddToListMenu objekt={objekt} />
+                        <AddToListMenu objekts={[objekt]} />
                       </ObjektStaticMenu>
                     )
                   }
                 >
-                  <ObjektViewSelectable objekt={objekt}>
+                  <ObjektViewSelectable objekts={item}>
                     {({ isSelected }) => (
                       <ObjektView objekts={item} isSelected={isSelected} hideLabel={hideLabel}>
                         {session && (
                           <div className="flex items-start self-start justify-self-end">
                             <ObjektSelect objekts={item} />
                             <ObjektHoverMenu>
-                              <AddToListMenu objekt={objekt} />
+                              <AddToListMenu objekts={[objekt]} />
                             </ObjektHoverMenu>
                           </div>
                         )}

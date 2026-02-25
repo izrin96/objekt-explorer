@@ -91,9 +91,10 @@ export async function GET(_: Request, props: Params) {
       id: result.id,
       to: result.to,
       timestamp: new Date(result.timestamp).toISOString(),
-      nickname: knownAddresses.find(
-        (a) => a.address.toLowerCase() === result.to.toLowerCase() && !a.hideNickname,
-      )?.nickname,
+      nickname:
+        knownAddresses.find(
+          (a) => a.address.toLowerCase() === result.to.toLowerCase() && !a.hideNickname,
+        )?.nickname ?? undefined,
     })),
   });
 }
