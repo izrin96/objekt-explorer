@@ -123,8 +123,6 @@ async function fetchTransfers(query: ActivityParams) {
 
     if (matchingCollections.length === 0) return [];
 
-    const matchingCollectionIds = matchingCollections.map((c) => c.id);
-
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
@@ -132,7 +130,8 @@ async function fetchTransfers(query: ActivityParams) {
         collections,
         and(
           eq(collections.id, transfers.collectionId),
-          inArray(collections.id, matchingCollectionIds),
+          ne(collections.slug, "empty-collection"),
+          ...collectionFilters,
         ),
       )
       .where(and(...cursorFilter, ...typeFilters))

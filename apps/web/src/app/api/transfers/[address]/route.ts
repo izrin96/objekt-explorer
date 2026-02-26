@@ -105,8 +105,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
 
-  let matchingCollectionIds: string[] | undefined;
-
   if (collectionFilters.length > 0) {
     const matchingCollections = await indexer
       .select({ id: collections.id })
@@ -116,8 +114,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
     if (matchingCollections.length === 0) {
       return Response.json({ nextCursor: undefined, results: [] });
     }
-
-    matchingCollectionIds = matchingCollections.map((c) => c.id);
   }
 
   const typeFilters = {
@@ -147,8 +143,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
 
   let results: Awaited<ReturnType<typeof runQuery>>;
 
-  if (matchingCollectionIds) {
-    // Use JOIN with pre-fetched collection IDs
+  if (collectionFilters.length > 0) {
+    // Use JOIN with filters directly
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ id: transfers.id })
@@ -157,7 +153,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
           collections,
           and(
             eq(collections.id, transfers.collectionId),
-            inArray(collections.id, matchingCollectionIds),
+            ne(collections.slug, "empty-collection"),
+            ...collectionFilters,
           ),
         )
         .where(and(...addressFilters, ...cursorFilter, ...tsFilter))
