@@ -542,7 +542,8 @@
         "hide_label": "Hide labels",
         "hide_label_desc": "Hide collection labels on objekts"
       }
-    }
+    },
+    "changelog": "Changelog"
   },
   "generate_discord": {
     "title": "Generate Discord Format",

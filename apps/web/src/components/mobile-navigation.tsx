@@ -15,6 +15,7 @@ import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
 
+import Changelog from "./changelog";
 import { navMenuItems } from "./navbar";
 import { SettingsButton } from "./settings-button";
 import { Container } from "./ui/container";
@@ -90,6 +91,7 @@ export function MobileNavigation() {
           </MenuTrigger>
           <Separator orientation="vertical" className="mr-1 h-4" />
           <AppLogo />
+          <Changelog />
         </div>
 
         <div className="flex-1" aria-hidden />

@@ -11,6 +11,7 @@ import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
+import Changelog from "./changelog";
 import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
 import { Container } from "./ui/container";
@@ -36,6 +37,7 @@ export default function Navbar() {
                 </NavLink>
               ))}
             </div>
+            <Changelog />
           </div>
 
           <div className="flex-1" aria-hidden />
