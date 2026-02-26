@@ -77,7 +77,7 @@ export default function Changelog() {
               <DisclosurePanel>
                 <div className="text-fg text-sm">
                   <ul className="list-inside list-disc leading-6">
-                    <li>Added Checkpoint feature to view collection at given time.</li>
+                    <li>Added Snapshot feature to view collection at given time.</li>
                   </ul>
                 </div>
               </DisclosurePanel>
