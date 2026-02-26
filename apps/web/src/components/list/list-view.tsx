@@ -122,6 +122,7 @@ function ListView() {
                         showCount
                         showSerial={!filters.grouped && isProfileList}
                         listCurrency={list.currency}
+                        onSetPrice={isOwned ? () => openSetPrice(item) : undefined}
                       >
                         {session && (
                           <div className="flex items-start self-start justify-self-end">

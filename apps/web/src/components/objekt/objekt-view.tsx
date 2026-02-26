@@ -33,6 +33,7 @@ type Props = PropsWithChildren<{
   isSelected?: boolean;
   hideLabel?: boolean;
   listCurrency?: string | null;
+  onSetPrice?: () => void;
 }>;
 
 export default function ObjektView({
@@ -45,6 +46,7 @@ export default function ObjektView({
   hideLabel = false,
   listCurrency,
   children,
+  onSetPrice,
 }: Props) {
   const t = useTranslations("objekt");
   const [ref, { width }] = useElementSize();
@@ -98,6 +100,30 @@ export default function ObjektView({
       </div>
       {showBottomContent && (
         <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
+          {objekt.isQyop ? (
+            <Badge
+              intent="secondary"
+              className={cn("font-semibold", onSetPrice && "cursor-pointer")}
+              onClick={onSetPrice}
+            >
+              QYOP
+            </Badge>
+          ) : (
+            hasListPrice &&
+            listCurrency && (
+              <Badge
+                intent="outline"
+                className={cn(
+                  "bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)",
+                  onSetPrice && "cursor-pointer",
+                )}
+                onClick={onSetPrice}
+              >
+                {formatListPrice(objekt.listPrice!, listCurrency)}
+              </Badge>
+            )
+          )}
+
           {!hideLabel && (
             <Badge
               intent="secondary"
@@ -110,21 +136,6 @@ export default function ObjektView({
             </Badge>
           )}
 
-          {objekt.isQyop ? (
-            <Badge intent="secondary" className="font-semibold">
-              QYOP
-            </Badge>
-          ) : (
-            hasListPrice &&
-            listCurrency && (
-              <Badge
-                intent="outline"
-                className="bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)"
-              >
-                {formatListPrice(objekt.listPrice!, listCurrency)}
-              </Badge>
-            )
-          )}
           {unobtainable && (
             <Badge intent="danger" isCircle={false}>
               {t("unobtainable")}

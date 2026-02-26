@@ -1,12 +1,14 @@
 import { CurrencyDollarIcon, PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { Focusable } from "react-aria-components";
 import { useShallow } from "zustand/react/shallow";
 
 import { AddToListModal, RemoveFromListModal } from "@/components/list/modal/manage-objekt";
 import { SetPriceModal } from "@/components/list/modal/set-price-modal";
 import type { ButtonProps } from "@/components/ui/button";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 
 export function AddToList({ size, address }: { size?: ButtonProps["size"]; address?: string }) {
@@ -39,7 +41,13 @@ export function RemoveFromList({ size }: { size?: ButtonProps["size"] }) {
   );
 }
 
-export function SetPrice({ size }: { size?: ButtonProps["size"] }) {
+export function SetPrice({
+  size,
+  isDisabled = false,
+}: {
+  size?: ButtonProps["size"];
+  isDisabled?: boolean;
+}) {
   const t = useTranslations("filter");
   const [open, setOpen] = useState(false);
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -47,10 +55,22 @@ export function SetPrice({ size }: { size?: ButtonProps["size"] }) {
   return (
     <>
       <SetPriceModal open={open} setOpen={setOpen} objekts={selected} />
-      <Button size={size} intent="outline" onPress={() => handleAction(() => setOpen(true))}>
-        <CurrencyDollarIcon weight="regular" data-slot="icon" />
-        {t("set_price")}
-      </Button>
+      <Tooltip delay={0} closeDelay={0} isDisabled={!isDisabled} shouldCloseOnPress={false}>
+        <Focusable>
+          <Button
+            isDisabled={isDisabled}
+            size={size}
+            intent="outline"
+            onPress={() => handleAction(() => setOpen(true))}
+          >
+            <CurrencyDollarIcon weight="regular" data-slot="icon" />
+            {t("set_price")}
+          </Button>
+        </Focusable>
+        <TooltipContent placement="bottom" inverse>
+          {t("set_price_no_currency")}
+        </TooltipContent>
+      </Tooltip>
     </>
   );
 }

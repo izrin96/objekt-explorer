@@ -56,6 +56,7 @@
     "add_to_list": "Add to list",
     "remove_from_list": "Remove from list",
     "set_price": "Set price",
+    "set_price_no_currency": "No currency is set for this list",
     "reset_filter": "Reset filter",
     "quick_search": "Quick search",
     "disable_pin": "Disable pin",

@@ -56,6 +56,7 @@
     "add_to_list": "목록에 추가",
     "remove_from_list": "목록에서 제거",
     "set_price": "가격 설정",
+    "set_price_no_currency": "이 목록에 설정된 통화가 없습니다",
     "reset_filter": "필터 초기화",
     "quick_search": "빠른 검색",
     "disable_pin": "고정 해제",
