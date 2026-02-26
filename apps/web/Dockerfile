@@ -5,7 +5,7 @@ WORKDIR /app
 FROM base AS prune
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
-RUN bunx turbo@2.8.3 prune web --docker
+RUN bunx turbo@2.8.11 prune web --docker
 
 # dependencies & build
 FROM base AS build

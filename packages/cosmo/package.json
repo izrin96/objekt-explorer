@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "ofetch": "^1.5.1",
-    "puppeteer-core": "^24.37.4",
     "zod": "^4.3.6"
   },
   "devDependencies": {

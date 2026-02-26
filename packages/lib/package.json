@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
-    "drizzle-orm": "^1.0.0-beta.15-859cf75"
+    "drizzle-orm": "^1.0.0-beta.15-9485290"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
