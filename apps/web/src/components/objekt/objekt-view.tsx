@@ -60,7 +60,10 @@ export default function ObjektView({
     "--width": `${width}px`,
   } as CSSProperties;
 
+  const hasListPrice = objekt.listPrice !== undefined && objekt.listPrice !== null;
   const resizedUrl = replaceUrlSize(objekt.frontImage);
+
+  const showBottomContent = !hideLabel || objekt.isQyop || hasListPrice || unobtainable;
 
   return (
     <div className={cn("flex flex-col gap-2", isFade && "opacity-35")} style={css}>
@@ -93,41 +96,42 @@ export default function ObjektView({
 
         {children}
       </div>
-      <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
-        {!hideLabel && (
-          <Badge
-            intent="secondary"
-            className="text-fg bg-muted cursor-pointer text-[0.65rem] sm:text-xs"
-            onClick={ctx.handleClick}
-            isCircle={false}
-          >
-            {getCollectionShortId(objekt)}
-            {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
-          </Badge>
-        )}
-
-        {objekt.isQyop ? (
-          <Badge intent="secondary" className="font-semibold">
-            QYOP
-          </Badge>
-        ) : (
-          objekt.listPrice !== undefined &&
-          objekt.listPrice !== null &&
-          listCurrency && (
+      {showBottomContent && (
+        <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
+          {!hideLabel && (
             <Badge
-              intent="outline"
-              className="bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)"
+              intent="secondary"
+              className="text-fg bg-muted cursor-pointer text-[0.65rem] sm:text-xs"
+              onClick={ctx.handleClick}
+              isCircle={false}
             >
-              {formatListPrice(objekt.listPrice, listCurrency)}
+              {getCollectionShortId(objekt)}
+              {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
             </Badge>
-          )
-        )}
-        {unobtainable && (
-          <Badge intent="danger" isCircle={false}>
-            {t("unobtainable")}
-          </Badge>
-        )}
-      </div>
+          )}
+
+          {objekt.isQyop ? (
+            <Badge intent="secondary" className="font-semibold">
+              QYOP
+            </Badge>
+          ) : (
+            hasListPrice &&
+            listCurrency && (
+              <Badge
+                intent="outline"
+                className="bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)"
+              >
+                {formatListPrice(objekt.listPrice!, listCurrency)}
+              </Badge>
+            )
+          )}
+          {unobtainable && (
+            <Badge intent="danger" isCircle={false}>
+              {t("unobtainable")}
+            </Badge>
+          )}
+        </div>
+      )}
     </div>
   );
 }
