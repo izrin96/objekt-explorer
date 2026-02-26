@@ -105,6 +105,21 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
 
+  let matchingCollectionIds: string[] | undefined;
+
+  if (collectionFilters.length > 0) {
+    const matchingCollections = await indexer
+      .select({ id: collections.id })
+      .from(collections)
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+
+    if (matchingCollections.length === 0) {
+      return Response.json({ nextCursor: undefined, results: [] });
+    }
+
+    matchingCollectionIds = matchingCollections.map((c) => c.id);
+  }
+
   const typeFilters = {
     all: null,
     mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
@@ -132,10 +147,8 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
 
   let results: Awaited<ReturnType<typeof runQuery>>;
 
-  if (collectionFilters.length > 0) {
-    // Use JOIN instead of IN for better performance with many collections
-    // Pre-fetch matching collection IDs only if the list is small (< 50)
-    // Otherwise use JOIN directly in the transfer query
+  if (matchingCollectionIds) {
+    // Use JOIN with pre-fetched collection IDs
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ id: transfers.id })
@@ -144,8 +157,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
           collections,
           and(
             eq(collections.id, transfers.collectionId),
-            ne(collections.slug, "empty-collection"),
-            ...collectionFilters,
+            inArray(collections.id, matchingCollectionIds),
           ),
         )
         .where(and(...addressFilters, ...cursorFilter, ...tsFilter))
