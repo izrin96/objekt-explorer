@@ -116,7 +116,15 @@ async function fetchTransfers(query: ActivityParams) {
     collectionFilters.push(inArray(collections.collectionNo, query.collection));
 
   if (collectionFilters.length > 0) {
-    // Use JOIN instead of IN for better performance with many collections
+    const matchingCollections = await indexer
+      .select({ id: collections.id })
+      .from(collections)
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+
+    if (matchingCollections.length === 0) return [];
+
+    const matchingCollectionIds = matchingCollections.map((c) => c.id);
+
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
@@ -124,8 +132,7 @@ async function fetchTransfers(query: ActivityParams) {
         collections,
         and(
           eq(collections.id, transfers.collectionId),
-          ne(collections.slug, "empty-collection"),
-          ...collectionFilters,
+          inArray(collections.id, matchingCollectionIds),
         ),
       )
       .where(and(...cursorFilter, ...typeFilters))
