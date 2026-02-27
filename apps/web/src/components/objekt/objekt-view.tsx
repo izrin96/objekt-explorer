@@ -100,29 +100,30 @@ export default function ObjektView({
       </div>
       {showBottomContent && (
         <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
-          {objekt.isQyop ? (
-            <Badge
-              intent="secondary"
-              className={cn("font-semibold", onSetPrice && "cursor-pointer")}
-              onClick={onSetPrice}
-            >
-              QYOP
-            </Badge>
-          ) : (
-            hasListPrice &&
-            listCurrency && (
+          {listCurrency ? (
+            objekt.isQyop ? (
               <Badge
-                intent="outline"
-                className={cn(
-                  "bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)",
-                  onSetPrice && "cursor-pointer",
-                )}
+                intent="secondary"
+                className={cn("font-semibold", onSetPrice && "cursor-pointer")}
                 onClick={onSetPrice}
               >
-                {formatListPrice(objekt.listPrice!, listCurrency)}
+                QYOP
               </Badge>
+            ) : (
+              hasListPrice && (
+                <Badge
+                  intent="outline"
+                  className={cn(
+                    "bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)",
+                    onSetPrice && "cursor-pointer",
+                  )}
+                  onClick={onSetPrice}
+                >
+                  {formatListPrice(objekt.listPrice!, listCurrency)}
+                </Badge>
+              )
             )
-          )}
+          ) : null}
 
           {!hideLabel && (
             <Badge
