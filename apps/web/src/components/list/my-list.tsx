@@ -114,13 +114,12 @@ function ListCard({ list }: ListCardProps) {
     <>
       <EditListModal slug={list.slug} open={editOpen} setOpen={setEditOpen} />
       <DeleteListModal slug={list.slug} open={deleteOpen} setOpen={setDeleteOpen} />
-      <Link
-        href={href}
-        className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
-      >
+      <div className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h3 className="font-semibold">{list.name}</h3>
+            <h3 className="font-semibold">
+              <Link href={href}>{list.name}</Link>
+            </h3>
             {list.profileAddress && (
               <span className="text-muted-fg text-sm">
                 {parseNickname(list.profileAddress, list.nickname)}
@@ -139,7 +138,7 @@ function ListCard({ list }: ListCardProps) {
             </MenuContent>
           </Menu>
         </div>
-      </Link>
+      </div>
     </>
   );
 }

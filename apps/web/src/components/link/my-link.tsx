@@ -80,14 +80,16 @@ function LinkCard({ link }: LinkCardProps) {
         open={editOpen}
         setOpen={setEditOpen}
       />
-      <Link
-        href={href}
-        className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
-      >
+
+      <div className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-3">
-            <h3 className="truncate font-semibold">{nickname}</h3>
-            <p className="text-muted-fg truncate font-mono text-xs">{link.address}</p>
+            <h3 className="truncate font-semibold">
+              <Link href={href}>{nickname}</Link>
+            </h3>
+            <p className="text-muted-fg truncate font-mono text-xs">
+              <Link href={href}>{link.address}</Link>
+            </p>
           </div>
           <Menu>
             <Button intent="outline" size="sq-xs">
@@ -101,7 +103,7 @@ function LinkCard({ link }: LinkCardProps) {
             </MenuContent>
           </Menu>
         </div>
-      </Link>
+      </div>
     </>
   );
 }
