@@ -8,6 +8,7 @@ import type { PropsWithChildren } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { replaceUrlSize } from "@/lib/utils";
 
 import { Button } from "../ui/button";
 import { Toggle } from "../ui/toggle";
@@ -58,14 +59,17 @@ export function FloatingSelectMode({ children, objekts }: Props) {
         >
           <div className="flex items-center gap-2">
             <div className="flex -space-x-1">
-              {selected.slice(0, 3).map((item) => (
-                <img
-                  src={item.frontImage}
-                  aria-label="objekt"
-                  key={item.id}
-                  className="outline-bg aspect-square h-8 w-8 overflow-hidden rounded-lg object-cover outline-3"
-                />
-              ))}
+              {selected.slice(0, 3).map((item) => {
+                const resizedUrl = replaceUrlSize(item.frontImage);
+                return (
+                  <img
+                    src={resizedUrl}
+                    aria-label="objekt"
+                    key={item.id}
+                    className="outline-bg aspect-square h-8 w-8 overflow-hidden rounded-lg object-cover outline-3"
+                  />
+                );
+              })}
               {selected.length > 3 && (
                 <div className="bg-fg text-bg flex items-center justify-center rounded-lg px-2 font-mono text-xs">
                   +{selected.length - 3}
