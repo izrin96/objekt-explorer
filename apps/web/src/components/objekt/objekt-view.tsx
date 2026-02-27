@@ -102,7 +102,7 @@ export default function ObjektView({
         {children}
       </div>
       {showBottomContent && (
-        <div className="flex flex-col items-center justify-center gap-1">
+        <div className="flex flex-col items-center justify-center gap-1 text-center">
           {listCurrency ? (
             <div className="flex flex-wrap items-center justify-center">
               {objekt.isQyop ? (
