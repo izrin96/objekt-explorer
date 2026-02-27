@@ -89,19 +89,17 @@ function LinkCard({ link }: LinkCardProps) {
             <h3 className="truncate font-semibold">{nickname}</h3>
             <p className="text-muted-fg truncate font-mono text-xs">{link.address}</p>
           </div>
-          <div onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
-            <Menu>
-              <Button intent="outline" size="sq-xs">
-                <EllipsisVerticalIcon className="size-5" />
-              </Button>
-              <MenuContent placement="bottom right">
-                <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
-                <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
-                  {t("unlink")}
-                </MenuItem>
-              </MenuContent>
-            </Menu>
-          </div>
+          <Menu>
+            <Button intent="outline" size="sq-xs">
+              <EllipsisVerticalIcon className="size-5" />
+            </Button>
+            <MenuContent placement="bottom right">
+              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
+              <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
+                {t("unlink")}
+              </MenuItem>
+            </MenuContent>
+          </Menu>
         </div>
       </Link>
     </>

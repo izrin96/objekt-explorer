@@ -127,19 +127,17 @@ function ListCard({ list }: ListCardProps) {
               </span>
             )}
           </div>
-          <div onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
-            <Menu>
-              <Button intent="outline" size="sq-xs">
-                <EllipsisVerticalIcon className="size-5" />
-              </Button>
-              <MenuContent placement="bottom right">
-                <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
-                <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
-                  {t("delete")}
-                </MenuItem>
-              </MenuContent>
-            </Menu>
-          </div>
+          <Menu>
+            <Button intent="outline" size="sq-xs">
+              <EllipsisVerticalIcon className="size-5" />
+            </Button>
+            <MenuContent placement="bottom right">
+              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
+              <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
+                {t("delete")}
+              </MenuItem>
+            </MenuContent>
+          </Menu>
         </div>
       </Link>
     </>
