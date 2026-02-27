@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "tanstack": {
+      "command": "bunx",
+      "args": ["@tanstack/cli", "mcp"],
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
