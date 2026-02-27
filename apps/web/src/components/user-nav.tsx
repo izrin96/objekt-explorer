@@ -81,7 +81,7 @@ function UserMenu({ user }: { user: User }) {
             src={user.image}
           />
         </MenuTrigger>
-        <MenuContent className="sm:min-w-56">
+        <MenuContent placement="bottom left">
           <MenuSection>
             <MenuHeader separator>
               <div className="flex flex-col">
@@ -157,7 +157,7 @@ function MyListMenuItem({
         <HeartIcon data-slot="icon" />
         <MenuLabel>{t("my_list")}</MenuLabel>
       </MenuItem>
-      <MenuContent>
+      <MenuContent placement="left top">
         {!data && (
           <MenuItem isDisabled>
             <MenuLabel>
@@ -210,7 +210,7 @@ function MyCosmoProfileMenuItem() {
         <DeviceMobileIcon data-slot="icon" />
         <MenuLabel>{t("my_cosmo_link")}</MenuLabel>
       </MenuItem>
-      <MenuContent>
+      <MenuContent placement="left top">
         {!data && (
           <MenuItem isDisabled>
             <MenuLabel>

@@ -94,7 +94,7 @@ function LinkCard({ link }: LinkCardProps) {
               <Button intent="outline" size="sq-xs">
                 <EllipsisVerticalIcon className="size-5" />
               </Button>
-              <MenuContent className="sm:min-w-56">
+              <MenuContent placement="bottom right">
                 <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
                 <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
                   {t("unlink")}

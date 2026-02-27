@@ -73,7 +73,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
         <PlusIcon data-slot="icon" />
         <MenuLabel>{t("add_to_list")}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="bottom">
+      <MenuContent placement="bottom right">
         {!availableLists && (
           <MenuItem isDisabled>
             <MenuLabel>
