@@ -119,7 +119,7 @@ function ListCard({ list }: ListCardProps) {
         className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-1 flex-col gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h3 className="font-semibold">{list.name}</h3>
             {list.profileAddress && (
               <span className="text-muted-fg text-sm">
@@ -127,7 +127,7 @@ function ListCard({ list }: ListCardProps) {
               </span>
             )}
           </div>
-          <div onClick={(e) => e.stopPropagation()}>
+          <div onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
             <Menu>
               <Button intent="outline" size="sq-xs">
                 <EllipsisVerticalIcon className="size-5" />

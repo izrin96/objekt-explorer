@@ -33,7 +33,7 @@ export function MobileNavigation() {
   return (
     <nav className="bg-bg sticky top-0 z-40 flex h-12 items-center lg:hidden">
       <Container className="flex items-center [--container-breakpoint:var(--breakpoint-2xl)]">
-        <div className="flex items-center gap-x-2">
+        <div className="flex items-center gap-x-1.5">
           <MenuTrigger>
             <Button
               size="sq-sm"

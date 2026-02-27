@@ -85,11 +85,11 @@ function LinkCard({ link }: LinkCardProps) {
         className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-1 flex-col gap-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
             <h3 className="truncate font-semibold">{nickname}</h3>
             <p className="text-muted-fg truncate font-mono text-xs">{link.address}</p>
           </div>
-          <div onClick={(e) => e.stopPropagation()}>
+          <div onClick={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
             <Menu>
               <Button intent="outline" size="sq-xs">
                 <EllipsisVerticalIcon className="size-5" />
