@@ -98,6 +98,7 @@ export const listEntries = pgTable(
     objektId: varchar("objekt_id", { length: 255 }),
     price: real("price"),
     isQyop: boolean("is_qyop").notNull().default(false),
+    note: varchar("note", { length: 255 }),
     createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   },
   (t) => [

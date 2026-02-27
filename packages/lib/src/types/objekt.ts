@@ -7,6 +7,7 @@ type CollectionExtra = {
   order?: number;
   listPrice?: number | null;
   isQyop?: boolean;
+  note?: string | null;
 };
 
 type OwnedExtra = {

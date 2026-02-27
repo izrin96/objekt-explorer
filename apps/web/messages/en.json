@@ -128,7 +128,8 @@
     "objekt_private": "Objekt Private",
     "not_found_objekt": "Not found",
     "token_id_copied": "Token ID copied",
-    "must_select_one": "Must select at least 1 objekt"
+    "must_select_one": "Must select at least 1 objekt",
+    "note": "Note"
   },
   "nav": {
     "activity": "Activity",
@@ -435,6 +436,8 @@
       "set_price_error": "Error updating price",
       "set_price_qyop": "QYOP",
       "set_price_clear": "Clear price",
+      "set_price_note": "Note",
+      "set_price_note_placeholder": "e.g., Selling in set",
       "no_list_message": "You don't have any list yet.",
       "create_one_here": "Create one here",
       "list_label": "My List",

@@ -1,0 +1,1 @@
+ALTER TABLE "list_entries" ADD COLUMN "note" varchar(255);

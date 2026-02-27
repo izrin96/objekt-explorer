@@ -69,6 +69,7 @@ export const listRouter = {
               objektId: true,
               price: true,
               isQyop: true,
+              note: true,
             },
           },
         },
@@ -115,6 +116,7 @@ export const listRouter = {
               order: entry.id,
               listPrice: entry.price ?? undefined,
               isQyop: entry.isQyop ?? undefined,
+              note: entry.note ?? undefined,
             });
           })
           .filter(filterNonNull);
@@ -511,6 +513,7 @@ export const listRouter = {
             entryId: z.number(),
             price: z.number().nullable(),
             isQyop: z.boolean(),
+            note: z.string().nullable(),
           }),
         ),
       }),
@@ -526,10 +529,10 @@ export const listRouter = {
 
         const list = await findOwnedList(slug, user.id);
 
-        for (const { entryId, price, isQyop } of updates) {
+        for (const { entryId, price, isQyop, note } of updates) {
           await db
             .update(listEntries)
-            .set({ price, isQyop })
+            .set({ price, isQyop, note })
             .where(and(eq(listEntries.id, entryId), eq(listEntries.listId, list.id)));
         }
       },
@@ -803,7 +806,7 @@ async function fetchCollections(slugs: string[], artists: ValidArtist[]) {
 }
 
 async function mapEntriesCollection(
-  result: Pick<ListEntry, "collectionSlug" | "id" | "price" | "isQyop">[],
+  result: Pick<ListEntry, "collectionSlug" | "id" | "price" | "isQyop" | "note">[],
   artists: ValidArtist[],
 ) {
   const validEntries = result
@@ -816,12 +819,13 @@ async function mapEntriesCollection(
 
   return validEntries
     .filter((a) => collectionsMap.has(a.collectionSlug!))
-    .map(({ collectionSlug, id, price, isQyop }) =>
+    .map(({ collectionSlug, id, price, isQyop, note }) =>
       Object.assign({}, collectionsMap.get(collectionSlug!), {
         id: id.toString(),
         order: id,
         listPrice: price ?? undefined,
         isQyop: isQyop ?? undefined,
+        note: note ?? undefined,
       }),
     );
 }

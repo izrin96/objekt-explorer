@@ -8,6 +8,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Description, FieldError, Label } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   ModalBody,
   ModalClose,
@@ -18,6 +19,7 @@ import {
   ModalTitle,
 } from "@/components/ui/modal";
 import { NumberField, NumberInput } from "@/components/ui/number-field";
+import { TextField } from "@/components/ui/text-field";
 import { useUpdateEntryPrices } from "@/hooks/actions/update-entry-prices";
 import { useTarget } from "@/hooks/use-target";
 
@@ -30,6 +32,7 @@ type SetPriceModalProps = {
 type FormValues = {
   price: number;
   isQyop: boolean;
+  note: string;
 };
 
 export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
@@ -43,22 +46,25 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
     defaultValues: {
       price: 0,
       isQyop: false,
+      note: "",
     },
     values: {
       price: objekt?.listPrice ?? 0,
       isQyop: objekt?.isQyop ?? false,
+      note: objekt?.note ?? "",
     },
   });
 
   const isQyop = watch("isQyop");
 
-  const onSubmit = handleSubmit(({ price, isQyop }) => {
+  const onSubmit = handleSubmit(({ price, isQyop, note }) => {
     if (!isQyop && (Number.isNaN(price) || price < 0)) return;
 
     const updates = objekts.map((o) => ({
       entryId: Number(o.id),
       price: isQyop ? null : price,
       isQyop,
+      note: note || null,
     }));
 
     updateEntryPrices.mutate(
@@ -77,6 +83,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
       entryId: Number(o.id),
       price: null,
       isQyop: false,
+      note: null,
     }));
 
     updateEntryPrices.mutate(
@@ -137,6 +144,16 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
                   <Description>{list.currency}</Description>
                   <FieldError>{error?.message}</FieldError>
                 </NumberField>
+              )}
+            />
+            <Controller
+              control={control}
+              name="note"
+              render={({ field: { name, value, onChange, onBlur } }) => (
+                <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
+                  <Label>{t("set_price_note")}</Label>
+                  <Input placeholder={t("set_price_note_placeholder")} />
+                </TextField>
               )}
             />
           </div>

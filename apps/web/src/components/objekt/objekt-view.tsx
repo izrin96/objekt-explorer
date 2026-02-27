@@ -1,4 +1,5 @@
 import { NumberFormatter } from "@internationalized/number";
+import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useTranslations } from "next-intl";
 import NextImage from "next/image";
@@ -10,6 +11,8 @@ import { replaceUrlSize } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent } from "../ui/popover";
 import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
 
@@ -99,30 +102,45 @@ export default function ObjektView({
         {children}
       </div>
       {showBottomContent && (
-        <div className="flex flex-col items-center justify-center gap-1 text-center text-sm">
+        <div className="flex flex-col items-center justify-center gap-1">
           {listCurrency ? (
-            objekt.isQyop ? (
-              <Badge
-                intent="secondary"
-                className={cn("font-semibold", onSetPrice && "cursor-pointer")}
-                onClick={onSetPrice}
-              >
-                QYOP
-              </Badge>
-            ) : (
-              hasListPrice && (
+            <div className="flex flex-wrap items-center justify-center">
+              {objekt.isQyop ? (
                 <Badge
-                  intent="outline"
-                  className={cn(
-                    "bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)",
-                    onSetPrice && "cursor-pointer",
-                  )}
+                  intent="secondary"
+                  className={cn("font-semibold", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
-                  {formatListPrice(objekt.listPrice!, listCurrency)}
+                  QYOP
                 </Badge>
-              )
-            )
+              ) : (
+                hasListPrice && (
+                  <Badge
+                    intent="outline"
+                    className={cn(
+                      "bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)",
+                      onSetPrice && "cursor-pointer",
+                    )}
+                    onClick={onSetPrice}
+                  >
+                    {formatListPrice(objekt.listPrice!, listCurrency)}
+                  </Badge>
+                )
+              )}
+              {objekt.note && (
+                <Popover>
+                  <Button isCircle intent="plain" size="sq-xs">
+                    <NoteIcon className="size-3.5 sm:size-4" />
+                  </Button>
+                  <PopoverContent arrow className="max-w-72">
+                    <div className="p-3 text-sm">
+                      <span className="text-muted-fg">{t("note")}: </span>
+                      <span className="text-fg">{objekt.note}</span>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
           ) : null}
 
           {!hideLabel && (
@@ -137,11 +155,7 @@ export default function ObjektView({
             </Badge>
           )}
 
-          {unobtainable && (
-            <Badge intent="danger" isCircle={false}>
-              {t("unobtainable")}
-            </Badge>
-          )}
+          {unobtainable && <Badge intent="danger">{t("unobtainable")}</Badge>}
         </div>
       )}
     </div>
