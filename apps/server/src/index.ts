@@ -46,8 +46,8 @@ void redisPubSub.subscribe("transfers", async (message, channel) => {
 
       const transferEvent = {
         nickname: {
-          from: fromUser?.nickname ?? undefined,
-          to: toUser?.nickname ?? undefined,
+          from: fromUser?.hideNickname ? undefined : (fromUser?.nickname ?? undefined),
+          to: toUser?.hideNickname ? undefined : (toUser?.nickname ?? undefined),
         },
         transfer: rest,
         objekt: mapOwnedObjekt(objekt, collection),
