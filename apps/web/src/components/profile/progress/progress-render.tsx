@@ -35,7 +35,7 @@ export default dynamic(() => Promise.resolve(ProgressRender), {
 
 function ProgressRender() {
   return (
-    <ObjektViewProvider modalTab="owned" withSelect={false}>
+    <ObjektViewProvider modalTab="owned">
       <div className="flex flex-col gap-4">
         <ProgressFilter />
         <Progress />

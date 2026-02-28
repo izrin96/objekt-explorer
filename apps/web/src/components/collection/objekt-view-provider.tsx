@@ -15,14 +15,12 @@ import { Loader } from "../ui/loader";
 interface ObjektViewProviderProps extends PropsWithChildren {
   initialColumn?: number;
   modalTab: "owned" | "trades";
-  withSelect?: boolean;
   suspenseFallback?: ReactNode;
 }
 
 export function ObjektViewProvider({
   initialColumn,
   modalTab,
-  withSelect = true,
   suspenseFallback,
   children,
 }: ObjektViewProviderProps) {
@@ -30,21 +28,19 @@ export function ObjektViewProvider({
 
   const content = (
     <ObjektColumnProvider initialColumn={initialColumn}>
-      <ObjektModalProvider initialTab={modalTab}>
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense fallback={fallback}>{children}</Suspense>
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
-      </ObjektModalProvider>
+      <ObjektSelectProvider>
+        <ObjektModalProvider initialTab={modalTab}>
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                <Suspense fallback={fallback}>{children}</Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        </ObjektModalProvider>
+      </ObjektSelectProvider>
     </ObjektColumnProvider>
   );
-
-  if (withSelect) {
-    return <ObjektSelectProvider>{content}</ObjektSelectProvider>;
-  }
 
   return content;
 }

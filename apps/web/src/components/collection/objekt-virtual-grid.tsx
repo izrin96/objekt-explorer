@@ -8,7 +8,6 @@ import { WindowVirtualizer } from "virtua";
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 
 import { makeObjektRows, ObjektsRenderRow } from "./collection-render";
-import { GroupLabelRender } from "./label-render";
 
 export type ShapedData<T = ValidObjekt[]> = [string, T[]][];
 
@@ -56,4 +55,8 @@ export function ObjektVirtualGrid<T = ValidObjekt[]>({
       <WindowVirtualizer key={columns}>{virtualList}</WindowVirtualizer>
     </div>
   );
+}
+
+function GroupLabelRender({ title }: { title: string }) {
+  return <div className={"pt-3 pb-3 text-base font-semibold"}>{title}</div>;
 }
