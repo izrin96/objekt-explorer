@@ -1,30 +1,25 @@
 "use client";
 
 import { type ValidObjekt } from "@repo/lib/types/objekt";
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import type React from "react";
-import { Suspense, useMemo, useState } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import { useMemo, useState } from "react";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
-import ErrorFallbackRender from "@/components/error-boundary";
-import { ObjektHoverMenu } from "@/components/objekt/objekt-action";
+import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
+import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
 import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
-import ObjektModal from "@/components/objekt/objekt-modal";
-import ObjektView from "@/components/objekt/objekt-view";
 import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Loader } from "@/components/ui/loader";
 import { ProgressBar, ProgressBarTrack, ProgressBarValue } from "@/components/ui/progress-bar";
 import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
-import { ObjektColumnProvider, useObjektColumn } from "@/hooks/use-objekt-column";
-import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useSession } from "@/hooks/use-user";
 import { unobtainables } from "@/lib/unobtainables";
@@ -40,28 +35,12 @@ export default dynamic(() => Promise.resolve(ProgressRender), {
 
 function ProgressRender() {
   return (
-    <ObjektColumnProvider>
-      <ObjektModalProvider initialTab="owned">
-        <div className="flex flex-col gap-4">
-          <ProgressFilter />
-          <QueryErrorResetBoundary>
-            {({ reset }) => (
-              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center">
-                      <Loader variant="ring" />
-                    </div>
-                  }
-                >
-                  <Progress />
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </QueryErrorResetBoundary>
-        </div>
-      </ObjektModalProvider>
-    </ObjektColumnProvider>
+    <ObjektViewProvider modalTab="owned" withSelect={false}>
+      <div className="flex flex-col gap-4">
+        <ProgressFilter />
+        <Progress />
+      </div>
+    </ObjektViewProvider>
   );
 }
 
@@ -142,7 +121,7 @@ interface ProgressCollapseProps extends ProgressGroupProps {
 function ProgressCollapse(props: ProgressCollapseProps) {
   const t = useTranslations("progress");
   const { data: session } = useSession();
-  const { title, columns, grouped, percentage, ownedSlugs, owned, filtered } = props;
+  const { title, columns, grouped, percentage, ownedSlugs } = props;
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const [showCount] = useShowCount();
   const [show, setShow] = useState(false);
@@ -163,7 +142,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
         <ProgressBar
           aria-label={t("progress_bar_label")}
           className="flex w-fit min-w-[240px] items-center gap-2"
-          valueLabel={`${owned.length}/${filtered.length} (${percentage}%)`}
+          valueLabel={`${props.owned.length}/${props.filtered.length} (${percentage}%)`}
           value={percentage}
         >
           <div className="relative">
@@ -184,44 +163,37 @@ function ProgressCollapse(props: ProgressCollapseProps) {
             {makeObjektRows({
               items: grouped,
               columns,
-              renderItem: ({ items, rowIndex }) => (
+              renderItem: ({ items: rowItems, rowIndex }) => (
                 <ObjektsRenderRow
                   key={`${title}-${rowIndex}`}
                   columns={columns}
                   rowIndex={rowIndex}
-                  items={items}
+                  items={rowItems}
                 >
                   {({ item: objekts }) => {
-                    const [objekt] = objekts as [ValidObjekt];
+                    const objekt = objekts[0];
+                    if (!objekt) return null;
                     return (
-                      <ObjektModal
-                        key={objekt.id}
+                      <ObjektGridItem
                         objekts={objekts}
-                        showOwned
-                        menu={
+                        session={!!session}
+                        showSelect={false}
+                        staticMenu={
                           session && (
                             <ObjektStaticMenu>
                               <AddToListMenu objekts={[objekt]} />
                             </ObjektStaticMenu>
                           )
                         }
-                      >
-                        <ObjektView
-                          objekts={objekts}
-                          isFade={!ownedSlugs.has(objekt.slug)}
-                          unobtainable={unobtainables.includes(objekt.slug)}
-                          showCount={showCount}
-                          hideLabel={hideLabel}
-                        >
-                          {session && (
-                            <div className="flex items-start self-start justify-self-end">
-                              <ObjektHoverMenu>
-                                <AddToListMenu objekts={[objekt]} />
-                              </ObjektHoverMenu>
-                            </div>
-                          )}
-                        </ObjektView>
-                      </ObjektModal>
+                        hoverMenu={session && <AddToListMenu objekts={[objekt]} />}
+                        viewProps={{
+                          hideLabel,
+                          showCount,
+                          showOwned: true,
+                          isFade: !ownedSlugs.has(objekt.slug),
+                          unobtainable: unobtainables.includes(objekt.slug),
+                        }}
+                      />
                     );
                   }}
                 </ObjektsRenderRow>

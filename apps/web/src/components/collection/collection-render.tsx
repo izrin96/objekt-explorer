@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { Fragment } from "react";
 
 export function makeObjektRows<T>({
   items,
@@ -7,7 +8,7 @@ export function makeObjektRows<T>({
 }: {
   items: T[];
   columns: number;
-  renderItem: (props: { items: T[]; rowIndex: number }) => React.ReactElement;
+  renderItem: (props: { items: T[]; rowIndex: number }) => React.ReactElement | null;
 }) {
   return Array.from({
     length: Math.ceil(items.length / columns),
@@ -28,7 +29,7 @@ export function ObjektsRenderRow<T>({
   items: T[];
   columns: number;
   rowIndex: number;
-  children: (props: { item: T; index: number }) => React.ReactElement;
+  children: (props: { item: T; index: number }) => React.ReactElement | null;
 }) {
   return (
     <div
@@ -37,10 +38,7 @@ export function ObjektsRenderRow<T>({
     >
       {items.map((item, j) => {
         const index = rowIndex * columns + j;
-        return children({
-          item,
-          index,
-        });
+        return <Fragment key={index}>{children({ item, index })}</Fragment>;
       })}
     </div>
   );
