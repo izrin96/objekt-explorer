@@ -140,7 +140,9 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
                 >
                   <Label>{t("set_price_label")}</Label>
                   <NumberInput />
-                  <Description>{list.currency}</Description>
+                  <Description>
+                    {list.currency} ({t("set_price_clear_hint")})
+                  </Description>
                   <FieldError>{error?.message}</FieldError>
                 </NumberField>
               )}

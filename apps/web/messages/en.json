@@ -438,6 +438,7 @@
       "set_price_clear": "Clear price",
       "set_price_note": "Note",
       "set_price_note_placeholder": "e.g., Selling in set",
+      "set_price_clear_hint": "Set to 0 to clear price",
       "no_list_message": "You don't have any list yet.",
       "create_one_here": "Create one here",
       "list_label": "My List",

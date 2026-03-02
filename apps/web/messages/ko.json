@@ -438,6 +438,7 @@
       "set_price_clear": "가격 초기화",
       "set_price_note": "메모",
       "set_price_note_placeholder": "예: 세트로만 판매",
+      "set_price_clear_hint": "0으로 설정하면 가격이 초기화됩니다",
       "no_list_message": "아직 목록이 없습니다.",
       "create_one_here": "여기서 만들기",
       "list_label": "내 목록",
