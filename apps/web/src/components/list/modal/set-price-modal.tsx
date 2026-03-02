@@ -62,7 +62,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
 
     const updates = objekts.map((o) => ({
       entryId: Number(o.id),
-      price: isQyop ? null : price,
+      price: isQyop ? null : price || null,
       isQyop,
       note: note || null,
     }));
@@ -83,7 +83,6 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
       entryId: Number(o.id),
       price: null,
       isQyop: false,
-      note: null,
     }));
 
     updateEntryPrices.mutate(
@@ -161,7 +160,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
       </ModalBody>
       <ModalFooter id="set-price-form">
         <ModalClose>{tCommon("cancel")}</ModalClose>
-        <Button intent="secondary" onPress={handleClearPrice}>
+        <Button className="hidden" intent="secondary" onPress={handleClearPrice}>
           {t("set_price_clear")}
         </Button>
         <Button isPending={updateEntryPrices.isPending} onPress={() => onSubmit()}>

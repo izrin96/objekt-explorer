@@ -513,7 +513,7 @@ export const listRouter = {
             entryId: z.number(),
             price: z.number().nullable(),
             isQyop: z.boolean(),
-            note: z.string().nullable(),
+            note: z.string().optional().nullable(),
           }),
         ),
       }),

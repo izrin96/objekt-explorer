@@ -104,7 +104,7 @@ export default function ObjektView({
       {showBottomContent && (
         <div className="flex flex-col items-center justify-center gap-1 text-center">
           {listCurrency ? (
-            <div className="flex flex-wrap items-center justify-center">
+            <div className="flex flex-wrap items-center justify-center gap-0.5">
               {objekt.isQyop ? (
                 <Badge
                   intent="secondary"
@@ -116,7 +116,7 @@ export default function ObjektView({
               ) : (
                 hasListPrice && (
                   <Badge
-                    intent="outline"
+                    intent="secondary"
                     className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
                     onClick={onSetPrice}
                   >
@@ -127,7 +127,7 @@ export default function ObjektView({
               {objekt.note && (
                 <Popover>
                   <Button isCircle intent="plain" size="sq-xs">
-                    <NoteIcon className="size-3.5 sm:size-4" />
+                    <NoteIcon className="size-4 sm:size-5" />
                   </Button>
                   <PopoverContent arrow className="max-w-72">
                     <div className="p-3 text-sm">
