@@ -65,10 +65,11 @@ export default function ObjektView({
     "--width": `${width}px`,
   } as CSSProperties;
 
-  const hasListPrice = objekt.listPrice !== undefined && objekt.listPrice !== null;
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
-  const showBottomContent = !hideLabel || objekt.isQyop || hasListPrice || unobtainable;
+  const hasListPrice = objekt.listPrice !== undefined && objekt.listPrice !== null;
+  const showPriceContent = listCurrency && (objekt.isQyop || hasListPrice || objekt.note);
+  const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
     <div className={cn("flex flex-col gap-2", isFade && "opacity-35")} style={css}>
@@ -103,7 +104,7 @@ export default function ObjektView({
       </div>
       {showBottomContent && (
         <div className="flex flex-col items-center justify-center gap-1 text-center">
-          {listCurrency ? (
+          {showPriceContent ? (
             <div className="flex flex-wrap items-center justify-center gap-0.5">
               {objekt.isQyop ? (
                 <Badge
