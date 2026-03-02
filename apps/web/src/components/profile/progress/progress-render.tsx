@@ -62,7 +62,7 @@ function Progress() {
         <MemberProgressChart objekts={ownedFiltered} collections={collectionsFiltered} />
       ) : (
         <div className="flex flex-col gap-8">
-          <div className="text-sm font-semibold tabular-nums">
+          <div className="text-sm font-semibold">
             {stats.owned}/{stats.total} ({stats.percentage}%)
           </div>
 

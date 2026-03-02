@@ -117,10 +117,7 @@ export default function ObjektView({
                 hasListPrice && (
                   <Badge
                     intent="outline"
-                    className={cn(
-                      "bg-(--objekt-bg-color) font-semibold text-(--objekt-text-color)",
-                      onSetPrice && "cursor-pointer",
-                    )}
+                    className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
                     onClick={onSetPrice}
                   >
                     {formatListPrice(objekt.listPrice!, listCurrency)}
