@@ -95,7 +95,7 @@ export default function ObjektView({
         />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
-          <div className="bg-bg text-fg pointer-events-none m-1 flex self-end justify-self-start rounded-full px-1.5 py-0.5 text-[0.6rem] font-semibold sm:px-2 sm:py-1 sm:text-xs">
+          <div className="bg-bg text-fg pointer-events-none m-1 flex self-end justify-self-start overflow-hidden rounded-full px-1.5 py-0.5 text-[0.6rem] font-semibold sm:px-2 sm:py-1 sm:text-xs">
             {objekts.length.toLocaleString()}
           </div>
         )}

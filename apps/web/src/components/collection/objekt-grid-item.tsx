@@ -53,7 +53,7 @@ export function ObjektGridItem({
         {({ isSelected }) => (
           <ObjektView objekts={objekts} isSelected={isSelected} {...viewProps}>
             {session && (showSelect || hoverMenu) && (
-              <div className="flex items-start self-start justify-self-end">
+              <div className="flex items-start self-start justify-self-end overflow-hidden">
                 {showSelect && <ObjektSelect objekts={objekts} />}
                 {hoverMenu && <ObjektHoverMenu>{hoverMenu}</ObjektHoverMenu>}
               </div>
