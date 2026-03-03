@@ -22,9 +22,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const [data, t] = await Promise.all([getList(params.slug), getTranslations("page_titles")]);
 
   return {
-    title: data.user
-      ? t("list_detail_with_user", { name: data.name, user: data.user.name })
-      : t("list_detail", { name: data.name }),
+    title: t("list_detail", { name: data.name }),
   };
 }
 

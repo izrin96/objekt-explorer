@@ -717,15 +717,14 @@
   "page_titles": {
     "activity": "활동",
     "live": "라이브",
-    "live_detail": "{title} · {channel} 라이브",
+    "live_detail": "{title} · {channel} · 라이브",
     "login": "로그인",
     "my_list": "내 리스트",
     "my_cosmo_link": "내 Cosmo 링크",
-    "profile_collection": "{nickname}님의 컬렉션",
-    "profile_progress": "{nickname}님의 진행상황",
-    "profile_stats": "{nickname}님의 통계",
-    "profile_trades": "{nickname}님의 거래",
-    "list_detail": "{name} 리스트",
-    "list_detail_with_user": "{name} · {user}님의 리스트"
+    "profile_collection": "{nickname} · 컬렉션",
+    "profile_progress": "{nickname} · 진행상황",
+    "profile_stats": "{nickname} · 통계",
+    "profile_trades": "{nickname} · 거래",
+    "list_detail": "{name} · 리스트"
   }
 }
