@@ -36,6 +36,8 @@ void redisPubSub.subscribe("transfers", async (message, channel) => {
     const transferBatch: TransferSendData[] = [];
 
     for (const transfer of transfers) {
+      if (transfer.collection.slug === "empty-collection") continue;
+
       const { objekt, collection, ...rest } = transfer;
       const fromUser = knownAddresses.find(
         (a) => a.address.toLowerCase() === transfer.from.toLowerCase(),
