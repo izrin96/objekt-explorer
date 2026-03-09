@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     })
     .from(userAddress)
     .where(like(userAddress.nickname, `${query}%`))
-    .orderBy(desc(userAddress.id))
+    .orderBy(userAddress.nickname, desc(userAddress.id))
     .limit(100);
 
   return Response.json({
