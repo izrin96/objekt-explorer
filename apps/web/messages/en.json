@@ -130,7 +130,8 @@
     "token_id_copied": "Token ID copied",
     "must_select_one": "Must select at least 1 objekt",
     "note": "Note",
-    "qyop": "QYOP"
+    "qyop": "QYOP",
+    "set_price": "Set price"
   },
   "nav": {
     "activity": "Activity",

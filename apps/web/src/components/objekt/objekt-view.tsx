@@ -68,7 +68,8 @@ export default function ObjektView({
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
   const hasListPrice = objekt.listPrice !== undefined && objekt.listPrice !== null;
-  const showPriceContent = listCurrency && (objekt.isQyop || hasListPrice || objekt.note);
+  const showPriceContent =
+    listCurrency && (objekt.isQyop || hasListPrice || objekt.note || onSetPrice !== undefined);
   const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
@@ -114,14 +115,22 @@ export default function ObjektView({
                 >
                   {t("qyop")}
                 </Badge>
+              ) : hasListPrice ? (
+                <Badge
+                  intent="secondary"
+                  className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
+                  onClick={onSetPrice}
+                >
+                  {formatListPrice(objekt.listPrice!, listCurrency)}
+                </Badge>
               ) : (
-                hasListPrice && (
+                onSetPrice && (
                   <Badge
                     intent="secondary"
-                    className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
+                    className="cursor-pointer font-semibold"
                     onClick={onSetPrice}
                   >
-                    {formatListPrice(objekt.listPrice!, listCurrency)}
+                    {t("set_price")}
                   </Badge>
                 )
               )}
