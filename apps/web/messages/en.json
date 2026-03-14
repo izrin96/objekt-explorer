@@ -129,7 +129,8 @@
     "not_found_objekt": "Not found",
     "token_id_copied": "Token ID copied",
     "must_select_one": "Must select at least 1 objekt",
-    "note": "Note"
+    "note": "Note",
+    "qyop": "QYOP"
   },
   "nav": {
     "activity": "Activity",

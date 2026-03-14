@@ -112,7 +112,7 @@ export default function ObjektView({
                   className={cn("font-semibold", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
-                  QYOP
+                  {t("qyop")}
                 </Badge>
               ) : (
                 hasListPrice && (
