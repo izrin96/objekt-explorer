@@ -152,6 +152,12 @@ export const transfers = pgTable(
       table.to.asc().nullsLast(),
       table.id.desc().nullsFirst(),
     ),
+    index("idx_transfer_collection_ts_id").using(
+      "btree",
+      table.collectionId.asc().nullsLast(),
+      table.timestamp.desc().nullsFirst(),
+      table.id.desc().nullsFirst(),
+    ),
     index("idx_transfer_from_objekt_ts").using(
       "btree",
       table.from.asc().nullsLast(),
@@ -188,6 +194,14 @@ export const transfers = pgTable(
       table.objektId.asc().nullsLast(),
       table.id.desc().nullsFirst(),
     ),
+    index("idx_transfer_spin_collection_ts")
+      .using(
+        "btree",
+        table.collectionId.asc().nullsLast(),
+        table.timestamp.desc().nullsFirst(),
+        table.id.desc().nullsFirst(),
+      )
+      .where(sql`("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
     index("idx_transfer_spin_id_collection")
       .using("btree", table.id.desc().nullsFirst(), table.collectionId.asc().nullsLast())
       .where(sql`("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),

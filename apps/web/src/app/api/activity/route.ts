@@ -123,19 +123,42 @@ async function fetchTransfers(query: ActivityParams) {
 
     if (matchingCollections.length === 0) return [];
 
+    // temporary disable inArray
+
+    // const collectionIds = matchingCollections.map((c) => c.id);
+
+    // if (collectionIds.length <= 100) {
+    //   const ids = await indexer
+    //     .select({ id: transfers.id })
+    //     .from(transfers)
+    //     .where(and(inArray(transfers.collectionId, collectionIds), ...cursorFilter, ...typeFilters))
+    //     .orderBy(desc(transfers.timestamp), desc(transfers.id))
+    //     .limit(PAGE_SIZE + 1);
+
+    //   if (ids.length === 0) return [];
+
+    //   return indexer
+    //     .select(transferSelect)
+    //     .from(transfers)
+    //     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+    //     .innerJoin(collections, eq(transfers.collectionId, collections.id))
+    //     .where(inArray(transfers.id, ids.map((t) => t.id)))
+    //     .orderBy(desc(transfers.timestamp), desc(transfers.id));
+    // }
+
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
       .innerJoin(
         collections,
         and(
-          eq(collections.id, transfers.collectionId),
+          eq(transfers.collectionId, collections.id),
           ne(collections.slug, "empty-collection"),
           ...collectionFilters,
         ),
       )
       .where(and(...cursorFilter, ...typeFilters))
-      .orderBy(desc(transfers.id))
+      .orderBy(desc(transfers.timestamp), desc(transfers.id))
       .limit(PAGE_SIZE + 1);
 
     if (ids.length === 0) return [];
@@ -151,7 +174,7 @@ async function fetchTransfers(query: ActivityParams) {
           ids.map((t) => t.id),
         ),
       )
-      .orderBy(desc(transfers.id));
+      .orderBy(desc(transfers.timestamp), desc(transfers.id));
   }
 
   // No collection filters — scan transfer index directly
@@ -161,7 +184,7 @@ async function fetchTransfers(query: ActivityParams) {
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
     .where(and(...cursorFilter, ...typeFilters, ne(collections.slug, "empty-collection")))
-    .orderBy(desc(transfers.id))
+    .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PAGE_SIZE + 1);
 }
 

@@ -105,17 +105,6 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
 
-  if (collectionFilters.length > 0) {
-    const matchingCollections = await indexer
-      .select({ id: collections.id })
-      .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-
-    if (matchingCollections.length === 0) {
-      return Response.json({ nextCursor: undefined, results: [] });
-    }
-  }
-
   const typeFilters = {
     all: null,
     mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
@@ -144,7 +133,64 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   let results: Awaited<ReturnType<typeof runQuery>>;
 
   if (collectionFilters.length > 0) {
-    // Use JOIN with filters directly
+    const matchingCollections = await indexer
+      .select({ id: collections.id })
+      .from(collections)
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+
+    if (matchingCollections.length === 0) {
+      return Response.json({ nextCursor: undefined, results: [] });
+    }
+
+    // temporary disable inArray
+
+    // const collectionIds = matchingCollections.map((c) => c.id);
+
+    // if (collectionIds.length <= 100) {
+    //   const getIds = (...addressFilters: (SQL | undefined)[]) =>
+    //     indexer
+    //       .select({ id: transfers.id })
+    //       .from(transfers)
+    //       .where(
+    //         and(
+    //           inArray(transfers.collectionId, collectionIds),
+    //           ...addressFilters,
+    //           ...cursorFilter,
+    //           ...tsFilter,
+    //         ),
+    //       )
+    //       .orderBy(desc(transfers.timestamp), desc(transfers.id))
+    //       .limit(PER_PAGE + 1);
+
+    //   let ids: { id: string }[];
+
+    //   if (query.type === "all") {
+    //     const [fromIds, toIds] = await Promise.all([
+    //       getIds(eq(transfers.from, addr)),
+    //       getIds(eq(transfers.to, addr)),
+    //     ]);
+    //     ids = mergeSortedTransfers(
+    //       fromIds.map((r) => ({ transfer: r })),
+    //       toIds.map((r) => ({ transfer: r })),
+    //       PER_PAGE + 1,
+    //     ).map((r) => r.transfer);
+    //   } else {
+    //     ids = await getIds(...typeFilters[query.type]);
+    //   }
+
+    //   if (ids.length === 0) {
+    //     return Response.json({ nextCursor: undefined, results: [] });
+    //   }
+
+    //   results = await indexer
+    //     .select(transferSelect)
+    //     .from(transfers)
+    //     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+    //     .innerJoin(collections, eq(transfers.collectionId, collections.id))
+    //     .where(inArray(transfers.id, ids.map((r) => r.id)))
+    //     .orderBy(desc(transfers.timestamp), desc(transfers.id));
+    // } else {
+
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ id: transfers.id })
@@ -152,7 +198,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         .innerJoin(
           collections,
           and(
-            eq(collections.id, transfers.collectionId),
+            eq(transfers.collectionId, collections.id),
             ne(collections.slug, "empty-collection"),
             ...collectionFilters,
           ),
@@ -193,6 +239,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
         ),
       )
       .orderBy(desc(transfers.timestamp), desc(transfers.id));
+    // }
   } else if (query.type === "all") {
     // No collection filters — split OR into two parallel queries
     const [fromResults, toResults] = await Promise.all([
