@@ -1,7 +1,14 @@
+import { SQL } from "bun";
 import { drizzle } from "drizzle-orm/bun-sql";
 
 import { relations } from "./relation";
 
-export const db = drizzle(process.env.DATABASE_URL!, {
+const client = new SQL({
+  url: process.env.DATABASE_URL!,
+  idleTimeout: 60,
+});
+
+export const db = drizzle({
   relations,
+  client,
 });
