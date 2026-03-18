@@ -6,16 +6,7 @@ import { LiveStreamingRender } from "@/components/live/live-render";
 import { env } from "@/env";
 import { getLiveSession } from "@/lib/data-fetching";
 
-type Props = {
-  params: Promise<{
-    id: string;
-  }>;
-  searchParams?: Promise<{
-    token?: string;
-  }>;
-};
-
-export async function generateMetadata(props: Props): Promise<Metadata> {
+export async function generateMetadata(props: PageProps<"/live/[id]">): Promise<Metadata> {
   const params = await props.params;
   const [live, t] = await Promise.all([getLiveSession(params.id), getTranslations("page_titles")]);
 
@@ -42,7 +33,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page(props: Props) {
+export default async function Page(props: PageProps<"/live/[id]">) {
   const [searchParams, params] = await Promise.all([props.searchParams, props.params]);
   const token = searchParams?.token ?? "";
 

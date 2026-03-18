@@ -28,7 +28,7 @@ export default function ClientProviders({ children }: PropsWithChildren) {
   const [queryClient] = useState(() => createQueryClient());
 
   return (
-    <RouterProvider navigate={router.push}>
+    <RouterProvider navigate={router.push as any}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <NuqsAdapter>

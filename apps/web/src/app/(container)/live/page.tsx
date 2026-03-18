@@ -7,12 +7,6 @@ import { Loader } from "@/components/ui/loader";
 import { Note } from "@/components/ui/note";
 import { env } from "@/env";
 
-type Props = {
-  searchParams?: Promise<{
-    token?: string;
-  }>;
-};
-
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("page_titles");
   return {
@@ -20,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function Page(props: Props) {
+export default async function Page(props: PageProps<"/live">) {
   const searchParams = await props.searchParams;
   const token = searchParams?.token ?? "";
   return (

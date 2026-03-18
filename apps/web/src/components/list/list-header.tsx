@@ -1,6 +1,7 @@
 "use client";
 
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import type { Route } from "next";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -35,7 +36,7 @@ export default function ListHeader() {
             </div>
             <div className="text-muted-fg text-sm">
               <Link
-                href={`/@${profile.nickname || profile.address}`}
+                href={`/@${profile.nickname || profile.address}` as Route}
                 className="text-muted-fg hover:underline"
               >
                 {parseNickname(profile.address, profile.nickname)}

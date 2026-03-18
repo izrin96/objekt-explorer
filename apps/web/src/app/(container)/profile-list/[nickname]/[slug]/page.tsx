@@ -9,14 +9,9 @@ import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 
-type Props = {
-  params: Promise<{
-    nickname: string;
-    slug: string;
-  }>;
-};
-
-export async function generateMetadata(props: Props): Promise<Metadata> {
+export async function generateMetadata(
+  props: PageProps<"/profile-list/[nickname]/[slug]">,
+): Promise<Metadata> {
   const params = await props.params;
   const [profile, t] = await Promise.all([
     getUserByIdentifier(params.nickname),
@@ -29,7 +24,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-export default async function ProfileListPage(props: Props) {
+export default async function ProfileListPage(props: PageProps<"/profile-list/[nickname]/[slug]">) {
   const queryClient = getQueryClient();
   const [params, session] = await Promise.all([props.params, getSession()]);
 

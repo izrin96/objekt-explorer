@@ -2,7 +2,6 @@
 
 import { type ComponentProps, startTransition, useMemo } from "react";
 import { Bar, BarChart as BarChartPrimitive } from "recharts";
-import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
 import {
   type BaseChartProps,
@@ -20,10 +19,7 @@ import {
   YAxis,
 } from "./chart";
 
-export interface BarChartProps<
-  TValue extends ValueType,
-  TName extends NameType,
-> extends BaseChartProps<TValue, TName> {
+export interface BarChartProps extends BaseChartProps {
   barCategoryGap?: number;
   barRadius?: number;
   barGap?: number;
@@ -33,7 +29,7 @@ export interface BarChartProps<
   chartProps?: Omit<ComponentProps<typeof BarChartPrimitive>, "data" | "stackOffset">;
 }
 
-export function BarChart<TValue extends ValueType, TName extends NameType>({
+export function BarChart({
   data = [],
   dataKey,
   colors = DEFAULT_COLORS,
@@ -72,14 +68,17 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
   chartProps,
 
   ...props
-}: BarChartProps<TValue, TName>) {
+}: BarChartProps) {
   const configKeys = useMemo(() => Object.keys(config), [config]);
   const categoryColors = useMemo(
     () => constructCategoryColors(configKeys, colors),
     [configKeys, colors],
   );
 
-  const configEntries = useMemo(() => Object.entries(config), [config]);
+  const configEntries = useMemo(
+    () => configKeys.map((category) => [category, config[category]] as const),
+    [config, configKeys],
+  );
 
   const stacked = type === "stacked" || type === "percent";
   const defaultBarRadius = stacked ? undefined : 4;
@@ -138,7 +137,7 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
 
           {!children
             ? configEntries.map(([category, values]) => {
-                const color = getColorValue(values.color || categoryColors.get(category));
+                const color = getColorValue(values?.color || categoryColors.get(category));
                 const strokeOpacity = selectedLegend && selectedLegend !== category ? 0.2 : 0;
                 const fillOpacity = selectedLegend && selectedLegend !== category ? 0.1 : 1;
 

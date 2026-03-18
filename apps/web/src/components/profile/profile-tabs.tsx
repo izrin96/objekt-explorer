@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -16,11 +17,11 @@ export default function ProfileTabs() {
   const path = profile.nickname || profile.address;
 
   const items = [
-    { url: `/@${path}`, translationKey: "collection" as const },
-    { url: `/@${path}/trades`, translationKey: "trade_history" as const },
-    { url: `/@${path}/progress`, translationKey: "progress" as const },
-    { url: `/@${path}/stats`, translationKey: "statistics" as const },
-    { url: `/@${path}/list`, translationKey: "lists" as const },
+    { url: `/@${path}` as Route, translationKey: "collection" as const },
+    { url: `/@${path}/trades` as Route, translationKey: "trade_history" as const },
+    { url: `/@${path}/progress` as Route, translationKey: "progress" as const },
+    { url: `/@${path}/stats` as Route, translationKey: "statistics" as const },
+    { url: `/@${path}/list` as Route, translationKey: "lists" as const },
   ];
 
   useEffect(() => {

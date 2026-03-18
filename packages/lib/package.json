@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
-    "drizzle-orm": "^1.0.0-beta.15-9485290"
+    "drizzle-orm": "^1.0.0-beta.18-d6c3a2f"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
-    "@types/bun": "^1.3.9"
+    "@types/bun": "^1.3.10"
   }
 }

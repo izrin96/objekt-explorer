@@ -3,6 +3,7 @@
 import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useQuery } from "@tanstack/react-query";
+import type { Route } from "next";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
@@ -46,7 +47,7 @@ export default function UserSearch() {
     setQuery("");
     setIsOpen(false);
     addRecent(user);
-    router.push(`/@${user.nickname}`);
+    router.push(`/@${user.nickname}` as Route);
   };
 
   return (

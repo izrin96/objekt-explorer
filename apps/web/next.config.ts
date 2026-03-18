@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["react-aria-components", "@phosphor-icons/react"],
   },
+  typedRoutes: true,
   async rewrites() {
     return [
       {

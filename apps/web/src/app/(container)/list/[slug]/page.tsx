@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
@@ -11,13 +11,7 @@ import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 import type { PublicList } from "@/lib/universal/user";
 
-type Props = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
-
-export async function generateMetadata(props: Props): Promise<Metadata> {
+export async function generateMetadata(props: PageProps<"/list/[slug]">): Promise<Metadata> {
   const params = await props.params;
   const [data, t] = await Promise.all([getList(params.slug), getTranslations("page_titles")]);
 
@@ -26,7 +20,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   };
 }
 
-export default async function Page(props: Props) {
+export default async function Page(props: PageProps<"/list/[slug]">) {
   const queryClient = getQueryClient();
   const [params, session] = await Promise.all([props.params, getSession()]);
 
@@ -41,7 +35,9 @@ export default async function Page(props: Props) {
   // Redirect normal lists bound to a profile
   if (list.profileAddress && (list.profileSlug || list.slug)) {
     const profile = await getUserByIdentifier(list.profileAddress);
-    redirect(`/@${profile.nickname || profile.address}/list/${list.profileSlug || list.slug}`);
+    redirect(
+      `/@${profile.nickname || profile.address}/list/${list.profileSlug || list.slug}` as Route,
+    );
   }
 
   void queryClient.prefetchQuery(
