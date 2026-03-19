@@ -6,6 +6,7 @@ import { relations } from "./relation";
 const client = new SQL({
   url: process.env.INDEXER_DATABASE_URL!,
   max: 15,
+  idleTimeout: 120,
 });
 
 export const indexer = drizzle({

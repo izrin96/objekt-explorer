@@ -99,6 +99,7 @@ services:
       - POOL_MODE=transaction
       - AUTH_TYPE=scram-sha-256
       - MAX_CLIENT_CONN=300
+      - MIN_POOL_SIZE=5
       - DEFAULT_POOL_SIZE=20
       - RESERVE_POOL_SIZE=5
       - RESERVE_POOL_TIMEOUT=5
@@ -200,6 +201,7 @@ services:
       - POOL_MODE=transaction
       - AUTH_TYPE=scram-sha-256
       - MAX_CLIENT_CONN=300
+      - MIN_POOL_SIZE=5
       - DEFAULT_POOL_SIZE=20
       - RESERVE_POOL_SIZE=5
       - RESERVE_POOL_TIMEOUT=5
