@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+import { useTarget } from "@/hooks/use-target";
 
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
@@ -26,6 +27,7 @@ import { GenerateDiscordButton } from "../generate-discord-button";
 export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
+  const list = useTarget((a) => a.list)!;
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
@@ -40,7 +42,7 @@ export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
         <EditionFilter />
         <OnlineFilter />
         <ColorFilter />
-        <SortFilter allowDuplicateSort />
+        <SortFilter allowDuplicateSort allowSerialSort={list.listType === "profile"} />
         <SortDirectionFilter />
         <CombineDuplicateFilter />
         <GroupByFilter />
