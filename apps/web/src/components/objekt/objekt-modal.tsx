@@ -4,7 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useState } from "react";
 
-import { ModalBody, ModalClose, ModalContent, ModalFooter } from "../ui/modal";
+import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../ui/modal";
 import ObjektDetail from "./objekt-detail";
 
 type Props = {
@@ -29,6 +29,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
   return (
     <ObjektModalContext value={{ handleClick }}>
       <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
+        <ModalHeader className="hidden">Objekt detail</ModalHeader>
         <ModalBody className="py-0 [--gutter:0]">
           {menu}
           <ObjektDetail objekts={objekts} showOwned={showOwned} />
