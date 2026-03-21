@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -32,7 +32,7 @@ export function SettingsModal({
   setOpen: (val: boolean) => void;
 }) {
   const t = useTranslations("common.settings");
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const locale = useLocale() as Locale;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -42,6 +42,14 @@ export function SettingsModal({
   const { wide, setWide } = useWide();
   const hideLabel = useConfigStore((s) => s.hideLabel);
   const setHideLabel = useConfigStore((s) => s.setHideLabel);
+
+  useEffect(() => {
+    if (resolvedTheme === "dark") {
+      document.querySelector('meta[name="theme-color"]')!.setAttribute("content", "#09090b");
+    } else {
+      document.querySelector('meta[name="theme-color"]')!.setAttribute("content", "#ffffff");
+    }
+  }, [resolvedTheme]);
 
   const handleLocaleChange = (value: string) => {
     startTransition(async () => {
@@ -62,7 +70,12 @@ export function SettingsModal({
             <Description>{t("theme.desc")}</Description>
           </div>
           <div className="flex self-center">
-            <Select className="shrink" value={theme} onChange={(key) => setTheme(key as string)}>
+            <Select
+              className="shrink"
+              value={theme}
+              onChange={(key) => setTheme(key as string)}
+              aria-label={t("theme.label")}
+            >
               <SelectTrigger />
               <SelectContent>
                 <SelectItem id="light">{t("theme.light")}</SelectItem>
@@ -83,6 +96,7 @@ export function SettingsModal({
               value={locale}
               onChange={(key) => handleLocaleChange(key as string)}
               isDisabled={isPending}
+              aria-label={t("language.label")}
             >
               <SelectTrigger />
               <SelectContent>
@@ -97,13 +111,17 @@ export function SettingsModal({
           <h3 className="text-sm font-medium">{t("filters.label")}</h3>
 
           {!isCompact && (
-            <Switch isSelected={wide} onChange={setWide}>
+            <Switch isSelected={wide} onChange={setWide} aria-label={t("filters.wide")}>
               <Label>{t("filters.wide")}</Label>
               <Description>{t("filters.wide_desc")}</Description>
             </Switch>
           )}
 
-          <Switch isSelected={hideLabel} onChange={setHideLabel}>
+          <Switch
+            isSelected={hideLabel}
+            onChange={setHideLabel}
+            aria-label={t("filters.hide_label")}
+          >
             <Label>{t("filters.hide_label")}</Label>
             <Description>{t("filters.hide_label_desc")}</Description>
           </Switch>

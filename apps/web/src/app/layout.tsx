@@ -17,6 +17,7 @@ import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 import { artists } from "@/lib/server/cosmo/artists";
 import { SITE_NAME } from "@/lib/utils";
+import { cn } from "@/utils/classes";
 
 const inter = Google_Sans_Flex({
   variable: "--font-inter",
@@ -92,8 +93,22 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={`${inter.variable} ${geistMono.variable} ${notoSansKr.variable} ${notoSansSc.variable}`}
+      className={cn(inter.variable, geistMono.variable, notoSansKr.variable, notoSansSc.variable)}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.querySelector('meta[name="theme-color"]').setAttribute('content', '#09090b')
+                }
+              } catch (_) {}
+            `,
+          }}
+        />
+        <meta name="theme-color" content="#ffffff" />
+      </head>
       <body className="min-h-svh font-sans antialiased">
         <ClientProviders>
           <Providers>
