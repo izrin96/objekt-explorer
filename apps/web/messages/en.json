@@ -110,8 +110,8 @@
     "scanned_copies": "Scanned Copies",
     "spin": "Spin",
     "non_spin": "Non-Spin",
-    "tradable": "Tradable",
-    "trades": "Trades",
+    "tradable": "Transferable",
+    "trades": "Serials",
     "owned": "Owned",
     "view_in_apollo": "View in Apollo",
     "owner": "Owner",
@@ -273,7 +273,7 @@
     },
     "tabs": {
       "collection": "Collection",
-      "trade_history": "Trade History",
+      "trade_history": "Activity History",
       "progress": "Progress",
       "statistics": "Statistics",
       "lists": "Lists"
@@ -284,11 +284,11 @@
       "hide_user_label": "Hide User",
       "hide_user_desc": "Hide {siteName} account from Cosmo profile",
       "hide_nickname_label": "Hide Cosmo ID",
-      "hide_nickname_desc": "Hide Cosmo ID from Activity, Trade History, Serial Lookup and your profile.",
+      "hide_nickname_desc": "Hide Cosmo ID from Activity, Activity History, Serial Lookup and your profile.",
       "private_serial_label": "Hide from Serial Lookup",
       "private_serial_desc": "Prevent others from finding your objekt via serial number. Only you can see it.",
-      "hide_transfer_label": "Hide Trade History",
-      "hide_transfer_desc": "Hide your profile trade history. Only you can see it.",
+      "hide_transfer_label": "Hide Activity History",
+      "hide_transfer_desc": "Hide your profile Activity History. Only you can see it.",
       "private_profile_label": "Private Profile",
       "private_profile_desc": "Make your Cosmo profile private. Only you can see it.",
       "grid_columns_label": "Objekt Columns",
@@ -660,7 +660,7 @@
       "sent": "Sent",
       "spin": "Spin"
     },
-    "history_private": "Trade History Private",
+    "history_private": "Activity History Private",
     "table_headers": {
       "date": "Date",
       "objekt": "Objekt",
@@ -726,7 +726,7 @@
     "profile_collection": "{nickname} · Collection",
     "profile_progress": "{nickname} · Progress",
     "profile_stats": "{nickname} · Stats",
-    "profile_trades": "{nickname} · Trades",
+    "profile_trades": "{nickname} · Activity History",
     "list_detail": "{name} · List"
   }
 }

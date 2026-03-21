@@ -110,8 +110,8 @@
     "scanned_copies": "스캔된 복제본",
     "spin": "스핀",
     "non_spin": "논스핀",
-    "tradable": "거래 가능",
-    "trades": "거래 내역",
+    "tradable": "전송 가능",
+    "trades": "번호",
     "owned": "보유함",
     "view_in_apollo": "Apollo에서 보기",
     "owner": "소유자",
@@ -273,7 +273,7 @@
     },
     "tabs": {
       "collection": "컬렉션",
-      "trade_history": "거래 내역",
+      "trade_history": "활동 내역",
       "progress": "진행 상황",
       "statistics": "통계",
       "lists": "목록"
@@ -284,11 +284,11 @@
       "hide_user_label": "사용자 숨기기",
       "hide_user_desc": "Cosmo 프로필에서 {siteName} 계정을 숨깁니다",
       "hide_nickname_label": "Cosmo ID 숨기기",
-      "hide_nickname_desc": "활동, 거래 내역, 시리얼 조회 및 프로필에서 Cosmo ID를 숨깁니다.",
+      "hide_nickname_desc": "활동, 활동 내역, 시리얼 조회 및 프로필에서 Cosmo ID를 숨깁니다.",
       "private_serial_label": "시리얼 조회에서 숨기기",
       "private_serial_desc": "다른 사람이 시리얼 번호로 오브젝트를 찾지 못하도록 합니다. 본인만 볼 수 있습니다.",
-      "hide_transfer_label": "거래 내역 숨기기",
-      "hide_transfer_desc": "프로필 거래 내역을 숨깁니다. 본인만 볼 수 있습니다.",
+      "hide_transfer_label": "활동 내역 숨기기",
+      "hide_transfer_desc": "프로필 활동 내역을 숨깁니다. 본인만 볼 수 있습니다.",
       "private_profile_label": "비공개 프로필",
       "private_profile_desc": "Cosmo 프로필을 비공개로 설정합니다. 본인만 볼 수 있습니다.",
       "grid_columns_label": "오브젝트 열",
@@ -660,7 +660,7 @@
       "sent": "보냄",
       "spin": "스핀"
     },
-    "history_private": "거래 내역 비공개",
+    "history_private": "활동 내역 비공개",
     "table_headers": {
       "date": "날짜",
       "objekt": "오브젝트",
@@ -726,7 +726,7 @@
     "profile_collection": "{nickname} · 컬렉션",
     "profile_progress": "{nickname} · 진행상황",
     "profile_stats": "{nickname} · 통계",
-    "profile_trades": "{nickname} · 거래",
+    "profile_trades": "{nickname} · 활동 내역",
     "list_detail": "{name} · 리스트"
   }
 }
