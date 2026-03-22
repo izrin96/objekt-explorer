@@ -3,34 +3,42 @@ import { RPCLink } from "@orpc/client/fetch";
 import { BatchLinkPlugin } from "@orpc/client/plugins";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { createIsomorphicFn } from "@tanstack/react-start";
 
 import type { router } from "../server/api/routers";
 
-declare global {
-  var $client: RouterClient<typeof router> | undefined;
-}
+const getClientLink = createIsomorphicFn()
+  .client(
+    () =>
+      new RPCLink({
+        url: () => {
+          if (typeof window === "undefined") {
+            throw new Error("RPCLink is not allowed on the server side.");
+          }
 
-const link = new RPCLink({
-  url: () => {
-    if (typeof window === "undefined") {
-      throw new Error("RPCLink is not allowed on the server side.");
-    }
-
-    return `${window.location.origin}/rpc`;
-  },
-  plugins: [
-    new BatchLinkPlugin({
-      mode: typeof window === "undefined" ? "buffered" : "streaming",
-      groups: [
-        {
-          condition: () => true,
-          context: {},
+          return `${window.location.origin}/rpc`;
         },
-      ],
-    }),
-  ],
-});
+        plugins: [
+          new BatchLinkPlugin({
+            mode: typeof window === "undefined" ? "buffered" : "streaming",
+            groups: [
+              {
+                condition: () => true,
+                context: {},
+              },
+            ],
+          }),
+        ],
+      }),
+  )
+  .server(
+    () =>
+      new RPCLink({
+        url: "http://localhost:3000/api/rpc",
+        headers: () => getRequestHeaders(),
+      }),
+  );
 
-export const client: RouterClient<typeof router> = globalThis.$client ?? createORPCClient(link);
+export const client: RouterClient<typeof router> = getClientLink();
 
 export const orpc = createTanstackQueryUtils(client);

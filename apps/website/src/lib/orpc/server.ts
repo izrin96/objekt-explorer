@@ -11,7 +11,7 @@ import { getRequest } from "@tanstack/react-start/server";
 
 import { router } from "../server/api/routers";
 
-globalThis.$client = createRouterClient(router, {
+createRouterClient(router, {
   context: async () => {
     const request = getRequest();
     return {
