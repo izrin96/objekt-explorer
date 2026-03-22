@@ -28,6 +28,7 @@ import { Route as ContainerListSlugRouteImport } from './routes/_container/list/
 import { Route as ContainerLinkConnectRouteImport } from './routes/_container/link/connect'
 import { Route as ContainerAuthVerifiedRouteImport } from './routes/_container/auth/verified'
 import { Route as ContainerAuthResetPasswordRouteImport } from './routes/_container/auth/reset-password'
+import { Route as AtnicknameListSlugRouteImport } from './routes/@$nickname/list.$slug'
 import { Route as ContainerProfileListNicknameSlugRouteImport } from './routes/_container/profile-list/$nickname/$slug'
 
 const ContainerRoute = ContainerRouteImport.update({
@@ -125,6 +126,11 @@ const ContainerAuthResetPasswordRoute =
     path: '/auth/reset-password',
     getParentRoute: () => ContainerRoute,
   } as any)
+const AtnicknameListSlugRoute = AtnicknameListSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AtnicknameListRoute,
+} as any)
 const ContainerProfileListNicknameSlugRoute =
   ContainerProfileListNicknameSlugRouteImport.update({
     id: '/profile-list/$nickname/$slug',
@@ -135,7 +141,7 @@ const ContainerProfileListNicknameSlugRoute =
 export interface FileRoutesByFullPath {
   '/@$nickname': typeof AtnicknameRouteWithChildren
   '/': typeof ContainerIndexRoute
-  '/@$nickname/list': typeof AtnicknameListRoute
+  '/@$nickname/list': typeof AtnicknameListRouteWithChildren
   '/@$nickname/progress': typeof AtnicknameProgressRoute
   '/@$nickname/stats': typeof AtnicknameStatsRoute
   '/@$nickname/trades': typeof AtnicknameTradesRoute
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof ContainerLoginRoute
   '/terms-privacy': typeof ContainerTermsPrivacyRoute
   '/@$nickname/': typeof AtnicknameIndexRoute
+  '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
   '/auth/reset-password': typeof ContainerAuthResetPasswordRoute
   '/auth/verified': typeof ContainerAuthVerifiedRoute
   '/link/connect': typeof ContainerLinkConnectRoute
@@ -154,7 +161,7 @@ export interface FileRoutesByFullPath {
   '/profile-list/$nickname/$slug': typeof ContainerProfileListNicknameSlugRoute
 }
 export interface FileRoutesByTo {
-  '/@$nickname/list': typeof AtnicknameListRoute
+  '/@$nickname/list': typeof AtnicknameListRouteWithChildren
   '/@$nickname/progress': typeof AtnicknameProgressRoute
   '/@$nickname/stats': typeof AtnicknameStatsRoute
   '/@$nickname/trades': typeof AtnicknameTradesRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/terms-privacy': typeof ContainerTermsPrivacyRoute
   '/@$nickname': typeof AtnicknameIndexRoute
   '/': typeof ContainerIndexRoute
+  '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
   '/auth/reset-password': typeof ContainerAuthResetPasswordRoute
   '/auth/verified': typeof ContainerAuthVerifiedRoute
   '/link/connect': typeof ContainerLinkConnectRoute
@@ -177,7 +185,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/@$nickname': typeof AtnicknameRouteWithChildren
   '/_container': typeof ContainerRouteWithChildren
-  '/@$nickname/list': typeof AtnicknameListRoute
+  '/@$nickname/list': typeof AtnicknameListRouteWithChildren
   '/@$nickname/progress': typeof AtnicknameProgressRoute
   '/@$nickname/stats': typeof AtnicknameStatsRoute
   '/@$nickname/trades': typeof AtnicknameTradesRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/_container/terms-privacy': typeof ContainerTermsPrivacyRoute
   '/@$nickname/': typeof AtnicknameIndexRoute
   '/_container/': typeof ContainerIndexRoute
+  '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
   '/_container/auth/reset-password': typeof ContainerAuthResetPasswordRoute
   '/_container/auth/verified': typeof ContainerAuthVerifiedRoute
   '/_container/link/connect': typeof ContainerLinkConnectRoute
@@ -209,6 +218,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/terms-privacy'
     | '/@$nickname/'
+    | '/@$nickname/list/$slug'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/terms-privacy'
     | '/@$nickname'
     | '/'
+    | '/@$nickname/list/$slug'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -251,6 +262,7 @@ export interface FileRouteTypes {
     | '/_container/terms-privacy'
     | '/@$nickname/'
     | '/_container/'
+    | '/@$nickname/list/$slug'
     | '/_container/auth/reset-password'
     | '/_container/auth/verified'
     | '/_container/link/connect'
@@ -402,6 +414,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContainerAuthResetPasswordRouteImport
       parentRoute: typeof ContainerRoute
     }
+    '/@$nickname/list/$slug': {
+      id: '/@$nickname/list/$slug'
+      path: '/$slug'
+      fullPath: '/@$nickname/list/$slug'
+      preLoaderRoute: typeof AtnicknameListSlugRouteImport
+      parentRoute: typeof AtnicknameListRoute
+    }
     '/_container/profile-list/$nickname/$slug': {
       id: '/_container/profile-list/$nickname/$slug'
       path: '/profile-list/$nickname/$slug'
@@ -412,8 +431,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AtnicknameListRouteChildren {
+  AtnicknameListSlugRoute: typeof AtnicknameListSlugRoute
+}
+
+const AtnicknameListRouteChildren: AtnicknameListRouteChildren = {
+  AtnicknameListSlugRoute: AtnicknameListSlugRoute,
+}
+
+const AtnicknameListRouteWithChildren = AtnicknameListRoute._addFileChildren(
+  AtnicknameListRouteChildren,
+)
+
 interface AtnicknameRouteChildren {
-  AtnicknameListRoute: typeof AtnicknameListRoute
+  AtnicknameListRoute: typeof AtnicknameListRouteWithChildren
   AtnicknameProgressRoute: typeof AtnicknameProgressRoute
   AtnicknameStatsRoute: typeof AtnicknameStatsRoute
   AtnicknameTradesRoute: typeof AtnicknameTradesRoute
@@ -421,7 +452,7 @@ interface AtnicknameRouteChildren {
 }
 
 const AtnicknameRouteChildren: AtnicknameRouteChildren = {
-  AtnicknameListRoute: AtnicknameListRoute,
+  AtnicknameListRoute: AtnicknameListRouteWithChildren,
   AtnicknameProgressRoute: AtnicknameProgressRoute,
   AtnicknameStatsRoute: AtnicknameStatsRoute,
   AtnicknameTradesRoute: AtnicknameTradesRoute,

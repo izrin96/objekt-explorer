@@ -1,0 +1,168 @@
+import { NumberFormatter } from "@internationalized/number";
+import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { type CSSProperties, type PropsWithChildren, useState } from "react";
+
+import { useElementSize } from "@/hooks/use-element-size";
+import { useTranslations } from "@/lib/i18n/context";
+import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
+import { cn, replaceUrlSize } from "@/lib/utils";
+
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent } from "../ui/popover";
+import { useObjektModal } from "./objekt-modal";
+import ObjektSidebar from "./objekt-sidebar";
+
+function formatListPrice(price: number, currency: string): string {
+  try {
+    return new NumberFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
+      style: "currency",
+      currency,
+    }).format(price);
+  } catch {
+    return `${price.toLocaleString()} ${currency}`;
+  }
+}
+
+type Props = PropsWithChildren<{
+  objekts: ValidObjekt[];
+  isFade?: boolean;
+  unobtainable?: boolean;
+  showCount?: boolean;
+  showSerial?: boolean;
+  isSelected?: boolean;
+  hideLabel?: boolean;
+  listCurrency?: string | null;
+  onSetPrice?: () => void;
+}>;
+
+export default function ObjektView({
+  objekts,
+  isFade = false,
+  unobtainable = false,
+  showCount = false,
+  showSerial = false,
+  isSelected = false,
+  hideLabel = false,
+  listCurrency,
+  children,
+  onSetPrice,
+}: Props) {
+  const t = useTranslations("objekt");
+  const [ref, { width }] = useElementSize();
+  const [loaded, setLoaded] = useState(false);
+  const [objekt] = objekts;
+  const ctx = useObjektModal();
+
+  if (!objekt) return null;
+
+  const css = {
+    "--objekt-bg-color": objekt.backgroundColor,
+    "--objekt-text-color": objekt.textColor,
+    "--width": `${width}px`,
+  } as CSSProperties;
+
+  const resizedUrl = replaceUrlSize(objekt.frontImage);
+
+  const hasListPrice = objekt.listPrice !== undefined && objekt.listPrice !== null;
+  const showPriceContent =
+    listCurrency && (objekt.isQyop || hasListPrice || objekt.note || onSetPrice !== undefined);
+  const showBottomContent = !hideLabel || unobtainable || showPriceContent;
+
+  return (
+    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")} style={css}>
+      <div
+        ref={ref}
+        className={cn(
+          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md transition-all",
+          "contain-layout contain-paint",
+          isSelected && "bg-fg outline-[calc(var(--width)*0.03)]",
+          !loaded && "opacity-0",
+        )}
+      >
+        <img
+          draggable={false}
+          onClick={ctx.handleClick}
+          className="h-full w-full object-cover"
+          src={resizedUrl}
+          width={582}
+          height={900}
+          alt={objekt.collectionId}
+          onLoad={() => setLoaded(true)}
+          fetchPriority="high"
+        />
+        <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
+        {showCount && objekts.length > 1 && (
+          <div className="bg-bg text-fg pointer-events-none m-1 flex self-end justify-self-start overflow-hidden rounded-full px-1.5 py-0.5 text-[0.6rem] font-semibold sm:px-2 sm:py-1 sm:text-xs">
+            {objekts.length.toLocaleString()}
+          </div>
+        )}
+
+        {children}
+      </div>
+      {showBottomContent && (
+        <div className="flex flex-col items-center justify-center gap-1 text-center">
+          {showPriceContent ? (
+            <div className="flex flex-wrap items-center justify-center gap-0.5">
+              {objekt.isQyop ? (
+                <Badge
+                  intent="secondary"
+                  className={cn("font-semibold", onSetPrice && "cursor-pointer")}
+                  onClick={onSetPrice}
+                >
+                  {t("qyop")}
+                </Badge>
+              ) : hasListPrice ? (
+                <Badge
+                  intent="secondary"
+                  className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
+                  onClick={onSetPrice}
+                >
+                  {formatListPrice(objekt.listPrice!, listCurrency)}
+                </Badge>
+              ) : (
+                onSetPrice && (
+                  <Badge
+                    intent="secondary"
+                    className="cursor-pointer font-semibold"
+                    onClick={onSetPrice}
+                  >
+                    {t("set_price")}
+                  </Badge>
+                )
+              )}
+              {objekt.note && (
+                <Popover>
+                  <Button isCircle intent="plain" size="sq-xs">
+                    <NoteIcon className="size-4 sm:size-5" />
+                  </Button>
+                  <PopoverContent arrow className="max-w-72">
+                    <div className="p-3 text-sm">
+                      <span className="text-muted-fg">{t("note")}: </span>
+                      <span className="text-fg">{objekt.note}</span>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+            </div>
+          ) : null}
+
+          {!hideLabel && (
+            <Badge
+              intent="secondary"
+              className="text-fg bg-muted cursor-pointer text-[0.65rem] sm:text-xs"
+              onClick={ctx.handleClick}
+              isCircle={false}
+            >
+              {getCollectionShortId(objekt)}
+              {showSerial && isObjektOwned(objekt) && ` #${objekt.serial}`}
+            </Badge>
+          )}
+
+          {unobtainable && <Badge intent="danger">{t("unobtainable")}</Badge>}
+        </div>
+      )}
+    </div>
+  );
+}

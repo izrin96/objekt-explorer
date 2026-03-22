@@ -1,0 +1,43 @@
+import type { ValidArtist } from "@repo/cosmo/types/common";
+import { useCallback } from "react";
+import type { Selection } from "react-aria-components";
+
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
+import { useTranslations } from "@/lib/i18n/context";
+
+import { Button } from "../ui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
+
+export default function ArtistFilter() {
+  const { selectedArtists } = useCosmoArtist();
+  const t = useTranslations("filter");
+  const [filters, setFilters] = useFilters();
+  const selected = new Set(filters.artist ?? []);
+
+  const update = useCallback(
+    (key: Selection) => {
+      const values = Array.from((key as Set<ValidArtist>).values());
+      return setFilters({
+        artist: values.length ? values : null,
+        member: null,
+      });
+    },
+    [setFilters],
+  );
+
+  return (
+    <Menu>
+      <Button intent="outline" data-selected={filters.artist}>
+        {t("artist")}
+      </Button>
+      <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
+        {selectedArtists.map((item) => (
+          <MenuItem key={item.name} id={item.name} textValue={item.title}>
+            <MenuLabel>{item.title}</MenuLabel>
+          </MenuItem>
+        ))}
+      </MenuContent>
+    </Menu>
+  );
+}

@@ -1,5 +1,5 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-
+import type { ToOptions } from "@tanstack/react-router";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -27,18 +27,29 @@ export function parseNickname(address: string, nickname?: string | null) {
   return nickname || `${address.substring(0, 8)}...`;
 }
 
-export function getListHref(list: {
+export function getListToOptions(list: {
   listType?: "normal" | "profile";
   slug: string;
   profileSlug?: string | null;
   nickname?: string | null;
   profileAddress?: string | null;
-}) {
+}): ToOptions {
   const isProfileContext = list.listType === "profile" || !!list.profileAddress;
   if (isProfileContext && (list.nickname || list.profileAddress)) {
-    return `/@${list.nickname || list.profileAddress}/list/${list.profileSlug || list.slug}`;
+    return {
+      to: "/@$nickname/list",
+      params: {
+        nickname: `${list.nickname || list.profileAddress}`,
+      },
+    };
+    // todo: should return `/@${list.nickname || list.profileAddress}/list/${list.profileSlug || list.slug}`;
   }
-  return `/list/${list.slug}`;
+  return {
+    to: "/list/$slug",
+    params: {
+      slug: list.slug,
+    },
+  };
 }
 
 export function getBaseURL() {

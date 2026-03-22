@@ -5,7 +5,7 @@ import { NotFound } from "./components/NotFound";
 import type { RouterContext } from "./routes/__root";
 import { routeTree } from "./routeTree.gen";
 
-export function createAppRouter(context: RouterContext) {
+export function getRouter(context: RouterContext) {
   return createRouter({
     routeTree,
     defaultPreload: "intent",
@@ -16,4 +16,4 @@ export function createAppRouter(context: RouterContext) {
   });
 }
 
-export type AppRouter = ReturnType<typeof createAppRouter>;
+export type AppRouter = ReturnType<typeof getRouter>;

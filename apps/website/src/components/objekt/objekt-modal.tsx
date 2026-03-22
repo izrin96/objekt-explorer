@@ -1,0 +1,43 @@
+import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { createContext, type ReactNode, use, useState } from "react";
+
+import { useTranslations } from "@/lib/i18n/context";
+
+import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../ui/modal";
+import ObjektDetail from "./objekt-detail";
+
+type Props = {
+  showOwned?: boolean;
+  objekts: ValidObjekt[];
+  children: ReactNode;
+  menu?: ReactNode;
+};
+
+export const ObjektModalContext = createContext({
+  handleClick: () => {},
+});
+
+export const useObjektModal = () => use(ObjektModalContext);
+
+export default function ObjektModal({ children, showOwned, objekts, menu }: Props) {
+  const [open, setOpen] = useState(false);
+  const t = useTranslations("common.modal");
+
+  const handleClick = () => setOpen(true);
+
+  return (
+    <ObjektModalContext value={{ handleClick }}>
+      <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
+        <ModalHeader className="hidden">Objekt detail</ModalHeader>
+        <ModalBody className="py-0 [--gutter:0]">
+          {menu}
+          <ObjektDetail objekts={objekts} showOwned={showOwned} />
+        </ModalBody>
+        <ModalFooter className="sm:hidden">
+          <ModalClose>{t("close")}</ModalClose>
+        </ModalFooter>
+      </ModalContent>
+      {children}
+    </ObjektModalContext>
+  );
+}

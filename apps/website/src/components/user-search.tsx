@@ -1,0 +1,108 @@
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
+import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
+
+import { ofetch } from "ofetch";
+import { useState } from "react";
+import { useDebounceValue } from "usehooks-ts";
+
+import { useUserSearchStore } from "@/hooks/use-user-search-store";
+import { useTranslations } from "@/lib/i18n/context";
+import { getBaseURL } from "@/lib/utils";
+
+import { Button } from "./ui/button";
+import {
+  CommandMenu,
+  CommandMenuItem,
+  CommandMenuList,
+  CommandMenuSearch,
+  CommandMenuSection,
+} from "./ui/command-menu";
+
+export default function UserSearch() {
+  const t = useTranslations("nav.search_user");
+  const recentUsers = useUserSearchStore((a) => a.users);
+  const addRecent = useUserSearchStore((a) => a.add);
+  const clearAll = useUserSearchStore((a) => a.clearAll);
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [debouncedQuery, setQuery] = useDebounceValue<string>("", 350);
+  const enable = debouncedQuery.length > 0;
+
+  const { data, isPending } = useQuery({
+    queryKey: ["user-search", debouncedQuery],
+    queryFn: () => {
+      const url = new URL("/api/user/search", getBaseURL());
+      return ofetch<CosmoSearchResult>(url.toString(), {
+        query: { query: debouncedQuery },
+      }).then((res) => res.results);
+    },
+    enabled: enable,
+  });
+
+  const handleAction = (user: CosmoPublicUser) => {
+    setQuery("");
+    setIsOpen(false);
+    addRecent(user);
+    router.navigate({ to: `/@${user.nickname}` });
+  };
+
+  return (
+    <>
+      <Button onPress={() => setIsOpen(true)} size="sm" intent="primary">
+        <MagnifyingGlassIcon data-slot="icon" />
+        <span className="hidden sm:block">{t("label")}</span>
+      </Button>
+      <CommandMenu
+        shortcut="k"
+        isPending={enable && isPending}
+        onInputChange={setQuery}
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
+      >
+        <CommandMenuSearch placeholder={t("placeholder")} />
+        <CommandMenuList autoFocus="first" shouldFocusWrap>
+          <CommandMenuSection label={t("result_label")}>
+            {data?.map((user) => (
+              <CommandMenuItem
+                onAction={() => handleAction(user)}
+                key={`search-${user.address}`}
+                id={`search-${user.address}`}
+                textValue={user.nickname}
+              >
+                {user.nickname}
+              </CommandMenuItem>
+            ))}
+          </CommandMenuSection>
+          <CommandMenuSection label={t("recent_label")}>
+            {[
+              ...recentUsers.map((user) => (
+                <CommandMenuItem
+                  onAction={() => handleAction(user)}
+                  key={`recent-${user.address}`}
+                  id={`recent-${user.address}`}
+                  textValue={user.nickname}
+                >
+                  {user.nickname}
+                </CommandMenuItem>
+              )),
+              ...(recentUsers.length > 0
+                ? [
+                    <CommandMenuItem
+                      key="clear"
+                      textValue={t("clear_history")}
+                      onAction={() => clearAll()}
+                      intent="danger"
+                    >
+                      {t("clear_history")}
+                    </CommandMenuItem>,
+                  ]
+                : []),
+            ]}
+          </CommandMenuSection>
+        </CommandMenuList>
+      </CommandMenu>
+    </>
+  );
+}
