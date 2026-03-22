@@ -13,6 +13,7 @@ import { Route as ContainerRouteImport } from './routes/_container'
 import { Route as AtnicknameRouteImport } from './routes/@$nickname'
 import { Route as ContainerIndexRouteImport } from './routes/_container/index'
 import { Route as AtnicknameIndexRouteImport } from './routes/@$nickname/index'
+import { Route as RpcSplatRouteImport } from './routes/rpc.$'
 import { Route as ContainerTermsPrivacyRouteImport } from './routes/_container/terms-privacy'
 import { Route as ContainerLoginRouteImport } from './routes/_container/login'
 import { Route as ContainerActivityRouteImport } from './routes/_container/activity'
@@ -49,6 +50,11 @@ const AtnicknameIndexRoute = AtnicknameIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AtnicknameRoute,
+} as any)
+const RpcSplatRoute = RpcSplatRouteImport.update({
+  id: '/rpc/$',
+  path: '/rpc/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ContainerTermsPrivacyRoute = ContainerTermsPrivacyRouteImport.update({
   id: '/terms-privacy',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/activity': typeof ContainerActivityRoute
   '/login': typeof ContainerLoginRoute
   '/terms-privacy': typeof ContainerTermsPrivacyRoute
+  '/rpc/$': typeof RpcSplatRoute
   '/@$nickname/': typeof AtnicknameIndexRoute
   '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
   '/auth/reset-password': typeof ContainerAuthResetPasswordRoute
@@ -168,6 +175,7 @@ export interface FileRoutesByTo {
   '/activity': typeof ContainerActivityRoute
   '/login': typeof ContainerLoginRoute
   '/terms-privacy': typeof ContainerTermsPrivacyRoute
+  '/rpc/$': typeof RpcSplatRoute
   '/@$nickname': typeof AtnicknameIndexRoute
   '/': typeof ContainerIndexRoute
   '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
@@ -192,6 +200,7 @@ export interface FileRoutesById {
   '/_container/activity': typeof ContainerActivityRoute
   '/_container/login': typeof ContainerLoginRoute
   '/_container/terms-privacy': typeof ContainerTermsPrivacyRoute
+  '/rpc/$': typeof RpcSplatRoute
   '/@$nickname/': typeof AtnicknameIndexRoute
   '/_container/': typeof ContainerIndexRoute
   '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/login'
     | '/terms-privacy'
+    | '/rpc/$'
     | '/@$nickname/'
     | '/@$nickname/list/$slug'
     | '/auth/reset-password'
@@ -237,6 +247,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/login'
     | '/terms-privacy'
+    | '/rpc/$'
     | '/@$nickname'
     | '/'
     | '/@$nickname/list/$slug'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/_container/activity'
     | '/_container/login'
     | '/_container/terms-privacy'
+    | '/rpc/$'
     | '/@$nickname/'
     | '/_container/'
     | '/@$nickname/list/$slug'
@@ -277,6 +289,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AtnicknameRoute: typeof AtnicknameRouteWithChildren
   ContainerRoute: typeof ContainerRouteWithChildren
+  RpcSplatRoute: typeof RpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -308,6 +321,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/@$nickname/'
       preLoaderRoute: typeof AtnicknameIndexRouteImport
       parentRoute: typeof AtnicknameRoute
+    }
+    '/rpc/$': {
+      id: '/rpc/$'
+      path: '/rpc/$'
+      fullPath: '/rpc/$'
+      preLoaderRoute: typeof RpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_container/terms-privacy': {
       id: '/_container/terms-privacy'
@@ -502,6 +522,7 @@ const ContainerRouteWithChildren = ContainerRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AtnicknameRoute: AtnicknameRouteWithChildren,
   ContainerRoute: ContainerRouteWithChildren,
+  RpcSplatRoute: RpcSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

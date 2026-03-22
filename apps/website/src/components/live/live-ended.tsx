@@ -12,7 +12,6 @@ export default function LiveEnded() {
         {liveSession.thumbnailImage && (
           <img
             className="size-full object-contain object-center"
-           
             src={liveSession.thumbnailImage}
             alt={liveSession.title}
           />

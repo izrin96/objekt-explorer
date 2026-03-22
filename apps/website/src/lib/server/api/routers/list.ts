@@ -52,7 +52,7 @@ export const listRouter = {
       }),
     )
     .handler(async ({ input: { slug } }) => {
-      const artists = await parseSelectedArtists();
+      const artists = parseSelectedArtists();
       const result = await db.query.lists.findFirst({
         columns: {
           listType: true,
@@ -251,7 +251,7 @@ export const listRouter = {
           });
         }
 
-        const artists = await parseSelectedArtists();
+        const artists = parseSelectedArtists();
 
         if (skipDups) {
           const uniqueCollectionSlugs = Array.from(new Set(collectionSlugs));

@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import SignIn from "@/components/auth/sign-in";
+
 export const Route = createFileRoute("/_container/login")({
   head: () => ({
     meta: [{ title: "Login · Objekt Tracker" }],
@@ -8,5 +10,5 @@ export const Route = createFileRoute("/_container/login")({
 });
 
 function LoginPage() {
-  return <div>Login</div>;
+  return <SignIn />;
 }

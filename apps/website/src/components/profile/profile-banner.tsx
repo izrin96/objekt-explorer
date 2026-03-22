@@ -30,7 +30,6 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
               <img
                 src={profile.bannerImgUrl}
                 className="size-full object-cover object-center"
-               
                 alt="Banner"
               />
             )}
@@ -53,7 +52,6 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
           <img
             src={profile.bannerImgUrl}
             className="size-full object-cover object-center"
-           
             alt="Banner"
           />
         )}

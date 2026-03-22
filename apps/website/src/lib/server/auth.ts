@@ -208,7 +208,7 @@ export async function fetchUserByIdentifier(
     return undefined;
   }
 
-  cacheUsers([
+  await cacheUsers([
     {
       address: user.address,
       nickname: user.nickname,

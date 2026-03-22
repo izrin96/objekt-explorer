@@ -236,7 +236,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         setOpen(false);
         setDroppedImage(null);
         toast.success(t("success"));
-        router.invalidate();
+        void router.invalidate();
       },
       onError: () => {
         toast.error(t("error"));

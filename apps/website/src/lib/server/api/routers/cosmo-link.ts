@@ -7,8 +7,9 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
-import { getTranslations } from "@/lib/i18n/context";
 import * as z from "zod";
+
+import { getTranslations } from "@/lib/i18n/context";
 
 import { getUserLocale } from "../../locale";
 import { redis } from "../../redis";
@@ -36,7 +37,7 @@ async function assertAddressNotLinked(address: string, userId: string) {
     .limit(1);
 
   if (existing) {
-    const locale = await getUserLocale();
+    const locale = getUserLocale();
     const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
     throw new ORPCError("BAD_REQUEST", {
       message: existing.userId === userId ? t("already_linked_self") : t("already_linked_other"),
@@ -80,7 +81,7 @@ export const cosmoLinkRouter = {
         await redis.expire(rateLimitKey, 30);
       }
       if (attempts > 5) {
-        const locale = await getUserLocale();
+        const locale = getUserLocale();
         const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
         throw new ORPCError("TOO_MANY_REQUESTS", {
           message: t("rate_limit"),
@@ -112,7 +113,7 @@ export const cosmoLinkRouter = {
   verifyStatusMessage: authed
     .input(z.string())
     .handler(async ({ input: address, context: { session } }) => {
-      const locale = await getUserLocale();
+      const locale = getUserLocale();
       const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
 
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;

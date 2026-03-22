@@ -3,8 +3,9 @@ import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, eq } from "drizzle-orm";
-import { getTranslations } from "@/lib/i18n/context";
 import * as z from "zod";
+
+import { getTranslations } from "@/lib/i18n/context";
 
 import { getUserLocale } from "../../locale";
 import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3";
@@ -85,7 +86,7 @@ export async function checkAddressOwned(address: string, userId: string) {
   );
 
   if (count < 1) {
-    const locale = await getUserLocale();
+    const locale = getUserLocale();
     const t = await getTranslations({ locale, namespace: "api_errors.profile" });
     throw new ORPCError("UNAUTHORIZED", {
       message: t("not_linked"),
@@ -114,7 +115,7 @@ async function fetchOwnedProfile(address: string, userId: string) {
   });
 
   if (!profile) {
-    const locale = await getUserLocale();
+    const locale = getUserLocale();
     const t = await getTranslations({ locale, namespace: "api_errors.profile" });
     throw new ORPCError("NOT_FOUND", {
       message: t("not_found"),

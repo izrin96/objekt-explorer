@@ -27,7 +27,7 @@ export default function SelectedArtistFilter() {
       void queryClient.invalidateQueries({
         queryKey: orpc.config.getArtists.key(),
       });
-      router.invalidate();
+      void router.invalidate();
     });
   }, []);
 

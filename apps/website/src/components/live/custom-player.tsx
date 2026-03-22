@@ -63,7 +63,6 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
         }
       >
         <img
-         
           className="size-full rounded-full object-contain object-center"
           src={liveSession.channel.profileImageUrl}
           alt={participant.name}

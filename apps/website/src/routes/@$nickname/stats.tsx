@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { ProfileStatsRender } from "@/components/profile/stats/stats-render";
+
 export const Route = createFileRoute("/@$nickname/stats")({
   head: () => ({
     meta: [{ title: "Stats · Objekt Tracker" }],
@@ -8,5 +10,5 @@ export const Route = createFileRoute("/@$nickname/stats")({
 });
 
 function ProfileStatsPage() {
-  return <div>Profile Stats</div>;
+  return <ProfileStatsRender />;
 }

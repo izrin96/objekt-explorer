@@ -370,7 +370,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
       onSuccess: (_, { slug }, _o, { client }) => {
         setOpen(false);
         toast.success(t("success"));
-        router.navigate({ to: `/list/${slug}`, replace: true });
+        void router.navigate({ to: `/list/${slug}`, replace: true });
         void client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });

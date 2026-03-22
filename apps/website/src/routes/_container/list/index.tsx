@@ -1,11 +1,15 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
+import MyListRender from "@/components/list/my-list";
+import { getSession } from "@/lib/server/auth";
+
 export const Route = createFileRoute("/_container/list/")({
   head: () => ({
     meta: [{ title: "My List · Objekt Tracker" }],
   }),
-  beforeLoad: ({ context }) => {
-    if (!context.session) {
+  beforeLoad: async () => {
+    const session = await getSession();
+    if (!session) {
       throw redirect({ to: "/" });
     }
   },
@@ -15,7 +19,7 @@ export const Route = createFileRoute("/_container/list/")({
 function ListPage() {
   return (
     <div className="flex flex-col pt-2 pb-36">
-      <div>My Lists</div>
+      <MyListRender />
     </div>
   );
 }

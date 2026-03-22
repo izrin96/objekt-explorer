@@ -62,7 +62,7 @@ function SignInForm({
       void client.refetchQueries({
         queryKey: ["session"],
       });
-      router.navigate({ to: "/" });
+      void router.navigate({ to: "/" });
     },
     onError: (error) => {
       toast.error(t("error", { message: error.message }));
@@ -233,7 +233,7 @@ function SignUpForm({
       void client.refetchQueries({
         queryKey: ["session"],
       });
-      router.navigate({ to: "/" });
+      void router.navigate({ to: "/" });
     },
     onError: (error) => {
       toast.error(t("error", { message: error.message }));

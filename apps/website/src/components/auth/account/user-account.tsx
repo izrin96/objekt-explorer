@@ -149,7 +149,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
       void client.refetchQueries({
         queryKey: ["session"],
       });
-      router.invalidate();
+      void router.invalidate();
       toast.success(t("account_updated"));
     },
     onError: ({ message }) => {

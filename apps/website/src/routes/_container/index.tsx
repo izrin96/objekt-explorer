@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import IndexRenderExport from "@/components/index/index-view";
+
 export const Route = createFileRoute("/_container/")({
   component: Home,
 });
@@ -7,7 +9,7 @@ export const Route = createFileRoute("/_container/")({
 function Home() {
   return (
     <div className="flex flex-col pt-2 pb-36">
-      <div>Home</div>
+      <IndexRenderExport />
     </div>
   );
 }

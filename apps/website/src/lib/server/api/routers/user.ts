@@ -2,9 +2,9 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { user as userSchema } from "@repo/db/auth-schema";
 import { eq } from "drizzle-orm";
-import { getTranslations } from "@/lib/i18n/context";
 import * as z from "zod";
 
+import { getTranslations } from "@/lib/i18n/context";
 import { providersMap } from "@/lib/universal/user";
 
 import { auth } from "../../auth";
@@ -19,7 +19,7 @@ export const userRouter = {
         session: { user },
       },
     }) => {
-      const locale = await getUserLocale();
+      const locale = getUserLocale();
       const t = await getTranslations({ locale, namespace: "api_errors.user" });
 
       // get accessToken from account

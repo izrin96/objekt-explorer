@@ -2,7 +2,6 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-
 import { ofetch } from "ofetch";
 import { useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
@@ -45,7 +44,7 @@ export default function UserSearch() {
     setQuery("");
     setIsOpen(false);
     addRecent(user);
-    router.navigate({ to: `/@${user.nickname}` });
+    void router.navigate({ to: `/@${user.nickname}` });
   };
 
   return (

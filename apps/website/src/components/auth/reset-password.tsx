@@ -32,7 +32,7 @@ export default function ResetPassword({ token }: { token: string }) {
     },
     onSuccess: () => {
       toast.success(t("success"));
-      router.navigate({ to: "/login" });
+      void router.navigate({ to: "/login" });
     },
     onError: ({ message }) => {
       toast.error(t("error", { message }));

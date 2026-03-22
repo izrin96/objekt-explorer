@@ -1,14 +1,17 @@
-import { HeadContent, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
 
+import { Analytics } from "@/components/analytics";
 import { DefaultCatchBoundary } from "@/components/DefaultCatchBoundary";
+import Navbar from "@/components/navbar";
 import { NotFound } from "@/components/NotFound";
 
 import appCss from "@/styles/app.css?url";
 
 export interface RouterContext {
-  session: unknown | null;
+  queryClient: QueryClient;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -65,7 +68,17 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
   shellComponent: RootDocument,
+  component: RootComponent,
 });
+
+function RootComponent() {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+    </>
+  );
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -89,6 +102,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="min-h-svh font-sans antialiased">
         {children}
+        <Analytics />
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>
