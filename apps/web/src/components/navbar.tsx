@@ -1,7 +1,7 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { ChartLineIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { useLocale, useTranslations } from "next-intl";
 import { Suspense } from "react";
 
 import AppLogo from "@/components/app-logo";
@@ -16,12 +16,26 @@ import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
 import { Container } from "./ui/container";
 
+function Notice() {
+  const locale = useLocale();
+  return (
+    <div className="flex items-center justify-center space-x-1 bg-yellow-100 text-center text-xs leading-loose text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
+      <WarningCircleIcon className="mx-1.5 inline-flex size-4" />
+      {locale === "ko"
+        ? "현재 데이터베이스가 몇 시간 정도 지연되고 있습니다. 원인을 파악 중입니다."
+        : "The database is currently a few hours behind. We are investigating."}
+    </div>
+  );
+}
+
 export default function Navbar() {
   const t = useTranslations("nav");
   const isMobile = useMediaQuery("(max-width: 1023px)");
 
   return (
     <>
+      <Notice />
+
       {/* Desktop Navbar */}
       <nav className="from-bg/80 sticky top-0 z-40 hidden h-12 bg-linear-to-b to-transparent lg:flex">
         <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>
