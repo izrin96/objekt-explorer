@@ -1,6 +1,6 @@
 import { fetchMetadataV1, fetchMetadataV3 } from "@repo/cosmo/server/metadata";
+import { normalizeV3 } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
-import { normalizeV3 } from "@repo/cosmo/types/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
