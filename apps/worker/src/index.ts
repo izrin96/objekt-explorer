@@ -7,8 +7,8 @@ import { cleanupProfileLists, syncProfileListsToCache } from "./job/profile-list
 // fix metadata
 void fixObjektMetadata();
 void fixObjektSerialZero();
-void new Cron("0 * * * *", fixObjektMetadata);
-void new Cron("0 * * * *", fixObjektSerialZero);
+// void new Cron("0 * * * *", fixObjektMetadata);
+// void new Cron("0 * * * *", fixObjektSerialZero);
 
 // cosmo-spin transferable update
 void updateTransferableCosmoSpin();
