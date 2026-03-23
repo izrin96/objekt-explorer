@@ -20,8 +20,10 @@ export async function fixObjektMetadata() {
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
     .where(eq(collections.slug, "empty-collection"));
 
-  for (const objekt of objektsResults) {
-    await processObjekt(objekt);
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < objektsResults.length; i += BATCH_SIZE) {
+    const batch = objektsResults.slice(i, i + BATCH_SIZE);
+    await Promise.all(batch.map((objekt) => processObjekt(objekt)));
   }
 }
 
@@ -36,8 +38,10 @@ export async function fixObjektSerialZero() {
     .from(objekts)
     .where(eq(objekts.serial, 0));
 
-  for (const objekt of objektsResults) {
-    await processObjekt(objekt);
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < objektsResults.length; i += BATCH_SIZE) {
+    const batch = objektsResults.slice(i, i + BATCH_SIZE);
+    await Promise.all(batch.map((objekt) => processObjekt(objekt)));
   }
 }
 
