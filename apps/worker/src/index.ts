@@ -1,12 +1,15 @@
 import { Cron } from "croner";
 
-import { fixObjektMetadata, fixObjektSerialZero } from "./job/collection";
+import { fixEmptyCollection, fixObjektSerialZero } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupProfileLists, syncProfileListsToCache } from "./job/profile-list-cleanup";
 
 // fix metadata
-await fixObjektMetadata();
+await fixEmptyCollection();
 await fixObjektSerialZero();
+
+// populate missing serials for digital objekts
+// await populateSerial();
 
 // cosmo-spin transferable update
 await updateTransferableCosmoSpin();

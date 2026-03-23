@@ -5,11 +5,9 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { chunk, slugifyObjekt } from "@repo/lib";
 import { eq, inArray } from "drizzle-orm";
 
-const enableUpdateMetadata = false;
-
 const BATCH_SIZE = 50;
 
-export async function fixObjektMetadata() {
+export async function fixEmptyCollection() {
   const objektsResults = await indexer
     .select({
       id: objekts.id,
@@ -67,6 +65,7 @@ async function processMetadataBatch(
     serial: number;
     transferable: boolean;
   }[] = [];
+  const collectionMetadataUpdates: Map<string, CosmoObjektMetadataV1> = new Map();
 
   for (const result of metadataResults) {
     if (!result.metadata) {
@@ -76,6 +75,10 @@ async function processMetadataBatch(
 
     const slug = slugifyObjekt(result.metadata.objekt.collectionId);
     collectionSlugMap.set(result.objektId, slug);
+
+    if (result.metadata.objekt.objektNo !== 0 && !collectionMetadataUpdates.has(slug)) {
+      collectionMetadataUpdates.set(slug, result.metadata);
+    }
   }
 
   const uniqueSlugs = [...new Set(collectionSlugMap.values())];
@@ -105,58 +108,53 @@ async function processMetadataBatch(
       serial: metadata.objekt.objektNo,
       transferable: metadata.objekt.transferable,
     });
-
-    if (enableUpdateMetadata) {
-      await updateCollectionMetadata(slug, metadata);
-    }
   }
 
-  if (updates.length === 0) {
+  if (updates.length === 0 && collectionMetadataUpdates.size === 0) {
     console.log(`[fix metadata] Batch ${batchNumber}/${totalBatches}: No updates needed`);
     return;
   }
 
   await indexer.transaction(async (tx) => {
-    await Promise.all(
-      updates.map((update) =>
-        tx
-          .update(objekts)
-          .set({
-            serial: update.serial,
-            transferable: update.transferable,
-            collectionId: update.collectionId,
-          })
-          .where(eq(objekts.id, update.objektId)),
-      ),
-    );
+    if (collectionMetadataUpdates.size > 0) {
+      await Promise.all(
+        Array.from(collectionMetadataUpdates.entries()).map(([slug, metadata]) =>
+          tx
+            .update(collections)
+            .set(enrichUpdateMetadata(metadata))
+            .where(eq(collections.slug, slug)),
+        ),
+      );
+    }
 
-    await Promise.all(
-      updates.map((update) =>
-        tx
-          .update(transfers)
-          .set({
-            collectionId: update.collectionId,
-          })
-          .where(eq(transfers.objektId, update.objektId)),
-      ),
-    );
+    if (updates.length > 0) {
+      await Promise.all(
+        updates.map((update) =>
+          tx
+            .update(objekts)
+            .set({
+              serial: update.serial,
+              transferable: update.transferable,
+              collectionId: update.collectionId,
+            })
+            .where(eq(objekts.id, update.objektId)),
+        ),
+      );
+
+      await Promise.all(
+        updates.map((update) =>
+          tx
+            .update(transfers)
+            .set({
+              collectionId: update.collectionId,
+            })
+            .where(eq(transfers.objektId, update.objektId)),
+        ),
+      );
+    }
   });
 
   console.log(
     `[fix metadata] Batch ${batchNumber}/${totalBatches}: Updated ${updates.length} objekts`,
   );
-}
-
-/**
- * Update collection metadata
- */
-async function updateCollectionMetadata(slug: string, metadata: CosmoObjektMetadataV1) {
-  // update collection metadata
-  const updateMetadata = enrichUpdateMetadata(metadata);
-  await indexer
-    .update(collections)
-    .set({
-      ...updateMetadata,
-    })
-    .where(eq(collections.slug, slug));
 }
