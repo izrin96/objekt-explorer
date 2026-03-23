@@ -1,10 +1,9 @@
+import { enrichUpdateMetadata, fetchMetadata } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
 import { eq } from "drizzle-orm";
-
-import { fetchMetadata } from "../lib/metadata-utils";
 
 const enableUpdateMetadata = false;
 
@@ -48,8 +47,6 @@ export async function fixObjektSerialZero() {
 async function processObjekt(objekt: { id: string }) {
   // fetch metadata
   const metadata = await fetchMetadata(objekt.id);
-
-  if (metadata === null || metadata.objekt.objektNo === 0) return;
 
   const slug = slugifyObjekt(metadata.objekt.collectionId);
 
@@ -99,22 +96,11 @@ async function processObjekt(objekt: { id: string }) {
  */
 async function updateCollectionMetadata(slug: string, metadata: CosmoObjektMetadataV1) {
   // update collection metadata
+  const updateMetadata = enrichUpdateMetadata(metadata);
   await indexer
     .update(collections)
     .set({
-      season: metadata.objekt.season,
-      member: metadata.objekt.member,
-      artist: metadata.objekt.artists[0]!.toLowerCase(),
-      collectionNo: metadata.objekt.collectionNo,
-      class: metadata.objekt.class,
-      comoAmount: metadata.objekt.comoAmount,
-      onOffline: metadata.objekt.collectionNo.includes("Z") ? "online" : "offline",
-      thumbnailImage: metadata.objekt.thumbnailImage,
-      frontImage: metadata.objekt.frontImage,
-      backImage: metadata.objekt.backImage,
-      backgroundColor: metadata.objekt.backgroundColor,
-      textColor: metadata.objekt.textColor,
-      accentColor: metadata.objekt.accentColor,
+      ...updateMetadata,
     })
     .where(eq(collections.slug, slug));
 }
