@@ -7,7 +7,7 @@ import type { CosmoObjektMetadataV1, CosmoObjektMetadataV3 } from "../types/meta
  */
 export async function fetchMetadataV1(tokenId: string) {
   return await ofetch<CosmoObjektMetadataV1>(`https://api.cosmo.fans/objekt/v1/token/${tokenId}`, {
-    retry: 1,
+    retry: 0,
     retryDelay: 750, // 750ms backoff
   });
 }
@@ -76,8 +76,8 @@ export function emptyMetadata(tokenId: string): CosmoObjektMetadataV1 {
       accentColor: "",
       textColor: "",
       objektNo: 0,
-      tokenAddress: "",
-      transferable: false,
+      tokenAddress: "0x0000000000000000000000000000000000000000",
+      transferable: true,
     },
   };
 }
@@ -142,8 +142,8 @@ export function normalizeV3(
       accentColor: "",
       textColor: "#000000",
       objektNo: 0,
-      tokenAddress: "",
-      transferable: false,
+      tokenAddress: "0x0000000000000000000000000000000000000000",
+      transferable: true,
     },
   };
 }

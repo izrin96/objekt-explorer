@@ -2,16 +2,14 @@ import { enrichUpdateMetadata, fetchMetadata } from "@repo/cosmo/server/metadata
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
-import { slugifyObjekt } from "@repo/lib";
-import { eq } from "drizzle-orm";
+import { chunk, slugifyObjekt } from "@repo/lib";
+import { eq, inArray } from "drizzle-orm";
 
 const enableUpdateMetadata = false;
 
-/**
- * Fix all missing metadata for all objekt in 'empty-collection'
- */
+const BATCH_SIZE = 50;
+
 export async function fixObjektMetadata() {
-  // find objekt that have missing metadata
   const objektsResults = await indexer
     .select({
       id: objekts.id,
@@ -20,16 +18,15 @@ export async function fixObjektMetadata() {
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
     .where(eq(collections.slug, "empty-collection"));
 
-  const BATCH_SIZE = 50;
-  for (let i = 0; i < objektsResults.length; i += BATCH_SIZE) {
-    const batch = objektsResults.slice(i, i + BATCH_SIZE);
-    await Promise.all(batch.map((objekt) => processObjekt(objekt)));
-  }
+  const totalBatches = Math.ceil(objektsResults.length / BATCH_SIZE);
+  let batchNumber = 0;
+
+  await chunk(objektsResults, BATCH_SIZE, async (batch) => {
+    batchNumber++;
+    await processMetadataBatch(batch, batchNumber, totalBatches);
+  });
 }
 
-/**
- * Fix all objekt with serial 0
- */
 export async function fixObjektSerialZero() {
   const objektsResults = await indexer
     .select({
@@ -38,61 +35,116 @@ export async function fixObjektSerialZero() {
     .from(objekts)
     .where(eq(objekts.serial, 0));
 
-  const BATCH_SIZE = 50;
-  for (let i = 0; i < objektsResults.length; i += BATCH_SIZE) {
-    const batch = objektsResults.slice(i, i + BATCH_SIZE);
-    await Promise.all(batch.map((objekt) => processObjekt(objekt)));
-  }
+  const totalBatches = Math.ceil(objektsResults.length / BATCH_SIZE);
+  let batchNumber = 0;
+
+  await chunk(objektsResults, BATCH_SIZE, async (batch) => {
+    batchNumber++;
+    await processMetadataBatch(batch, batchNumber, totalBatches);
+  });
 }
 
-/**
- * Fetch metadata for an objekt
- */
-async function processObjekt(objekt: { id: string }) {
-  // fetch metadata
-  const metadata = await fetchMetadata(objekt.id);
+async function processMetadataBatch(
+  batch: { id: string }[],
+  batchNumber: number,
+  totalBatches: number,
+) {
+  console.log(
+    `[fix metadata] Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`,
+  );
 
-  const slug = slugifyObjekt(metadata.objekt.collectionId);
+  const metadataResults = await Promise.all(
+    batch.map(async (objekt) => ({
+      objektId: objekt.id,
+      metadata: await fetchMetadata(objekt.id),
+    })),
+  );
 
-  // find correct collection
-  const [collection] = await indexer
+  const collectionSlugMap = new Map<string, string>();
+  const updates: {
+    objektId: string;
+    collectionId: string;
+    serial: number;
+    transferable: boolean;
+  }[] = [];
+
+  for (const result of metadataResults) {
+    if (!result.metadata) {
+      console.log(`[fix metadata] Failed to fetch metadata for token ID ${result.objektId}`);
+      continue;
+    }
+
+    const slug = slugifyObjekt(result.metadata.objekt.collectionId);
+    collectionSlugMap.set(result.objektId, slug);
+  }
+
+  const uniqueSlugs = [...new Set(collectionSlugMap.values())];
+  const collectionRecords = await indexer
     .select({
       id: collections.id,
+      slug: collections.slug,
     })
     .from(collections)
-    .where(eq(collections.slug, slug));
+    .where(inArray(collections.slug, uniqueSlugs));
 
-  // if not found, skip, just wait indexer processor create it
-  // rarely happen
-  if (!collection) {
-    console.log(`[fix metadata] Collection not yet exist for token ID ${objekt.id}`);
+  const slugToCollectionId = new Map(collectionRecords.map((c) => [c.slug, c.id]));
+
+  for (const [objektId, slug] of collectionSlugMap) {
+    const collectionId = slugToCollectionId.get(slug);
+    if (!collectionId) {
+      console.log(`[fix metadata] Collection not yet exist for token ID ${objektId}`);
+      continue;
+    }
+
+    const metadata = metadataResults.find((r) => r.objektId === objektId)?.metadata;
+    if (!metadata) continue;
+
+    updates.push({
+      objektId,
+      collectionId,
+      serial: metadata.objekt.objektNo,
+      transferable: metadata.objekt.transferable,
+    });
+
+    if (enableUpdateMetadata) {
+      await updateCollectionMetadata(slug, metadata);
+    }
+  }
+
+  if (updates.length === 0) {
+    console.log(`[fix metadata] Batch ${batchNumber}/${totalBatches}: No updates needed`);
     return;
   }
 
-  // optional: force update metadata
-  if (enableUpdateMetadata) {
-    await updateCollectionMetadata(slug, metadata);
-  }
+  await indexer.transaction(async (tx) => {
+    await Promise.all(
+      updates.map((update) =>
+        tx
+          .update(objekts)
+          .set({
+            serial: update.serial,
+            transferable: update.transferable,
+            collectionId: update.collectionId,
+          })
+          .where(eq(objekts.id, update.objektId)),
+      ),
+    );
 
-  // update objekt
-  await indexer
-    .update(objekts)
-    .set({
-      serial: metadata.objekt.objektNo,
-      transferable: metadata.objekt.transferable,
-      collectionId: collection.id,
-    })
-    .where(eq(objekts.id, objekt.id));
+    await Promise.all(
+      updates.map((update) =>
+        tx
+          .update(transfers)
+          .set({
+            collectionId: update.collectionId,
+          })
+          .where(eq(transfers.objektId, update.objektId)),
+      ),
+    );
+  });
 
-  // update transfer
-  await indexer
-    .update(transfers)
-    .set({
-      collectionId: collection.id,
-    })
-    .where(eq(transfers.objektId, objekt.id));
-
-  console.log(`[fix metadata] Update missing metadata for token ID ${objekt.id}`);
+  console.log(
+    `[fix metadata] Batch ${batchNumber}/${totalBatches}: Updated ${updates.length} objekts`,
+  );
 }
 
 /**

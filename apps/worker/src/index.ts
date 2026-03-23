@@ -5,18 +5,16 @@ import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupProfileLists, syncProfileListsToCache } from "./job/profile-list-cleanup";
 
 // fix metadata
-void fixObjektMetadata();
-void fixObjektSerialZero();
-// void new Cron("0 * * * *", fixObjektMetadata);
-// void new Cron("0 * * * *", fixObjektSerialZero);
+await fixObjektMetadata();
+await fixObjektSerialZero();
 
 // cosmo-spin transferable update
-void updateTransferableCosmoSpin();
+await updateTransferableCosmoSpin();
 void new Cron("*/10 * * * *", updateTransferableCosmoSpin);
 
 // profile list
-void syncProfileListsToCache();
+await syncProfileListsToCache();
 void new Cron("*/30 * * * *", syncProfileListsToCache);
 
-void cleanupProfileLists();
+await cleanupProfileLists();
 void new Cron("*/10 * * * *", cleanupProfileLists);
