@@ -118,7 +118,11 @@ export function normalizeV3(
   const collection = getTrait(metadata, tokenId, "Collection");
 
   const thumbnail = metadata.image.replace(/\/(4x|3x|2x|original)/, "/thumbnail");
-  const comoAmount = ["Double", "Premier"].includes(className) ? 2 : 1;
+  const comoAmount = ["Motion"].includes(className)
+    ? 3
+    : ["Double", "Premier"].includes(className)
+      ? 2
+      : 1;
 
   return {
     name: metadata.name,
