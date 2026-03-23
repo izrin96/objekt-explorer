@@ -61,7 +61,7 @@ export default function Changelog() {
 
   return (
     <Modal>
-      <Button size="xs" intent="plain" className="px-1.5 sm:px-1.5">
+      <Button size="xs" intent="plain" className="hidden px-1.5 sm:px-1.5">
         <NoteIcon size={16} weight="duotone" />
       </Button>
       <ModalContent size="xl">

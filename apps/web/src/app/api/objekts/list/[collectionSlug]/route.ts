@@ -1,6 +1,6 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 
 import { cacheHeaders } from "@/app/api/common";
 
@@ -19,7 +19,7 @@ export async function GET(_: Request, props: Params) {
     })
     .from(objekts)
     .leftJoin(collections, eq(objekts.collectionId, collections.id))
-    .where(eq(collections.slug, params.collectionSlug))
+    .where(and(eq(collections.slug, params.collectionSlug), ne(objekts.serial, 0)))
     .orderBy(asc(objekts.serial));
 
   return Response.json(

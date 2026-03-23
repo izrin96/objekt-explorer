@@ -1,4 +1,4 @@
-import { fetchMetadata } from "@repo/cosmo/server/metadata";
+import { enrichUpdateMetadata, fetchMetadata } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { addr, chunk, slugifyObjekt } from "@repo/lib";
 import { Addresses } from "@repo/lib";
@@ -176,23 +176,18 @@ async function handleCollection(
       createdAt: new Date(transfer.timestamp),
       collectionId: metadata.objekt.collectionId,
       slug: slug,
+      // if create, set metadata even if data is v3 normalized
+      ...enrichUpdateMetadata(metadata),
     });
   }
 
+  // skip update metadata if data is v3 normalized
+  if (metadata.objekt.objektNo === 0) {
+    return collection;
+  }
+
   // set and/or update metadata
-  collection.season = metadata.objekt.season;
-  collection.member = metadata.objekt.member;
-  collection.artist = metadata.objekt.artists[0]!.toLowerCase();
-  collection.collectionNo = metadata.objekt.collectionNo;
-  collection.class = metadata.objekt.class;
-  collection.comoAmount = metadata.objekt.comoAmount;
-  collection.onOffline = metadata.objekt.collectionNo.includes("Z") ? "online" : "offline";
-  collection.thumbnailImage = metadata.objekt.thumbnailImage;
-  collection.frontImage = metadata.objekt.frontImage;
-  collection.backImage = metadata.objekt.backImage;
-  collection.backgroundColor = metadata.objekt.backgroundColor;
-  collection.textColor = metadata.objekt.textColor;
-  collection.accentColor = metadata.objekt.accentColor;
+  Object.assign(collection, enrichUpdateMetadata(metadata));
 
   return collection;
 }

@@ -22,6 +22,8 @@ export default function Navbar() {
 
   return (
     <>
+      {/* <Notice /> */}
+
       {/* Desktop Navbar */}
       <nav className="from-bg/80 sticky top-0 z-40 hidden h-12 bg-linear-to-b to-transparent lg:flex">
         <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>

@@ -179,15 +179,17 @@ export function ObjektCard({
         </div>
         {/* Back side */}
         <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
-          <NextImage
-            className="h-full w-full object-cover"
-            width={OBJEKT_SIZE.width}
-            height={OBJEKT_SIZE.height}
-            loading="eager"
-            src={urls.backUrl}
-            alt={objekt.collectionId}
-            onLoad={() => setBackLoaded(true)}
-          />
+          {urls.backUrl && (
+            <NextImage
+              className="h-full w-full object-cover"
+              width={OBJEKT_SIZE.width}
+              height={OBJEKT_SIZE.height}
+              loading="eager"
+              src={urls.backUrl}
+              alt={objekt.collectionId}
+              onLoad={() => setBackLoaded(true)}
+            />
+          )}
           {!backLoaded && (
             <div className="aspect-photocard relative flex size-full bg-white">
               <div className="h-[88%] w-[91%] self-center rounded-r-lg bg-(--objekt-bg-color) p-5"></div>
