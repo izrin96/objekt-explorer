@@ -40,14 +40,6 @@ type TradeViewProps = {
   serial: number | null;
 };
 
-const fetchObjektsQuery = (slug: string) => ({
-  queryKey: ["objekts", "list", slug],
-  queryFn: () => {
-    const url = new URL(`/api/objekts/list/${slug}`, getBaseURL());
-    return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
-  },
-});
-
 export default function TradeView({ ...props }: TradeViewProps) {
   return (
     <QueryErrorResetBoundary>
@@ -69,7 +61,14 @@ export default function TradeView({ ...props }: TradeViewProps) {
 }
 
 function TradeViewRender({ objekt, serial }: TradeViewProps) {
-  const { data } = useSuspenseQuery(fetchObjektsQuery(objekt.slug));
+  const { data } = useSuspenseQuery({
+    queryKey: ["objekts", "list", objekt.slug],
+    queryFn: () => {
+      const url = new URL(`/api/objekts/list/${objekt.slug}`, getBaseURL());
+      return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
+    },
+    staleTime: 1000 * 60,
+  });
 
   return (
     <>
