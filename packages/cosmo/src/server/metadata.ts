@@ -7,7 +7,7 @@ import type { CosmoObjektMetadataV1, CosmoObjektMetadataV3 } from "../types/meta
  */
 export async function fetchMetadataV1(tokenId: string) {
   return await ofetch<CosmoObjektMetadataV1>(`https://api.cosmo.fans/objekt/v1/token/${tokenId}`, {
-    retry: 0,
+    retry: 1,
     retryDelay: 750, // 750ms backoff
   });
 }
@@ -118,11 +118,7 @@ export function normalizeV3(
   const collection = getTrait(metadata, tokenId, "Collection");
 
   const thumbnail = metadata.image.replace(/\/(4x|3x|2x|original)/, "/thumbnail");
-  const comoAmount = ["Motion"].includes(className)
-    ? 3
-    : ["Double", "Premier"].includes(className)
-      ? 2
-      : 1;
+  const comoAmount = className === "Motion" ? 3 : ["Double", "Premier"].includes(className) ? 2 : 1;
 
   return {
     name: metadata.name,
