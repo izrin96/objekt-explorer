@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
     headers: {
       "Content-Type": "application/json",
       ETag: etag,
-      "Cache-Control": "public, max-age=14400, stale-while-revalidate=60",
+      "Cache-Control": "private, max-age=0, must-revalidate",
     },
   });
 }

@@ -22,6 +22,7 @@ export const collectionOptions = (artistIds: ValidArtist[], enable = true, at?: 
           artist: artistIds,
           ...(at && { at }),
         },
+        cache: "no-cache",
       }).then((a) => a.collections);
 
       return result.map(mapObjektWithTag);
