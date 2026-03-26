@@ -5,10 +5,6 @@ services:
     build:
       context: .
       dockerfile: ./apps/worker/Dockerfile
-    depends_on:
-      - pgbouncer
-      - pgbouncer-indexer
-      - valkey
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
       - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
@@ -27,10 +23,6 @@ services:
     build:
       context: .
       dockerfile: ./apps/server/Dockerfile
-    depends_on:
-      - pgbouncer
-      - pgbouncer-indexer
-      - valkey
     environment:
       - REDIS_PUBSUB_URL=redis://valkey:6379
       - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
@@ -60,9 +52,6 @@ services:
       - ENABLE_GRAVITY=${INDEXER_ENABLE_GRAVITY}
       - COSMO_PARALLEL_COUNT=${INDEXER_COSMO_PARALLEL_COUNT}
       - REDIS_URL=redis://valkey:6379
-    depends_on:
-      - postgres-indexer
-      - valkey
 
   # postgres database for indexer
   postgres-indexer:
@@ -87,8 +76,6 @@ services:
   pgbouncer-indexer:
     image: edoburu/pgbouncer:latest
     restart: always
-    depends_on:
-      - postgres-indexer
     ports:
       - "5435:5432"
     environment:
@@ -111,10 +98,6 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    depends_on:
-      - pgbouncer
-      - pgbouncer-indexer
-      - valkey
     build:
       context: .
       dockerfile: ./apps/web/Dockerfile
@@ -189,8 +172,6 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:latest
     restart: always
-    depends_on:
-      - postgres
     ports:
       - "5433:5432"
     environment:
