@@ -33,7 +33,8 @@
     "verbatimModuleSyntax": false,
 
     // Other
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"],
   },
-  "exclude": ["node_modules", "dist", ".turbo"]
+  "exclude": ["node_modules", "dist", ".turbo"],
 }

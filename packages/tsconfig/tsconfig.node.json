@@ -26,6 +26,7 @@
 
     // Stricter linting
     "noUnusedLocals": true,
-    "noUnusedParameters": true
-  }
+    "noUnusedParameters": true,
+    "types": ["node"],
+  },
 }
