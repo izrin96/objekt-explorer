@@ -51,4 +51,5 @@ export const sessionOptions = queryOptions({
     }
     return result.data;
   },
+  staleTime: 5 * 1000,
 });
