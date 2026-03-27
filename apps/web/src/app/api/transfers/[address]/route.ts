@@ -27,6 +27,7 @@ const transfersSchema = z.object({
   at: z.string().optional(),
   cursor: z
     .object({
+      timestamp: z.string().nullish(),
       id: z.string(),
     })
     .optional(),
@@ -103,7 +104,12 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   };
 
   const collectionFilters = getCollectionFilters(query);
-  const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
+  const cursorFilter = query.cursor
+    ? [
+        ...(query.cursor.timestamp ? [lt(transfers.timestamp, query.cursor.timestamp)] : []),
+        lt(transfers.id, query.cursor.id),
+      ]
+    : [];
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
 
   const typeFilters = {
@@ -258,6 +264,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
     ? {
+        timestamp: new Date(results[PER_PAGE - 1]!.transfer.timestamp).toISOString(),
         id: results[PER_PAGE - 1]!.transfer.id,
       }
     : undefined;

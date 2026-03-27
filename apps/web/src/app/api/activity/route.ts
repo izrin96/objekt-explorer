@@ -24,6 +24,7 @@ const activitySchema = z.object({
   collection: z.string().array(),
   cursor: z
     .object({
+      timestamp: z.string().nullish(),
       id: z.string(),
     })
     .optional(),
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
   const hasNextPage = transferResults.length > PAGE_SIZE;
   const nextCursor = hasNextPage
     ? {
+        timestamp: new Date(transferResults[PAGE_SIZE - 1]!.transfer.timestamp).toISOString(),
         id: transferResults[PAGE_SIZE - 1]!.transfer.id,
       }
     : undefined;
@@ -98,7 +100,12 @@ function getTypeFilters(type: ActivityParams["type"]): SQL[] {
 
 async function fetchTransfers(query: ActivityParams) {
   const typeFilters = getTypeFilters(query.type);
-  const cursorFilter = query.cursor ? [lt(transfers.id, query.cursor.id)] : [];
+  const cursorFilter = query.cursor
+    ? [
+        ...(query.cursor.timestamp ? [lt(transfers.timestamp, query.cursor.timestamp)] : []),
+        lt(transfers.id, query.cursor.id),
+      ]
+    : [];
 
   const collectionFilters: SQL[] = [];
   if (query.artist.length)
