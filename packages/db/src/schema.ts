@@ -44,6 +44,7 @@ export const userAddress = pgTable(
     isAbstract: boolean("is_abstract").default(false),
     gridColumns: integer("grid_columns"),
     cosmoId: integer("cosmo_id"),
+    lastCosmoCheck: timestamp("last_cosmo_check", { mode: "string" }),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),

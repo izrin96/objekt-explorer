@@ -1,0 +1,1 @@
+ALTER TABLE "user_address" ADD COLUMN "last_cosmo_check" timestamp;

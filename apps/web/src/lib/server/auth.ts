@@ -8,7 +8,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { username } from "better-auth/plugins/username";
 import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
-import { after } from "next/server";
 import { cache } from "react";
 
 import { env } from "@/env";
@@ -146,6 +145,10 @@ export const getSession = cache(async () =>
   }),
 );
 
+async function safeFetchByNickname(identifier: string) {
+  return fetchByNickname(identifier).catch(() => undefined);
+}
+
 export async function fetchUserByIdentifier(
   identifier: string,
 ): Promise<PublicProfile | undefined> {
@@ -162,6 +165,7 @@ export async function fetchUserByIdentifier(
       hideNickname: true,
       gridColumns: true,
       userId: true,
+      lastCosmoCheck: true,
     },
     with: {
       user: {
@@ -185,6 +189,32 @@ export async function fetchUserByIdentifier(
   });
 
   if (cachedUser) {
+    // double check address with cosmo if last check more than 1 hour
+    const ONE_HOUR = 60 * 60 * 1000;
+    const needsCheck =
+      !cachedUser.lastCosmoCheck ||
+      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > ONE_HOUR;
+
+    if (needsCheck && cachedUser.nickname) {
+      const user = await safeFetchByNickname(cachedUser.nickname);
+
+      await db
+        .update(userAddress)
+        .set({ lastCosmoCheck: new Date().toISOString() })
+        .where(eq(userAddress.nickname, cachedUser.nickname));
+
+      if (user && user.address.toLowerCase() !== cachedUser.address.toLowerCase()) {
+        await cacheUsers([
+          {
+            address: user.address,
+            nickname: user.nickname,
+          },
+        ]);
+
+        return await fetchUserByIdentifier(identifier);
+      }
+    }
+
     return {
       address: cachedUser.address,
       nickname: cachedUser.hideNickname ? null : cachedUser.nickname,
@@ -204,49 +234,45 @@ export async function fetchUserByIdentifier(
     };
   }
 
-  const user = await fetchByNickname(identifier).catch(() => undefined);
+  const user = await safeFetchByNickname(identifier);
   if (!user) {
     return undefined;
   }
 
-  after(async () => {
-    await cacheUsers([
-      {
-        address: user.address,
-        nickname: user.nickname,
-      },
-    ]);
-  });
+  await cacheUsers([
+    {
+      address: user.address,
+      nickname: user.nickname,
+    },
+  ]);
 
-  return {
-    nickname: user.nickname,
-    address: user.address,
-  };
+  return await fetchUserByIdentifier(identifier);
 }
 
 export async function cacheUsers(
   newAddresses: { nickname: string; address: string; cosmoId?: number }[],
 ) {
-  if (newAddresses.length > 0) {
-    const values = newAddresses.map((a) => ({
-      nickname: a.nickname,
-      address: a.address,
-      cosmoId: a.cosmoId ?? null,
-    }));
-    try {
-      await db
-        .insert(userAddress)
-        .values(values)
-        .onConflictDoUpdate({
-          target: userAddress.address,
-          set: {
-            nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
-            cosmoId: sql`coalesce(excluded.${sql.raw(userAddress.cosmoId.name)}, ${userAddress.cosmoId})`,
-          },
-        });
-    } catch (err) {
-      console.error("Bulk user caching failed:", err);
-    }
+  if (newAddresses.length === 0) return;
+
+  const values = newAddresses.map((a) => ({
+    nickname: a.nickname,
+    address: a.address,
+    cosmoId: a.cosmoId ?? null,
+  }));
+
+  try {
+    await db
+      .insert(userAddress)
+      .values(values)
+      .onConflictDoUpdate({
+        target: userAddress.address,
+        set: {
+          nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
+          cosmoId: sql`coalesce(excluded.${sql.raw(userAddress.cosmoId.name)}, ${userAddress.cosmoId})`,
+        },
+      });
+  } catch (err) {
+    console.error("Bulk user caching failed:", err);
   }
 }
 
