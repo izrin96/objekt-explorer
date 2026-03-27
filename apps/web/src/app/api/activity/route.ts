@@ -12,6 +12,7 @@ import { getCollectionColumns } from "@/lib/server/objekt";
 import { validType } from "@/lib/universal/activity";
 
 const PAGE_SIZE = 300;
+const ENABLE_INARRAY = true;
 
 const activitySchema = z.object({
   type: z.enum(validType).default("all"),
@@ -123,41 +124,44 @@ async function fetchTransfers(query: ActivityParams) {
 
     if (matchingCollections.length === 0) return [];
 
-    // temporary disable inArray
+    if (ENABLE_INARRAY) {
+      const collectionIds = matchingCollections.map((c) => c.id);
 
-    // const collectionIds = matchingCollections.map((c) => c.id);
+      const ids = await indexer
+        .select({ id: transfers.id })
+        .from(transfers)
+        .where(and(inArray(transfers.collectionId, collectionIds), ...cursorFilter, ...typeFilters))
+        .orderBy(desc(transfers.timestamp), desc(transfers.id))
+        .limit(PAGE_SIZE + 1);
 
-    // if (collectionIds.length <= 100) {
-    //   const ids = await indexer
-    //     .select({ id: transfers.id })
-    //     .from(transfers)
-    //     .where(and(inArray(transfers.collectionId, collectionIds), ...cursorFilter, ...typeFilters))
-    //     .orderBy(desc(transfers.timestamp), desc(transfers.id))
-    //     .limit(PAGE_SIZE + 1);
+      if (ids.length === 0) return [];
 
-    //   if (ids.length === 0) return [];
-
-    //   return indexer
-    //     .select(transferSelect)
-    //     .from(transfers)
-    //     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-    //     .innerJoin(collections, eq(transfers.collectionId, collections.id))
-    //     .where(inArray(transfers.id, ids.map((t) => t.id)))
-    //     .orderBy(desc(transfers.timestamp), desc(transfers.id));
-    // }
+      return indexer
+        .select(transferSelect)
+        .from(transfers)
+        .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+        .innerJoin(collections, eq(transfers.collectionId, collections.id))
+        .where(
+          inArray(
+            transfers.id,
+            ids.map((t) => t.id),
+          ),
+        )
+        .orderBy(desc(transfers.timestamp), desc(transfers.id));
+    }
 
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
-      .innerJoin(
-        collections,
+      .innerJoin(collections, eq(transfers.collectionId, collections.id))
+      .where(
         and(
-          eq(transfers.collectionId, collections.id),
-          ne(collections.slug, "empty-collection"),
+          ...cursorFilter,
+          ...typeFilters,
           ...collectionFilters,
+          ne(collections.slug, "empty-collection"),
         ),
       )
-      .where(and(...cursorFilter, ...typeFilters))
       .orderBy(desc(transfers.timestamp), desc(transfers.id))
       .limit(PAGE_SIZE + 1);
 
