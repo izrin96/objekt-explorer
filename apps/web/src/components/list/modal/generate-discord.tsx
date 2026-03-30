@@ -71,7 +71,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
           )}
         </QueryErrorResetBoundary>
       </ModalBody>
-      <ModalFooter className="flex justify-end" id="submit-form"></ModalFooter>
+      <ModalFooter className="flex justify-end" id="submit-form-discord"></ModalFooter>
     </ModalContent>
   );
 }
@@ -350,7 +350,7 @@ function Content() {
         <CopyButton text={formatText} />
       </div>
 
-      <Portal to="#submit-form">
+      <Portal to="#submit-form-discord">
         <div className="flex gap-2">
           <Button intent="outline" onPress={handleReset}>
             {t("reset_button")}

@@ -65,7 +65,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
       <ModalBody>
         <CreateListForm setOpen={setOpen} />
       </ModalBody>
-      <ModalFooter id="submit-form">
+      <ModalFooter id="submit-form-create-list">
         <ModalClose>{tCommon("cancel")}</ModalClose>
       </ModalFooter>
     </ModalContent>
@@ -261,7 +261,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           )}
         />
 
-        <Portal to="#submit-form">
+        <Portal to="#submit-form-create-list">
           <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
             {t("submit")}
           </Button>
@@ -347,7 +347,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
           )}
         </QueryErrorResetBoundary>
       </SheetBody>
-      <SheetFooter id="submit-form">
+      <SheetFooter id="submit-form-edit-list">
         <SheetClose>{tCommon("cancel")}</SheetClose>
       </SheetFooter>
     </SheetContent>
@@ -581,7 +581,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           })}
         </span>
 
-        <Portal to="#submit-form">
+        <Portal to="#submit-form-edit-list">
           <Button isPending={editList.isPending} onPress={() => onSubmit()}>
             {t("submit")}
           </Button>

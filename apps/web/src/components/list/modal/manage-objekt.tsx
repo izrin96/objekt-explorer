@@ -74,7 +74,7 @@ export function AddToListModal({
           )}
         </QueryErrorResetBoundary>
       </ModalBody>
-      <ModalFooter id="submit-form">
+      <ModalFooter id="submit-form-add-to-list">
         <ModalClose>{tCommon("cancel")}</ModalClose>
       </ModalFooter>
     </ModalContent>
@@ -197,7 +197,7 @@ function AddToListForm({
             </Checkbox>
           )}
         />
-        <Portal to="#submit-form">
+        <Portal to="#submit-form-add-to-list">
           <Button isPending={addToList.isPending} onPress={() => onSubmit()}>
             {t("add_button")}
           </Button>
