@@ -61,7 +61,7 @@ function SignInForm({
     },
     onSuccess: async (_, _v, _o, { client }) => {
       toast.success(t("success"));
-      void client.refetchQueries({
+      void client.invalidateQueries({
         queryKey: ["session"],
       });
       router.push("/");
@@ -232,7 +232,7 @@ function SignUpForm({
     },
     onSuccess: async (_, _v, _o, { client }) => {
       toast.success(t("success"));
-      void client.refetchQueries({
+      void client.invalidateQueries({
         queryKey: ["session"],
       });
       router.push("/");

@@ -148,7 +148,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
     },
     onSuccess: async (_, _v, _o, { client }) => {
       setOpen(false);
-      void client.refetchQueries({
+      void client.invalidateQueries({
         queryKey: ["session"],
       });
       router.refresh();

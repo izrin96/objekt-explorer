@@ -66,7 +66,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
       onSuccess: async (_, _v, _o, { client }) => {
-        void client.refetchQueries({
+        void client.invalidateQueries({
           queryKey: ["session"],
         });
         void client.invalidateQueries({
@@ -150,7 +150,7 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
   const refreshProfile = useMutation(
     orpc.user.refreshProfile.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
-        void client.refetchQueries({
+        void client.invalidateQueries({
           queryKey: ["session"],
         });
         setOpen(false);

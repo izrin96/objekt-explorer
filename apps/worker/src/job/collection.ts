@@ -3,7 +3,7 @@ import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { chunk, slugifyObjekt } from "@repo/lib";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray } from "drizzle-orm";
 
 const BATCH_SIZE = 50;
 
@@ -26,12 +26,13 @@ export async function fixEmptyCollection() {
 }
 
 export async function fixObjektSerialZero() {
+  // cut-off date because older objekt have a real serial 0
   const objektsResults = await indexer
     .select({
       id: objekts.id,
     })
     .from(objekts)
-    .where(eq(objekts.serial, 0));
+    .where(and(eq(objekts.serial, 0), gte(objekts.mintedAt, "2026-03-23T01:00:00.000Z")));
 
   const totalBatches = Math.ceil(objektsResults.length / BATCH_SIZE);
   let batchNumber = 0;

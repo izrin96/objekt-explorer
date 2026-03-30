@@ -133,7 +133,7 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
           )}
         </QueryErrorResetBoundary>
       </SheetBody>
-      <SheetFooter id="submit-form">
+      <SheetFooter id="submit-form-edit-profile">
         <SheetClose>{tCommon("cancel")}</SheetClose>
       </SheetFooter>
     </SheetContent>
@@ -478,7 +478,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           })}
         </span>
 
-        <Portal to="#submit-form">
+        <Portal to="#submit-form-edit-profile">
           <Button intent="primary" isPending={isSubmitting} onPress={() => onSubmit()}>
             {t("submit")}
           </Button>

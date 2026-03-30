@@ -27,7 +27,14 @@ function Pill({ label, value, className }: PillProps) {
 
 function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   const t = useTranslations("objekt");
-  const { data, status } = useQuery(fetchMetadata(objekt.slug));
+  const { data, status } = useQuery({
+    queryKey: ["objekts", "metadata", objekt.slug],
+    queryFn: () => {
+      const url = new URL(`/api/objekts/metadata/${objekt.slug}`, getBaseURL());
+      return ofetch<CollectionMetadata>(url.toString());
+    },
+    staleTime: 0,
+  });
 
   if (status === "pending") {
     return (
@@ -63,14 +70,6 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
     );
   }
 }
-
-const fetchMetadata = (slug: string) => ({
-  queryKey: ["objekts", "metadata", slug],
-  queryFn: () => {
-    const url = new URL(`/api/objekts/metadata/${slug}`, getBaseURL());
-    return ofetch<CollectionMetadata>(url.toString());
-  },
-});
 
 export function AttributePanel({
   objekt,

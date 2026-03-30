@@ -22,13 +22,19 @@ await fixObjektSerialZero();
 // required neighbour serial to be found to predict serial
 await populateSerialOffline();
 
+void new Cron("0 * * * *", async () => {
+  await fixEmptyCollection();
+  await fixObjektSerialZero();
+  await populateSerialOffline();
+});
+
 // 4. cosmo-spin transferable update
 await updateTransferableCosmoSpin();
 void new Cron("*/10 * * * *", updateTransferableCosmoSpin);
 
 // 5. profile list
 await syncProfileListsToCache();
-void new Cron("*/30 * * * *", syncProfileListsToCache);
+void new Cron("0 * * * *", syncProfileListsToCache);
 
 await cleanupProfileLists();
 void new Cron("*/10 * * * *", cleanupProfileLists);

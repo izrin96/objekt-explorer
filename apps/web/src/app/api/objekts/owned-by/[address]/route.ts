@@ -4,7 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { and, desc, eq, getColumns, inArray, lte, ne, or, sql } from "drizzle-orm";
+import { and, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import * as z from "zod";
 
@@ -24,7 +24,7 @@ const schema = z.object({
   at: z.string().optional(),
   cursor: z
     .object({
-      receivedAt: z.string().or(z.date()),
+      receivedAt: z.string(),
       id: z.string(),
     })
     .optional(),
@@ -109,7 +109,14 @@ export async function GET(request: NextRequest, props: Params) {
             : []),
           ...(query.cursor
             ? [
-                sql`(${latest.timestamp}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
+                // sql`(${latest.timestamp}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
+                or(
+                  lt(latest.timestamp, query.cursor.receivedAt),
+                  and(
+                    eq(latest.timestamp, query.cursor.receivedAt),
+                    lt(objekts.id, query.cursor.id),
+                  ),
+                ),
               ]
             : []),
         ),
@@ -120,7 +127,7 @@ export async function GET(request: NextRequest, props: Params) {
     const hasNext = results.length > PER_PAGE;
     const nextCursor = hasNext
       ? {
-          receivedAt: results[PER_PAGE - 1]!.objekt.receivedAt,
+          receivedAt: new Date(results[PER_PAGE - 1]!.objekt.receivedAt).toISOString(),
           id: results[PER_PAGE - 1]!.objekt.id,
         }
       : undefined;
@@ -144,7 +151,14 @@ export async function GET(request: NextRequest, props: Params) {
         eq(objekts.owner, addr),
         ...(query.cursor
           ? [
-              sql`(${objekts.receivedAt}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
+              // sql`(${objekts.receivedAt}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
+              or(
+                lt(objekts.receivedAt, query.cursor.receivedAt),
+                and(
+                  eq(objekts.receivedAt, query.cursor.receivedAt),
+                  lt(objekts.id, query.cursor.id),
+                ),
+              ),
             ]
           : []),
         ...(query.artist.length
@@ -164,7 +178,7 @@ export async function GET(request: NextRequest, props: Params) {
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext
     ? {
-        receivedAt: results[PER_PAGE - 1]!.objekt.receivedAt,
+        receivedAt: new Date(results[PER_PAGE - 1]!.objekt.receivedAt).toISOString(),
         id: results[PER_PAGE - 1]!.objekt.id,
       }
     : undefined;

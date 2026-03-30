@@ -9,6 +9,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": false,
+    "types": ["node"],
 
     // Module Resolution
     "moduleResolution": "Bundler",
@@ -33,7 +34,7 @@
     "verbatimModuleSyntax": false,
 
     // Other
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
-  "exclude": ["node_modules", "dist", ".turbo"]
+  "exclude": ["node_modules", "dist", ".turbo"],
 }

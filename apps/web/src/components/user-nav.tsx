@@ -123,7 +123,7 @@ function UserMenu({ user }: { user: User }) {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    void queryClient.refetchQueries({
+                    void queryClient.invalidateQueries({
                       queryKey: ["session"],
                     });
                     toast(t("sign_out_success"));
