@@ -47,7 +47,7 @@ export default function Filter({
         <EditionFilter />
         <OnlineFilter />
         <ColorFilter />
-        <SortFilter allowDuplicateSort allowSerialSort />
+        <SortFilter enabled={["date", "season", "collectionNo", "member", "serial", "duplicate"]} />
         <SortDirectionFilter />
         <CombineDuplicateFilter />
         <GroupByFilter />

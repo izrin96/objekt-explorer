@@ -1,7 +1,6 @@
 "use client";
 
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
-import { validCustomSorts } from "@repo/cosmo/types/common";
 import { useTranslations } from "next-intl";
 import type { Selection } from "react-aria-components";
 
@@ -10,17 +9,18 @@ import { useFilters } from "@/hooks/use-filters";
 import { Button } from "../ui/button";
 import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../ui/menu";
 
+const defaultSorts: ValidCustomSort[] = ["date", "season", "collectionNo", "member"];
+
 type Props = {
-  allowDuplicateSort?: boolean;
-  allowSerialSort?: boolean;
+  enabled?: ValidCustomSort[];
 };
 
-export default function SortFilter({ allowDuplicateSort = false, allowSerialSort = false }: Props) {
+export default function SortFilter({ enabled = defaultSorts }: Props) {
   const t = useTranslations("filter.sort_by");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.sort ? [filters.sort] : ["date"]);
 
-  const map = {
+  const map: Record<ValidCustomSort, { label: string; desc: string }> = {
     date: { label: t("date.label"), desc: t("date.desc") },
     season: { label: t("season.label"), desc: t("season.desc") },
     collectionNo: { label: t("collection_no.label"), desc: t("collection_no.desc") },
@@ -39,12 +39,6 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
     }));
   }
 
-  const availableSorts = validCustomSorts.filter((s) => {
-    if (s === "duplicate" && !allowDuplicateSort) return false;
-    if (s === "serial" && !allowSerialSort) return false;
-    return true;
-  });
-
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.sort}>
@@ -56,7 +50,7 @@ export default function SortFilter({ allowDuplicateSort = false, allowSerialSort
         onSelectionChange={update}
         className="min-w-52"
       >
-        {availableSorts.map((item) => {
+        {enabled.map((item) => {
           const i = map[item];
           return (
             <MenuItem key={item} id={item} textValue={i.label}>

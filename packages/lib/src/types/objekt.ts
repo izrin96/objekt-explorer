@@ -67,12 +67,17 @@ export type ObjektTransferResult = {
 };
 
 // API response types
+export type OwnedObjektsCursor = {
+  receivedAt?: string;
+  serial?: number;
+  collectionNo?: string;
+  id: string;
+};
+
 export type OwnedObjektsResult = {
-  nextCursor?: {
-    receivedAt: string;
-    id: string;
-  };
+  nextCursor?: OwnedObjektsCursor;
   objekts: OwnedObjekt[];
+  total?: number;
 };
 
 export type CollectionResult = {

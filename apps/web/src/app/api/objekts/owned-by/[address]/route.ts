@@ -1,10 +1,15 @@
-import { validArtists, validOnlineTypes } from "@repo/cosmo/types/common";
+import {
+  validArtists,
+  validCustomSorts,
+  validOnlineTypes,
+  validSortDirection,
+} from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { and, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
+import { and, asc, desc, eq, getColumns, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import * as z from "zod";
 
@@ -19,14 +24,17 @@ type Params = {
 
 const PER_PAGE = 8000;
 
+// Cursor schema - flexible for different sort modes
+const cursorSchema = z.object({
+  receivedAt: z.string().optional(),
+  serial: z.coerce.number().optional(),
+  collectionNo: z.string().optional(),
+  id: z.string(),
+});
+
 const schema = z.object({
   at: z.string().optional(),
-  cursor: z
-    .object({
-      receivedAt: z.string(),
-      id: z.string(),
-    })
-    .optional(),
+  cursor: cursorSchema.optional(),
   artist: z.enum(validArtists).array().optional(),
   member: z.array(z.string()).optional(),
   class: z.array(z.string()).optional(),
@@ -37,9 +45,13 @@ const schema = z.object({
     .transform((v) => v === "true")
     .optional(),
   collection: z.string().array().optional(),
+  sort: z.enum(validCustomSorts).optional(),
+  sort_dir: z.enum(validSortDirection).optional(),
 });
 
-function buildCollectionFilters(query: z.infer<typeof schema>) {
+type Query = z.infer<typeof schema>;
+
+function buildCollectionFilters(query: Query) {
   const filters = [];
 
   if (query.artist?.length) {
@@ -78,6 +90,97 @@ function buildCollectionFilters(query: z.infer<typeof schema>) {
   return filters;
 }
 
+function getSortConfig(query: Query) {
+  const sort = query.sort ?? "date";
+  const sortDir = query.sort_dir ?? "desc";
+  const isAsc = sortDir === "asc";
+
+  switch (sort) {
+    case "serial":
+      return {
+        orderBy: isAsc
+          ? [asc(objekts.serial), asc(objekts.id)]
+          : [desc(objekts.serial), desc(objekts.id)],
+        cursorWhere:
+          query.cursor?.serial !== undefined
+            ? isAsc
+              ? or(
+                  gt(objekts.serial, query.cursor.serial),
+                  and(eq(objekts.serial, query.cursor.serial), gt(objekts.id, query.cursor.id)),
+                )
+              : or(
+                  lt(objekts.serial, query.cursor.serial),
+                  and(eq(objekts.serial, query.cursor.serial), lt(objekts.id, query.cursor.id)),
+                )
+            : undefined,
+        nextCursor: (lastResult: { objekt: { serial: number; id: string } }) => ({
+          serial: lastResult.objekt.serial,
+          id: lastResult.objekt.id,
+        }),
+      };
+
+    case "collectionNo":
+      return {
+        orderBy: isAsc
+          ? [asc(collections.collectionNo), asc(objekts.id)]
+          : [desc(collections.collectionNo), desc(objekts.id)],
+        cursorWhere: query.cursor?.collectionNo
+          ? isAsc
+            ? or(
+                gt(collections.collectionNo, query.cursor.collectionNo),
+                and(
+                  eq(collections.collectionNo, query.cursor.collectionNo),
+                  gt(objekts.id, query.cursor.id),
+                ),
+              )
+            : or(
+                lt(collections.collectionNo, query.cursor.collectionNo),
+                and(
+                  eq(collections.collectionNo, query.cursor.collectionNo),
+                  lt(objekts.id, query.cursor.id),
+                ),
+              )
+          : undefined,
+        nextCursor: (lastResult: {
+          collection: { collectionNo: string };
+          objekt: { id: string };
+        }) => ({
+          collectionNo: lastResult.collection.collectionNo,
+          id: lastResult.objekt.id,
+        }),
+      };
+
+    // date (default)
+    default:
+      return {
+        orderBy: isAsc
+          ? [asc(objekts.receivedAt), asc(objekts.id)]
+          : [desc(objekts.receivedAt), desc(objekts.id)],
+        cursorWhere: query.cursor?.receivedAt
+          ? isAsc
+            ? or(
+                gt(objekts.receivedAt, query.cursor.receivedAt),
+                and(
+                  eq(objekts.receivedAt, query.cursor.receivedAt),
+                  gt(objekts.id, query.cursor.id),
+                ),
+              )
+            : or(
+                lt(objekts.receivedAt, query.cursor.receivedAt),
+                and(
+                  eq(objekts.receivedAt, query.cursor.receivedAt),
+                  lt(objekts.id, query.cursor.id),
+                ),
+              )
+          : undefined,
+        nextCursor: (lastResult: { objekt: { receivedAt: Date | string; id: string } }) => ({
+          receivedAt: new Date(lastResult.objekt.receivedAt).toISOString(),
+          id: lastResult.objekt.id,
+        }),
+      };
+  }
+}
+
 export async function GET(request: NextRequest, props: Params) {
   const [session, params] = await Promise.all([getSession(), props.params]);
   const addr = params.address.toLowerCase();
@@ -113,6 +216,7 @@ export async function GET(request: NextRequest, props: Params) {
   }
 
   const collectionFilters = buildCollectionFilters(query);
+  const sortConfig = getSortConfig(query);
 
   // snapshot
   if (query.at) {
@@ -150,29 +254,14 @@ export async function GET(request: NextRequest, props: Params) {
           eq(latest.to, addr),
           ne(collections.slug, "empty-collection"),
           ...collectionFilters,
-          ...(query.cursor
-            ? [
-                or(
-                  lt(latest.timestamp, query.cursor.receivedAt),
-                  and(
-                    eq(latest.timestamp, query.cursor.receivedAt),
-                    lt(objekts.id, query.cursor.id),
-                  ),
-                ),
-              ]
-            : []),
+          sortConfig.cursorWhere,
         ),
       )
-      .orderBy(desc(latest.timestamp), desc(objekts.id))
+      .orderBy(...sortConfig.orderBy)
       .limit(PER_PAGE + 1);
 
     const hasNext = results.length > PER_PAGE;
-    const nextCursor = hasNext
-      ? {
-          receivedAt: new Date(results[PER_PAGE - 1]!.objekt.receivedAt).toISOString(),
-          id: results[PER_PAGE - 1]!.objekt.id,
-        }
-      : undefined;
+    const nextCursor = hasNext ? sortConfig.nextCursor(results[PER_PAGE - 1]!) : undefined;
 
     return Response.json({
       nextCursor,
@@ -193,29 +282,14 @@ export async function GET(request: NextRequest, props: Params) {
         eq(objekts.owner, addr),
         ne(collections.slug, "empty-collection"),
         ...collectionFilters,
-        ...(query.cursor
-          ? [
-              or(
-                lt(objekts.receivedAt, query.cursor.receivedAt),
-                and(
-                  eq(objekts.receivedAt, query.cursor.receivedAt),
-                  lt(objekts.id, query.cursor.id),
-                ),
-              ),
-            ]
-          : []),
+        sortConfig.cursorWhere,
       ),
     )
-    .orderBy(desc(objekts.receivedAt), desc(objekts.id))
+    .orderBy(...sortConfig.orderBy)
     .limit(PER_PAGE + 1);
 
   const hasNext = results.length > PER_PAGE;
-  const nextCursor = hasNext
-    ? {
-        receivedAt: new Date(results[PER_PAGE - 1]!.objekt.receivedAt).toISOString(),
-        id: results[PER_PAGE - 1]!.objekt.id,
-      }
-    : undefined;
+  const nextCursor = hasNext ? sortConfig.nextCursor(results[PER_PAGE - 1]!) : undefined;
 
   return Response.json({
     nextCursor,
@@ -223,7 +297,7 @@ export async function GET(request: NextRequest, props: Params) {
   });
 }
 
-function parseParams(params: URLSearchParams): z.infer<typeof schema> {
+function parseParams(params: URLSearchParams): Query {
   const result = schema.safeParse({
     at: params.get("at") ?? undefined,
     cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
@@ -234,6 +308,8 @@ function parseParams(params: URLSearchParams): z.infer<typeof schema> {
     onOffline: params.getAll("onOffline").length ? params.getAll("onOffline") : undefined,
     transferable: params.get("transferable") ?? undefined,
     collection: params.getAll("collection").length ? params.getAll("collection") : undefined,
+    sort: params.get("sort") ?? undefined,
+    sort_dir: params.get("sort_dir") ?? undefined,
   });
 
   return result.success ? result.data : {};

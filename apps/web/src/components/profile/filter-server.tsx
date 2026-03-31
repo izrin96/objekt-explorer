@@ -12,7 +12,8 @@ import ColumnFilter from "../filters/filter-column";
 import MemberFilter from "../filters/filter-member";
 import OnlineFilter from "../filters/filter-online";
 import SeasonFilter from "../filters/filter-season";
-import TransferableFilter from "../filters/filter-transferable";
+import SortFilter from "../filters/filter-sort";
+import SortDirectionFilter from "../filters/filter-sort-direction";
 import ResetFilter from "../filters/reset-filter";
 
 export default function FilterServer() {
@@ -27,15 +28,15 @@ export default function FilterServer() {
         <Suspense>
           <MemberFilter />
         </Suspense>
-        <TransferableFilter />
+        {/* <TransferableFilter /> */}
         <SeasonFilter />
         <ClassFilter />
         <OnlineFilter />
         <Suspense>
           <CollectionFilter />
         </Suspense>
-        {/* <SortFilter allowSerialSort /> */}
-        {/* <SortDirectionFilter /> */}
+        <SortFilter enabled={["date", "collectionNo", "serial"]} />
+        <SortDirectionFilter />
       </div>
       <div className="flex flex-wrap gap-2">
         <ColumnFilter />

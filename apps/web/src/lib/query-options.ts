@@ -1,5 +1,5 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
-import type { CollectionResult } from "@repo/lib/types/objekt";
+import type { ValidArtist, ValidCustomSort, ValidSortDirection } from "@repo/cosmo/types/common";
+import type { CollectionResult, OwnedObjektsCursor } from "@repo/lib/types/objekt";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
@@ -17,6 +17,8 @@ export type ServerFilters = {
   onOffline?: string[];
   transferable?: boolean;
   collection?: string[];
+  sort?: ValidCustomSort;
+  sort_dir?: ValidSortDirection;
 };
 
 export const collectionOptions = (filters?: ServerFilters, enable = true) =>
@@ -45,7 +47,7 @@ export const ownedCollectionOptions = (address: string, filters?: ServerFilters)
         objekts: result.objekts.map(mapObjektWithTag),
         nextCursor: result.nextCursor,
       })),
-    initialPageParam: undefined as { receivedAt: string; id: string } | undefined,
+    initialPageParam: undefined as OwnedObjektsCursor | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
     staleTime: filters?.at ? Infinity : 1000 * 60 * 5,

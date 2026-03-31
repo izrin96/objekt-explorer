@@ -21,6 +21,8 @@ export function useProfileObjektsServer() {
     ...(filters.on_offline && { onOffline: filters.on_offline }),
     ...(filters.transferable !== null && { transferable: filters.transferable }),
     ...(filters.collection && { collection: filters.collection }),
+    ...(filters.sort && { sort: filters.sort }),
+    ...(filters.sort_dir && { sort_dir: filters.sort_dir }),
   };
 
   const { objekts: filtered, query } = useOwnedCollectionsServer(profile.address, serverFilters);

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import { Suspense } from "react";
 
 import { useIsFiltering } from "@/hooks/use-filters";
@@ -30,6 +31,12 @@ export default function Filter({
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
   const list = useTarget((a) => a.list)!;
+
+  const sortOptions: ValidCustomSort[] =
+    list.listType === "profile"
+      ? ["date", "season", "collectionNo", "member", "serial", "duplicate"]
+      : ["date", "season", "collectionNo", "member", "duplicate"];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
@@ -44,7 +51,7 @@ export default function Filter({
         <EditionFilter />
         <OnlineFilter />
         <ColorFilter />
-        <SortFilter allowDuplicateSort allowSerialSort={list.listType === "profile"} />
+        <SortFilter enabled={sortOptions} />
         <SortDirectionFilter />
         <CombineDuplicateFilter />
         <GroupByFilter />
