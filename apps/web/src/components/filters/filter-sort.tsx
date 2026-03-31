@@ -35,7 +35,7 @@ export default function SortFilter({ enabled = defaultSorts }: Props) {
     return setFilters((current) => ({
       sort: value === "date" ? null : value,
       sort_dir: ["serial", "member"].includes(value) ? "asc" : null,
-      grouped: value === "duplicate" ? true : value === "serial" ? false : current.grouped,
+      grouped: value === "duplicate" ? true : value === "serial" ? null : current.grouped,
     }));
   }
 
