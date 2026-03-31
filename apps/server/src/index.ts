@@ -33,18 +33,18 @@ void redisPubSub.subscribe("transfers", async (message, channel) => {
     const addresses = transfers.flatMap((a) => [a.from, a.to]);
     const knownAddresses = await fetchKnownAddresses(addresses);
 
+    const addressMap = new Map(
+      knownAddresses.map((a) => [a.address.toLowerCase(), a]),
+    );
+
     const transferBatch: TransferSendData[] = [];
 
     for (const transfer of transfers) {
       if (transfer.collection.slug === "empty-collection") continue;
 
       const { objekt, collection, ...rest } = transfer;
-      const fromUser = knownAddresses.find(
-        (a) => a.address.toLowerCase() === transfer.from.toLowerCase(),
-      );
-      const toUser = knownAddresses.find(
-        (a) => a.address.toLowerCase() === transfer.to.toLowerCase(),
-      );
+      const fromUser = addressMap.get(transfer.from.toLowerCase());
+      const toUser = addressMap.get(transfer.to.toLowerCase());
 
       const transferEvent = {
         nickname: {

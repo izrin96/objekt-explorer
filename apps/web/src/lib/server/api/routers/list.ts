@@ -156,17 +156,19 @@ export const listRouter = {
         result.map((a) => a.profileAddress).filter(filterNonNull),
       );
 
-      return result.map((l) => ({
-        name: l.name,
-        slug: l.slug,
-        profileSlug: l.profileSlug,
-        listType: l.listType,
-        profileAddress: l.profileAddress,
-        nickname:
-          knownAddresses.find(
-            (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
-          )?.nickname ?? undefined,
-      }));
+      const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+
+      return result.map((l) => {
+        const addr = addressMap.get(l.profileAddress?.toLowerCase() ?? "");
+        return {
+          name: l.name,
+          slug: l.slug,
+          profileSlug: l.profileSlug,
+          listType: l.listType,
+          profileAddress: l.profileAddress,
+          nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
+        };
+      });
     }),
 
   addObjektsToList: authed
@@ -748,17 +750,19 @@ export async function fetchOwnedLists(userId: string) {
     result.map((a) => a.profileAddress).filter(filterNonNull),
   );
 
-  return result.map((l) => ({
-    name: l.name,
-    slug: l.slug,
-    profileSlug: l.profileSlug,
-    listType: l.listType,
-    profileAddress: l.profileAddress,
-    nickname:
-      knownAddresses.find(
-        (a) => a.address.toLowerCase() === l.profileAddress?.toLowerCase() && !a.hideNickname,
-      )?.nickname ?? undefined,
-  }));
+  const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+
+  return result.map((l) => {
+    const addr = addressMap.get(l.profileAddress?.toLowerCase() ?? "");
+    return {
+      name: l.name,
+      slug: l.slug,
+      profileSlug: l.profileSlug,
+      listType: l.listType,
+      profileAddress: l.profileAddress,
+      nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
+    };
+  });
 }
 
 async function findOwnedList(slug: string, userId: string) {

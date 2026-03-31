@@ -83,18 +83,20 @@ export async function GET(_: Request, props: Params) {
 
   const knownAddresses = await fetchKnownAddresses(addresses);
 
+  const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+
   return Response.json({
     tokenId: result.tokenId ?? undefined,
     owner: result.owner ?? undefined,
     transferable: result.transferable ?? undefined,
-    transfers: results.map((result) => ({
-      id: result.id,
-      to: result.to,
-      timestamp: new Date(result.timestamp).toISOString(),
-      nickname:
-        knownAddresses.find(
-          (a) => a.address.toLowerCase() === result.to.toLowerCase() && !a.hideNickname,
-        )?.nickname ?? undefined,
-    })),
+    transfers: results.map((result) => {
+      const addr = addressMap.get(result.to.toLowerCase());
+      return {
+        id: result.id,
+        to: result.to,
+        timestamp: new Date(result.timestamp).toISOString(),
+        nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
+      };
+    }),
   });
 }

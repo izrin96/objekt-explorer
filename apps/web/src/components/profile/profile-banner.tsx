@@ -1,12 +1,16 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import type { PublicProfile } from "@/lib/universal/user";
 
+import { Container } from "../ui/container";
+
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   if (!(profile.bannerImgUrl && profile.bannerImgType)) return;
 
@@ -29,6 +33,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 loop
                 muted
                 playsInline
+                onLoad={() => setIsLoaded(true)}
               />
             ) : (
               <Image
@@ -36,6 +41,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 className="size-full object-cover object-center"
                 fill
                 alt="Banner"
+                onLoad={() => setIsLoaded(true)}
               />
             )}
             <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100%"></div>
@@ -43,30 +49,35 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         </div>
       </div>
       {/* background */}
-      <div className={"absolute inset-0 top-12 -z-10 xl:top-0"} style={{ height: `${height}px` }}>
-        {isVideo ? (
-          <video
-            className="size-full object-cover object-center"
-            src={profile.bannerImgUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
-        ) : (
-          <Image
-            src={profile.bannerImgUrl}
-            className="size-full object-cover object-center"
-            fill
-            alt="Banner"
-          />
-        )}
-        <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100% backdrop-blur-xl"></div>
-      </div>
+      {isLoaded && (
+        <div className={"absolute inset-0 top-12 -z-10 xl:top-0"} style={{ height: `${height}px` }}>
+          {isVideo ? (
+            <video
+              className="size-full object-cover object-center"
+              src={profile.bannerImgUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          ) : (
+            <Image
+              src={profile.bannerImgUrl}
+              className="size-full object-cover object-center"
+              fill
+              alt="Banner"
+            />
+          )}
+          <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100% backdrop-blur-xl"></div>
+        </div>
+      )}
+      <Container className="[--container-breakpoint:var(--breakpoint-2xl)]">
+        <ProfileBannerClearance />
+      </Container>
     </>
   );
 }
 
-export function ProfileBannerClearance() {
+function ProfileBannerClearance() {
   return <div className={"-mt-2 aspect-[2.3/1] xl:-mt-14"}></div>;
 }

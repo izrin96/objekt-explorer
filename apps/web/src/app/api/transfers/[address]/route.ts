@@ -276,22 +276,23 @@ export async function GET(request: NextRequest, props: { params: Promise<{ addre
 
   const knownAddresses = await fetchKnownAddresses(addressesUnique);
 
+  const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+
   return Response.json({
     nextCursor,
-    results: slicedResults.map((row) => ({
-      transfer: mapTransfer(row.transfer),
-      objekt: mapOwnedObjekt(row.objekt, row.collection),
-      nickname: {
-        from:
-          knownAddresses.find(
-            (a) => row.transfer.from.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
-          )?.nickname ?? undefined,
-        to:
-          knownAddresses.find(
-            (a) => row.transfer.to.toLowerCase() === a.address.toLowerCase() && !a.hideNickname,
-          )?.nickname ?? undefined,
-      },
-    })),
+    results: slicedResults.map((row) => {
+      const fromAddr = addressMap.get(row.transfer.from.toLowerCase());
+      const toAddr = addressMap.get(row.transfer.to.toLowerCase());
+
+      return {
+        transfer: mapTransfer(row.transfer),
+        objekt: mapOwnedObjekt(row.objekt, row.collection),
+        nickname: {
+          from: fromAddr?.hideNickname ? undefined : (fromAddr?.nickname ?? undefined),
+          to: toAddr?.hideNickname ? undefined : (toAddr?.nickname ?? undefined),
+        },
+      };
+    }),
   });
 }
 
