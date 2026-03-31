@@ -9,14 +9,16 @@ import { useTarget } from "./use-target";
 export function useProfileObjektsServer() {
   const shape = useShapeObjekts();
   const profile = useTarget((a) => a.profile)!;
-  const { selectedArtistIds } = useCosmoArtist();
+  const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
+
+  const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
 
   const serverFilters = {
     at: filters.at ?? undefined,
     includeCount: true,
     limit: 300,
-    artist: selectedArtistIds,
+    artist: parsedSelectedArtistIds ?? undefined,
     member: filters.member ?? undefined,
     class: filters.class ?? undefined,
     season: filters.season ?? undefined,

@@ -1,4 +1,9 @@
-import type { ValidArtist, ValidCustomSort, ValidSortDirection } from "@repo/cosmo/types/common";
+import type {
+  ValidArtist,
+  ValidCustomSort,
+  ValidOnlineType,
+  ValidSortDirection,
+} from "@repo/cosmo/types/common";
 import type { CollectionResult, OwnedObjektsCursor } from "@repo/lib/types/objekt";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
@@ -14,7 +19,7 @@ export type ServerFilters = {
   member?: string[];
   class?: string[];
   season?: string[];
-  onOffline?: string[];
+  onOffline?: ValidOnlineType[];
   transferable?: boolean;
   collection?: string[];
   sort?: ValidCustomSort;
