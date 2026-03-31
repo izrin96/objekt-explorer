@@ -318,7 +318,7 @@ function Activity() {
                 return (
                   <div
                     className={cn(
-                      "absolute top-0 left-0 min-w-full overflow-hidden will-change-transform",
+                      "absolute top-0 left-0 min-w-full overflow-hidden",
                       isNew &&
                         "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
                     )}
