@@ -3,6 +3,7 @@
 import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useLocale } from "next-intl";
 import dynamic from "next/dynamic";
 import { Suspense, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
@@ -35,14 +36,16 @@ export default dynamic(() => Promise.resolve(ProfileObjektServerRender), {
 function ProfileObjektServerRender() {
   const profile = useTarget((a) => a.profile)!;
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
+  const locale = useLocale();
 
   return (
     <ObjektViewProvider initialColumn={profile.gridColumns ?? undefined} modalTab="owned">
       <div className="flex flex-col gap-4">
         {profile.address.toLowerCase() === Addresses.SPIN && (
           <Note intent="default" className="max-w-xl">
-            Some filters are not available for cosmo-spin. Spinned objekts during Polygon chain is
-            not yet merge.
+            {locale === "ko"
+              ? "COSMO 스핀에서는 일부 필터를 사용할 수 없습니다. 폴리곤 체인에서 스핀된 오브젝트는 아직 병합되지 않았습니다."
+              : "Some filters are unavailable for COSMO Spin. Objekts spun on the Polygon chain have not been merged yet."}
           </Note>
         )}
 
