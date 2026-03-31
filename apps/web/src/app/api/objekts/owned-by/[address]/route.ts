@@ -227,6 +227,7 @@ export async function GET(request: NextRequest, props: Params) {
   }
 
   const collectionFilters = buildCollectionFilters(query);
+  const objektFilters = buildObjektFilters(query);
   const sortConfig = getSortConfig(query);
   const isFirstPage = !query.cursor;
   const limit = query.limit ?? PER_PAGE;
@@ -267,6 +268,7 @@ export async function GET(request: NextRequest, props: Params) {
           eq(latest.to, addr),
           ne(collections.slug, "empty-collection"),
           ...collectionFilters,
+          ...objektFilters,
           sortConfig.cursorWhere,
         ),
       )
@@ -286,6 +288,7 @@ export async function GET(request: NextRequest, props: Params) {
                 eq(latest.to, addr),
                 ne(collections.slug, "empty-collection"),
                 ...collectionFilters,
+                ...objektFilters,
               ),
             )
         : null;
@@ -304,8 +307,6 @@ export async function GET(request: NextRequest, props: Params) {
   }
 
   // current owner
-  const hasCollectionFilters = collectionFilters.length > 0;
-
   const mainQuery = indexer
     .select({
       objekt: objekts,
@@ -318,6 +319,7 @@ export async function GET(request: NextRequest, props: Params) {
         eq(objekts.owner, addr),
         ne(collections.slug, "empty-collection"),
         ...collectionFilters,
+        ...objektFilters,
         sortConfig.cursorWhere,
       ),
     )
@@ -335,91 +337,13 @@ export async function GET(request: NextRequest, props: Params) {
               eq(objekts.owner, addr),
               ne(collections.slug, "empty-collection"),
               ...collectionFilters,
+              ...objektFilters,
             ),
           )
       : null;
 
-  let results: Awaited<typeof mainQuery>;
-  let total: number | undefined;
-
-  if (hasCollectionFilters) {
-    // Two-phase query: filter collections first, then objekts
-    const matchingCollections = await indexer
-      .select({ id: collections.id })
-      .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-
-    if (matchingCollections.length === 0) {
-      return Response.json({
-        nextCursor: undefined,
-        objekts: [],
-        total: 0,
-      });
-    }
-
-    const collectionIds = matchingCollections.map((c) => c.id);
-    const objektFilters = buildObjektFilters(query);
-
-    // Phase 2: Filter objekts by collectionId IN (...) — no join needed
-    const idsQuery = indexer
-      .select({ id: objekts.id })
-      .from(objekts)
-      .where(
-        and(
-          eq(objekts.owner, addr),
-          inArray(objekts.collectionId, collectionIds),
-          ...objektFilters,
-          sortConfig.cursorWhere,
-        ),
-      )
-      .orderBy(...sortConfig.orderBy)
-      .limit(limit + 1);
-
-    const idsCountQuery =
-      query.includeCount && isFirstPage
-        ? indexer
-            .select({ count: count() })
-            .from(objekts)
-            .where(
-              and(
-                eq(objekts.owner, addr),
-                inArray(objekts.collectionId, collectionIds),
-                ...objektFilters,
-              ),
-            )
-        : null;
-
-    const [ids, countResult] = await Promise.all([idsQuery, idsCountQuery]);
-    total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
-
-    if (ids.length === 0) {
-      return Response.json({
-        nextCursor: undefined,
-        objekts: [],
-        total,
-      });
-    }
-
-    // Phase 3: Join only for filtered results
-    results = await indexer
-      .select({
-        objekt: objekts,
-        collection: getCollectionColumns(),
-      })
-      .from(objekts)
-      .innerJoin(collections, eq(objekts.collectionId, collections.id))
-      .where(
-        inArray(
-          objekts.id,
-          ids.map((i) => i.id),
-        ),
-      )
-      .orderBy(...sortConfig.orderBy);
-  } else {
-    const [queryResults, countResult] = await Promise.all([mainQuery, countQuery]);
-    results = queryResults;
-    total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
-  }
+  const [results, countResult] = await Promise.all([mainQuery, countQuery]);
+  const total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
 
   const hasNext = results.length > limit;
   const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
