@@ -35,7 +35,7 @@ export default function FilterServer() {
         <Suspense>
           <CollectionFilter />
         </Suspense>
-        <SortFilter enabled={["date", "collectionNo", "serial"]} />
+        <SortFilter enabled={["date", "serial"]} />
         <SortDirectionFilter />
       </div>
       <div className="flex flex-wrap gap-2">
