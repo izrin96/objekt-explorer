@@ -19,6 +19,7 @@ export type ServerFilters = {
   collection?: string[];
   sort?: ValidCustomSort;
   sort_dir?: ValidSortDirection;
+  includeCount?: boolean;
 };
 
 export const collectionOptions = (filters?: ServerFilters, enable = true) =>
@@ -46,6 +47,7 @@ export const ownedCollectionOptions = (address: string, filters?: ServerFilters)
       fetchOwnedObjektsByCursor(address, pageParam, filters).then((result) => ({
         objekts: result.objekts.map(mapObjektWithTag),
         nextCursor: result.nextCursor,
+        total: result.total,
       })),
     initialPageParam: undefined as OwnedObjektsCursor | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,

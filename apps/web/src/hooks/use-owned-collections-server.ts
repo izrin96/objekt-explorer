@@ -6,9 +6,11 @@ export function useOwnedCollectionsServer(address: string, filters?: ServerFilte
   const query = useSuspenseInfiniteQuery(ownedCollectionOptions(address, filters));
 
   const objekts = query.data.pages.flatMap((page) => page.objekts);
+  const total = query.data.pages[0]?.total;
 
   return {
     objekts,
+    total,
     query,
   };
 }

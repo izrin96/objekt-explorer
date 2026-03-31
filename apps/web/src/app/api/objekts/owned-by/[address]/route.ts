@@ -9,7 +9,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { and, asc, desc, eq, getColumns, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, getColumns, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import * as z from "zod";
 
@@ -47,6 +47,10 @@ const schema = z.object({
   collection: z.string().array().optional(),
   sort: z.enum(validCustomSorts).optional(),
   sort_dir: z.enum(validSortDirection).optional(),
+  includeCount: z
+    .enum(["true", "false"])
+    .transform((v) => v === "true")
+    .optional(),
 });
 
 type Query = z.infer<typeof schema>;
@@ -217,6 +221,7 @@ export async function GET(request: NextRequest, props: Params) {
 
   const collectionFilters = buildCollectionFilters(query);
   const sortConfig = getSortConfig(query);
+  const isFirstPage = !query.cursor;
 
   // snapshot
   if (query.at) {
@@ -237,7 +242,7 @@ export async function GET(request: NextRequest, props: Params) {
         .orderBy(transfers.objektId, desc(transfers.timestamp)),
     );
 
-    const results = await indexer
+    const mainQuery = indexer
       .with(latest)
       .select({
         objekt: {
@@ -260,17 +265,38 @@ export async function GET(request: NextRequest, props: Params) {
       .orderBy(...sortConfig.orderBy)
       .limit(PER_PAGE + 1);
 
+    const countQuery =
+      query.includeCount && isFirstPage
+        ? indexer
+            .with(latest)
+            .select({ count: count() })
+            .from(latest)
+            .innerJoin(objekts, eq(latest.objektId, objekts.id))
+            .innerJoin(collections, eq(collections.id, objekts.collectionId))
+            .where(
+              and(
+                eq(latest.to, addr),
+                ne(collections.slug, "empty-collection"),
+                ...collectionFilters,
+              ),
+            )
+        : null;
+
+    const [results, countResult] = await Promise.all([mainQuery, countQuery]);
+
     const hasNext = results.length > PER_PAGE;
     const nextCursor = hasNext ? sortConfig.nextCursor(results[PER_PAGE - 1]!) : undefined;
+    const total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
 
     return Response.json({
       nextCursor,
       objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+      total,
     });
   }
 
   // current owner
-  const results = await indexer
+  const mainQuery = indexer
     .select({
       objekt: objekts,
       collection: getCollectionColumns(),
@@ -288,12 +314,31 @@ export async function GET(request: NextRequest, props: Params) {
     .orderBy(...sortConfig.orderBy)
     .limit(PER_PAGE + 1);
 
+  const countQuery =
+    query.includeCount && isFirstPage
+      ? indexer
+          .select({ count: count() })
+          .from(objekts)
+          .innerJoin(collections, eq(objekts.collectionId, collections.id))
+          .where(
+            and(
+              eq(objekts.owner, addr),
+              ne(collections.slug, "empty-collection"),
+              ...collectionFilters,
+            ),
+          )
+      : null;
+
+  const [results, countResult] = await Promise.all([mainQuery, countQuery]);
+
   const hasNext = results.length > PER_PAGE;
   const nextCursor = hasNext ? sortConfig.nextCursor(results[PER_PAGE - 1]!) : undefined;
+  const total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
 
   return Response.json({
     nextCursor,
     objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    total,
   });
 }
 
@@ -310,6 +355,7 @@ function parseParams(params: URLSearchParams): Query {
     collection: params.getAll("collection").length ? params.getAll("collection") : undefined,
     sort: params.get("sort") ?? undefined,
     sort_dir: params.get("sort_dir") ?? undefined,
+    includeCount: params.get("includeCount") ?? undefined,
   });
 
   return result.success ? result.data : {};

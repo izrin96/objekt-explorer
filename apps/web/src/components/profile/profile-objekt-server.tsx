@@ -93,7 +93,7 @@ function ProfileObjektServer({
 }) {
   const { data: session } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, query } = useProfileObjektsServer();
+  const { shaped, filtered, total, query } = useProfileObjektsServer();
 
   const renderObjekt = useCallback(
     ({ item }: { item: ValidObjekt[] }) => {
@@ -142,7 +142,7 @@ function ProfileObjektServer({
           selectTarget,
         )}
 
-      <ObjektCount filtered={filtered} />
+      <ObjektCount filtered={filtered} total={total} />
       <ObjektVirtualGrid
         shaped={shaped as ShapedData}
         renderItem={renderObjekt}

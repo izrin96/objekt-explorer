@@ -14,6 +14,7 @@ export function useProfileObjektsServer() {
 
   const serverFilters = {
     artist: selectedArtistIds,
+    includeCount: true,
     ...(filters.at !== null && { at: filters.at }),
     ...(filters.member && { member: filters.member }),
     ...(filters.class && { class: filters.class }),
@@ -25,11 +26,16 @@ export function useProfileObjektsServer() {
     ...(filters.sort_dir && { sort_dir: filters.sort_dir }),
   };
 
-  const { objekts: filtered, query } = useOwnedCollectionsServer(profile.address, serverFilters);
+  const {
+    objekts: filtered,
+    total,
+    query,
+  } = useOwnedCollectionsServer(profile.address, serverFilters);
 
   return useDeferredValue({
     shaped: shape(filtered, true),
     filtered,
+    total,
     filters,
     query,
   });
