@@ -13,18 +13,18 @@ export function useProfileObjektsServer() {
   const [filters] = useFilters();
 
   const serverFilters = {
-    artist: selectedArtistIds,
+    at: filters.at ?? undefined,
     includeCount: true,
     limit: 300,
-    ...(filters.at !== null && { at: filters.at }),
-    ...(filters.member && { member: filters.member }),
-    ...(filters.class && { class: filters.class }),
-    ...(filters.season && { season: filters.season }),
-    ...(filters.on_offline && { onOffline: filters.on_offline }),
-    ...(filters.transferable !== null && { transferable: filters.transferable }),
-    ...(filters.collection && { collection: filters.collection }),
-    ...(filters.sort && { sort: filters.sort }),
-    ...(filters.sort_dir && { sort_dir: filters.sort_dir }),
+    artist: selectedArtistIds,
+    member: filters.member ?? undefined,
+    class: filters.class ?? undefined,
+    season: filters.season ?? undefined,
+    onOffline: filters.on_offline ?? undefined,
+    transferable: filters.transferable ?? undefined,
+    collection: filters.collection ?? undefined,
+    sort: filters.sort ?? undefined,
+    sort_dir: filters.sort_dir ?? undefined,
   };
 
   const {

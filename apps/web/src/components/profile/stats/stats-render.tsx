@@ -63,7 +63,7 @@ function ProfileStats() {
 
   const serverFilters = {
     artist: selectedArtistIds,
-    ...(filters.at && { at: filters.at }),
+    at: filters.at ?? undefined,
   };
 
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
