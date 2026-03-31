@@ -20,10 +20,14 @@ export function useProfileObjekts() {
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
+  const serverFilters = {
+    artist: selectedArtistIds,
+    ...(filters.at && { at: filters.at }),
+  };
+
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
     profile.address,
-    selectedArtistIds,
-    filters.at ?? undefined,
+    serverFilters,
   );
 
   const [pinsQuery, lockedObjektQuery] = useSuspenseQueries({
@@ -41,9 +45,7 @@ export function useProfileObjekts() {
     ],
   });
 
-  const objektsQuery = useQuery(
-    collectionOptions(selectedArtistIds, !hasNextPage, filters.at ?? undefined),
-  );
+  const objektsQuery = useQuery(collectionOptions(serverFilters, !hasNextPage));
 
   // owned objekts - in checkpoint mode, skip pin/lock augmentation
   const ownedWithPinLock = filters.at

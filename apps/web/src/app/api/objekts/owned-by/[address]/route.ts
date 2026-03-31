@@ -1,4 +1,4 @@
-import { validArtists } from "@repo/cosmo/types/common";
+import { validArtists, validOnlineTypes } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
@@ -17,10 +17,9 @@ type Params = {
   }>;
 };
 
-const PER_PAGE = 10000;
+const PER_PAGE = 8000;
 
 const schema = z.object({
-  artist: z.enum(validArtists).array(),
   at: z.string().optional(),
   cursor: z
     .object({
@@ -28,7 +27,56 @@ const schema = z.object({
       id: z.string(),
     })
     .optional(),
+  artist: z.enum(validArtists).array().optional(),
+  member: z.array(z.string()).optional(),
+  class: z.array(z.string()).optional(),
+  season: z.array(z.string()).optional(),
+  onOffline: z.array(z.enum(validOnlineTypes)).optional(),
+  transferable: z
+    .enum(["true", "false"])
+    .transform((v) => v === "true")
+    .optional(),
+  collection: z.string().array().optional(),
 });
+
+function buildCollectionFilters(query: z.infer<typeof schema>) {
+  const filters = [];
+
+  if (query.artist?.length) {
+    filters.push(
+      inArray(
+        collections.artist,
+        query.artist.map((a) => a.toLowerCase()),
+      ),
+    );
+  }
+
+  if (query.member?.length) {
+    filters.push(inArray(collections.member, query.member));
+  }
+
+  if (query.class?.length) {
+    filters.push(inArray(collections.class, query.class));
+  }
+
+  if (query.season?.length) {
+    filters.push(inArray(collections.season, query.season));
+  }
+
+  if (query.onOffline?.length) {
+    filters.push(inArray(collections.onOffline, query.onOffline));
+  }
+
+  if (query.transferable !== undefined) {
+    filters.push(eq(objekts.transferable, query.transferable));
+  }
+
+  if (query.collection?.length) {
+    filters.push(inArray(collections.collectionNo, query.collection));
+  }
+
+  return filters;
+}
 
 export async function GET(request: NextRequest, props: Params) {
   const [session, params] = await Promise.all([getSession(), props.params]);
@@ -63,6 +111,8 @@ export async function GET(request: NextRequest, props: Params) {
         objekts: [],
       });
   }
+
+  const collectionFilters = buildCollectionFilters(query);
 
   // snapshot
   if (query.at) {
@@ -99,17 +149,9 @@ export async function GET(request: NextRequest, props: Params) {
         and(
           eq(latest.to, addr),
           ne(collections.slug, "empty-collection"),
-          ...(query.artist.length
-            ? [
-                inArray(
-                  collections.artist,
-                  query.artist.map((a) => a.toLowerCase()),
-                ),
-              ]
-            : []),
+          ...collectionFilters,
           ...(query.cursor
             ? [
-                // sql`(${latest.timestamp}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
                 or(
                   lt(latest.timestamp, query.cursor.receivedAt),
                   and(
@@ -149,9 +191,10 @@ export async function GET(request: NextRequest, props: Params) {
     .where(
       and(
         eq(objekts.owner, addr),
+        ne(collections.slug, "empty-collection"),
+        ...collectionFilters,
         ...(query.cursor
           ? [
-              // sql`(${objekts.receivedAt}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
               or(
                 lt(objekts.receivedAt, query.cursor.receivedAt),
                 and(
@@ -161,15 +204,6 @@ export async function GET(request: NextRequest, props: Params) {
               ),
             ]
           : []),
-        ...(query.artist.length
-          ? [
-              inArray(
-                collections.artist,
-                query.artist.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
-        ne(collections.slug, "empty-collection"),
       ),
     )
     .orderBy(desc(objekts.receivedAt), desc(objekts.id))
@@ -191,14 +225,16 @@ export async function GET(request: NextRequest, props: Params) {
 
 function parseParams(params: URLSearchParams): z.infer<typeof schema> {
   const result = schema.safeParse({
-    artist: params.getAll("artist"),
     at: params.get("at") ?? undefined,
     cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
+    artist: params.getAll("artist").length ? params.getAll("artist") : undefined,
+    member: params.getAll("member").length ? params.getAll("member") : undefined,
+    class: params.getAll("class").length ? params.getAll("class") : undefined,
+    season: params.getAll("season").length ? params.getAll("season") : undefined,
+    onOffline: params.getAll("onOffline").length ? params.getAll("onOffline") : undefined,
+    transferable: params.get("transferable") ?? undefined,
+    collection: params.getAll("collection").length ? params.getAll("collection") : undefined,
   });
 
-  return result.success
-    ? result.data
-    : {
-        artist: [],
-      };
+  return result.success ? result.data : {};
 }

@@ -3,15 +3,25 @@ import type { CollectionResult } from "@repo/lib/types/objekt";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
-import { fetchOwnedObjektsByCursor } from "@/components/profile/fetching-util";
-
 import { authClient } from "./auth-client";
+import { fetchOwnedObjektsByCursor } from "./fetching-util";
 import { mapObjektWithTag } from "./objekt-utils";
 import { getBaseURL } from "./utils";
 
-export const collectionOptions = (artistIds: ValidArtist[], enable = true, at?: string) =>
+export type ServerFilters = {
+  at?: string;
+  artist?: ValidArtist[];
+  member?: string[];
+  class?: string[];
+  season?: string[];
+  onOffline?: string[];
+  transferable?: boolean;
+  collection?: string[];
+};
+
+export const collectionOptions = (filters?: ServerFilters, enable = true) =>
   queryOptions({
-    queryKey: ["collections", artistIds, at],
+    queryKey: ["collections", filters],
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     enabled: enable,
@@ -19,8 +29,7 @@ export const collectionOptions = (artistIds: ValidArtist[], enable = true, at?: 
       const url = new URL("/api/collection", getBaseURL());
       const result = await ofetch<CollectionResult>(url.toString(), {
         query: {
-          artist: artistIds,
-          ...(at && { at }),
+          ...filters,
         },
       }).then((a) => a.collections);
 
@@ -28,18 +37,18 @@ export const collectionOptions = (artistIds: ValidArtist[], enable = true, at?: 
     },
   });
 
-export const ownedCollectionOptions = (address: string, artistIds: ValidArtist[], at?: string) =>
+export const ownedCollectionOptions = (address: string, filters?: ServerFilters) =>
   infiniteQueryOptions({
-    queryKey: ["owned-collections", address, artistIds, at],
+    queryKey: ["owned-collections", address, filters],
     queryFn: ({ pageParam }) =>
-      fetchOwnedObjektsByCursor(address, artistIds, pageParam, at).then((result) => ({
+      fetchOwnedObjektsByCursor(address, pageParam, filters).then((result) => ({
         objekts: result.objekts.map(mapObjektWithTag),
         nextCursor: result.nextCursor,
       })),
     initialPageParam: undefined as { receivedAt: string; id: string } | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
-    staleTime: at ? Infinity : 1000 * 60 * 5,
+    staleTime: filters?.at ? Infinity : 1000 * 60 * 5,
   });
 
 export const sessionOptions = queryOptions({

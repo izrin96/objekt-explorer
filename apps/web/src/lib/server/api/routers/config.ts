@@ -1,27 +1,16 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
 import { validArtists } from "@repo/cosmo/types/common";
 import { cookies } from "next/headers";
 import * as z from "zod";
 
 import { locales } from "@/i18n/config";
 
+import { parseSelectedArtists } from "../../cookie";
 import { setUserLocale } from "../../locale";
 import { fetchFilterData } from "../../objekt";
 import { pub } from "../orpc";
 
 export const configRouter = {
-  getArtists: pub.handler(async () => {
-    const cookie = await cookies();
-    const value = cookie.get("artists")?.value;
-
-    if (value === undefined) return [];
-
-    try {
-      return JSON.parse(value) as ValidArtist[];
-    } catch {
-      return [];
-    }
-  }),
+  getArtists: pub.handler(parseSelectedArtists),
 
   getFilterData: pub.handler(fetchFilterData),
 

@@ -1,9 +1,11 @@
 "use client";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useFilters } from "@/hooks/use-filters";
@@ -17,6 +19,7 @@ import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
+import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../filters/objekt/add-remove-list";
 import { LockObjekt, UnlockObjekt } from "../filters/objekt/lock-unlock";
@@ -31,6 +34,7 @@ import {
   ToggleLockMenuItem,
   TogglePinMenuItem,
 } from "../objekt/objekt-menu";
+import { Loader } from "../ui/loader";
 import CheckpointPicker from "./checkpoint-picker";
 import Filter from "./filter";
 
@@ -47,11 +51,26 @@ function ProfileObjektRender() {
     <ObjektViewProvider initialColumn={profile.gridColumns ?? undefined} modalTab="owned">
       <div className="flex flex-col gap-4">
         <ProfileObjektFilters selectRef={setSelectTarget} discordRef={setDiscordTarget} />
-        <ProfileObjekt
-          selectTarget={selectTarget}
-          discordTarget={discordTarget}
-          address={profile.address}
-        />
+
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <ProfileObjekt
+                  selectTarget={selectTarget}
+                  discordTarget={discordTarget}
+                  address={profile.address}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </div>
     </ObjektViewProvider>
   );

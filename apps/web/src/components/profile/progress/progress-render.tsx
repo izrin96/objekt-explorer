@@ -1,17 +1,20 @@
 "use client";
 
 import { type ValidObjekt } from "@repo/lib/types/objekt";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import type React from "react";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
+import ErrorFallbackRender from "@/components/error-boundary";
 import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
 import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Loader } from "@/components/ui/loader";
@@ -38,7 +41,22 @@ function ProgressRender() {
     <ObjektViewProvider modalTab="owned">
       <div className="flex flex-col gap-4">
         <ProgressFilter />
-        <Progress />
+
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <Progress />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </div>
     </ObjektViewProvider>
   );

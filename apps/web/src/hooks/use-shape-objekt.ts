@@ -77,7 +77,7 @@ export function useShapeObjekts() {
             ...ownedItems
               .filter((item) => item.isPin === true)
               .toSorted((a, b) => (a.pinOrder && b.pinOrder ? b.pinOrder - a.pinOrder : 0)),
-            ...ownedItems.filter((item) => item.isPin === false),
+            ...ownedItems.filter((item) => !item.isPin),
           ];
         }
 

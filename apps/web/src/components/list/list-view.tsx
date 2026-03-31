@@ -1,8 +1,11 @@
 "use client";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { type PropsWithChildren, use } from "react";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { type PropsWithChildren, Suspense, use } from "react";
 import { createContext, useCallback, useState } from "react";
+import { createPortal } from "react-dom";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
@@ -14,9 +17,11 @@ import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
+import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
 import { AddToList, RemoveFromList, SetPrice } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { GenerateDiscordButton } from "../generate-discord-button";
 import {
   AddToListMenu,
   ObjektStaticMenu,
@@ -24,11 +29,15 @@ import {
   SelectMenuItem,
   SetPriceMenuItem,
 } from "../objekt/objekt-menu";
+import { Loader } from "../ui/loader";
 import Filter from "./filter";
 import { SetPriceModal } from "./modal/set-price-modal";
 
 export default function ListRender() {
   const list = useTarget((a) => a.list)!;
+  const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
+  const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
+
   const isProfileList = list.listType === "profile";
 
   return (
@@ -37,7 +46,25 @@ export default function ListRender() {
       modalTab={isProfileList ? "owned" : "trades"}
     >
       <SetPriceProvider>
-        <ListView />
+        <div className="flex flex-col gap-4">
+          <ListFilter selectRef={setSelectTarget} discordRef={setDiscordTarget} />
+
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+                <Suspense
+                  fallback={
+                    <div className="flex justify-center">
+                      <Loader variant="ring" />
+                    </div>
+                  }
+                >
+                  <ListView selectTarget={selectTarget} discordTarget={discordTarget} />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        </div>
       </SetPriceProvider>
     </ObjektViewProvider>
   );
@@ -66,7 +93,33 @@ function SetPriceProvider({ children }: PropsWithChildren) {
   );
 }
 
-function ListView() {
+function ListFilter({
+  selectRef,
+  discordRef,
+}: {
+  selectRef: (el: HTMLDivElement | null) => void;
+  discordRef: (el: HTMLDivElement | null) => void;
+}) {
+  const { data: session } = useSession();
+  return (
+    <div className="flex flex-col gap-6">
+      <FilterContainer>
+        <div className="flex w-full flex-col gap-6">
+          <Filter discordRef={discordRef} />
+          {session && <div className="contents" ref={selectRef} />}
+        </div>
+      </FilterContainer>
+    </div>
+  );
+}
+
+function ListView({
+  selectTarget,
+  discordTarget,
+}: {
+  selectTarget: HTMLDivElement | null;
+  discordTarget: HTMLDivElement | null;
+}) {
   const { data: session } = useSession();
   const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -116,30 +169,27 @@ function ListView() {
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-6">
-        {session && (
-          <FloatingSelectMode objekts={filtered}>
-            {isOwned && <RemoveFromList size="sm" />}
-            {isOwned && list.currency && <SetPrice size="sm" />}
-            <AddToList size="sm" />
-          </FloatingSelectMode>
+    <>
+      <FloatingSelectMode objekts={filtered}>
+        {isOwned && <RemoveFromList size="sm" />}
+        {isOwned && list.currency && <SetPrice size="sm" />}
+        <AddToList size="sm" />
+      </FloatingSelectMode>
+
+      {selectTarget &&
+        createPortal(
+          <SelectMode objekts={filtered}>
+            {isOwned && <RemoveFromList />}
+            {isOwned && list.currency && <SetPrice />}
+            <AddToList />
+          </SelectMode>,
+          selectTarget,
         )}
-        <FilterContainer>
-          <div className="flex w-full flex-col gap-6">
-            <Filter objekts={filtered} />
-            {session && (
-              <SelectMode objekts={filtered}>
-                {isOwned && <RemoveFromList />}
-                {isOwned && list.currency && <SetPrice />}
-                <AddToList />
-              </SelectMode>
-            )}
-          </div>
-        </FilterContainer>
-      </div>
+
+      {discordTarget && createPortal(<GenerateDiscordButton objekts={filtered} />, discordTarget)}
+
       <ObjektCount filtered={filtered} grouped={filters.grouped ? grouped : undefined} />
       <ObjektVirtualGrid shaped={shaped as ShapedData} renderItem={renderObjekt} />
-    </div>
+    </>
   );
 }

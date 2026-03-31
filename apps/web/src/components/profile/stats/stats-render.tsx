@@ -61,14 +61,16 @@ function ProfileStats() {
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
+  const serverFilters = {
+    artist: selectedArtistIds,
+    ...(filters.at && { at: filters.at }),
+  };
+
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
     profile.address,
-    selectedArtistIds,
-    filters.at ?? undefined,
+    serverFilters,
   );
-  const collectionQuery = useSuspenseQuery(
-    collectionOptions(selectedArtistIds, !hasNextPage, filters.at ?? undefined),
-  );
+  const collectionQuery = useSuspenseQuery(collectionOptions(serverFilters, !hasNextPage));
 
   const objekts = filter(allOwnedObjekts);
 

@@ -12,7 +12,10 @@ export function useCollectionObjekts() {
   const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const { selectedArtistIds } = useCosmoArtist();
-  const query = useSuspenseQuery(collectionOptions(selectedArtistIds));
+  const serverFilters = {
+    artist: selectedArtistIds,
+  };
+  const query = useSuspenseQuery(collectionOptions(serverFilters));
   const [filters] = useFilters();
   const filtered = filter(query.data);
   return useDeferredValue({ shaped: shape(filtered), filtered, filters });
