@@ -51,6 +51,7 @@ const schema = z.object({
     .enum(["true", "false"])
     .transform((v) => v === "true")
     .optional(),
+  limit: z.number().optional(),
 });
 
 type Query = z.infer<typeof schema>;
@@ -222,6 +223,7 @@ export async function GET(request: NextRequest, props: Params) {
   const collectionFilters = buildCollectionFilters(query);
   const sortConfig = getSortConfig(query);
   const isFirstPage = !query.cursor;
+  const limit = query.limit ?? PER_PAGE;
 
   // snapshot
   if (query.at) {
@@ -263,7 +265,7 @@ export async function GET(request: NextRequest, props: Params) {
         ),
       )
       .orderBy(...sortConfig.orderBy)
-      .limit(PER_PAGE + 1);
+      .limit(limit + 1);
 
     const countQuery =
       query.includeCount && isFirstPage
@@ -284,13 +286,13 @@ export async function GET(request: NextRequest, props: Params) {
 
     const [results, countResult] = await Promise.all([mainQuery, countQuery]);
 
-    const hasNext = results.length > PER_PAGE;
-    const nextCursor = hasNext ? sortConfig.nextCursor(results[PER_PAGE - 1]!) : undefined;
+    const hasNext = results.length > limit;
+    const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
     const total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
 
     return Response.json({
       nextCursor,
-      objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+      objekts: results.slice(0, limit).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
       total,
     });
   }
@@ -312,7 +314,7 @@ export async function GET(request: NextRequest, props: Params) {
       ),
     )
     .orderBy(...sortConfig.orderBy)
-    .limit(PER_PAGE + 1);
+    .limit(limit + 1);
 
   const countQuery =
     query.includeCount && isFirstPage
@@ -331,13 +333,13 @@ export async function GET(request: NextRequest, props: Params) {
 
   const [results, countResult] = await Promise.all([mainQuery, countQuery]);
 
-  const hasNext = results.length > PER_PAGE;
-  const nextCursor = hasNext ? sortConfig.nextCursor(results[PER_PAGE - 1]!) : undefined;
+  const hasNext = results.length > limit;
+  const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
   const total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
 
   return Response.json({
     nextCursor,
-    objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    objekts: results.slice(0, limit).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
     total,
   });
 }
@@ -356,6 +358,7 @@ function parseParams(params: URLSearchParams): Query {
     sort: params.get("sort") ?? undefined,
     sort_dir: params.get("sort_dir") ?? undefined,
     includeCount: params.get("includeCount") ?? undefined,
+    limit: params.get("limit") ? Number(params.get("limit")) : undefined,
   });
 
   return result.success ? result.data : {};

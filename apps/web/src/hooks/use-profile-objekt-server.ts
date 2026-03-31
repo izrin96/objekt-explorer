@@ -15,6 +15,7 @@ export function useProfileObjektsServer() {
   const serverFilters = {
     artist: selectedArtistIds,
     includeCount: true,
+    limit: 300,
     ...(filters.at !== null && { at: filters.at }),
     ...(filters.member && { member: filters.member }),
     ...(filters.class && { class: filters.class }),

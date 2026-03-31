@@ -20,6 +20,7 @@ export type ServerFilters = {
   sort?: ValidCustomSort;
   sort_dir?: ValidSortDirection;
   includeCount?: boolean;
+  limit?: number;
 };
 
 export const collectionOptions = (filters?: ServerFilters, enable = true) =>
