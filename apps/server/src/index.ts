@@ -33,9 +33,7 @@ void redisPubSub.subscribe("transfers", async (message, channel) => {
     const addresses = transfers.flatMap((a) => [a.from, a.to]);
     const knownAddresses = await fetchKnownAddresses(addresses);
 
-    const addressMap = new Map(
-      knownAddresses.map((a) => [a.address.toLowerCase(), a]),
-    );
+    const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
 
     const transferBatch: TransferSendData[] = [];
 
@@ -123,4 +121,4 @@ const server = serve({
   },
 });
 
-console.log(`Server is running on http://localhost:${server.port}`);
+console.info(`Server is running on http://localhost:${server.port}`);

@@ -26,8 +26,7 @@ import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useSession } from "@/hooks/use-user";
 import { unobtainables } from "@/lib/unobtainables";
-import { tradeableFilter } from "@/lib/utils";
-import { cn } from "@/utils/classes";
+import { tradeableFilter, cn } from "@/lib/utils";
 
 import { useShowCount } from "./filter-showcount";
 import ProgressFilter from "./progress-filter";

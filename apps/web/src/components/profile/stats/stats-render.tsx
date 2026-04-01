@@ -21,8 +21,7 @@ import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useTarget } from "@/hooks/use-target";
 import { collectionOptions } from "@/lib/query-options";
-import { getSeasonColor, tradeableFilter } from "@/lib/utils";
-import { cn } from "@/utils/classes";
+import { getSeasonColor, tradeableFilter, cn } from "@/lib/utils";
 
 import StatsFilter from "./stats-filter";
 

@@ -1,24 +1,29 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "default",
+  "style": "base-nova",
   "rsc": true,
   "tsx": true,
   "tailwind": {
     "config": "",
     "css": "src/app/globals.css",
-    "baseColor": "neutral",
+    "baseColor": "zinc",
     "cssVariables": true,
     "prefix": ""
   },
   "aliases": {
     "components": "@/components",
-    "utils": "@/utils",
+    "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
   "iconLibrary": "lucide",
+  "menuColor": "default-translucent",
+  "menuAccent": "subtle",
   "registries": {
+    "@reui": "https://reui.io/r/{style}/{name}.json",
+    "@diceui": "https://diceui.com/r/{name}",
+    "@kibo-ui": "https://kibo-ui.com/r/{name}.json",
     "@intentui": "https://intentui.com/r/{name}"
   }
 }

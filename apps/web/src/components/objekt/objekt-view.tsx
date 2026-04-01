@@ -7,8 +7,7 @@ import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
-import { replaceUrlSize } from "@/lib/utils";
-import { cn } from "@/utils/classes";
+import { replaceUrlSize, cn } from "@/lib/utils";
 
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";

@@ -24,8 +24,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
-import { getBaseURL } from "@/lib/utils";
-import { cn } from "@/utils/classes";
+import { getBaseURL, cn } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";

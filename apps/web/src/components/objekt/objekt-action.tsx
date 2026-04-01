@@ -10,7 +10,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { PropsWithChildren } from "react";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { cn } from "@/utils/classes";
+import { cn } from "@/lib/utils";
 
 import { Button } from "../ui/button";
 import { Menu, MenuContent } from "../ui/menu";

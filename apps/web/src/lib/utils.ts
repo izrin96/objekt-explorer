@@ -1,9 +1,13 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 import { env } from "@/env";
 
 import { unobtainables } from "./unobtainables";
+
+export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
 
 export const classOrder: Record<ValidArtist, string[]> = {
   tripleS: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],

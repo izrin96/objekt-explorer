@@ -16,8 +16,7 @@ import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 import { artists } from "@/lib/server/cosmo/artists";
-import { SITE_NAME } from "@/lib/utils";
-import { cn } from "@/utils/classes";
+import { SITE_NAME, cn } from "@/lib/utils";
 
 const inter = Google_Sans_Flex({
   variable: "--font-inter",
@@ -122,8 +121,10 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   );
 }
 
-function Providers({ children }: PropsWithChildren) {
+async function Providers({ children }: PropsWithChildren) {
   const queryClient = getQueryClient();
+
+  const filterData = await queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions());
 
   void queryClient.prefetchQuery(orpc.config.getArtists.queryOptions());
 
@@ -132,13 +133,11 @@ function Providers({ children }: PropsWithChildren) {
     queryFn: () => getSession(),
   });
 
-  void queryClient.prefetchQuery(orpc.config.getFilterData.queryOptions());
-
   return (
     <HydrateClient client={queryClient}>
       <NextIntlClientProvider>
         <CosmoArtistProvider artists={artists}>
-          <FilterDataProvider>{children}</FilterDataProvider>
+          <FilterDataProvider data={filterData}>{children}</FilterDataProvider>
         </CosmoArtistProvider>
       </NextIntlClientProvider>
     </HydrateClient>

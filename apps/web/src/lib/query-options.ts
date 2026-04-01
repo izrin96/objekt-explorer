@@ -70,5 +70,6 @@ export const sessionOptions = queryOptions({
     }
     return result.data;
   },
-  staleTime: 5 * 1000,
+  staleTime: Infinity,
+  refetchOnWindowFocus: false,
 });

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import * as z from "zod";
 
 import { locales } from "@/i18n/config";
+import type { Outputs } from "@/lib/orpc/server";
 
 import { parseSelectedArtists } from "../../cookie";
 import { setUserLocale } from "../../locale";
@@ -28,3 +29,5 @@ export const configRouter = {
     await setUserLocale(locale);
   }),
 };
+
+export type FilterDataOutput = Outputs["config"]["getFilterData"];
