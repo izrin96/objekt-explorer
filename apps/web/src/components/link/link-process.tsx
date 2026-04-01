@@ -4,7 +4,6 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 import { ofetch } from "ofetch";
 import { useState } from "react";
 import type { Selection } from "react-aria-components";
@@ -93,7 +92,7 @@ function IntroStep({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex max-w-xl flex-col items-center justify-center gap-4">
       <h2 className="text-lg font-semibold">{t("process.intro_title")}</h2>
-      <Image
+      <img
         src="/assets/icon-smartphone.png"
         alt="Smartphone"
         width={220}
@@ -154,7 +153,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
 
   return (
     <div className="flex max-w-md flex-col items-center gap-4">
-      <Image
+      <img
         src="/assets/icon-search.png"
         alt="Search"
         width={220}
@@ -233,7 +232,7 @@ function ArtistStep({
 
   return (
     <div className="flex max-w-md flex-col items-center gap-4">
-      <Image
+      <img
         src="/assets/icon-lanyard.png"
         alt="Verify"
         width={220}
@@ -315,7 +314,7 @@ function VerifyStep({
   if (expired) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <Image
+        <img
           src="/assets/icon-trash.png"
           alt="Expired"
           width={220}
@@ -333,7 +332,7 @@ function VerifyStep({
   if (verifyMutation.isError) {
     return (
       <div className="flex flex-col items-center gap-2">
-        <Image
+        <img
           src="/assets/icon-error.png"
           alt="Error"
           width={220}
@@ -355,7 +354,7 @@ function VerifyStep({
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <Image
+      <img
         src={randomIcon.src}
         alt={randomIcon.alt}
         width={220}
@@ -399,7 +398,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <Image
+      <img
         src="/assets/icon-welcome.png"
         width={220}
         height={220}

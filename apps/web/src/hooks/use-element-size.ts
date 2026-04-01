@@ -11,7 +11,7 @@ export const useElementSize = <T extends HTMLElement = HTMLDivElement>(): [
   Size,
 ] => {
   const ref = useRef<T>(null);
-  const [size, setSize] = useState<Size>({
+  const [size, setSize] = useState({
     width: 0,
     height: 0,
   });

@@ -12,7 +12,6 @@ import { Addresses } from "@repo/lib";
 import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
 import { useTranslations } from "next-intl";
-import NextImage from "next/image";
 import { Suspense, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 
@@ -156,7 +155,7 @@ export function ObjektCard({
         {/* Front side */}
         <div className="absolute inset-0 grid rotate-y-0 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {/* Progressive loading: show resized first, then original when loaded */}
-          <NextImage
+          <img
             className="h-full w-full object-cover"
             width={OBJEKT_SIZE.width}
             height={OBJEKT_SIZE.height}
@@ -166,7 +165,7 @@ export function ObjektCard({
             onLoad={() => setLoaded(true)}
           />
           {!loaded && (
-            <NextImage
+            <img
               className="h-full w-full object-cover"
               width={582}
               height={900}
@@ -180,7 +179,7 @@ export function ObjektCard({
         {/* Back side */}
         <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {urls.backUrl && (
-            <NextImage
+            <img
               className="h-full w-full object-cover"
               width={OBJEKT_SIZE.width}
               height={OBJEKT_SIZE.height}

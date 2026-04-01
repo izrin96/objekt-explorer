@@ -67,7 +67,7 @@ export default function CheckpointPicker() {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const [selectedDate, setSelectedDate] = useState<CalendarDate | null>(
+  const [selectedDate, setSelectedDate] = useState(
     currentValue ? toCalendarDate(currentValue) : null,
   );
   const [selectedTime, setSelectedTime] = useState<Time | null>(

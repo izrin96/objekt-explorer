@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 
 import { useLiveSession } from "@/hooks/use-live-session";
 
@@ -14,9 +13,8 @@ export default function LiveEnded() {
     <div className="relative flex aspect-9/16 h-[calc(100svh-140px)] w-full flex-col items-center justify-center gap-2">
       <div className="relative aspect-square size-full overflow-hidden rounded">
         {liveSession.thumbnailImage && (
-          <Image
-            className="size-full object-contain object-center"
-            fill
+          <img
+            className="absolute size-full object-contain object-center"
             src={liveSession.thumbnailImage}
             alt={liveSession.title}
           />

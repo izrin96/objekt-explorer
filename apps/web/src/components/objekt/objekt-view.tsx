@@ -2,7 +2,6 @@ import { NumberFormatter } from "@internationalized/number";
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useTranslations } from "next-intl";
-import NextImage from "next/image";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
@@ -82,7 +81,7 @@ export default function ObjektView({
           !loaded && "opacity-0",
         )}
       >
-        <NextImage
+        <img
           draggable={false}
           onClick={ctx.handleClick}
           className="h-full w-full object-cover"

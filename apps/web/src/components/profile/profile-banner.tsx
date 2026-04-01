@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 import { useElementSize } from "@/hooks/use-element-size";
 import type { PublicProfile } from "@/lib/universal/user";
 
@@ -33,10 +31,9 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 playsInline
               />
             ) : (
-              <Image
+              <img
                 src={profile.bannerImgUrl}
-                className="size-full object-cover object-center"
-                fill
+                className="absolute size-full object-cover object-center"
                 alt="Banner"
               />
             )}
@@ -56,10 +53,9 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             playsInline
           />
         ) : (
-          <Image
+          <img
             src={profile.bannerImgUrl}
-            className="size-full object-cover object-center"
-            fill
+            className="absolute size-full object-cover object-center"
             alt="Banner"
           />
         )}

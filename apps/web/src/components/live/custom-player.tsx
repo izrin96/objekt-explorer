@@ -10,7 +10,6 @@ import {
   useStreamVideoClient,
   type VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import Image from "next/image";
 import { type CSSProperties, useEffect, useState } from "react";
 
 import { useLiveSession } from "@/hooks/use-live-session";
@@ -65,9 +64,8 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
           } as CSSProperties
         }
       >
-        <Image
-          fill
-          className="size-full rounded-full object-contain object-center"
+        <img
+          className="absolute size-full rounded-full object-contain object-center"
           src={liveSession.channel.profileImageUrl}
           alt={participant.name}
         />

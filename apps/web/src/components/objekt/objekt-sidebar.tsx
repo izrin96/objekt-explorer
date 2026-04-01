@@ -1,5 +1,4 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import Image from "next/image";
 import { useRef, useState } from "react";
 
 import { isObjektOwned } from "@/lib/objekt-utils";
@@ -45,7 +44,7 @@ export default function ObjektSidebar(props: Props) {
     <div className="pointer-events-none grid h-full w-full items-center text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
       {/* custom band image */}
       {objekt.bandImageUrl && (
-        <Image
+        <img
           ref={ref}
           onLoad={handleImageLoad}
           className="h-full w-full object-cover"

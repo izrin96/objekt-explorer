@@ -29,7 +29,7 @@ export default function UserSearch() {
   const clearAll = useUserSearchStore((a) => a.clearAll);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [debouncedQuery, setQuery] = useDebounceValue<string>("", 350);
+  const [debouncedQuery, setQuery] = useDebounceValue("", 350);
   const enable = debouncedQuery.length > 0;
 
   const { data, isPending } = useQuery({

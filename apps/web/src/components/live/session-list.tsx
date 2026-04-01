@@ -3,7 +3,6 @@
 import type { LiveSession } from "@repo/cosmo/server/live";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense } from "react";
@@ -100,9 +99,8 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
     >
       <div className="flex flex-col gap-2">
         <div className="relative aspect-square overflow-hidden rounded">
-          <Image
-            className="size-full object-cover object-center"
-            fill
+          <img
+            className="absolute size-full object-cover object-center"
             src={live.thumbnailImage}
             alt={live.title}
           />

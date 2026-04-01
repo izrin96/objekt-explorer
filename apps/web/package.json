@@ -74,9 +74,6 @@
     "zod": "catalog:",
     "zustand": "^5.0.12"
   },
-  "overrides": {
-    "@tanstack/query-core": "^5.96.1"
-  },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
     "@tanstack/react-query-devtools": "^5.96.1",
@@ -89,5 +86,8 @@
     "postcss": "^8.5.8",
     "tailwindcss": "^4.2.2",
     "typescript": "catalog:dev"
+  },
+  "overrides": {
+    "@tanstack/query-core": "^5.96.1"
   }
 }

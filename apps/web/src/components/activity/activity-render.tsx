@@ -117,7 +117,7 @@ function Activity() {
   const [filters] = useFilters();
   const [type] = useTypeFilter();
   const [realtimeTransfers, setRealtimeTransfers] = useState<ActivityData[]>([]);
-  const [newTransferIds, setNewTransferIds] = useState<Set<string>>(new Set());
+  const [newTransferIds, setNewTransferIds] = useState(new Set());
   const [isHovering, setIsHovering] = useState(false);
   const [queuedTransfers, setQueuedTransfers] = useState<ActivityData[]>([]);
   const parentRef = useRef<HTMLDivElement>(null);
