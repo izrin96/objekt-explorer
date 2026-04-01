@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "bun run --env-file=../../.env --hot src/index.ts",
+    "dev": "bun run --env-file=../../.env src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
     "start": "bun run dist/index.js",
     "lint": "oxlint --type-aware",
@@ -14,7 +14,7 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
-    "drizzle-orm": "^1.0.0-beta.19-dca1773",
+    "drizzle-orm": "^1.0.0-beta.20",
     "zod": "^4.3.6"
   },
   "devDependencies": {

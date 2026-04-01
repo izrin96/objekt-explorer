@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(bunx oxfmt:*)",
-      "Bash(bunx tsc:*)",
-      "Bash(bun run typecheck:*)"
-    ]
-  }
-}
