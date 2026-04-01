@@ -45,7 +45,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { orpc } from "@/lib/orpc/client";
-import { mimeTypes, SITE_NAME, validColumns } from "@/lib/utils";
+import { acceptedFileMimeTypes, SITE_NAME, validColumns } from "@/lib/utils";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -448,10 +448,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
 
         <div className="group flex flex-col gap-y-2">
           <Label>{t("banner_label")}</Label>
-          <FileTrigger
-            acceptedFileTypes={[...new Set(Object.values(mimeTypes))]}
-            onSelect={handleSelectImage}
-          />
+          <FileTrigger acceptedFileTypes={acceptedFileMimeTypes} onSelect={handleSelectImage} />
           <BannerImage
             droppedImage={droppedImage}
             cropperRef={cropperRef}
