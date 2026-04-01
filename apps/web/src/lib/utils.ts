@@ -1,8 +1,32 @@
+import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { env } from "@/env";
 
 import { unobtainables } from "./unobtainables";
+
+export const classOrder: Record<ValidArtist, string[]> = {
+  tripleS: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
+  artms: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
+  idntt: ["Basic", "Event", "Motion", "Special", "Unit", "Welcome"],
+};
+
+const baseSeasonColors: Record<string, string> = {
+  Atom: "#FFDD00",
+  Binary: "#75FB4C",
+  Cream: "#FF7477",
+  Divine: "#B400FF",
+  Ever: "#33ECFD",
+  Spring: "#FFE527",
+  Summer: "#619AFF",
+  Autumn: "#B5315A",
+  Winter: "#C6C6C6",
+};
+
+export function getSeasonColor(season: string): string {
+  const base = season.replace(/\d+$/, "");
+  return baseSeasonColors[base] ?? "#C6C6C6";
+}
 
 export const SITE_NAME = "Objekt Tracker";
 

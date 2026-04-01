@@ -33,7 +33,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 loop
                 muted
                 playsInline
-                onLoad={() => setIsLoaded(true)}
+                onLoadedData={() => setIsLoaded(true)}
               />
             ) : (
               <Image

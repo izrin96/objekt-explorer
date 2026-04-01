@@ -1,6 +1,5 @@
 "use client";
 
-import { seasonColors } from "@repo/cosmo/types/common";
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
@@ -22,7 +21,7 @@ import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useTarget } from "@/hooks/use-target";
 import { collectionOptions } from "@/lib/query-options";
-import { tradeableFilter } from "@/lib/utils";
+import { getSeasonColor, tradeableFilter } from "@/lib/utils";
 import { cn } from "@/utils/classes";
 
 import StatsFilter from "./stats-filter";
@@ -190,9 +189,9 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   const { seasons } = useFilterData();
 
   const chartData = useMemo(() => {
-    const data = seasons.map((season, i) => ({
+    const data = seasons.map((season) => ({
       name: season,
-      fill: seasonColors[i],
+      fill: getSeasonColor(season),
       count: objekts.filter((obj) => obj.season === season).length,
     }));
     const total = data.reduce((sum, d) => sum + d.count, 0);

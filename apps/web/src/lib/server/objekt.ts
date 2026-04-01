@@ -4,9 +4,14 @@ import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { asc, getColumns, ne } from "drizzle-orm";
 
-import { classArtistMap } from "@/lib/universal/cosmo/filter-data";
+import { classOrder } from "@/lib/utils";
 
 import { getCache } from "./redis";
+
+export type ClassArtist = {
+  artistId: ValidArtist;
+  classes: string[];
+};
 
 export async function fetchUniqueCollections() {
   const result = await indexer
@@ -73,16 +78,49 @@ export async function fetchSeasonMap() {
   });
 }
 
+export async function fetchClassMap(): Promise<ClassArtist[]> {
+  const result = await indexer
+    .selectDistinct({
+      artist: collections.artist,
+      class: collections.class,
+    })
+    .from(collections);
+
+  const classMap = new Map<ValidArtist, string[]>();
+
+  for (const item of result) {
+    const artist = item.artist as ValidArtist;
+    if (!validArtists.includes(artist)) continue;
+
+    const existing = classMap.get(artist);
+    if (!existing) {
+      classMap.set(artist, [item.class]);
+    } else if (!existing.includes(item.class)) {
+      existing.push(item.class);
+    }
+  }
+
+  return validArtists
+    .filter((artist) => classMap.has(artist))
+    .map((artist) => ({
+      artistId: artist,
+      classes: (classMap.get(artist) ?? []).toSorted(
+        (a, b) => classOrder[artist].indexOf(a) - classOrder[artist].indexOf(b),
+      ),
+    }));
+}
+
 export async function fetchFilterData() {
   return getCache("filter-data", 60 * 60, async () => {
-    const [collections, seasonsMap] = await Promise.all([
+    const [collections, seasonsMap, classesMap] = await Promise.all([
       fetchUniqueCollections(),
       fetchSeasonMap(),
+      fetchClassMap(),
     ]);
     return {
       collections,
       seasonsMap,
-      classesMap: classArtistMap,
+      classesMap,
     };
   });
 }
