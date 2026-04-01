@@ -20,9 +20,9 @@
     "db:pull:indexer": "bun run --env-file=../../.env drizzle-kit pull --config drizzle-indexer.config.ts"
   },
   "dependencies": {
-    "drizzle-orm": "^1.0.0-beta.20",
+    "drizzle-orm": "catalog:",
     "pg": "^8.20.0",
-    "zod": "^4.3.6"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",

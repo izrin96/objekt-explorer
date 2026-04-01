@@ -31,11 +31,11 @@
         "glob": "^13.0.6",
         "ioredis": "^5.10.1",
         "lru-cache": "^11.2.7",
-        "ofetch": "^1.5.1",
+        "ofetch": "catalog:",
         "path-scurry": "^2.0.2",
         "typeorm": "^0.3.28",
         "uuid": "^13.0.0",
-        "zod": "^4.3.6",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@repo/tsconfig": "workspace:*",
@@ -43,9 +43,9 @@
         "@subsquid/evm-typegen": "^4.6.0",
         "@subsquid/squid-gen-evm": "^2.0.0",
         "@subsquid/typeorm-codegen": "^2.1.0",
-        "@types/bun": "1.3.11",
-        "turbo": "^2.9.3",
-        "typescript": "6.0.2",
+        "@types/bun": "catalog:dev",
+        "turbo": "catalog:dev",
+        "typescript": "catalog:dev",
       },
     },
     "apps/server": {
@@ -54,12 +54,12 @@
       "dependencies": {
         "@repo/db": "workspace:*",
         "@repo/lib": "workspace:*",
-        "drizzle-orm": "^1.0.0-beta.20",
-        "zod": "^4.3.6",
+        "drizzle-orm": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@repo/tsconfig": "workspace:*",
-        "@types/bun": "^1.3.11",
+        "@types/bun": "catalog:dev",
       },
     },
     "apps/web": {
@@ -94,7 +94,7 @@
         "clsx": "^2.1.1",
         "core-js": "^3.49.0",
         "date-fns": "^4.1.0",
-        "drizzle-orm": "^1.0.0-beta.20",
+        "drizzle-orm": "catalog:",
         "es-toolkit": "^1.45.1",
         "input-otp": "^1.4.2",
         "jose": "^6.2.2",
@@ -104,7 +104,7 @@
         "next-intl": "^4.9.0",
         "next-themes": "^0.4.6",
         "nuqs": "^2.8.9",
-        "ofetch": "^1.5.1",
+        "ofetch": "catalog:",
         "react": "^19.2.4",
         "react-advanced-cropper": "^0.20.1",
         "react-aria-components": "^1.16.0",
@@ -123,13 +123,13 @@
         "tw-animate-css": "^1.4.0",
         "usehooks-ts": "^3.1.1",
         "virtua": "^0.49.0",
-        "zod": "^4.3.6",
+        "zod": "catalog:",
         "zustand": "^5.0.12",
       },
       "devDependencies": {
         "@tailwindcss/postcss": "^4.2.2",
         "@tanstack/react-query-devtools": "^5.96.1",
-        "@types/bun": "^1.3.11",
+        "@types/bun": "catalog:dev",
         "@types/chroma-js": "^3.1.2",
         "@types/node": "^25.5.0",
         "@types/react": "^19.2.14",
@@ -137,7 +137,7 @@
         "drizzle-kit": "^1.0.0-beta.20",
         "postcss": "^8.5.8",
         "tailwindcss": "^4.2.2",
-        "typescript": "^6.0.2",
+        "typescript": "catalog:dev",
       },
     },
     "apps/worker": {
@@ -148,21 +148,21 @@
         "@repo/db": "workspace:*",
         "@repo/lib": "workspace:*",
         "croner": "^10.0.1",
-        "drizzle-orm": "^1.0.0-beta.20",
-        "ofetch": "^1.5.1",
-        "zod": "^4.3.6",
+        "drizzle-orm": "catalog:",
+        "ofetch": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@repo/tsconfig": "workspace:*",
-        "@types/bun": "^1.3.11",
+        "@types/bun": "catalog:dev",
       },
     },
     "packages/cosmo": {
       "name": "@repo/cosmo",
       "version": "0.0.0",
       "dependencies": {
-        "ofetch": "^1.5.1",
-        "zod": "^4.3.6",
+        "ofetch": "catalog:",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@repo/tsconfig": "workspace:*",
@@ -172,9 +172,9 @@
       "name": "@repo/db",
       "version": "0.0.0",
       "dependencies": {
-        "drizzle-orm": "^1.0.0-beta.20",
+        "drizzle-orm": "catalog:",
         "pg": "^8.20.0",
-        "zod": "^4.3.6",
+        "zod": "catalog:",
       },
       "devDependencies": {
         "@repo/tsconfig": "workspace:*",
@@ -187,11 +187,11 @@
       "version": "0.0.0",
       "dependencies": {
         "@repo/db": "workspace:*",
-        "drizzle-orm": "^1.0.0-beta.20",
+        "drizzle-orm": "catalog:",
       },
       "devDependencies": {
         "@repo/tsconfig": "workspace:*",
-        "@types/bun": "^1.3.11",
+        "@types/bun": "catalog:dev",
       },
     },
     "packages/tsconfig": {
@@ -202,6 +202,18 @@
   "patchedDependencies": {
     "@react-aria/utils@3.33.1": "patches/@react-aria%2Futils@3.33.1.patch",
     "@subsquid/typeorm-store@1.7.0": "patches/@subsquid%2Ftypeorm-store@1.7.0.patch",
+  },
+  "catalog": {
+    "drizzle-orm": "^1.0.0-beta.20",
+    "ofetch": "^1.5.1",
+    "zod": "^4.3.6",
+  },
+  "catalogs": {
+    "dev": {
+      "@types/bun": "^1.3.11",
+      "turbo": "^2.9.3",
+      "typescript": "^6.0.2",
+    },
   },
   "packages": {
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.10.1", "", {}, "sha512-96Z2IP3mYmF1Xg2cDm8f1gWGf/HUVedQ3FMifV4kG/PQ4yEP51xDtRAEfhVNt5f/uzpNkZHwWQuUcu6D6K+Ekw=="],
