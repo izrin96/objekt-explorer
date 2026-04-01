@@ -10,7 +10,7 @@ import { Link } from "./ui/link";
 export default function AppLogo() {
   return (
     <Link href="/">
-      <motion.div className="flex items-center gap-2" whileHover="hover">
+      <motion.div className="flex h-8 items-center gap-2" whileHover="hover">
         <motion.div
           variants={{
             initial: { rotate: 0 },

@@ -21,7 +21,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         <div className="mx-auto w-full max-w-(--container-breakpoint) [--container-breakpoint:var(--breakpoint-2xl)]">
           <div
             ref={bannerRef}
-            className={"relative aspect-[2.3/1] mask-x-from-100% xl:mask-x-from-97%"}
+            className="relative aspect-[2.3/1] mask-x-from-100% xl:mask-x-from-97%"
           >
             {isVideo ? (
               <video
@@ -45,7 +45,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         </div>
       </div>
       {/* background */}
-      <div className={"absolute inset-0 top-12 -z-10 xl:top-0"} style={{ height: `${height}px` }}>
+      <div className="absolute inset-0 top-12 -z-10 xl:top-0" style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
             className="size-full object-cover object-center"
@@ -73,5 +73,5 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
 }
 
 function ProfileBannerClearance() {
-  return <div className={"-mt-2 aspect-[2.3/1] xl:-mt-14"}></div>;
+  return <div className="-mt-2 aspect-[2.3/1] xl:-mt-14"></div>;
 }

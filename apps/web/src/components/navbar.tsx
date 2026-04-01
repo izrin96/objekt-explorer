@@ -68,7 +68,7 @@ export default function Navbar() {
 function NavLink({ ...props }: React.ComponentProps<typeof Link>) {
   return (
     <Link
-      className="text-fg hover:text-fg flex items-center gap-x-2 rounded-full px-2.5 py-1 text-sm font-medium tracking-tight outline-hidden transition duration-200 focus-visible:ring-2"
+      className="text-fg hover:text-fg flex h-8 items-center gap-x-2 rounded-full px-2.5 py-1 text-sm font-medium tracking-tight outline-hidden transition duration-200 focus-visible:ring-2"
       {...props}
     />
   );
