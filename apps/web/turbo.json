@@ -1,5 +1,5 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
     "build": {
@@ -11,7 +11,7 @@
       "env": ["NODE_ENV", "NEXT_PUBLIC_*"]
     },
     "lint": {
-      "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"]
+      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts"]
     }
   }
 }

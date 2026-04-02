@@ -31,4 +31,5 @@
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": false,
   },
+  "exclude": ["node_modules", "dist", ".turbo"],
 }

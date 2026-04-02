@@ -1,10 +1,10 @@
 # AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to coding agents when working with code in this repository.
 
 ## Project Overview
 
-Objekt Tracker - A web application for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc. Currently undergoing major refactoring from Next.js to TanStack React Start.
+Objekt Tracker - A web application for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc.
 
 ## Architecture
 
@@ -18,12 +18,13 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 - `packages/db` - Database schema (Drizzle ORM + PostgreSQL)
 - `packages/lib` - Shared utilities
 - `packages/cosmo` - Cosmo SDK (from teamreflex/cosmo-web)
-- `packages/env` - Environment variables
+- `packages/lint` - Shared oxlint configuration
+- `packages/tsconfig` - Shared TypeScript configurations
 
 **Key Technologies**:
 
-- Runtime: Bun 1.3.6
-- Frontend: Next.js, TanStack React Start, React 19, Tailwind CSS 4
+- Runtime: Bun 1.3.11
+- Frontend: Next.js 16, TanStack React Start + Vite, React 19, Tailwind CSS 4
 - API: ORPC (type-safe RPC) with Zod validation
 - Database: PostgreSQL 18 with Drizzle ORM
 - State: React Query (server), Zustand (client)
@@ -38,6 +39,49 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 ## Code Style
 
 - Formatter: oxfmt (configured in `.oxfmtrc.json`)
-- Linter: oxlint (configured in `.oxlintrc.json`)
+- Linter: oxlint (configured in `packages/lint/oxlint.config.ts`)
 - TypeScript strict mode enabled
 - Path alias: `@/*` maps to `src/`
+
+## Development Commands
+
+All commands should be run from the monorepo root using Turbo:
+
+```bash
+# Development
+bun run dev                    # Start all dev servers
+bun run dev --filter=web       # Start specific app
+
+# Build
+bun run build                  # Build all packages and apps
+bun run build --filter=web     # Build specific app
+
+# Linting
+bun run lint                   # Lint all packages (oxlint)
+bun run lint --filter=web      # Lint specific app
+bun run lint:fix               # Lint and auto-fix
+
+# Type Checking
+bun run typecheck              # Type check all packages
+bun run typecheck --filter=web # Type check specific app
+
+# Formatting
+bun run format                 # Format all code (oxfmt)
+```
+
+## Linting (Oxlint)
+
+- Base config: `packages/lint/oxlint.config.ts`
+- Each app/package has its own `oxlint.config.ts` extending the base
+- Config uses `extends: [baseConfig]` pattern (not spread)
+- All packages use `"type": "module"` in package.json
+
+## TypeScript Configuration
+
+- Base configs: `packages/tsconfig/`
+  - `tsconfig.base.json` - Default for packages (bundler resolution)
+  - `tsconfig.bun.json` - For Bun-based apps (includes JSX, Bun types)
+  - `tsconfig.node.json` - For strict Node.js ESM projects (NodeNext resolution)
+- All packages use `"type": "module"` in package.json
+- All tsconfigs have explicit `include` and `exclude` fields
+- Module resolution: `bundler` (not `NodeNext`) — no `.js` extensions needed on imports

@@ -38,6 +38,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@repo/lint": "workspace:*",
         "@repo/tsconfig": "workspace:*",
         "@subsquid/commands": "^2.3.1",
         "@subsquid/evm-typegen": "^4.6.0",
@@ -58,6 +59,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@repo/lint": "workspace:*",
         "@repo/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
       },
@@ -83,6 +85,7 @@
         "@repo/cosmo": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/lib": "workspace:*",
+        "@repo/lint": "workspace:*",
         "@repo/tsconfig": "workspace:*",
         "@stream-io/video-react-sdk": "^1.34.1",
         "@t3-oss/env-nextjs": "^0.13.11",
@@ -153,6 +156,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@repo/lint": "workspace:*",
         "@repo/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
       },
@@ -193,6 +197,10 @@
         "@repo/tsconfig": "workspace:*",
         "@types/bun": "catalog:dev",
       },
+    },
+    "packages/lint": {
+      "name": "@repo/lint",
+      "version": "0.0.0",
     },
     "packages/tsconfig": {
       "name": "@repo/tsconfig",
@@ -995,6 +1003,8 @@
     "@repo/db": ["@repo/db@workspace:packages/db"],
 
     "@repo/lib": ["@repo/lib@workspace:packages/lib"],
+
+    "@repo/lint": ["@repo/lint@workspace:packages/lint"],
 
     "@repo/tsconfig": ["@repo/tsconfig@workspace:packages/tsconfig"],
 

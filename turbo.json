@@ -1,7 +1,7 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
-  "globalDependencies": [".oxlintrc.json", ".oxfmtrc.json"],
+  "globalDependencies": ["packages/lint/oxlint.config.ts", ".oxfmtrc.json"],
   "tasks": {
     "dev": {
       "cache": false,
@@ -17,12 +17,12 @@
     },
     "lint": {
       "dependsOn": ["^lint"],
-      "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"],
+      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts"],
       "outputs": [],
       "cache": true
     },
     "lint:fix": {
-      "inputs": ["$TURBO_DEFAULT$", ".oxlintrc.json"],
+      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts"],
       "outputs": ["**/*.{ts,tsx,js,jsx}"],
       "cache": false
     },

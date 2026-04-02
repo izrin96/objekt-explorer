@@ -1,4 +1,0 @@
-{
-  "extends": ["../../.oxlintrc.json"],
-  "ignorePatterns": ["node_modules", ".turbo", "lib", "src/model/generated/**", "db/migrations/**"]
-}

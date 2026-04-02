@@ -1,7 +1,9 @@
-{
-  "$schema": "../../node_modules/oxlint/configuration_schema.json",
-  "extends": ["../../.oxlintrc.json"],
-  "rules": {
+import baseConfig from "@repo/lint/oxlint.config";
+import { defineConfig } from "oxlint";
+
+export default defineConfig({
+  extends: [baseConfig],
+  rules: {
     "react/no-children-prop": "off",
     "react/no-danger": "off",
     "react/no-danger-with-children": "off",
@@ -18,6 +20,6 @@
     "jsx-a11y/aria-props": "warn",
     "jsx-a11y/aria-unsupported-elements": "warn",
     "jsx-a11y/role-has-required-aria-props": "warn",
-    "jsx-a11y/no-redundant-roles": "off"
-  }
-}
+    "jsx-a11y/no-redundant-roles": "off",
+  },
+});
