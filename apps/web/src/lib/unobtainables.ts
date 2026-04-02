@@ -4,6 +4,7 @@
  * List of objekt slugs that are unobtainable.
  */
 export const unobtainables = [
+  // error in minting
   "binary01-jiwoo-120a",
   // test
   "atom01-artmstest-100u",
