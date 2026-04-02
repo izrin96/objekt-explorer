@@ -91,5 +91,10 @@
   },
   "overrides": {
     "@tanstack/query-core": "^5.96.1"
+  },
+  "postcss": {
+    "plugins": {
+      "@tailwindcss/postcss": {}
+    }
   }
 }
