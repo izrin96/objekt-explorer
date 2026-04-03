@@ -1,7 +1,7 @@
 "use client";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
@@ -37,8 +37,8 @@ type Props = {
 };
 
 export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: Props) {
-  const t = useTranslations("generate_discord");
-  const tModal = useTranslations("discord_format_modal");
+  const content = useIntlayer("generate_discord");
+  const modalContent = useIntlayer("discord_format_modal");
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
   const { handleSubmit, control } = useForm({
@@ -67,8 +67,8 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{tModal("title")}</ModalTitle>
-        <ModalDescription>{tModal("description")}</ModalDescription>
+        <ModalTitle>{modalContent.title.value}</ModalTitle>
+        <ModalDescription>{modalContent.description.value}</ModalDescription>
       </ModalHeader>
       <ModalBody>
         <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
@@ -83,7 +83,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onBlur={onBlur}
                 isInvalid={invalid}
               >
-                <Label>{t("show_count")}</Label>
+                <Label>{content.show_count.value}</Label>
               </Checkbox>
             )}
           />
@@ -98,7 +98,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onBlur={onBlur}
                 isInvalid={invalid}
               >
-                <Label>{t("lower_case")}</Label>
+                <Label>{content.lower_case.value}</Label>
               </Checkbox>
             )}
           />
@@ -113,7 +113,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onBlur={onBlur}
                 isInvalid={invalid}
               >
-                <Label>{t("bulleted_list")}</Label>
+                <Label>{content.bulleted_list.value}</Label>
               </Checkbox>
             )}
           />
@@ -126,19 +126,19 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                placeholder={t("group_by_placeholder")}
+                placeholder={content.group_by_placeholder.value}
               >
-                <Label>{t("group_by_label")}</Label>
+                <Label>{content.group_by_label.value}</Label>
                 <SelectTrigger />
                 <SelectContent>
                   <SelectItem id="none" textValue="none">
-                    {t("group_by_none")}
+                    {content.group_by_none.value}
                   </SelectItem>
                   <SelectItem id="season" textValue="season">
-                    {t("group_by_season")}
+                    {content.group_by_season.value}
                   </SelectItem>
                   <SelectItem id="season-first" textValue="season-first">
-                    {t("group_by_season_first")}
+                    {content.group_by_season_first.value}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -153,23 +153,23 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                placeholder={t("style_placeholder")}
+                placeholder={content.style_placeholder.value}
               >
-                <Label>{t("style_label")}</Label>
+                <Label>{content.style_label.value}</Label>
                 <SelectTrigger />
                 <SelectContent>
                   <SelectItem id="default" textValue="default">
-                    {t("style_default")}
+                    {content.style_default.value}
                   </SelectItem>
                   <SelectItem id="compact" textValue="compact">
-                    {t("style_compact")}
+                    {content.style_compact.value}
                   </SelectItem>
                 </SelectContent>
               </Select>
             )}
           />
           <TextField>
-            <Label>{t("formatted_text_label")}</Label>
+            <Label>{content.formatted_text_label.value}</Label>
             <Textarea
               value={formatText}
               onChange={(e) => setFormatText(e.target.value)}
@@ -183,7 +183,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
       </ModalBody>
       <ModalFooter className="flex justify-end">
         <Button type="submit" onPress={() => onSubmit()}>
-          {tModal("generate")}
+          {modalContent.generate.value}
         </Button>
       </ModalFooter>
     </ModalContent>

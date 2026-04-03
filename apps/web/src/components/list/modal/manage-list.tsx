@@ -6,7 +6,7 @@ import {
   useSuspenseQueries,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { Form } from "react-aria-components";
@@ -54,26 +54,26 @@ type CreateListModalProps = {
 };
 
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
-  const t = useTranslations("list.create");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
 
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
+        <ModalTitle>{content.create.title.value}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <CreateListForm setOpen={setOpen} />
       </ModalBody>
       <ModalFooter id="submit-form-create-list">
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
 }
 
 function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const t = useTranslations("list.create");
+  const content = useIntlayer("list");
   const { data: profiles } = useUserProfiles();
   const { data: currencies } = useSuspenseQuery(orpc.meta.supportedCurrencies.queryOptions());
   const { handleSubmit, control, watch } = useForm({
@@ -93,13 +93,13 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     orpc.list.create.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(t("success"));
+        toast.success(content.create.success.value);
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.create.error.value);
       },
     }),
   );
@@ -122,7 +122,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="name"
           rules={{
-            required: t("name_required"),
+            required: content.create.name_required.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -137,8 +137,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("name_label")}</Label>
-              <Input placeholder={t("name_placeholder")} />
+              <Label>{content.create.name_label.value}</Label>
+              <Input placeholder={content.create.name_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -148,8 +148,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           name="description"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("description_label")}</Label>
-              <Textarea placeholder={t("description_placeholder")} rows={3} />
+              <Label>{content.create.description_label.value}</Label>
+              <Textarea placeholder={content.create.description_placeholder.value} rows={3} />
             </TextField>
           )}
         />
@@ -161,16 +161,16 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={t("currency_label")}
-              placeholder={t("currency_placeholder")}
+              aria-label={content.create.currency_label.value}
+              placeholder={content.create.currency_placeholder.value}
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("currency_label")}</Label>
-              <Description>{t("currency_desc")}</Description>
+              <Label>{content.create.currency_label.value}</Label>
+              <Description>{content.create.currency_desc.value}</Description>
               <SelectTrigger />
               <SelectContent>
                 <SelectItem id="" textValue="None">
@@ -191,15 +191,15 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           name="listType"
           render={({ field: { name, value, onChange } }) => (
             <RadioGroup name={name} value={value} onChange={onChange}>
-              <Label>{t("list_type_label")}</Label>
-              <Description>{t("list_type_desc")}</Description>
+              <Label>{content.create.list_type_label.value}</Label>
+              <Description>{content.create.list_type_desc.value}</Description>
               <Radio value="normal">
-                <Label>{t("normal_list_label")}</Label>
-                <Description>{t("normal_list_desc")}</Description>
+                <Label>{content.create.normal_list_label.value}</Label>
+                <Description>{content.create.normal_list_desc.value}</Description>
               </Radio>
               <Radio value="profile">
-                <Label>{t("profile_list_label")}</Label>
-                <Description>{t("profile_list_desc")}</Description>
+                <Label>{content.create.profile_list_label.value}</Label>
+                <Description>{content.create.profile_list_desc.value}</Description>
               </Radio>
             </RadioGroup>
           )}
@@ -209,30 +209,33 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             control={control}
             name="profileAddress"
             rules={{
-              required: watchedListType === "profile" ? t("profile_required") : false,
+              required:
+                watchedListType === "profile" ? content.create.profile_required.value : false,
             }}
             render={({
               field: { name, value, onChange, onBlur },
               fieldState: { invalid, error },
             }) => (
               <Select
-                aria-label={t("profile_label")}
-                placeholder={t("profile_placeholder")}
+                aria-label={content.create.profile_label.value}
+                placeholder={content.create.profile_placeholder.value}
                 name={name}
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
               >
-                <Label>{t("profile_label")}</Label>
+                <Label>{content.create.profile_label.value}</Label>
                 <Description>
-                  {watchedListType === "profile" ? t("profile_desc") : t("display_profile_desc")}
+                  {watchedListType === "profile"
+                    ? content.create.profile_desc.value
+                    : content.create.display_profile_desc.value}
                 </Description>
                 <SelectTrigger />
                 <SelectContent>
                   {watchedListType === "normal" && (
-                    <SelectItem id="" textValue={t("display_profile_none")}>
-                      {t("display_profile_none")}
+                    <SelectItem id="" textValue={content.create.display_profile_none.value}>
+                      {content.create.display_profile_none.value}
                     </SelectItem>
                   )}
                   {profiles?.map((profile) => (
@@ -255,15 +258,17 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_user_label")}</Label>
-              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
+              <Label>{content.create.hide_user_label.value}</Label>
+              <Description>
+                {content.create.hide_user_desc({ siteName: SITE_NAME }).value}
+              </Description>
             </Checkbox>
           )}
         />
 
         <Portal to="#submit-form-create-list">
           <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
-            {t("submit")}
+            {content.create.submit.value}
           </Button>
         </Portal>
       </div>
@@ -278,37 +283,37 @@ type DeleteListModalProps = {
 };
 
 export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
-  const t = useTranslations("list.delete");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   const deleteList = useMutation(
     orpc.list.delete.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(t("success"));
+        toast.success(content.delete.success.value);
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.delete.error.value);
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
-        <ModalDescription>{t("description")}</ModalDescription>
+        <ModalTitle>{content.delete.title.value}</ModalTitle>
+        <ModalDescription>{content.delete.description.value}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
         <Button
           intent="danger"
           type="submit"
           isPending={deleteList.isPending}
           onPress={() => deleteList.mutate({ slug })}
         >
-          {t("submit")}
+          {content.delete.submit.value}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -322,13 +327,13 @@ type EditListModalProps = {
 };
 
 export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
-  const t = useTranslations("list.edit");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   return (
     <SheetContent className="sm:max-w-sm" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>{t("title")}</SheetTitle>
-        <SheetDescription>{t("description")}</SheetDescription>
+        <SheetTitle>{content.edit.title.value}</SheetTitle>
+        <SheetDescription>{content.edit.description.value}</SheetDescription>
       </SheetHeader>
       <SheetBody>
         <QueryErrorResetBoundary>
@@ -348,7 +353,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
         </QueryErrorResetBoundary>
       </SheetBody>
       <SheetFooter id="submit-form-edit-list">
-        <SheetClose>{tCommon("cancel")}</SheetClose>
+        <SheetClose>{contentCommon.modal.cancel.value}</SheetClose>
       </SheetFooter>
     </SheetContent>
   );
@@ -356,7 +361,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
 
 function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
   const router = useRouter();
-  const t = useTranslations("list.edit");
+  const content = useIntlayer("list");
   const { data: profiles } = useUserProfiles();
   const [{ data: currencies }, { data }] = useSuspenseQueries({
     queries: [
@@ -371,14 +376,14 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
     orpc.list.edit.mutationOptions({
       onSuccess: (_, { slug }, _o, { client }) => {
         setOpen(false);
-        toast.success(t("success"));
+        toast.success(content.edit.success.value);
         router.replace(`/list/${slug}`);
         void client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.edit.error.value);
       },
     }),
   );
@@ -416,7 +421,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="name"
           rules={{
-            required: t("name_required"),
+            required: content.edit.name_required.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -431,8 +436,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("name_label")}</Label>
-              <Input placeholder={t("name_placeholder")} />
+              <Label>{content.edit.name_label.value}</Label>
+              <Input placeholder={content.edit.name_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -443,8 +448,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           name="description"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("description_label")}</Label>
-              <Textarea placeholder={t("description_placeholder")} rows={3} />
+              <Label>{content.edit.description_label.value}</Label>
+              <Textarea placeholder={content.edit.description_placeholder.value} rows={3} />
             </TextField>
           )}
         />
@@ -457,16 +462,16 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={t("currency_label")}
-              placeholder={t("currency_placeholder")}
+              aria-label={content.edit.currency_label.value}
+              placeholder={content.edit.currency_placeholder.value}
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("currency_label")}</Label>
-              <Description>{t("currency_desc")}</Description>
+              <Label>{content.edit.currency_label.value}</Label>
+              <Description>{content.edit.currency_desc.value}</Description>
               <SelectTrigger />
               <SelectContent>
                 <SelectItem id="" textValue="None">
@@ -492,20 +497,20 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               fieldState: { invalid, error },
             }) => (
               <Select
-                aria-label={t("display_profile_label")}
-                placeholder={t("display_profile_none")}
+                aria-label={content.edit.display_profile_label.value}
+                placeholder={content.edit.display_profile_none.value}
                 name={name}
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
               >
-                <Label>{t("display_profile_label")}</Label>
-                <Description>{t("display_profile_desc")}</Description>
+                <Label>{content.edit.display_profile_label.value}</Label>
+                <Description>{content.edit.display_profile_desc.value}</Description>
                 <SelectTrigger />
                 <SelectContent>
-                  <SelectItem id="" textValue={t("display_profile_none")}>
-                    {t("display_profile_none")}
+                  <SelectItem id="" textValue={content.edit.display_profile_none.value}>
+                    {content.edit.display_profile_none.value}
                   </SelectItem>
                   {profiles?.map((profile) => (
                     <SelectItem
@@ -528,8 +533,10 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_user_label")}</Label>
-              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
+              <Label>{content.edit.hide_user_label.value}</Label>
+              <Description>
+                {content.edit.hide_user_desc({ siteName: SITE_NAME }).value}
+              </Description>
             </Checkbox>
           )}
         />
@@ -542,23 +549,23 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={t("objekt_columns_label")}
-              placeholder={t("objekt_columns_label")}
+              aria-label={content.edit.objekt_columns_label.value}
+              placeholder={content.edit.objekt_columns_label.value}
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("objekt_columns_label")}</Label>
-              <Description>{t("objekt_columns_desc")}</Description>
+              <Label>{content.edit.objekt_columns_label.value}</Label>
+              <Description>{content.edit.objekt_columns_desc.value}</Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
-                  { id: 0, name: t("objekt_columns_not_set") },
+                  { id: 0, name: content.edit.objekt_columns_not_set.value },
                   ...validColumns.map((a) => ({
                     id: a,
-                    name: t("objekt_columns_count", { count: String(a) }),
+                    name: content.edit.objekt_columns_count({ count: a }).value,
                   })),
                 ].map((item) => (
                   <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
@@ -572,10 +579,10 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
         />
 
         <span className="text-muted-fg text-sm">
-          {t.rich("delete_note", {
-            link: (chunks) => (
-              <Link href="/list" className="underline">
-                {chunks}
+          {content.edit.delete_note.use({
+            link: (props) => (
+              <Link href="/link" className="underline">
+                {props.children}
               </Link>
             ),
           })}
@@ -583,7 +590,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
 
         <Portal to="#submit-form-edit-list">
           <Button isPending={editList.isPending} onPress={() => onSubmit()}>
-            {t("submit")}
+            {content.edit.submit.value}
           </Button>
         </Portal>
       </div>

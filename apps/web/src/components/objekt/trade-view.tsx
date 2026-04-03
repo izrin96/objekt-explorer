@@ -15,7 +15,7 @@ import { Addresses } from "@repo/lib";
 import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components";
@@ -178,7 +178,7 @@ type TransferItem = ObjektTransferResult["transfers"][number];
 
 function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
   const [, copy] = useCopyToClipboard();
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: () => {
       const url = new URL(`/api/objekts/transfers/${objekt.slug}/${serial}`, getBaseURL());
@@ -189,13 +189,10 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     staleTime: 0,
   });
 
-  const handleCopy = useCallback(
-    async (tokenId: string | undefined) => {
-      await copy(tokenId ?? "");
-      toast.success(t("token_id_copied"));
-    },
-    [copy, t],
-  );
+  const handleCopy = async (tokenId: string | undefined) => {
+    await copy(tokenId ?? "");
+    toast.success(content.token_id_copied.value);
+  };
 
   const list = useAsyncList<TransferItem>({
     async load() {
@@ -248,7 +245,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <p>{t("objekt_private")}</p>
+        <p>{content.objekt_private.value}</p>
       </div>
     );
   }
@@ -257,7 +254,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <QuestionMarkIcon size={64} weight="light" />
-        <p>{t("not_found_objekt")}</p>
+        <p>{content.not_found_objekt.value}</p>
       </div>
     );
   }
@@ -266,11 +263,11 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     <>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{t("owner")}</span>
+          <span className="text-sm font-semibold">{content.owner.value}</span>
           <UserLink address={data.owner} nickname={ownerNickname} />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{t("token_id")}</span>
+          <span className="text-sm font-semibold">{content.token_id.value}</span>
           <div className="flex items-center gap-2">
             <Link
               href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${data.tokenId}`}
@@ -288,9 +285,9 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{t("transferable")}</span>
+          <span className="text-sm font-semibold">{content.transferable.value}</span>
           <Badge intent={data.transferable ? "info" : "danger"}>
-            {data.transferable ? t("yes") : t("no")}
+            {data.transferable ? content.yes.value : content.no.value}
           </Badge>
         </div>
       </div>
@@ -305,9 +302,9 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
             onSortChange={(desc) => list.sort(desc)}
           >
             <TableHeader>
-              <TableColumn isRowHeader>{t("owner")}</TableColumn>
+              <TableColumn isRowHeader>{content.owner.value}</TableColumn>
               <TableColumn id="timestamp" allowsSorting minWidth={200}>
-                {t("date")}
+                {content.date.value}
               </TableColumn>
             </TableHeader>
             <TableBody>

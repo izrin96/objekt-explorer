@@ -3,6 +3,7 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 
 import "./globals.css";
+import { Locales } from "intlayer";
 import { Google_Sans_Flex } from "next/font/google";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ const inter = Google_Sans_Flex({
 
 export default function GlobalError() {
   return (
-    <html lang="en" className={`dark ${inter.variable}`}>
+    <html lang={Locales.ENGLISH} className={`dark ${inter.variable}`}>
       <head>
         <title>{SITE_NAME}</title>
       </head>

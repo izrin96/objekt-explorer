@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
@@ -15,7 +15,7 @@ import { TextField } from "../ui/text-field";
 
 export default function ResetPassword({ token }: { token: string }) {
   const router = useRouter();
-  const t = useTranslations("auth.reset_password");
+  const content = useIntlayer("auth");
 
   const { handleSubmit, control } = useForm({
     defaultValues: {
@@ -33,11 +33,11 @@ export default function ResetPassword({ token }: { token: string }) {
       return result.data;
     },
     onSuccess: () => {
-      toast.success(t("success"));
+      toast.success(content.reset_password.success.value);
       router.push("/login");
     },
     onError: ({ message }) => {
-      toast.error(t("error", { message }));
+      toast.error(content.reset_password.error({ message }).value);
     },
   });
 
@@ -50,14 +50,14 @@ export default function ResetPassword({ token }: { token: string }) {
   return (
     <div className="flex flex-col pt-2 pb-36">
       <div className="flex w-full max-w-xl flex-col gap-4 self-center">
-        <div className="text-xl font-semibold">{t("title")}</div>
+        <div className="text-xl font-semibold">{content.reset_password.title.value}</div>
         <Form onSubmit={onSubmit}>
           <div className="flex flex-col gap-4">
             <Controller
               control={control}
               name="password"
               rules={{
-                required: t("password_required"),
+                required: content.reset_password.password_required.value,
               }}
               render={({
                 field: { name, value, onChange, onBlur },
@@ -72,13 +72,13 @@ export default function ResetPassword({ token }: { token: string }) {
                   onBlur={onBlur}
                   isInvalid={invalid}
                 >
-                  <Label>{t("password_label")}</Label>
+                  <Label>{content.reset_password.password_label.value}</Label>
                   <FieldError>{error?.message}</FieldError>
                 </TextField>
               )}
             />
             <Button type="submit" isDisabled={mutation.isPending}>
-              {t("submit")}
+              {content.reset_password.submit.value}
             </Button>
           </div>
         </Form>

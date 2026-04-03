@@ -1,7 +1,7 @@
 "use client";
 
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { Button } from "./ui/button";
 import {
@@ -21,7 +21,7 @@ import {
 } from "./ui/modal";
 
 export default function Changelog() {
-  const t = useTranslations("common");
+  const content = useIntlayer("common");
 
   const changelog = [
     {
@@ -66,7 +66,7 @@ export default function Changelog() {
       </Button>
       <ModalContent size="xl">
         <ModalHeader>
-          <ModalTitle>{t("changelog")}</ModalTitle>
+          <ModalTitle>{content.changelog.value}</ModalTitle>
         </ModalHeader>
         <ModalBody>
           <DisclosureGroup defaultExpandedKeys="1">

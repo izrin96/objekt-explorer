@@ -1,9 +1,7 @@
 "use client";
 
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import type { Route } from "next";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 
 import { useTarget } from "@/hooks/use-target";
@@ -12,6 +10,7 @@ import { parseNickname } from "@/lib/utils";
 
 import { Avatar } from "../ui/avatar-custom";
 import { Button } from "../ui/button";
+import { Link } from "../ui/link";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
@@ -36,7 +35,7 @@ export default function ListHeader() {
             </div>
             <div className="text-muted-fg text-sm">
               <Link
-                href={`/@${profile.nickname || profile.address}` as Route}
+                href={`/@${profile.nickname || profile.address}`}
                 className="text-muted-fg hover:underline"
               >
                 {parseNickname(profile.address, profile.nickname)}
@@ -94,7 +93,7 @@ export default function ListHeader() {
 
 function EditList({ slug }: { slug: string }) {
   const [open, setOpen] = useState(false);
-  const t = useTranslations("list.card");
+  const content = useIntlayer("list");
   return (
     <>
       <EditListModal slug={slug} open={open} setOpen={setOpen} />
@@ -104,7 +103,7 @@ function EditList({ slug }: { slug: string }) {
         onPress={() => setOpen(true)}
         className="w-full flex-none sm:w-auto"
       >
-        {t("edit_list")}
+        {content.card.edit_list.value}
       </Button>
     </>
   );

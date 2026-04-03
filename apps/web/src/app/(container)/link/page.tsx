@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 import { redirect } from "next/navigation";
 
 import MyLinkRender from "@/components/link/my-link";
@@ -8,15 +8,16 @@ import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("page_titles");
+  const content = useIntlayer("page_titles");
   return {
-    title: t("my_cosmo_link"),
+    title: content.my_cosmo_link.value,
   };
 }
 
 export default async function Page() {
   const queryClient = getQueryClient();
-  const [session, t] = await Promise.all([getSession(), getTranslations("link")]);
+  const session = await getSession();
+  const content = useIntlayer("link");
 
   if (!session) redirect("/");
 
@@ -25,7 +26,7 @@ export default async function Page() {
   return (
     <div className="flex flex-col pt-2 pb-36">
       <div className="flex flex-col gap-4">
-        <div className="text-xl font-semibold">{t("my_cosmo")}</div>
+        <div className="text-xl font-semibold">{content.my_cosmo.value}</div>
         <HydrateClient client={queryClient}>
           <MyLinkRender />
         </HydrateClient>

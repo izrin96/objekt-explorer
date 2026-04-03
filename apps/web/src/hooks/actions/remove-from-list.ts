@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
 export function useRemoveFromList() {
-  const t = useTranslations("actions.remove_from_list");
+  const content = useIntlayer("actions");
 
   const removeObjektsFromList = useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
@@ -15,11 +15,15 @@ export function useRemoveFromList() {
           return old.filter((item) => !idSet.has(item.id));
         });
 
-        const key = ids.length > 1 ? "success_multiple" : "success_single";
-        toast.success(t(key, { count: ids.length.toLocaleString() }));
+        const message =
+          ids.length > 1
+            ? content.remove_from_list.success_multiple({ count: ids.length.toLocaleString() })
+                .value
+            : content.remove_from_list.success_single.value;
+        toast.success(message);
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.remove_from_list.error.value);
       },
     }),
   );

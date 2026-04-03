@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 import { Suspense } from "react";
 
 import LiveSessionListRender from "@/components/live/session-list";
@@ -8,9 +8,9 @@ import { Note } from "@/components/ui/note";
 import { env } from "@/env";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("page_titles");
+  const content = useIntlayer("page_titles");
   return {
-    title: t("live"),
+    title: content.live.value,
   };
 }
 

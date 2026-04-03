@@ -59,4 +59,5 @@ dev-dist
 
 .open-next
 
-messages/*.d.json.ts
+# Intlayer
+.intlayer

@@ -1,11 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
 export function useAddToList() {
-  const t = useTranslations("actions.add_to_list");
+  const content = useIntlayer("actions");
 
   const addToList = useMutation(
     orpc.list.addObjektsToList.mutationOptions({
@@ -15,11 +15,14 @@ export function useAddToList() {
           return [...rows, ...old];
         });
 
-        const key = rows.length > 1 ? "success_multiple" : "success_single";
-        toast.success(t(key, { count: rows.length.toLocaleString() }));
+        const message =
+          rows.length > 1
+            ? content.add_to_list.success_multiple({ count: rows.length.toLocaleString() }).value
+            : content.add_to_list.success_single.value;
+        toast.success(message);
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.add_to_list.error.value);
       },
     }),
   );

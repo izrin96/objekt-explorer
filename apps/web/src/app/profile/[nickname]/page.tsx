@@ -1,6 +1,6 @@
 import { Addresses } from "@repo/lib";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 
 import ProfileObjektRender from "@/components/profile/profile-objekt";
 import ProfileObjektServer from "@/components/profile/profile-objekt-server";
@@ -15,15 +15,13 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const [profile, t] = await Promise.all([
-    getUserByIdentifier(params.nickname),
-    getTranslations("page_titles"),
-  ]);
+  const profile = await getUserByIdentifier(params.nickname);
+  const content = useIntlayer("page_titles");
 
   return {
-    title: t("profile_collection", {
+    title: content.profile_collection({
       nickname: parseNickname(profile.address, profile.nickname),
-    }),
+    }).value,
   };
 }
 

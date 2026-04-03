@@ -1,7 +1,7 @@
 import { NumberFormatter } from "@internationalized/number";
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
@@ -49,7 +49,7 @@ export default function ObjektView({
   children,
   onSetPrice,
 }: Props) {
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const [ref, { width }] = useElementSize();
   const [loaded, setLoaded] = useState(false);
   const [objekt] = objekts;
@@ -111,7 +111,7 @@ export default function ObjektView({
                   className={cn("font-semibold", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
-                  {t("qyop")}
+                  {content.qyop.value}
                 </Badge>
               ) : hasListPrice ? (
                 <Badge
@@ -128,7 +128,7 @@ export default function ObjektView({
                     className="cursor-pointer font-semibold"
                     onClick={onSetPrice}
                   >
-                    {t("set_price")}
+                    {content.set_price.value}
                   </Badge>
                 )
               )}
@@ -139,7 +139,7 @@ export default function ObjektView({
                   </Button>
                   <PopoverContent arrow className="max-w-72">
                     <div className="p-3 text-sm">
-                      <span className="text-muted-fg">{t("note")}: </span>
+                      <span className="text-muted-fg">{content.note.value}: </span>
                       <span className="text-fg">{objekt.note}</span>
                     </div>
                   </PopoverContent>
@@ -160,7 +160,7 @@ export default function ObjektView({
             </Badge>
           )}
 
-          {unobtainable && <Badge intent="danger">{t("unobtainable")}</Badge>}
+          {unobtainable && <Badge intent="danger">{content.unobtainable.value}</Badge>}
         </div>
       )}
     </div>

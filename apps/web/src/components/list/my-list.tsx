@@ -2,7 +2,7 @@
 
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -42,25 +42,25 @@ function MyList() {
   const [addOpen, setAddOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
-  const t = useTranslations("list");
+  const content = useIntlayer("list");
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-xl font-semibold">{t("title")}</div>
+      <div className="text-xl font-semibold">{content.title.value}</div>
 
       <CreateListModal open={addOpen} setOpen={setAddOpen} />
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
       <Tabs aria-label="Navbar" className="w-full">
         <TabList className="w-fit">
-          <Tab id="a">{t("tabs.normal")}</Tab>
-          <Tab id="b">{t("tabs.profile")}</Tab>
+          <Tab id="a">{content.tabs.normal.value}</Tab>
+          <Tab id="b">{content.tabs.profile.value}</Tab>
         </TabList>
         <TabPanel id="a" className="flex flex-col gap-4">
           <div className="flex w-full gap-2">
-            <Button onPress={() => setAddOpen(true)}>{t("create_button")}</Button>
+            <Button onPress={() => setAddOpen(true)}>{content.create_button.value}</Button>
             <Button intent="outline" onPress={() => setGenOpen(true)}>
-              {t("generate_discord_button")}
+              {content.generate_discord_button.value}
             </Button>
           </div>
 
@@ -74,9 +74,9 @@ function MyList() {
         </TabPanel>
         <TabPanel id="b" className="flex flex-col gap-4">
           <div className="flex w-full gap-2">
-            <Button onPress={() => setAddOpen(true)}>{t("create_button")}</Button>
+            <Button onPress={() => setAddOpen(true)}>{content.create_button.value}</Button>
             <Button intent="outline" onPress={() => setGenOpen(true)}>
-              {t("generate_discord_button")}
+              {content.generate_discord_button.value}
             </Button>
           </div>
 
@@ -106,7 +106,7 @@ type ListCardProps = {
 function ListCard({ list }: ListCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const t = useTranslations("list.card");
+  const content = useIntlayer("list");
 
   const href = getListHref(list);
 
@@ -131,9 +131,9 @@ function ListCard({ list }: ListCardProps) {
               <EllipsisVerticalIcon className="size-5" />
             </Button>
             <MenuContent placement="bottom right">
-              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>{content.card.edit.value}</MenuItem>
               <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
-                {t("delete")}
+                {content.card.delete.value}
               </MenuItem>
             </MenuContent>
           </Menu>

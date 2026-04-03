@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
 import { Autocomplete, type Key, Popover, useFilter } from "react-aria-components";
 
@@ -13,7 +13,7 @@ import { SearchField, SearchInput } from "../ui/search-field";
 import { Select, SelectItem, SelectTrigger } from "../ui/select";
 
 export default function CollectionFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const { contains } = useFilter({ sensitivity: "base" });
   const { collections } = useFilterData();
   const [filters, setFilters] = useFilters();
@@ -30,8 +30,8 @@ export default function CollectionFilter() {
       selectionMode="multiple"
       value={selected}
       onChange={update}
-      placeholder={t("collection_no")}
-      aria-label={t("collection_no")}
+      placeholder={content.collection_no.value}
+      aria-label={content.collection_no.value}
       className="max-w-52"
     >
       <SelectTrigger />

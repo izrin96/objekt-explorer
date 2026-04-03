@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 
@@ -16,7 +16,7 @@ type Props = {
 
 export default function ClassFilter({ hideEtc = false }: Props) {
   const { classes } = useFilterData();
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.class);
 
@@ -37,7 +37,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.class?.length}>
-        {t("class")}
+        {content.class.value}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {availableClasses.map((item) => (

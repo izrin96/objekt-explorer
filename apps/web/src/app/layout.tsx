@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { NextIntlClientProvider } from "next-intl";
+import { IntlayerClientProvider } from "next-intlayer";
 
 import "@/app/globals.css";
-import { getLocale } from "next-intl/server";
 import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
 import { type PropsWithChildren } from "react";
 
-import "@/lib/orpc/server";
 import { Analytics } from "@/components/analytics";
+import "@/lib/orpc/server";
 import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
@@ -16,6 +15,7 @@ import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 import { artists } from "@/lib/server/cosmo/artists";
+import { getUserLocale } from "@/lib/server/locale";
 import { SITE_NAME, cn } from "@/lib/utils";
 
 const inter = Google_Sans_Flex({
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const locale = await getLocale();
+  const locale = await getUserLocale();
 
   return (
     <html
@@ -110,7 +110,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body className="min-h-svh font-sans antialiased">
         <ClientProviders>
-          <Providers>
+          <Providers locale={locale}>
             <Navbar />
             <main className="mx-auto w-full">{children}</main>
             <Analytics />
@@ -121,7 +121,9 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   );
 }
 
-async function Providers({ children }: PropsWithChildren) {
+type ProvidersProps = PropsWithChildren<{ locale: string }>;
+
+async function Providers({ children, locale }: ProvidersProps) {
   const queryClient = getQueryClient();
 
   const filterData = await queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions());
@@ -135,11 +137,11 @@ async function Providers({ children }: PropsWithChildren) {
 
   return (
     <HydrateClient client={queryClient}>
-      <NextIntlClientProvider>
+      <IntlayerClientProvider locale={locale}>
         <CosmoArtistProvider artists={artists}>
           <FilterDataProvider data={filterData}>{children}</FilterDataProvider>
         </CosmoArtistProvider>
-      </NextIntlClientProvider>
+      </IntlayerClientProvider>
     </HydrateClient>
   );
 }

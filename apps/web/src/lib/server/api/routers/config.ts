@@ -1,8 +1,8 @@
 import { validArtists } from "@repo/cosmo/types/common";
+import { locales } from "intlayer";
 import { cookies } from "next/headers";
 import * as z from "zod";
 
-import { locales } from "@/i18n/config";
 import type { Outputs } from "@/lib/orpc/server";
 
 import { parseSelectedArtists } from "../../cookie";

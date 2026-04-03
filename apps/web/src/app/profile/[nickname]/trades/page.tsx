@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 
 import ProfileTradesRender from "@/components/profile/trades/profile-trades";
 import { getUserByIdentifier } from "@/lib/data-fetching";
@@ -13,15 +13,12 @@ type Props = {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  const [profile, t] = await Promise.all([
-    getUserByIdentifier(params.nickname),
-    getTranslations("page_titles"),
-  ]);
+  const profile = await getUserByIdentifier(params.nickname);
+  const content = useIntlayer("page_titles");
 
   return {
-    title: t("profile_trades", {
-      nickname: parseNickname(profile.address, profile.nickname),
-    }),
+    title: content.profile_trades({ nickname: parseNickname(profile.address, profile.nickname) })
+      .value,
   };
 }
 

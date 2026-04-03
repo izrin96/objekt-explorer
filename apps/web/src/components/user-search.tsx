@@ -4,7 +4,7 @@ import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useQuery } from "@tanstack/react-query";
 import type { Route } from "next";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
 import { useState } from "react";
@@ -23,7 +23,7 @@ import {
 } from "./ui/command-menu";
 
 export default function UserSearch() {
-  const t = useTranslations("nav.search_user");
+  const content = useIntlayer("nav");
   const recentUsers = useUserSearchStore((a) => a.users);
   const addRecent = useUserSearchStore((a) => a.add);
   const clearAll = useUserSearchStore((a) => a.clearAll);
@@ -54,7 +54,7 @@ export default function UserSearch() {
     <>
       <Button onPress={() => setIsOpen(true)} size="sm" intent="primary">
         <MagnifyingGlassIcon data-slot="icon" />
-        <span className="hidden sm:block">{t("label")}</span>
+        <span className="hidden sm:block">{content.search_user.label.value}</span>
       </Button>
       <CommandMenu
         shortcut="k"
@@ -63,9 +63,9 @@ export default function UserSearch() {
         isOpen={isOpen}
         onOpenChange={setIsOpen}
       >
-        <CommandMenuSearch placeholder={t("placeholder")} />
+        <CommandMenuSearch placeholder={content.search_user.placeholder.value} />
         <CommandMenuList autoFocus="first" shouldFocusWrap>
-          <CommandMenuSection label={t("result_label")}>
+          <CommandMenuSection label={content.search_user.result_label.value}>
             {data?.map((user) => (
               <CommandMenuItem
                 onAction={() => handleAction(user)}
@@ -77,7 +77,7 @@ export default function UserSearch() {
               </CommandMenuItem>
             ))}
           </CommandMenuSection>
-          <CommandMenuSection label={t("recent_label")}>
+          <CommandMenuSection label={content.search_user.recent_label.value}>
             {[
               ...recentUsers.map((user) => (
                 <CommandMenuItem
@@ -93,11 +93,11 @@ export default function UserSearch() {
                 ? [
                     <CommandMenuItem
                       key="clear"
-                      textValue={t("clear_history")}
+                      textValue={content.search_user.clear_history.value}
                       onAction={() => clearAll()}
                       intent="danger"
                     >
-                      {t("clear_history")}
+                      {content.search_user.clear_history.value}
                     </CommandMenuItem>,
                   ]
                 : []),

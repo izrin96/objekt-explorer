@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { parseAsBoolean, useQueryState } from "nuqs";
 
 import { Toggle } from "@/components/ui/toggle";
@@ -10,12 +10,12 @@ export function useShowCount() {
 }
 
 export default function ShowCountFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [showCount, setShowCount] = useShowCount();
 
   return (
     <Toggle intent="outline" isSelected={showCount ?? false} onChange={setShowCount}>
-      {t("show_count")}
+      {content.show_count.value}
     </Toggle>
   );
 }

@@ -13,7 +13,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { type PropsWithChildren } from "react";
 
 import { useAddToList } from "@/hooks/actions/add-to-list";
@@ -45,7 +45,7 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; address?: string }) {
   const { data: lists } = useQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
 
   const availableLists = lists?.filter((list) => {
     if (address) {
@@ -71,7 +71,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
     <MenuSubMenu>
       <MenuItem>
         <PlusIcon data-slot="icon" />
-        <MenuLabel>{t("add_to_list")}</MenuLabel>
+        <MenuLabel>{content.add_to_list.value}</MenuLabel>
       </MenuItem>
       <MenuContent placement="bottom right">
         {!availableLists && (
@@ -84,7 +84,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
         {availableLists && availableLists.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
-              <span>{t("no_list_found")}</span>
+              <span>{content.no_list_found.value}</span>
             </MenuLabel>
           </MenuItem>
         )}
@@ -108,7 +108,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
 export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
   const target = useTarget((a) => a.list)!;
   const removeObjektsFromList = useRemoveFromList();
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
 
   return (
     <MenuItem
@@ -121,7 +121,7 @@ export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
       intent="danger"
     >
       <TrashSimpleIcon data-slot="icon" />
-      <MenuLabel>{t("remove_from_list")}</MenuLabel>
+      <MenuLabel>{content.remove_from_list.value}</MenuLabel>
     </MenuItem>
   );
 }
@@ -136,7 +136,7 @@ export function TogglePinMenuItem({
   const profile = useTarget((a) => a.profile)!;
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem
       onAction={() => {
@@ -154,7 +154,7 @@ export function TogglePinMenuItem({
       }}
     >
       {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
-      <MenuLabel>{isPin ? t("unpin") : t("pin")}</MenuLabel>
+      <MenuLabel>{isPin ? content.unpin.value : content.pin.value}</MenuLabel>
     </MenuItem>
   );
 }
@@ -169,7 +169,7 @@ export function ToggleLockMenuItem({
   const profile = useTarget((a) => a.profile)!;
   const lock = useBatchLock();
   const unlock = useBatchUnlock();
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem
       onAction={() => {
@@ -187,17 +187,17 @@ export function ToggleLockMenuItem({
       }}
     >
       {isLocked ? <LockSimpleOpenIcon data-slot="icon" /> : <LockSimpleIcon data-slot="icon" />}
-      <MenuLabel>{isLocked ? t("unlock") : t("lock")}</MenuLabel>
+      <MenuLabel>{isLocked ? content.unlock.value : content.lock.value}</MenuLabel>
     </MenuItem>
   );
 }
 
 export function SetPriceMenuItem({ onAction }: { onAction: () => void }) {
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem onAction={onAction}>
       <CurrencyDollarIcon data-slot="icon" />
-      <MenuLabel>{t("set_price")}</MenuLabel>
+      <MenuLabel>{content.set_price.value}</MenuLabel>
     </MenuItem>
   );
 }
@@ -206,11 +206,11 @@ export function SelectMenuItem({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts as [ValidObjekt];
   const objektSelect = useObjektSelect((a) => a.select);
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem onAction={() => objektSelect(objekts)}>
       <CheckIcon data-slot="icon" />
-      <MenuLabel>{isSelected ? t("unselect") : t("select")}</MenuLabel>
+      <MenuLabel>{isSelected ? content.unselect.value : content.select.value}</MenuLabel>
     </MenuItem>
   );
 }

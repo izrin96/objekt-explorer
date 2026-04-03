@@ -1,12 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 import type { PinListOutput } from "@/lib/server/api/routers/pins";
 
 export function useBatchPin() {
-  const t = useTranslations("actions.pin");
+  const content = useIntlayer("actions");
 
   const batchPin = useMutation(
     orpc.pins.batchPin.mutationOptions({
@@ -27,15 +27,21 @@ export function useBatchPin() {
         return { previousPins };
       },
       onSuccess: (_, { tokenIds }) => {
-        const key = tokenIds.length > 1 ? "success_multiple" : "success_single";
-        toast.success(t(key, { count: tokenIds.length.toLocaleString() }));
+        const message =
+          tokenIds.length > 1
+            ? content.pin.success_multiple({ count: tokenIds.length.toLocaleString() }).value
+            : content.pin.success_single.value;
+        toast.success(message);
       },
       onError: (_err, { tokenIds, address }, context, { client }) => {
         if (context?.previousPins) {
           client.setQueryData(orpc.pins.list.queryKey({ input: address }), context.previousPins);
         }
-        const key = tokenIds.length > 1 ? "error_multiple" : "error_single";
-        toast.error(t(key, { count: tokenIds.length.toLocaleString() }));
+        const message =
+          tokenIds.length > 1
+            ? content.pin.error_multiple({ count: tokenIds.length.toLocaleString() }).value
+            : content.pin.error_single.value;
+        toast.error(message);
       },
     }),
   );

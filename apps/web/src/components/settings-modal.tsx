@@ -1,7 +1,9 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { useLocale, useTranslations } from "next-intl";
+import type { Locale } from "intlayer";
+import { Locales } from "intlayer";
+import { useLocale, useIntlayer } from "next-intlayer";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useEffect, useTransition } from "react";
@@ -9,7 +11,6 @@ import { useEffect, useTransition } from "react";
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
-import type { Locale } from "@/i18n/config";
 import { orpc } from "@/lib/orpc/client";
 
 import { Description, Label } from "./ui/field";
@@ -31,9 +32,9 @@ export function SettingsModal({
   open: boolean;
   setOpen: (val: boolean) => void;
 }) {
-  const t = useTranslations("common.settings");
+  const content = useIntlayer("common");
   const { theme, setTheme, resolvedTheme } = useTheme();
-  const locale = useLocale() as Locale;
+  const { locale } = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const isCompact = useMediaQuery("(max-width: 1560px)");
@@ -61,26 +62,26 @@ export function SettingsModal({
   return (
     <ModalContent size="md" isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
+        <ModalTitle>{content.settings.title.value}</ModalTitle>
       </ModalHeader>
       <ModalBody className="space-y-4">
         <div className="flex space-y-2">
           <div className="grow">
-            <Label>{t("theme.label")}</Label>
-            <Description>{t("theme.desc")}</Description>
+            <Label>{content.settings.theme.label.value}</Label>
+            <Description>{content.settings.theme.desc.value}</Description>
           </div>
           <div className="flex self-center">
             <Select
               className="shrink"
               value={theme}
               onChange={(key) => setTheme(key as string)}
-              aria-label={t("theme.label")}
+              aria-label={content.settings.theme.label.value}
             >
               <SelectTrigger />
               <SelectContent>
-                <SelectItem id="light">{t("theme.light")}</SelectItem>
-                <SelectItem id="dark">{t("theme.dark")}</SelectItem>
-                <SelectItem id="system">{t("theme.system")}</SelectItem>
+                <SelectItem id="light">{content.settings.theme.light.value}</SelectItem>
+                <SelectItem id="dark">{content.settings.theme.dark.value}</SelectItem>
+                <SelectItem id="system">{content.settings.theme.system.value}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -88,42 +89,50 @@ export function SettingsModal({
 
         <div className="flex space-y-2">
           <div className="grow">
-            <Label>{t("language.label")}</Label>
-            <Description>{t("language.desc")}</Description>
+            <Label>{content.settings.language.label.value}</Label>
+            <Description>{content.settings.language.desc.value}</Description>
           </div>
           <div className="flex self-center">
             <Select
               value={locale}
               onChange={(key) => handleLocaleChange(key as string)}
               isDisabled={isPending}
-              aria-label={t("language.label")}
+              aria-label={content.settings.language.label.value}
             >
               <SelectTrigger />
               <SelectContent>
-                <SelectItem id="en">{t("language.en")}</SelectItem>
-                <SelectItem id="ko">{t("language.ko")}</SelectItem>
+                <SelectItem id={Locales.ENGLISH}>
+                  {content.settings.language[Locales.ENGLISH].value}
+                </SelectItem>
+                <SelectItem id={Locales.KOREAN}>
+                  {content.settings.language[Locales.KOREAN].value}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-sm font-medium">{t("filters.label")}</h3>
+          <h3 className="text-sm font-medium">{content.settings.filters.label.value}</h3>
 
           {!isCompact && (
-            <Switch isSelected={wide} onChange={setWide} aria-label={t("filters.wide")}>
-              <Label>{t("filters.wide")}</Label>
-              <Description>{t("filters.wide_desc")}</Description>
+            <Switch
+              isSelected={wide}
+              onChange={setWide}
+              aria-label={content.settings.filters.wide.value}
+            >
+              <Label>{content.settings.filters.wide.value}</Label>
+              <Description>{content.settings.filters.wide_desc.value}</Description>
             </Switch>
           )}
 
           <Switch
             isSelected={hideLabel}
             onChange={setHideLabel}
-            aria-label={t("filters.hide_label")}
+            aria-label={content.settings.filters.hide_label.value}
           >
-            <Label>{t("filters.hide_label")}</Label>
-            <Description>{t("filters.hide_label_desc")}</Description>
+            <Label>{content.settings.filters.hide_label.value}</Label>
+            <Description>{content.settings.filters.hide_label_desc.value}</Description>
           </Switch>
         </div>
       </ModalBody>
