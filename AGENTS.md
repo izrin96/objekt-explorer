@@ -85,3 +85,11 @@ bun run format                 # Format all code (oxfmt)
 - All packages use `"type": "module"` in package.json
 - All tsconfigs have explicit `include` and `exclude` fields
 - Module resolution: `bundler` (not `NodeNext`) — no `.js` extensions needed on imports
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+<!-- END:nextjs-agent-rules -->
