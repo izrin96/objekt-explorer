@@ -74,6 +74,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
 
 function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   const { data: profiles } = useUserProfiles();
   const { data: currencies } = useSuspenseQuery(orpc.meta.supportedCurrencies.queryOptions());
   const { handleSubmit, control, watch } = useForm({
@@ -122,7 +123,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="name"
           rules={{
-            required: content.create.name_required.value,
+            required: contentCommon.validation.required_name.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -138,8 +139,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.create.name_label.value}</Label>
-              <Input placeholder={content.create.name_placeholder.value} />
+              <Label>{contentCommon.form.name.label.value}</Label>
+              <Input placeholder={contentCommon.form.name.placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -155,7 +156,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.create.description_label.value}</Label>
+              <Label>{contentCommon.form.description.label.value}</Label>
               <Textarea placeholder={content.create.description_placeholder.value} rows={3} />
             </TextField>
           )}
@@ -169,7 +170,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           }) => (
             <Select
               aria-label={content.create.currency_label.value}
-              placeholder={content.create.currency_placeholder.value}
+              placeholder={contentCommon.form.none.value}
               name={name}
               value={value}
               onChange={onChange}
@@ -243,8 +244,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 <SelectTrigger />
                 <SelectContent>
                   {watchedListType === "normal" && (
-                    <SelectItem id="" textValue={content.create.display_profile_none.value}>
-                      {content.create.display_profile_none.value}
+                    <SelectItem id="" textValue={contentCommon.form.none.value}>
+                      {contentCommon.form.none.value}
                     </SelectItem>
                   )}
                   {profiles?.map((profile) => (
@@ -283,7 +284,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
 
         <Portal to="#submit-form-create-list">
           <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
-            {content.create.submit.value}
+            {contentCommon.actions.create.value}
           </Button>
         </Portal>
       </div>
@@ -328,7 +329,7 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
           isPending={deleteList.isPending}
           onPress={() => deleteList.mutate({ slug })}
         >
-          {content.delete.submit.value}
+          {contentCommon.actions.continue.value}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -377,6 +378,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
 function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
   const router = useRouter();
   const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   const { data: profiles } = useUserProfiles();
   const [{ data: currencies }, { data }] = useSuspenseQueries({
     queries: [
@@ -436,7 +438,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="name"
           rules={{
-            required: content.edit.name_required.value,
+            required: contentCommon.validation.required_name.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -452,7 +454,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.edit.name_label.value}</Label>
+              <Label>{contentCommon.form.name.label.value}</Label>
               <Input placeholder={content.edit.name_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
@@ -470,7 +472,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.description_label.value}</Label>
+              <Label>{contentCommon.form.description.label.value}</Label>
               <Textarea placeholder={content.edit.description_placeholder.value} rows={3} />
             </TextField>
           )}
@@ -485,7 +487,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           }) => (
             <Select
               aria-label={content.edit.currency_label.value}
-              placeholder={content.edit.currency_placeholder.value}
+              placeholder={contentCommon.form.none.value}
               name={name}
               value={value}
               onChange={onChange}
@@ -521,7 +523,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             }) => (
               <Select
                 aria-label={content.edit.display_profile_label.value}
-                placeholder={content.edit.display_profile_none.value}
+                placeholder={contentCommon.form.none.value}
                 name={name}
                 value={value}
                 onChange={onChange}
@@ -533,8 +535,8 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
                 <Description>{content.edit.display_profile_desc.value}</Description>
                 <SelectTrigger />
                 <SelectContent>
-                  <SelectItem id="" textValue={content.edit.display_profile_none.value}>
-                    {content.edit.display_profile_none.value}
+                  <SelectItem id="" textValue={contentCommon.form.none.value}>
+                    {contentCommon.form.none.value}
                   </SelectItem>
                   {profiles?.map((profile) => (
                     <SelectItem
@@ -621,7 +623,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
 
         <Portal to="#submit-form-edit-list">
           <Button isPending={editList.isPending} onPress={() => onSubmit()}>
-            {content.edit.submit.value}
+            {contentCommon.actions.save.value}
           </Button>
         </Portal>
       </div>

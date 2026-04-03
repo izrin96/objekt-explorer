@@ -128,6 +128,7 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
 function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean) => void }) {
   const router = useRouter();
   const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
 
   const values = {
     name: user.name,
@@ -174,7 +175,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           control={control}
           name="name"
           rules={{
-            required: content.account.name_required.value,
+            required: commonContent.validation.required_name.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -245,6 +246,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
 
 function ChangePassword() {
   const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       currentPassword: "",
@@ -280,7 +282,7 @@ function ChangePassword() {
           control={control}
           name="currentPassword"
           rules={{
-            required: content.account.current_password_required.value,
+            required: commonContent.validation.required_password.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -308,11 +310,7 @@ function ChangePassword() {
           control={control}
           name="newPassword"
           rules={{
-            required: content.account.new_password_required.value,
-            minLength: {
-              value: 8,
-              message: content.account.password_min_length.value,
-            },
+            required: commonContent.validation.required_password.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -354,6 +352,7 @@ function ChangePassword() {
 
 function ChangeEmail({ email }: { email: string }) {
   const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email,
@@ -390,7 +389,7 @@ function ChangeEmail({ email }: { email: string }) {
           control={control}
           name="email"
           rules={{
-            required: content.account.email_required.value,
+            required: commonContent.validation.required_email.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },

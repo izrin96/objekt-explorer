@@ -42,6 +42,7 @@ function SignInForm({
 }) {
   const router = useRouter();
   const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
 
   const { handleSubmit, control } = useForm({
     defaultValues: {
@@ -86,7 +87,7 @@ function SignInForm({
           control={control}
           name="email"
           rules={{
-            required: content.sign_in.email_required.value,
+            required: commonContent.validation.required_email.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -112,7 +113,7 @@ function SignInForm({
           control={control}
           name="password"
           rules={{
-            required: content.sign_in.password_required.value,
+            required: commonContent.validation.required_password.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -216,6 +217,7 @@ function SignUpForm({
 }) {
   const router = useRouter();
   const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       name: "",
@@ -255,7 +257,7 @@ function SignUpForm({
           control={control}
           name="name"
           rules={{
-            required: content.sign_up.name_required.value,
+            required: commonContent.validation.required_name.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -281,7 +283,7 @@ function SignUpForm({
           control={control}
           name="email"
           rules={{
-            required: content.sign_up.email_required.value,
+            required: commonContent.validation.required_email.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -307,7 +309,7 @@ function SignUpForm({
           control={control}
           name="password"
           rules={{
-            required: content.sign_up.password_required.value,
+            required: commonContent.validation.required_password.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -346,6 +348,7 @@ function ForgotPassword({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email: "",
@@ -383,7 +386,7 @@ function ForgotPassword({
           control={control}
           name="email"
           rules={{
-            required: content.forgot_password.email_required.value,
+            required: commonContent.validation.required_email.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },

@@ -20,10 +20,6 @@ const content = {
         en: "your@email.com",
         ko: "your@email.com",
       }),
-      email_required: t({
-        en: "Email is required.",
-        ko: "이메일을 입력해주세요.",
-      }),
       password_label: t({
         en: "Password",
         ko: "비밀번호",
@@ -31,10 +27,6 @@ const content = {
       password_placeholder: t({
         en: "•••••••",
         ko: "•••••••",
-      }),
-      password_required: t({
-        en: "Password is required.",
-        ko: "비밀번호를 입력해주세요.",
       }),
       submit: t({
         en: "Sign in with Email",
@@ -80,10 +72,6 @@ const content = {
         en: "Your name",
         ko: "이름을 입력하세요",
       }),
-      name_required: t({
-        en: "Name is required.",
-        ko: "이름을 입력해주세요.",
-      }),
       email_label: t({
         en: "Email",
         ko: "이메일",
@@ -92,17 +80,9 @@ const content = {
         en: "your@email.com",
         ko: "your@email.com",
       }),
-      email_required: t({
-        en: "Email is required.",
-        ko: "이메일을 입력해주세요.",
-      }),
       password_label: t({
         en: "Password",
         ko: "비밀번호",
-      }),
-      password_required: t({
-        en: "Password is required.",
-        ko: "비밀번호를 입력해주세요.",
       }),
       submit: t({
         en: "Create Account",
@@ -131,10 +111,6 @@ const content = {
       email_placeholder: t({
         en: "your@email.com",
         ko: "your@email.com",
-      }),
-      email_required: t({
-        en: "Email is required.",
-        ko: "이메일을 입력해주세요.",
       }),
       submit: t({
         en: "Send reset password email",
@@ -226,10 +202,6 @@ const content = {
         en: "Your name",
         ko: "이름을 입력하세요",
       }),
-      name_required: t({
-        en: "Name is required.",
-        ko: "이름을 입력해주세요.",
-      }),
       show_social_label: t({
         en: "Show Social",
         ko: "소셜 표시",
@@ -254,10 +226,6 @@ const content = {
         en: "Your current password",
         ko: "현재 비밀번호를 입력하세요",
       }),
-      current_password_required: t({
-        en: "Current password is required.",
-        ko: "현재 비밀번호를 입력해주세요.",
-      }),
       new_password_label: t({
         en: "New Password",
         ko: "새 비밀번호",
@@ -265,10 +233,6 @@ const content = {
       new_password_placeholder: t({
         en: "Your new password",
         ko: "새 비밀번호를 입력하세요",
-      }),
-      new_password_required: t({
-        en: "New password is required.",
-        ko: "새 비밀번호를 입력해주세요.",
       }),
       password_min_length: t({
         en: "Password must be at least 8 characters",
@@ -281,10 +245,6 @@ const content = {
       email_placeholder: t({
         en: "Your email",
         ko: "이메일을 입력하세요",
-      }),
-      email_required: t({
-        en: "Email is required.",
-        ko: "이메일을 입력해주세요.",
       }),
       email_verification_desc: t({
         en: "Verification email will be sent to verify your new email address",
@@ -385,14 +345,6 @@ const content = {
             ko: "{{provider}} 사용자명과 프로필 사진이 업데이트됩니다. 계속하시겠습니까?",
           }),
         ),
-        cancel: t({
-          en: "Cancel",
-          ko: "취소",
-        }),
-        continue: t({
-          en: "Continue",
-          ko: "계속",
-        }),
       },
     },
   },

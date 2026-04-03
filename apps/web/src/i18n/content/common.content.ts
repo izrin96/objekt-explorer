@@ -13,6 +13,84 @@ const content = {
         ko: "취소",
       }),
     },
+    actions: {
+      save: t({
+        en: "Save",
+        ko: "저장",
+      }),
+      continue: t({
+        en: "Continue",
+        ko: "계속",
+      }),
+      create: t({
+        en: "Create",
+        ko: "만들기",
+      }),
+    },
+    form: {
+      email: {
+        label: t({
+          en: "Email",
+          ko: "이메일",
+        }),
+        placeholder: t({
+          en: "your@email.com",
+          ko: "your@email.com",
+        }),
+      },
+      password: {
+        label: t({
+          en: "Password",
+          ko: "비밀번호",
+        }),
+        placeholder: t({
+          en: "•••••••",
+          ko: "•••••••",
+        }),
+      },
+      name: {
+        label: t({
+          en: "Name",
+          ko: "이름",
+        }),
+        placeholder: t({
+          en: "Your name",
+          ko: "이름을 입력하세요",
+        }),
+      },
+      description: {
+        label: t({
+          en: "Description",
+          ko: "설명",
+        }),
+        placeholder: t({
+          en: "Optional description",
+          ko: "설명 (선택 사항)",
+        }),
+      },
+      none: t({
+        en: "None",
+        ko: "없음",
+      }),
+    },
+    validation: {
+      required: t({
+        en: "This field is required.",
+        ko: "이 필드를 입력해주세요.",
+      }),
+      required_email: t({
+        en: "Email is required.",
+        ko: "이메일을 입력해주세요.",
+      }),
+      required_password: t({
+        en: "Password is required.",
+        ko: "비밀번호를 입력해주세요.",
+      }),
+      required_name: t({
+        en: "Name is required.",
+        ko: "이름을 입력해주세요.",
+      }),
+    },
     copy: {
       button: t({
         en: "Copy",

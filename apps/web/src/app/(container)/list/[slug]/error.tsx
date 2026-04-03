@@ -9,6 +9,6 @@ function refresh() {
 }
 
 export default function IndexError() {
-  const content = useIntlayer("error");
-  return <ErrorRender onRetry={refresh} message={content.list_loading.value} />;
+  const content = useIntlayer("common");
+  return <ErrorRender onRetry={refresh} message={content.error.loading_data.value} />;
 }

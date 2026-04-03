@@ -50,22 +50,6 @@ const content = {
         en: "Create list",
         ko: "목록 만들기",
       }),
-      name_label: t({
-        en: "Name",
-        ko: "이름",
-      }),
-      name_placeholder: t({
-        en: "My list",
-        ko: "내 목록",
-      }),
-      name_required: t({
-        en: "Name is required.",
-        ko: "이름을 입력해주세요.",
-      }),
-      description_label: t({
-        en: "Description",
-        ko: "설명",
-      }),
       description_placeholder: t({
         en: "Optional description for your list",
         ko: "설명 (선택 사항)",
@@ -73,10 +57,6 @@ const content = {
       currency_label: t({
         en: "Currency",
         ko: "통화",
-      }),
-      currency_placeholder: t({
-        en: "None",
-        ko: "없음",
       }),
       currency_desc: t({
         en: "Currency for objekt prices in this list",
@@ -130,10 +110,6 @@ const content = {
         en: "Choose a profile to display this list in its Lists tab",
         ko: "이 목록을 표시할 프로필의 목록 탭을 선택하세요",
       }),
-      display_profile_none: t({
-        en: "None",
-        ko: "없음",
-      }),
       hide_user_label: t({
         en: "Hide User",
         ko: "사용자 숨기기",
@@ -144,10 +120,6 @@ const content = {
           ko: "이 목록에서 {{siteName}} 계정을 숨깁니다",
         }),
       ),
-      submit: t({
-        en: "Create",
-        ko: "만들기",
-      }),
       success: t({
         en: "List created",
         ko: "목록이 생성되었습니다",
@@ -166,14 +138,6 @@ const content = {
         en: "Manage your list",
         ko: "목록을 관리하세요",
       }),
-      name_label: t({
-        en: "Name",
-        ko: "이름",
-      }),
-      description_label: t({
-        en: "Description",
-        ko: "설명",
-      }),
       description_placeholder: t({
         en: "Optional description for your list",
         ko: "설명 (선택 사항)",
@@ -182,10 +146,6 @@ const content = {
         en: "Currency",
         ko: "통화",
       }),
-      currency_placeholder: t({
-        en: "None",
-        ko: "없음",
-      }),
       currency_desc: t({
         en: "Currency for objekt prices in this list",
         ko: "이 목록의 오브젝트 가격에 사용할 통화",
@@ -193,10 +153,6 @@ const content = {
       name_placeholder: t({
         en: "My list",
         ko: "내 목록",
-      }),
-      name_required: t({
-        en: "Name is required.",
-        ko: "이름을 입력해주세요.",
       }),
       hide_user_label: t({
         en: "Hide User",
@@ -215,10 +171,6 @@ const content = {
       display_profile_desc: t({
         en: "Choose a profile to display this list in its Lists tab",
         ko: "이 목록을 표시할 프로필의 목록 탭을 선택하세요",
-      }),
-      display_profile_none: t({
-        en: "None",
-        ko: "없음",
       }),
       objekt_columns_label: t({
         en: "Objekt Columns",
@@ -244,10 +196,6 @@ const content = {
           ko: "이 목록을 삭제하려면 <link>목록 관리</link> 페이지를 방문하세요.",
         }),
       ),
-      submit: t({
-        en: "Save",
-        ko: "저장",
-      }),
       success: t({
         en: "List updated",
         ko: "목록이 업데이트되었습니다",
@@ -265,10 +213,6 @@ const content = {
       description: t({
         en: "This will permanently delete the selected list. Continue?",
         ko: "선택한 목록이 영구적으로 삭제됩니다. 계속하시겠습니까?",
-      }),
-      submit: t({
-        en: "Continue",
-        ko: "계속",
       }),
       success: t({
         en: "List deleted",
@@ -377,10 +321,6 @@ const content = {
       remove_description: t({
         en: "This will permanently remove the selected objekt from the list. Continue?",
         ko: "목록에서 선택한 오브젝트가 영구적으로 제거됩니다. 계속하시겠습니까?",
-      }),
-      continue_button: t({
-        en: "Continue",
-        ko: "계속",
       }),
     },
   },

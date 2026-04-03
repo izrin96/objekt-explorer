@@ -147,6 +147,7 @@ type PullProfileProps = {
 
 function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
   const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const refreshProfile = useMutation(
     orpc.user.refreshProfile.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
@@ -172,14 +173,14 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
         </ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{content.account.link_accounts.cancel.value}</ModalClose>
+        <ModalClose>{commonContent.modal.cancel.value}</ModalClose>
         <Button
           intent="primary"
           type="submit"
           isPending={refreshProfile.isPending}
           onPress={() => refreshProfile.mutate(provider.id)}
         >
-          {content.account.link_accounts.continue.value}
+          {commonContent.actions.continue.value}
         </Button>
       </ModalFooter>
     </ModalContent>

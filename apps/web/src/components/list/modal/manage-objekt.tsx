@@ -255,7 +255,7 @@ export function RemoveFromListModal({
             );
           }}
         >
-          {content.manage_objekt.continue_button.value}
+          {contentCommon.actions.continue.value}
         </Button>
       </ModalFooter>
     </ModalContent>
