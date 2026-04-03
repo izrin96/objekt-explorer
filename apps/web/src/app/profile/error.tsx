@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { ErrorRender } from "@/components/error-boundary";
 
@@ -9,6 +9,6 @@ function refresh() {
 }
 
 export default function IndexError() {
-  const t = useTranslations("error");
-  return <ErrorRender onRetry={refresh} message={t("profile_loading")} />;
+  const content = useIntlayer("error");
+  return <ErrorRender onRetry={refresh} message={content.profile_loading.value} />;
 }

@@ -4,7 +4,7 @@ import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import dynamic from "next/dynamic";
 import type React from "react";
 import { Suspense, useMemo, useState } from "react";
@@ -62,7 +62,7 @@ function ProgressRender() {
 }
 
 function Progress() {
-  const t = useTranslations("progress");
+  const content = useIntlayer("progress");
   const { columns } = useObjektColumn();
   const { shaped, filters, ownedSlugs, hasNextPage, stats, ownedFiltered, collectionsFiltered } =
     useProgressObjekts();
@@ -71,7 +71,7 @@ function Progress() {
     <>
       {hasNextPage && (
         <div className="flex items-center gap-2 text-sm font-semibold">
-          {t("loading_objekts")} <Loader variant="ring" className="size-4" />
+          {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
         </div>
       )}
 
@@ -136,7 +136,7 @@ interface ProgressCollapseProps extends ProgressGroupProps {
 }
 
 function ProgressCollapse(props: ProgressCollapseProps) {
-  const t = useTranslations("progress");
+  const content = useIntlayer("progress");
   const { data: session } = useSession();
   const { title, columns, grouped, percentage, ownedSlugs } = props;
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -157,7 +157,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           {title}
         </div>
         <ProgressBar
-          aria-label={t("progress_bar_label")}
+          aria-label={content.progress_bar_label.value}
           className="flex w-fit min-w-[240px] items-center gap-2"
           valueLabel={`${props.owned.length}/${props.filtered.length} (${percentage}%)`}
           value={percentage}
@@ -230,7 +230,7 @@ function MemberProgressChart({
   objekts: ValidObjekt[];
   collections: ValidObjekt[];
 }) {
-  const t = useTranslations("stats.member_progress");
+  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
   const [_, setFilters] = useFilters();
 
@@ -264,7 +264,7 @@ function MemberProgressChart({
 
   const chartConfig = {
     percentage: {
-      label: t("percentage_label"),
+      label: content.member_progress.percentage_label.value,
       color: "var(--chart-1)",
     },
   } satisfies ChartConfig;

@@ -1,7 +1,7 @@
 "use client";
 
 import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { useTarget } from "@/hooks/use-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -35,13 +35,13 @@ export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
       }
     >
       <PushPinIcon data-slot="icon" />
-      {t("pin")}
+      {content.pin.value}
     </Button>
   );
 }
 
 export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -63,7 +63,7 @@ export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
       }}
     >
       <PushPinSlashIcon data-slot="icon" />
-      {t("unpin")}
+      {content.unpin.value}
     </Button>
   );
 }

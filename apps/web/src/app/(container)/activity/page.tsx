@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 
 import ActivityRender from "@/components/activity/activity-render";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("page_titles");
+  const content = useIntlayer("page_titles");
   return {
-    title: t("activity"),
+    title: content.activity.value,
   };
 }
 

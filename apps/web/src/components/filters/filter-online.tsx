@@ -1,7 +1,7 @@
 "use client";
 
 import { type ValidOnlineType, validOnlineTypes } from "@repo/cosmo/types/common";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 
@@ -11,13 +11,13 @@ import { Button } from "../ui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
 
 export default function OnlineFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.on_offline);
 
   const map = {
-    online: t("digital"),
-    offline: t("physical"),
+    online: content.digital.value,
+    offline: content.physical.value,
   };
 
   const update = useCallback(
@@ -33,7 +33,7 @@ export default function OnlineFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.on_offline?.length}>
-        {t("physical")}
+        {content.physical.value}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {Object.values(validOnlineTypes).map((item) => (

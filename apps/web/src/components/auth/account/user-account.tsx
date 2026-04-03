@@ -2,7 +2,7 @@
 
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components";
@@ -50,12 +50,12 @@ type Props = {
 };
 
 export default function UserAccountModal({ open, setOpen }: Props) {
-  const t = useTranslations("auth.account");
+  const content = useIntlayer("auth");
   return (
     <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>{t("title")}</SheetTitle>
-        <SheetDescription>{t("description")}</SheetDescription>
+        <SheetTitle>{content.account.title.value}</SheetTitle>
+        <SheetDescription>{content.account.description.value}</SheetDescription>
       </SheetHeader>
       <SheetBody>
         <QueryErrorResetBoundary>
@@ -85,7 +85,7 @@ export default function UserAccountModal({ open, setOpen }: Props) {
 
 function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
   const { data: session } = useSession();
-  const t = useTranslations("auth.account");
+  const content = useIntlayer("auth");
 
   if (!session) return;
 
@@ -95,28 +95,28 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       className="[--disclosure-collapsed-bg:transparent] [--disclosure-collapsed-border:transparent] [--disclosure-gutter-x:--spacing(3)]"
     >
       <Disclosure id="1">
-        <DisclosureTrigger>{t("general")}</DisclosureTrigger>
+        <DisclosureTrigger>{content.account.general.value}</DisclosureTrigger>
         <DisclosurePanel>
           <UserAccountForm user={session.user} setOpen={setOpen} />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
-        <DisclosureTrigger>{t("change_email")}</DisclosureTrigger>
+        <DisclosureTrigger>{content.account.change_email.value}</DisclosureTrigger>
         <DisclosurePanel>
           <ChangeEmail email={session.user.email} />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
-        <DisclosureTrigger>{t("change_password")}</DisclosureTrigger>
+        <DisclosureTrigger>{content.account.change_password.value}</DisclosureTrigger>
         <DisclosurePanel>
           <ChangePassword />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
-        <DisclosureTrigger>{t("social_link")}</DisclosureTrigger>
+        <DisclosureTrigger>{content.account.social_link.value}</DisclosureTrigger>
         <DisclosurePanel>
           <ListAccounts />
         </DisclosurePanel>
@@ -127,7 +127,7 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
 
 function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean) => void }) {
   const router = useRouter();
-  const t = useTranslations("auth.account");
+  const content = useIntlayer("auth");
 
   const values = {
     name: user.name,
@@ -152,10 +152,10 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
         queryKey: ["session"],
       });
       router.refresh();
-      toast.success(t("account_updated"));
+      toast.success(content.account.account_updated.value);
     },
     onError: ({ message }) => {
-      toast.error(`${t("account_update_error")}. ${message}`);
+      toast.error(`${content.account.account_update_error.value}. ${message}`);
     },
   });
 
@@ -174,7 +174,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           control={control}
           name="name"
           rules={{
-            required: t("name_required"),
+            required: content.account.name_required.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -188,8 +188,8 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("name_label")}</Label>
-              <Input placeholder={t("name_placeholder")} />
+              <Label>{content.account.name_label.value}</Label>
+              <Input placeholder={content.account.name_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -206,8 +206,8 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               isSelected={value}
               isInvalid={invalid}
             >
-              <Label>{t("show_social_label")}</Label>
-              <Description>{t("show_social_desc")}</Description>
+              <Label>{content.account.show_social_label.value}</Label>
+              <Description>{content.account.show_social_desc.value}</Description>
             </Checkbox>
           )}
         />
@@ -223,16 +223,16 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               isSelected={value}
               isInvalid={invalid}
             >
-              <Label>{t("remove_profile_picture")}</Label>
+              <Label>{content.account.remove_profile_picture.value}</Label>
             </Checkbox>
           )}
         />
 
-        <span className="text-muted-fg text-xs">{t("profile_pic_help")}</span>
+        <span className="text-muted-fg text-xs">{content.account.profile_pic_help.value}</span>
 
         <div className="flex">
           <Button size="md" intent="primary" type="submit" isPending={mutation.isPending}>
-            {t("save")}
+            {content.account.save.value}
           </Button>
         </div>
       </div>
@@ -241,7 +241,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
 }
 
 function ChangePassword() {
-  const t = useTranslations("auth.account");
+  const content = useIntlayer("auth");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       currentPassword: "",
@@ -256,10 +256,10 @@ function ChangePassword() {
       return result.data;
     },
     onSuccess: () => {
-      toast.success(t("password_changed"));
+      toast.success(content.account.password_changed.value);
     },
     onError: ({ message }) => {
-      toast.error(`${t("password_change_error")}. ${message}`);
+      toast.error(`${content.account.password_change_error.value}. ${message}`);
     },
   });
 
@@ -277,7 +277,7 @@ function ChangePassword() {
           control={control}
           name="currentPassword"
           rules={{
-            required: t("current_password_required"),
+            required: content.account.current_password_required.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -293,8 +293,8 @@ function ChangePassword() {
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("current_password_label")}</Label>
-              <Input placeholder={t("current_password_placeholder")} />
+              <Label>{content.account.current_password_label.value}</Label>
+              <Input placeholder={content.account.current_password_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -304,10 +304,10 @@ function ChangePassword() {
           control={control}
           name="newPassword"
           rules={{
-            required: t("new_password_required"),
+            required: content.account.new_password_required.value,
             minLength: {
               value: 8,
-              message: t("password_min_length"),
+              message: content.account.password_min_length.value,
             },
           }}
           render={({
@@ -324,8 +324,8 @@ function ChangePassword() {
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("new_password_label")}</Label>
-              <Input placeholder={t("new_password_placeholder")} />
+              <Label>{content.account.new_password_label.value}</Label>
+              <Input placeholder={content.account.new_password_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -339,7 +339,7 @@ function ChangePassword() {
             className="flex-none"
             type="submit"
           >
-            {t("save")}
+            {content.account.save.value}
           </Button>
         </div>
       </div>
@@ -348,7 +348,7 @@ function ChangePassword() {
 }
 
 function ChangeEmail({ email }: { email: string }) {
-  const t = useTranslations("auth.account");
+  const content = useIntlayer("auth");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email,
@@ -365,10 +365,10 @@ function ChangeEmail({ email }: { email: string }) {
       return result.data;
     },
     onSuccess: () => {
-      toast.success(t("email_verification_sent"));
+      toast.success(content.account.email_verification_sent.value);
     },
     onError: ({ message }) => {
-      toast.error(`${t("email_verification_error")}. ${message}`);
+      toast.error(`${content.account.email_verification_error.value}. ${message}`);
     },
   });
 
@@ -385,7 +385,7 @@ function ChangeEmail({ email }: { email: string }) {
           control={control}
           name="email"
           rules={{
-            required: t("email_required"),
+            required: content.account.email_required.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -401,9 +401,9 @@ function ChangeEmail({ email }: { email: string }) {
               onBlur={onBlur}
               isInvalid={invalid}
             >
-              <Label>{t("email_label")}</Label>
-              <Input placeholder={t("email_placeholder")} />
-              <Description>{t("email_verification_desc")}</Description>
+              <Label>{content.account.email_label.value}</Label>
+              <Input placeholder={content.account.email_placeholder.value} />
+              <Description>{content.account.email_verification_desc.value}</Description>
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -417,7 +417,7 @@ function ChangeEmail({ email }: { email: string }) {
             className="flex-none"
             type="submit"
           >
-            {t("save")}
+            {content.account.save.value}
           </Button>
         </div>
       </div>
@@ -427,8 +427,8 @@ function ChangeEmail({ email }: { email: string }) {
 
 function DeleteAccount() {
   const [open, setOpen] = useState(false);
-  const t = useTranslations("auth.account");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("auth");
+  const contentCommon = useIntlayer("common");
   const mutation = useMutation({
     mutationFn: async () => {
       const result = await authClient.deleteUser();
@@ -439,10 +439,10 @@ function DeleteAccount() {
     },
     onSuccess: () => {
       setOpen(false);
-      toast.success(t("verification_email_sent"));
+      toast.success(content.account.verification_email_sent.value);
     },
     onError: ({ message }) => {
-      toast.error(`${t("delete_account_error")}. ${message}`);
+      toast.error(`${content.account.delete_account_error.value}. ${message}`);
     },
   });
 
@@ -450,22 +450,22 @@ function DeleteAccount() {
     <>
       <Button intent="danger" size="sm" onPress={() => setOpen(true)}>
         <TrashSimpleIcon data-slot="icon" />
-        {t("delete_account")}
+        {content.account.delete_account.value}
       </Button>
       <ModalContent isOpen={open} onOpenChange={setOpen}>
         <ModalHeader>
-          <ModalTitle>{t("delete_account")}</ModalTitle>
-          <ModalDescription>{t("delete_account_description")}</ModalDescription>
+          <ModalTitle>{content.account.delete_account.value}</ModalTitle>
+          <ModalDescription>{content.account.delete_account_description.value}</ModalDescription>
         </ModalHeader>
         <ModalFooter>
-          <ModalClose>{tCommon("cancel")}</ModalClose>
+          <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
           <Button
             intent="danger"
             type="submit"
             isPending={mutation.isPending}
             onPress={() => mutation.mutate()}
           >
-            {t("continue")}
+            {content.account.continue.value}
           </Button>
         </ModalFooter>
       </ModalContent>

@@ -2,7 +2,7 @@
 
 import { Addresses } from "@repo/lib";
 import type { Route } from "next";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -11,12 +11,20 @@ import type { PublicProfile } from "@/lib/universal/user";
 import { Tab, TabList, Tabs } from "../ui/tabs";
 
 export default function ProfileTabs({ user }: { user: PublicProfile }) {
-  const t = useTranslations("profile.tabs");
+  const content = useIntlayer("profile");
   const router = useRouter();
   const pathname = usePathname();
   const path = user.nickname || user.address;
 
   const disabled = user.address.toLowerCase() === Addresses.SPIN;
+
+  const translationMap = {
+    collection: content.tabs.collection.value,
+    trade_history: content.tabs.trade_history.value,
+    progress: content.tabs.progress.value,
+    statistics: content.tabs.statistics.value,
+    lists: content.tabs.lists.value,
+  };
 
   const items = [
     { url: `/@${path}` as Route, translationKey: "collection" as const },
@@ -40,8 +48,13 @@ export default function ProfileTabs({ user }: { user: PublicProfile }) {
     >
       <TabList className="border-b-0">
         {filteredItems.map((item) => (
-          <Tab key={item.url} id={item.url} href={item.url} aria-label={t(item.translationKey)}>
-            {t(item.translationKey)}
+          <Tab
+            key={item.url}
+            id={item.url}
+            href={item.url}
+            aria-label={translationMap[item.translationKey]}
+          >
+            {translationMap[item.translationKey]}
           </Tab>
         ))}
       </TabList>

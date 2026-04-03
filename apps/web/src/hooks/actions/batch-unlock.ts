@@ -1,12 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
 
 export function useBatchUnlock() {
-  const t = useTranslations("actions.unlock");
+  const content = useIntlayer("actions");
 
   const batchUnlock = useMutation(
     orpc.lockedObjekt.batchUnlock.mutationOptions({
@@ -21,8 +21,11 @@ export function useBatchUnlock() {
         return { previousLocks };
       },
       onSuccess: (_, { tokenIds }) => {
-        const key = tokenIds.length > 1 ? "success_multiple" : "success_single";
-        toast.success(t(key, { count: tokenIds.length.toLocaleString() }));
+        const message =
+          tokenIds.length > 1
+            ? content.unlock.success_multiple({ count: tokenIds.length.toLocaleString() }).value
+            : content.unlock.success_single.value;
+        toast.success(message);
       },
       onError: (_err, { tokenIds, address }, context, { client }) => {
         if (context?.previousLocks) {
@@ -31,8 +34,11 @@ export function useBatchUnlock() {
             context.previousLocks,
           );
         }
-        const key = tokenIds.length > 1 ? "error_multiple" : "error_single";
-        toast.error(t(key, { count: tokenIds.length.toLocaleString() }));
+        const message =
+          tokenIds.length > 1
+            ? content.unlock.error_multiple({ count: tokenIds.length.toLocaleString() }).value
+            : content.unlock.error_single.value;
+        toast.error(message);
       },
     }),
   );

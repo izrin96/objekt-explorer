@@ -3,7 +3,7 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import dynamic from "next/dynamic";
 import type React from "react";
 import { Suspense, useMemo } from "react";
@@ -53,7 +53,7 @@ export function ProfileStatsRender() {
 }
 
 function ProfileStats() {
-  const t = useTranslations("stats");
+  const content = useIntlayer("stats");
   const profile = useTarget((a) => a.profile)!;
   const filter = useObjektFilter();
   const { selectedArtistIds } = useCosmoArtist();
@@ -78,7 +78,7 @@ function ProfileStats() {
     <div className="flex flex-col gap-4">
       {hasNextPage && (
         <div className="flex items-center gap-2 text-sm font-semibold">
-          {t("loading_objekts")} <Loader variant="ring" className="size-4" />
+          {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
         </div>
       )}
 
@@ -92,7 +92,7 @@ function ProfileStats() {
 }
 
 function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
-  const t = useTranslations("stats.breakdown_member");
+  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
@@ -118,8 +118,8 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <CardHeader className="items-center pb-0">
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
+        <CardTitle>{content.breakdown_member.title.value}</CardTitle>
+        <CardDescription>{content.breakdown_member.description.value}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart
@@ -184,7 +184,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
 }
 
 function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
-  const t = useTranslations("stats.breakdown_season");
+  const content = useIntlayer("stats");
   const { seasons } = useFilterData();
 
   const chartData = useMemo(() => {
@@ -206,8 +206,8 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <CardHeader className="items-center pb-0">
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
+        <CardTitle>{content.breakdown_season.title.value}</CardTitle>
+        <CardDescription>{content.breakdown_season.description.value}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart
@@ -278,7 +278,7 @@ function MemberProgressChart({
   objekts: ValidObjekt[];
   collections: ValidObjekt[];
 }) {
-  const t = useTranslations("stats.member_progress");
+  const content = useIntlayer("stats");
   const [filters] = useFilters();
   const { selectedArtists } = useCosmoArtist();
 
@@ -312,7 +312,7 @@ function MemberProgressChart({
 
   const chartConfig = {
     percentage: {
-      label: t("percentage_label"),
+      label: content.member_progress.percentage_label.value,
       color: "var(--chart-1)",
     },
   } satisfies ChartConfig;
@@ -320,8 +320,8 @@ function MemberProgressChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
+        <CardTitle>{content.member_progress.title.value}</CardTitle>
+        <CardDescription>{content.member_progress.description.value}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart

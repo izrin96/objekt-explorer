@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Suspense } from "react";
 
 import AppLogo from "@/components/app-logo";
@@ -16,9 +16,20 @@ import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
 import { Container } from "./ui/container";
 
+export function useNavMenuItems() {
+  const content = useIntlayer("nav");
+  return [
+    {
+      href: "/activity",
+      label: content.activity.value,
+      icon: ChartLineIcon,
+    },
+  ];
+}
+
 export default function Navbar() {
-  const t = useTranslations("nav");
   const isMobile = useMediaQuery("(max-width: 1023px)");
+  const navMenuItems = useNavMenuItems();
 
   return (
     <>
@@ -34,7 +45,7 @@ export default function Navbar() {
             <div className="flex items-center gap-x-1">
               {navMenuItems.map((menu) => (
                 <NavLink key={menu.href} href={menu.href}>
-                  {t(menu.translationKey)}
+                  {menu.label}
                   {menu.icon && <menu.icon className="size-4" weight="regular" />}
                 </NavLink>
               ))}
@@ -73,11 +84,3 @@ function NavLink({ ...props }: React.ComponentProps<typeof Link>) {
     />
   );
 }
-
-export const navMenuItems = [
-  {
-    href: "/activity",
-    translationKey: "activity" as const,
-    icon: ChartLineIcon,
-  },
-];

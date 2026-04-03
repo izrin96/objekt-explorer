@@ -1,7 +1,7 @@
 "use client";
 
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { Button } from "../ui/button";
 
@@ -12,11 +12,11 @@ export default function ResetFilter({
   onReset: () => void;
   isDisabled?: boolean;
 }) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   return (
     <Button intent="outline" onPress={onReset} isDisabled={isDisabled}>
       <XIcon data-slot="icon" />
-      {t("reset_filter")}
+      {content.reset_filter.value}
     </Button>
   );
 }

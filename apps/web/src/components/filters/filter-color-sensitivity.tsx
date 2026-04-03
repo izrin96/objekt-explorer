@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 
@@ -12,12 +12,12 @@ import { Popover, PopoverBody, PopoverContent } from "../ui/popover";
 import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../ui/slider";
 
 export default function ColorSensitivityFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   return (
     <Popover>
-      <Button intent="outline">{t("color_sensitivity")}</Button>
+      <Button intent="outline">{content.color_sensitivity.value}</Button>
       <PopoverContent>
         <PopoverBody className="py-2 [--gutter:--spacing(4)]">
           <ColorSensitivitySlider
@@ -38,7 +38,7 @@ interface ColorSensitivitySliderProps {
 }
 
 function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitivitySliderProps) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [value, setValue] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 150);
 
@@ -57,7 +57,7 @@ function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitiv
       style={{ "--primary": color ?? undefined } as CSSProperties}
     >
       <div className="flex min-w-56 items-center justify-between">
-        <Label>{t("color_sensitivity")}</Label>
+        <Label>{content.color_sensitivity.value}</Label>
         <SliderOutput />
       </div>
       <SliderTrack>

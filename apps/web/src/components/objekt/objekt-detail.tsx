@@ -11,7 +11,7 @@ import { useAsyncList } from "@react-stately/data";
 import { Addresses } from "@repo/lib";
 import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Suspense, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 
@@ -69,7 +69,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
 function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
   const [objekt] = objekts;
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const currentTab = useObjektModal((a) => a.currentTab);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
   const [serial, setSerial] = useState(() => {
@@ -90,14 +90,14 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       <TabList className="px-2.5">
         {showOwned && (
           <Tab id="owned">
-            {t("owned")}
+            {content.owned.value}
             {objekts.length > 1 ? ` (${objekts.length.toLocaleString()})` : ""}
           </Tab>
         )}
-        <Tab id="trades">{t("trades")}</Tab>
+        <Tab id="trades">{content.trades.value}</Tab>
         <Tab id="apollo" href={`https://apollo.cafe/?id=${objekt.slug}`} target="_blank">
           <ArrowTopRightOnSquareIcon className="size-5" />
-          {t("view_in_apollo")}
+          {content.view_in_apollo.value}
         </Tab>
       </TabList>
       {showOwned && (
@@ -107,7 +107,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
               <ArchiveBoxXMarkIcon className="size-16" strokeWidth={1} />
-              <p>{t("not_owned")}</p>
+              <p>{content.not_owned.value}</p>
             </div>
           )}
         </TabPanel>
@@ -209,17 +209,14 @@ function OwnedListPanel({
   objekts: OwnedObjekt[];
   setSerial: (serial: number) => void;
 }) {
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const [currentPage, setCurrentPage] = useState(1);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
 
-  const openTrades = useCallback(
-    (serial: number) => {
-      setSerial(serial);
-      setCurrentTab("trades");
-    },
-    [setCurrentTab, setSerial],
-  );
+  const openTrades = (serial: number) => {
+    setSerial(serial);
+    setCurrentTab("trades");
+  };
 
   const handleSort = useCallback(
     ({ items, sortDescriptor }: { items: OwnedObjekt[]; sortDescriptor: SortDescriptor }) => {
@@ -279,13 +276,13 @@ function OwnedListPanel({
           >
             <TableHeader>
               <TableColumn id="serial" allowsSorting isRowHeader maxWidth={110}>
-                {t("serial")}
+                {content.serial.value}
               </TableColumn>
-              <TableColumn>{t("token_id")}</TableColumn>
+              <TableColumn>{content.token_id.value}</TableColumn>
               <TableColumn id="receivedAt" allowsSorting minWidth={200}>
-                {t("received")}
+                {content.received.value}
               </TableColumn>
-              <TableColumn>{t("transferable")}</TableColumn>
+              <TableColumn>{content.transferable.value}</TableColumn>
             </TableHeader>
             <TableBody>
               {currentItems.map((item) => (
@@ -310,7 +307,7 @@ function OwnedListPanel({
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
                   <TableCell>
                     <Badge intent={item.transferable ? "info" : "danger"}>
-                      {item.transferable ? t("yes") : t("no")}
+                      {item.transferable ? content.yes.value : content.no.value}
                     </Badge>
                   </TableCell>
                 </TableRow>

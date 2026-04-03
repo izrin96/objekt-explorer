@@ -2,7 +2,7 @@
 
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { type Color, parseColor } from "@react-stately/color";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 
@@ -20,7 +20,7 @@ import { Popover, PopoverBody, PopoverContent } from "../ui/popover";
 import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   return (
@@ -42,7 +42,7 @@ export default function ColorFilter() {
             }
           >
             <XIcon data-slot="icon" />
-            {t("clear_color")}
+            {content.clear_color.value}
           </Button>
         </>
       )}
@@ -56,7 +56,7 @@ interface ColorPickerControlProps {
 }
 
 function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [localColor, setLocalColor] = useState(initialValue);
   const [color, setColor] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 60);
@@ -83,7 +83,7 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
             data-slot="control"
           >
             <ColorSwatch className="[--color-swatch-size:--spacing(5)]" />
-            {t("color")}
+            {content.color.value}
           </Button>
           <PopoverContent>
             <PopoverBody className="space-y-2 py-3 [--gutter:--spacing(3)]">

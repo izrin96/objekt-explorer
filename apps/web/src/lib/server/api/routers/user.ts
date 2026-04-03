@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { user as userSchema } from "@repo/db/auth-schema";
 import { eq } from "drizzle-orm";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 import * as z from "zod";
 
 import { providersMap } from "@/lib/universal/user";
@@ -20,7 +20,7 @@ export const userRouter = {
       },
     }) => {
       const locale = await getUserLocale();
-      const t = await getTranslations({ locale, namespace: "api_errors.user" });
+      const content = useIntlayer("api_errors", locale);
 
       // get accessToken from account
       const account = await db.query.account.findFirst({
@@ -34,7 +34,7 @@ export const userRouter = {
 
       if (!account)
         throw new ORPCError("BAD_REQUEST", {
-          message: t("not_linked_provider"),
+          message: content.user.not_linked_provider.value,
         });
 
       const authContext = await auth.$context;
@@ -50,7 +50,7 @@ export const userRouter = {
 
       if (!info)
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: t("failed_get_info", { provider: providersMap[providerId].label }),
+          message: content.user.failed_get_info({ provider: providersMap[providerId].label }).value,
         });
 
       // update user

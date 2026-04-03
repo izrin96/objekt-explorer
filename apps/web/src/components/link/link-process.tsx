@@ -3,7 +3,7 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { ofetch } from "ofetch";
 import { useState } from "react";
 import type { Selection } from "react-aria-components";
@@ -88,10 +88,10 @@ export default function LinkRender() {
 }
 
 function IntroStep({ onContinue }: { onContinue: () => void }) {
-  const t = useTranslations("link");
+  const content = useIntlayer("link");
   return (
     <div className="flex max-w-xl flex-col items-center justify-center gap-4">
-      <h2 className="text-lg font-semibold">{t("process.intro_title")}</h2>
+      <h2 className="text-lg font-semibold">{content.process.intro_title.value}</h2>
       <img
         src="/assets/icon-smartphone.png"
         alt="Smartphone"
@@ -100,17 +100,17 @@ function IntroStep({ onContinue }: { onContinue: () => void }) {
         className="fade-in zoom-in animate-in duration-200"
       />
       <div className="flex flex-col gap-2 text-center text-sm">
-        <p>{t("process.intro_description")}</p>
+        <p>{content.process.intro_description.value}</p>
       </div>
       <Button size="md" intent="outline" onPress={onContinue}>
-        {t("continue")}
+        {content.continue.value}
       </Button>
     </div>
   );
 }
 
 function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) {
-  const t = useTranslations("link");
+  const content = useIntlayer("link");
   const [inputValue, setInputValue] = useState("");
   const [debouncedQuery] = useDebounceValue(inputValue, 350);
 
@@ -160,14 +160,14 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
         height={220}
         className="fade-in zoom-in animate-in duration-200"
       />
-      <span className="text-center">{t("process.nickname_step_prompt")}</span>
+      <span className="text-center">{content.process.nickname_step_prompt.value}</span>
       <SearchField
         value={inputValue}
         onChange={setInputValue}
-        aria-label={t("enter_nickname")}
+        aria-label={content.enter_nickname.value}
         className="w-full"
       >
-        <SearchInput placeholder={t("nickname_placeholder")} />
+        <SearchInput placeholder={content.nickname_placeholder.value} />
       </SearchField>
       {(isPending && debouncedQuery.length > 0) || checkMutation.isPending ? (
         <div className="flex justify-center p-4">
@@ -178,7 +178,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
           items={data}
           selectionMode="single"
           onSelectionChange={handleSelection}
-          aria-label={t("enter_nickname")}
+          aria-label={content.enter_nickname.value}
           className="w-full"
         >
           {(item: CosmoPublicUser) => (
@@ -188,7 +188,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
           )}
         </ListBox>
       ) : debouncedQuery.length > 0 && data ? (
-        <p className="text-muted-fg text-center text-sm">{t("nickname_not_found")}</p>
+        <p className="text-muted-fg text-center text-sm">{content.nickname_not_found.value}</p>
       ) : null}
     </div>
   );
@@ -203,7 +203,7 @@ function ArtistStep({
   onSuccess: (artistId: ValidArtist, codeData: CodeData) => void;
   onBack: () => void;
 }) {
-  const t = useTranslations("link");
+  const content = useIntlayer("link");
   const { artists } = useCosmoArtist();
 
   const generateMutation = useMutation(
@@ -240,9 +240,10 @@ function ArtistStep({
         className="fade-in zoom-in animate-in duration-200"
       />
       <span>
-        {t("process.artist_step_cosmo_id")} <span className="font-bold">{searchData.nickname}</span>
+        {content.process.artist_step_cosmo_id.value}{" "}
+        <span className="font-bold">{searchData.nickname}</span>
       </span>
-      <p className="text-center text-sm">{t("process.artist_step_select")}</p>
+      <p className="text-center text-sm">{content.process.artist_step_select.value}</p>
       <div className="flex gap-2">
         {artists.map((artist) => (
           <Button
@@ -259,7 +260,7 @@ function ArtistStep({
         ))}
       </div>
       <Button intent="outline" onPress={onBack}>
-        {t("start_over")}
+        {content.start_over.value}
       </Button>
     </div>
   );
@@ -278,7 +279,7 @@ function VerifyStep({
   onSuccess: () => void;
   onStartOver: () => void;
 }) {
-  const t = useTranslations("link");
+  const content = useIntlayer("link");
   const { getArtist } = useCosmoArtist();
   const artistTitle = getArtist(artistId)?.title ?? artistId;
 
@@ -302,11 +303,11 @@ function VerifyStep({
   const verifyMutation = useMutation(
     orpc.cosmoLink.verifyStatusMessage.mutationOptions({
       onSuccess: () => {
-        toast.success(t("success", { nickname: searchData.nickname }));
+        toast.success(content.success({ nickname: searchData.nickname }).value);
         onSuccess();
       },
       onError: ({ message }) => {
-        toast.error(message || t("verification_failed"));
+        toast.error(message || content.verification_failed.value);
       },
     }),
   );
@@ -321,9 +322,9 @@ function VerifyStep({
           height={220}
           className="fade-in zoom-in animate-in duration-200"
         />
-        <span>{t("code_expired")}</span>
+        <span>{content.code_expired.value}</span>
         <Button intent="outline" onPress={onStartOver}>
-          {t("start_over")}
+          {content.start_over.value}
         </Button>
       </div>
     );
@@ -342,10 +343,10 @@ function VerifyStep({
         <span>{verifyMutation.error.message}</span>
         <div className="flex gap-2">
           <Button intent="primary" onPress={() => verifyMutation.reset()}>
-            {t("try_again")}
+            {content.try_again.value}
           </Button>
           <Button intent="outline" onPress={onStartOver}>
-            {t("start_over")}
+            {content.start_over.value}
           </Button>
         </div>
       </div>
@@ -362,10 +363,9 @@ function VerifyStep({
         className="fade-in zoom-in animate-in duration-200"
       />
       <span>
-        {t.rich("process.verify_step_verifying", {
-          nickname: searchData.nickname,
-          artist: artistTitle,
-          bold: (chunks) => <span className="font-bold">{chunks}</span>,
+        {content.process.verify_step_verifying.use({
+          nickname: () => <span className="font-bold">{searchData.nickname}</span>,
+          artist: () => <span className="font-bold">{artistTitle}</span>,
         })}
       </span>
 
@@ -374,7 +374,7 @@ function VerifyStep({
       </div>
 
       <p className="max-w-md text-center text-sm">
-        {t("code_instructions", { artist: artistTitle })}
+        {content.code_instructions({ artist: artistTitle }).value}
       </p>
 
       <Countdown deadline={deadline} onExpire={() => setExpired(true)} />
@@ -383,18 +383,18 @@ function VerifyStep({
         onPress={() => verifyMutation.mutate(searchData.address)}
         isPending={verifyMutation.isPending}
       >
-        {verifyMutation.isPending ? <Loader variant="ring" /> : t("verify")}
+        {verifyMutation.isPending ? <Loader variant="ring" /> : content.verify.value}
       </Button>
 
       <Button intent="outline" onPress={onStartOver}>
-        {t("start_over")}
+        {content.start_over.value}
       </Button>
     </div>
   );
 }
 
 function SuccessStep({ nickname }: { nickname: string }) {
-  const t = useTranslations("link");
+  const content = useIntlayer("link");
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -405,7 +405,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
         alt="Welcome"
         className="fade-in zoom-in animate-in duration-200"
       />
-      <span>{t("success", { nickname })}</span>
+      <span>{content.success({ nickname }).value}</span>
       <div>
         <Link
           className={buttonStyles({
@@ -413,7 +413,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
           })}
           href={`/@${nickname}`}
         >
-          {t("go_to_cosmo")}
+          {content.go_to_cosmo.value}
         </Link>
       </div>
     </div>
@@ -421,7 +421,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
 }
 
 function Countdown({ deadline, onExpire }: { deadline: number; onExpire: () => void }) {
-  const t = useTranslations("link.process");
+  const content = useIntlayer("link");
   const [remaining, setRemaining] = useState(() => Math.max(deadline - Date.now(), 0));
 
   useInterval(
@@ -437,7 +437,7 @@ function Countdown({ deadline, onExpire }: { deadline: number; onExpire: () => v
 
   return (
     <span className="text-sm">
-      {t("countdown_remaining", { countdown: msToCountdown(remaining) })}
+      {content.process.countdown_remaining({ countdown: msToCountdown(remaining) }).value}
     </span>
   );
 }

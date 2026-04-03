@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
@@ -56,38 +56,38 @@ type RemoveLinkModalProps = {
 };
 
 export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps) {
-  const t = useTranslations("link.unlink");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("link");
+  const contentCommon = useIntlayer("common");
 
   const removeLink = useMutation(
     orpc.cosmoLink.removeLink.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(t("success"));
+        toast.success(content.unlink.success.value);
         void client.invalidateQueries({
           queryKey: orpc.profile.list.key(),
         });
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.unlink.error.value);
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
-        <ModalDescription>{t("description")}</ModalDescription>
+        <ModalTitle>{content.unlink.title.value}</ModalTitle>
+        <ModalDescription>{content.unlink.description.value}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
         <Button
           intent="danger"
           type="submit"
           isPending={removeLink.isPending}
           onPress={() => removeLink.mutate(address)}
         >
-          {t("submit")}
+          {content.unlink.submit}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -102,17 +102,16 @@ type EditProfileModalProps = {
 };
 
 export function EditProfileModal({ nickname, address, open, setOpen }: EditProfileModalProps) {
-  const t = useTranslations("profile.edit");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("profile");
+  const contentCommon = useIntlayer("common");
 
   return (
     <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>{t("title")}</SheetTitle>
+        <SheetTitle>{content.edit.title.value}</SheetTitle>
         <SheetDescription>
-          {t.rich("desc", {
-            bold: (chunks) => <span className="text-fg">{chunks}</span>,
-            nickname,
+          {content.edit.desc.use({
+            nickname: () => <span className="text-fg">{nickname}</span>,
           })}
         </SheetDescription>
       </SheetHeader>
@@ -134,7 +133,7 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
         </QueryErrorResetBoundary>
       </SheetBody>
       <SheetFooter id="submit-form-edit-profile">
-        <SheetClose>{tCommon("cancel")}</SheetClose>
+        <SheetClose>{contentCommon.modal.cancel.value}</SheetClose>
       </SheetFooter>
     </SheetContent>
   );
@@ -153,7 +152,7 @@ type BannerImageProps = {
 
 function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const t = useTranslations("profile.edit");
+  const content = useIntlayer("profile");
 
   useEffect(() => {
     if (droppedImage) {
@@ -190,10 +189,10 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
       )}
       <div className="flex items-center justify-between">
         <span className="text-muted-fg truncate text-sm">
-          {t("banner_selected", { name: droppedImage.name })}
+          {content.edit.banner_selected({ name: droppedImage.name }).value}
         </span>
         <Button size="xs" intent="outline" onPress={onClear}>
-          {t("banner_clear")}
+          {content.edit.banner_clear.value}
         </Button>
       </div>
     </>
@@ -204,7 +203,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
   const router = useRouter();
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
-  const t = useTranslations("profile.edit");
+  const content = useIntlayer("profile");
 
   const { data } = useSuspenseQuery(
     orpc.profile.find.queryOptions({
@@ -237,11 +236,11 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
       onSuccess: () => {
         setOpen(false);
         setDroppedImage(null);
-        toast.success(t("success"));
+        toast.success(content.edit.success.value);
         router.refresh();
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.edit.error.value);
       },
     }),
   );
@@ -249,52 +248,46 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
   const getPresignedPost = useMutation(
     orpc.profile.getPresignedPost.mutationOptions({
       onError: () => {
-        toast.error(t("upload_error"));
+        toast.error(content.edit.upload_error.value);
       },
       retry: 2,
     }),
   );
 
-  const handleUpload = useCallback(
-    async (url: string, fields: Record<string, string>, file: File) => {
-      try {
-        const formData = new FormData();
-        formData.append("Content-Type", file.type);
-        Object.entries(fields).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
-        formData.append("file", file);
+  const handleUpload = async (url: string, fields: Record<string, string>, file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append("Content-Type", file.type);
+      Object.entries(fields).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+      formData.append("file", file);
 
-        const response = await ofetch.raw(url, {
-          method: "POST",
-          body: formData,
-        });
+      const response = await ofetch.raw(url, {
+        method: "POST",
+        body: formData,
+      });
 
-        if (!response.ok) {
-          throw new Error(t("upload_error"));
-        }
-      } catch {
-        throw new Error(t("upload_error"));
+      if (!response.ok) {
+        throw new Error(content.edit.upload_error.value);
       }
-    },
-    [],
-  );
+    } catch {
+      throw new Error(content.edit.upload_error.value);
+    }
+  };
 
-  const handleSelectImage = useCallback(
-    (e: FileList | null) => {
-      const files = Array.from(e ?? []);
-      const item = files[0];
-      if (!item) return;
+  const handleSelectImage = (e: FileList | null) => {
+    const files = Array.from(e ?? []);
+    const item = files[0];
+    if (!item) return;
 
-      if (item.size > MAX_FILE_SIZE) {
-        toast.error(t("file_too_large", { name: item.name }));
-        return;
-      }
+    if (item.size > MAX_FILE_SIZE) {
+      toast.error(content.edit.file_too_large({ name: item.name }).value);
+      return;
+    }
 
-      setDroppedImage(item);
-    },
-    [t],
-  );
+    setDroppedImage(item);
+  };
 
   const generateCroppedImage = useCallback(() => {
     if (!cropperRef.current || !droppedImage) return null;
@@ -328,7 +321,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
       try {
         await handleUpload(url, fields, croppedFile ?? droppedImage);
       } catch {
-        toast.error(t("upload_error"));
+        toast.error(content.edit.upload_error.value);
         return;
       }
 
@@ -368,8 +361,10 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_user_label")}</Label>
-              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
+              <Label>{content.edit.hide_user_label.value}</Label>
+              <Description>
+                {content.edit.hide_user_desc({ siteName: SITE_NAME }).value}
+              </Description>
             </Checkbox>
           )}
         />
@@ -378,8 +373,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="hideNickname"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_nickname_label")}</Label>
-              <Description>{t("hide_nickname_desc")}</Description>
+              <Label>{content.edit.hide_nickname_label.value}</Label>
+              <Description>{content.edit.hide_nickname_desc.value}</Description>
             </Checkbox>
           )}
         />
@@ -388,8 +383,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="privateSerial"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("private_serial_label")}</Label>
-              <Description>{t("private_serial_desc")}</Description>
+              <Label>{content.edit.private_serial_label.value}</Label>
+              <Description>{content.edit.private_serial_desc.value}</Description>
             </Checkbox>
           )}
         />
@@ -398,8 +393,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="hideTransfer"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_transfer_label")}</Label>
-              <Description>{t("hide_transfer_desc")}</Description>
+              <Label>{content.edit.hide_transfer_label.value}</Label>
+              <Description>{content.edit.hide_transfer_desc.value}</Description>
             </Checkbox>
           )}
         />
@@ -408,8 +403,8 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="privateProfile"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("private_profile_label")}</Label>
-              <Description>{t("private_profile_desc")}</Description>
+              <Label>{content.edit.private_profile_label.value}</Label>
+              <Description>{content.edit.private_profile_desc.value}</Description>
             </Checkbox>
           )}
         />
@@ -419,22 +414,22 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           name="gridColumns"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Select
-              aria-label={t("grid_columns_label")}
-              placeholder={t("grid_columns_label")}
+              aria-label={content.edit.grid_columns_label.value}
+              placeholder={content.edit.grid_columns_label.value}
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
             >
-              <Label>{t("grid_columns_label")}</Label>
-              <Description>{t("grid_columns_desc")}</Description>
+              <Label>{content.edit.grid_columns_label.value}</Label>
+              <Description>{content.edit.grid_columns_desc.value}</Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
-                  { id: 0, name: t("grid_columns_not_set") },
+                  { id: 0, name: content.edit.grid_columns_not_set.value },
                   ...validColumns.map((a) => ({
                     id: a,
-                    name: t("grid_columns_count", { count: String(a) }),
+                    name: content.edit.grid_columns_count({ count: String(a) }).value,
                   })),
                 ].map((item) => (
                   <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
@@ -447,37 +442,39 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         />
 
         <div className="group flex flex-col gap-y-2">
-          <Label>{t("banner_label")}</Label>
+          <Label>{content.edit.banner_label.value}</Label>
           <FileTrigger acceptedFileTypes={acceptedFileMimeTypes} onSelect={handleSelectImage} />
           <BannerImage
             droppedImage={droppedImage}
             cropperRef={cropperRef}
             onClear={() => setDroppedImage(null)}
           />
-          <span className="text-muted-fg text-sm">{t("banner_recommendation")}</span>
+          <span className="text-muted-fg text-sm">{content.edit.banner_recommendation.value}</span>
         </div>
         <Controller
           control={control}
           name="removeBanner"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("remove_banner_label")}</Label>
+              <Label>{content.edit.remove_banner_label.value}</Label>
             </Checkbox>
           )}
         />
         <span className="text-muted-fg text-sm">
-          {t.rich("unlink_note", {
-            link: (chunks) => (
-              <Link href="/link" className="underline">
-                {chunks}
-              </Link>
-            ),
-          })}
+          <Link href="/link" className="underline">
+            {content.edit.unlink_note.use({
+              link: (props) => (
+                <Link href="/link" className="underline">
+                  {props.children}
+                </Link>
+              ),
+            })}
+          </Link>
         </span>
 
         <Portal to="#submit-form-edit-profile">
           <Button intent="primary" isPending={isSubmitting} onPress={() => onSubmit()}>
-            {t("submit")}
+            {content.edit.submit.value}
           </Button>
         </Portal>
       </div>

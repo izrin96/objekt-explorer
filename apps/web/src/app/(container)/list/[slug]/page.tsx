@@ -1,5 +1,5 @@
 import type { Metadata, Route } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 import { redirect } from "next/navigation";
 
 import ListHeader from "@/components/list/list-header";
@@ -13,10 +13,11 @@ import type { PublicList } from "@/lib/universal/user";
 
 export async function generateMetadata(props: PageProps<"/list/[slug]">): Promise<Metadata> {
   const params = await props.params;
-  const [data, t] = await Promise.all([getList(params.slug), getTranslations("page_titles")]);
+  const data = await getList(params.slug);
+  const content = useIntlayer("page_titles");
 
   return {
-    title: t("list_detail", { name: data.name }),
+    title: content.list_detail({ name: data.name }).value,
   };
 }
 

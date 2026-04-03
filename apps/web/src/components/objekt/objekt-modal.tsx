@@ -1,7 +1,7 @@
 "use client";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { createContext, type ReactNode, use, useState } from "react";
 
 import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../ui/modal";
@@ -22,7 +22,7 @@ export const useObjektModal = () => use(ObjektModalContext);
 
 export default function ObjektModal({ children, showOwned, objekts, menu }: Props) {
   const [open, setOpen] = useState(false);
-  const t = useTranslations("common.modal");
+  const content = useIntlayer("common");
 
   const handleClick = () => setOpen(true);
 
@@ -35,7 +35,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
           <ObjektDetail objekts={objekts} showOwned={showOwned} />
         </ModalBody>
         <ModalFooter className="sm:hidden">
-          <ModalClose>{t("close")}</ModalClose>
+          <ModalClose>{content.modal.close}</ModalClose>
         </ModalFooter>
       </ModalContent>
       {children}

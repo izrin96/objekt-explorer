@@ -2,7 +2,7 @@
 
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -37,14 +37,14 @@ export default function MyLinkRender() {
 }
 
 function MyLink() {
-  const t = useTranslations("link");
+  const content = useIntlayer("link");
   const { data: links } = useSuspenseQuery(orpc.profile.list.queryOptions());
 
   return (
     <div className="flex flex-col gap-4">
       <div className="w-full">
         <Link href={`/link/connect`} className={buttonStyles()}>
-          {t("link_cosmo")}
+          {content.link_cosmo.value}
         </Link>
       </div>
 
@@ -65,7 +65,7 @@ type LinkCardProps = {
 };
 
 function LinkCard({ link }: LinkCardProps) {
-  const t = useTranslations("link.card");
+  const content = useIntlayer("link");
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const nickname = parseNickname(link.address, link.nickname);
@@ -96,9 +96,9 @@ function LinkCard({ link }: LinkCardProps) {
               <EllipsisVerticalIcon className="size-5" />
             </Button>
             <MenuContent placement="bottom right">
-              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>{content.card.edit.value}</MenuItem>
               <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
-                {t("unlink")}
+                {content.card.unlink.value}
               </MenuItem>
             </MenuContent>
           </Menu>

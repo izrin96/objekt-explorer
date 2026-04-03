@@ -1,7 +1,7 @@
 "use client";
 
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import type { Selection } from "react-aria-components";
 
 import { useFilters } from "@/hooks/use-filters";
@@ -16,17 +16,20 @@ type Props = {
 };
 
 export default function SortFilter({ enabled = defaultSorts }: Props) {
-  const t = useTranslations("filter.sort_by");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.sort ? [filters.sort] : ["date"]);
 
   const map: Record<ValidCustomSort, { label: string; desc: string }> = {
-    date: { label: t("date.label"), desc: t("date.desc") },
-    season: { label: t("season.label"), desc: t("season.desc") },
-    collectionNo: { label: t("collection_no.label"), desc: t("collection_no.desc") },
-    serial: { label: t("serial.label"), desc: t("serial.desc") },
-    duplicate: { label: t("dups.label"), desc: t("dups.desc") },
-    member: { label: t("member.label"), desc: t("member.desc") },
+    date: { label: content.sort_by.date.label.value, desc: content.sort_by.date.desc.value },
+    season: { label: content.sort_by.season.label.value, desc: content.sort_by.season.desc.value },
+    collectionNo: {
+      label: content.sort_by.collection_no.label.value,
+      desc: content.sort_by.collection_no.desc.value,
+    },
+    serial: { label: content.sort_by.serial.label.value, desc: content.sort_by.serial.desc.value },
+    duplicate: { label: content.sort_by.dups.label.value, desc: content.sort_by.dups.desc.value },
+    member: { label: content.sort_by.member.label.value, desc: content.sort_by.member.desc.value },
   };
 
   function update(key: Selection) {
@@ -42,7 +45,7 @@ export default function SortFilter({ enabled = defaultSorts }: Props) {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.sort}>
-        {t("label")}
+        {content.sort_by.label.value}
       </Button>
       <MenuContent
         selectionMode="single"

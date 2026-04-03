@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { Loader } from "../ui/loader";
 
@@ -12,7 +12,7 @@ export interface ObjektCountProps {
 }
 
 export function ObjektCount({ filtered, grouped, hasNextPage, total }: ObjektCountProps) {
-  const t = useTranslations("common.count");
+  const content = useIntlayer("common");
 
   const displayCount = total !== undefined ? total : filtered.length;
   const isLoading = hasNextPage && total === undefined;
@@ -20,8 +20,10 @@ export function ObjektCount({ filtered, grouped, hasNextPage, total }: ObjektCou
   return (
     <span className={isLoading ? "flex items-center gap-2 font-semibold" : "font-semibold"}>
       <span>
-        {t("total", { count: displayCount.toLocaleString() })}
-        {grouped ? ` (${t("types", { count: grouped.length.toLocaleString() })})` : ""}
+        {content.count.total({ count: displayCount.toLocaleString() }).value}
+        {grouped
+          ? ` (${content.count.types({ count: grouped?.length.toLocaleString() ?? "0" }).value})`
+          : ""}
       </span>
       {isLoading && <Loader variant="ring" className="size-4" />}
     </span>
