@@ -168,7 +168,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-6">
         <Controller
           control={control}
@@ -187,6 +187,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.account.name_label.value}</Label>
               <Input placeholder={content.account.name_placeholder.value} />
@@ -205,6 +206,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               onBlur={onBlur}
               isSelected={value}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.account.show_social_label.value}</Label>
               <Description>{content.account.show_social_desc.value}</Description>
@@ -222,6 +224,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               onBlur={onBlur}
               isSelected={value}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.account.remove_profile_picture.value}</Label>
             </Checkbox>
@@ -271,7 +274,7 @@ function ChangePassword() {
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-3">
         <Controller
           control={control}
@@ -292,6 +295,7 @@ function ChangePassword() {
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.account.current_password_label.value}</Label>
               <Input placeholder={content.account.current_password_placeholder.value} />
@@ -323,6 +327,7 @@ function ChangePassword() {
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.account.new_password_label.value}</Label>
               <Input placeholder={content.account.new_password_placeholder.value} />
@@ -379,7 +384,7 @@ function ChangeEmail({ email }: { email: string }) {
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-3">
         <Controller
           control={control}
@@ -400,6 +405,7 @@ function ChangeEmail({ email }: { email: string }) {
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.account.email_label.value}</Label>
               <Input placeholder={content.account.email_placeholder.value} />

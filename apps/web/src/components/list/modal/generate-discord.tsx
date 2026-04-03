@@ -180,7 +180,7 @@ function Content() {
   });
 
   return (
-    <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
+    <Form className="flex flex-col gap-2" onSubmit={onSubmit} validationBehavior="aria">
       <Controller
         control={control}
         name="haveList"
@@ -192,6 +192,7 @@ function Content() {
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
+            validationBehavior="aria"
           >
             <Label>{content.have_list_label.value}</Label>
             <SelectTrigger />
@@ -224,6 +225,7 @@ function Content() {
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
+            validationBehavior="aria"
           >
             <Label>{content.want_list_label.value}</Label>
             <SelectTrigger />
@@ -249,7 +251,13 @@ function Content() {
         control={control}
         name="showCount"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            validationBehavior="aria"
+          >
             <Label>{content.show_count.value}</Label>
           </Checkbox>
         )}
@@ -258,7 +266,13 @@ function Content() {
         control={control}
         name="includeLink"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            validationBehavior="aria"
+          >
             <Label>{content.include_link.value}</Label>
           </Checkbox>
         )}
@@ -267,7 +281,13 @@ function Content() {
         control={control}
         name="lowercase"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            validationBehavior="aria"
+          >
             <Label>{content.lower_case.value}</Label>
           </Checkbox>
         )}
@@ -282,6 +302,7 @@ function Content() {
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
+            validationBehavior="aria"
           >
             <Label>{content.bulleted_list.value}</Label>
           </Checkbox>
@@ -297,6 +318,7 @@ function Content() {
             onChange={onChange}
             onBlur={onBlur}
             placeholder={content.group_by_placeholder.value}
+            validationBehavior="aria"
           >
             <Label>{content.group_by_label.value}</Label>
             <SelectTrigger />
@@ -324,6 +346,7 @@ function Content() {
             onChange={onChange}
             onBlur={onBlur}
             placeholder={content.style_placeholder.value}
+            validationBehavior="aria"
           >
             <Label>{content.style_label.value}</Label>
             <SelectTrigger />

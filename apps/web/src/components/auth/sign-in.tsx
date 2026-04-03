@@ -81,7 +81,7 @@ function SignInForm({
         <h2 className="text-lg/8 font-semibold">{content.sign_in.title.value}</h2>
         <span className="text-muted-fg text-sm">{content.sign_in.description.value}</span>
       </div>
-      <Form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <Form onSubmit={onSubmit} className="flex flex-col gap-4" validationBehavior="aria">
         <Controller
           control={control}
           name="email"
@@ -100,6 +100,7 @@ function SignInForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.sign_in.email_label.value}</Label>
               <Input placeholder={content.sign_in.email_placeholder.value} />
@@ -125,6 +126,7 @@ function SignInForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.sign_in.password_label.value}</Label>
               <Input placeholder={content.sign_in.password_placeholder.value} />
@@ -247,7 +249,7 @@ function SignUpForm({
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-4">
         <Controller
           control={control}
@@ -267,6 +269,7 @@ function SignUpForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.sign_up.name_label.value}</Label>
               <Input placeholder={content.sign_up.name_placeholder.value} />
@@ -292,6 +295,7 @@ function SignUpForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.sign_up.email_label.value}</Label>
               <Input placeholder={content.sign_up.email_placeholder.value} />
@@ -317,6 +321,7 @@ function SignUpForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.sign_up.password_label.value}</Label>
               <Input />
@@ -372,7 +377,7 @@ function ForgotPassword({
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-4">
         <Controller
           control={control}
@@ -392,6 +397,7 @@ function ForgotPassword({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.forgot_password.email_label.value}</Label>
               <Input placeholder={content.forgot_password.email_placeholder.value} />

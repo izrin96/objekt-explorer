@@ -116,7 +116,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-6">
         <Controller
           control={control}
@@ -136,6 +136,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.create.name_label.value}</Label>
               <Input placeholder={content.create.name_placeholder.value} />
@@ -147,7 +148,13 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="description"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
+            <TextField
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.create.description_label.value}</Label>
               <Textarea placeholder={content.create.description_placeholder.value} rows={3} />
             </TextField>
@@ -168,6 +175,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.create.currency_label.value}</Label>
               <Description>{content.create.currency_desc.value}</Description>
@@ -190,7 +198,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="listType"
           render={({ field: { name, value, onChange } }) => (
-            <RadioGroup name={name} value={value} onChange={onChange}>
+            <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
               <Label>{content.create.list_type_label.value}</Label>
               <Description>{content.create.list_type_desc.value}</Description>
               <Radio value="normal">
@@ -224,6 +232,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
+                validationBehavior="aria"
               >
                 <Label>{content.create.profile_label.value}</Label>
                 <Description>
@@ -257,7 +266,13 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.create.hide_user_label.value}</Label>
               <Description>
                 {content.create.hide_user_desc({ siteName: SITE_NAME }).value}
@@ -415,7 +430,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-6">
         <Controller
           control={control}
@@ -435,6 +450,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.edit.name_label.value}</Label>
               <Input placeholder={content.edit.name_placeholder.value} />
@@ -447,7 +463,13 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="description"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
+            <TextField
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.description_label.value}</Label>
               <Textarea placeholder={content.edit.description_placeholder.value} rows={3} />
             </TextField>
@@ -469,6 +491,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.edit.currency_label.value}</Label>
               <Description>{content.edit.currency_desc.value}</Description>
@@ -504,6 +527,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
+                validationBehavior="aria"
               >
                 <Label>{content.edit.display_profile_label.value}</Label>
                 <Description>{content.edit.display_profile_desc.value}</Description>
@@ -532,7 +556,13 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.hide_user_label.value}</Label>
               <Description>
                 {content.edit.hide_user_desc({ siteName: SITE_NAME }).value}
@@ -556,6 +586,7 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.edit.objekt_columns_label.value}</Label>
               <Description>{content.edit.objekt_columns_desc.value}</Description>

@@ -71,7 +71,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
         <ModalDescription>{modalContent.description.value}</ModalDescription>
       </ModalHeader>
       <ModalBody>
-        <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
+        <Form className="flex flex-col gap-2" onSubmit={onSubmit} validationBehavior="aria">
           <Controller
             control={control}
             name="showCount"
@@ -82,6 +82,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
+                validationBehavior="aria"
               >
                 <Label>{content.show_count.value}</Label>
               </Checkbox>
@@ -97,6 +98,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
+                validationBehavior="aria"
               >
                 <Label>{content.lower_case.value}</Label>
               </Checkbox>
@@ -112,6 +114,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
+                validationBehavior="aria"
               >
                 <Label>{content.bulleted_list.value}</Label>
               </Checkbox>
@@ -127,6 +130,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onChange={onChange}
                 onBlur={onBlur}
                 placeholder={content.group_by_placeholder.value}
+                validationBehavior="aria"
               >
                 <Label>{content.group_by_label.value}</Label>
                 <SelectTrigger />
@@ -154,6 +158,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onChange={onChange}
                 onBlur={onBlur}
                 placeholder={content.style_placeholder.value}
+                validationBehavior="aria"
               >
                 <Label>{content.style_label.value}</Label>
                 <SelectTrigger />

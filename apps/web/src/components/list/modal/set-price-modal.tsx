@@ -107,13 +107,13 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
         </ModalDescription>
       </ModalHeader>
       <ModalBody>
-        <Form onSubmit={onSubmit}>
+        <Form onSubmit={onSubmit} validationBehavior="aria">
           <div className="flex flex-col gap-4">
             <Controller
               control={control}
               name="isQyop"
               render={({ field: { value, onChange } }) => (
-                <Checkbox isSelected={value} onChange={onChange}>
+                <Checkbox isSelected={value} onChange={onChange} validationBehavior="aria">
                   {content.manage_objekt.set_price_qyop.value}
                 </Checkbox>
               )}
@@ -137,6 +137,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
                   isInvalid={invalid}
                   minValue={0}
                   isDisabled={isQyop}
+                  validationBehavior="aria"
                 >
                   <Label>{content.manage_objekt.set_price_label.value}</Label>
                   <NumberInput />
@@ -151,7 +152,13 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
               control={control}
               name="note"
               render={({ field: { name, value, onChange, onBlur } }) => (
-                <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
+                <TextField
+                  name={name}
+                  value={value}
+                  onChange={onChange}
+                  onBlur={onBlur}
+                  validationBehavior="aria"
+                >
                   <Label>{content.manage_objekt.set_price_note.value}</Label>
                   <Input placeholder={content.manage_objekt.set_price_note_placeholder.value} />
                 </TextField>

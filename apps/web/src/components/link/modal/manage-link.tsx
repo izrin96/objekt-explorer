@@ -354,13 +354,19 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-6">
         <Controller
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.hide_user_label.value}</Label>
               <Description>
                 {content.edit.hide_user_desc({ siteName: SITE_NAME }).value}
@@ -372,7 +378,13 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="hideNickname"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.hide_nickname_label.value}</Label>
               <Description>{content.edit.hide_nickname_desc.value}</Description>
             </Checkbox>
@@ -382,7 +394,13 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="privateSerial"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.private_serial_label.value}</Label>
               <Description>{content.edit.private_serial_desc.value}</Description>
             </Checkbox>
@@ -392,7 +410,13 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="hideTransfer"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.hide_transfer_label.value}</Label>
               <Description>{content.edit.hide_transfer_desc.value}</Description>
             </Checkbox>
@@ -402,7 +426,13 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="privateProfile"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.private_profile_label.value}</Label>
               <Description>{content.edit.private_profile_desc.value}</Description>
             </Checkbox>
@@ -420,6 +450,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
+              validationBehavior="aria"
             >
               <Label>{content.edit.grid_columns_label.value}</Label>
               <Description>{content.edit.grid_columns_desc.value}</Description>
@@ -455,7 +486,13 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="removeBanner"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
               <Label>{content.edit.remove_banner_label.value}</Label>
             </Checkbox>
           )}

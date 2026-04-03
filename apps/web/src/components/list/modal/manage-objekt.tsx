@@ -146,7 +146,7 @@ function AddToListForm({
     );
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-4">
         <Controller
           control={control}
@@ -166,6 +166,7 @@ function AddToListForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
               <Label>{content.manage_objekt.list_label.value}</Label>
               <SelectTrigger />
@@ -191,7 +192,13 @@ function AddToListForm({
           control={control}
           name="skipDups"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} onChange={onChange} onBlur={onBlur} isSelected={value}>
+            <Checkbox
+              name={name}
+              onChange={onChange}
+              onBlur={onBlur}
+              isSelected={value}
+              validationBehavior="aria"
+            >
               <Label>{content.manage_objekt.skip_dups_label.value}</Label>
               <Description>{content.manage_objekt.skip_dups_desc.value}</Description>
             </Checkbox>

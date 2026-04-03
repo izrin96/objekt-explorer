@@ -51,7 +51,7 @@ export default function ResetPassword({ token }: { token: string }) {
     <div className="flex flex-col pt-2 pb-36">
       <div className="flex w-full max-w-xl flex-col gap-4 self-center">
         <div className="text-xl font-semibold">{content.reset_password.title.value}</div>
-        <Form onSubmit={onSubmit}>
+        <Form onSubmit={onSubmit} validationBehavior="aria">
           <div className="flex flex-col gap-4">
             <Controller
               control={control}
@@ -71,6 +71,7 @@ export default function ResetPassword({ token }: { token: string }) {
                   onChange={onChange}
                   onBlur={onBlur}
                   isInvalid={invalid}
+                  validationBehavior="aria"
                 >
                   <Label>{content.reset_password.password_label.value}</Label>
                   <FieldError>{error?.message}</FieldError>
