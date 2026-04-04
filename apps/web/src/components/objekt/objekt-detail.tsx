@@ -107,7 +107,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
               <ArchiveBoxXMarkIcon className="size-16" strokeWidth={1} />
-              <p>{content.not_owned.value}</p>
+              <span>{content.not_owned.value}</span>
             </div>
           )}
         </TabPanel>

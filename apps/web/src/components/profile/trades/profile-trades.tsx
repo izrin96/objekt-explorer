@@ -94,7 +94,7 @@ function ProfileTrades() {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <p>{content.history_private.value}</p>
+        <span>{content.history_private.value}</span>
       </div>
     );
   }

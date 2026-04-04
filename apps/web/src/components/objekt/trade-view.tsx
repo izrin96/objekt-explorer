@@ -245,7 +245,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <p>{content.objekt_private.value}</p>
+        <span>{content.objekt_private.value}</span>
       </div>
     );
   }
@@ -254,7 +254,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <QuestionMarkIcon size={64} weight="light" />
-        <p>{content.not_found_objekt.value}</p>
+        <span>{content.not_found_objekt.value}</span>
       </div>
     );
   }

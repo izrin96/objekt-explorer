@@ -100,7 +100,7 @@ function IntroStep({ onContinue }: { onContinue: () => void }) {
         className="fade-in zoom-in animate-in duration-200"
       />
       <div className="flex flex-col gap-2 text-center text-sm">
-        <p>{content.process.intro_description.value}</p>
+        <span>{content.process.intro_description.value}</span>
       </div>
       <Button size="md" intent="outline" onPress={onContinue}>
         {content.continue.value}
