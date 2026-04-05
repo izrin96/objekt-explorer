@@ -22,7 +22,6 @@ import type { PublicList } from "@/lib/universal/user";
 import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
 import { getCollectionColumns } from "../../objekt";
-import { filterNonNull } from "../../utils";
 import { authed, pub } from "../orpc";
 
 export const listRouter = {
@@ -80,7 +79,7 @@ export const listRouter = {
 
       // Handle profile lists differently
       if (result.listType === "profile") {
-        const objektIds = result.entries.map((e) => e.objektId).filter(filterNonNull);
+        const objektIds = result.entries.map((e) => e.objektId).filter((a) => a !== null);
         if (objektIds.length === 0) return [];
 
         // Fetch full objekt data from indexer
@@ -121,7 +120,7 @@ export const listRouter = {
               note: entry.note ?? undefined,
             });
           })
-          .filter(filterNonNull);
+          .filter((a) => a !== null);
       }
 
       // Handle normal lists
@@ -155,7 +154,7 @@ export const listRouter = {
         orderBy: { id: "desc" },
       });
       const knownAddresses = await fetchKnownAddresses(
-        result.map((a) => a.profileAddress).filter(filterNonNull),
+        result.map((a) => a.profileAddress).filter((a) => a !== null),
       );
 
       const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
@@ -231,7 +230,7 @@ export const listRouter = {
             .from(listEntries)
             .where(eq(listEntries.listId, list.id));
 
-          const existingSet = new Set(existing.map((e) => e.objektId).filter(filterNonNull));
+          const existingSet = new Set(existing.map((e) => e.objektId).filter((a) => a !== null));
           const filtered = values.filter((v) => !existingSet.has(v.objektId));
 
           if (filtered.length === 0) return [];
@@ -327,7 +326,7 @@ export const listRouter = {
 
         if (list.listType === "profile" && list.profileAddress) {
           if (result.length === 0) return;
-          const objektIdsToRemove = result.map((e) => e.objektId).filter(filterNonNull);
+          const objektIdsToRemove = result.map((e) => e.objektId).filter((a) => a !== null);
           await removeObjektIdsFromProfileList(list.profileAddress, list.id, objektIdsToRemove);
         }
       },
@@ -626,7 +625,7 @@ async function fetchListCollectionsBySlug(listSlug: string) {
   if (list.listType === "profile") {
     const objektIds = list.entries
       .map((e: { objektId: string | null }) => e.objektId)
-      .filter(filterNonNull);
+      .filter((a) => a !== null);
 
     if (objektIds.length === 0) return [];
 
@@ -655,12 +654,12 @@ async function fetchListCollectionsBySlug(listSlug: string) {
         const collection = objektToCollection.get(e.objektId!);
         return collection ?? null;
       })
-      .filter(filterNonNull);
+      .filter((a) => a !== null);
   }
 
   const slugs = list.entries
     .map((e: { collectionSlug: string | null }) => e.collectionSlug)
-    .filter(filterNonNull);
+    .filter((a) => a !== null);
 
   if (slugs.length === 0) return [];
 
@@ -685,7 +684,7 @@ async function fetchListCollectionsBySlug(listSlug: string) {
       const collection = slugToCollection.get(e.collectionSlug!);
       return collection ?? null;
     })
-    .filter(filterNonNull);
+    .filter((a) => a !== null);
 }
 
 export async function fetchList(slug: string, profileAddress?: string): Promise<PublicList | null> {
@@ -749,7 +748,7 @@ export async function fetchOwnedLists(userId: string) {
     orderBy: { id: "desc" },
   });
   const knownAddresses = await fetchKnownAddresses(
-    result.map((a) => a.profileAddress).filter(filterNonNull),
+    result.map((a) => a.profileAddress).filter((a) => a !== null),
   );
 
   const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));

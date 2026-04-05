@@ -9,7 +9,6 @@ import { eq, inArray } from "drizzle-orm";
 
 import { compareInputSchema } from "../../../compare/schemas";
 import { getCollectionColumns } from "../../objekt";
-import { filterNonNull } from "../../utils";
 import { pub } from "../orpc";
 
 export const compareRouter = {
@@ -105,7 +104,7 @@ async function buildComparisonEntries(
 ): Promise<ValidObjekt[]> {
   if (listType === "profile") {
     // Profile lists use objektId
-    const objektIds = entries.map((e) => e.objektId).filter(filterNonNull);
+    const objektIds = entries.map((e) => e.objektId).filter((a) => a !== null);
     if (objektIds.length === 0) return [];
 
     const objektsData = await indexer
@@ -133,10 +132,10 @@ async function buildComparisonEntries(
           note: entry.note ?? undefined,
         });
       })
-      .filter(filterNonNull);
+      .filter((a) => a !== null);
   } else {
     // Normal lists use collectionSlug
-    const slugs = entries.map((e) => e.collectionSlug).filter(filterNonNull);
+    const slugs = entries.map((e) => e.collectionSlug).filter((a) => a !== null);
     if (slugs.length === 0) return [];
 
     const collectionsData = await indexer
@@ -159,7 +158,7 @@ async function buildComparisonEntries(
           note: entry.note ?? undefined,
         });
       })
-      .filter(filterNonNull);
+      .filter((a) => a !== null);
   }
 }
 
