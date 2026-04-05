@@ -36,8 +36,6 @@ import { useTarget } from "@/hooks/use-target";
 import { useSession } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/compare/schemas";
 
-import { Badge } from "../ui/badge";
-
 interface CompareViewProps {
   input: CompareInput;
 }
@@ -83,12 +81,11 @@ function ListCompareHeader({ input }: { input: CompareInput }) {
             ? "Showing objekts missing from the target"
             : "Showing matching objekts"}
         </h2>
-        <Badge intent="primary">Beta</Badge>
       </div>
       <div className="text-muted-fg text-xs">
         Source List ID: <span className="text-fg">{input.sourceId}</span> - Target:{" "}
         <span className="text-fg">
-          {input.targetType === "list" ? input.targetListId : input.targetAddress}
+          {input.targetType === "list" ? input.targetListId : input.targetProfile}
         </span>{" "}
         ({input.targetType === "list" ? "List" : "Profile"})
       </div>

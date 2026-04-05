@@ -77,7 +77,7 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
     });
 
     if (data.targetType === "profile") {
-      params.set("targetAddress", data.targetProfile);
+      params.set("targetProfile", data.targetProfile);
     } else {
       params.set("targetListId", data.targetList);
     }
@@ -115,7 +115,7 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
             control={control}
             name="targetProfile"
             rules={{
-              required: "Profile is required.",
+              required: "Cosmo ID is required.",
             }}
           />
         )}
@@ -125,7 +125,7 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
             control={control}
             name="targetList"
             rules={{
-              required: "List is required.",
+              required: "List ID is required.",
             }}
           />
         )}

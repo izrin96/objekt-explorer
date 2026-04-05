@@ -13,7 +13,7 @@ import { parseNickname } from "@/lib/utils";
 import { Avatar } from "../ui/avatar-custom";
 import { Button } from "../ui/button";
 import { Link } from "../ui/link";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { Tooltip, TooltipContent } from "../ui/tooltip";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
@@ -119,18 +119,19 @@ function CopyListId({ slug }: { slug: string }) {
   const [, copy] = useCopyToClipboard();
   return (
     <Tooltip delay={0} closeDelay={0}>
-      <TooltipTrigger>
-        <CopyIcon
-          size={16}
-          className="text-muted-fg cursor-pointer select-none"
-          onClick={async () => {
-            await copy(slug);
-            toast.success(content.copy.copied.value);
-          }}
-        />
-      </TooltipTrigger>
+      <Button
+        intent="plain"
+        size="sq-xs"
+        className="cursor-pointer"
+        onClick={async () => {
+          await copy(slug);
+          toast.success(content.copy.copied.value);
+        }}
+      >
+        <CopyIcon data-slot="icon" />
+      </Button>
       <TooltipContent placement="bottom" inverse>
-        Copy list ID
+        Copy ID ({slug})
       </TooltipContent>
     </Tooltip>
   );

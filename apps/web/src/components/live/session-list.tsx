@@ -13,7 +13,6 @@ import { getBaseURL } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Avatar } from "../ui/avatar-custom";
-import { Badge } from "../ui/badge";
 import { Link } from "../ui/link";
 import { Loader } from "../ui/loader";
 import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
@@ -26,7 +25,6 @@ export default function LiveSessionListRender() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">{content.title.value}</h2>
-          <Badge intent="warning">{content.alpha.value}</Badge>
         </div>
         <span className="text-muted-fg text-sm">{content.description.value}</span>
       </div>

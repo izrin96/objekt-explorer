@@ -7,16 +7,16 @@ export const compareInputSchema = z
   .object({
     sourceId: z.string(),
     targetType: targetTypeSchema,
-    targetAddress: z.string().optional(),
+    targetProfile: z.string().optional(),
     targetListId: z.string().optional(),
     mode: modeSchema,
   })
   .refine(
     (data) => {
-      if (data.targetType === "profile") return data.targetAddress !== undefined;
+      if (data.targetType === "profile") return data.targetProfile !== undefined;
       return true;
     },
-    { message: "targetAddress is required when targetType is 'profile'", path: ["targetAddress"] },
+    { message: "targetProfile is required when targetType is 'profile'", path: ["targetProfile"] },
   )
   .refine(
     (data) => {

@@ -6,7 +6,7 @@ import { Locales } from "intlayer";
 import { useLocale, useIntlayer } from "next-intlayer";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useEffect, useTransition } from "react";
+import { useTransition } from "react";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -33,7 +33,7 @@ export function SettingsModal({
   setOpen: (val: boolean) => void;
 }) {
   const content = useIntlayer("common");
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { locale } = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -43,16 +43,6 @@ export function SettingsModal({
   const { wide, setWide } = useWide();
   const hideLabel = useConfigStore((s) => s.hideLabel);
   const setHideLabel = useConfigStore((s) => s.setHideLabel);
-
-  useEffect(() => {
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    if (!meta) {
-      meta = document.createElement("meta");
-      meta.name = "theme-color";
-      document.head.appendChild(meta);
-    }
-    meta.content = resolvedTheme === "dark" ? "#09090b" : "#ffffff";
-  }, [resolvedTheme]);
 
   const handleLocaleChange = (value: string) => {
     startTransition(async () => {

@@ -3,6 +3,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import type { ListEntry } from "@repo/db/schema";
+import { isAddress } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { eq, inArray } from "drizzle-orm";
@@ -14,54 +15,12 @@ import { pub } from "../orpc";
 export const compareRouter = {
   compare: pub
     .input(compareInputSchema)
-    .handler(async ({ input: { sourceId, targetType, mode, targetAddress, targetListId } }) => {
-      // Fetch source list
-      const sourceList = await db.query.lists.findFirst({
-        columns: {
-          listType: true,
-        },
-        with: {
-          entries: {
-            orderBy: {
-              id: "asc",
-            },
-            columns: {
-              id: true,
-              collectionSlug: true,
-              objektId: true,
-              price: true,
-              isQyop: true,
-              note: true,
-            },
-          },
-        },
-        where: { slug: sourceId },
-      });
-
-      if (!sourceList) throw new ORPCError("NOT_FOUND", { message: "Source list not found" });
-
-      // Build source comparison entries
-      const sourceComparisonEntries = await buildComparisonEntries(
-        sourceList.entries,
-        sourceList.listType,
-      );
-
-      // Fetch target comparison entries based on targetType
-      let targetComparisonEntries: ValidObjekt[] = [];
-
-      if (targetType === "profile" && targetAddress) {
-        // Query owned objekts from indexer
-        const ownedObjekts = await indexer
-          .select({
-            collection: getCollectionColumns(),
-          })
-          .from(objekts)
-          .innerJoin(collections, eq(collections.id, objekts.collectionId))
-          .where(eq(objekts.owner, targetAddress.toLowerCase()));
-
-        targetComparisonEntries = ownedObjekts.map((o) => o.collection);
-      } else if (targetType === "list" && targetListId) {
-        const targetList = await db.query.lists.findFirst({
+    .handler(
+      async ({
+        input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
+      }) => {
+        // Fetch source list
+        const sourceList = await db.query.lists.findFirst({
           columns: {
             listType: true,
           },
@@ -80,22 +39,84 @@ export const compareRouter = {
               },
             },
           },
-          where: { slug: targetListId },
+          where: { slug: sourceId },
         });
 
-        if (targetList) {
+        if (!sourceList) throw new ORPCError("NOT_FOUND", { message: "Source list not found" });
+
+        // Build source comparison entries
+        const sourceComparisonEntries = await buildComparisonEntries(
+          sourceList.entries,
+          sourceList.listType,
+        );
+
+        // Fetch target comparison entries based on targetType
+        let targetComparisonEntries: ValidObjekt[] = [];
+
+        if (targetType === "profile" && targetProfileId) {
+          const targetIsAddress = isAddress(targetProfileId);
+          const targetProfile = await db.query.userAddress.findFirst({
+            columns: {
+              address: true,
+              nickname: true,
+            },
+            where: {
+              [targetIsAddress ? "address" : "nickname"]: targetProfileId,
+            },
+          });
+
+          if (!targetProfile)
+            throw new ORPCError("NOT_FOUND", { message: "Target profile not found" });
+
+          // Query owned objekts from indexer
+          const ownedObjekts = await indexer
+            .select({
+              collection: getCollectionColumns(),
+            })
+            .from(objekts)
+            .innerJoin(collections, eq(collections.id, objekts.collectionId))
+            .where(eq(objekts.owner, targetProfile.address.toLowerCase()));
+
+          targetComparisonEntries = ownedObjekts.map((o) => o.collection);
+        } else if (targetType === "list" && targetListId) {
+          const targetList = await db.query.lists.findFirst({
+            columns: {
+              listType: true,
+            },
+            with: {
+              entries: {
+                orderBy: {
+                  id: "asc",
+                },
+                columns: {
+                  id: true,
+                  collectionSlug: true,
+                  objektId: true,
+                  price: true,
+                  isQyop: true,
+                  note: true,
+                },
+              },
+            },
+            where: { slug: targetListId },
+          });
+
+          if (!targetList) throw new ORPCError("NOT_FOUND", { message: "Target list not found" });
+
           targetComparisonEntries = await buildComparisonEntries(
             targetList.entries,
             targetList.listType,
           );
         }
-      }
 
-      // Perform comparison
-      const result = performComparison(sourceComparisonEntries, targetComparisonEntries, mode);
+        const result = performComparison(sourceComparisonEntries, targetComparisonEntries, mode);
 
-      return result;
-    }),
+        // Perform comparison
+        return {
+          objekts: result,
+        };
+      },
+    ),
 };
 
 async function buildComparisonEntries(

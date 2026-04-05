@@ -97,17 +97,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       )}
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.querySelector('meta[name="theme-color"]').setAttribute('content', '#09090b')
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
         <PublicEnvScript />
       </head>
       <body className="min-h-svh font-sans antialiased">

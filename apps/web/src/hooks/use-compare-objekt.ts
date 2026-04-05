@@ -16,7 +16,7 @@ export function useCompareObjekts(input: CompareInput) {
   const query = useSuspenseQuery(
     orpc.compare.compare.queryOptions({
       input,
-      select: (data) => data.map(mapObjektWithTag),
+      select: (data) => data.objekts.map(mapObjektWithTag),
       staleTime: 0,
     }),
   );

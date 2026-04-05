@@ -6,7 +6,7 @@ import CompareView from "@/components/compare/compare-view";
 import { ProfileProvider } from "@/components/profile-provider";
 import { compareInputSchema } from "@/lib/compare/schemas";
 import { getList } from "@/lib/data-fetching";
-import { orpc } from "@/lib/orpc/client";
+import { orpc, safeClient } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 import type { PublicList } from "@/lib/universal/user";
@@ -15,7 +15,7 @@ interface CompareToolPageProps {
   searchParams: Promise<{
     sourceId?: string;
     targetType?: string;
-    targetAddress?: string;
+    targetProfile?: string;
     targetListId?: string;
     mode?: string;
   }>;
@@ -26,7 +26,7 @@ export async function generateMetadata(props: CompareToolPageProps): Promise<Met
   const content = useIntlayer("page_titles");
 
   const sourceId = searchParams.sourceId ?? "";
-  const targetId = searchParams.targetAddress ?? searchParams.targetListId ?? "";
+  const targetId = searchParams.targetProfile ?? searchParams.targetListId ?? "";
 
   return {
     title: content.compare_tool({ source: sourceId, target: targetId }).value,
@@ -43,7 +43,7 @@ export default async function CompareToolPage(props: CompareToolPageProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-3">
         <HeartBreakIcon size={64} weight="light" />
-        <span>Invalid parameters</span>
+        <span className="font-medium">Invalid parameters</span>
       </div>
     );
   }
@@ -57,11 +57,18 @@ export default async function CompareToolPage(props: CompareToolPageProps) {
     isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
   };
 
-  void queryClient.prefetchQuery(
-    orpc.compare.compare.queryOptions({
-      input,
-    }),
-  );
+  const [error, data] = await safeClient.compare.compare(input);
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3">
+        <HeartBreakIcon size={64} weight="light" />
+        <span className="font-medium">{error.message}</span>
+      </div>
+    );
+  }
+
+  queryClient.setQueryData(orpc.compare.compare.queryKey({ input }), data);
 
   return (
     <ProfileProvider targetList={list}>

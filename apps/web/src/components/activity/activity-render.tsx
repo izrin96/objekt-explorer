@@ -83,7 +83,6 @@ function ActivityRender() {
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-semibold">{content.title.value}</h2>
-          <Badge intent="primary">{content.beta.value}</Badge>
         </div>
         <span className="text-muted-fg text-sm">{content.description.value}</span>
       </div>
