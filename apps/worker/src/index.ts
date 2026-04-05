@@ -30,7 +30,7 @@ void new Cron("0 * * * *", async () => {
 
 // 4. cosmo-spin transferable update
 await updateTransferableCosmoSpin();
-void new Cron("*/10 * * * *", updateTransferableCosmoSpin);
+void new Cron("0 * * * *", updateTransferableCosmoSpin);
 
 // 5. profile list
 await syncProfileListsToCache();

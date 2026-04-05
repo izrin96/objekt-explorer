@@ -1,6 +1,7 @@
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
+import { Addresses } from "@repo/lib";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { and, desc, eq } from "drizzle-orm";
 
@@ -88,7 +89,12 @@ export async function GET(_: Request, props: Params) {
   return Response.json({
     tokenId: result.tokenId ?? undefined,
     owner: result.owner ?? undefined,
-    transferable: result.transferable ?? undefined,
+    transferable:
+      result.transferable !== null
+        ? result.owner?.toLowerCase() === Addresses.SPIN
+          ? false
+          : result.transferable
+        : undefined,
     transfers: results.map((result) => {
       const addr = addressMap.get(result.to.toLowerCase());
       return {
