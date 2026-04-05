@@ -55,13 +55,7 @@ export function CompareModal({ open, setOpen, sourceList }: CompareModalProps) {
   );
 }
 
-function CompareForm({
-  sourceList,
-  setOpen,
-}: {
-  sourceList: SourceList;
-  setOpen: (val: boolean) => void;
-}) {
+function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: boolean) => void }) {
   const content = useIntlayer("common");
 
   const { control, watch, handleSubmit } = useForm<CompareFormData>({
@@ -89,7 +83,6 @@ function CompareForm({
     }
 
     window.open(`/compare-tool?${params.toString()}`, "_blank");
-    setOpen(false);
   });
 
   return (
@@ -102,13 +95,7 @@ function CompareForm({
           control={control}
           name="targetType"
           render={({ field: { name, value, onChange } }) => (
-            <RadioGroup
-              aria-label="Select target type"
-              name={name}
-              value={value}
-              onChange={onChange}
-              validationBehavior="aria"
-            >
+            <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
               <Label>Compare with</Label>
               <Description>Choose whether to compare with a profile or another list</Description>
               <Radio value="profile">
@@ -117,39 +104,37 @@ function CompareForm({
               </Radio>
               <Radio value="list">
                 <Label>List</Label>
-                <Description>Compare with another saved list</Description>
+                <Description>Compare with another list</Description>
               </Radio>
             </RadioGroup>
           )}
         />
 
         {watchedTargetType === "profile" && (
-          <div className="flex flex-col gap-2">
-            <Label>Profile</Label>
-            <Description>Select a Cosmo profile to compare with</Description>
-            <ProfileSelector control={control} name="targetProfile" />
-          </div>
+          <ProfileSelector
+            control={control}
+            name="targetProfile"
+            rules={{
+              required: "Profile is required.",
+            }}
+          />
         )}
 
         {watchedTargetType === "list" && (
-          <div className="flex flex-col gap-2">
-            <Label>List</Label>
-            <Description>Select a saved list to compare with</Description>
-            <ListSelector control={control} name="targetList" />
-          </div>
+          <ListSelector
+            control={control}
+            name="targetList"
+            rules={{
+              required: "List is required.",
+            }}
+          />
         )}
 
         <Controller
           control={control}
           name="mode"
           render={({ field: { name, value, onChange } }) => (
-            <RadioGroup
-              aria-label="Select comparison type"
-              name={name}
-              value={value}
-              onChange={onChange}
-              validationBehavior="aria"
-            >
+            <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
               <Label>Comparison Type</Label>
               <Description>Choose what to show in the comparison results</Description>
               <Radio value="missing">

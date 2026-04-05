@@ -13,19 +13,16 @@ import { parseNickname } from "@/lib/utils";
 import { Avatar } from "../ui/avatar-custom";
 import { Button } from "../ui/button";
 import { Link } from "../ui/link";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
   const list = useTarget((a) => a.list)!;
   const profile = useTarget((a) => a.profile);
   const isListAuthed = useListAuthed();
-  const [, copy] = useCopyToClipboard();
-  const content = useIntlayer("common");
 
   const isProfileList = list.listType === "profile";
   const isProfileContext = isProfileList || (list.listType === "normal" && list.profileAddress);
-
-  const slugToCopy = list.slug;
 
   // Use profile info when in profile context
   const displayUser = isProfileContext && profile ? profile.user : list.user;
@@ -38,14 +35,7 @@ export default function ListHeader() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">{list.name}</span>
-              <CopyIcon
-                size={16}
-                className="text-muted-fg cursor-pointer"
-                onClick={async () => {
-                  await copy(slugToCopy);
-                  toast.success(content.copy.copied.value);
-                }}
-              />
+              <CopyListId slug={list.slug} />
             </div>
             <div className="text-muted-fg text-sm">
               <Link
@@ -71,14 +61,7 @@ export default function ListHeader() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{list.name}</span>
-                <CopyIcon
-                  size={16}
-                  className="text-muted-fg cursor-pointer"
-                  onClick={async () => {
-                    await copy(slugToCopy);
-                    toast.success(content.copy.copied.value);
-                  }}
-                />
+                <CopyListId slug={list.slug} />
               </div>
               {displayUser && (
                 <div className="flex items-center gap-2">
@@ -128,5 +111,27 @@ function EditList({ slug }: { slug: string }) {
         {content.card.edit_list.value}
       </Button>
     </>
+  );
+}
+
+function CopyListId({ slug }: { slug: string }) {
+  const content = useIntlayer("common");
+  const [, copy] = useCopyToClipboard();
+  return (
+    <Tooltip delay={0} closeDelay={0}>
+      <TooltipTrigger>
+        <CopyIcon
+          size={16}
+          className="text-muted-fg cursor-pointer"
+          onClick={async () => {
+            await copy(slug);
+            toast.success(content.copy.copied.value);
+          }}
+        />
+      </TooltipTrigger>
+      <TooltipContent placement="bottom" inverse>
+        Copy list ID
+      </TooltipContent>
+    </Tooltip>
   );
 }

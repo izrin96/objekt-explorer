@@ -12,8 +12,10 @@ import {
 } from "react-hook-form";
 import { useDebounceValue } from "usehooks-ts";
 
+import { Description, FieldError, Label } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ListBox, ListBoxItem, ListBoxSection } from "@/components/ui/list-box";
+import { TextField } from "@/components/ui/text-field";
 import { useUserProfiles } from "@/hooks/use-user";
 import { getBaseURL } from "@/lib/utils";
 
@@ -42,10 +44,10 @@ export function ProfileSelector<T extends FieldValues>({
   control,
   name,
   rules,
-  disabled,
 }: ProfileSelectorProps<T>) {
   const {
     field: { onChange, onBlur },
+    fieldState: { invalid, error },
   } = useController({
     name,
     control,
@@ -92,21 +94,28 @@ export function ProfileSelector<T extends FieldValues>({
 
   return (
     <div className="flex flex-col gap-2">
-      <Input
-        placeholder="Search for a profile..."
+      <TextField
+        isRequired
+        name={name}
         value={selectedProfileDisplay || inputValue}
-        onChange={(e) => {
-          setInputValue(e.target.value);
-          if (e.target.value) {
+        onChange={(value) => {
+          setInputValue(value);
+          if (value) {
             setSelectedProfileDisplay(null);
           }
         }}
         onBlur={onBlur}
-        disabled={disabled}
-        aria-label="Profile search input"
-      />
+        isInvalid={invalid}
+        validationBehavior="aria"
+      >
+        <Label>Profile</Label>
+        <Description>Select a Cosmo profile to compare with</Description>
+        <Input placeholder="Enter Cosmo profile" />
+        <FieldError>{error?.message}</FieldError>
+      </TextField>
+
       {showListBox && (
-        <ListBox className="min-h-md" aria-label="Profile search list">
+        <ListBox className="pb-2" aria-label="Profile search list">
           {!enableSearch && linkedProfilesData.length > 0 && (
             <ListBoxSection title="Linked Profiles">
               {linkedProfilesData.map((profile) => (

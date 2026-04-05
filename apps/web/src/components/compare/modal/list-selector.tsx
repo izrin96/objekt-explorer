@@ -8,6 +8,7 @@ import {
   type RegisterOptions,
 } from "react-hook-form";
 
+import { Description, FieldError, Label } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { TextField } from "@/components/ui/text-field";
 
@@ -22,10 +23,10 @@ export function ListSelector<T extends FieldValues>({
   control,
   name,
   rules,
-  disabled,
 }: ListSelectorProps<T>) {
   const {
     field: { value, onChange, onBlur },
+    fieldState: { invalid, error },
   } = useController({
     name,
     control,
@@ -34,14 +35,19 @@ export function ListSelector<T extends FieldValues>({
 
   return (
     <TextField
+      isRequired
       name={name}
       value={value}
       onChange={onChange}
       onBlur={onBlur}
-      isDisabled={disabled}
+      isInvalid={invalid}
       validationBehavior="aria"
+      aria-label="List ID"
     >
-      <Input placeholder="Enter list slug" aria-label="List slug" />
+      <Label>List</Label>
+      <Description>Paste a list ID to compare with</Description>
+      <Input placeholder="Enter list ID" />
+      <FieldError>{error?.message}</FieldError>
     </TextField>
   );
 }

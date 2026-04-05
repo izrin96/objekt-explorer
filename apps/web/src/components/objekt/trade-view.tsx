@@ -275,11 +275,11 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
               target="_blank"
             >
               {data.tokenId}
-              <ArrowTopRightOnSquareIcon className="size-4" />
+              <ArrowTopRightOnSquareIcon className="text-muted-fg size-4" />
             </Link>
             <CopyIcon
               size={16}
-              className="cursor-pointer"
+              className="text-muted-fg cursor-pointer"
               onClick={() => handleCopy(data.tokenId)}
             />
           </div>
