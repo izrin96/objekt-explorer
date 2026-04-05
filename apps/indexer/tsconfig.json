@@ -1,5 +1,5 @@
 {
-  "extends": "@repo/tsconfig/tsconfig.base.json",
+  "extends": "@repo/tsconfig/tsconfig.node.json",
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", ".turbo", "lib"],
   "compilerOptions": {
@@ -9,7 +9,6 @@
 
     // Build output
     "declaration": false,
-    "declarationMap": false,
     "sourceMap": true,
 
     // Path aliases

@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "build": "rm -rf lib/ && tsc -p tsconfig.build.json",
     "start": "squid-commands process:prod",

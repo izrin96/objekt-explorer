@@ -74,7 +74,6 @@ bun run format                 # Format all code (oxfmt)
 - Base config: `packages/lint/oxlint.config.ts`
 - Each app/package has its own `oxlint.config.ts` extending the base
 - Config uses `extends: [baseConfig]` pattern (not spread)
-- All packages use `"type": "module"` in package.json
 
 ## TypeScript Configuration
 
@@ -82,7 +81,6 @@ bun run format                 # Format all code (oxfmt)
   - `tsconfig.base.json` - Default for packages (bundler resolution)
   - `tsconfig.bun.json` - For Bun-based apps (includes JSX, Bun types)
   - `tsconfig.node.json` - For strict Node.js ESM projects (NodeNext resolution)
-- All packages use `"type": "module"` in package.json
 - All tsconfigs have explicit `include` and `exclude` fields
 - Module resolution: `bundler` (not `NodeNext`) — no `.js` extensions needed on imports
 
