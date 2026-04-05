@@ -7,8 +7,10 @@ import { isAddress } from "@repo/lib";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { eq, inArray } from "drizzle-orm";
+import { useIntlayer } from "next-intlayer/server";
 
 import { compareInputSchema } from "../../../compare/schemas";
+import { getUserLocale } from "../../locale";
 import { getCollectionColumns } from "../../objekt";
 import { pub } from "../orpc";
 
@@ -19,6 +21,9 @@ export const compareRouter = {
       async ({
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
+        const locale = await getUserLocale();
+        const content = useIntlayer("api_errors", locale);
+
         // Fetch source list
         const sourceList = await db.query.lists.findFirst({
           columns: {
@@ -42,7 +47,10 @@ export const compareRouter = {
           where: { slug: sourceId },
         });
 
-        if (!sourceList) throw new ORPCError("NOT_FOUND", { message: "Source list not found" });
+        if (!sourceList)
+          throw new ORPCError("NOT_FOUND", {
+            message: content.compare.source_list_not_found.value,
+          });
 
         // Build source comparison entries
         const sourceComparisonEntries = await buildComparisonEntries(
@@ -66,7 +74,9 @@ export const compareRouter = {
           });
 
           if (!targetProfile)
-            throw new ORPCError("NOT_FOUND", { message: "Target profile not found" });
+            throw new ORPCError("NOT_FOUND", {
+              message: content.compare.target_profile_not_found.value,
+            });
 
           // Query owned objekts from indexer
           const ownedObjekts = await indexer
@@ -101,7 +111,10 @@ export const compareRouter = {
             where: { slug: targetListId },
           });
 
-          if (!targetList) throw new ORPCError("NOT_FOUND", { message: "Target list not found" });
+          if (!targetList)
+            throw new ORPCError("NOT_FOUND", {
+              message: content.compare.target_list_not_found.value,
+            });
 
           targetComparisonEntries = await buildComparisonEntries(
             targetList.entries,

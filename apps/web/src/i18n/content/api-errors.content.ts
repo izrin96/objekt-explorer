@@ -51,6 +51,20 @@ const content = {
         }),
       ),
     },
+    compare: {
+      source_list_not_found: t({
+        en: "Source list not found",
+        ko: "원본 목록을 찾을 수 없습니다",
+      }),
+      target_profile_not_found: t({
+        en: "Target profile not found",
+        ko: "대상 프로필을 찾을 수 없습니다",
+      }),
+      target_list_not_found: t({
+        en: "Target list not found",
+        ko: "대상 목록을 찾을 수 없습니다",
+      }),
+    },
   },
 } satisfies Dictionary;
 

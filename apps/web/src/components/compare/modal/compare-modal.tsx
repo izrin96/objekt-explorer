@@ -13,6 +13,7 @@ import {
   ModalBody,
   ModalClose,
   ModalContent,
+  ModalDescription,
   ModalFooter,
   ModalHeader,
   ModalTitle,
@@ -38,25 +39,29 @@ type CompareFormData = {
 };
 
 export function CompareModal({ open, setOpen, sourceList }: CompareModalProps) {
-  const content = useIntlayer("common");
+  const content = useIntlayer("compare");
+  const commonContent = useIntlayer("common");
 
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Compare List</ModalTitle>
+        <ModalTitle>{content.modal.title.value}</ModalTitle>
+        <ModalDescription>
+          {content.modal.comparing_from({ name: sourceList.name }).value}
+        </ModalDescription>
       </ModalHeader>
       <ModalBody>
         <CompareForm sourceList={sourceList} setOpen={setOpen} />
       </ModalBody>
       <ModalFooter id="submit-form-compare">
-        <ModalClose>{content.modal.cancel.value}</ModalClose>
+        <ModalClose>{commonContent.modal.cancel.value}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
 }
 
 function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: boolean) => void }) {
-  const content = useIntlayer("common");
+  const content = useIntlayer("compare");
 
   const { control, watch, handleSubmit } = useForm<CompareFormData>({
     defaultValues: {
@@ -88,62 +93,45 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
   return (
     <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-6">
-        <span className="text-muted-fg text-sm">
-          Comparing from: <span className="text-fg font-medium">{sourceList.name}</span>
-        </span>
         <Controller
           control={control}
           name="targetType"
           render={({ field: { name, value, onChange } }) => (
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
-              <Label>Compare with</Label>
-              <Description>Choose whether to compare with a profile or another list</Description>
+              <Label>{content.modal.target_type.label.value}</Label>
+              <Description>{content.modal.target_type.description.value}</Description>
               <Radio value="profile">
-                <Label>Profile</Label>
-                <Description>Compare with a Cosmo profile</Description>
+                <Label>{content.modal.target_type.profile.label.value}</Label>
+                <Description>{content.modal.target_type.profile.description.value}</Description>
               </Radio>
               <Radio value="list">
-                <Label>List</Label>
-                <Description>Compare with another list</Description>
+                <Label>{content.modal.target_type.list.label.value}</Label>
+                <Description>{content.modal.target_type.list.description.value}</Description>
               </Radio>
             </RadioGroup>
           )}
         />
 
         {watchedTargetType === "profile" && (
-          <ProfileSelector
-            control={control}
-            name="targetProfile"
-            rules={{
-              required: "Cosmo ID is required.",
-            }}
-          />
+          <ProfileSelector control={control} name="targetProfile" />
         )}
 
-        {watchedTargetType === "list" && (
-          <ListSelector
-            control={control}
-            name="targetList"
-            rules={{
-              required: "List ID is required.",
-            }}
-          />
-        )}
+        {watchedTargetType === "list" && <ListSelector control={control} name="targetList" />}
 
         <Controller
           control={control}
           name="mode"
           render={({ field: { name, value, onChange } }) => (
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
-              <Label>Comparison Type</Label>
-              <Description>Choose what to show in the comparison results</Description>
+              <Label>{content.modal.comparison_type.label.value}</Label>
+              <Description>{content.modal.comparison_type.description.value}</Description>
               <Radio value="missing">
-                <Label>Missing</Label>
-                <Description>Show objekts in source but not in target</Description>
+                <Label>{content.modal.comparison_type.missing.label.value}</Label>
+                <Description>{content.modal.comparison_type.missing.description.value}</Description>
               </Radio>
               <Radio value="matches">
-                <Label>Matches</Label>
-                <Description>Show objekts that appear in both source and target</Description>
+                <Label>{content.modal.comparison_type.matches.label.value}</Label>
+                <Description>{content.modal.comparison_type.matches.description.value}</Description>
               </Radio>
             </RadioGroup>
           )}
@@ -151,7 +139,7 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
 
         <Portal to="#submit-form-compare">
           <Button type="submit" onPress={() => onSubmit()}>
-            {content.actions.continue.value}
+            {content.modal.submit.value}
           </Button>
         </Portal>
       </div>

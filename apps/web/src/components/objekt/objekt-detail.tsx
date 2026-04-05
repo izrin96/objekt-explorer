@@ -301,7 +301,7 @@ function OwnedListPanel({
                       target="_blank"
                     >
                       {item.tokenId}
-                      <ArrowTopRightOnSquareIcon className="size-4" />
+                      <ArrowTopRightOnSquareIcon className="text-muted-fg size-4" />
                     </Link>
                   </TableCell>
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>

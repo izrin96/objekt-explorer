@@ -131,7 +131,7 @@ function CopyListId({ slug }: { slug: string }) {
         <CopyIcon data-slot="icon" />
       </Button>
       <TooltipContent placement="bottom" inverse>
-        Copy ID ({slug})
+        {content.copy.list_id({ id: slug }).value}
       </TooltipContent>
     </Tooltip>
   );

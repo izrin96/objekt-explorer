@@ -2,6 +2,7 @@
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useIntlayer } from "next-intlayer";
 import { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -73,21 +74,23 @@ export default function CompareView({ input }: CompareViewProps) {
 }
 
 function ListCompareHeader({ input }: { input: CompareInput }) {
+  const content = useIntlayer("compare");
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <h2 className="text-fg text-sm font-medium">
           {input.mode === "missing"
-            ? "Showing objekts missing from the target"
-            : "Showing matching objekts"}
+            ? content.view.showing_missing.value
+            : content.view.showing_matches.value}
         </h2>
       </div>
       <div className="text-muted-fg text-xs">
-        Source List ID: <span className="text-fg">{input.sourceId}</span> - Target:{" "}
+        {content.view.source_label.value}: <span className="text-fg">{input.sourceId}</span> -{" "}
+        {content.view.target_label.value}:{" "}
         <span className="text-fg">
           {input.targetType === "list" ? input.targetListId : input.targetProfile}
-        </span>{" "}
-        ({input.targetType === "list" ? "List" : "Profile"})
+        </span>
+        {` (${input.targetType === "list" ? content.view.type_list.value : content.view.type_profile.value})`}
       </div>
     </div>
   );

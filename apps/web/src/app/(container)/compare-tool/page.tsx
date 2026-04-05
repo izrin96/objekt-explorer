@@ -34,6 +34,7 @@ export async function generateMetadata(props: CompareToolPageProps): Promise<Met
 }
 
 export default async function CompareToolPage(props: CompareToolPageProps) {
+  const content = useIntlayer("compare");
   const queryClient = getQueryClient();
   const [searchParams, session] = await Promise.all([props.searchParams, getSession()]);
 
@@ -43,7 +44,7 @@ export default async function CompareToolPage(props: CompareToolPageProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-3">
         <HeartBreakIcon size={64} weight="light" />
-        <span className="font-medium">Invalid parameters</span>
+        <span className="font-medium">{content.error.invalid_params.value}</span>
       </div>
     );
   }
@@ -63,7 +64,7 @@ export default async function CompareToolPage(props: CompareToolPageProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-3">
         <HeartBreakIcon size={64} weight="light" />
-        <span className="font-medium">{error.message}</span>
+        <span className="font-medium">{content.error.loading.value}</span>
       </div>
     );
   }

@@ -104,6 +104,12 @@ const content = {
         en: "Copied!",
         ko: "복사됨!",
       }),
+      list_id: insert(
+        t({
+          en: "Copy ID ({{id}})",
+          ko: "ID 복사 ({{id}})",
+        }),
+      ),
     },
     count: {
       total: insert(

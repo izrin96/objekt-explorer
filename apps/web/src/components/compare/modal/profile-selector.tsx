@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  useController,
-  type Control,
-  type FieldValues,
-  type Path,
-  type RegisterOptions,
-} from "react-hook-form";
+import { useIntlayer } from "next-intlayer";
+import { useController, type Control, type FieldValues, type Path } from "react-hook-form";
 
 import { Description, FieldError, Label } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -15,22 +10,19 @@ import { TextField } from "@/components/ui/text-field";
 type ProfileSelectorProps<T extends FieldValues> = {
   control: Control<T>;
   name: Path<T>;
-  rules?: RegisterOptions<T, Path<T>>;
-  disabled?: boolean;
 };
 
-export function ProfileSelector<T extends FieldValues>({
-  control,
-  name,
-  rules,
-}: ProfileSelectorProps<T>) {
+export function ProfileSelector<T extends FieldValues>({ control, name }: ProfileSelectorProps<T>) {
+  const content = useIntlayer("compare");
   const {
     field: { value, onChange, onBlur },
     fieldState: { invalid, error },
   } = useController({
     name,
     control,
-    rules,
+    rules: {
+      required: content.profile_selector.required.value,
+    },
   });
 
   return (
@@ -44,9 +36,9 @@ export function ProfileSelector<T extends FieldValues>({
         isInvalid={invalid}
         validationBehavior="aria"
       >
-        <Label>Profile</Label>
-        <Description>Enter a Cosmo ID to compare with</Description>
-        <Input placeholder="Enter Cosmo ID" />
+        <Label>{content.profile_selector.label.value}</Label>
+        <Description>{content.profile_selector.description.value}</Description>
+        <Input placeholder={content.profile_selector.placeholder.value} />
         <FieldError>{error?.message}</FieldError>
       </TextField>
     </div>
