@@ -15,7 +15,6 @@ import { FilterDataProvider } from "@/hooks/use-filter-data";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
-import { artists } from "@/lib/server/cosmo/artists";
 import { getUserLocale } from "@/lib/server/locale";
 import { SITE_NAME, cn } from "@/lib/utils";
 
@@ -130,8 +129,9 @@ async function Providers({ children, locale }: ProvidersProps) {
   const queryClient = getQueryClient();
 
   const filterData = await queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions());
+  const artists = await queryClient.ensureQueryData(orpc.config.getArtists.queryOptions());
 
-  void queryClient.prefetchQuery(orpc.config.getArtists.queryOptions());
+  void queryClient.prefetchQuery(orpc.config.getSelectedArtists.queryOptions());
 
   void queryClient.prefetchQuery({
     queryKey: ["session"],

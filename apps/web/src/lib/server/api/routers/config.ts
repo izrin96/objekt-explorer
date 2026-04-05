@@ -5,13 +5,14 @@ import * as z from "zod";
 
 import type { Outputs } from "@/lib/orpc/server";
 
+import { getArtists } from "../../artist";
 import { parseSelectedArtists } from "../../cookie";
 import { setUserLocale } from "../../locale";
 import { fetchFilterData } from "../../objekt";
 import { pub } from "../orpc";
 
 export const configRouter = {
-  getArtists: pub.handler(parseSelectedArtists),
+  getSelectedArtists: pub.handler(parseSelectedArtists),
 
   getFilterData: pub.handler(fetchFilterData),
 
@@ -28,6 +29,8 @@ export const configRouter = {
   setLocale: pub.input(z.enum(locales)).handler(async ({ input: locale }) => {
     await setUserLocale(locale);
   }),
+
+  getArtists: pub.handler(getArtists),
 };
 
 export type FilterDataOutput = Outputs["config"]["getFilterData"];

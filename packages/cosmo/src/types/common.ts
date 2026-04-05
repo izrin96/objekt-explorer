@@ -1,7 +1,7 @@
 export const COSMO_ENDPOINT = "https://api.cosmo.fans";
 
 // artists
-export const validArtists = ["artms", "tripleS", "idntt"] as const;
+export const validArtists = ["tripleS", "artms", "idntt"] as const;
 export type ValidArtist = (typeof validArtists)[number];
 
 // sort values

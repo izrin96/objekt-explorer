@@ -43,7 +43,7 @@ export function CompareModal({ open, setOpen, sourceList }: CompareModalProps) {
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>Compare {sourceList.name}</ModalTitle>
+        <ModalTitle>Compare List</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <CompareForm sourceList={sourceList} setOpen={setOpen} />

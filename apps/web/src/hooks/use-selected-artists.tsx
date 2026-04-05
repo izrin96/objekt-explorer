@@ -6,7 +6,7 @@ import { orpc } from "@/lib/orpc/client";
 
 export function useSelectedArtists() {
   return useSuspenseQuery(
-    orpc.config.getArtists.queryOptions({
+    orpc.config.getSelectedArtists.queryOptions({
       staleTime: Infinity,
       refetchOnWindowFocus: false,
     }),
