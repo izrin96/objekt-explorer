@@ -55,7 +55,7 @@ const content = {
         }),
         missing: {
           label: t({
-            en: "Show Missing",
+            en: "Show Unowned",
             ko: "미보유 항목 표시",
           }),
           description: t({

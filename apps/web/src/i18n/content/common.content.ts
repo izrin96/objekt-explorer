@@ -152,7 +152,7 @@ const content = {
       }),
       label: t({
         en: "Navigation",
-        ko: "낵비게이션",
+        ko: "내비게이션",
       }),
       home: t({
         en: "Home",

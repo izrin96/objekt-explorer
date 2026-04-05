@@ -114,7 +114,7 @@ const content = {
       }),
       submit: t({
         en: "Send reset password email",
-        ko: "비밀번호 재설정 이메일 본내기",
+        ko: "비밀번호 재설정 이메일 보내기",
       }),
       back: t({
         en: "Back to Sign In",

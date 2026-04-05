@@ -9,7 +9,7 @@ const content = {
       t({ en: "{{title}} · {{channel}} · Live", ko: "{{title}} · {{channel}} · 라이브" }),
     ),
     login: t({ en: "Sign In", ko: "로그인" }),
-    my_list: t({ en: "My List", ko: "내 리스트" }),
+    my_list: t({ en: "My List", ko: "내 목록" }),
     my_cosmo_link: t({ en: "My Cosmo Link", ko: "내 Cosmo 링크" }),
     profile_collection: insert(t({ en: "{{nickname}} · Collection", ko: "{{nickname}} · 컬렉션" })),
     profile_progress: insert(t({ en: "{{nickname}} · Progress", ko: "{{nickname}} · 진행상황" })),
@@ -17,7 +17,7 @@ const content = {
     profile_trades: insert(
       t({ en: "{{nickname}} · Activity History", ko: "{{nickname}} · 활동 내역" }),
     ),
-    list_detail: insert(t({ en: "{{name}} · List", ko: "{{name}} · 리스트" })),
+    list_detail: insert(t({ en: "{{name}} · List", ko: "{{name}} · 목록" })),
     compare_tool: insert(
       t({ en: "{{source}} vs {{target}} · Compare", ko: "{{source}} vs {{target}} · 비교" }),
     ),

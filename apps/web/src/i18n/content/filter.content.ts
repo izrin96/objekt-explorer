@@ -213,7 +213,7 @@ const content = {
     }),
     show_missing: t({
       en: "Show missing",
-      ko: "누락된 항목 보기",
+      ko: "미보유 항목 표시",
     }),
     filters: t({
       en: "Filters",
