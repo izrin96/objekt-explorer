@@ -14,7 +14,7 @@ import { Popover, PopoverContent } from "../ui/popover";
 import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
 
-function formatListPrice(price: number, currency: string): string {
+function formatPrice(price: number, currency: string): string {
   try {
     return new NumberFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
       style: "currency",
@@ -65,9 +65,9 @@ export default function ObjektView({
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
-  const hasListPrice = objekt.listPrice !== undefined && objekt.listPrice !== null;
+  const hasPrice = objekt.price !== undefined && objekt.price !== null;
   const showPriceContent =
-    listCurrency && (objekt.isQyop || hasListPrice || objekt.note || onSetPrice !== undefined);
+    listCurrency && (objekt.isQyop || hasPrice || objekt.note || onSetPrice !== undefined);
   const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
@@ -113,13 +113,13 @@ export default function ObjektView({
                 >
                   {content.qyop.value}
                 </Badge>
-              ) : hasListPrice ? (
+              ) : hasPrice ? (
                 <Badge
                   intent="secondary"
                   className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
-                  {formatListPrice(objekt.listPrice!, listCurrency)}
+                  {formatPrice(objekt.price!, listCurrency)}
                 </Badge>
               ) : (
                 onSetPrice && (

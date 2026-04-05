@@ -1,10 +1,8 @@
 import { ORPCError } from "@orpc/server";
-import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { type ListEntry, listEntries, lists } from "@repo/db/schema";
-import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
+import { listEntries, lists } from "@repo/db/schema";
 import {
   addObjektIdsToProfileList,
   addProfileListToCache,
@@ -21,7 +19,7 @@ import type { PublicList } from "@/lib/universal/user";
 
 import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
-import { getCollectionColumns } from "../../objekt";
+import { buildListEntries } from "../../lists";
 import { authed, pub } from "../orpc";
 
 export const listRouter = {
@@ -59,9 +57,7 @@ export const listRouter = {
         },
         with: {
           entries: {
-            orderBy: {
-              id: "asc",
-            },
+            orderBy: { id: "asc" },
             columns: {
               id: true,
               collectionSlug: true,
@@ -77,54 +73,7 @@ export const listRouter = {
 
       if (!result) throw new ORPCError("NOT_FOUND");
 
-      // Handle profile lists differently
-      if (result.listType === "profile") {
-        const objektIds = result.entries.map((e) => e.objektId).filter((a) => a !== null);
-        if (objektIds.length === 0) return [];
-
-        // Fetch full objekt data from indexer
-        const objektsData = await indexer
-          .select({
-            objekt: objekts,
-            collection: getCollectionColumns(),
-          })
-          .from(objekts)
-          .innerJoin(collections, eq(collections.id, objekts.collectionId))
-          .where(
-            and(
-              inArray(objekts.id, objektIds),
-              ...(artists.length
-                ? [
-                    inArray(
-                      collections.artist,
-                      artists.map((a) => a.toLowerCase()),
-                    ),
-                  ]
-                : []),
-            ),
-          );
-
-        const objektMap = new Map(objektsData.map((o) => [o.objekt.id, o]));
-
-        // Map to OwnedObjekt format
-        return result.entries
-          .map((entry) => {
-            const data = objektMap.get(entry.objektId!);
-            if (!data || !data.collection) return null;
-            const ownedObjekt = mapOwnedObjekt(data.objekt, data.collection);
-            return Object.assign({}, ownedObjekt, {
-              id: entry.id.toString(),
-              order: entry.id,
-              listPrice: entry.price ?? undefined,
-              isQyop: entry.isQyop ?? undefined,
-              note: entry.note ?? undefined,
-            });
-          })
-          .filter((a) => a !== null);
-      }
-
-      // Handle normal lists
-      return mapEntriesCollection(result.entries, artists);
+      return buildListEntries(result.entries, result.listType, { artists });
     }),
 
   list: authed.handler(async ({ context: { session } }) => {
@@ -282,7 +231,7 @@ export const listRouter = {
             )
             .returning();
 
-          return mapEntriesCollection(result, artists);
+          return buildListEntries(result, "normal", { artists });
         }
 
         const result = await db
@@ -295,7 +244,7 @@ export const listRouter = {
           )
           .returning();
 
-        return mapEntriesCollection(result, artists);
+        return buildListEntries(result, "normal", { artists });
       },
     ),
 
@@ -781,56 +730,4 @@ async function findOwnedList(slug: string, userId: string) {
   if (!list) throw new ORPCError("NOT_FOUND");
 
   return list;
-}
-
-async function fetchCollections(slugs: string[], artists: ValidArtist[]) {
-  const uniqueSlugs = new Set(slugs);
-
-  if (uniqueSlugs.size === 0) return [];
-
-  const result = await indexer
-    .select({
-      ...getCollectionColumns(),
-    })
-    .from(collections)
-    .where(
-      and(
-        inArray(collections.slug, Array.from(uniqueSlugs)),
-        ...(artists.length
-          ? [
-              inArray(
-                collections.artist,
-                artists.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
-      ),
-    );
-
-  return result.map(overrideCollection);
-}
-
-async function mapEntriesCollection(
-  result: Pick<ListEntry, "collectionSlug" | "id" | "price" | "isQyop" | "note">[],
-  artists: ValidArtist[],
-) {
-  const validEntries = result
-    .toSorted((a, b) => a.id - b.id)
-    .filter((a) => a.collectionSlug !== null);
-
-  const slugs = validEntries.map((a) => a.collectionSlug!);
-  const collections = await fetchCollections(slugs, artists);
-  const collectionsMap = new Map(collections.map((c) => [c.slug, c]));
-
-  return validEntries
-    .filter((a) => collectionsMap.has(a.collectionSlug!))
-    .map(({ collectionSlug, id, price, isQyop, note }) =>
-      Object.assign({}, collectionsMap.get(collectionSlug!), {
-        id: id.toString(),
-        order: id,
-        listPrice: price ?? undefined,
-        isQyop: isQyop ?? undefined,
-        note: note ?? undefined,
-      }),
-    );
 }

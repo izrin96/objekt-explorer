@@ -192,6 +192,7 @@
       "name": "@repo/lib",
       "version": "0.0.0",
       "dependencies": {
+        "@repo/cosmo": "workspace:*",
         "@repo/db": "workspace:*",
         "drizzle-orm": "catalog:",
       },

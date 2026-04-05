@@ -2,14 +2,13 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import type { ListEntry } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
-import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { useIntlayer } from "next-intlayer/server";
 
 import { compareInputSchema } from "../../../compare/schemas";
+import { buildListEntries } from "../../lists";
 import { getUserLocale } from "../../locale";
 import { getCollectionColumns } from "../../objekt";
 import { pub } from "../orpc";
@@ -53,7 +52,7 @@ export const compareRouter = {
           });
 
         // Build source comparison entries
-        const sourceComparisonEntries = await buildComparisonEntries(
+        const sourceComparisonEntries = await buildListEntries(
           sourceList.entries,
           sourceList.listType,
         );
@@ -116,10 +115,7 @@ export const compareRouter = {
               message: content.compare.target_list_not_found.value,
             });
 
-          targetComparisonEntries = await buildComparisonEntries(
-            targetList.entries,
-            targetList.listType,
-          );
+          targetComparisonEntries = await buildListEntries(targetList.entries, targetList.listType);
         }
 
         const result = performComparison(sourceComparisonEntries, targetComparisonEntries, mode);
@@ -131,70 +127,6 @@ export const compareRouter = {
       },
     ),
 };
-
-async function buildComparisonEntries(
-  entries: Pick<ListEntry, "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note">[],
-  listType: "normal" | "profile",
-): Promise<ValidObjekt[]> {
-  if (listType === "profile") {
-    // Profile lists use objektId
-    const objektIds = entries.map((e) => e.objektId).filter((a) => a !== null);
-    if (objektIds.length === 0) return [];
-
-    const objektsData = await indexer
-      .select({
-        objekt: objekts,
-        collection: getCollectionColumns(),
-      })
-      .from(objekts)
-      .innerJoin(collections, eq(collections.id, objekts.collectionId))
-      .where(inArray(objekts.id, objektIds));
-
-    const objektMap = new Map(objektsData.map((o) => [o.objekt.id, o]));
-
-    return entries
-      .filter((e) => e.objektId !== null)
-      .map((entry) => {
-        const data = objektMap.get(entry.objektId!);
-        if (!data || !data.collection) return null;
-        const ownedObjekt = mapOwnedObjekt(data.objekt, data.collection);
-        return Object.assign({}, ownedObjekt, {
-          id: entry.id.toString(),
-          order: entry.id,
-          listPrice: entry.price ?? undefined,
-          isQyop: entry.isQyop ?? undefined,
-          note: entry.note ?? undefined,
-        });
-      })
-      .filter((a) => a !== null);
-  } else {
-    // Normal lists use collectionSlug
-    const slugs = entries.map((e) => e.collectionSlug).filter((a) => a !== null);
-    if (slugs.length === 0) return [];
-
-    const collectionsData = await indexer
-      .select(getCollectionColumns())
-      .from(collections)
-      .where(inArray(collections.slug, slugs));
-
-    const collectionMap = new Map(collectionsData.map((c) => [c.slug, c]));
-
-    return entries
-      .filter((e) => e.collectionSlug !== null)
-      .map((entry) => {
-        const collection = collectionMap.get(entry.collectionSlug!);
-        if (!collection) return null;
-        return Object.assign({}, collection, {
-          id: entry.id.toString(),
-          order: entry.id,
-          listPrice: entry.price ?? undefined,
-          isQyop: entry.isQyop ?? undefined,
-          note: entry.note ?? undefined,
-        });
-      })
-      .filter((a) => a !== null);
-  }
-}
 
 function performComparison(
   sourceEntries: ValidObjekt[],

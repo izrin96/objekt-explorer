@@ -1,9 +1,4 @@
-import {
-  type PinObjekt,
-  type LockObjekt,
-  shortformMembers,
-  type ValidObjekt,
-} from "@repo/lib/types/objekt";
+import { type PinObjekt, type LockObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 
 import { getCollectionEdition } from "./universal/collection-grid";
 import { replaceUrlSize } from "./utils";
@@ -91,3 +86,59 @@ export function getObjektImageUrls(objekt: ValidObjekt) {
     backUrl: replaceUrlSize(objekt.backImage, "original"),
   };
 }
+
+// Member shortform aliases
+const shortformMembers: Record<string, string> = {
+  naky: "NaKyoung",
+  n: "Nien",
+  nk: "NaKyoung",
+  tone: "Kotone",
+  sulin: "Sullin",
+  s: "Sullin",
+  sh: "SoHyun",
+  c: "Choerry",
+  ch: "Choerry",
+  choery: "Choerry",
+  cw: "ChaeWon",
+  cy: "ChaeYeon",
+  sy: "SeoYeon",
+  sm: "SooMin",
+  so: "ShiOn",
+  sa: "SeoAh",
+  sl: "Sullin",
+  jw: "JiWoo",
+  jb: "JooBin",
+  jy: "JiYeon",
+  js: "JinSoul",
+  dh: "DaHyun",
+  kd: "Kaede",
+  kl: "KimLip",
+  k: "Kaede",
+  hr: "HyeRin",
+  hy: "HaYeon",
+  hj: "HeeJin",
+  hs: "HaSeul",
+  yb: "YuBin",
+  yj: "YeonJi",
+  yy: "YooYeon",
+  x: "Xinyu",
+  m: "Mayu",
+  l: "Lynn",
+  soda: "DaHyun",
+  kwak: "YeonJi",
+  yubam: "YuBin",
+  ham: "SeoYeon",
+  ssaem: "SoHyun",
+  park: "SoHyun",
+  mg: "MinGyeol",
+  hh: "HwanHee",
+  jh: "JuHo",
+  ti: "TaeIn",
+  cm: "CheongMyeong",
+  t: "Towa",
+  kh: "KyuHyuk",
+  nr: "NuRi",
+  sj: "SeongJun",
+  gb: "GyeongBeen",
+  es: "EunSoo",
+};

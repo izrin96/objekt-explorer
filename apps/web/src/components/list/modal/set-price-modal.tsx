@@ -49,7 +49,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
       note: "",
     },
     values: {
-      price: objekt?.listPrice ?? 0,
+      price: objekt?.price ?? 0,
       isQyop: objekt?.isQyop ?? false,
       note: objekt?.note ?? "",
     },
