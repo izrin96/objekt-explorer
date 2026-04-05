@@ -1,0 +1,172 @@
+"use client";
+
+import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { Suspense, useCallback } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+
+import { ObjektCount } from "@/components/collection/objekt-count";
+import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
+import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
+import type { ShapedData } from "@/components/collection/objekt-virtual-grid";
+import { ObjektVirtualGrid } from "@/components/collection/objekt-virtual-grid";
+import ErrorFallbackRender from "@/components/error-boundary";
+import ArtistFilter from "@/components/filters/filter-artist";
+import ClassFilter from "@/components/filters/filter-class";
+import ColorFilter from "@/components/filters/filter-color";
+import ColumnFilter from "@/components/filters/filter-column";
+import CombineDuplicateFilter from "@/components/filters/filter-combine-duplicate";
+import { FilterContainer } from "@/components/filters/filter-container";
+import EditionFilter from "@/components/filters/filter-edition";
+import GroupDirectionFilter from "@/components/filters/filter-group-direction";
+import GroupByFilter from "@/components/filters/filter-groupby";
+import MemberFilter from "@/components/filters/filter-member";
+import OnlineFilter from "@/components/filters/filter-online";
+import SearchFilter from "@/components/filters/filter-search";
+import SeasonFilter from "@/components/filters/filter-season";
+import SortFilter from "@/components/filters/filter-sort";
+import SortDirectionFilter from "@/components/filters/filter-sort-direction";
+import ResetFilter from "@/components/filters/reset-filter";
+import { Loader } from "@/components/ui/loader";
+import { useCompareObjekts } from "@/hooks/use-compare-objekt";
+import { useConfigStore } from "@/hooks/use-config";
+import { useIsFiltering } from "@/hooks/use-filters";
+import { useResetFilters } from "@/hooks/use-reset-filters";
+import { useTarget } from "@/hooks/use-target";
+import { useSession } from "@/hooks/use-user";
+import type { CompareInput } from "@/lib/compare/schemas";
+
+import { Badge } from "../ui/badge";
+
+interface CompareViewProps {
+  input: CompareInput;
+}
+
+export default function CompareView({ input }: CompareViewProps) {
+  const list = useTarget((a) => a.list)!;
+
+  const isProfileList = list.listType === "profile";
+
+  return (
+    <ObjektViewProvider modalTab={isProfileList ? "owned" : "trades"}>
+      <ListCompareHeader input={input} />
+
+      <div className="flex flex-col gap-4">
+        <CompareFilter />
+
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <CompareGrid input={input} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </div>
+    </ObjektViewProvider>
+  );
+}
+
+function ListCompareHeader({ input }: { input: CompareInput }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <span className="text-fg text-sm font-medium">
+          {input.mode === "missing"
+            ? "Showing objekts missing from the target"
+            : "Showing matching objekts"}
+        </span>
+        <Badge intent="primary">Beta</Badge>
+      </div>
+      <div className="text-muted-fg text-xs">
+        Source List ID: <span className="text-fg">{input.sourceId}</span> - Target:{" "}
+        <span className="text-fg">
+          {input.targetType === "list" ? input.targetListId : input.targetAddress}
+        </span>{" "}
+        ({input.targetType === "list" ? "List" : "Profile"})
+      </div>
+    </div>
+  );
+}
+
+function CompareFilter() {
+  const reset = useResetFilters();
+  const isFiltering = useIsFiltering();
+
+  return (
+    <FilterContainer>
+      <div className="flex w-full flex-col gap-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
+            <Suspense>
+              <ArtistFilter />
+            </Suspense>
+            <Suspense>
+              <MemberFilter />
+            </Suspense>
+            <SeasonFilter />
+            <ClassFilter />
+            <EditionFilter />
+            <OnlineFilter />
+            <ColorFilter />
+            <SortFilter enabled={["date", "season", "collectionNo", "member", "duplicate"]} />
+            <SortDirectionFilter />
+            <CombineDuplicateFilter />
+            <GroupByFilter />
+            <GroupDirectionFilter />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <ColumnFilter />
+            <SearchFilter />
+            <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
+          </div>
+        </div>
+      </div>
+    </FilterContainer>
+  );
+}
+
+function CompareGrid({ input }: { input: CompareInput }) {
+  const { data: session } = useSession();
+  const hideLabel = useConfigStore((a) => a.hideLabel);
+  const { shaped, filtered, filters } = useCompareObjekts(input);
+  const list = useTarget((a) => a.list)!;
+  const isProfileList = list.listType === "profile";
+
+  const renderObjekt = useCallback(
+    ({ item }: { item: ValidObjekt[] }) => {
+      const objekt = item[0];
+      if (!objekt) return null;
+
+      return (
+        <ObjektGridItem
+          objekts={item}
+          session={!!session}
+          showSelect={false}
+          viewProps={{
+            hideLabel,
+            showCount: true,
+            showSerial: !filters.grouped && isProfileList,
+            showOwned: isProfileList,
+            listCurrency: list.currency,
+          }}
+        />
+      );
+    },
+    [session, hideLabel, list.currency, isProfileList, filters.grouped],
+  );
+
+  return (
+    <>
+      <ObjektCount filtered={filtered} />
+      <ObjektVirtualGrid shaped={shaped as ShapedData} renderItem={renderObjekt} />
+    </>
+  );
+}

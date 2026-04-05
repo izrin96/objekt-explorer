@@ -188,7 +188,9 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
           )}
         </ListBox>
       ) : debouncedQuery.length > 0 && data ? (
-        <p className="text-muted-fg text-center text-sm">{content.nickname_not_found.value}</p>
+        <span className="text-muted-fg text-center text-sm">
+          {content.nickname_not_found.value}
+        </span>
       ) : null}
     </div>
   );
@@ -243,7 +245,7 @@ function ArtistStep({
         {content.process.artist_step_cosmo_id.value}{" "}
         <span className="font-bold">{searchData.nickname}</span>
       </span>
-      <p className="text-center text-sm">{content.process.artist_step_select.value}</p>
+      <span className="text-center text-sm">{content.process.artist_step_select.value}</span>
       <div className="flex gap-2">
         {artists.map((artist) => (
           <Button
@@ -373,9 +375,9 @@ function VerifyStep({
         {codeData.code}
       </div>
 
-      <p className="max-w-md text-center text-sm">
+      <span className="max-w-md text-center text-sm">
         {content.code_instructions({ artist: artistTitle }).value}
-      </p>
+      </span>
 
       <Countdown deadline={deadline} onExpire={() => setExpired(true)} />
 

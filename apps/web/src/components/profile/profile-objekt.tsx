@@ -87,15 +87,13 @@ function ProfileObjektFilters({
   const [filters] = useFilters();
 
   return (
-    <div className="mb-2 flex flex-col gap-6">
-      <FilterContainer>
-        <div className="flex w-full flex-col gap-6">
-          <Filter discordRef={discordRef} />
-          <CheckpointPicker />
-          {session && !filters.at && <div className="contents" ref={selectRef} />}
-        </div>
-      </FilterContainer>
-    </div>
+    <FilterContainer>
+      <div className="flex w-full flex-col gap-4">
+        <Filter discordRef={discordRef} />
+        <CheckpointPicker />
+        {session && !filters.at && <div className="contents" ref={selectRef} />}
+      </div>
+    </FilterContainer>
   );
 }
 

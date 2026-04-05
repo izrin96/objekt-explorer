@@ -85,7 +85,7 @@ function ActivityRender() {
           <h2 className="text-xl font-semibold">{content.title.value}</h2>
           <Badge intent="primary">{content.beta.value}</Badge>
         </div>
-        <p className="text-muted-fg text-sm">{content.description.value}</p>
+        <span className="text-muted-fg text-sm">{content.description.value}</span>
       </div>
       <ObjektModalProvider initialTab="trades">
         <ActivityFilter />

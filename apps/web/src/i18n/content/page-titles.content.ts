@@ -18,6 +18,9 @@ const content = {
       t({ en: "{{nickname}} · Activity History", ko: "{{nickname}} · 활동 내역" }),
     ),
     list_detail: insert(t({ en: "{{name}} · List", ko: "{{name}} · 리스트" })),
+    compare_tool: insert(
+      t({ en: "{{source}} vs {{target}} · Compare", ko: "{{source}} vs {{target}} · 비교" }),
+    ),
   },
 } satisfies Dictionary;
 

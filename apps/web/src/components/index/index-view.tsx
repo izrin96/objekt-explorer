@@ -58,14 +58,12 @@ function IndexRender() {
 function IndexFilter({ selectRef }: { selectRef: (el: HTMLDivElement | null) => void }) {
   const { data: session } = useSession();
   return (
-    <div className="flex flex-col gap-6">
-      <FilterContainer>
-        <div className="flex w-full flex-col gap-6">
-          <Filter />
-          {session && <div className="contents" ref={selectRef} />}
-        </div>
-      </FilterContainer>
-    </div>
+    <FilterContainer>
+      <div className="flex w-full flex-col gap-4">
+        <Filter />
+        {session && <div className="contents" ref={selectRef} />}
+      </div>
+    </FilterContainer>
   );
 }
 

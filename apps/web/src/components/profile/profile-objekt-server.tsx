@@ -77,14 +77,12 @@ function ProfileObjektFilters({ selectRef }: { selectRef: (el: HTMLDivElement | 
   const [filters] = useFilters();
 
   return (
-    <div className="mb-2 flex flex-col gap-6">
-      <FilterContainer>
-        <div className="flex w-full flex-col gap-6">
-          <FilterServer />
-          {session && !filters.at && <div className="contents" ref={selectRef} />}
-        </div>
-      </FilterContainer>
-    </div>
+    <FilterContainer>
+      <div className="flex w-full flex-col gap-4">
+        <FilterServer />
+        {session && !filters.at && <div className="contents" ref={selectRef} />}
+      </div>
+    </FilterContainer>
   );
 }
 

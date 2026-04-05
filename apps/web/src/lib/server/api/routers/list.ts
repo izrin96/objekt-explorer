@@ -105,10 +105,12 @@ export const listRouter = {
             ),
           );
 
+        const objektMap = new Map(objektsData.map((o) => [o.objekt.id, o]));
+
         // Map to OwnedObjekt format
         return result.entries
           .map((entry) => {
-            const data = objektsData.find((o) => o.objekt.id === entry.objektId);
+            const data = objektMap.get(entry.objektId!);
             if (!data || !data.collection) return null;
             const ownedObjekt = mapOwnedObjekt(data.objekt, data.collection);
             return Object.assign({}, ownedObjekt, {

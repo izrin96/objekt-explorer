@@ -87,9 +87,9 @@ function LinkCard({ link }: LinkCardProps) {
             <h3 className="truncate font-semibold">
               <Link href={href}>{nickname}</Link>
             </h3>
-            <p className="text-muted-fg truncate font-mono text-xs">
+            <span className="text-muted-fg truncate font-mono text-xs">
               <Link href={href}>{link.address}</Link>
-            </p>
+            </span>
           </div>
           <Menu>
             <Button intent="outline" size="sq-xs">

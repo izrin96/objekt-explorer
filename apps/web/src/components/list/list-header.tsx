@@ -1,8 +1,10 @@
 "use client";
 
-import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useCopyToClipboard } from "usehooks-ts";
 
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
@@ -17,9 +19,13 @@ export default function ListHeader() {
   const list = useTarget((a) => a.list)!;
   const profile = useTarget((a) => a.profile);
   const isListAuthed = useListAuthed();
+  const [, copy] = useCopyToClipboard();
+  const content = useIntlayer("common");
 
   const isProfileList = list.listType === "profile";
   const isProfileContext = isProfileList || (list.listType === "normal" && list.profileAddress);
+
+  const slugToCopy = list.slug;
 
   // Use profile info when in profile context
   const displayUser = isProfileContext && profile ? profile.user : list.user;
@@ -32,6 +38,14 @@ export default function ListHeader() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">{list.name}</span>
+              <CopyIcon
+                size={16}
+                className="text-muted-fg cursor-pointer"
+                onClick={async () => {
+                  await copy(slugToCopy);
+                  toast.success(content.copy.copied.value);
+                }}
+              />
             </div>
             <div className="text-muted-fg text-sm">
               <Link
@@ -57,6 +71,14 @@ export default function ListHeader() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{list.name}</span>
+                <CopyIcon
+                  size={16}
+                  className="text-muted-fg cursor-pointer"
+                  onClick={async () => {
+                    await copy(slugToCopy);
+                    toast.success(content.copy.copied.value);
+                  }}
+                />
               </div>
               {displayUser && (
                 <div className="flex items-center gap-2">
@@ -85,7 +107,7 @@ export default function ListHeader() {
         {isListAuthed && <EditList slug={list.slug} />}
       </div>
       {list.description && (
-        <p className="text-fg text-sm whitespace-pre-wrap">{list.description}</p>
+        <span className="text-fg text-sm whitespace-pre-wrap">{list.description}</span>
       )}
     </div>
   );

@@ -22,9 +22,9 @@ export default function ProfileLists() {
     <div className="flex flex-col gap-6">
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-          <p className="text-muted-fg text-sm">{content.no_lists_found.value}</p>
+          <span className="text-muted-fg text-sm">{content.no_lists_found.value}</span>
           {profile.isOwned && (
-            <p className="text-muted-fg text-sm">{content.no_lists_hint.value}</p>
+            <span className="text-muted-fg text-sm">{content.no_lists_hint.value}</span>
           )}
         </div>
       ) : (

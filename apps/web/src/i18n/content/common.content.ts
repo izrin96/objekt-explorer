@@ -26,6 +26,10 @@ const content = {
         en: "Create",
         ko: "만들기",
       }),
+      compare: t({
+        en: "Compare",
+        ko: "비교",
+      }),
     },
     form: {
       email: {

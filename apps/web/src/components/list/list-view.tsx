@@ -17,6 +17,7 @@ import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
+import { CompareButton } from "../compare/compare-button";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
 import { AddToList, RemoveFromList, SetPrice } from "../filters/objekt/add-remove-list";
@@ -101,15 +102,22 @@ function ListFilter({
   discordRef: (el: HTMLDivElement | null) => void;
 }) {
   const { data: session } = useSession();
+  const list = useTarget((a) => a.list)!;
   return (
-    <div className="flex flex-col gap-6">
-      <FilterContainer>
-        <div className="flex w-full flex-col gap-6">
-          <Filter discordRef={discordRef} />
-          {session && <div className="contents" ref={selectRef} />}
+    <FilterContainer>
+      <div className="flex w-full flex-col gap-4">
+        <Filter discordRef={discordRef} />
+        <div className="flex flex-wrap gap-2">
+          <CompareButton
+            sourceList={{
+              id: list.slug,
+              name: list.name,
+            }}
+          />
         </div>
-      </FilterContainer>
-    </div>
+        {session && <div className="contents" ref={selectRef} />}
+      </div>
+    </FilterContainer>
   );
 }
 
