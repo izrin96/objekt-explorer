@@ -9,7 +9,7 @@ import { getList, getUserByIdentifier } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
-import type { PublicList } from "@/lib/universal/user";
+import { sanitizePublicList } from "@/lib/server/list";
 
 export async function generateMetadata(props: PageProps<"/list/[slug]">): Promise<Metadata> {
   const params = await props.params;
@@ -27,11 +27,7 @@ export default async function Page(props: PageProps<"/list/[slug]">) {
 
   const result = await getList(params.slug);
 
-  const { ownerId, ...safeList } = result;
-  const list: PublicList = {
-    ...safeList,
-    isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
-  };
+  const list = sanitizePublicList(result, session?.user.id);
 
   // Redirect normal lists bound to a profile
   if (list.profileAddress && (list.profileSlug || list.slug)) {

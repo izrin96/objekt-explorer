@@ -8,6 +8,8 @@ import { getUserByIdentifier, getList } from "@/lib/data-fetching";
 import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
+import { sanitizePublicList } from "@/lib/server/list";
+import { sanitizePublicProfile } from "@/lib/server/profile";
 
 export async function generateMetadata(
   props: PageProps<"/profile-list/[nickname]/[slug]">,
@@ -26,12 +28,11 @@ export default async function ProfileListPage(props: PageProps<"/profile-list/[n
   const queryClient = getQueryClient();
   const [params, session] = await Promise.all([props.params, getSession()]);
 
-  const profile = await getUserByIdentifier(params.nickname);
-  const list = await getList(params.slug, profile.address);
+  const profileResult = await getUserByIdentifier(params.nickname);
+  const listResult = await getList(params.slug, profileResult.address);
 
-  profile.isOwned =
-    profile.ownerId && session?.user.id ? profile.ownerId === session.user.id : false;
-  list.isOwned = list.ownerId && session?.user.id ? list.ownerId === session.user.id : false;
+  const profile = sanitizePublicProfile(profileResult, session?.user.id);
+  const list = sanitizePublicList(listResult, session?.user.id);
 
   void queryClient.prefetchQuery(
     orpc.list.listEntries.queryOptions({

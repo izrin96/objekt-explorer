@@ -9,7 +9,7 @@ import { getList } from "@/lib/data-fetching";
 import { orpc, safeClient } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
-import type { PublicList } from "@/lib/universal/user";
+import { sanitizePublicList } from "@/lib/server/list";
 
 interface CompareToolPageProps {
   searchParams: Promise<{
@@ -52,11 +52,7 @@ export default async function CompareToolPage(props: CompareToolPageProps) {
   const input = parseResult.data;
   const result = await getList(input.sourceId);
 
-  const { ownerId, ...safeList } = result;
-  const list: PublicList = {
-    ...safeList,
-    isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
-  };
+  const list = sanitizePublicList(result, session?.user.id);
 
   const [error, data] = await safeClient.compare.compare(input);
 

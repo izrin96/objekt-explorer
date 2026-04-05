@@ -7,7 +7,7 @@ import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { getUserByIdentifier } from "@/lib/data-fetching";
 import { getSession } from "@/lib/server/auth";
-import type { PublicProfile } from "@/lib/universal/user";
+import { sanitizePublicProfile } from "@/lib/server/profile";
 
 type Props = PropsWithChildren<{
   params: Promise<{
@@ -19,11 +19,7 @@ export default async function UserCollectionLayout(props: Props) {
   const [params, session] = await Promise.all([props.params, getSession()]);
   const result = await getUserByIdentifier(params.nickname);
 
-  const { ownerId, ...targetProfile } = result;
-  const safeProfile: PublicProfile = {
-    ...targetProfile,
-    isOwned: ownerId && session?.user.id ? ownerId === session.user.id : false,
-  };
+  const safeProfile = sanitizePublicProfile(result, session?.user.id);
 
   return (
     <ProfileProvider targetProfile={safeProfile}>
