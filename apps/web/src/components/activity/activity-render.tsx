@@ -18,10 +18,10 @@ import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { ErrorBoundary } from "react-error-boundary";
 import useWebSocket from "react-use-websocket";
 
-import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
+import { clientEnv } from "@/lib/env";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { getBaseURL, cn } from "@/lib/utils";
@@ -159,7 +159,7 @@ function Activity() {
     });
 
   const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
-    !(isPending || isRefetching) ? env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL : null,
+    !(isPending || isRefetching) ? clientEnv.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL : null,
     {
       shouldReconnect: () => true,
       reconnectAttempts: Infinity,

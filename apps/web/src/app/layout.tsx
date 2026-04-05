@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { IntlayerClientProvider } from "next-intlayer";
 
 import "@/app/globals.css";
-import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
+import { PublicEnvScript } from "next-runtime-env";
+import { Noto_Sans_KR, Noto_Sans_SC, Fira_Code, Google_Sans_Flex } from "next/font/google";
 import { type PropsWithChildren } from "react";
 
-import { Analytics } from "@/components/analytics";
 import "@/lib/orpc/server";
+import Analytics from "@/components/analytics";
 import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
@@ -18,20 +19,17 @@ import { artists } from "@/lib/server/cosmo/artists";
 import { getUserLocale } from "@/lib/server/locale";
 import { SITE_NAME, cn } from "@/lib/utils";
 
-const inter = Google_Sans_Flex({
-  variable: "--font-inter",
-  display: "swap",
+const googleSansFlex = Google_Sans_Flex({
   subsets: ["latin"],
   weight: "variable",
-  adjustFontFallback: false,
+  variable: "--font-google-sans-flex",
   fallback: [],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  display: "swap",
-  subsets: ["latin"],
-  weight: "variable",
+const firaCodeFiraCode = Fira_Code({
+  subsets: ["cyrillic", "cyrillic-ext", "greek", "greek-ext", "latin", "latin-ext", "symbols2"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-fira-code",
 });
 
 const notoSansKr = Noto_Sans_KR({
@@ -92,7 +90,12 @@ export default async function RootLayout({ children }: PropsWithChildren) {
     <html
       lang={locale}
       suppressHydrationWarning
-      className={cn(inter.variable, geistMono.variable, notoSansKr.variable, notoSansSc.variable)}
+      className={cn(
+        notoSansKr.variable,
+        notoSansSc.variable,
+        googleSansFlex.variable,
+        firaCodeFiraCode.variable,
+      )}
     >
       <head>
         <script
@@ -106,6 +109,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             `,
           }}
         />
+        <PublicEnvScript />
       </head>
       <body className="min-h-svh font-sans antialiased">
         <ClientProviders>

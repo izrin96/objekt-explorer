@@ -10,7 +10,7 @@ import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { cache } from "react";
 
-import { env } from "@/env";
+import { env } from "@/lib/env";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
 import { getBaseURL, SITE_NAME } from "../utils";

@@ -78,11 +78,11 @@ function ListCompareHeader({ input }: { input: CompareInput }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <span className="text-fg text-sm font-medium">
+        <h2 className="text-fg text-sm font-medium">
           {input.mode === "missing"
             ? "Showing objekts missing from the target"
             : "Showing matching objekts"}
-        </span>
+        </h2>
         <Badge intent="primary">Beta</Badge>
       </div>
       <div className="text-muted-fg text-xs">

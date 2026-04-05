@@ -279,7 +279,7 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
             </Link>
             <CopyIcon
               size={16}
-              className="text-muted-fg cursor-pointer"
+              className="text-muted-fg cursor-pointer select-none"
               onClick={() => handleCopy(data.tokenId)}
             />
           </div>

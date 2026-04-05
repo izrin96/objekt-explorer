@@ -109,7 +109,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
       >
         <tspan>{objekt.collectionNo}</tspan>
         {!hideSerial && isObjektOwned(objekt) && (
-          <tspan className="tracking-wide tabular-nums" dx={40}>
+          <tspan className="tracking-wide" dx={40}>
             #{objekt.serial}
           </tspan>
         )}

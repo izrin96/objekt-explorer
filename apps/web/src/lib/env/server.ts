@@ -19,18 +19,5 @@ export const env = createEnv({
     BYPASS_LIVE_KEY: z.string().min(1).optional(),
     REDIS_URL: z.string().min(1),
   },
-  client: {
-    NEXT_PUBLIC_SITE_URL: z.string().min(1),
-    NEXT_PUBLIC_UMAMI_SCRIPT_URL: z.string().min(1).optional(),
-    NEXT_PUBLIC_UMAMI_WEBSITE_ID: z.string().min(1).optional(),
-    NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: z.string().min(1),
-    NEXT_PUBLIC_LIVE_API_KEY: z.string().min(1),
-  },
-  experimental__runtimeEnv: {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
-    NEXT_PUBLIC_UMAMI_SCRIPT_URL: process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL,
-    NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
-    NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL: process.env.NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL,
-    NEXT_PUBLIC_LIVE_API_KEY: process.env.NEXT_PUBLIC_LIVE_API_KEY,
-  },
+  experimental__runtimeEnv: process.env,
 });

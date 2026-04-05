@@ -20,7 +20,6 @@ const link = new RPCLink({
   },
   plugins: [
     new BatchLinkPlugin({
-      mode: typeof window === "undefined" ? "buffered" : "streaming",
       groups: [
         {
           condition: () => true,

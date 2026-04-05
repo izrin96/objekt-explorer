@@ -3,7 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { env } from "@/env";
+import { clientEnv } from "@/lib/env";
 
 import { unobtainables } from "./unobtainables";
 
@@ -65,10 +65,7 @@ export function getListHref(list: {
 }
 
 export function getBaseURL() {
-  if (typeof window !== "undefined") {
-    return window.location.origin;
-  }
-  return env.NEXT_PUBLIC_SITE_URL;
+  return clientEnv.NEXT_PUBLIC_SITE_URL;
 }
 
 export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {

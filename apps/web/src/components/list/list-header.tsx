@@ -34,7 +34,7 @@ export default function ListHeader() {
         {isProfileContext && profile ? (
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold">{list.name}</span>
+              <h2 className="text-lg font-semibold">{list.name}</h2>
               <CopyListId slug={list.slug} />
             </div>
             <div className="text-muted-fg text-sm">
@@ -122,7 +122,7 @@ function CopyListId({ slug }: { slug: string }) {
       <TooltipTrigger>
         <CopyIcon
           size={16}
-          className="text-muted-fg cursor-pointer"
+          className="text-muted-fg cursor-pointer select-none"
           onClick={async () => {
             await copy(slug);
             toast.success(content.copy.copied.value);

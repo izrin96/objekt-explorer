@@ -3,8 +3,8 @@ import { useIntlayer } from "next-intlayer/server";
 import { redirect } from "next/navigation";
 
 import { LiveStreamingRender } from "@/components/live/live-render";
-import { env } from "@/env";
 import { getLiveSession } from "@/lib/data-fetching";
+import { env } from "@/lib/env";
 
 export async function generateMetadata(props: PageProps<"/live/[id]">): Promise<Metadata> {
   const params = await props.params;

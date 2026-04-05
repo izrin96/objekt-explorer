@@ -25,12 +25,12 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
       <div className="flex w-full flex-col md:w-auto">
-        <div className="text-xl font-semibold">{nickname}</div>
+        <h2 className="text-xl font-semibold">{nickname}</h2>
         <div className="text-muted-fg inline-flex gap-1 truncate font-mono text-xs">
           {user.address}{" "}
           <CopyIcon
             size={14}
-            className="text-muted-fg cursor-pointer"
+            className="text-muted-fg cursor-pointer select-none"
             onClick={async () => {
               await copy(user.address);
               toast.success(content.header.address_copied.value);
