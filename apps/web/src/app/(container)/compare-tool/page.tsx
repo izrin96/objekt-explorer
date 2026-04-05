@@ -64,7 +64,7 @@ export default async function CompareToolPage(props: CompareToolPageProps) {
     return (
       <div className="flex flex-col items-center justify-center gap-3">
         <HeartBreakIcon size={64} weight="light" />
-        <span className="font-medium">{content.error.loading.value}</span>
+        <span className="font-medium">{error.message}</span>
       </div>
     );
   }
