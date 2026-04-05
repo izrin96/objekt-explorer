@@ -106,7 +106,6 @@ export default async function RootLayout({ children }: PropsWithChildren) {
             `,
           }}
         />
-        <meta name="theme-color" content="var(--bg)" />
       </head>
       <body className="min-h-svh font-sans antialiased">
         <ClientProviders>

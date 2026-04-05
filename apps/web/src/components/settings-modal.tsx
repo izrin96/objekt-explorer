@@ -45,11 +45,13 @@ export function SettingsModal({
   const setHideLabel = useConfigStore((s) => s.setHideLabel);
 
   useEffect(() => {
-    if (resolvedTheme === "dark") {
-      document.querySelector('meta[name="theme-color"]')!.setAttribute("content", "#09090b");
-    } else {
-      document.querySelector('meta[name="theme-color"]')!.setAttribute("content", "#ffffff");
+    let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
     }
+    meta.content = resolvedTheme === "dark" ? "#09090b" : "#ffffff";
   }, [resolvedTheme]);
 
   const handleLocaleChange = (value: string) => {
