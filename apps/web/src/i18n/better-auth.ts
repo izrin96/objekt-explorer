@@ -52,5 +52,19 @@ export const betterAuthLocale = {
       "POST 메소드 사용을 위해 세션 설정에서 deferSessionRefresh 활성화가 필요합니다",
     BODY_MUST_BE_AN_OBJECT: "본문(Body)은 객체 형식이어야 합니다",
     PASSWORD_ALREADY_SET: "이미 비밀번호가 설정된 사용자입니다",
+
+    // Username Plugin
+    INVALID_USERNAME_OR_PASSWORD: "잘못된 사용자명 또는 비밀번호입니다",
+    USERNAME_IS_ALREADY_TAKEN: "이미 사용 중인 사용자명입니다. 다른 이름을 입력해 주세요",
+    USERNAME_TOO_SHORT: "사용자명이 너무 짧습니다",
+    USERNAME_TOO_LONG: "사용자명이 너무 깁니다",
+    INVALID_USERNAME: "유효하지 않은 사용자명입니다",
+    INVALID_DISPLAY_USERNAME: "유효하지 않은 표시 이름입니다",
+    UNEXPECTED_ERROR: "예상치 못한 오류가 발생했습니다",
+
+    // Email OTP Plugin
+    OTP_EXPIRED: "인증 코드(OTP)가 만료되었습니다",
+    INVALID_OTP: "유효하지 않은 인증 코드(OTP)입니다",
+    TOO_MANY_ATTEMPTS: "너무 많은 시도가 있었습니다. 잠시 후 다시 시도해 주세요",
   },
 };
