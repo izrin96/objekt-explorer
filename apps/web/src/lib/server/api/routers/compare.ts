@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { useIntlayer } from "next-intlayer/server";
 
 import { compareInputSchema } from "../../../compare/schemas";
-import { buildListEntries } from "../../lists";
+import { buildListEntries } from "../../list";
 import { getUserLocale } from "../../locale";
 import { getCollectionColumns } from "../../objekt";
 import { pub } from "../orpc";

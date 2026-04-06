@@ -19,7 +19,7 @@ import type { PublicList } from "@/lib/universal/user";
 
 import { mapPublicUser } from "../../auth";
 import { parseSelectedArtists } from "../../cookie";
-import { buildListEntries } from "../../lists";
+import { buildListEntries } from "../../list";
 import { authed, pub } from "../orpc";
 
 export const listRouter = {
