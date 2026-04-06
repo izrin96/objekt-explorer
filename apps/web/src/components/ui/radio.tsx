@@ -46,7 +46,7 @@ export function Radio({ className, children, ...props }: RadioProps) {
             <span
               data-slot="indicator"
               className={twMerge([
-                "inset-ring-input text-bg hover:before:bg-muted-fg/20 sm:before:size-1.7 relative isolate flex size-4.5 shrink-0 items-center justify-center rounded-full inset-ring transition before:absolute before:inset-auto before:size-2 before:shrink-0 before:rounded-full before:content-[''] sm:size-4",
+                "inset-ring-input text-bg hover:before:bg-muted-fg/20 sm:before:size-1.7 relative isolate flex size-4.5 shrink-0 items-center justify-center rounded-full bg-(--control-bg,transparent) inset-ring transition before:absolute before:inset-auto before:size-2 before:shrink-0 before:rounded-full before:content-[''] sm:size-4",
                 "in-disabled:bg-muted",
                 isSelected && [
                   "before:bg-bg hover:before:bg-muted/90 bg-(--radio-bg,var(--color-primary)) text-(--radio-fg,var(--color-primary-fg)) inset-ring-(--radio-ring,var(--color-ring))",
@@ -69,5 +69,5 @@ export function Radio({ className, children, ...props }: RadioProps) {
 }
 
 export function RadioLabel(props: React.ComponentProps<typeof Label>) {
-  return <Label elementType="span" {...props} />;
+  return <Label elementType="span" data-slot="control-label" {...props} />;
 }

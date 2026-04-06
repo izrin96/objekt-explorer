@@ -12,7 +12,7 @@ export function Textarea({ className, ...props }: TextAreaProps) {
         {...props}
         className={cx(
           twJoin([
-            "relative block field-sizing-content min-h-16 w-full appearance-none rounded-lg px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)]",
+            "relative block field-sizing-content min-h-16 w-full appearance-none rounded-lg bg-(--control-bg,transparent) px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)]",
             "text-fg placeholder:text-muted-fg text-base/6 sm:text-sm/6",
             "border-input enabled:hover:border-muted-fg/30 border",
             "focus:border-ring/70 focus:ring-ring/20 focus:enabled:hover:border-ring/80 outline-hidden focus:ring-3",

@@ -61,7 +61,7 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
               <span
                 data-slot="indicator"
                 className={twMerge([
-                  "inset-ring-input text-bg group-hover:inset-ring-muted-fg/30 relative isolate flex shrink-0 items-center justify-center rounded inset-ring transition",
+                  "inset-ring-input text-bg group-hover:inset-ring-muted-fg/30 relative isolate flex shrink-0 items-center justify-center rounded bg-(--control-bg,transparent) inset-ring transition",
                   "sm:size-4 sm:*:data-[slot=check-indicator]:size-3.5",
                   "size-4.5 *:data-[slot=check-indicator]:size-4",
                   "in-disabled:bg-muted",
@@ -89,5 +89,5 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
 }
 
 export function CheckboxLabel(props: React.ComponentProps<typeof Label>) {
-  return <Label elementType="span" {...props} />;
+  return <Label elementType="span" className="control-label" {...props} />;
 }

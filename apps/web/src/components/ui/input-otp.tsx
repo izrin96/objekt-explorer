@@ -85,5 +85,5 @@ export function InputOTPSeparator({ ...props }: React.ComponentProps<"div">) {
 }
 
 export function InputOTPLabel(props: React.ComponentProps<typeof Label>) {
-  return <Label elementType="span" {...props} />;
+  return <Label elementType="span" data-slot="control-label" {...props} />;
 }
