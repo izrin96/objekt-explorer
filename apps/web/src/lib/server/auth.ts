@@ -1,3 +1,4 @@
+import { i18n } from "@better-auth/i18n";
 import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
@@ -10,6 +11,7 @@ import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { cache } from "react";
 
+import { betterAuthLocale } from "@/i18n/better-auth";
 import { env } from "@/lib/env";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
@@ -22,7 +24,14 @@ export const auth = betterAuth({
     provider: "pg",
     schema: authSchema,
   }),
-  plugins: [username()],
+  plugins: [
+    username(),
+    i18n({
+      translations: betterAuthLocale,
+      detection: ["cookie", "header"],
+      localeCookie: "NEXT_LOCALE",
+    }),
+  ],
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
