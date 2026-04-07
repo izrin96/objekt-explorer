@@ -5,7 +5,7 @@ import { useIntlayer } from "next-intlayer";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 
 export function CopyButton({ text }: { text: string }) {
   const [, copy] = useCopyToClipboard();

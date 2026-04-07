@@ -6,7 +6,7 @@ import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/intentui/button";
 import {
   ModalClose,
   ModalContent,
@@ -14,7 +14,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
+} from "@/components/intentui/modal";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";

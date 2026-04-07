@@ -8,12 +8,11 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Link } from "@/components/ui/link";
-import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Link } from "@/components/intentui/link";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalBody,
   ModalClose,
@@ -22,15 +21,16 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { Note } from "@/components/ui/note";
+} from "@/components/intentui/modal";
+import { Note } from "@/components/intentui/note";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectLabel,
   SelectTrigger,
-} from "@/components/ui/select";
+} from "@/components/intentui/select";
+import Portal from "@/components/portal";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";

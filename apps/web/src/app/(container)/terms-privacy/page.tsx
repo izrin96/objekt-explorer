@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { useIntlayer } from "next-intlayer/server";
 
-import { Link } from "@/components/ui/link";
+import { Link } from "@/components/intentui/link";
 import { SITE_NAME } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {

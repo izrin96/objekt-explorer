@@ -15,10 +15,19 @@ import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collec
 import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
 import ErrorFallbackRender from "@/components/error-boundary";
+import {
+  Chart,
+  type ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/intentui/chart";
+import { Loader } from "@/components/intentui/loader";
+import {
+  ProgressBar,
+  ProgressBarTrack,
+  ProgressBarValue,
+} from "@/components/intentui/progress-bar";
 import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
-import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Loader } from "@/components/ui/loader";
-import { ProgressBar, ProgressBarTrack, ProgressBarValue } from "@/components/ui/progress-bar";
 import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -149,7 +158,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
         role="none"
         className={cn(
           "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-muted/20 p-4 border transition hover:bg-muted",
-          percentage >= 100 && "border-accent-solid shadow-lg shadow-accent-solid/20",
+          percentage >= 100 && "border-accent-solid shadow-sm shadow-accent-solid/20",
         )}
         onClick={() => setShow(!show)}
       >

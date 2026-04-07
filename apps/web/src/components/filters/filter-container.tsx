@@ -4,7 +4,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline";
 import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 
-import { Button } from "../ui/button";
+import { Button } from "../intentui/button";
 
 export function FilterContainer({ children }: React.PropsWithChildren) {
   const content = useIntlayer("filter");

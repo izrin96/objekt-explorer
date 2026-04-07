@@ -23,12 +23,10 @@ import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth";
 import { getListHref, parseNickname } from "@/lib/utils";
 
-import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
-import { CreateListModal } from "./list/modal/manage-list";
-import { Avatar } from "./ui/avatar-custom";
-import { buttonStyles } from "./ui/button";
-import { Link } from "./ui/link";
-import { Loader } from "./ui/loader";
+import { Avatar } from "./intentui/avatar-custom";
+import { buttonStyles } from "./intentui/button";
+import { Link } from "./intentui/link";
+import { Loader } from "./intentui/loader";
 import {
   Menu,
   MenuContent,
@@ -39,7 +37,9 @@ import {
   MenuSeparator,
   MenuSubMenu,
   MenuTrigger,
-} from "./ui/menu";
+} from "./intentui/menu";
+import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
+import { CreateListModal } from "./list/modal/manage-list";
 
 export default function UserNav() {
   const content = useIntlayer("nav");

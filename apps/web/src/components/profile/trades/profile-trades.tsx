@@ -13,10 +13,10 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import ErrorFallbackRender from "@/components/error-boundary";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
+import { Badge } from "@/components/intentui/badge";
+import { Card } from "@/components/intentui/card";
+import { Loader } from "@/components/intentui/loader";
 import ObjektModal, { useObjektModal } from "@/components/objekt/objekt-modal";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Loader } from "@/components/ui/loader";
 import UserLink from "@/components/user-link";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";

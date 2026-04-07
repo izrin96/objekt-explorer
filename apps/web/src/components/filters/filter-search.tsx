@@ -7,10 +7,10 @@ import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Input, InputGroup } from "../ui/input";
-import { Popover, PopoverContent } from "../ui/popover";
-import { TextField } from "../ui/text-field";
+import { Button } from "../intentui/button";
+import { Input, InputGroup } from "../intentui/input";
+import { Popover, PopoverContent } from "../intentui/popover";
+import { TextField } from "../intentui/text-field";
 
 export default function SearchFilter() {
   const [filters, setFilters] = useFilters();

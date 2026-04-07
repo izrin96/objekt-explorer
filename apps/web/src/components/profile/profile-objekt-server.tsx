@@ -25,9 +25,9 @@ import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { Loader } from "../intentui/loader";
+import { Note } from "../intentui/note";
 import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objekt-menu";
-import { Loader } from "../ui/loader";
-import { Note } from "../ui/note";
 import FilterServer from "./filter-server";
 
 export default dynamic(() => Promise.resolve(ProfileObjektServerRender), {

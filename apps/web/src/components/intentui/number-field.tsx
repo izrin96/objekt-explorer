@@ -8,7 +8,7 @@ import type {
 } from "react-aria-components";
 import { Button, NumberField as NumberFieldPrimitive } from "react-aria-components";
 
-import { Input, InputGroup } from "@/components/ui/input";
+import { Input, InputGroup } from "@/components/intentui/input";
 import { cx } from "@/lib/primitive";
 
 import { fieldStyles } from "./field";

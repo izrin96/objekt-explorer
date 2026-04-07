@@ -6,15 +6,15 @@ import { Suspense } from "react";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
-import { Link } from "@/components/ui/link";
+import { Link } from "@/components/intentui/link";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
 
 import Changelog from "./changelog";
+import { Container } from "./intentui/container";
 import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
-import { Container } from "./ui/container";
 
 export function useNavMenuItems() {
   const content = useIntlayer("nav");

@@ -3,9 +3,9 @@
 import { useIntlayer } from "next-intlayer";
 import { useController, type Control, type FieldValues, type Path } from "react-hook-form";
 
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { TextField } from "@/components/ui/text-field";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Input } from "@/components/intentui/input";
+import { TextField } from "@/components/intentui/text-field";
 
 type ListSelectorProps<T extends FieldValues> = {
   control: Control<T>;

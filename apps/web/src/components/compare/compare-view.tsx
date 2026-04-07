@@ -28,7 +28,7 @@ import SeasonFilter from "@/components/filters/filter-season";
 import SortFilter from "@/components/filters/filter-sort";
 import SortDirectionFilter from "@/components/filters/filter-sort-direction";
 import ResetFilter from "@/components/filters/reset-filter";
-import { Loader } from "@/components/ui/loader";
+import { Loader } from "@/components/intentui/loader";
 import { useCompareObjekts } from "@/hooks/use-compare-objekt";
 import { useConfigStore } from "@/hooks/use-config";
 import { useIsFiltering } from "@/hooks/use-filters";

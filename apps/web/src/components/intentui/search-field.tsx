@@ -5,7 +5,7 @@ import type { InputProps, SearchFieldProps } from "react-aria-components";
 import { Button, SearchField as SearchFieldPrimitive } from "react-aria-components";
 import { twJoin } from "tailwind-merge";
 
-import { fieldStyles } from "@/components/ui/field";
+import { fieldStyles } from "@/components/intentui/field";
 import { cx } from "@/lib/primitive";
 
 import { Input, InputGroup } from "./input";

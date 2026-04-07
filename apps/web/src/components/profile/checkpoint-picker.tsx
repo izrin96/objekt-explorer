@@ -18,8 +18,8 @@ import { useRef, useState } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Calendar } from "../ui/calendar";
+import { Button } from "../intentui/button";
+import { Calendar } from "../intentui/calendar";
 import {
   PopoverBody,
   PopoverClose,
@@ -28,8 +28,8 @@ import {
   PopoverFooter,
   PopoverHeader,
   PopoverTitle,
-} from "../ui/popover";
-import { TimeField, TimeInput } from "../ui/time-field";
+} from "../intentui/popover";
+import { TimeField, TimeInput } from "../intentui/time-field";
 
 const TIME_ZONE = getLocalTimeZone();
 

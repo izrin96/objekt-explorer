@@ -14,9 +14,9 @@ import { type CSSProperties, useEffect, useState } from "react";
 
 import { useLiveSession } from "@/hooks/use-live-session";
 
-import { Button } from "../ui/button";
-import { Popover, PopoverContent } from "../ui/popover";
-import { Slider, SliderFill, SliderThumb, SliderTrack } from "../ui/slider";
+import { Button } from "../intentui/button";
+import { Popover, PopoverContent } from "../intentui/popover";
+import { Slider, SliderFill, SliderThumb, SliderTrack } from "../intentui/slider";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";

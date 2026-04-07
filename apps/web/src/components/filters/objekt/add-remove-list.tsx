@@ -4,11 +4,11 @@ import { useState } from "react";
 import { Focusable } from "react-aria-components";
 import { useShallow } from "zustand/react/shallow";
 
+import type { ButtonProps } from "@/components/intentui/button";
+import { Button } from "@/components/intentui/button";
+import { Tooltip, TooltipContent } from "@/components/intentui/tooltip";
 import { AddToListModal, RemoveFromListModal } from "@/components/list/modal/manage-objekt";
 import { SetPriceModal } from "@/components/list/modal/set-price-modal";
-import type { ButtonProps } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 
 export function AddToList({ size, address }: { size?: ButtonProps["size"]; address?: string }) {

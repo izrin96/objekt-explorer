@@ -10,27 +10,27 @@ import { toast } from "sonner";
 
 import { CopyButton } from "@/components/copy-button";
 import ErrorFallbackRender from "@/components/error-boundary";
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FieldError, Label } from "@/components/ui/field";
-import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { FieldError, Label } from "@/components/intentui/field";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
+} from "@/components/intentui/modal";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectLabel,
   SelectTrigger,
-} from "@/components/ui/select";
-import { TextField } from "@/components/ui/text-field";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/intentui/select";
+import { TextField } from "@/components/intentui/text-field";
+import { Textarea } from "@/components/intentui/textarea";
+import Portal from "@/components/portal";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import {
   type FormatStyle,

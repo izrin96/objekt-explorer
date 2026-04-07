@@ -11,17 +11,17 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import ErrorFallbackRender from "@/components/error-boundary";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
 import {
   Disclosure,
   DisclosureGroup,
   DisclosurePanel,
   DisclosureTrigger,
-} from "@/components/ui/disclosure-group";
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Loader } from "@/components/ui/loader";
+} from "@/components/intentui/disclosure-group";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Input } from "@/components/intentui/input";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalClose,
   ModalContent,
@@ -29,15 +29,15 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
+} from "@/components/intentui/modal";
 import {
   SheetBody,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { TextField } from "@/components/ui/text-field";
+} from "@/components/intentui/sheet";
+import { TextField } from "@/components/intentui/text-field";
 import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import type { User } from "@/lib/server/auth";

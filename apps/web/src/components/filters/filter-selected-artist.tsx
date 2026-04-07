@@ -9,10 +9,10 @@ import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 
-import { Avatar } from "../ui/avatar-custom";
-import { Button } from "../ui/button";
-import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
+import { Avatar } from "../intentui/avatar-custom";
+import { Button } from "../intentui/button";
+import { Loader } from "../intentui/loader";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function SelectedArtistFilter() {
   const queryClient = useQueryClient();

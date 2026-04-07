@@ -13,14 +13,14 @@ import { useDebounceValue } from "usehooks-ts";
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
 import { getBaseURL } from "@/lib/utils";
 
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 import {
   CommandMenu,
   CommandMenuItem,
   CommandMenuList,
   CommandMenuSearch,
   CommandMenuSection,
-} from "./ui/command-menu";
+} from "./intentui/command-menu";
 
 export default function UserSearch() {
   const content = useIntlayer("nav");

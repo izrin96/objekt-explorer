@@ -5,7 +5,7 @@ import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 
 import GenerateDiscordFormatModal from "./generate-discord-modal";
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 
 export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
   const content = useIntlayer("discord_format_modal");

@@ -10,10 +10,10 @@ import { useProfileAuthed } from "@/hooks/use-user";
 import type { PublicProfile } from "@/lib/universal/user";
 import { parseNickname } from "@/lib/utils";
 
+import { Avatar } from "../intentui/avatar-custom";
+import { Button, buttonStyles } from "../intentui/button";
+import { Link } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
-import { Avatar } from "../ui/avatar-custom";
-import { Button, buttonStyles } from "../ui/button";
-import { Link } from "../ui/link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const [, copy] = useCopyToClipboard();

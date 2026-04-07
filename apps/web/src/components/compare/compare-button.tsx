@@ -4,7 +4,7 @@ import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 
 import { CompareModal } from "@/components/compare/modal/compare-modal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/intentui/button";
 
 type SourceList = {
   id: string;

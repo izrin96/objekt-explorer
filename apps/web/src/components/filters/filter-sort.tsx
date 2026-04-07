@@ -6,8 +6,8 @@ import type { Selection } from "react-aria-components";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../intentui/menu";
 
 const defaultSorts: ValidCustomSort[] = ["date", "season", "collectionNo", "member"];
 

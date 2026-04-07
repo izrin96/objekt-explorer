@@ -4,8 +4,8 @@ import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/s
 import { useIntlayer } from "next-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
-import type { ButtonProps } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
+import type { ButtonProps } from "@/components/intentui/button";
+import { Button } from "@/components/intentui/button";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";

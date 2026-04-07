@@ -6,10 +6,10 @@ import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Label } from "../ui/field";
-import { Popover, PopoverBody, PopoverContent } from "../ui/popover";
-import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../ui/slider";
+import { Button } from "../intentui/button";
+import { Label } from "../intentui/field";
+import { Popover, PopoverBody, PopoverContent } from "../intentui/popover";
+import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../intentui/slider";
 
 export default function ColorSensitivityFilter() {
   const content = useIntlayer("filter");

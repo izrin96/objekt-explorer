@@ -19,13 +19,12 @@ import { toast } from "sonner";
 import ErrorFallbackRender from "@/components/error-boundary";
 
 import "react-advanced-cropper/dist/style.css";
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Description, Label } from "@/components/ui/field";
-import { FileTrigger } from "@/components/ui/file-trigger";
-import { Link } from "@/components/ui/link";
-import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Description, Label } from "@/components/intentui/field";
+import { FileTrigger } from "@/components/intentui/file-trigger";
+import { Link } from "@/components/intentui/link";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalClose,
   ModalContent,
@@ -33,8 +32,8 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+} from "@/components/intentui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
 import {
   SheetBody,
   SheetClose,
@@ -43,7 +42,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@/components/intentui/sheet";
+import Portal from "@/components/portal";
 import { orpc } from "@/lib/orpc/client";
 import { acceptedFileMimeTypes, SITE_NAME, validColumns } from "@/lib/utils";
 

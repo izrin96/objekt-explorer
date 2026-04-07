@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 
 import { useThemeStyle, type ValidThemeStyle } from "@/hooks/use-theme-style";
 
-import { Button } from "./ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator } from "./ui/menu";
+import { Button } from "./intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSeparator } from "./intentui/menu";
 
 interface ThemeStyleItem {
   id: ValidThemeStyle;

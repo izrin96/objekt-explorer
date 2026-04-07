@@ -7,9 +7,9 @@ import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
 
 import { CopyButton } from "@/components/copy-button";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/field";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Label } from "@/components/intentui/field";
 import {
   ModalBody,
   ModalContent,
@@ -17,10 +17,10 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { TextField } from "@/components/ui/text-field";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/intentui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
+import { TextField } from "@/components/intentui/text-field";
+import { Textarea } from "@/components/intentui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import {
   type FormatStyle,

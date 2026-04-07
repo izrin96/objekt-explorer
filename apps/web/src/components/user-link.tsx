@@ -3,8 +3,8 @@ import { useIntlayer } from "next-intlayer";
 
 import { parseNickname } from "@/lib/utils";
 
-import { Link } from "./ui/link";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Link } from "./intentui/link";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./intentui/tooltip";
 
 export default function UserLink({
   address,

@@ -10,8 +10,8 @@ import { useShallow } from "zustand/react/shallow";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { replaceUrlSize } from "@/lib/utils";
 
-import { Button } from "../ui/button";
-import { Toggle } from "../ui/toggle";
+import { Button } from "../intentui/button";
+import { Toggle } from "../intentui/toggle";
 
 type Props = PropsWithChildren<{ objekts: ValidObjekt[] }>;
 

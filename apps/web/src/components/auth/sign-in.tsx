@@ -16,10 +16,10 @@ import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "../ui/button";
-import { FieldError, Label } from "../ui/field";
-import { Input } from "../ui/input";
-import { TextField } from "../ui/text-field";
+import { Button } from "../intentui/button";
+import { FieldError, Label } from "../intentui/field";
+import { Input } from "../intentui/input";
+import { TextField } from "../intentui/text-field";
 
 export default function SignIn() {
   const [state, setState] = useState<"sign-in" | "sign-up" | "forgot-password">("sign-in");

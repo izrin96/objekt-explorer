@@ -12,8 +12,8 @@ import type { PropsWithChildren } from "react";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { cn } from "@/lib/utils";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent } from "../intentui/menu";
 
 export function ObjektSelect({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts as [ValidObjekt];

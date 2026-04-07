@@ -3,7 +3,7 @@
 import { useElementSize } from "@/hooks/use-element-size";
 import type { PublicProfile } from "@/lib/universal/user";
 
-import { Container } from "../ui/container";
+import { Container } from "../intentui/container";
 
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();

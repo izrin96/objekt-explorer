@@ -4,8 +4,8 @@ import { GearIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 
+import { Button } from "./intentui/button";
 import { SettingsModal } from "./settings-modal";
-import { Button } from "./ui/button";
 
 export function SettingsButton({
   intent = "plain",

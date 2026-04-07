@@ -6,9 +6,8 @@ import { Controller, useForm } from "react-hook-form";
 
 import { ListSelector } from "@/components/compare/modal/list-selector";
 import { ProfileSelector } from "@/components/compare/modal/profile-selector";
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Description, Label } from "@/components/ui/field";
+import { Button } from "@/components/intentui/button";
+import { Description, Label } from "@/components/intentui/field";
 import {
   ModalBody,
   ModalClose,
@@ -17,8 +16,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { Radio, RadioGroup } from "@/components/ui/radio";
+} from "@/components/intentui/modal";
+import { Radio, RadioGroup } from "@/components/intentui/radio";
+import Portal from "@/components/portal";
 
 type SourceList = {
   id: string;

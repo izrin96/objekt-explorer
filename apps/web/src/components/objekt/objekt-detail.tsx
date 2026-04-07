@@ -21,12 +21,12 @@ import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
 import { OBJEKT_SIZE } from "@/lib/utils";
 
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Link } from "../ui/link";
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../ui/table";
-import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
+import { Badge } from "../intentui/badge";
+import { Button } from "../intentui/button";
+import { Card, CardContent } from "../intentui/card";
+import { Link } from "../intentui/link";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
+import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import { AttributePanel } from "./objekt-attribute";
 import ObjektSidebar from "./objekt-sidebar";
 import TradeView from "./trade-view";

@@ -4,8 +4,8 @@ import { useIntlayer } from "next-intlayer";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import type { Selection } from "react-aria-components";
 
-import { Button } from "@/components/ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui/menu";
+import { Button } from "@/components/intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/intentui/menu";
 import { type ValidType, validType } from "@/lib/universal/transfers";
 
 export function useTypeFilter() {

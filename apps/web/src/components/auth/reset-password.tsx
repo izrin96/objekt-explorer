@@ -9,9 +9,9 @@ import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "../ui/button";
-import { FieldError, Label } from "../ui/field";
-import { TextField } from "../ui/text-field";
+import { Button } from "../intentui/button";
+import { FieldError, Label } from "../intentui/field";
+import { TextField } from "../intentui/text-field";
 
 export default function ResetPassword({ token }: { token: string }) {
   const router = useRouter();

@@ -23,6 +23,7 @@ import { FilterContainer } from "../filters/filter-container";
 import { AddToList, RemoveFromList, SetPrice } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { GenerateDiscordButton } from "../generate-discord-button";
+import { Loader } from "../intentui/loader";
 import {
   AddToListMenu,
   ObjektStaticMenu,
@@ -30,7 +31,6 @@ import {
   SelectMenuItem,
   SetPriceMenuItem,
 } from "../objekt/objekt-menu";
-import { Loader } from "../ui/loader";
 import Filter from "./filter";
 import { SetPriceModal } from "./modal/set-price-modal";
 

@@ -7,8 +7,8 @@ import type { Selection } from "react-aria-components";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel, MenuSection } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSection } from "../intentui/menu";
 
 export default function MemberFilter() {
   const { selectedArtists } = useCosmoArtist();

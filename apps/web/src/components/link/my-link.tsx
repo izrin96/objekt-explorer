@@ -10,10 +10,10 @@ import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Button, buttonStyles } from "../ui/button";
-import { Link } from "../ui/link";
-import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem } from "../ui/menu";
+import { Button, buttonStyles } from "../intentui/button";
+import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
+import { Menu, MenuContent, MenuItem } from "../intentui/menu";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
 
 export default function MyLinkRender() {

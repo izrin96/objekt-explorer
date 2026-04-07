@@ -10,11 +10,11 @@ import { orpc } from "@/lib/orpc/client";
 import { getListHref, parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Button } from "../ui/button";
-import { Link } from "../ui/link";
-import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem } from "../ui/menu";
-import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
+import { Button } from "../intentui/button";
+import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
+import { Menu, MenuContent, MenuItem } from "../intentui/menu";
+import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
 import { CreateListModal, DeleteListModal, EditListModal } from "./modal/manage-list";
 

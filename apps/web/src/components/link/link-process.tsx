@@ -14,11 +14,11 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 import { getBaseURL, msToCountdown } from "@/lib/utils";
 
-import { Button, buttonStyles } from "../ui/button";
-import { Link } from "../ui/link";
-import { ListBox, ListBoxItem, ListBoxLabel } from "../ui/list-box";
-import { Loader } from "../ui/loader";
-import { SearchField, SearchInput } from "../ui/search-field";
+import { Button, buttonStyles } from "../intentui/button";
+import { Link } from "../intentui/link";
+import { ListBox, ListBoxItem, ListBoxLabel } from "../intentui/list-box";
+import { Loader } from "../intentui/loader";
+import { SearchField, SearchInput } from "../intentui/search-field";
 
 type SearchData = {
   cosmoId: number;

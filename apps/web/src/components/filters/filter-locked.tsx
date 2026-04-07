@@ -4,7 +4,7 @@ import { useIntlayer } from "next-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
+import { Button } from "../intentui/button";
 
 export default function LockedFilter() {
   const content = useIntlayer("filter");

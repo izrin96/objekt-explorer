@@ -3,7 +3,7 @@
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 
-import { Button } from "../ui/button";
+import { Button } from "../intentui/button";
 
 export default function ResetFilter({
   onReset,

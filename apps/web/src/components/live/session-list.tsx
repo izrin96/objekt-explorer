@@ -12,10 +12,10 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { getBaseURL } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Avatar } from "../ui/avatar-custom";
-import { Link } from "../ui/link";
-import { Loader } from "../ui/loader";
-import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
+import { Avatar } from "../intentui/avatar-custom";
+import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
+import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 
 export default function LiveSessionListRender() {
   const content = useIntlayer("live");

@@ -6,7 +6,7 @@ import "./globals.css";
 import { Locales } from "intlayer";
 import { Google_Sans_Flex } from "next/font/google";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/intentui/button";
 import { SITE_NAME } from "@/lib/utils";
 
 const inter = Google_Sans_Flex({

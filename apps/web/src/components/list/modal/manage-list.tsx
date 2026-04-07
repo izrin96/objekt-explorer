@@ -15,13 +15,12 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import ErrorFallbackRender from "@/components/error-boundary";
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Link } from "@/components/ui/link";
-import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Input } from "@/components/intentui/input";
+import { Link } from "@/components/intentui/link";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalBody,
   ModalClose,
@@ -30,9 +29,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { Radio, RadioGroup } from "@/components/ui/radio";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+} from "@/components/intentui/modal";
+import { Radio, RadioGroup } from "@/components/intentui/radio";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
 import {
   SheetBody,
   SheetClose,
@@ -41,9 +40,10 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { TextField } from "@/components/ui/text-field";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/intentui/sheet";
+import { TextField } from "@/components/intentui/text-field";
+import { Textarea } from "@/components/intentui/textarea";
+import Portal from "@/components/portal";
 import { useUserProfiles } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";

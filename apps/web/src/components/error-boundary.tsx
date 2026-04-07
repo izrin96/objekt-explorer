@@ -3,7 +3,7 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 
 export default function ErrorFallbackRender({
   resetErrorBoundary,

@@ -7,7 +7,7 @@ import {
   SliderTrack,
 } from "react-aria-components";
 
-import { fieldStyles } from "@/components/ui/field";
+import { fieldStyles } from "@/components/intentui/field";
 import { cx } from "@/lib/primitive";
 
 export function ColorSlider({ className, ...props }: ColorSliderProps) {

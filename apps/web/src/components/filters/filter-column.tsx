@@ -5,7 +5,7 @@ import { useIntlayer } from "next-intlayer";
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { validColumns } from "@/lib/utils";
 
-import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "../intentui/select";
 
 export default function ColumnFilter() {
   const content = useIntlayer("filter");

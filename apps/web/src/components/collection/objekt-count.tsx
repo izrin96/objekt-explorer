@@ -2,7 +2,7 @@
 
 import { useIntlayer } from "next-intlayer";
 
-import { Loader } from "../ui/loader";
+import { Loader } from "../intentui/loader";
 
 export interface ObjektCountProps {
   filtered: unknown[];

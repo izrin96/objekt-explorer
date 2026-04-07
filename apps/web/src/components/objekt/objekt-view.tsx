@@ -8,9 +8,9 @@ import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
 import { replaceUrlSize, cn } from "@/lib/utils";
 
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent } from "../ui/popover";
+import { Badge } from "../intentui/badge";
+import { Button } from "../intentui/button";
+import { Popover, PopoverContent } from "../intentui/popover";
 import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
 

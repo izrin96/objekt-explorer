@@ -11,7 +11,7 @@ import { preconnect } from "react-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { createQueryClient } from "@/lib/query/client";
 
-import { Toast } from "./ui/toast-custom";
+import { Toast } from "./intentui/toast-custom";
 
 declare module "react-aria-components" {
   interface RouterConfig {

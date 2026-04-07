@@ -10,10 +10,10 @@ import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 
-import { Avatar } from "../ui/avatar-custom";
-import { Button } from "../ui/button";
-import { Link } from "../ui/link";
-import { Tooltip, TooltipContent } from "../ui/tooltip";
+import { Avatar } from "../intentui/avatar-custom";
+import { Button } from "../intentui/button";
+import { Link } from "../intentui/link";
+import { Tooltip, TooltipContent } from "../intentui/tooltip";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {

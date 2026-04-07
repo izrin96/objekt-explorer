@@ -7,7 +7,7 @@ import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import { getListHref } from "@/lib/utils";
 
-import { Link } from "../ui/link";
+import { Link } from "../intentui/link";
 
 export default function ProfileLists() {
   const content = useIntlayer("list");

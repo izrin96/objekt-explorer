@@ -9,17 +9,17 @@ import { twJoin, twMerge } from "tailwind-merge";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/intentui/button";
+import { Separator } from "@/components/intentui/separator";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
 
 import Changelog from "./changelog";
+import { Container } from "./intentui/container";
+import { MenuLabel } from "./intentui/menu";
 import { useNavMenuItems } from "./navbar";
 import { SettingsButton } from "./settings-button";
-import { Container } from "./ui/container";
-import { MenuLabel } from "./ui/menu";
 
 export function MobileNavigation() {
   const content = useIntlayer("nav");

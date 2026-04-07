@@ -8,7 +8,7 @@ import { useEffect } from "react";
 
 import type { PublicProfile } from "@/lib/universal/user";
 
-import { Tab, TabList, Tabs } from "../ui/tabs";
+import { Tab, TabList, Tabs } from "../intentui/tabs";
 
 export default function ProfileTabs({ user }: { user: PublicProfile }) {
   const content = useIntlayer("profile");

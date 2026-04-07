@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 
 import { SITE_NAME } from "@/lib/utils";
 
-import { Link } from "./ui/link";
+import { Link } from "./intentui/link";
 
 export default function AppLogo() {
   return (

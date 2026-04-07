@@ -13,7 +13,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
 import { orpc } from "@/lib/orpc/client";
 
-import { Description, Label } from "./ui/field";
+import { Description, Label } from "./intentui/field";
 import {
   ModalBody,
   ModalClose,
@@ -21,9 +21,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./ui/modal";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
-import { Switch } from "./ui/switch";
+} from "./intentui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "./intentui/select";
+import { Switch } from "./intentui/switch";
 
 export function SettingsModal({
   open,

@@ -26,6 +26,7 @@ import { LockObjekt, UnlockObjekt } from "../filters/objekt/lock-unlock";
 import { PinObjekt, UnpinObjekt } from "../filters/objekt/pin-unpin";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { GenerateDiscordButton } from "../generate-discord-button";
+import { Loader } from "../intentui/loader";
 import { ObjektOverlay } from "../objekt/objekt-action";
 import {
   AddToListMenu,
@@ -34,7 +35,6 @@ import {
   ToggleLockMenuItem,
   TogglePinMenuItem,
 } from "../objekt/objekt-menu";
-import { Loader } from "../ui/loader";
 import CheckpointPicker from "./checkpoint-picker";
 import Filter from "./filter";
 

@@ -4,7 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useIntlayer } from "next-intlayer";
 import { createContext, type ReactNode, use, useState } from "react";
 
-import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../ui/modal";
+import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../intentui/modal";
 import ObjektDetail from "./objekt-detail";
 
 type Props = {

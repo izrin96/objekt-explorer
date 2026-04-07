@@ -11,9 +11,20 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import ErrorFallbackRender from "@/components/error-boundary";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Loader } from "@/components/ui/loader";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/intentui/card";
+import {
+  Chart,
+  type ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/intentui/chart";
+import { Loader } from "@/components/intentui/loader";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";

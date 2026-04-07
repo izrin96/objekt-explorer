@@ -28,10 +28,10 @@ import { getBaseURL, cn } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
+import { Badge } from "../intentui/badge";
+import { Card } from "../intentui/card";
+import { Loader } from "../intentui/loader";
 import ObjektModal, { useObjektModal } from "../objekt/objekt-modal";
-import { Badge } from "../ui/badge";
-import { Card } from "../ui/card";
-import { Loader } from "../ui/loader";
 import UserLink from "../user-link";
 import ActivityFilter from "./activity-filter";
 import { useTypeFilter } from "./filter-type";

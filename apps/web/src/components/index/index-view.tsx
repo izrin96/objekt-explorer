@@ -20,8 +20,8 @@ import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { Loader } from "../intentui/loader";
 import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objekt-menu";
-import { Loader } from "../ui/loader";
 import Filter from "./filter";
 
 export default dynamic(() => Promise.resolve(IndexRender), {

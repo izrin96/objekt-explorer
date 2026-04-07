@@ -3,7 +3,7 @@
 import { useIntlayer } from "next-intlayer";
 import { parseAsBoolean, useQueryState } from "nuqs";
 
-import { Toggle } from "@/components/ui/toggle";
+import { Toggle } from "@/components/intentui/toggle";
 
 export function useShowCount() {
   return useQueryState("showCount", parseAsBoolean.withDefault(false));

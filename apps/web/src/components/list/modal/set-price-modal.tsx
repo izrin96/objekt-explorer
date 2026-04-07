@@ -5,10 +5,10 @@ import { useIntlayer } from "next-intlayer";
 import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Input } from "@/components/intentui/input";
 import {
   ModalBody,
   ModalClose,
@@ -17,9 +17,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { NumberField, NumberInput } from "@/components/ui/number-field";
-import { TextField } from "@/components/ui/text-field";
+} from "@/components/intentui/modal";
+import { NumberField, NumberInput } from "@/components/intentui/number-field";
+import { TextField } from "@/components/intentui/text-field";
 import { useUpdateEntryPrices } from "@/hooks/actions/update-entry-prices";
 import { useTarget } from "@/hooks/use-target";
 

@@ -4,7 +4,7 @@ import { useIntlayer } from "next-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Toggle } from "../ui/toggle";
+import { Toggle } from "../intentui/toggle";
 
 export default function HidePinFilter() {
   const content = useIntlayer("filter");

@@ -4,8 +4,8 @@ import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
-import type { ButtonProps } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
+import type { ButtonProps } from "@/components/intentui/button";
+import { Button } from "@/components/intentui/button";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";

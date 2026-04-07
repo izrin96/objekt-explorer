@@ -7,10 +7,10 @@ import { Autocomplete, type Key, Popover, useFilter } from "react-aria-component
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 
-import { Dialog } from "../ui/dialog";
-import { ListBox } from "../ui/list-box";
-import { SearchField, SearchInput } from "../ui/search-field";
-import { Select, SelectItem, SelectTrigger } from "../ui/select";
+import { Dialog } from "../intentui/dialog";
+import { ListBox } from "../intentui/list-box";
+import { SearchField, SearchInput } from "../intentui/search-field";
+import { Select, SelectItem, SelectTrigger } from "../intentui/select";
 
 export default function CollectionFilter() {
   const content = useIntlayer("filter");

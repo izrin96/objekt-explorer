@@ -27,7 +27,7 @@ import {
 } from "react-aria-components";
 import { twJoin, twMerge } from "tailwind-merge";
 
-import { Text } from "@/components/ui/text";
+import { Text } from "@/components/intentui/text";
 import { cx } from "@/lib/primitive";
 
 import { Checkbox } from "./checkbox";

@@ -27,9 +27,9 @@ import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 
-import { Button } from "../ui/button";
-import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem, MenuLabel, MenuSubMenu } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Loader } from "../intentui/loader";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSubMenu } from "../intentui/menu";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (

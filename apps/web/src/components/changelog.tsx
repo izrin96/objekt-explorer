@@ -3,13 +3,13 @@
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 import {
   Disclosure,
   DisclosureGroup,
   DisclosurePanel,
   DisclosureTrigger,
-} from "./ui/disclosure-group";
+} from "./intentui/disclosure-group";
 import {
   Modal,
   ModalBody,
@@ -18,7 +18,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./ui/modal";
+} from "./intentui/modal";
 
 export default function Changelog() {
   const content = useIntlayer("common");
