@@ -2,20 +2,18 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 
-import { compareByArray } from "@/lib/filter-utils";
+import { compareByArray, sortObjekts } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilterData } from "./use-filter-data";
 import { isFiltering, type Filters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
-import { useObjektSortFactory } from "./use-objekt-sort";
 
 export function useShapeObjekts() {
   const { seasons, classes } = useFilterData();
   const { getArtist } = useCosmoArtist();
   const compareMember = useCompareMember();
-  const sortObjektsFactory = useObjektSortFactory();
 
   return useCallback(
     (
@@ -24,7 +22,6 @@ export function useShapeObjekts() {
       isProfile: boolean = false,
     ): [string, ValidObjekt[][]][] => {
       const filtering = isFiltering(filters);
-      const sortObjekts = (data: ValidObjekt[]) => sortObjektsFactory(data, filters);
 
       // group by key
       let groupByKey: Record<string, ValidObjekt[]>;
@@ -65,7 +62,7 @@ export function useShapeObjekts() {
 
       return groupByKeySorted.map(([key, items]) => {
         // sort objekts
-        items = sortObjekts(items);
+        items = sortObjekts(items, filters, seasons, compareMember);
 
         // sort pin
         // if not filtering, pins should show first
@@ -99,6 +96,6 @@ export function useShapeObjekts() {
         return [key, grouped];
       });
     },
-    [getArtist, compareMember, seasons, classes, sortObjektsFactory],
+    [getArtist, compareMember, seasons, classes],
   );
 }
