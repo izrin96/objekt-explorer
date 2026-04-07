@@ -7,26 +7,24 @@ import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilterData } from "./use-filter-data";
-import { useFilters, useIsFiltering } from "./use-filters";
+import { isFiltering, type Filters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
-import { useObjektSort } from "./use-objekt-sort";
+import { useObjektSortFactory } from "./use-objekt-sort";
 
 export function useShapeObjekts() {
   const { seasons, classes } = useFilterData();
-  const [filters] = useFilters();
-  const isFiltering = useIsFiltering();
   const { getArtist } = useCosmoArtist();
   const compareMember = useCompareMember();
-  const sortObjekts = useObjektSort();
+  const sortObjektsFactory = useObjektSortFactory();
 
   return useCallback(
-    (objekts: ValidObjekt[], isProfile: boolean = false): [string, ValidObjekt[][]][] => {
-      // - group by key
-      // - sort the group
-      // - sort the items
-      // - sort pin objekt
-      // - group by duplicate
-      // - sort by duplicate
+    (
+      objekts: ValidObjekt[],
+      filters: Filters,
+      isProfile: boolean = false,
+    ): [string, ValidObjekt[][]][] => {
+      const filtering = isFiltering(filters);
+      const sortObjekts = (data: ValidObjekt[]) => sortObjektsFactory(data, filters);
 
       // group by key
       let groupByKey: Record<string, ValidObjekt[]>;
@@ -71,7 +69,7 @@ export function useShapeObjekts() {
 
         // sort pin
         // if not filtering, pins should show first
-        if (!isFiltering && isProfile && !filters.hidePin) {
+        if (!filtering && isProfile && !filters.hidePin) {
           const ownedItems = items.filter(isObjektOwned);
           items = [
             ...ownedItems
@@ -90,7 +88,7 @@ export function useShapeObjekts() {
         }
 
         // sort duplicate objekts
-        if (isFiltering && filters.sort === "duplicate") {
+        if (filtering && filters.sort === "duplicate") {
           if (filters.sort_dir === "asc") {
             grouped = grouped.toSorted((a, b) => a.length - b.length);
           } else {
@@ -101,6 +99,6 @@ export function useShapeObjekts() {
         return [key, grouped];
       });
     },
-    [filters, isFiltering, getArtist, compareMember, sortObjekts, seasons, classes],
+    [getArtist, compareMember, seasons, classes, sortObjektsFactory],
   );
 }

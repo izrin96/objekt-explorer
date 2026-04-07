@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useDeferredValue } from "react";
+import { useDeferredValue, useMemo } from "react";
 
 import { collectionOptions } from "@/lib/query-options";
 
@@ -12,11 +12,23 @@ export function useCollectionObjekts() {
   const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const { selectedArtistIds } = useCosmoArtist();
+  const [filters] = useFilters();
+  const deferredFilters = useDeferredValue(filters);
+
   const serverFilters = {
     artist: selectedArtistIds,
   };
   const query = useSuspenseQuery(collectionOptions(serverFilters));
-  const [filters] = useFilters();
-  const filtered = filter(query.data);
-  return useDeferredValue({ shaped: shape(filtered), filtered, filters });
+
+  const result = useMemo(() => {
+    const filtered = filter(deferredFilters, query.data);
+    return {
+      shaped: shape(filtered, deferredFilters, false),
+      filtered,
+      filters: deferredFilters,
+      isStale: filters !== deferredFilters,
+    };
+  }, [filter, shape, deferredFilters, query.data, filters]);
+
+  return result;
 }

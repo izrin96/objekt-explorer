@@ -1,6 +1,6 @@
 import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import { useDeferredValue } from "react";
+import { useDeferredValue, useMemo } from "react";
 
 import { augmentObjektsWithPinLock } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
@@ -19,6 +19,7 @@ export function useProfileObjekts() {
   const profile = useTarget((a) => a.profile)!;
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
+  const deferredFilters = useDeferredValue(filters);
 
   const serverFilters = {
     artist: selectedArtistIds,
@@ -47,29 +48,44 @@ export function useProfileObjekts() {
 
   const objektsQuery = useQuery(collectionOptions(serverFilters, !hasNextPage));
 
-  // owned objekts - in checkpoint mode, skip pin/lock augmentation
-  const ownedWithPinLock = filters.at
-    ? allOwnedObjekts
-    : augmentObjektsWithPinLock(allOwnedObjekts, pinsQuery.data, lockedObjektQuery.data);
+  const result = useMemo(() => {
+    // owned objekts - in checkpoint mode, skip pin/lock augmentation
+    const ownedWithPinLock = deferredFilters.at
+      ? allOwnedObjekts
+      : augmentObjektsWithPinLock(allOwnedObjekts, pinsQuery.data, lockedObjektQuery.data);
 
-  const ownedFiltered = filter(ownedWithPinLock);
+    const ownedFiltered = filter(deferredFilters, ownedWithPinLock);
 
-  // find missing objekts based on owned slug
-  const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
-  const missingObjekts =
-    filters.unowned || filters.missing
-      ? (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug))
-      : [];
-  const missingFiltered = filter(missingObjekts);
+    // find missing objekts based on owned slug
+    const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
+    const missingObjekts =
+      deferredFilters.unowned || deferredFilters.missing
+        ? (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug))
+        : [];
+    const missingFiltered = filter(deferredFilters, missingObjekts);
 
-  // combine both
-  const filtered = [...ownedFiltered, ...missingFiltered];
+    // combine both
+    const filtered = [...ownedFiltered, ...missingFiltered];
 
-  return useDeferredValue({
-    shaped: shape(filtered, true),
-    filtered,
-    grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
-    filters,
+    return {
+      shaped: shape(filtered, deferredFilters, true),
+      filtered,
+      grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
+      filters: deferredFilters,
+      hasNextPage,
+      isStale: filters !== deferredFilters,
+    };
+  }, [
+    filter,
+    shape,
+    deferredFilters,
+    allOwnedObjekts,
+    pinsQuery.data,
+    lockedObjektQuery.data,
+    objektsQuery.data,
     hasNextPage,
-  });
+    filters,
+  ]);
+
+  return result;
 }

@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import { useDeferredValue } from "react";
+import { useDeferredValue, useMemo } from "react";
 
 import type { CompareInput } from "@/lib/compare/schemas";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
@@ -21,13 +21,18 @@ export function useCompareObjekts(input: CompareInput) {
     }),
   );
   const [filters] = useFilters();
+  const deferredFilters = useDeferredValue(filters);
 
-  const filtered = filter(query.data);
+  const result = useMemo(() => {
+    const filtered = filter(deferredFilters, query.data);
+    return {
+      shaped: shape(filtered, deferredFilters, false),
+      filtered,
+      grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
+      filters: deferredFilters,
+      isStale: filters !== deferredFilters,
+    };
+  }, [filter, shape, deferredFilters, query.data, filters]);
 
-  return useDeferredValue({
-    shaped: shape(filtered),
-    filtered,
-    grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
-    filters,
-  });
+  return result;
 }

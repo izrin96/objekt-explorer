@@ -34,7 +34,7 @@ export function useProfileObjektsServer() {
   } = useOwnedCollectionsServer(profile.address, serverFilters);
 
   return {
-    shaped: shape(filtered, true),
+    shaped: shape(filtered, filters, true),
     filtered,
     total,
     filters,

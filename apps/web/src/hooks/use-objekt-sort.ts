@@ -5,16 +5,15 @@ import { compareByArray, getSortDate } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { useFilterData } from "./use-filter-data";
-import { useFilters } from "./use-filters";
+import type { Filters } from "./use-filters";
 import { useCompareMember } from "./use-objekt-compare-member";
 
-export function useObjektSort() {
+export function useObjektSortFactory() {
   const { seasons } = useFilterData();
-  const [filters] = useFilters();
   const compareMember = useCompareMember();
 
   return useCallback(
-    (data: ValidObjekt[]) => {
+    (data: ValidObjekt[], filters: Filters) => {
       let objekts = data;
 
       const sort = filters.sort ?? "date";
@@ -66,6 +65,6 @@ export function useObjektSort() {
 
       return objekts;
     },
-    [filters, compareMember, seasons],
+    [compareMember, seasons],
   );
 }

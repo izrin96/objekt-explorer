@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
-import { useDeferredValue } from "react";
+import { useDeferredValue, useMemo } from "react";
 
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
@@ -24,11 +24,18 @@ export function useListObjekts() {
     }),
   );
   const [filters] = useFilters();
-  const filtered = filter(query.data);
-  return useDeferredValue({
-    shaped: shape(filtered),
-    filtered,
-    grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
-    filters,
-  });
+  const deferredFilters = useDeferredValue(filters);
+
+  const result = useMemo(() => {
+    const filtered = filter(deferredFilters, query.data);
+    return {
+      shaped: shape(filtered, deferredFilters, false),
+      filtered,
+      grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
+      filters: deferredFilters,
+      isStale: filters !== deferredFilters,
+    };
+  }, [filter, shape, deferredFilters, query.data, filters]);
+
+  return result;
 }

@@ -18,6 +18,7 @@ export function useProgressObjekts() {
   const profile = useTarget((a) => a.profile)!;
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
+  const deferredFilters = useDeferredValue(filters);
 
   const serverFilters = {
     artist: selectedArtistIds,
@@ -30,20 +31,20 @@ export function useProgressObjekts() {
   );
   const objektsQuery = useSuspenseQuery(collectionOptions(serverFilters, !hasNextPage));
 
-  // owned objekts
-  const ownedFiltered = filter(allOwnedObjekts);
+  const result = useMemo(() => {
+    // owned objekts
+    const ownedFiltered = filter(deferredFilters, allOwnedObjekts);
 
-  // all collections filtered
-  const collectionsFiltered = filter(objektsQuery.data);
+    // all collections filtered
+    const collectionsFiltered = filter(deferredFilters, objektsQuery.data);
 
-  // find missing objekts based on owned slug
-  const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
-  const missingObjekts = collectionsFiltered.filter((obj) => !ownedSlugs.has(obj.slug));
+    // find missing objekts based on owned slug
+    const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
+    const missingObjekts = collectionsFiltered.filter((obj) => !ownedSlugs.has(obj.slug));
 
-  // combine both
-  const filtered = [...ownedFiltered, ...missingObjekts];
+    // combine both
+    const filtered = [...ownedFiltered, ...missingObjekts];
 
-  const stats = useMemo(() => {
     const ownedGrouped = Object.values(groupBy(ownedFiltered, (obj) => obj.collectionId));
     const owned = ownedGrouped.filter(([objekt]) => objekt && tradeableFilter(objekt)).length;
 
@@ -51,20 +52,23 @@ export function useProgressObjekts() {
 
     const percentage = total > 0 ? Number(((owned / total) * 100).toFixed(1)) : 0;
 
-    return {
+    const stats = {
       owned,
       total,
       percentage,
     };
-  }, [ownedFiltered, collectionsFiltered]);
 
-  return useDeferredValue({
-    shaped: shape(filtered),
-    filters,
-    ownedSlugs,
-    hasNextPage,
-    stats,
-    ownedFiltered,
-    collectionsFiltered,
-  });
+    return {
+      shaped: shape(filtered),
+      filters: deferredFilters,
+      ownedSlugs,
+      hasNextPage,
+      stats,
+      ownedFiltered,
+      collectionsFiltered,
+      isStale: filters !== deferredFilters,
+    };
+  }, [filter, shape, deferredFilters, allOwnedObjekts, objektsQuery.data, hasNextPage, filters]);
+
+  return result;
 }

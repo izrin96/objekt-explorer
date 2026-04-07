@@ -81,9 +81,9 @@ function ProfileStats() {
   );
   const collectionQuery = useSuspenseQuery(collectionOptions(serverFilters, !hasNextPage));
 
-  const objekts = filter(allOwnedObjekts);
+  const objekts = filter(filters, allOwnedObjekts);
 
-  const collections = filter(collectionQuery.data);
+  const collections = filter(filters, collectionQuery.data);
 
   return (
     <div className="flex flex-col gap-4">
