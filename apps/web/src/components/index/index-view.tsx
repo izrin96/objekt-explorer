@@ -14,7 +14,6 @@ import { useSession } from "@/hooks/use-user";
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
-import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
@@ -56,12 +55,11 @@ function IndexRender() {
 }
 
 function IndexFilter({ selectRef }: { selectRef: (el: HTMLDivElement | null) => void }) {
-  const { data: session } = useSession();
   return (
     <FilterContainer>
       <div className="flex w-full flex-col gap-4">
         <Filter />
-        {session && <div className="contents" ref={selectRef} />}
+        <div className="contents" ref={selectRef} />
       </div>
     </FilterContainer>
   );
@@ -100,7 +98,8 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
         <AddToList size="sm" />
       </FloatingSelectMode>
 
-      {selectTarget &&
+      {session &&
+        selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>
             <AddToList />
@@ -109,7 +108,7 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
         )}
 
       <ObjektCount filtered={filtered} />
-      <ObjektVirtualGrid shaped={shaped as ShapedData} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

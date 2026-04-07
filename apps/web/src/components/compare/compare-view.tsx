@@ -9,7 +9,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ObjektCount } from "@/components/collection/objekt-count";
 import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
-import type { ShapedData } from "@/components/collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "@/components/collection/objekt-virtual-grid";
 import ErrorFallbackRender from "@/components/error-boundary";
 import ArtistFilter from "@/components/filters/filter-artist";
@@ -166,7 +165,7 @@ function CompareGrid({ input }: { input: CompareInput }) {
   return (
     <>
       <ObjektCount filtered={filtered} />
-      <ObjektVirtualGrid shaped={shaped as ShapedData} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

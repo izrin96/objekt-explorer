@@ -15,7 +15,6 @@ import { useListAuthed, useSession } from "@/hooks/use-user";
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
-import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { CompareButton } from "../compare/compare-button";
 import ErrorFallbackRender from "../error-boundary";
@@ -101,7 +100,6 @@ function ListFilter({
   selectRef: (el: HTMLDivElement | null) => void;
   discordRef: (el: HTMLDivElement | null) => void;
 }) {
-  const { data: session } = useSession();
   const list = useTarget((a) => a.list)!;
   return (
     <FilterContainer>
@@ -115,7 +113,7 @@ function ListFilter({
             }}
           />
         </div>
-        {session && <div className="contents" ref={selectRef} />}
+        <div className="contents" ref={selectRef} />
       </div>
     </FilterContainer>
   );
@@ -184,7 +182,8 @@ function ListView({
         <AddToList size="sm" />
       </FloatingSelectMode>
 
-      {selectTarget &&
+      {session &&
+        selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>
             {isOwned && <RemoveFromList />}
@@ -197,7 +196,7 @@ function ListView({
       {discordTarget && createPortal(<GenerateDiscordButton objekts={filtered} />, discordTarget)}
 
       <ObjektCount filtered={filtered} grouped={filters.grouped ? grouped : undefined} />
-      <ObjektVirtualGrid shaped={shaped as ShapedData} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

@@ -11,7 +11,6 @@ import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
-import { useFilters } from "@/hooks/use-filters";
 import { useProfileObjektsServer } from "@/hooks/use-profile-objekt-server";
 import { useTarget } from "@/hooks/use-target";
 import { useSession } from "@/hooks/use-user";
@@ -19,7 +18,6 @@ import { useSession } from "@/hooks/use-user";
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
-import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
@@ -73,14 +71,11 @@ function ProfileObjektServerRender() {
 }
 
 function ProfileObjektFilters({ selectRef }: { selectRef: (el: HTMLDivElement | null) => void }) {
-  const { data: session } = useSession();
-  const [filters] = useFilters();
-
   return (
     <FilterContainer>
       <div className="flex w-full flex-col gap-4">
         <FilterServer />
-        {session && !filters.at && <div className="contents" ref={selectRef} />}
+        <div className="contents" ref={selectRef} />
       </div>
     </FilterContainer>
   );
@@ -95,7 +90,8 @@ function ProfileObjektServer({
 }) {
   const { data: session } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, total, query } = useProfileObjektsServer();
+  const { shaped, filtered, total, query, filters } = useProfileObjektsServer();
+  const showSelectMode = session && !filters.at && selectTarget;
 
   const renderObjekt = useCallback(
     ({ item }: { item: ValidObjekt[] }) => {
@@ -136,7 +132,7 @@ function ProfileObjektServer({
         <AddToList size="sm" address={address} />
       </FloatingSelectMode>
 
-      {selectTarget &&
+      {showSelectMode &&
         createPortal(
           <SelectMode objekts={filtered}>
             <AddToList address={address} />
@@ -145,11 +141,7 @@ function ProfileObjektServer({
         )}
 
       <ObjektCount filtered={filtered} total={total} />
-      <ObjektVirtualGrid
-        shaped={shaped as ShapedData}
-        renderItem={renderObjekt}
-        infiniteQueryProp={query}
-      />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} infiniteQueryProp={query} />
     </>
   );
 }

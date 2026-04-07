@@ -8,7 +8,6 @@ import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
-import { useFilters } from "@/hooks/use-filters";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useSession } from "@/hooks/use-user";
@@ -17,7 +16,6 @@ import { isObjektOwned } from "@/lib/objekt-utils";
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
-import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
@@ -83,15 +81,12 @@ function ProfileObjektFilters({
   selectRef: (el: HTMLDivElement | null) => void;
   discordRef: (el: HTMLDivElement | null) => void;
 }) {
-  const { data: session } = useSession();
-  const [filters] = useFilters();
-
   return (
     <FilterContainer>
       <div className="flex w-full flex-col gap-4">
         <Filter discordRef={discordRef} />
         <CheckpointPicker />
-        {session && !filters.at && <div className="contents" ref={selectRef} />}
+        <div className="contents" ref={selectRef} />
       </div>
     </FilterContainer>
   );
@@ -110,6 +105,7 @@ function ProfileObjekt({
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, grouped, filters, hasNextPage } = useProfileObjekts();
   const isProfileAuthed = useProfileAuthed();
+  const showSelectMode = session && !filters.at && selectTarget;
 
   const renderObjekt = useCallback(
     ({ item }: { item: ValidObjekt[] }) => {
@@ -183,7 +179,7 @@ function ProfileObjekt({
         )}
       </FloatingSelectMode>
 
-      {selectTarget &&
+      {showSelectMode &&
         createPortal(
           <SelectMode objekts={filtered}>
             <AddToList address={address} />
@@ -206,7 +202,7 @@ function ProfileObjekt({
         grouped={filters.grouped ? grouped : undefined}
         hasNextPage={hasNextPage}
       />
-      <ObjektVirtualGrid shaped={shaped as ShapedData} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

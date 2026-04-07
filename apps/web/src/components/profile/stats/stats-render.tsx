@@ -290,7 +290,6 @@ function MemberProgressChart({
   collections: ValidObjekt[];
 }) {
   const content = useIntlayer("stats");
-  const [filters] = useFilters();
   const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
@@ -319,7 +318,7 @@ function MemberProgressChart({
         };
       })
       .toSorted((a, b) => b.percentage - a.percentage);
-  }, [selectedArtists, objekts, collections, filters]);
+  }, [selectedArtists, objekts, collections]);
 
   const chartConfig = {
     percentage: {
