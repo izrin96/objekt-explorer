@@ -9,6 +9,7 @@ import { betterAuth } from "better-auth/minimal";
 import { username } from "better-auth/plugins/username";
 import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
+import type { FetchError } from "ofetch";
 import { cache } from "react";
 
 import { betterAuthLocale } from "@/i18n/better-auth";
@@ -152,7 +153,12 @@ export const getSession = cache(async () =>
 );
 
 async function safeFetchByNickname(identifier: string) {
-  return fetchByNickname(identifier).catch(() => undefined);
+  return fetchByNickname(identifier).catch((error: FetchError<{ error: { code: string } }>) => {
+    if (error.data?.error.code === "USER_NOT_FOUND") {
+      return null;
+    }
+    return undefined;
+  });
 }
 
 export async function fetchUserByIdentifier(
@@ -204,11 +210,13 @@ export async function fetchUserByIdentifier(
     if (needsCheck && cachedUser.nickname) {
       const user = await safeFetchByNickname(cachedUser.nickname);
 
+      // update last check
       await db
         .update(userAddress)
         .set({ lastCosmoCheck: new Date().toISOString() })
         .where(eq(userAddress.nickname, cachedUser.nickname));
 
+      // address changed
       if (user && user.address.toLowerCase() !== cachedUser.address.toLowerCase()) {
         await cacheUsers([
           {
@@ -216,6 +224,16 @@ export async function fetchUserByIdentifier(
             nickname: user.nickname,
           },
         ]);
+
+        return await fetchUserByIdentifier(identifier);
+      }
+
+      // nickname not found, unbind
+      if (user === null) {
+        await db
+          .update(userAddress)
+          .set({ nickname: null })
+          .where(eq(userAddress.nickname, cachedUser.nickname));
 
         return await fetchUserByIdentifier(identifier);
       }
