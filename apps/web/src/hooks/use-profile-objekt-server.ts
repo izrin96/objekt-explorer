@@ -1,5 +1,3 @@
-import { useDeferredValue } from "react";
-
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useOwnedCollectionsServer } from "./use-owned-collections-server";
@@ -35,11 +33,11 @@ export function useProfileObjektsServer() {
     query,
   } = useOwnedCollectionsServer(profile.address, serverFilters);
 
-  return useDeferredValue({
+  return {
     shaped: shape(filtered, true),
     filtered,
     total,
     filters,
     query,
-  });
+  };
 }
