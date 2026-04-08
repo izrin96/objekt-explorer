@@ -165,7 +165,7 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
   return (
     <>
       <ObjektCount filtered={filtered} />
-      <ObjektVirtualGrid dataKey={list.slug} shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

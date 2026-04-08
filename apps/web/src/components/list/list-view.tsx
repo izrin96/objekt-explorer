@@ -199,7 +199,7 @@ function ListView({
       {discordTarget && createPortal(<GenerateDiscordButton objekts={filtered} />, discordTarget)}
 
       <ObjektCount filtered={filtered} grouped={filters.grouped ? grouped : undefined} />
-      <ObjektVirtualGrid dataKey={list.slug} shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

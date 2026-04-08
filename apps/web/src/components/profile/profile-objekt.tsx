@@ -202,7 +202,7 @@ function ProfileObjekt({
         grouped={filters.grouped ? grouped : undefined}
         hasNextPage={hasNextPage}
       />
-      <ObjektVirtualGrid dataKey={address} shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

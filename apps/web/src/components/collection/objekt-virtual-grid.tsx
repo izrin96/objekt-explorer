@@ -3,8 +3,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { QueryStatus } from "@tanstack/react-query";
 import type { ReactElement } from "react";
-import { useMemo, useRef, useLayoutEffect } from "react";
-import type { WindowVirtualizerHandle, CacheSnapshot } from "virtua";
+import { useMemo } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import { useObjektColumn } from "@/hooks/use-objekt-column";
@@ -17,7 +16,6 @@ export type ShapedData<T = ValidObjekt[]> = [string, T[]][];
 export interface ObjektVirtualGridProps<T = ValidObjekt[]> {
   shaped: ShapedData<T>;
   columns?: number;
-  dataKey?: string;
   renderItem: (props: {
     item: T;
     items: T[];
@@ -32,45 +30,14 @@ export interface ObjektVirtualGridProps<T = ValidObjekt[]> {
   };
 }
 
-const cacheStore = new Map<string, [number, CacheSnapshot]>();
-
 export function ObjektVirtualGrid<T = ValidObjekt[]>({
   shaped,
   columns: columnsProp,
-  dataKey,
   renderItem,
   infiniteQueryProp,
 }: ObjektVirtualGridProps<T>) {
   const { columns: contextColumns } = useObjektColumn();
   const columns = columnsProp ?? contextColumns;
-  const ref = useRef<WindowVirtualizerHandle>(null);
-
-  const [offset, cache] = useMemo(() => {
-    if (!dataKey) return [undefined, undefined];
-    return cacheStore.get(dataKey) ?? [undefined, undefined];
-  }, [dataKey]);
-
-  useLayoutEffect(() => {
-    if (!ref.current) return;
-
-    if (offset !== undefined) {
-      window.scrollTo(0, offset);
-    }
-
-    let scrollY = 0;
-    const onScroll = () => {
-      scrollY = window.scrollY;
-    };
-    window.addEventListener("scroll", onScroll);
-    onScroll();
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (dataKey && ref.current) {
-        cacheStore.set(dataKey, [scrollY, ref.current.cache]);
-      }
-    };
-  }, [dataKey, offset]);
 
   const virtualList = useMemo(() => {
     return shaped.flatMap(([title, items]) => [
@@ -94,7 +61,7 @@ export function ObjektVirtualGrid<T = ValidObjekt[]>({
 
   return (
     <div className="[&>*>*]:will-change-transform">
-      <WindowVirtualizer key={columns} ref={ref} cache={cache}>
+      <WindowVirtualizer key={columns}>
         {virtualList}
         {infiniteQueryProp && <InfiniteQueryNext {...infiniteQueryProp} />}
       </WindowVirtualizer>
