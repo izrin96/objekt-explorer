@@ -5,7 +5,6 @@ import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ProfileProvider } from "@/components/profile-provider";
 import { getUserByIdentifier, getList } from "@/lib/data-fetching";
-import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 import { sanitizePublicList } from "@/lib/server/list";
@@ -33,14 +32,6 @@ export default async function ProfileListPage(props: PageProps<"/profile-list/[n
 
   const profile = sanitizePublicProfile(profileResult, session?.user.id);
   const list = sanitizePublicList(listResult, session?.user.id);
-
-  void queryClient.prefetchQuery(
-    orpc.list.listEntries.queryOptions({
-      input: {
-        slug: list.slug,
-      },
-    }),
-  );
 
   return (
     <ProfileProvider targetProfile={profile} targetList={list}>

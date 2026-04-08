@@ -67,7 +67,6 @@ function TradeViewRender({ objekt, serial }: TradeViewProps) {
       const url = new URL(`/api/objekts/list/${objekt.slug}`, getBaseURL());
       return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
     },
-    staleTime: 1000 * 60,
   });
 
   return (

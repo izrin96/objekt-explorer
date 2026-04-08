@@ -73,7 +73,7 @@ function LiveSessionList({ artistId }: { artistId: string }) {
       });
       return result;
     },
-    staleTime: 5 * 1000,
+    staleTime: 1000 * 60 * 5,
   });
 
   return (
