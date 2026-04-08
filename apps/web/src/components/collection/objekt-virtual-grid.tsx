@@ -16,6 +16,7 @@ export type ShapedData<T = ValidObjekt[]> = [string, T[]][];
 export interface ObjektVirtualGridProps<T = ValidObjekt[]> {
   shaped: ShapedData<T>;
   columns?: number;
+  dataKey?: string;
   renderItem: (props: {
     item: T;
     items: T[];
@@ -33,6 +34,7 @@ export interface ObjektVirtualGridProps<T = ValidObjekt[]> {
 export function ObjektVirtualGrid<T = ValidObjekt[]>({
   shaped,
   columns: columnsProp,
+  dataKey,
   renderItem,
   infiniteQueryProp,
 }: ObjektVirtualGridProps<T>) {
@@ -57,7 +59,7 @@ export function ObjektVirtualGrid<T = ValidObjekt[]>({
         ),
       }),
     ]);
-  }, [shaped, columns, renderItem]);
+  }, [shaped, columns, renderItem, dataKey]);
 
   return (
     <div className="[&>*>*]:will-change-transform">

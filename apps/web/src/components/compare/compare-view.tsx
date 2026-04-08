@@ -35,6 +35,7 @@ import { useResetFilters } from "@/hooks/use-reset-filters";
 import { useTarget } from "@/hooks/use-target";
 import { useSession } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/compare/schemas";
+import type { PublicList } from "@/lib/universal/user";
 
 interface CompareViewProps {
   input: CompareInput;
@@ -62,7 +63,7 @@ export default function CompareView({ input }: CompareViewProps) {
                   </div>
                 }
               >
-                <CompareGrid input={input} />
+                <CompareGrid input={input} list={list} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -132,11 +133,10 @@ function CompareFilter() {
   );
 }
 
-function CompareGrid({ input }: { input: CompareInput }) {
+function CompareGrid({ input, list }: { input: CompareInput; list: PublicList }) {
   const { data: session } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, filters } = useCompareObjekts(input);
-  const list = useTarget((a) => a.list)!;
   const isProfileList = list.listType === "profile";
 
   const renderObjekt = useCallback(
@@ -165,7 +165,7 @@ function CompareGrid({ input }: { input: CompareInput }) {
   return (
     <>
       <ObjektCount filtered={filtered} />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid dataKey={list.slug} shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

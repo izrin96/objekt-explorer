@@ -141,7 +141,12 @@ function ProfileObjektServer({
         )}
 
       <ObjektCount filtered={filtered} total={total} />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} infiniteQueryProp={query} />
+      <ObjektVirtualGrid
+        dataKey={address}
+        shaped={shaped}
+        renderItem={renderObjekt}
+        infiniteQueryProp={query}
+      />
     </>
   );
 }
