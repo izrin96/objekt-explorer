@@ -38,7 +38,6 @@
   "activity": {
     "title": "Objekt Activity",
     "description": "Latest objekt activity in realtime",
-    "beta": "Beta",
     "event_type": {
       "mint": "Mint",
       "spin": "Spin",
@@ -579,7 +578,6 @@
   },
   "live": {
     "title": "Cosmo Live",
-    "alpha": "Alpha",
     "description": "Live by member from Cosmo app",
     "tabs_label": "Recipe App",
     "no_live": "No live available at this moment",

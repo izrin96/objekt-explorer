@@ -11,10 +11,6 @@ const content = {
       en: "Latest objekt activity in realtime",
       ko: "실시간 최신 오브젝트 활동",
     }),
-    beta: t({
-      en: "Beta",
-      ko: "베타",
-    }),
     event_type: {
       mint: t({
         en: "Mint",

@@ -4,7 +4,6 @@ const content = {
   key: "live",
   content: {
     title: t({ en: "Cosmo Live", ko: "Cosmo Live" }),
-    alpha: t({ en: "Alpha", ko: "알파" }),
     description: t({ en: "Live by member from Cosmo app", ko: "Cosmo 앱의 멤버별 라이브" }),
     tabs_label: t({ en: "Recipe App", ko: "Recipe 앱" }),
     no_live: t({

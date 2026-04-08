@@ -38,7 +38,6 @@
   "activity": {
     "title": "오브젝트 활동",
     "description": "실시간 최신 오브젝트 활동",
-    "beta": "베타",
     "event_type": {
       "mint": "민팅",
       "spin": "스핀",
@@ -579,7 +578,6 @@
   },
   "live": {
     "title": "Cosmo Live",
-    "alpha": "알파",
     "description": "Cosmo 앱의 멤버별 라이브",
     "tabs_label": "Recipe 앱",
     "no_live": "현재 이용 가능한 라이브가 없습니다",
