@@ -27,6 +27,7 @@ export const CustomLivestreamPlayer = (props: { callType: string; callId: string
   const client = useStreamVideoClient();
 
   const [call, setCall] = useState<Call>();
+
   useEffect(() => {
     if (!client) return;
     const myCall = client.call(callType, callId);
@@ -55,7 +56,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   const liveSession = useLiveSession();
   const { participant } = useParticipantViewContext();
   return (
-    <div className="flex aspect-9/16 h-full w-full items-center justify-center" style={style}>
+    <div className="flex h-full w-full items-center justify-center" style={style}>
       <div
         className="relative h-24 w-24 rounded-full outline-4 outline-(--color)"
         style={
@@ -146,21 +147,18 @@ const CustomLivestreamLayout = () => {
   const { useParticipants } = useCallStateHooks();
   const [currentSpeaker] = useParticipants();
   const [open, setOpen] = useState(false);
+
   return (
-    <div className="relative">
+    <>
       {currentSpeaker ? (
         <>
           <ParticipantView
             PictureInPicturePlaceholder={null}
-            className="relative flex aspect-9/16 h-[calc(100svh-140px)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
+            className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
             // render when video is disabled
             VideoPlaceholder={CustomVideoPlaceholder}
             // render after video element
-            ParticipantViewUI={
-              <LiveFooter>
-                <LiveControl />
-              </LiveFooter>
-            }
+            ParticipantViewUI={null}
             participant={currentSpeaker}
             muteAudio={!open}
             key={`${open}`}
@@ -172,10 +170,22 @@ const CustomLivestreamLayout = () => {
               </Button>
             </div>
           )}
+          <LiveFooter>
+            <LiveControl />
+          </LiveFooter>
         </>
       ) : (
-        <LiveEnded />
+        <LiveEndedLayout />
       )}
-    </div>
+    </>
   );
 };
+
+export function LiveEndedLayout() {
+  return (
+    <>
+      <LiveEnded />
+      <LiveFooter />
+    </>
+  );
+}

@@ -7,8 +7,7 @@ import dynamic from "next/dynamic";
 import { LiveSessionProvider } from "@/hooks/use-live-session";
 import { clientEnv } from "@/lib/env";
 
-import { CustomLivestreamPlayer } from "./custom-player";
-import LiveEnded from "./live-ended";
+import { CustomLivestreamPlayer, LiveEndedLayout } from "./custom-player";
 
 const user: User = { type: "anonymous" };
 const client = new StreamVideoClient({
@@ -28,11 +27,13 @@ export function LiveStreamingRender({ live }: Props) {
   return (
     <LiveSessionProvider live={live}>
       <StreamVideo client={client}>
-        {live.endedAt !== null ? (
-          <LiveEnded />
-        ) : (
-          <CustomLivestreamPlayer callType="livestream" callId={live.videoCallId} />
-        )}
+        <div className="relative flex flex-col gap-2">
+          {live.endedAt !== null ? (
+            <LiveEndedLayout />
+          ) : (
+            <CustomLivestreamPlayer callType="livestream" callId={live.videoCallId} />
+          )}
+        </div>
       </StreamVideo>
     </LiveSessionProvider>
   );
