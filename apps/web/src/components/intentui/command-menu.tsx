@@ -278,16 +278,16 @@ const CommandMenuShortcut = ({
   />
 );
 
-export type { CommandMenuProps, CommandMenuSearchProps, CommandMenuDescriptionProps };
+export type { CommandMenuDescriptionProps, CommandMenuProps, CommandMenuSearchProps };
 export {
   CommandMenu,
-  CommandMenuSearch,
-  CommandMenuList,
+  CommandMenuDescription,
+  CommandMenuFooter,
   CommandMenuItem,
   CommandMenuLabel,
+  CommandMenuList,
+  CommandMenuSearch,
   CommandMenuSection,
-  CommandMenuDescription,
-  CommandMenuShortcut,
   CommandMenuSeparator,
-  CommandMenuFooter,
+  CommandMenuShortcut,
 };

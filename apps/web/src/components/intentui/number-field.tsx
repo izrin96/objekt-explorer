@@ -74,4 +74,4 @@ const StepperButton = ({
 };
 
 export type { NumberFieldProps };
-export { NumberInput, NumberField };
+export { NumberField, NumberInput };

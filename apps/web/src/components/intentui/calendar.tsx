@@ -218,4 +218,4 @@ const CalendarGridHeader = () => {
 };
 
 export type { CalendarProps };
-export { Calendar, SelectMonth, SelectYear, CalendarHeader, CalendarGridHeader };
+export { Calendar, CalendarGridHeader, CalendarHeader, SelectMonth, SelectYear };

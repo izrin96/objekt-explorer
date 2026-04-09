@@ -498,15 +498,13 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           )}
         />
         <span className="text-muted-fg text-sm">
-          <Link href="/link" className="underline">
-            {content.edit.unlink_note.use({
-              link: (props) => (
-                <Link href="/link" className="underline">
-                  {props.children}
-                </Link>
-              ),
-            })}
-          </Link>
+          {content.edit.unlink_note.use({
+            link: (props) => (
+              <Link href="/link" className="underline">
+                {props.children}
+              </Link>
+            ),
+          })}
         </span>
 
         <Portal to="#submit-form-edit-profile">

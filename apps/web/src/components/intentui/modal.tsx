@@ -113,12 +113,12 @@ const ModalClose = DialogClose;
 
 export {
   Modal,
-  ModalTrigger,
-  ModalHeader,
-  ModalTitle,
-  ModalDescription,
-  ModalFooter,
   ModalBody,
   ModalClose,
   ModalContent,
+  ModalDescription,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+  ModalTrigger,
 };
