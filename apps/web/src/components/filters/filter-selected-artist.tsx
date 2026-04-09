@@ -26,9 +26,7 @@ export default function SelectedArtistFilter() {
     startTransition(async () => {
       const values = Array.from((key as Set<ValidArtist>).values());
       await setArtists.mutateAsync(values);
-      void queryClient.invalidateQueries({
-        queryKey: orpc.config.getSelectedArtists.key(),
-      });
+      void queryClient.invalidateQueries();
       router.refresh();
     });
   }, []);
