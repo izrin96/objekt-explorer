@@ -1,6 +1,6 @@
 "use client";
 
-import { CornersOutIcon, SpeakerHighIcon } from "@phosphor-icons/react/dist/ssr";
+import { SpeakerHighIcon } from "@phosphor-icons/react/dist/ssr";
 import {
   type Call,
   ParticipantView,
@@ -17,7 +17,7 @@ import { useLiveSession } from "@/hooks/use-live-session";
 import { Button } from "../intentui/button";
 import { Popover, PopoverContent } from "../intentui/popover";
 import { Slider, SliderFill, SliderThumb, SliderTrack } from "../intentui/slider";
-import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
+import { useUpdateCallDuration } from "./hooks";
 import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";
 import LiveFooter from "./live-footer";
@@ -76,15 +76,15 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
 };
 
 function LiveControl() {
-  const toggleFullscreen = useToggleFullScreen();
+  // const toggleFullscreen = useToggleFullScreen();
   return (
     <>
       <LiveDuration />
       <ParticipantCounter />
       <LiveVolumeControl />
-      <Button intent="outline" size="sq-sm" onPress={toggleFullscreen}>
+      {/* <Button intent="outline" size="sq-sm" onPress={toggleFullscreen}>
         <CornersOutIcon />
-      </Button>
+      </Button> */}
     </>
   );
 }
