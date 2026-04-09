@@ -1,7 +1,5 @@
 # AGENTS.md
 
-This file provides guidance to coding agents when working with code in this repository.
-
 ## Project Overview
 
 Objekt Tracker - A web application for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc.
@@ -84,10 +82,22 @@ bun run format                 # Format all code (oxfmt)
 - All tsconfigs have explicit `include` and `exclude` fields
 - Module resolution: `bundler` (not `NodeNext`) — no `.js` extensions needed on imports
 
-<!-- BEGIN:nextjs-agent-rules -->
+## Code Style
 
-# Next.js: ALWAYS read docs before coding
+Enforced by oxlint, oxfmt, and TypeScript config. Follow strictly.
+
+- `import * as z from "zod"`, never `import { z } from "zod"`
+- All promises must be awaited or explicitly voided
+- Avoid classes (use functions/objects) and enums (use `as const` or unions)
+- 2-space indent, oxfmt handles formatting — do not add Prettier or Biome
+- while using tailwing, prefer sizes in tw units like `-5` rather than in pixels via `-[20px]`
+- while using Zod, prefer not duplicate types, just infer them from schemas
+
+## Behavior
+
+- Never `git commit`, `git push`, or run database migrations without explicit approval or being asked
+- never edit past migrations, only way is generating new one
+
+## Next.js: ALWAYS read docs before coding
 
 Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
-
-<!-- END:nextjs-agent-rules -->
