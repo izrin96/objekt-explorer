@@ -9,7 +9,7 @@ import {
 } from "@repo/lib/server/redis-profile-lists";
 import { inArray, eq, and } from "drizzle-orm";
 
-import { redis } from "@/lib/redis";
+import { pubsub } from "@/lib/pubsub";
 
 type TransferData = {
   from: string;
@@ -23,7 +23,7 @@ type TransferData = {
 void (async () => {
   console.log("[Profile List Cleanup] Subscribing to transfers channel");
 
-  await redis.subscribe("transfers", async (message, channel) => {
+  await pubsub.subscribe("transfers", async (message, channel) => {
     if (channel === "transfers") {
       try {
         const transfers = JSON.parse(message) as TransferData[];
