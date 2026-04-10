@@ -4,7 +4,7 @@ import { fetchKnownAddresses } from "@repo/lib/server/user";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { serve, type ServerWebSocket } from "bun";
 
-import { redisPubSub } from "./lib/redis";
+import { redis } from "./lib/redis";
 
 const clients = new Set<ServerWebSocket>();
 
@@ -25,7 +25,7 @@ type TransferSendData = {
   objekt: OwnedObjekt;
 };
 
-void redisPubSub.subscribe("transfers", async (message, channel) => {
+void redis.subscribe("transfers", async (message, channel) => {
   if (channel === "transfers") {
     const transfers = JSON.parse(message) as TransferData[];
 

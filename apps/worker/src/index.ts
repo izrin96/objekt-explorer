@@ -2,6 +2,7 @@ import { Cron } from "croner";
 
 import { fixEmptyCollection, fixObjektSerialZero } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
+import { populateRarity } from "./job/populate-rarity";
 import { populateSerialOffline } from "./job/populate-serial";
 import { cleanupProfileLists, syncProfileListsToCache } from "./job/profile-list-cleanup";
 
@@ -38,3 +39,6 @@ void new Cron("0 * * * *", syncProfileListsToCache);
 
 await cleanupProfileLists();
 void new Cron("*/10 * * * *", cleanupProfileLists);
+
+await populateRarity();
+void new Cron("0 * * * *", populateRarity);

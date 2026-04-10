@@ -5,11 +5,6 @@ import { orpc } from "@/lib/orpc/client";
 
 import { useFilters } from "./use-filters";
 
-export interface CollectionRarity {
-  slug: string;
-  count: number;
-}
-
 export function useCollectionRarity() {
   const [filters] = useFilters();
   const { data } = useQuery(

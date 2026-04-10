@@ -8,7 +8,6 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
       - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
-      - REDIS_PUBSUB_URL=redis://valkey:6379
       - REDIS_URL=redis://valkey:6379
     healthcheck:
       test: test ! -f /tmp/drain
@@ -24,7 +23,7 @@ services:
       context: .
       dockerfile: ./apps/server/Dockerfile
     environment:
-      - REDIS_PUBSUB_URL=redis://valkey:6379
+      - REDIS_URL=redis://valkey:6379
       - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
       - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
     healthcheck:
