@@ -6,6 +6,8 @@ import { populateRarity } from "./job/populate-rarity";
 import { populateSerialOffline } from "./job/populate-serial";
 import { cleanupProfileLists, syncProfileListsToCache } from "./job/profile-list-cleanup";
 
+const crons: Cron[] = [];
+
 // 1. fix metadata
 // refetch metadata from endpoint
 // fallback to v3 if v1 fail
@@ -23,22 +25,36 @@ await fixObjektSerialZero();
 // required neighbour serial to be found to predict serial
 await populateSerialOffline();
 
-void new Cron("0 * * * *", async () => {
-  await fixEmptyCollection();
-  await fixObjektSerialZero();
-  await populateSerialOffline();
-});
+crons.push(
+  new Cron("0 * * * *", async () => {
+    await fixEmptyCollection();
+    await fixObjektSerialZero();
+    await populateSerialOffline();
+  }),
+);
 
 // 4. cosmo-spin transferable update
 await updateTransferableCosmoSpin();
-void new Cron("0 * * * *", updateTransferableCosmoSpin);
+crons.push(new Cron("0 * * * *", updateTransferableCosmoSpin));
 
 // 5. profile list
 await syncProfileListsToCache();
-void new Cron("0 * * * *", syncProfileListsToCache);
+crons.push(new Cron("0 * * * *", syncProfileListsToCache));
 
 await cleanupProfileLists();
-void new Cron("*/10 * * * *", cleanupProfileLists);
+crons.push(new Cron("*/10 * * * *", cleanupProfileLists));
 
 await populateRarity();
-void new Cron("0 * * * *", populateRarity);
+crons.push(new Cron("0 * * * *", populateRarity));
+
+async function shutdown(signal: NodeJS.Signals) {
+  console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);
+  for (const cron of crons) {
+    cron.stop();
+  }
+  console.log("[shutdown] All cron jobs stopped");
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

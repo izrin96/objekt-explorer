@@ -122,3 +122,22 @@ const server = serve({
 });
 
 console.info(`Server is running on http://localhost:${server.port}`);
+
+async function shutdown(signal: NodeJS.Signals) {
+  console.log(`[shutdown] Received ${signal}, closing connections...`);
+
+  // Close all WebSocket connections
+  for (const client of clients) {
+    client.close();
+  }
+  clients.clear();
+
+  // Stop accepting new connections
+  await server.stop();
+
+  console.log("[shutdown] Server stopped");
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
