@@ -3,16 +3,15 @@ import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
 
 import type { CompareInput } from "@/lib/compare/schemas";
+import { filterObjekts } from "@/lib/filter-utils";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useFilters } from "./use-filters";
-import { useObjektFilter } from "./use-objekt-filter";
 import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useCompareObjekts(input: CompareInput) {
-  const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const query = useSuspenseQuery(
     orpc.compare.compare.queryOptions({
@@ -26,7 +25,7 @@ export function useCompareObjekts(input: CompareInput) {
   const rarityMap = useCollectionRarity();
 
   const result = useMemo(() => {
-    const filtered = filter(deferredFilters, query.data);
+    const filtered = filterObjekts(deferredFilters, query.data);
     return {
       shaped: shape(filtered, deferredFilters, false, rarityMap),
       filtered,
@@ -34,7 +33,7 @@ export function useCompareObjekts(input: CompareInput) {
       filters: deferredFilters,
       isStale: filters !== deferredFilters,
     };
-  }, [filter, shape, deferredFilters, query.data, filters, rarityMap]);
+  }, [shape, deferredFilters, query.data, filters, rarityMap]);
 
   return result;
 }

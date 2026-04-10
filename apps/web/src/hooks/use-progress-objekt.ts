@@ -2,18 +2,17 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
 
+import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
 import { tradeableFilter } from "@/lib/utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
-import { useObjektFilter } from "./use-objekt-filter";
 import { useOwnedCollections } from "./use-owned-collections";
 import { useShapeProgress } from "./use-shape-progress";
 import { useTarget } from "./use-target";
 
 export function useProgressObjekts() {
-  const filter = useObjektFilter();
   const shape = useShapeProgress();
   const profile = useTarget((a) => a.profile)!;
   const { selectedArtistIds } = useCosmoArtist();
@@ -33,10 +32,10 @@ export function useProgressObjekts() {
 
   const result = useMemo(() => {
     // owned objekts
-    const ownedFiltered = filter(deferredFilters, allOwnedObjekts);
+    const ownedFiltered = filterObjekts(deferredFilters, allOwnedObjekts);
 
     // all collections filtered
-    const collectionsFiltered = filter(deferredFilters, objektsQuery.data);
+    const collectionsFiltered = filterObjekts(deferredFilters, objektsQuery.data);
 
     // find missing objekts based on owned slug
     const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
@@ -68,7 +67,7 @@ export function useProgressObjekts() {
       collectionsFiltered,
       isStale: filters !== deferredFilters,
     };
-  }, [filter, shape, deferredFilters, allOwnedObjekts, objektsQuery.data, hasNextPage, filters]);
+  }, [shape, deferredFilters, allOwnedObjekts, objektsQuery.data, hasNextPage, filters]);
 
   return result;
 }

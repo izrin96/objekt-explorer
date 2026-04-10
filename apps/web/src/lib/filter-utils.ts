@@ -181,11 +181,26 @@ export function sortObjekts(
   const sort = filters.sort ?? "date";
   const sortDir = filters.sort_dir ?? "desc";
 
-  if (sort === "date") {
+  if (sort === "date" || sort === "rare") {
     if (sortDir === "desc") {
       objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
     } else {
       objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
+    }
+
+    if (sort === "rare") {
+      if (!rarityMap) return [];
+
+      objekts = objekts.toSorted((a, b) => {
+        const countA = rarityMap.get(a.slug) ?? Infinity;
+        const countB = rarityMap.get(b.slug) ?? Infinity;
+
+        if (sortDir === "asc") {
+          return countA - countB;
+        } else {
+          return countB - countA;
+        }
+      });
     }
   } else if (sort === "season" || sort === "collectionNo") {
     // default to member sort (ascending)
@@ -223,19 +238,6 @@ export function sortObjekts(
     } else {
       objekts = objekts.toSorted((a, b) => compareMember(b.member, a.member));
     }
-  } else if (sort === "rare") {
-    if (!rarityMap) return objekts;
-
-    objekts = objekts.toSorted((a, b) => {
-      const countA = rarityMap.get(a.slug) ?? Infinity;
-      const countB = rarityMap.get(b.slug) ?? Infinity;
-
-      if (sortDir === "asc") {
-        return countA - countB;
-      } else {
-        return countB - countA;
-      }
-    });
   }
 
   return objekts;

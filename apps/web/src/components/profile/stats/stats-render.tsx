@@ -28,9 +28,9 @@ import { Loader } from "@/components/intentui/loader";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
-import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useTarget } from "@/hooks/use-target";
+import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
 import { getSeasonColor, tradeableFilter, cn } from "@/lib/utils";
 
@@ -66,7 +66,6 @@ export function ProfileStatsRender() {
 function ProfileStats() {
   const content = useIntlayer("stats");
   const profile = useTarget((a) => a.profile)!;
-  const filter = useObjektFilter();
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
@@ -81,9 +80,9 @@ function ProfileStats() {
   );
   const collectionQuery = useSuspenseQuery(collectionOptions(serverFilters, !hasNextPage));
 
-  const objekts = filter(filters, allOwnedObjekts);
+  const objekts = filterObjekts(filters, allOwnedObjekts);
 
-  const collections = filter(filters, collectionQuery.data);
+  const collections = filterObjekts(filters, collectionQuery.data);
 
   return (
     <div className="flex flex-col gap-4">

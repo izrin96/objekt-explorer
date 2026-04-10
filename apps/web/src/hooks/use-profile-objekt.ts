@@ -2,6 +2,7 @@ import { useQuery, useSuspenseQueries } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
 
+import { filterObjekts } from "@/lib/filter-utils";
 import { augmentObjektsWithPinLock } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions } from "@/lib/query-options";
@@ -9,13 +10,11 @@ import { collectionOptions } from "@/lib/query-options";
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
-import { useObjektFilter } from "./use-objekt-filter";
 import { useOwnedCollections } from "./use-owned-collections";
 import { useShapeObjekts } from "./use-shape-objekt";
 import { useTarget } from "./use-target";
 
 export function useProfileObjekts() {
-  const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const profile = useTarget((a) => a.profile)!;
   const { selectedArtistIds } = useCosmoArtist();
@@ -56,7 +55,7 @@ export function useProfileObjekts() {
       ? allOwnedObjekts
       : augmentObjektsWithPinLock(allOwnedObjekts, pinsQuery.data, lockedObjektQuery.data);
 
-    const ownedFiltered = filter(deferredFilters, ownedWithPinLock);
+    const ownedFiltered = filterObjekts(deferredFilters, ownedWithPinLock);
 
     // find missing objekts based on owned slug
     const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
@@ -64,7 +63,7 @@ export function useProfileObjekts() {
       deferredFilters.unowned || deferredFilters.missing
         ? (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug))
         : [];
-    const missingFiltered = filter(deferredFilters, missingObjekts);
+    const missingFiltered = filterObjekts(deferredFilters, missingObjekts);
 
     // combine both
     const filtered = [...ownedFiltered, ...missingFiltered];
@@ -78,7 +77,6 @@ export function useProfileObjekts() {
       isStale: filters !== deferredFilters,
     };
   }, [
-    filter,
     shape,
     deferredFilters,
     allOwnedObjekts,

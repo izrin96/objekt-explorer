@@ -2,18 +2,17 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
 
+import { filterObjekts } from "@/lib/filter-utils";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useFilters } from "./use-filters";
-import { useObjektFilter } from "./use-objekt-filter";
 import { useShapeObjekts } from "./use-shape-objekt";
 import { useTarget } from "./use-target";
 
 export function useListObjekts() {
   const list = useTarget((a) => a.list)!;
-  const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const query = useSuspenseQuery(
     orpc.list.listEntries.queryOptions({
@@ -29,7 +28,7 @@ export function useListObjekts() {
   const rarityMap = useCollectionRarity();
 
   const result = useMemo(() => {
-    const filtered = filter(deferredFilters, query.data);
+    const filtered = filterObjekts(deferredFilters, query.data);
     return {
       shaped: shape(filtered, deferredFilters, false, rarityMap),
       filtered,
@@ -37,7 +36,7 @@ export function useListObjekts() {
       filters: deferredFilters,
       isStale: filters !== deferredFilters,
     };
-  }, [filter, shape, deferredFilters, query.data, filters, rarityMap]);
+  }, [shape, deferredFilters, query.data, filters, rarityMap]);
 
   return result;
 }
