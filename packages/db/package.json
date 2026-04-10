@@ -27,6 +27,6 @@
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
     "@types/pg": "^8.20.0",
-    "drizzle-kit": "^1.0.0-beta.20"
+    "drizzle-kit": "^1.0.0-beta.21"
   }
 }

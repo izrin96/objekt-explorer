@@ -1,4 +1,4 @@
-import { Cron } from "croner";
+import { type CronJob, cron } from "bun";
 
 import { fixEmptyCollection, fixObjektSerialZero } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
@@ -6,7 +6,7 @@ import { populateRarity } from "./job/populate-rarity";
 import { populateSerialOffline } from "./job/populate-serial";
 import { cleanupProfileLists, syncProfileListsToCache } from "./job/profile-list-cleanup";
 
-const crons: Cron[] = [];
+const crons: CronJob[] = [];
 
 // 1. fix metadata
 // refetch metadata from endpoint
@@ -26,7 +26,7 @@ await fixObjektSerialZero();
 await populateSerialOffline();
 
 crons.push(
-  new Cron("0 * * * *", async () => {
+  cron("0 * * * *", async () => {
     await fixEmptyCollection();
     await fixObjektSerialZero();
     await populateSerialOffline();
@@ -35,17 +35,17 @@ crons.push(
 
 // 4. cosmo-spin transferable update
 await updateTransferableCosmoSpin();
-crons.push(new Cron("0 * * * *", updateTransferableCosmoSpin));
+crons.push(cron("0 * * * *", updateTransferableCosmoSpin));
 
 // 5. profile list
 await syncProfileListsToCache();
-crons.push(new Cron("0 * * * *", syncProfileListsToCache));
+crons.push(cron("0 * * * *", syncProfileListsToCache));
 
 await cleanupProfileLists();
-crons.push(new Cron("*/10 * * * *", cleanupProfileLists));
+crons.push(cron("*/10 * * * *", cleanupProfileLists));
 
 await populateRarity();
-crons.push(new Cron("0 * * * *", populateRarity));
+crons.push(cron("0 * * * *", populateRarity));
 
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);

@@ -16,10 +16,8 @@
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
-    "croner": "^10.0.1",
     "drizzle-orm": "catalog:",
-    "ofetch": "catalog:",
-    "zod": "catalog:"
+    "ofetch": "catalog:"
   },
   "devDependencies": {
     "@repo/lint": "workspace:*",
