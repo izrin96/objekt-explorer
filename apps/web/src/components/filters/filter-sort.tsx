@@ -5,17 +5,16 @@ import { useIntlayer } from "next-intlayer";
 import type { Selection } from "react-aria-components";
 
 import { useFilters } from "@/hooks/use-filters";
+import { defaultSort } from "@/lib/utils";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../intentui/menu";
-
-const defaultSorts: ValidCustomSort[] = ["date", "season", "collectionNo", "member"];
 
 type Props = {
   enabled?: ValidCustomSort[];
 };
 
-export default function SortFilter({ enabled = defaultSorts }: Props) {
+export default function SortFilter({ enabled = defaultSort }: Props) {
   const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.sort ? [filters.sort] : ["date"]);
@@ -30,6 +29,7 @@ export default function SortFilter({ enabled = defaultSorts }: Props) {
     serial: { label: content.sort_by.serial.label.value, desc: content.sort_by.serial.desc.value },
     duplicate: { label: content.sort_by.dups.label.value, desc: content.sort_by.dups.desc.value },
     member: { label: content.sort_by.member.label.value, desc: content.sort_by.member.desc.value },
+    rare: { label: content.sort_by.rare.label.value, desc: content.sort_by.rare.desc.value },
   };
 
   function update(key: Selection) {
@@ -37,7 +37,7 @@ export default function SortFilter({ enabled = defaultSorts }: Props) {
 
     return setFilters((current) => ({
       sort: value === "date" ? null : value,
-      sort_dir: ["serial", "member"].includes(value) ? "asc" : null,
+      sort_dir: ["serial", "member", "rare"].includes(value) ? "asc" : null,
       grouped: value === "duplicate" ? true : value === "serial" ? null : current.grouped,
     }));
   }

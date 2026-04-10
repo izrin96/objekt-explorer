@@ -20,6 +20,7 @@ export function useShapeObjekts() {
       objekts: ValidObjekt[],
       filters: Filters,
       isProfile: boolean = false,
+      rarityMap?: Map<string, number>,
     ): [string, ValidObjekt[][]][] => {
       const filtering = isFiltering(filters);
 
@@ -62,7 +63,7 @@ export function useShapeObjekts() {
 
       return groupByKeySorted.map(([key, items]) => {
         // sort objekts
-        items = sortObjekts(items, filters, seasons, compareMember);
+        items = sortObjekts(items, filters, seasons, compareMember, rarityMap);
 
         // sort pin
         // if not filtering, pins should show first

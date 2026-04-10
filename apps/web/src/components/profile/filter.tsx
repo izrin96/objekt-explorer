@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
+import { defaultSortDuplicateSerial } from "@/lib/utils";
 
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
@@ -47,7 +48,7 @@ export default function Filter({
         <EditionFilter />
         <OnlineFilter />
         <ColorFilter />
-        <SortFilter enabled={["date", "season", "collectionNo", "member", "serial", "duplicate"]} />
+        <SortFilter enabled={defaultSortDuplicateSerial} />
         <SortDirectionFilter />
         <CombineDuplicateFilter />
         <GroupByFilter />

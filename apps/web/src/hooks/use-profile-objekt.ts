@@ -6,6 +6,7 @@ import { augmentObjektsWithPinLock } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions } from "@/lib/query-options";
 
+import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useObjektFilter } from "./use-objekt-filter";
@@ -20,6 +21,7 @@ export function useProfileObjekts() {
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const deferredFilters = useDeferredValue(filters);
+  const rarityMap = useCollectionRarity();
 
   const serverFilters = {
     artist: selectedArtistIds,
@@ -68,7 +70,7 @@ export function useProfileObjekts() {
     const filtered = [...ownedFiltered, ...missingFiltered];
 
     return {
-      shaped: shape(filtered, deferredFilters, true),
+      shaped: shape(filtered, deferredFilters, true, rarityMap),
       filtered,
       grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
       filters: deferredFilters,
@@ -85,6 +87,7 @@ export function useProfileObjekts() {
     objektsQuery.data,
     hasNextPage,
     filters,
+    rarityMap,
   ]);
 
   return result;

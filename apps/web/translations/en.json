@@ -366,6 +366,10 @@
       "member": {
         "label": "Member Order",
         "desc": "Sort by Member order"
+      },
+      "rare": {
+        "label": "Rarity",
+        "desc": "Sort by mint count"
       }
     },
     "desc": "Descending",

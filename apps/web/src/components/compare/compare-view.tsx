@@ -1,5 +1,6 @@
 "use client";
 
+import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useIntlayer } from "next-intlayer";
@@ -36,6 +37,7 @@ import { useTarget } from "@/hooks/use-target";
 import { useSession } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/compare/schemas";
 import type { PublicList } from "@/lib/universal/user";
+import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
 
 interface CompareViewProps {
   input: CompareInput;
@@ -51,7 +53,7 @@ export default function CompareView({ input }: CompareViewProps) {
       <ListCompareHeader input={input} />
 
       <div className="flex flex-col gap-4">
-        <CompareFilter />
+        <CompareFilter list={list} />
 
         <QueryErrorResetBoundary>
           {({ reset }) => (
@@ -96,9 +98,12 @@ function ListCompareHeader({ input }: { input: CompareInput }) {
   );
 }
 
-function CompareFilter() {
+function CompareFilter({ list }: { list: PublicList }) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
+
+  const sortOptions: ValidCustomSort[] =
+    list.listType === "profile" ? defaultSortDuplicateSerial : defaultSortDuplicate;
 
   return (
     <FilterContainer>
@@ -116,7 +121,7 @@ function CompareFilter() {
             <EditionFilter />
             <OnlineFilter />
             <ColorFilter />
-            <SortFilter enabled={["date", "season", "collectionNo", "member", "duplicate"]} />
+            <SortFilter enabled={sortOptions} />
             <SortDirectionFilter />
             <CombineDuplicateFilter />
             <GroupByFilter />

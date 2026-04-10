@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import { useTarget } from "@/hooks/use-target";
+import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
 
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
@@ -33,9 +34,7 @@ export default function Filter({
   const list = useTarget((a) => a.list)!;
 
   const sortOptions: ValidCustomSort[] =
-    list.listType === "profile"
-      ? ["date", "season", "collectionNo", "member", "serial", "duplicate"]
-      : ["date", "season", "collectionNo", "member", "duplicate"];
+    list.listType === "profile" ? defaultSortDuplicateSerial : defaultSortDuplicate;
 
   return (
     <div className="flex flex-col gap-4">

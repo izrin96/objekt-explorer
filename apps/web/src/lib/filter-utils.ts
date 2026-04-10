@@ -174,6 +174,7 @@ export function sortObjekts(
   filters: Filters,
   seasons: string[],
   compareMember: (a: string, b: string) => number,
+  rarityMap?: Map<string, number>,
 ): ValidObjekt[] {
   let objekts = data;
 
@@ -222,6 +223,19 @@ export function sortObjekts(
     } else {
       objekts = objekts.toSorted((a, b) => compareMember(b.member, a.member));
     }
+  } else if (sort === "rare") {
+    if (!rarityMap) return objekts;
+
+    objekts = objekts.toSorted((a, b) => {
+      const countA = rarityMap.get(a.slug) ?? Infinity;
+      const countB = rarityMap.get(b.slug) ?? Infinity;
+
+      if (sortDir === "asc") {
+        return countA - countB;
+      } else {
+        return countB - countA;
+      }
+    });
   }
 
   return objekts;

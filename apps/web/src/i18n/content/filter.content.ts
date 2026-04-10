@@ -108,6 +108,16 @@ const content = {
           ko: "멤버 순서대로 정렬",
         }),
       },
+      rare: {
+        label: t({
+          en: "Rarity",
+          ko: "희귀도",
+        }),
+        desc: t({
+          en: "Sort by mint count",
+          ko: "민트 수량순 정렬",
+        }),
+      },
     },
     desc: t({
       en: "Descending",

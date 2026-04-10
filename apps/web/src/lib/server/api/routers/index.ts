@@ -1,3 +1,4 @@
+import { collectionsRouter } from "./collections";
 import { compareRouter } from "./compare";
 import { configRouter } from "./config";
 import { cosmoLinkRouter } from "./cosmo-link";
@@ -18,4 +19,5 @@ export const router = {
   config: configRouter,
   meta: metaRouter,
   compare: compareRouter,
+  collections: collectionsRouter,
 };

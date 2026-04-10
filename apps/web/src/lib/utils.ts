@@ -1,4 +1,4 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
+import type { ValidArtist, ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -14,6 +14,25 @@ export const classOrder: Record<ValidArtist, string[]> = {
   artms: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
   idntt: ["Basic", "Event", "Motion", "Special", "Unit", "Welcome"],
 };
+
+export const defaultSort: ValidCustomSort[] = ["date", "season", "collectionNo", "member", "rare"];
+export const defaultSortDuplicate: ValidCustomSort[] = [
+  "date",
+  "season",
+  "collectionNo",
+  "member",
+  "duplicate",
+  "rare",
+];
+export const defaultSortDuplicateSerial: ValidCustomSort[] = [
+  "date",
+  "season",
+  "collectionNo",
+  "member",
+  "serial",
+  "duplicate",
+  "rare",
+];
 
 const baseSeasonColors: Record<string, string> = {
   Atom: "#FFDD00",
