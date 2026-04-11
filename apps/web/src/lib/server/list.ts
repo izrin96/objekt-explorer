@@ -1,21 +1,24 @@
+import { ORPCError } from "@orpc/server";
 import type { ValidArtist } from "@repo/cosmo/types/common";
+import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import type { ListEntry } from "@repo/db/schema";
+import { lists } from "@repo/db/schema";
+import type { List, ListEntry } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
+import { fetchKnownAddresses } from "@repo/lib/server/user";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
+import slugify from "slugify";
 
 import type { PublicList } from "../universal/user";
+import { mapPublicUser } from "./auth";
 import { getCollectionColumns } from "./objekt";
 
 export interface ListEntryTransformConfig {
   artists?: ValidArtist[];
 }
 
-/**
- * Fetches collections from indexer by slug array with optional artist filtering
- */
 export async function fetchCollectionsBySlug(slugs: string[], artists: ValidArtist[]) {
   const uniqueSlugs = new Set(slugs);
 
@@ -43,9 +46,6 @@ export async function fetchCollectionsBySlug(slugs: string[], artists: ValidArti
   return result.map(overrideCollection);
 }
 
-/**
- * Build profile list entries (using objektId)
- */
 async function buildProfileListEntries(
   entries: Pick<ListEntry, "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note">[],
   config?: ListEntryTransformConfig,
@@ -99,9 +99,6 @@ type EntryPick = Pick<
   "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note"
 >;
 
-/**
- * Build normal list entries (using collectionSlug)
- */
 async function buildNormalListEntries(
   entries: EntryPick[],
   config?: ListEntryTransformConfig,
@@ -129,10 +126,6 @@ async function buildNormalListEntries(
     });
 }
 
-/**
- * Main entry point for building list entries
- * Handles both profile and normal list types
- */
 export async function buildListEntries(
   entries: Pick<ListEntry, "collectionSlug" | "objektId" | "id" | "price" | "isQyop" | "note">[],
   listType: "normal" | "profile",
@@ -144,9 +137,6 @@ export async function buildListEntries(
   return buildNormalListEntries(entries, config);
 }
 
-/**
- * Sanitize PublicList
- */
 export function sanitizePublicList(
   list: PublicList,
   currentUserId?: string,
@@ -156,4 +146,275 @@ export function sanitizePublicList(
     ...safeList,
     isOwned: ownerId && currentUserId ? ownerId === currentUserId : false,
   };
+}
+
+export async function fetchListWithEntries(slug: string) {
+  return db.query.lists.findFirst({
+    columns: {
+      id: true,
+      name: true,
+      listType: true,
+      profileAddress: true,
+      profileSlug: true,
+    },
+    with: {
+      entries: {
+        orderBy: { id: "asc" },
+        columns: {
+          id: true,
+          collectionSlug: true,
+          objektId: true,
+          price: true,
+          isQyop: true,
+          note: true,
+        },
+      },
+    },
+    where: { slug },
+  });
+}
+
+export async function fetchList(slug: string, profileAddress?: string): Promise<PublicList | null> {
+  const result = await db.query.lists.findFirst({
+    columns: {
+      slug: true,
+      name: true,
+      hideUser: true,
+      gridColumns: true,
+      userId: true,
+      listType: true,
+      profileAddress: true,
+      profileSlug: true,
+      description: true,
+      currency: true,
+    },
+    with: {
+      user: {
+        columns: {
+          name: true,
+          username: true,
+          image: true,
+          discord: true,
+          twitter: true,
+          displayUsername: true,
+          showSocial: true,
+        },
+      },
+    },
+    where: profileAddress
+      ? { profileSlug: slug, profileAddress: profileAddress.toLowerCase() }
+      : { slug },
+  });
+
+  if (!result) return null;
+
+  return {
+    name: result.name,
+    slug: result.slug,
+    profileSlug: result.profileSlug,
+    gridColumns: result.gridColumns,
+    user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
+    listType: result.listType,
+    profileAddress: result.profileAddress,
+    ownerId: result.userId,
+    description: result.description,
+    currency: result.currency,
+  };
+}
+
+export async function fetchOwnedLists(userId: string) {
+  const result = await db.query.lists.findMany({
+    columns: {
+      name: true,
+      slug: true,
+      profileSlug: true,
+      listType: true,
+      profileAddress: true,
+    },
+    where: { userId },
+    orderBy: { id: "desc" },
+  });
+  const knownAddresses = await fetchKnownAddresses(
+    result.map((a) => a.profileAddress).filter((a) => a !== null),
+  );
+
+  const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+
+  return result.map((l) => {
+    const addr = addressMap.get(l.profileAddress?.toLowerCase() ?? "");
+    return {
+      name: l.name,
+      slug: l.slug,
+      profileSlug: l.profileSlug,
+      listType: l.listType,
+      profileAddress: l.profileAddress,
+      nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
+    };
+  });
+}
+
+export async function checkProfileOwnership(address: string, userId: string): Promise<void> {
+  const owned = await db.query.userAddress.findFirst({
+    where: {
+      address: address.toLowerCase(),
+      userId,
+    },
+  });
+
+  if (!owned) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "Profile not owned by user",
+    });
+  }
+}
+
+export function slugifyName(name: string): string {
+  return slugify(name, { lower: true, strict: true });
+}
+
+export async function generateProfileSlug(
+  name: string,
+  profileAddress: string,
+  excludeListId?: number,
+): Promise<string> {
+  const baseSlug = slugifyName(name);
+  let slug = baseSlug;
+  let counter = 2;
+
+  while (true) {
+    const existing = await db
+      .select({ id: lists.id })
+      .from(lists)
+      .where(
+        and(
+          eq(lists.profileAddress, profileAddress),
+          eq(lists.profileSlug, slug),
+          ...(excludeListId ? [ne(lists.id, excludeListId)] : []),
+        ),
+      )
+      .limit(1);
+
+    if (existing.length === 0) break;
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+
+  return slug;
+}
+
+export async function resolveProfileSlugUpdate(
+  list: Pick<List, "profileAddress" | "profileSlug" | "name" | "id">,
+  name: string | undefined,
+  newProfileAddress: string | null,
+): Promise<string | null> {
+  const isBound = newProfileAddress !== null && newProfileAddress !== "";
+
+  if (!isBound) return null;
+
+  const wasBound = list.profileAddress !== null;
+
+  if (!wasBound) {
+    return generateProfileSlug(name ?? list.name, newProfileAddress.toLowerCase(), list.id);
+  }
+
+  const nameChanged = name !== undefined && slugifyName(name) !== slugifyName(list.name);
+
+  if (nameChanged) {
+    return generateProfileSlug(name!, newProfileAddress.toLowerCase(), list.id);
+  }
+
+  return list.profileSlug;
+}
+
+export async function findOwnedList(slug: string, userId: string) {
+  const list = await db.query.lists.findFirst({
+    columns: {
+      id: true,
+      name: true,
+      listType: true,
+      profileAddress: true,
+      profileSlug: true,
+    },
+    where: { slug, userId },
+  });
+
+  if (!list) throw new ORPCError("NOT_FOUND");
+
+  return list;
+}
+
+export async function fetchListCollectionsBySlug(listSlug: string) {
+  const list = await db.query.lists.findFirst({
+    where: { slug: listSlug },
+    with: {
+      entries: {
+        columns: {
+          collectionSlug: true,
+          objektId: true,
+        },
+      },
+    },
+  });
+
+  if (!list) return [];
+
+  if (list.listType === "profile") {
+    const objektIds = list.entries.map((e) => e.objektId).filter((a) => a !== null);
+
+    if (objektIds.length === 0) return [];
+
+    const objektsData = await indexer
+      .select({
+        id: objekts.id,
+        collection: {
+          slug: collections.slug,
+          season: collections.season,
+          collectionNo: collections.collectionNo,
+          member: collections.member,
+          artist: collections.artist,
+          collectionId: collections.collectionId,
+          class: collections.class,
+        },
+      })
+      .from(objekts)
+      .innerJoin(collections, eq(collections.id, objekts.collectionId))
+      .where(inArray(objekts.id, objektIds));
+
+    const objektToCollection = new Map(objektsData.map((o) => [o.id, o.collection]));
+
+    return list.entries
+      .filter((e) => e.objektId !== null)
+      .map((e) => {
+        const collection = objektToCollection.get(e.objektId!);
+        return collection ?? null;
+      })
+      .filter((a) => a !== null);
+  }
+
+  const slugs = list.entries.map((e) => e.collectionSlug).filter((a) => a !== null);
+
+  if (slugs.length === 0) return [];
+
+  const foundCollections = await indexer
+    .select({
+      slug: collections.slug,
+      season: collections.season,
+      collectionNo: collections.collectionNo,
+      member: collections.member,
+      artist: collections.artist,
+      collectionId: collections.collectionId,
+      class: collections.class,
+    })
+    .from(collections)
+    .where(inArray(collections.slug, slugs));
+
+  const slugToCollection = new Map(foundCollections.map((c) => [c.slug, c]));
+
+  return list.entries
+    .filter((e) => e.collectionSlug !== null)
+    .map((e) => {
+      const collection = slugToCollection.get(e.collectionSlug!);
+      return collection ?? null;
+    })
+    .filter((a) => a !== null);
 }

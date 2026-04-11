@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { useIntlayer } from "next-intlayer/server";
 
 import { compareInputSchema } from "../../../compare/schemas";
-import { buildListEntries } from "../../list";
+import { buildListEntries, fetchListWithEntries } from "../../list";
 import { getUserLocale } from "../../locale";
 import { getCollectionColumns } from "../../objekt";
 import { pub } from "../orpc";
@@ -23,41 +23,18 @@ export const compareRouter = {
         const locale = await getUserLocale();
         const content = useIntlayer("api_errors", locale);
 
-        // Fetch source list
-        const sourceList = await db.query.lists.findFirst({
-          columns: {
-            listType: true,
-          },
-          with: {
-            entries: {
-              orderBy: {
-                id: "asc",
-              },
-              columns: {
-                id: true,
-                collectionSlug: true,
-                objektId: true,
-                price: true,
-                isQyop: true,
-                note: true,
-              },
-            },
-          },
-          where: { slug: sourceId },
-        });
+        const sourceList = await fetchListWithEntries(sourceId);
 
         if (!sourceList)
           throw new ORPCError("NOT_FOUND", {
             message: content.compare.source_list_not_found.value,
           });
 
-        // Build source comparison entries
         const sourceComparisonEntries = await buildListEntries(
           sourceList.entries,
           sourceList.listType,
         );
 
-        // Fetch target comparison entries based on targetType
         let targetComparisonEntries: ValidObjekt[] = [];
 
         if (targetType === "profile" && targetProfileId) {
@@ -77,7 +54,6 @@ export const compareRouter = {
               message: content.compare.target_profile_not_found.value,
             });
 
-          // Query owned objekts from indexer
           const ownedObjekts = await indexer
             .select({
               collection: getCollectionColumns(),
@@ -88,27 +64,7 @@ export const compareRouter = {
 
           targetComparisonEntries = ownedObjekts.map((o) => o.collection);
         } else if (targetType === "list" && targetListId) {
-          const targetList = await db.query.lists.findFirst({
-            columns: {
-              listType: true,
-            },
-            with: {
-              entries: {
-                orderBy: {
-                  id: "asc",
-                },
-                columns: {
-                  id: true,
-                  collectionSlug: true,
-                  objektId: true,
-                  price: true,
-                  isQyop: true,
-                  note: true,
-                },
-              },
-            },
-            where: { slug: targetListId },
-          });
+          const targetList = await fetchListWithEntries(targetListId);
 
           if (!targetList)
             throw new ORPCError("NOT_FOUND", {
@@ -120,7 +76,6 @@ export const compareRouter = {
 
         const result = performComparison(sourceComparisonEntries, targetComparisonEntries, mode);
 
-        // Perform comparison
         return {
           objekts: result,
         };
