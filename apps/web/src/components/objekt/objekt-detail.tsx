@@ -95,10 +95,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           </Tab>
         )}
         <Tab id="trades">{content.trades.value}</Tab>
-        <Tab
-          id="apollo"
-          onPress={() => window.open(`https://apollo.cafe/?id=${objekt.slug}`, "_blank")}
-        >
+        <Tab href={`https://apollo.cafe/?id=${objekt.slug}`} target="_blank">
           <ArrowTopRightOnSquareIcon className="size-5" />
           {content.view_in_apollo.value}
         </Tab>
