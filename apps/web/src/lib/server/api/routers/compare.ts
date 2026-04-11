@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import { useIntlayer } from "next-intlayer/server";
 
 import { compareInputSchema } from "../../../compare/schemas";
+import { parseSelectedArtists } from "../../cookie";
 import { buildListEntries, fetchListWithEntries } from "../../list";
 import { getUserLocale } from "../../locale";
 import { getCollectionColumns } from "../../objekt";
@@ -20,6 +21,7 @@ export const compareRouter = {
       async ({
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
+        const artists = await parseSelectedArtists();
         const locale = await getUserLocale();
         const content = useIntlayer("api_errors", locale);
 
@@ -33,6 +35,7 @@ export const compareRouter = {
         const sourceComparisonEntries = await buildListEntries(
           sourceList.entries,
           sourceList.listType,
+          { artists },
         );
 
         let targetComparisonEntries: ValidObjekt[] = [];
@@ -71,7 +74,11 @@ export const compareRouter = {
               message: content.compare.target_list_not_found.value,
             });
 
-          targetComparisonEntries = await buildListEntries(targetList.entries, targetList.listType);
+          targetComparisonEntries = await buildListEntries(
+            targetList.entries,
+            targetList.listType,
+            { artists },
+          );
         }
 
         const result = performComparison(sourceComparisonEntries, targetComparisonEntries, mode);

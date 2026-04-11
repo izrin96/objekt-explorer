@@ -124,6 +124,7 @@ export const listRouter = {
         },
       }) => {
         const list = await findOwnedList(slug, user.id);
+        const artists = await parseSelectedArtists();
 
         if (list.listType === "profile") {
           if (!inputObjekts || inputObjekts.length === 0) {
@@ -165,7 +166,11 @@ export const listRouter = {
 
           if (filtered.length === 0) return [];
 
-          await db.insert(listEntries).values(filtered).onConflictDoNothing();
+          const result = await db
+            .insert(listEntries)
+            .values(filtered)
+            .onConflictDoNothing()
+            .returning();
 
           await addObjektIdsToProfileList(
             list.profileAddress!,
@@ -173,7 +178,7 @@ export const listRouter = {
             filtered.map((v) => v.objektId),
           );
 
-          return [];
+          return buildListEntries(result, list.listType, { artists });
         }
 
         if (!collectionSlugs || collectionSlugs.length === 0) {
@@ -181,8 +186,6 @@ export const listRouter = {
             message: "Collections required for normal lists",
           });
         }
-
-        const artists = await parseSelectedArtists();
 
         if (skipDups) {
           const uniqueCollectionSlugs = Array.from(new Set(collectionSlugs));
@@ -209,7 +212,7 @@ export const listRouter = {
             )
             .returning();
 
-          return buildListEntries(result, "normal", { artists });
+          return buildListEntries(result, list.listType, { artists });
         }
 
         const result = await db
@@ -222,7 +225,7 @@ export const listRouter = {
           )
           .returning();
 
-        return buildListEntries(result, "normal", { artists });
+        return buildListEntries(result, list.listType, { artists });
       },
     ),
 
