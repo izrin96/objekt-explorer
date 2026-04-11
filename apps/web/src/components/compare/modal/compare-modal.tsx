@@ -47,7 +47,7 @@ export function CompareModal({ open, setOpen, sourceList }: CompareModalProps) {
       <ModalHeader>
         <ModalTitle>{content.modal.title.value}</ModalTitle>
         <ModalDescription>
-          {content.modal.comparing_from({ name: sourceList.name }).value}
+          {content.modal.comparing_from({ name: sourceList.name }).value} (ID: {sourceList.id})
         </ModalDescription>
       </ModalHeader>
       <ModalBody>

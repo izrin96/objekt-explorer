@@ -35,7 +35,7 @@ export default function ListHeader() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold">{list.name}</h2>
-              <CopyListId slug={list.slug} />
+              {/* <CopyListId slug={list.slug} /> */}
             </div>
             <div className="text-muted-fg text-sm">
               <Link
@@ -61,7 +61,7 @@ export default function ListHeader() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{list.name}</span>
-                <CopyListId slug={list.slug} />
+                {/* <CopyListId slug={list.slug} /> */}
               </div>
               {displayUser && (
                 <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ function EditList({ slug }: { slug: string }) {
   );
 }
 
-function CopyListId({ slug }: { slug: string }) {
+export function CopyListId({ slug }: { slug: string }) {
   const content = useIntlayer("common");
   const [, copy] = useCopyToClipboard();
   return (
