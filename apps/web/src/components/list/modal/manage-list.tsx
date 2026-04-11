@@ -63,7 +63,21 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
         <ModalTitle>{content.create.title.value}</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <CreateListForm setOpen={setOpen} />
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <CreateListForm setOpen={setOpen} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </ModalBody>
       <ModalFooter id="submit-form-create-list">
         <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
@@ -234,6 +248,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 onBlur={onBlur}
                 isInvalid={invalid}
                 validationBehavior="aria"
+                isRequired={watchedListType === "profile"}
               >
                 <Label>{content.create.profile_label.value}</Label>
                 <Description>

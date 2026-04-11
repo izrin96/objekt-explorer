@@ -51,19 +51,19 @@ function MyList() {
       <CreateListModal open={addOpen} setOpen={setAddOpen} />
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
+      <div className="flex w-full gap-2">
+        <Button onPress={() => setAddOpen(true)}>{content.create_button.value}</Button>
+        <Button intent="outline" onPress={() => setGenOpen(true)}>
+          {content.generate_discord_button.value}
+        </Button>
+      </div>
+
       <Tabs aria-label="Navbar" className="w-full">
         <TabList className="w-fit">
           <Tab id="a">{content.tabs.normal.value}</Tab>
           <Tab id="b">{content.tabs.profile.value}</Tab>
         </TabList>
         <TabPanel id="a" className="flex flex-col gap-4">
-          <div className="flex w-full gap-2">
-            <Button onPress={() => setAddOpen(true)}>{content.create_button.value}</Button>
-            <Button intent="outline" onPress={() => setGenOpen(true)}>
-              {content.generate_discord_button.value}
-            </Button>
-          </div>
-
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {lists
               .filter((list) => list.listType === "normal")
@@ -73,13 +73,6 @@ function MyList() {
           </div>
         </TabPanel>
         <TabPanel id="b" className="flex flex-col gap-4">
-          <div className="flex w-full gap-2">
-            <Button onPress={() => setAddOpen(true)}>{content.create_button.value}</Button>
-            <Button intent="outline" onPress={() => setGenOpen(true)}>
-              {content.generate_discord_button.value}
-            </Button>
-          </div>
-
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {lists
               .filter((list) => list.listType === "profile")
