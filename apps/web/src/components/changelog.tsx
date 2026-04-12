@@ -10,6 +10,7 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
 } from "./intentui/disclosure-group";
+import { Link } from "./intentui/link";
 import {
   Modal,
   ModalBody,
@@ -19,6 +20,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "./intentui/modal";
+import { Note } from "./intentui/note";
 
 export default function Changelog() {
   const content = useIntlayer("common");
@@ -46,6 +48,7 @@ export default function Changelog() {
           <ModalTitle>{content.changelog.value}</ModalTitle>
         </ModalHeader>
         <ModalBody className="flex flex-col gap-4">
+          <ChangelogNotice />
           <DisclosureGroup defaultExpandedKeys="1">
             {changelog.map((entry, index) => (
               <Disclosure key={entry.date} id={String(index + 1)}>
@@ -68,5 +71,19 @@ export default function Changelog() {
         </ModalFooter>
       </ModalContent>
     </Modal>
+  );
+}
+
+function ChangelogNotice() {
+  return (
+    <Note
+      intent="default"
+      className="bg-(--color-indigo-500)/15 px-3 py-2 text-(--color-indigo-700) dark:text-(--color-indigo-300)"
+    >
+      Join our support Discord server for bug reporting or suggestions.{" "}
+      <Link className="underline" href="https://discord.gg/SWEm6RbJD3" target="_blank">
+        discord.gg/SWEm6RbJD3
+      </Link>
+    </Note>
   );
 }
