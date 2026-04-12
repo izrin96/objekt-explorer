@@ -235,7 +235,7 @@ export async function fetchUserByIdentifier(
           .set({ nickname: null })
           .where(eq(userAddress.nickname, cachedUser.nickname));
 
-        return await fetchUserByIdentifier(identifier);
+        return await fetchUserByIdentifier(cachedUser.address);
       }
     }
 
