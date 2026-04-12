@@ -24,6 +24,7 @@ export default defineConfig({
     "typescript/unbound-method": "off",
     "typescript/restrict-template-expressions": "off",
     "typescript/no-unnecessary-type-assertion": "off",
+    "typescript/consistent-return": "off",
     "no-await-in-loop": "off",
     "no-shadow": "off",
   },

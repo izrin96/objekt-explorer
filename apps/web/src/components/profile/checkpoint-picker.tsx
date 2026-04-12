@@ -81,7 +81,7 @@ export default function CheckpointPicker() {
     const dateTime = toCalendarDateTime(selectedDate, selectedTime);
     const isoString = dateTime.toDate(TIME_ZONE).toISOString();
     setIsOpen(false);
-    return setFilters({ at: isoString });
+    void setFilters({ at: isoString });
   };
 
   return (

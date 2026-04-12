@@ -10,7 +10,7 @@ import { Toggle } from "../intentui/toggle";
 export default function GroupDirectionFilter() {
   const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
-  if (!filters.group_by) return;
+  if (!filters.group_by) return null;
   return (
     <Toggle
       intent="outline"

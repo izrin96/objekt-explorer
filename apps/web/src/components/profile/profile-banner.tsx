@@ -8,7 +8,7 @@ import { Container } from "../intentui/container";
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();
 
-  if (!(profile.bannerImgUrl && profile.bannerImgType)) return;
+  if (!(profile.bannerImgUrl && profile.bannerImgType)) return null;
 
   const isVideo = profile.bannerImgType.startsWith("video");
 

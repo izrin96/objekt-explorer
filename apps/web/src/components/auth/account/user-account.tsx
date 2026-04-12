@@ -87,7 +87,7 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
   const { data: session } = useSession();
   const content = useIntlayer("auth");
 
-  if (!session) return;
+  if (!session) return null;
 
   return (
     <DisclosureGroup

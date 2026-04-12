@@ -5,7 +5,7 @@ import { desc, eq, inArray } from "drizzle-orm";
 export async function fetchKnownAddresses(addresses: string[]) {
   if (addresses.length === 0) return [];
   const result = await db
-    .select({
+    .selectDistinctOn([userAddress.address], {
       address: userAddress.address,
       nickname: userAddress.nickname,
       hideNickname: userAddress.hideNickname,
@@ -17,7 +17,7 @@ export async function fetchKnownAddresses(addresses: string[]) {
         addresses.map((a) => a.toLowerCase()),
       ),
     )
-    .orderBy(desc(userAddress.id));
+    .orderBy(userAddress.address, desc(userAddress.id));
   return result;
 }
 

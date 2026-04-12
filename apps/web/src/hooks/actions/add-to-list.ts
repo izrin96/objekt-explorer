@@ -11,7 +11,7 @@ export function useAddToList() {
     orpc.list.addObjektsToList.mutationOptions({
       onSuccess: (rows, { slug }, _o, { client }) => {
         client.setQueryData(orpc.list.listEntries.queryKey({ input: { slug } }), (old) => {
-          if (old === undefined) return;
+          if (old === undefined) return [];
           return [...rows, ...old];
         });
 

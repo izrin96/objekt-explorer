@@ -297,7 +297,7 @@ export async function GET(request: NextRequest, props: Params) {
 
     const hasNext = results.length > limit;
     const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
-    const total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
+    const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
 
     return Response.json({
       nextCursor,
@@ -343,7 +343,7 @@ export async function GET(request: NextRequest, props: Params) {
       : null;
 
   const [results, countResult] = await Promise.all([mainQuery, countQuery]);
-  const total = countResult ? Number(countResult[0]?.count ?? 0) : undefined;
+  const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
 
   const hasNext = results.length > limit;
   const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
