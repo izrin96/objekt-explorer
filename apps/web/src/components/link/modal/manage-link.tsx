@@ -106,7 +106,7 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
   const contentCommon = useIntlayer("common");
 
   return (
-    <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
+    <SheetContent className="sm:max-w-md" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
         <SheetTitle>{content.edit.title.value}</SheetTitle>
         <SheetDescription>

@@ -612,7 +612,8 @@
       "result_label": "Results",
       "recent_label": "Recents",
       "clear_history": "Clear history"
-    }
+    },
+    "about": "About"
   },
   "not_found": {
     "list": "List not found",

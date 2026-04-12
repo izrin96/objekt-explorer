@@ -39,10 +39,10 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   if (status === "pending") {
     return (
       <>
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-6 w-16" />
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-6 w-33" />
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-16" />
+        <Skeleton className="h-5 w-20" />
+        <Skeleton className="h-5 w-40" />
       </>
     );
   }
@@ -51,26 +51,22 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
     return <Badge intent="danger">{content.error_fetching_metadata.value}</Badge>;
   }
 
-  if (status === "success") {
-    return (
-      <>
-        <Pill
-          label={
-            objekt.onOffline === "online" ? content.copies.value : content.scanned_copies.value
-          }
-          value={data.total.toLocaleString()}
-        />
-        <Pill label={content.spin.value} value={data.spin.toLocaleString()} />
-        <Pill label={content.non_spin.value} value={(data.total - data.spin).toLocaleString()} />
-        <Pill
-          label={content.tradable.value}
-          value={`${((data.transferable / data.total) * 100.0).toFixed(
-            2,
-          )}% (${data.transferable.toLocaleString()})`}
-        />
-      </>
-    );
-  }
+  return (
+    <>
+      <Pill
+        label={objekt.onOffline === "online" ? content.copies.value : content.scanned_copies.value}
+        value={data.total.toLocaleString()}
+      />
+      <Pill label={content.spin.value} value={data.spin.toLocaleString()} />
+      <Pill label={content.non_spin.value} value={(data.total - data.spin).toLocaleString()} />
+      <Pill
+        label={content.tradable.value}
+        value={`${((data.transferable / data.total) * 100.0).toFixed(
+          2,
+        )}% (${data.transferable.toLocaleString()})`}
+      />
+    </>
+  );
 }
 
 export function AttributePanel({

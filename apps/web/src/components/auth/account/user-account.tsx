@@ -52,7 +52,7 @@ type Props = {
 export default function UserAccountModal({ open, setOpen }: Props) {
   const content = useIntlayer("auth");
   return (
-    <SheetContent className={"sm:max-w-md"} isOpen={open} onOpenChange={setOpen}>
+    <SheetContent className="sm:max-w-md" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
         <SheetTitle>{content.account.title.value}</SheetTitle>
         <SheetDescription>{content.account.description.value}</SheetDescription>

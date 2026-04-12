@@ -23,6 +23,7 @@ import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth";
 import { getListHref, parseNickname } from "@/lib/utils";
 
+import { AboutMenu, AboutModal } from "./about";
 import { Avatar } from "./intentui/avatar-custom";
 import { buttonStyles } from "./intentui/button";
 import { Link } from "./intentui/link";
@@ -64,12 +65,14 @@ function UserMenu({ user }: { user: User }) {
   const [genOpen, setGenOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const router = useRouter();
   return (
     <>
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
       <UserAccountModal open={accountOpen} setOpen={setAccountOpen} />
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
+      <AboutModal open={aboutOpen} setOpen={setAboutOpen} />
 
       <Menu>
         <MenuTrigger aria-label={content.open_menu.value}>
@@ -118,7 +121,12 @@ function UserMenu({ user }: { user: User }) {
 
           <MenuSeparator />
 
+          <AboutMenu onAction={() => setAboutOpen(true)} />
+
+          <MenuSeparator />
+
           <MenuItem
+            intent="danger"
             onAction={() =>
               authClient.signOut({
                 fetchOptions: {

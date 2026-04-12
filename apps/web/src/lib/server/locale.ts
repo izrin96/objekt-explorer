@@ -1,14 +1,15 @@
 "use server";
 
-import { Locales, type Locale } from "intlayer";
 import { cookies } from "next/headers";
 
-const defaultLocale = Locales.ENGLISH;
+import type { Locale } from "../utils";
+
+const defaultLocale = "en";
 const COOKIE_NAME = "NEXT_LOCALE";
 
 export async function getUserLocale(): Promise<Locale> {
   const cookie = (await cookies()).get(COOKIE_NAME)?.value;
-  return cookie === Locales.ENGLISH || cookie === Locales.KOREAN ? cookie : defaultLocale;
+  return cookie === "en" || cookie === "ko" ? cookie : defaultLocale;
 }
 
 export async function setUserLocale(locale: Locale) {

@@ -1,9 +1,9 @@
 import { validArtists } from "@repo/cosmo/types/common";
-import { locales } from "intlayer";
 import { cookies } from "next/headers";
 import * as z from "zod";
 
 import type { Outputs } from "@/lib/orpc/server";
+import { locales } from "@/lib/utils";
 
 import { getArtists } from "../../artist";
 import { parseSelectedArtists } from "../../cookie";

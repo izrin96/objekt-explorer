@@ -25,50 +25,27 @@ export default function Changelog() {
 
   const changelog = [
     {
-      date: "2026-02-28",
-      items: ["Added objekt selling note to the list."],
+      date: "2026-04-10",
+      items: ["Added sorting by Rarity. Mint counts are updated hourly."],
     },
     {
-      date: "2026-02-26",
+      date: "2026-04-06",
       items: [
-        "Added objekt price support to the list. Requires setting a currency. Currently, prices can only be set after adding an objekt.",
-        "Added a description field to the list.",
-      ],
-    },
-    {
-      date: "2026-02-22",
-      items: [
-        "Added a profile list feature that bound to a profile, allowing serial numbers to be displayed. Good for want-to-sell list.",
-        "Added member progress chart to profile progress page.",
-      ],
-    },
-    {
-      date: "2026-02-09",
-      items: ["Rework COSMO verification with new method, replacing old QR method."],
-    },
-    {
-      date: "2026-02-06",
-      items: ["Added Snapshot feature to view collection at given time."],
-    },
-    {
-      date: "Others",
-      items: [
-        "Improve query performance on Activity and Trade History.",
-        "Added Korean translation.",
+        "Added a Compare button to the list view. You can now compare the current list with your profile or another list. Note: This is an early implementation, UX is still being refined.",
       ],
     },
   ] as const;
 
   return (
     <Modal>
-      <Button size="xs" intent="plain" className="hidden px-1.5 sm:px-1.5">
+      <Button size="xs" intent="plain" className="px-1.5 sm:px-1.5">
         <NoteIcon size={16} weight="duotone" />
       </Button>
-      <ModalContent size="xl">
+      <ModalContent size="2xl">
         <ModalHeader>
           <ModalTitle>{content.changelog.value}</ModalTitle>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="flex flex-col gap-4">
           <DisclosureGroup defaultExpandedKeys="1">
             {changelog.map((entry, index) => (
               <Disclosure key={entry.date} id={String(index + 1)}>
@@ -87,7 +64,7 @@ export default function Changelog() {
           </DisclosureGroup>
         </ModalBody>
         <ModalFooter>
-          <ModalClose>Close</ModalClose>
+          <ModalClose>{content.modal.close.value}</ModalClose>
         </ModalFooter>
       </ModalContent>
     </Modal>

@@ -1,8 +1,6 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import type { Locale } from "intlayer";
-import { Locales } from "intlayer";
 import { useLocale, useIntlayer } from "next-intlayer";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
@@ -12,6 +10,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
 import { orpc } from "@/lib/orpc/client";
+import type { Locale } from "@/lib/utils";
 
 import { Description, Label } from "./intentui/field";
 import {
@@ -44,9 +43,9 @@ export function SettingsModal({
   const hideLabel = useConfigStore((s) => s.hideLabel);
   const setHideLabel = useConfigStore((s) => s.setHideLabel);
 
-  const handleLocaleChange = (value: string) => {
+  const handleLocaleChange = (value: Locale) => {
     startTransition(async () => {
-      await setLocale.mutateAsync(value as Locale);
+      await setLocale.mutateAsync(value);
       router.refresh();
     });
   };
@@ -87,18 +86,14 @@ export function SettingsModal({
           <div className="flex self-center">
             <Select
               value={locale}
-              onChange={(key) => handleLocaleChange(key as string)}
+              onChange={(key) => handleLocaleChange(key as Locale)}
               isDisabled={isPending}
               aria-label={content.settings.language.label.value}
             >
               <SelectTrigger />
               <SelectContent>
-                <SelectItem id={Locales.ENGLISH}>
-                  {content.settings.language[Locales.ENGLISH].value}
-                </SelectItem>
-                <SelectItem id={Locales.KOREAN}>
-                  {content.settings.language[Locales.KOREAN].value}
-                </SelectItem>
+                <SelectItem id="en">{content.settings.language.en.value}</SelectItem>
+                <SelectItem id="ko">{content.settings.language.ko.value}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -129,7 +124,7 @@ export function SettingsModal({
         </div>
       </ModalBody>
       <ModalFooter>
-        <ModalClose>Close</ModalClose>
+        <ModalClose>{content.modal.close.value}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );

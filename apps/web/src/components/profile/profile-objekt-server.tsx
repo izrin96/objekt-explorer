@@ -3,7 +3,6 @@
 import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { Locales } from "intlayer";
 import { useLocale } from "next-intlayer";
 import dynamic from "next/dynamic";
 import { Suspense, useCallback, useState } from "react";
@@ -42,7 +41,7 @@ function ProfileObjektServerRender() {
       <div className="flex flex-col gap-4">
         {profile.address.toLowerCase() === Addresses.SPIN && (
           <Note intent="default" className="max-w-xl">
-            {locale === Locales.KOREAN
+            {locale === "ko"
               ? "COSMO 스핀에서는 일부 필터를 사용할 수 없습니다. 폴리곤 체인에서 스핀된 오브젝트는 아직 병합되지 않았습니다."
               : "Some filters are unavailable for COSMO Spin. Objekts spun on the Polygon chain have not been merged yet."}
           </Note>

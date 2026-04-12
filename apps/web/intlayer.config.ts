@@ -1,9 +1,9 @@
-import { Locales, type IntlayerConfig } from "intlayer";
+import { type IntlayerConfig } from "intlayer";
 
 const config: IntlayerConfig = {
   internationalization: {
-    defaultLocale: Locales.ENGLISH,
-    locales: [Locales.ENGLISH, Locales.KOREAN],
+    defaultLocale: "en",
+    locales: ["en", "ko"],
   },
   content: {
     contentDir: ["./src/i18n/content"],

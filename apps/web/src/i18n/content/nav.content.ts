@@ -93,6 +93,10 @@ const content = {
         ko: "검색 기록 삭제",
       }),
     },
+    about: t({
+      en: "About",
+      ko: "소개",
+    }),
   },
 } satisfies Dictionary;
 

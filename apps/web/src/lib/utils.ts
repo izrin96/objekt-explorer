@@ -7,6 +7,9 @@ import { clientEnv } from "@/lib/env";
 
 import { unobtainables } from "./unobtainables";
 
+export const locales = ["en", "ko"] as const;
+export type Locale = (typeof locales)[number];
+
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
 
 export const classOrder: Record<ValidArtist, string[]> = {
