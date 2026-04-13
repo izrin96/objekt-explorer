@@ -3,7 +3,6 @@ import { useIntlayer } from "next-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
-import type { PinListOutput } from "@/lib/server/api/routers/pins";
 
 export function useBatchUnpin() {
   const content = useIntlayer("actions");
@@ -11,14 +10,17 @@ export function useBatchUnpin() {
   const batchUnpin = useMutation(
     orpc.pins.batchUnpin.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
-        const previousPins = client.getQueryData<PinListOutput>(
-          orpc.pins.list.queryKey({ input: address }),
-        );
-        client.setQueryData(orpc.pins.list.queryKey({ input: address }), (old = []) => {
+        await client.cancelQueries(orpc.pins.list.queryOptions({ input: address }));
+
+        const queryKey = orpc.pins.list.queryKey({ input: address });
+        const snapshot = client.getQueryData(queryKey);
+
+        client.setQueryData(queryKey, (old = []) => {
           const tokenIdSet = new Set(tokenIds.map(String));
           return old.filter((item) => !tokenIdSet.has(item.tokenId));
         });
-        return { previousPins };
+
+        return { snapshot };
       },
       onSuccess: (_, { tokenIds }) => {
         const message =
@@ -27,10 +29,15 @@ export function useBatchUnpin() {
             : content.unpin.success_single.value;
         toast.success(message);
       },
-      onError: (_err, { tokenIds, address }, context, { client }) => {
-        if (context?.previousPins) {
-          client.setQueryData(orpc.pins.list.queryKey({ input: address }), context.previousPins);
+      onError: async (_err, { tokenIds, address }, context, { client }) => {
+        const queryKey = orpc.pins.list.queryKey({ input: address });
+
+        if (context?.snapshot) {
+          client.setQueryData(queryKey, context.snapshot);
+        } else {
+          await client.invalidateQueries({ queryKey });
         }
+
         const message =
           tokenIds.length > 1
             ? content.unpin.error_multiple({ count: tokenIds.length.toLocaleString() }).value

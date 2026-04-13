@@ -9,12 +9,20 @@ export function useRemoveFromList() {
 
   const removeObjektsFromList = useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
-      onSuccess: (_, { slug, ids }, _o, { client }) => {
-        client.setQueryData(orpc.list.listEntries.queryKey({ input: { slug } }), (old = []) => {
+      onMutate: async ({ slug, ids }, { client }) => {
+        await client.cancelQueries(orpc.list.listEntries.queryOptions({ input: { slug } }));
+
+        const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });
+        const snapshot = client.getQueryData(queryKey);
+
+        client.setQueryData(queryKey, (old = []) => {
           const idSet = new Set(ids.map(String));
           return old.filter((item) => !idSet.has(item.id));
         });
 
+        return { snapshot };
+      },
+      onSuccess: (_, { ids }) => {
         const message =
           ids.length > 1
             ? content.remove_from_list.success_multiple({ count: ids.length.toLocaleString() })
@@ -22,7 +30,15 @@ export function useRemoveFromList() {
             : content.remove_from_list.success_single.value;
         toast.success(message);
       },
-      onError: () => {
+      onError: async (_err, { slug }, context, { client }) => {
+        const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });
+
+        if (context?.snapshot) {
+          client.setQueryData(queryKey, context.snapshot);
+        } else {
+          await client.invalidateQueries({ queryKey });
+        }
+
         toast.error(content.remove_from_list.error.value);
       },
     }),

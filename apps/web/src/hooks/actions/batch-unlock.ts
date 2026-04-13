@@ -3,7 +3,6 @@ import { useIntlayer } from "next-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
-import type { LockListOutput } from "@/lib/server/api/routers/locked-objekts";
 
 export function useBatchUnlock() {
   const content = useIntlayer("actions");
@@ -11,14 +10,17 @@ export function useBatchUnlock() {
   const batchUnlock = useMutation(
     orpc.lockedObjekt.batchUnlock.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
-        const previousLocks = client.getQueryData<LockListOutput>(
-          orpc.lockedObjekt.list.queryKey({ input: address }),
-        );
-        client.setQueryData(orpc.lockedObjekt.list.queryKey({ input: address }), (old = []) => {
+        await client.cancelQueries(orpc.lockedObjekt.list.queryOptions({ input: address }));
+
+        const queryKey = orpc.lockedObjekt.list.queryKey({ input: address });
+        const snapshot = client.getQueryData(queryKey);
+
+        client.setQueryData(queryKey, (old = []) => {
           const tokenIdSet = new Set(tokenIds.map(String));
           return old.filter((item) => !tokenIdSet.has(item.tokenId));
         });
-        return { previousLocks };
+
+        return { snapshot };
       },
       onSuccess: (_, { tokenIds }) => {
         const message =
@@ -27,13 +29,15 @@ export function useBatchUnlock() {
             : content.unlock.success_single.value;
         toast.success(message);
       },
-      onError: (_err, { tokenIds, address }, context, { client }) => {
-        if (context?.previousLocks) {
-          client.setQueryData(
-            orpc.lockedObjekt.list.queryKey({ input: address }),
-            context.previousLocks,
-          );
+      onError: async (_err, { tokenIds, address }, context, { client }) => {
+        const queryKey = orpc.lockedObjekt.list.queryKey({ input: address });
+
+        if (context?.snapshot) {
+          client.setQueryData(queryKey, context.snapshot);
+        } else {
+          await client.invalidateQueries({ queryKey });
         }
+
         const message =
           tokenIds.length > 1
             ? content.unlock.error_multiple({ count: tokenIds.length.toLocaleString() }).value
