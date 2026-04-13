@@ -2,6 +2,7 @@
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useIntlayer } from "next-intlayer";
+import { useEffect } from "react";
 import { Form } from "react-aria-components";
 import { Controller, useForm } from "react-hook-form";
 
@@ -43,11 +44,6 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
   const updateEntryPrices = useUpdateEntryPrices();
 
   const { handleSubmit, control, watch, reset } = useForm<FormValues>({
-    defaultValues: {
-      price: 0,
-      isQyop: false,
-      note: "",
-    },
     values: {
       price: objekt?.price ?? 0,
       isQyop: objekt?.isQyop ?? false,
@@ -95,6 +91,12 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
       },
     );
   };
+
+  useEffect(() => {
+    if (open) {
+      reset();
+    }
+  }, [open]);
 
   if (!list.currency) return null;
 
