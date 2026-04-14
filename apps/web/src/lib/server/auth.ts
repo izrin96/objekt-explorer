@@ -17,6 +17,7 @@ import { env } from "@/lib/env";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
 import { getBaseURL, SITE_NAME } from "../utils";
+import { getUserLocale } from "./locale";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({
@@ -28,9 +29,13 @@ export const auth = betterAuth({
   plugins: [
     username(),
     i18n({
+      defaultLocale: "en",
       translations: betterAuthLocale,
-      detection: ["cookie", "header"],
+      detection: ["callback", "cookie"],
       localeCookie: "NEXT_LOCALE",
+      getLocale: () => {
+        return getUserLocale();
+      },
     }),
   ],
   emailAndPassword: {
