@@ -140,6 +140,10 @@ const content = {
         en: "Password",
         ko: "비밀번호",
       }),
+      password_placeholder: t({
+        en: "•••••••",
+        ko: "•••••••",
+      }),
       password_required: t({
         en: "Password is required.",
         ko: "비밀번호를 입력해주세요.",

@@ -11,6 +11,7 @@ import { authClient } from "@/lib/auth-client";
 
 import { Button } from "../intentui/button";
 import { FieldError, Label } from "../intentui/field";
+import { Input } from "../intentui/input";
 import { TextField } from "../intentui/text-field";
 
 export default function ResetPassword({ token }: { token: string }) {
@@ -74,6 +75,7 @@ export default function ResetPassword({ token }: { token: string }) {
                   validationBehavior="aria"
                 >
                   <Label>{content.reset_password.password_label.value}</Label>
+                  <Input placeholder={content.reset_password.password_placeholder.value} />
                   <FieldError>{error?.message}</FieldError>
                 </TextField>
               )}

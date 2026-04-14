@@ -118,6 +118,7 @@
     "reset_password": {
       "title": "Reset Password",
       "password_label": "Password",
+      "password_placeholder": "•••••••",
       "password_required": "Password is required.",
       "submit": "Reset Password",
       "success": "Password reset successfully",
