@@ -3,7 +3,6 @@
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useIntlayer } from "next-intlayer";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import type { CropperRef } from "react-advanced-cropper";
@@ -99,9 +98,16 @@ type EditProfileModalProps = {
   address: string;
   open: boolean;
   setOpen: (val: boolean) => void;
+  onSave?: () => void;
 };
 
-export function EditProfileModal({ nickname, address, open, setOpen }: EditProfileModalProps) {
+export function EditProfileModal({
+  nickname,
+  address,
+  open,
+  setOpen,
+  onSave,
+}: EditProfileModalProps) {
   const content = useIntlayer("profile");
   const contentCommon = useIntlayer("common");
 
@@ -126,7 +132,7 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
                   </div>
                 }
               >
-                <EditProfileForm address={address} setOpen={setOpen} />
+                <EditProfileForm address={address} setOpen={setOpen} onSave={onSave} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -142,6 +148,7 @@ export function EditProfileModal({ nickname, address, open, setOpen }: EditProfi
 type EditProfileProps = {
   address: string;
   setOpen: (val: boolean) => void;
+  onSave?: () => void;
 };
 
 type BannerImageProps = {
@@ -199,8 +206,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
   );
 }
 
-function EditProfileForm({ address, setOpen }: EditProfileProps) {
-  const router = useRouter();
+function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const content = useIntlayer("profile");
@@ -237,7 +243,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         setOpen(false);
         setDroppedImage(null);
         toast.success(content.edit.success.value);
-        router.refresh();
+        onSave?.();
       },
       onError: () => {
         toast.error(content.edit.error.value);

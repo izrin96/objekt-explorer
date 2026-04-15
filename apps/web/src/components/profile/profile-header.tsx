@@ -2,6 +2,7 @@
 
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -16,11 +17,16 @@ import { Link } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
+  const router = useRouter();
   const [, copy] = useCopyToClipboard();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
   const content = useIntlayer("profile");
+
+  const onSave = () => {
+    router.refresh();
+  };
 
   return (
     <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
@@ -58,6 +64,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             nickname={nickname}
             open={editOpen}
             setOpen={setEditOpen}
+            onSave={onSave}
           />
           <Button
             size="sm"

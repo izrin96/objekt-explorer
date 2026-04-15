@@ -7,7 +7,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useIntlayer } from "next-intlayer";
-import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { Form } from "react-aria-components";
 import { ErrorBoundary } from "react-error-boundary";
@@ -355,9 +354,10 @@ type EditListModalProps = {
   slug: string;
   open: boolean;
   setOpen: (val: boolean) => void;
+  onSave?: () => void;
 };
 
-export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
+export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProps) {
   const content = useIntlayer("list");
   const contentCommon = useIntlayer("common");
   return (
@@ -377,7 +377,7 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
                   </div>
                 }
               >
-                <EditListForm slug={slug} setOpen={setOpen} />
+                <EditListForm slug={slug} setOpen={setOpen} onSave={onSave} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -390,8 +390,15 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
   );
 }
 
-function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
-  const router = useRouter();
+function EditListForm({
+  slug,
+  setOpen,
+  onSave,
+}: {
+  slug: string;
+  setOpen: (val: boolean) => void;
+  onSave?: () => void;
+}) {
   const content = useIntlayer("list");
   const contentCommon = useIntlayer("common");
   const { data: profiles } = useUserProfiles();
@@ -406,13 +413,13 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   });
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
-      onSuccess: (_, { slug }, _o, { client }) => {
+      onSuccess: (_, _d, _o, { client }) => {
         setOpen(false);
         toast.success(content.edit.success.value);
-        router.replace(`/list/${slug}`);
         void client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
+        onSave?.();
       },
       onError: () => {
         toast.error(content.edit.error.value);

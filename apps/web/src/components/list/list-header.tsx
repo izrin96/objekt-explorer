@@ -2,6 +2,7 @@
 
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -97,11 +98,17 @@ export default function ListHeader() {
 }
 
 function EditList({ slug }: { slug: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const content = useIntlayer("list");
+
+  const onSave = () => {
+    router.replace(`/list/${slug}`);
+  };
+
   return (
     <>
-      <EditListModal slug={slug} open={open} setOpen={setOpen} />
+      <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
       <Button
         size="sm"
         intent="outline"
