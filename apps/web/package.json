@@ -60,7 +60,7 @@
     "ofetch": "catalog:",
     "react": "^19.2.5",
     "react-advanced-cropper": "^0.20.1",
-    "react-aria-components": "^1.16.0",
+    "react-aria-components": "^1.17.0",
     "react-dom": "^19.2.5",
     "react-error-boundary": "^6.1.1",
     "react-hook-form": "^7.72.1",
