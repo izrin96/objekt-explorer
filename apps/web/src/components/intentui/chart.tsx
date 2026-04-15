@@ -155,7 +155,7 @@ interface BaseChartProps extends React.HTMLAttributes<HTMLDivElement> {
   layout?: ChartLayout;
   valueFormatter?: (value: number) => string;
 
-  tooltip?: TooltipContentType<ValueType, NameType> | boolean;
+  tooltip?: TooltipContentType | boolean;
   tooltipProps?: Omit<TooltipProps, "content"> & {
     hideLabel?: boolean;
     labelSeparator?: boolean;
