@@ -33,10 +33,12 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
     if (user.bannerImgType && user.bannerImgUrl && ref.current) {
       // instant scroll to profile header if banner exists
       const offset = ref.current.offsetTop - 90;
-      window.scrollTo({
-        top: offset,
-        behavior: "instant",
-      });
+      if (offset > 0) {
+        window.scrollTo({
+          top: offset,
+          behavior: "instant",
+        });
+      }
     }
   }, [user.bannerImgType, user.bannerImgUrl]);
 
