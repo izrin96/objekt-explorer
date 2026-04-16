@@ -3,7 +3,7 @@
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
@@ -18,6 +18,7 @@ import { EditProfileModal } from "../link/modal/manage-link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const router = useRouter();
+  const ref = useRef<HTMLDivElement>(null);
   const [, copy] = useCopyToClipboard();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
@@ -28,8 +29,22 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
     router.refresh();
   };
 
+  useEffect(() => {
+    if (user.bannerImgType && user.bannerImgUrl && ref.current) {
+      // instant scroll to profile header if banner exists
+      const offset = ref.current.offsetTop - 90;
+      window.scrollTo({
+        top: offset,
+        behavior: "instant",
+      });
+    }
+  }, [user.bannerImgType, user.bannerImgUrl]);
+
   return (
-    <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
+    <div
+      className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0"
+      ref={ref}
+    >
       <div className="flex w-full flex-col md:w-auto">
         <h2 className="text-xl font-semibold">{nickname}</h2>
         <div className="text-muted-fg inline-flex gap-1 truncate font-mono text-xs">
