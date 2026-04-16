@@ -3,7 +3,7 @@
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { useIntlayer } from "next-intlayer";
 import { Suspense, useState } from "react";
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";

@@ -2,7 +2,9 @@
 
 import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
-import { Autocomplete, type Key, Popover, useFilter } from "react-aria-components";
+import type { Key } from "react-aria-components";
+import { Autocomplete, useFilter } from "react-aria-components/Autocomplete";
+import { Popover } from "react-aria-components/Popover";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";

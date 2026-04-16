@@ -3,7 +3,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useIntlayer } from "next-intlayer";
 import { useEffect } from "react";
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/intentui/button";

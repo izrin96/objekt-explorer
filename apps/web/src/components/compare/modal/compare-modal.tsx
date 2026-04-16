@@ -1,7 +1,7 @@
 "use client";
 
 import { useIntlayer } from "next-intlayer";
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
 
 import { ListSelector } from "@/components/compare/modal/list-selector";

@@ -9,11 +9,11 @@ import {
   useMemo,
   useState,
 } from "react";
+import { ToggleButton } from "react-aria-components/ToggleButton";
 import {
-  ToggleButton,
   ToggleButtonGroup,
   type ToggleButtonGroupProps,
-} from "react-aria-components";
+} from "react-aria-components/ToggleButtonGroup";
 import type {
   CartesianGridProps as CartesianGridPrimitiveProps,
   CartesianGridProps,

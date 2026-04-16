@@ -10,7 +10,7 @@ import type { CropperRef } from "react-advanced-cropper";
 const Cropper = dynamic(() => import("react-advanced-cropper").then((mod) => mod.Cropper), {
   ssr: false,
 });
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";

@@ -1,11 +1,14 @@
 "use client";
-
-import type { ColorSliderProps, SliderOutputProps, SliderTrackProps } from "react-aria-components";
+import type {
+  ColorSliderProps,
+  SliderOutputProps,
+  SliderTrackProps,
+} from "react-aria-components/ColorSlider";
 import {
   ColorSlider as PrimitiveColorSlider,
   SliderOutput,
   SliderTrack,
-} from "react-aria-components";
+} from "react-aria-components/ColorSlider";
 
 import { fieldStyles } from "@/components/intentui/field";
 import { cx } from "@/lib/primitive";

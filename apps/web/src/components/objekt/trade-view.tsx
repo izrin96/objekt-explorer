@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { useIntlayer } from "next-intlayer";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { NumberField as NumberFieldPrimitive } from "react-aria-components";
+import { NumberField as NumberFieldPrimitive } from "react-aria-components/NumberField";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";

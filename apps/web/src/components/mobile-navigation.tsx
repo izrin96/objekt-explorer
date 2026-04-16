@@ -4,7 +4,14 @@ import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from "react-aria-components";
+import {
+  Header,
+  Menu,
+  MenuItem,
+  MenuSection,
+  MenuTrigger,
+  Popover,
+} from "react-aria-components/Menu";
 import { twJoin, twMerge } from "tailwind-merge";
 
 import AppLogo from "@/components/app-logo";

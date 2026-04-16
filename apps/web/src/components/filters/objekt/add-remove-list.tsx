@@ -1,7 +1,7 @@
 import { CurrencyDollarIcon, PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
-import { Focusable } from "react-aria-components";
+import { Focusable } from "react-aria-components/Focusable";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/intentui/button";
