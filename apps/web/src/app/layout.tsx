@@ -100,14 +100,16 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       <head>
         <PublicEnvScript />
       </head>
-      <body className="min-h-svh font-sans antialiased">
-        <ClientProviders>
-          <Providers locale={locale}>
-            <Navbar />
-            <main className="mx-auto w-full">{children}</main>
-            <Analytics />
-          </Providers>
-        </ClientProviders>
+      <body className="bg-bg text-fg relative font-sans text-sm antialiased">
+        <div className="relative isolate flex min-h-svh flex-col">
+          <ClientProviders>
+            <Providers locale={locale}>
+              <Navbar />
+              <main className="mx-auto w-full">{children}</main>
+              <Analytics />
+            </Providers>
+          </ClientProviders>
+        </div>
       </body>
     </html>
   );
