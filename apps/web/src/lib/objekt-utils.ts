@@ -1,4 +1,4 @@
-import { type PinObjekt, type LockObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { getCollectionEdition } from "./universal/collection-grid";
 import { replaceUrlSize } from "./utils";
@@ -41,30 +41,6 @@ function makeCollectionTags(objekt: ValidObjekt) {
     seasonCode + seasonNumber, // a01
     seasonCode + Number(seasonNumber), // a1
   ].map((a) => a.toLowerCase());
-}
-
-export function augmentObjektsWithPinLock(
-  objekts: ValidObjekt[],
-  pins: PinObjekt[],
-  locked: LockObjekt[],
-): ValidObjekt[] {
-  const pinsMap = new Map(pins.map((pin) => [pin.tokenId, pin]));
-  const lockedMap = new Map(locked.map((lock) => [lock.tokenId, lock]));
-
-  return objekts.map((objekt) => {
-    if (!isObjektOwned(objekt)) return objekt;
-
-    const pinObjekt = pinsMap.get(objekt.id);
-    const lockedObjekt = lockedMap.get(objekt.id);
-    const isPin = pinObjekt !== undefined;
-    const isLocked = lockedObjekt !== undefined;
-
-    return Object.assign({}, objekt, {
-      isPin,
-      isLocked,
-      pinOrder: isPin ? pinObjekt.order : null,
-    });
-  });
 }
 
 export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {

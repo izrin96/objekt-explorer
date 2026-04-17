@@ -3,7 +3,7 @@ import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";
-import { augmentObjektsWithPinLock } from "@/lib/objekt-utils";
+import { isObjektOwned } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions } from "@/lib/query-options";
 
@@ -38,11 +38,13 @@ export function useProfileObjekts() {
         input: profile.address,
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
+        select: (data) => new Map(data.map((p) => [p.tokenId, p.order])),
       }),
       orpc.lockedObjekt.list.queryOptions({
         input: profile.address,
         refetchOnWindowFocus: false,
         staleTime: 1000 * 60 * 5,
+        select: (data) => new Set(data.map((l) => l.tokenId)),
       }),
     ],
   });
@@ -50,10 +52,20 @@ export function useProfileObjekts() {
   const objektsQuery = useQuery(collectionOptions(serverFilters, !hasNextPage));
 
   const result = useMemo(() => {
-    // owned objekts - in checkpoint mode, skip pin/lock augmentation
+    // augment owned objekts with pin/lock status
+    const pinsMap = pinsQuery.data;
+    const lockedSet = lockedObjektQuery.data;
+
     const ownedWithPinLock = deferredFilters.at
       ? allOwnedObjekts
-      : augmentObjektsWithPinLock(allOwnedObjekts, pinsQuery.data, lockedObjektQuery.data);
+      : allOwnedObjekts.map((objekt) => {
+          if (!isObjektOwned(objekt)) return objekt;
+          const isPin = pinsMap.has(objekt.id);
+          const isLocked = lockedSet.has(objekt.id);
+          return isPin || isLocked
+            ? { ...objekt, isPin, isLocked, pinOrder: isPin ? pinsMap.get(objekt.id)! : null }
+            : objekt;
+        });
 
     const ownedFiltered = filterObjekts(deferredFilters, ownedWithPinLock);
 
