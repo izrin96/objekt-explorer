@@ -67,6 +67,7 @@
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
   "tailwindCSS.lint.suggestCanonicalClasses": "ignore",
+  "tailwindCSS.classFunctions": ["tv"],
   "emmet.showExpandedAbbreviation": "never",
   "js/ts.tsdk.path": "node_modules/typescript/lib",
   "js/ts.tsdk.promptToUseWorkspaceVersion": true
