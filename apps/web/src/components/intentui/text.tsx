@@ -7,11 +7,7 @@ import { Link } from "./link";
 
 export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p">) {
   return (
-    <p
-      data-slot="text"
-      {...props}
-      className={twMerge("text-muted-fg text-base/6 sm:text-sm/6", className)}
-    />
+    <p data-slot="text" {...props} className={twMerge("text-muted-fg text-sm/6", className)} />
   );
 }
 
@@ -32,7 +28,7 @@ export function Code({ className, ...props }: React.ComponentPropsWithoutRef<"co
     <code
       {...props}
       className={twMerge(
-        "bg-muted rounded-sm border px-0.5 text-sm font-medium sm:text-[0.8125rem]",
+        "bg-muted rounded-sm border px-0.5 text-[0.8125rem] font-medium",
         className,
       )}
     />

@@ -54,11 +54,7 @@ export function ProgressBarValue({
 }: Omit<React.ComponentProps<"span">, "children">) {
   const { valueText } = use(ProgressBarContext)!;
   return (
-    <span
-      data-slot="progress-bar-value"
-      className={twMerge("text-base/6 sm:text-sm/6", className)}
-      {...props}
-    >
+    <span data-slot="progress-bar-value" className={twMerge("text-sm/6", className)} {...props}>
       {valueText}
     </span>
   );

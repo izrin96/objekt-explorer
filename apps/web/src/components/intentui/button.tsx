@@ -40,45 +40,33 @@ export const buttonStyles = tv({
     },
     size: {
       xs: [
-        "min-h-8 gap-x-1.5 px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] text-sm sm:min-h-7 sm:px-2 sm:py-[calc(--spacing(1.5)-1px)] sm:text-xs/4",
-        "*:data-[slot=icon]:-mx-px *:data-[slot=icon]:size-3.5 sm:*:data-[slot=icon]:size-3",
-        "*:data-[slot=loader]:-mx-px *:data-[slot=loader]:size-3.5 sm:*:data-[slot=loader]:size-3",
+        "min-h-7 gap-x-1.5 px-2 py-[calc(--spacing(1.5)-1px)] text-xs/4",
+        "*:data-[slot=icon]:-mx-px *:data-[slot=icon]:size-3",
+        "*:data-[slot=loader]:-mx-px *:data-[slot=loader]:size-3",
       ],
       sm: [
-        "min-h-9 gap-x-1.5 px-3 py-[calc(--spacing(2)-1px)] sm:min-h-8 sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/5",
-        "*:data-[slot=icon]:size-4.5 sm:*:data-[slot=icon]:size-4",
-        "*:data-[slot=loader]:size-4.5 sm:*:data-[slot=loader]:size-4",
+        "min-h-8 gap-x-1.5 px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] text-sm/5",
+        "*:data-[slot=icon]:size-4",
+        "*:data-[slot=loader]:size-4",
       ],
       md: [
-        "min-h-10 gap-x-2 px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:min-h-9 sm:px-3 sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6",
-        "*:data-[slot=icon]:size-5 sm:*:data-[slot=icon]:size-4",
-        "*:data-[slot=loader]:size-5 sm:*:data-[slot=loader]:size-4",
+        "min-h-9 gap-x-2 px-3 py-[calc(--spacing(1.5)-1px)] text-sm/6",
+        "*:data-[slot=icon]:size-4",
+        "*:data-[slot=loader]:size-4",
       ],
       lg: [
-        "min-h-10 gap-x-2 px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(3)-1px)] sm:min-h-9 sm:px-3 sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/7",
-        "*:data-[slot=icon]:size-5 sm:*:data-[slot=icon]:size-4.5",
-        "*:data-[slot=loader]:size-5 sm:*:data-[slot=loader]:size-4.5",
+        "min-h-9 gap-x-2 px-3 py-[calc(--spacing(1.5)-1px)] text-sm/7",
+        "*:data-[slot=icon]:size-4.5",
+        "*:data-[slot=loader]:size-4.5",
       ],
-      "sq-xs": [
-        "touch-target size-8 sm:size-7",
-        "*:data-[slot=icon]:size-3.5 sm:*:data-[slot=icon]:size-3",
-        "*:data-[slot=loader]:size-3.5 sm:*:data-[slot=loader]:size-3",
-      ],
-      "sq-sm": [
-        "touch-target size-10 sm:size-8",
-        "*:data-[slot=icon]:size-4.5 sm:*:data-[slot=icon]:size-4",
-        "*:data-[slot=loader]:size-4.5 sm:*:data-[slot=loader]:size-4",
-      ],
+      "sq-xs": ["touch-target size-7", "*:data-[slot=icon]:size-3", "*:data-[slot=loader]:size-3"],
+      "sq-sm": ["touch-target size-8", "*:data-[slot=icon]:size-4", "*:data-[slot=loader]:size-4"],
       "sq-md": [
-        "touch-target size-11 sm:size-9",
-        "*:data-[slot=icon]:size-5 sm:*:data-[slot=icon]:size-4.5",
-        "*:data-[slot=loader]:size-5 sm:*:data-[slot=loader]:size-4.5",
+        "touch-target size-9",
+        "*:data-[slot=icon]:size-4.5",
+        "*:data-[slot=loader]:size-4.5",
       ],
-      "sq-lg": [
-        "touch-target size-12 sm:size-10",
-        "*:data-[slot=icon]:size-6 sm:*:data-[slot=icon]:size-5",
-        "*:data-[slot=loader]:size-6 sm:*:data-[slot=loader]:size-5",
-      ],
+      "sq-lg": ["touch-target size-10", "*:data-[slot=icon]:size-5", "*:data-[slot=loader]:size-5"],
     },
 
     isCircle: {

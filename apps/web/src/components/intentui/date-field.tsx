@@ -26,8 +26,8 @@ export function DateInput({ className, ...props }: Omit<DateInputProps, "childre
     <span data-slot="control" className="relative block">
       <DateInputPrimitive
         className={cx(
-          "relative block appearance-none rounded-lg px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)]",
-          "text-base/6 text-fg placeholder:text-muted-fg sm:text-sm/6",
+          "relative block appearance-none rounded-lg px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)]",
+          "text-sm/6 text-fg placeholder:text-muted-fg",
           "bg-(--control-bg,transparent)",
           "border border-input enabled:hover:border-muted-fg/30",
           "focus-within:border-ring/70 focus-within:bg-primary-subtle/5 focus-within:outline-hidden focus-within:ring-3 focus-within:ring-ring/20 focus-within:hover:border-ring/80",
@@ -43,7 +43,7 @@ export function DateInput({ className, ...props }: Omit<DateInputProps, "childre
           <DateSegment
             segment={segment}
             className={twJoin(
-              "type-literal:px-0 text-fg data-placeholder:not-data-focused:text-muted-fg inline shrink-0 rounded px-1 py-0.5 tracking-wider caret-transparent outline-0 sm:text-sm",
+              "type-literal:px-0 text-fg data-placeholder:not-data-focused:text-muted-fg inline shrink-0 rounded px-1 py-0.5 text-sm tracking-wider caret-transparent outline-0",
               "focus:bg-primary-subtle focus:text-primary-subtle-fg focus:data-invalid:bg-danger-subtle focus:data-invalid:text-danger-subtle-fg forced-colors:focus:bg-[Highlight] forced-colors:focus:text-[HighlightText]",
               "forced-color-adjust-none forced-colors:text-[ButtonText]",
               "in-disabled:bg-muted disabled:bg-muted forced-colors:disabled:text-[GrayText]",

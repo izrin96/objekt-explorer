@@ -56,8 +56,8 @@ const StepperButton = ({
     <Button
       className={cx(
         "inline-grid place-content-center pressed:text-fg text-muted-fg enabled:hover:text-fg",
-        "size-full min-w-11 grow bg-input/20 pressed:bg-input/60 sm:min-w-8.5",
-        "*:data-[slot=stepper-icon]:size-5 sm:*:data-[slot=stepper-icon]:size-4",
+        "size-full min-w-8.5 grow bg-input/20 pressed:bg-input/60",
+        "*:data-[slot=stepper-icon]:size-4",
         "disabled:pointer-events-none disabled:opacity-50",
         className,
       )}

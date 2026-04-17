@@ -30,7 +30,7 @@ export function ColorSlider({ className, ...props }: ColorSliderProps) {
 export function ColorSliderOutput({ className, ...props }: SliderOutputProps) {
   return (
     <SliderOutput
-      className={cx("orientation-vertical:hidden font-medium text-base/6 sm:text-sm/6", className)}
+      className={cx("orientation-vertical:hidden font-medium text-sm/6", className)}
       {...props}
     />
   );
