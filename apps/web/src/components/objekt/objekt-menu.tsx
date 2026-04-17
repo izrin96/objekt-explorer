@@ -37,7 +37,9 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
       <Button className="absolute top-1 right-10 z-50 p-2 sm:top-2" size="sq-xs" intent="outline">
         <DotsThreeVerticalIcon size={16} weight="bold" />
       </Button>
-      <MenuContent placement="bottom right">{children}</MenuContent>
+      <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+        {children}
+      </MenuContent>
     </Menu>
   );
 }
@@ -73,7 +75,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
         <PlusIcon data-slot="icon" />
         <MenuLabel>{content.add_to_list.value}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="bottom right">
+      <MenuContent placement="bottom right" popover={{ offset: -2 }}>
         {!availableLists && (
           <MenuItem isDisabled>
             <MenuLabel>

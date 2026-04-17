@@ -123,7 +123,7 @@ function ListCard({ list }: ListCardProps) {
             <Button intent="outline" size="sq-xs">
               <EllipsisVerticalIcon className="size-5" />
             </Button>
-            <MenuContent placement="bottom right">
+            <MenuContent placement="bottom right" popover={{ offset: -2 }}>
               <MenuItem onAction={() => setEditOpen(true)}>{content.card.edit.value}</MenuItem>
               <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
                 {content.card.delete.value}

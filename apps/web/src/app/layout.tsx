@@ -94,6 +94,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
         notoSansSc.variable,
         googleSansFlex.variable,
         firaCodeFiraCode.variable,
+        "[scrollbar-gutter:stable]",
       )}
     >
       <head>

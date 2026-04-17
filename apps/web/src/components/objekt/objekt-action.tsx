@@ -56,11 +56,13 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
       <Button
         size="sq-xs"
         intent="plain"
-        className="pressed:block bg-bg/80 text-fg hover:bg-bg hidden px-2 group-hover:block"
+        className="pressed:block bg-bg/80 text-fg hover:bg-bg pressed:bg-bg hidden px-2 group-hover:block"
       >
         <DotsThreeVerticalIcon className="size-3" weight="bold" />
       </Button>
-      <MenuContent placement="bottom right">{children}</MenuContent>
+      <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+        {children}
+      </MenuContent>
     </Menu>
   );
 }
