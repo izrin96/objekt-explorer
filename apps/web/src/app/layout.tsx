@@ -102,7 +102,7 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       <head>
         <PublicEnvScript />
       </head>
-      <body className="bg-bg text-fg font-sans text-sm antialiased">
+      <body className="bg-bg text-fg font-sans antialiased">
         <div className="relative flex min-h-svh flex-col">
           <ClientProviders>
             <Providers locale={locale}>
