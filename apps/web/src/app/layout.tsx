@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "@/app/globals.css";
 import { PublicEnvScript } from "next-runtime-env";
@@ -40,6 +40,12 @@ const notoSansSc = Noto_Sans_SC({
   weight: "variable",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: {
