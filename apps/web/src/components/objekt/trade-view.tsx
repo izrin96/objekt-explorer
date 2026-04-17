@@ -168,64 +168,22 @@ function Trades({
         </Button>
       </div>
 
-      <TradeTable objekt={objekt} serial={serial} />
+      <TradeTable slug={objekt.slug} serial={serial} />
     </div>
   );
 }
 
-type TransferItem = ObjektTransferResult["transfers"][number];
-
-function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
-  const [, copy] = useCopyToClipboard();
+function TradeTable({ slug, serial }: { slug: string; serial: number }) {
   const content = useIntlayer("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: () => {
-      const url = new URL(`/api/objekts/transfers/${objekt.slug}/${serial}`, getBaseURL());
+      const url = new URL(`/api/objekts/transfers/${slug}/${serial}`, getBaseURL());
       return ofetch<ObjektTransferResult>(url.toString());
     },
-    queryKey: ["objekts", "transfer", objekt.slug, serial],
+    queryKey: ["objekts", "transfer", slug, serial],
     retry: 1,
     staleTime: 0,
   });
-
-  const handleCopy = async (tokenId: string | undefined) => {
-    await copy(tokenId ?? "");
-    toast.success(content.token_id_copied.value);
-  };
-
-  const list = useAsyncList<TransferItem>({
-    async load() {
-      return {
-        items: data?.transfers ?? [],
-        sortDescriptor: {
-          column: "timestamp",
-          direction: "descending",
-        },
-      };
-    },
-    async sort({ items, sortDescriptor }) {
-      return {
-        items: items.toSorted((a, b) => {
-          let cmp = 0;
-          if (sortDescriptor.column === "timestamp") {
-            const aTime = new Date(a.timestamp).getTime();
-            const bTime = new Date(b.timestamp).getTime();
-            if (aTime < bTime) cmp = -1;
-            else if (aTime > bTime) cmp = 1;
-            else cmp = 0;
-          }
-          if (sortDescriptor.direction === "descending") cmp *= -1;
-          return cmp;
-        }),
-      };
-    },
-  });
-
-  useEffect(() => {
-    if (data) {
-      list.reload();
-    }
-  }, [data]);
 
   if (status === "pending")
     return (
@@ -235,10 +193,6 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     );
 
   if (status === "error") return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
-
-  const ownerNickname = data.transfers.find(
-    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
-  )?.nickname;
 
   if (data.hide) {
     return (
@@ -257,6 +211,55 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
       </div>
     );
   }
+
+  return <TradeTableContent data={data} />;
+}
+
+function TradeTableContent({ data }: { data: ObjektTransferResult }) {
+  const content = useIntlayer("objekt");
+  const [, copy] = useCopyToClipboard();
+
+  const list = useAsyncList({
+    load() {
+      return {
+        items: data.transfers,
+        sortDescriptor: {
+          column: "timestamp",
+          direction: "descending",
+        },
+      };
+    },
+    getKey(item) {
+      return item.id;
+    },
+    async sort({ items, sortDescriptor }) {
+      return {
+        items: items.toSorted((a, b) => {
+          let cmp = 0;
+          if (sortDescriptor.column === "timestamp") {
+            const aTime = new Date(a.timestamp).getTime();
+            const bTime = new Date(b.timestamp).getTime();
+            cmp = aTime < bTime ? -1 : aTime > bTime ? 1 : 0;
+          }
+          if (sortDescriptor.direction === "descending") cmp *= -1;
+          return cmp;
+        }),
+      };
+    },
+  });
+
+  const ownerNickname = data.transfers.find(
+    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
+  )?.nickname;
+
+  const handleCopy = async (tokenId: string | undefined) => {
+    await copy(tokenId ?? "");
+    toast.success(content.token_id_copied.value);
+  };
+
+  useEffect(() => {
+    list.reload();
+  }, [data]);
 
   return (
     <>
