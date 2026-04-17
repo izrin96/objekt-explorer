@@ -19,6 +19,7 @@ function formatPrice(price: number, currency: string): string {
     return new NumberFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
       style: "currency",
       currency,
+      currencyDisplay: "narrowSymbol",
     }).format(price);
   } catch {
     return `${price.toLocaleString()} ${currency}`;
