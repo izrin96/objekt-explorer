@@ -88,13 +88,13 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
     <span data-slot="control" className="relative block w-full">
       <Button
         className={cx(
-          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 rounded-lg border border-input bg-(--control-bg,transparent) px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] text-start text-fg outline-hidden sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6 sm:*:text-sm/6 dark:shadow-none",
+          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 rounded-lg border border-input bg-(--control-bg,transparent) text-start text-fg outline-hidden px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] text-sm/6 *:text-sm/6 dark:shadow-none",
           "focus:border-ring/70 focus:ring-3 focus:ring-ring/20 focus:enabled:hover:border-ring/80",
           "enabled:hover:border-muted-fg/30",
           "group-open/select:border-ring/70 group-open/select:ring-3 group-open/select:ring-ring/20",
           "group-open/select:invalid:border-danger-subtle-fg/70 group-open/select:invalid:ring-3 group-open/select:invalid:ring-danger-subtle-fg/20 group-invalid/select:border-danger-subtle-fg/70 group-invalid/select:ring-danger-subtle-fg/20 group-invalid/select:enabled:hover:border-danger-subtle-fg/80 group-focus/select:group-invalid/select:border-danger-subtle-fg/70 group-focus/select:group-invalid/select:ring-danger-subtle-fg/20 group-focus/select:group-invalid/select:enabled:hover:border-danger-subtle-fg/80",
-          "forced-colors:[--btn-icon:ButtonText] forced-colors:hover:[--btn-icon:ButtonText] *:[svg]:size-5 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-(--btn-icon) pressed:*:[svg]:text-(--btn-icon-active) focus-visible:*:[svg]:text-(--btn-icon-active)/80 enabled:hover:*:[svg]:text-(--btn-icon-active)/90 sm:*:[svg]:size-4",
-          "*:data-[slot=loader]:size-5 *:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-(--btn-icon) sm:*:data-[slot=loader]:size-4",
+          "forced-colors:[--btn-icon:ButtonText] forced-colors:hover:[--btn-icon:ButtonText] *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-(--btn-icon) pressed:*:[svg]:text-(--btn-icon-active) focus-visible:*:[svg]:text-(--btn-icon-active)/80 enabled:hover:*:[svg]:text-(--btn-icon-active)/90 *:[svg]:size-4",
+          "*:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-(--btn-icon) *:data-[slot=loader]:size-4",
           "forced-colors:group-focus/select:border-[Highlight] forced-colors:group-invalid/select:border-[Mark] forced-colors:group-focus/select:group-invalid/select:border-[Mark]",
           "group-disabled/select:bg-muted group-disabled/select:opacity-50 forced-colors:group-disabled/select:border-[GrayText] forced-colors:group-disabled/select:text-[GrayText]",
           "in-disabled:bg-muted in-disabled:opacity-50 forced-colors:in-disabled:border-[GrayText] forced-colors:in-disabled:text-[GrayText]",
@@ -112,16 +112,16 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
                 <SelectValue
                   data-slot="select-value"
                   className={twJoin([
-                    "data-placeholder:text-muted-fg truncate text-start sm:text-sm/6 **:[[slot=description]]:hidden",
+                    "data-placeholder:text-muted-fg truncate text-start text-sm/6 **:[[slot=description]]:hidden",
                     "has-data-[slot=avatar]:grid has-data-[slot=avatar]:grid-cols-[1fr_auto] has-data-[slot=avatar]:items-center has-data-[slot=avatar]:gap-x-2",
                     "has-[svg]:grid has-[svg]:grid-cols-[1fr_auto] has-[svg]:items-center has-[svg]:gap-x-2",
-                    "*:[svg]:size-5 sm:*:[svg]:size-4",
-                    "*:mt-0 *:data-[slot=avatar]:[--avatar-size:--spacing(5)] sm:*:data-[slot=avatar]:[--avatar-size:--spacing(4.5)]",
+                    "*:[svg]:size-4",
+                    "*:mt-0 *:data-[slot=avatar]:[--avatar-size:--spacing(4.5)]",
                   ])}
                 />
                 <ChevronUpDownIcon
                   data-slot="chevron"
-                  className="text-muted-fg ms-auto -me-1 size-5 shrink-0 sm:size-4"
+                  className="text-muted-fg ms-auto -me-1 size-4 shrink-0"
                 />
               </>
             )}

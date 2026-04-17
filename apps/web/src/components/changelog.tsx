@@ -76,10 +76,7 @@ export default function Changelog() {
 
 function ChangelogNotice() {
   return (
-    <Note
-      intent="default"
-      className="bg-(--color-indigo-500)/15 px-3 py-2 text-(--color-indigo-700) dark:text-(--color-indigo-300)"
-    >
+    <Note intent="default">
       Join our support Discord server for bug reporting or suggestions.{" "}
       <Link className="underline" href="https://discord.gg/SWEm6RbJD3" target="_blank">
         discord.gg/SWEm6RbJD3

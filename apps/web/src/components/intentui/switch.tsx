@@ -34,7 +34,7 @@ export function Switch({ children, className, ...props }: SwitchProps) {
           <span
             data-slot="indicator"
             className={twMerge(
-              "relative isolate inline-flex h-6 w-10 cursor-default rounded-full p-0.75 sm:h-5 sm:w-8",
+              "relative isolate inline-flex h-5 w-8 cursor-default rounded-full p-0.75",
               "transition duration-200 ease-in-out",
               "inset-ring-input bg-input/30 inset-ring",
               "forced-colors:outline forced-colors:[--switch-bg:Highlight]",
@@ -50,9 +50,9 @@ export function Switch({ children, className, ...props }: SwitchProps) {
             <span
               aria-hidden="true"
               className={twJoin(
-                "ring-fg/5 pointer-events-none relative inline-block size-4.5 translate-x-0 rounded-full border border-transparent bg-white shadow-sm ring transition duration-200 ease-in-out sm:size-3.5",
+                "ring-fg/5 pointer-events-none relative inline-block size-3.5 translate-x-0 rounded-full border border-transparent bg-white shadow-sm ring transition duration-200 ease-in-out",
                 values.isSelected &&
-                  "group-disabled:ring-secondary-fg/5 bg-(--switch) shadow-(--switch-shadow) ring-(--switch-ring) group-disabled:shadow-sm ltr:translate-x-4 ltr:sm:translate-x-3 rtl:-translate-x-4 rtl:sm:-translate-x-3",
+                  "group-disabled:ring-secondary-fg/5 bg-(--switch) shadow-(--switch-shadow) ring-(--switch-ring) group-disabled:shadow-sm ltr:translate-x-3 rtl:-translate-x-3",
               )}
             />
           </span>
