@@ -124,7 +124,7 @@ const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => 
       aria-label="Close"
       slot="close"
       className={cx(
-        "close absolute end-2 top-2 z-50 grid size-7 place-content-center rounded-md hover:bg-secondary focus:bg-secondary focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary",
+        "close absolute end-1 top-1 z-50 grid place-content-center hover:bg-secondary focus:bg-secondary focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary sm:end-2 sm:top-2 size-7 rounded-md",
         className,
       )}
     >
