@@ -309,7 +309,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
                 {content.date.value}
               </TableColumn>
             </TableHeader>
-            <TableBody>
+            <TableBody renderEmptyState={() => null}>
               {list.items.map((item) => (
                 <TableRow key={item.id} id={item.id}>
                   <TableCell>
