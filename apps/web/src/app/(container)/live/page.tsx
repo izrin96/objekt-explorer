@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { Loader } from "@/components/intentui/loader";
 import { Note } from "@/components/intentui/note";
 import LiveSessionListRender from "@/components/live/session-list";
-import { env } from "@/lib/env";
+import { env } from "@/lib/env/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = useIntlayer("page_titles");

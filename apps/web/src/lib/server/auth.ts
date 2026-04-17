@@ -13,7 +13,7 @@ import type { FetchError } from "ofetch";
 import { cache } from "react";
 
 import { betterAuthLocale } from "@/i18n/better-auth";
-import { env } from "@/lib/env";
+import { env } from "@/lib/env/server";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
 import { getBaseURL, SITE_NAME } from "../utils";

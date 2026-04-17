@@ -3,7 +3,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { clientEnv } from "@/lib/env";
+import { clientEnv } from "@/lib/env/client";
 
 import { unobtainables } from "./unobtainables";
 

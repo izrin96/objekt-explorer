@@ -1,6 +1,6 @@
 import Script from "next/script";
 
-import { clientEnv } from "@/lib/env";
+import { clientEnv } from "@/lib/env/client";
 
 export default function Analytics() {
   if (process.env.NODE_ENV !== "production") return null;

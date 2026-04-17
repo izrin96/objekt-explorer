@@ -5,7 +5,7 @@ import { StreamVideo, StreamVideoClient, type User } from "@stream-io/video-reac
 import dynamic from "next/dynamic";
 
 import { LiveSessionProvider } from "@/hooks/use-live-session";
-import { clientEnv } from "@/lib/env";
+import { clientEnv } from "@/lib/env/client";
 
 import { CustomLivestreamPlayer, LiveEndedLayout } from "./custom-player";
 

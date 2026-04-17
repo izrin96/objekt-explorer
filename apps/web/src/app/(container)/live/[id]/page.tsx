@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { LiveStreamingRender } from "@/components/live/live-render";
 import { getLiveSession } from "@/lib/data-fetching";
-import { env } from "@/lib/env";
+import { env } from "@/lib/env/server";
 
 export async function generateMetadata(props: PageProps<"/live/[id]">): Promise<Metadata> {
   const params = await props.params;

@@ -1,7 +1,7 @@
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 
-import { env } from "@/lib/env";
+import { env } from "@/lib/env/server";
 
 export const s3Client = new S3Client({
   region: "us-east-1",

@@ -21,7 +21,7 @@ import useWebSocket from "react-use-websocket";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { clientEnv } from "@/lib/env";
+import { clientEnv } from "@/lib/env/client";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { getBaseURL, cn } from "@/lib/utils";

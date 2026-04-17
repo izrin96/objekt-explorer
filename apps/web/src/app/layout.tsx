@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { IntlayerClientProvider } from "next-intlayer";
 
 import "@/app/globals.css";
 import { PublicEnvScript } from "next-runtime-env";
@@ -10,13 +9,10 @@ import "@/lib/orpc/server";
 import Analytics from "@/components/analytics";
 import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
-import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
-import { FilterDataProvider } from "@/hooks/use-filter-data";
-import { orpc } from "@/lib/orpc/client";
-import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
-import { getSession } from "@/lib/server/auth";
 import { getUserLocale } from "@/lib/server/locale";
 import { SITE_NAME, cn } from "@/lib/utils";
+
+import { Providers } from "./providers";
 
 const googleSansFlex = Google_Sans_Flex({
   subsets: ["latin"],
@@ -100,43 +96,17 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       <head>
         <PublicEnvScript />
       </head>
-      <body className="bg-bg text-fg relative font-sans text-sm antialiased">
-        <div className="relative isolate flex min-h-svh flex-col">
+      <body className="bg-bg text-fg font-sans text-sm antialiased">
+        <div className="relative flex min-h-svh flex-col">
           <ClientProviders>
             <Providers locale={locale}>
               <Navbar />
-              <main className="mx-auto w-full">{children}</main>
+              <main>{children}</main>
               <Analytics />
             </Providers>
           </ClientProviders>
         </div>
       </body>
     </html>
-  );
-}
-
-type ProvidersProps = PropsWithChildren<{ locale: string }>;
-
-async function Providers({ children, locale }: ProvidersProps) {
-  const queryClient = getQueryClient();
-
-  const filterData = await queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions());
-  const artists = await queryClient.ensureQueryData(orpc.config.getArtists.queryOptions());
-
-  void queryClient.prefetchQuery(orpc.config.getSelectedArtists.queryOptions());
-
-  void queryClient.prefetchQuery({
-    queryKey: ["session"],
-    queryFn: () => getSession(),
-  });
-
-  return (
-    <HydrateClient client={queryClient}>
-      <IntlayerClientProvider locale={locale}>
-        <CosmoArtistProvider artists={artists}>
-          <FilterDataProvider data={filterData}>{children}</FilterDataProvider>
-        </CosmoArtistProvider>
-      </IntlayerClientProvider>
-    </HydrateClient>
   );
 }
