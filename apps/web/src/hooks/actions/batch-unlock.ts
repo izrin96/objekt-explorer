@@ -4,8 +4,11 @@ import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
+import { useObjektSelect } from "../use-objekt-select";
+
 export function useBatchUnlock() {
   const content = useIntlayer("actions");
+  const reset = useObjektSelect((a) => a.reset);
 
   const batchUnlock = useMutation(
     orpc.lockedObjekt.batchUnlock.mutationOptions({
@@ -28,6 +31,7 @@ export function useBatchUnlock() {
             ? content.unlock.success_multiple({ count: tokenIds.length.toLocaleString() }).value
             : content.unlock.success_single.value;
         toast.success(message);
+        reset();
       },
       onError: async (_err, { tokenIds, address }, context, { client }) => {
         const queryKey = orpc.lockedObjekt.list.queryKey({ input: address });

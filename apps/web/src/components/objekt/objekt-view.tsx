@@ -76,9 +76,9 @@ export default function ObjektView({
       <div
         ref={ref}
         className={cn(
-          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md transition-all",
+          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md",
           "contain-layout contain-paint",
-          isSelected && "bg-fg outline-[calc(var(--width)*0.03)]",
+          isSelected && "bg-fg outline-[calc(var(--width)*0.034)]",
           !loaded && "opacity-0",
         )}
       >

@@ -4,8 +4,11 @@ import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
+import { useObjektSelect } from "../use-objekt-select";
+
 export function useRemoveFromList() {
   const content = useIntlayer("actions");
+  const reset = useObjektSelect((a) => a.reset);
 
   const removeObjektsFromList = useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
@@ -29,6 +32,7 @@ export function useRemoveFromList() {
                 .value
             : content.remove_from_list.success_single.value;
         toast.success(message);
+        reset();
       },
       onError: async (_err, { slug }, context, { client }) => {
         const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });

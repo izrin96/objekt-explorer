@@ -1,6 +1,6 @@
 "use client";
 
-import { ChecksIcon, HandPointingIcon, BroomIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChecksIcon, HandPointingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { AnimatePresence, motion } from "motion/react";
 import { useIntlayer } from "next-intlayer";
@@ -32,11 +32,11 @@ export function SelectMode({ children, objekts }: Props) {
         <ChecksIcon weight="regular" data-slot="icon" />
         {content.select_all.value}
       </Button>
+      {children}
       <Button intent="outline" onPress={reset}>
-        <BroomIcon weight="regular" data-slot="icon" />
+        <XIcon weight="regular" data-slot="icon" />
         {content.clear_select.value}
       </Button>
-      {children}
     </div>
   );
 }

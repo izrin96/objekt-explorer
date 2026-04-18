@@ -4,8 +4,11 @@ import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
+import { useObjektSelect } from "../use-objekt-select";
+
 export function useAddToList() {
   const content = useIntlayer("actions");
+  const reset = useObjektSelect((a) => a.reset);
 
   const addToList = useMutation(
     orpc.list.addObjektsToList.mutationOptions({
@@ -26,6 +29,7 @@ export function useAddToList() {
             ? content.add_to_list.success_multiple({ count: rows.length.toLocaleString() }).value
             : content.add_to_list.success_single.value;
         toast.success(message);
+        reset();
       },
       onError: () => {
         toast.error(content.add_to_list.error.value);

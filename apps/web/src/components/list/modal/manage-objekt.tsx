@@ -224,7 +224,6 @@ export function RemoveFromListModal({
   const target = useTarget((a) => a.list)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
-  const reset = useObjektSelect((a) => a.reset);
   const content = useIntlayer("list");
   const contentCommon = useIntlayer("common");
   return (
@@ -249,7 +248,6 @@ export function RemoveFromListModal({
               {
                 onSuccess: () => {
                   setOpen(false);
-                  reset();
                 },
               },
             );

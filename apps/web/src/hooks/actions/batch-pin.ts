@@ -4,8 +4,11 @@ import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
+import { useObjektSelect } from "../use-objekt-select";
+
 export function useBatchPin() {
   const content = useIntlayer("actions");
+  const reset = useObjektSelect((a) => a.reset);
 
   const batchPin = useMutation(
     orpc.pins.batchPin.mutationOptions({
@@ -34,6 +37,7 @@ export function useBatchPin() {
             ? content.pin.success_multiple({ count: tokenIds.length.toLocaleString() }).value
             : content.pin.success_single.value;
         toast.success(message);
+        reset();
       },
       onError: async (_err, { tokenIds, address }, context, { client }) => {
         const queryKey = orpc.pins.list.queryKey({ input: address });

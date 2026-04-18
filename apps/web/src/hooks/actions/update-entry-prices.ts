@@ -4,8 +4,11 @@ import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
 
+import { useObjektSelect } from "../use-objekt-select";
+
 export function useUpdateEntryPrices() {
   const content = useIntlayer("list");
+  const reset = useObjektSelect((a) => a.reset);
 
   const batchUpdatePrices = useMutation(
     orpc.list.updateEntryPrices.mutationOptions({
@@ -33,6 +36,7 @@ export function useUpdateEntryPrices() {
       },
       onSuccess: () => {
         toast.success(content.manage_objekt.set_price_success.value);
+        reset();
       },
       onError: async (_err, { slug }, context, { client }) => {
         const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });
