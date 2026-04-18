@@ -32,6 +32,7 @@ import { Card, CardContent } from "../intentui/card";
 import { Input, InputGroup } from "../intentui/input";
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
+import { Skeleton } from "../intentui/skeleton";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
 import UserLink from "../user-link";
 
@@ -187,8 +188,13 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
 
   if (status === "pending")
     return (
-      <div className="self-center">
-        <Loader variant="ring" />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Skeleton className="h-[24px] w-48" soft />
+          <Skeleton className="h-[24px] w-52" soft />
+          <Skeleton className="h-[24px] w-40" soft />
+        </div>
+        <Skeleton className="h-20 w-full rounded-lg" soft />
       </div>
     );
 

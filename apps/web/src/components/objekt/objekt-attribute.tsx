@@ -39,10 +39,10 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   if (status === "pending") {
     return (
       <>
-        <Skeleton className="h-5 w-20" />
-        <Skeleton className="h-5 w-16" />
-        <Skeleton className="h-5 w-20" />
-        <Skeleton className="h-5 w-40" />
+        <Skeleton className="h-5 w-20" soft />
+        <Skeleton className="h-5 w-16" soft />
+        <Skeleton className="h-5 w-20" soft />
+        <Skeleton className="h-5 w-40" soft />
       </>
     );
   }
