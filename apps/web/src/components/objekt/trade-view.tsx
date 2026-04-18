@@ -190,9 +190,20 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
     return (
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-1.5">
-          <Skeleton className="h-[24px] w-48" soft />
-          <Skeleton className="h-[24px] w-52" soft />
-          <Skeleton className="h-[24px] w-40" soft />
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">{content.owner.value}</span>
+            <Skeleton className="h-[24px] w-24" soft />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">{content.token_id.value}</span>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-[24px] w-30" soft />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">{content.transferable.value}</span>
+            <Skeleton className="h-[20px] w-8" soft />
+          </div>
         </div>
         <Skeleton className="h-20 w-full rounded-lg" soft />
       </div>
