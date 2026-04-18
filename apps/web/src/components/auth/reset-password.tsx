@@ -80,7 +80,7 @@ export default function ResetPassword({ token }: { token: string }) {
                 </TextField>
               )}
             />
-            <Button type="submit" isDisabled={mutation.isPending}>
+            <Button type="submit" isPending={mutation.isPending}>
               {content.reset_password.submit.value}
             </Button>
           </div>

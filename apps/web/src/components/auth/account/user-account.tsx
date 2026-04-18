@@ -336,7 +336,7 @@ function ChangePassword() {
 
         <div className="flex">
           <Button
-            isDisabled={mutation.isPending}
+            isPending={mutation.isPending}
             size="md"
             intent="primary"
             className="flex-none"
@@ -416,7 +416,7 @@ function ChangeEmail({ email }: { email: string }) {
 
         <div className="flex">
           <Button
-            isDisabled={mutation.isPending}
+            isPending={mutation.isPending}
             size="md"
             intent="primary"
             className="flex-none"

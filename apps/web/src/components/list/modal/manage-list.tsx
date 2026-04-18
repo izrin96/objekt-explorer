@@ -636,7 +636,7 @@ function EditListForm({
         <span className="text-muted-fg text-sm">
           {content.edit.delete_note.use({
             link: (props) => (
-              <Link href="/link" className="underline">
+              <Link href="/list" className="underline">
                 {props.children}
               </Link>
             ),

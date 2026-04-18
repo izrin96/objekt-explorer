@@ -135,7 +135,7 @@ function SignInForm({
             </TextField>
           )}
         />
-        <Button type="submit" intent="primary" isDisabled={mutation.isPending}>
+        <Button type="submit" intent="primary" isPending={mutation.isPending}>
           {content.sign_in.submit.value}
         </Button>
       </Form>
@@ -173,7 +173,7 @@ function SignInWithDiscord() {
     <Button
       intent="outline"
       className="gap-2"
-      isDisabled={isPending}
+      isPending={isPending}
       onPress={() => {
         startTransition(async () => {
           await authClient.signIn.social({
@@ -195,7 +195,7 @@ function SignInWithTwitter() {
     <Button
       intent="outline"
       className="gap-2"
-      isDisabled={isPending}
+      isPending={isPending}
       onPress={() => {
         startTransition(async () => {
           await authClient.signIn.social({
@@ -331,7 +331,7 @@ function SignUpForm({
             </TextField>
           )}
         />
-        <Button type="submit" isDisabled={mutation.isPending}>
+        <Button type="submit" isPending={mutation.isPending}>
           {content.sign_up.submit.value}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
@@ -408,7 +408,7 @@ function ForgotPassword({
             </TextField>
           )}
         />
-        <Button type="submit" isDisabled={mutation.isPending}>
+        <Button type="submit" isPending={mutation.isPending}>
           {content.forgot_password.submit.value}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
