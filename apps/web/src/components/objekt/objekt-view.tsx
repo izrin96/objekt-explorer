@@ -6,7 +6,7 @@ import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
-import { replaceUrlSize, cn } from "@/lib/utils";
+import { replaceUrlSize, cn, getUserLocale } from "@/lib/utils";
 
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
@@ -16,7 +16,7 @@ import ObjektSidebar from "./objekt-sidebar";
 
 function formatPrice(price: number, currency: string): string {
   try {
-    return new NumberFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
+    return new NumberFormatter(getUserLocale(), {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",

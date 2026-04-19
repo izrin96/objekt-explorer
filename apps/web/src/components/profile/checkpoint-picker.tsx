@@ -17,6 +17,7 @@ import { useIntlayer } from "next-intlayer";
 import { useRef, useState } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
+import { getUserLocale } from "@/lib/utils";
 
 import { Button } from "../intentui/button";
 import { Calendar } from "../intentui/calendar";
@@ -48,7 +49,7 @@ function formatCheckpointLabel(isoStr: string | null, defaultLabel: string) {
   if (!parsed) return defaultLabel;
 
   const date = parsed.toDate();
-  return new DateFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
+  return new DateFormatter(getUserLocale(), {
     month: "long",
     day: "numeric",
     year: "numeric",

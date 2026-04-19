@@ -90,6 +90,14 @@ export function getBaseURL() {
   return clientEnv.NEXT_PUBLIC_SITE_URL;
 }
 
+export function getUserLocale() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().locale;
+  } catch {
+    return "en";
+  }
+}
+
 export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
   return url.replace(/(4x|3x|2x|thumbnail|original)$/i, size);
 }
