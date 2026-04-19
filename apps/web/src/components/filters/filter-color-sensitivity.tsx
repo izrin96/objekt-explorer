@@ -40,7 +40,7 @@ interface ColorSensitivitySliderProps {
 function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitivitySliderProps) {
   const content = useIntlayer("filter");
   const [value, setValue] = useState(initialValue);
-  const debouncedCommit = useDebounceCallback(onCommit, 150);
+  const debouncedCommit = useDebounceCallback(onCommit, 100);
 
   return (
     <Slider

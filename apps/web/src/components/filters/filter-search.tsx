@@ -32,7 +32,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
   const ref = useRef<HTMLInputElement>(null!);
   const content = useIntlayer("filter");
   const [query, setQuery] = useState(initialValue);
-  const debouncedCommit = useDebounceCallback(onCommit, 250);
+  const debouncedCommit = useDebounceCallback(onCommit, 80);
 
   if (initialValue !== localQuery) {
     setLocalQuery(initialValue);
