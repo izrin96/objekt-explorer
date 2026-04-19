@@ -1,11 +1,9 @@
 "use client";
 
-import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from "sonner";
-import { useCopyToClipboard } from "usehooks-ts";
 
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
@@ -14,7 +12,6 @@ import { parseNickname } from "@/lib/utils";
 import { Avatar } from "../intentui/avatar-custom";
 import { Button } from "../intentui/button";
 import { Link } from "../intentui/link";
-import { Tooltip, TooltipContent } from "../intentui/tooltip";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
@@ -36,7 +33,7 @@ export default function ListHeader() {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold">{list.name}</h2>
-              {/* <CopyListId slug={list.slug} /> */}
+              {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
             </div>
             <div className="text-muted-fg text-sm">
               <Link
@@ -62,7 +59,7 @@ export default function ListHeader() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{list.name}</span>
-                {/* <CopyListId slug={list.slug} /> */}
+                {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
               </div>
               {displayUser && (
                 <div className="flex items-center gap-2">
@@ -118,28 +115,5 @@ function EditList({ slug }: { slug: string }) {
         {content.card.edit_list.value}
       </Button>
     </>
-  );
-}
-
-export function CopyListId({ slug }: { slug: string }) {
-  const content = useIntlayer("common");
-  const [, copy] = useCopyToClipboard();
-  return (
-    <Tooltip delay={0} closeDelay={0}>
-      <Button
-        intent="plain"
-        size="sq-xs"
-        className="cursor-pointer"
-        onClick={async () => {
-          await copy(slug);
-          toast.success(content.copy.copied.value);
-        }}
-      >
-        <CopyIcon data-slot="icon" />
-      </Button>
-      <TooltipContent placement="bottom" inverse>
-        {content.copy.list_id({ id: slug }).value}
-      </TooltipContent>
-    </Tooltip>
   );
 }
