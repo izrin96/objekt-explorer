@@ -2,6 +2,7 @@ import { type CronJob, cron } from "bun";
 
 import { fixEmptyCollection, fixObjektSerialZero } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
+import { cleanupUnownedObjekts } from "./job/pins-cleanup";
 import { populateRarity } from "./job/populate-rarity";
 import { populateSerialOffline } from "./job/populate-serial";
 import { cleanupProfileLists, syncProfileListsToCache } from "./job/profile-list-cleanup";
@@ -43,6 +44,9 @@ crons.push(cron("0 * * * *", syncProfileListsToCache));
 
 await cleanupProfileLists();
 crons.push(cron("*/10 * * * *", cleanupProfileLists));
+
+await cleanupUnownedObjekts();
+crons.push(cron("0 * * * *", cleanupUnownedObjekts));
 
 await populateRarity();
 crons.push(cron("0 * * * *", populateRarity));
