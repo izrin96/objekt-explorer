@@ -3,7 +3,6 @@ import { groupBy } from "es-toolkit";
 import { useDeferredValue, useMemo } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";
-import { isObjektOwned } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions } from "@/lib/query-options";
 
@@ -59,12 +58,13 @@ export function useProfileObjekts() {
     const ownedWithPinLock = deferredFilters.at
       ? allOwnedObjekts
       : allOwnedObjekts.map((objekt) => {
-          if (!isObjektOwned(objekt)) return objekt;
           const isPin = pinsMap.has(objekt.id);
           const isLocked = lockedSet.has(objekt.id);
-          return isPin || isLocked
-            ? { ...objekt, isPin, isLocked, pinOrder: isPin ? pinsMap.get(objekt.id)! : null }
-            : objekt;
+          return Object.assign(objekt, {
+            isPin,
+            isLocked,
+            pinOrder: isPin ? pinsMap.get(objekt.id)! : null,
+          });
         });
 
     const ownedFiltered = filterObjekts(deferredFilters, ownedWithPinLock);
