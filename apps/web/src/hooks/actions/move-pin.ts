@@ -23,13 +23,14 @@ export function useMovePin() {
           const swapIdx = direction === "down" ? idx - 1 : idx + 1;
           if (swapIdx < 0 || swapIdx >= sorted.length) return old;
 
-          const current = sorted[idx]!;
-          const adjacent = sorted[swapIdx]!;
-          const tempOrder = current.order;
-          current.order = adjacent.order;
-          adjacent.order = tempOrder;
+          const currentOrder = sorted[idx]!.order;
+          const adjacentOrder = sorted[swapIdx]!.order;
 
-          return sorted;
+          return sorted.map((item, i) => {
+            if (i === idx) return Object.assign({}, item, { order: adjacentOrder });
+            if (i === swapIdx) return Object.assign({}, item, { order: currentOrder });
+            return item;
+          });
         });
 
         return { snapshot };
