@@ -27,6 +27,10 @@ export default function Changelog() {
 
   const changelog = [
     {
+      date: "2026-04-20",
+      items: ["Added move pin order. You can now move your objekt pin."],
+    },
+    {
       date: "2026-04-10",
       items: ["Added sorting by Rarity. Mint counts are updated hourly."],
     },
