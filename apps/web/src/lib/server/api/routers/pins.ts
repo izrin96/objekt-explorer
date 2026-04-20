@@ -26,7 +26,7 @@ async function getValidPins(address: string) {
           objekts.id,
           allPins.map((p) => String(p.tokenId)),
         ),
-        eq(objekts.owner, address),
+        eq(objekts.owner, address.toLowerCase()),
       ),
     );
 
