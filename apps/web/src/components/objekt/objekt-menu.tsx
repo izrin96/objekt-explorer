@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  CaretDownIcon,
+  CaretUpIcon,
   CheckIcon,
   CurrencyDollarIcon,
   DotsThreeVerticalIcon,
@@ -21,6 +23,7 @@ import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
+import { useMovePin } from "@/hooks/actions/move-pin";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
@@ -157,6 +160,32 @@ export function TogglePinMenuItem({
     >
       {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
       <MenuLabel>{isPin ? content.unpin.value : content.pin.value}</MenuLabel>
+    </MenuItem>
+  );
+}
+
+export function MovePinMenuItem({
+  tokenId,
+  direction,
+}: {
+  tokenId: string;
+  direction: "up" | "down";
+}) {
+  const profile = useTarget((a) => a.profile)!;
+  const movePin = useMovePin();
+  const content = useIntlayer("objekt_menu");
+  return (
+    <MenuItem
+      onAction={() => {
+        movePin.mutate({
+          address: profile.address,
+          tokenId: Number(tokenId),
+          direction,
+        });
+      }}
+    >
+      {direction === "up" ? <CaretUpIcon data-slot="icon" /> : <CaretDownIcon data-slot="icon" />}
+      <MenuLabel>{direction === "up" ? content.move_up.value : content.move_down.value}</MenuLabel>
     </MenuItem>
   );
 }

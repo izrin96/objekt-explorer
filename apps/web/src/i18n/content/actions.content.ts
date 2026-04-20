@@ -123,6 +123,16 @@ const content = {
         ko: "오브젝트 목록 제거 오류",
       }),
     },
+    move_pin: {
+      success: t({
+        en: "Pin order updated",
+        ko: "고정 순서가 업데이트되었습니다",
+      }),
+      error: t({
+        en: "Error updating pin order",
+        ko: "고정 순서 업데이트 오류",
+      }),
+    },
   },
 } satisfies Dictionary;
 

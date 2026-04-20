@@ -33,6 +33,10 @@
       "success_single": "Objekt removed from list",
       "success_multiple": "{{count}} objekts removed from list",
       "error": "Error remove objekts from list"
+    },
+    "move_pin": {
+      "success": "Pin order updated",
+      "error": "Error updating pin order"
     }
   },
   "activity": {
@@ -631,6 +635,8 @@
     "unlock": "Unlock",
     "select": "Select",
     "unselect": "Unselect",
+    "move_up": "Move up",
+    "move_down": "Move down",
     "no_list_found": "No list found"
   },
   "objekt": {

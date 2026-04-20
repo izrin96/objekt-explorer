@@ -28,6 +28,7 @@ import { Loader } from "../intentui/loader";
 import { ObjektOverlay } from "../objekt/objekt-action";
 import {
   AddToListMenu,
+  MovePinMenuItem,
   ObjektStaticMenu,
   SelectMenuItem,
   ToggleLockMenuItem,
@@ -127,6 +128,12 @@ function ProfileObjekt({
                 {isProfileAuthed && isOwned && (
                   <>
                     <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
+                    {objekt.isPin && (
+                      <>
+                        <MovePinMenuItem tokenId={objekt.id} direction="up" />
+                        <MovePinMenuItem tokenId={objekt.id} direction="down" />
+                      </>
+                    )}
                     <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
                   </>
                 )}
@@ -140,6 +147,12 @@ function ProfileObjekt({
                 {isProfileAuthed && isOwned && (
                   <>
                     <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
+                    {objekt.isPin && (
+                      <>
+                        <MovePinMenuItem tokenId={objekt.id} direction="up" />
+                        <MovePinMenuItem tokenId={objekt.id} direction="down" />
+                      </>
+                    )}
                     <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
                   </>
                 )}

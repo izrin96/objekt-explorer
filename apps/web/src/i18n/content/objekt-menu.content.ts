@@ -39,6 +39,14 @@ const content = {
       en: "Unselect",
       ko: "선택 해제",
     }),
+    move_up: t({
+      en: "Move up",
+      ko: "위로 이동",
+    }),
+    move_down: t({
+      en: "Move down",
+      ko: "아래로 이동",
+    }),
     no_list_found: t({
       en: "No list found",
       ko: "목록을 찾을 수 없습니다",
