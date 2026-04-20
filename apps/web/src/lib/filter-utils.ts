@@ -135,7 +135,7 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
       return false;
     }
 
-    if (filters.locked !== null && isObjektOwned(a) && a.isLocked !== filters.locked) {
+    if (filters.locked !== null && isObjektOwned(a) && (a.isLocked ?? false) !== filters.locked) {
       return false;
     }
 
