@@ -36,12 +36,15 @@ export const lockedObjektsRouter = {
         .delete(lockedObjekts)
         .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
 
-      await db.insert(lockedObjekts).values(
-        tokenIds.map((tokenId) => ({
-          address,
-          tokenId,
-        })),
-      );
+      await db
+        .insert(lockedObjekts)
+        .values(
+          tokenIds.map((tokenId) => ({
+            address,
+            tokenId,
+          })),
+        )
+        .onConflictDoNothing();
     }),
 
   batchUnlock: authed

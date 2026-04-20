@@ -120,7 +120,11 @@ export const pins = pgTable(
     order: integer("order"),
     createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
   },
-  (t) => [index("pins_address_idx").on(t.address), index("pins_token_id_idx").on(t.tokenId)],
+  (t) => [
+    index("pins_address_idx").on(t.address),
+    index("pins_token_id_idx").on(t.tokenId),
+    uniqueIndex("pins_address_token_id_idx").on(t.address, t.tokenId),
+  ],
 );
 
 export const lockedObjekts = pgTable(
@@ -133,6 +137,7 @@ export const lockedObjekts = pgTable(
   (t) => [
     index("locked_objekts_address_idx").on(t.address),
     index("locked_objekts_token_id_idx").on(t.tokenId),
+    uniqueIndex("locked_objekts_address_token_id_idx").on(t.address, t.tokenId),
   ],
 );
 

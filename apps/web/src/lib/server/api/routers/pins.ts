@@ -46,7 +46,8 @@ export const pinsRouter = {
             tokenId,
           })),
         )
-        .returning({ id: pins.id });
+        .returning({ id: pins.id })
+        .onConflictDoNothing();
 
       // set order = id so pins can be reordered later
       for (const row of inserted) {
