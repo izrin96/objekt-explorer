@@ -1,4 +1,4 @@
-FROM oven/bun:alpine AS base
+FROM oven/bun:1.3.12-alpine AS base
 
 # Prune the monorepo to only include worker and its dependencies
 FROM base AS pruner
