@@ -31,6 +31,7 @@ import {
   SelectMenuItem,
   SetPriceMenuItem,
 } from "../objekt/objekt-menu";
+import { ExportButton } from "./export-button";
 import Filter from "./filter";
 import { SetPriceModal } from "./modal/set-price-modal";
 
@@ -114,6 +115,7 @@ function ListFilter({
               name: list.name,
             }}
           />
+          <ExportButton list={list} />
         </div>
         <div className="contents" ref={selectRef} />
       </div>

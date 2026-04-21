@@ -27,8 +27,11 @@ export default function Changelog() {
 
   const changelog = [
     {
-      date: "2026-04-20",
-      items: ["Added move pin order. You can now move your objekt pin."],
+      date: "2026-04-20 - 2026-04-21",
+      items: [
+        "Added move pin order. You can now move your objekt pin.",
+        "Added export button to list view to export as csv file. This could be useful in future to import into third party service like Apollo.",
+      ],
     },
     {
       date: "2026-04-10",

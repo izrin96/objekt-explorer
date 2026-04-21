@@ -200,7 +200,8 @@
       "save": "Save",
       "continue": "Continue",
       "create": "Create",
-      "compare": "Compare"
+      "compare": "Compare",
+      "export": "Export"
     },
     "form": {
       "email": {
@@ -272,7 +273,11 @@
         "hide_label_desc": "Hide collection labels on objekts"
       }
     },
-    "changelog": "Changelog"
+    "changelog": "Changelog",
+    "export": {
+      "title": "Export List",
+      "description": "Export all objekts to CSV?"
+    }
   },
   "compare": {
     "modal": {

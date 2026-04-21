@@ -30,6 +30,10 @@ const content = {
         en: "Compare",
         ko: "비교",
       }),
+      export: t({
+        en: "Export",
+        ko: "내보내기",
+      }),
     },
     form: {
       email: {
@@ -231,6 +235,16 @@ const content = {
       en: "Changelog",
       ko: "변경 사항",
     }),
+    export: {
+      title: t({
+        en: "Export List",
+        ko: "리스트 내보내기",
+      }),
+      description: t({
+        en: "Export all objekts to CSV?",
+        ko: "모든 오브젝트를 CSV로 내보내시겠습니까?",
+      }),
+    },
   },
 } satisfies Dictionary;
 

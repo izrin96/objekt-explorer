@@ -441,4 +441,47 @@ export const listRouter = {
 
       return { have: haveCollections, want: wantCollections };
     }),
+
+  export: pub.input(z.object({ slug: z.string() })).handler(async ({ input: { slug } }) => {
+    const artists = await parseSelectedArtists();
+    const result = await fetchListWithEntries(slug);
+
+    if (!result) throw new ORPCError("NOT_FOUND");
+
+    const entries = await buildListEntries(result.entries, result.listType, { artists });
+
+    const headers = [
+      "collection_slug",
+      "collection_id",
+      "season",
+      "member",
+      "artist",
+      "class",
+      "collection_no",
+      "on_offline",
+      "serial",
+      "token_id",
+      "transferable",
+    ];
+
+    const rows = entries.map((e) => {
+      return [
+        e.slug,
+        e.collectionId,
+        e.season,
+        e.member,
+        e.artist,
+        e.class,
+        e.collectionNo,
+        e.onOffline,
+        "serial" in e ? e.serial : "",
+        "tokenId" in e ? e.tokenId : "",
+        "transferable" in e ? e.transferable : "",
+      ].join(",");
+    });
+
+    const csv = [headers.join(","), ...rows].join("\n");
+
+    return new File([csv], `Export - ${slug}.csv`, { type: "text/csv" });
+  }),
 };
