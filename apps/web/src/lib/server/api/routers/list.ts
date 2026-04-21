@@ -25,6 +25,7 @@ import {
   generateProfileSlug,
   resolveProfileSlugUpdate,
 } from "../../list";
+import { escapeCSV } from "../../utils";
 import { authed, pub } from "../orpc";
 
 export const listRouter = {
@@ -482,7 +483,7 @@ export const listRouter = {
         "transferable" in e ? e.transferable : "",
         e.price,
         e.isQyop,
-        e.note,
+        e.note ? escapeCSV(e.note) : "",
       ].join(",");
     });
 

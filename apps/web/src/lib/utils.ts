@@ -1,4 +1,4 @@
-import type { ValidArtist, ValidCustomSort } from "@repo/cosmo/types/common";
+import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -11,12 +11,6 @@ export const locales = ["en", "ko"] as const;
 export type Locale = (typeof locales)[number];
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
-
-export const classOrder: Record<ValidArtist, string[]> = {
-  tripleS: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
-  artms: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
-  idntt: ["Basic", "Event", "Motion", "Special", "Unit", "Welcome"],
-};
 
 export const defaultSort: ValidCustomSort[] = ["date", "season", "collectionNo", "member", "rare"];
 export const defaultSortDuplicate: ValidCustomSort[] = [

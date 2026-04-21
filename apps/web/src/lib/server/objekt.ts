@@ -4,7 +4,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { asc, getColumns, ne } from "drizzle-orm";
 
-import { classOrder } from "@/lib/utils";
+import { classOrder } from "@/lib/server/utils";
 
 import { getCache } from "./redis";
 
