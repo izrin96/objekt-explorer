@@ -462,6 +462,9 @@ export const listRouter = {
       "serial",
       "token_id",
       "transferable",
+      "price",
+      "is_qyop",
+      "note",
     ];
 
     const rows = entries.map((e) => {
@@ -477,6 +480,9 @@ export const listRouter = {
         "serial" in e ? e.serial : "",
         "tokenId" in e ? e.tokenId : "",
         "transferable" in e ? e.transferable : "",
+        e.price,
+        e.isQyop,
+        e.note,
       ].join(",");
     });
 
