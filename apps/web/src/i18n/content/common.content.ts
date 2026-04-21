@@ -244,6 +244,10 @@ const content = {
         en: "Export all objekts to CSV?",
         ko: "모든 오브젝트를 CSV로 내보내시겠습니까?",
       }),
+      error: t({
+        en: "Failed to export list",
+        ko: "리스트 내보내기 실패",
+      }),
     },
   },
 } satisfies Dictionary;

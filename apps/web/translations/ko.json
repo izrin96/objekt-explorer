@@ -276,7 +276,8 @@
     "changelog": "변경 사항",
     "export": {
       "title": "리스트 내보내기",
-      "description": "모든 오브젝트를 CSV로 내보내시겠습니까?"
+      "description": "모든 오브젝트를 CSV로 내보내시겠습니까?",
+      "error": "리스트 내보내기 실패"
     }
   },
   "compare": {

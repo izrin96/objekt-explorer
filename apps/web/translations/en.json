@@ -276,7 +276,8 @@
     "changelog": "Changelog",
     "export": {
       "title": "Export List",
-      "description": "Export all objekts to CSV?"
+      "description": "Export all objekts to CSV?",
+      "error": "Failed to export list"
     }
   },
   "compare": {

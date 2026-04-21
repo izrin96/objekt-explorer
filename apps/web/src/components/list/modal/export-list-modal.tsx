@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useIntlayer } from "next-intlayer";
+import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
 import {
@@ -43,7 +44,7 @@ function ExportConfirmButton({ slug, onSuccess }: { slug: string; onSuccess: () 
   const exportMutation = useMutation(
     orpc.list.export.mutationOptions({
       onError: () => {
-        console.error("Failed to export list");
+        toast.error(content.export.error.value);
       },
     }),
   );
