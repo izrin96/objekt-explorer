@@ -41,6 +41,19 @@ function getFirstEdition(collection: number) {
   return null;
 }
 
+function getMotionEdition(collection: number) {
+  if (collection === 501) {
+    return 1;
+  }
+  if (collection === 502) {
+    return 2;
+  }
+  if (collection === 503) {
+    return 3;
+  }
+  return null;
+}
+
 export function getCollectionEdition(objekt: ValidObjekt) {
   if (objekt.artist === "idntt") {
     return null;
@@ -49,8 +62,10 @@ export function getCollectionEdition(objekt: ValidObjekt) {
   const edition =
     objekt.class === "Special" && objekt.onOffline === "online"
       ? getScoEdition(objekt, collection)
-      : objekt.class === "First"
-        ? getFirstEdition(collection)
-        : null;
+      : objekt.class === "Motion"
+        ? getMotionEdition(collection)
+        : objekt.class === "First"
+          ? getFirstEdition(collection)
+          : null;
   return edition;
 }
