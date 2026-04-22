@@ -59,14 +59,14 @@ export const buttonStyles = tv({
         "*:[svg]:size-4.5",
         "*:data-[slot=loader]:size-4.5",
       ],
-      "sq-xs": ["touch-target shrink-0 size-7", "*:[svg]:size-3", "*:data-[slot=loader]:size-3"],
-      "sq-sm": ["touch-target shrink-0 size-8", "*:[svg]:size-4", "*:data-[slot=loader]:size-4"],
+      "sq-xs": ["touch-target size-7 shrink-0", "*:[svg]:size-3", "*:data-[slot=loader]:size-3"],
+      "sq-sm": ["touch-target size-8 shrink-0", "*:[svg]:size-4", "*:data-[slot=loader]:size-4"],
       "sq-md": [
-        "touch-target shrink-0 size-9",
+        "touch-target size-9 shrink-0",
         "*:[svg]:size-4.5",
         "*:data-[slot=loader]:size-4.5",
       ],
-      "sq-lg": ["touch-target shrink-0 size-10", "*:[svg]:size-5", "*:data-[slot=loader]:size-5"],
+      "sq-lg": ["touch-target size-10 shrink-0", "*:[svg]:size-5", "*:data-[slot=loader]:size-5"],
     },
 
     isCircle: {
