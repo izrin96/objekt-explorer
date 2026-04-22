@@ -10,7 +10,7 @@
     "start": "bun run --bun --env-file=../../.env next start",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "next typegen && tsc --noEmit",
+    "typecheck": "next typegen && tsgo --noEmit",
     "format": "oxfmt .",
     "scan": "bunx react-scan@latest localhost:3000"
   },

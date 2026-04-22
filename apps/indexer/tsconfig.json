@@ -3,6 +3,7 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", ".turbo", "lib"],
   "compilerOptions": {
+    "rootDir": "./src",
     // TypeORM decorators
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

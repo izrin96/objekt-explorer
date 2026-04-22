@@ -1,6 +1,7 @@
 {
   "extends": "@repo/tsconfig/tsconfig.bun.json",
   "compilerOptions": {
+    "rootDir": ".",
     "lib": ["dom", "dom.iterable", "esnext"],
     "incremental": true,
     "plugins": [

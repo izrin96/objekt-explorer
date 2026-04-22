@@ -10,7 +10,7 @@
   "scripts": {
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "format": "oxfmt .",
     "db:generate": "drizzle-kit generate",
     "db:push": "bun run --env-file=../../.env drizzle-kit push",

@@ -4,11 +4,11 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf lib/ && tsc -p tsconfig.build.json",
+    "build": "rm -rf lib/ && tsgo -p tsconfig.build.json",
     "start": "squid-commands process:prod",
     "lint": "oxlint --type-aware --config ./oxlint.config.mts",
     "lint:fix": "oxlint --type-aware --fix --config ./oxlint.config.mts",
-    "typecheck": "tsc --pretty --noEmit",
+    "typecheck": "tsgo --pretty --noEmit",
     "format": "oxfmt ."
   },
   "dependencies": {
@@ -40,7 +40,6 @@
     "@subsquid/squid-gen-evm": "^2.0.0",
     "@subsquid/typeorm-codegen": "^2.1.0",
     "@types/bun": "catalog:dev",
-    "turbo": "catalog:dev",
-    "typescript": "catalog:dev"
+    "turbo": "catalog:dev"
   }
 }
