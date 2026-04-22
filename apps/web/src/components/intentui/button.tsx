@@ -14,7 +14,7 @@ export const buttonStyles = tv({
     "bg-(--btn-bg) text-(--btn-fg) ring-(--btn-ring) outline-(--btn-outline) hover:bg-(--btn-overlay)",
     "relative isolate inline-flex items-center justify-center border border-(--btn-border) font-medium hover:no-underline",
     "focus-visible:ring-offset-bg focus:outline-0 focus-visible:ring-2 focus-visible:ring-offset-3 focus-visible:outline focus-visible:outline-offset-2",
-    "*:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-(--btn-icon) hover:*:data-[slot=icon]:text-(--btn-icon-active)/90 focus-visible:*:data-[slot=icon]:text-(--btn-icon-active)/80 forced-colors:[--btn-icon:ButtonText] forced-colors:hover:[--btn-icon:ButtonText]",
+    "forced-colors:[--btn-icon:ButtonText] forced-colors:hover:[--btn-icon:ButtonText] *:[svg]:-mx-0.5 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-(--btn-icon) hover:*:[svg]:text-(--btn-icon-active)/90 focus-visible:*:[svg]:text-(--btn-icon-active)/80",
     "*:data-[slot=loader]:-mx-0.5 *:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-(--btn-icon)",
     "pending:opacity-50 disabled:opacity-50 disabled:forced-colors:text-[GrayText]",
     "*:data-[slot=color-swatch]:-mx-0.5 *:data-[slot=color-swatch]:shrink-0 *:data-[slot=color-swatch]:self-center *:data-[slot=color-swatch]:[--color-swatch-size:--spacing(5)]",
@@ -41,32 +41,32 @@ export const buttonStyles = tv({
     size: {
       xs: [
         "min-h-7 gap-x-1.5 px-2 py-[calc(--spacing(1.5)-1px)] text-xs/4",
-        "*:data-[slot=icon]:-mx-px *:data-[slot=icon]:size-3",
+        "*:[svg]:-mx-px *:[svg]:size-3",
         "*:data-[slot=loader]:-mx-px *:data-[slot=loader]:size-3",
       ],
       sm: [
         "min-h-8 gap-x-1.5 px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] text-sm/5",
-        "*:data-[slot=icon]:size-4",
+        "*:[svg]:size-4",
         "*:data-[slot=loader]:size-4",
       ],
       md: [
         "min-h-9 gap-x-2 px-3 py-[calc(--spacing(1.5)-1px)] text-sm/6",
-        "*:data-[slot=icon]:size-4",
+        "*:[svg]:size-4",
         "*:data-[slot=loader]:size-4",
       ],
       lg: [
         "min-h-9 gap-x-2 px-3 py-[calc(--spacing(1.5)-1px)] text-sm/7",
-        "*:data-[slot=icon]:size-4.5",
+        "*:[svg]:size-4.5",
         "*:data-[slot=loader]:size-4.5",
       ],
-      "sq-xs": ["touch-target size-7", "*:data-[slot=icon]:size-3", "*:data-[slot=loader]:size-3"],
-      "sq-sm": ["touch-target size-8", "*:data-[slot=icon]:size-4", "*:data-[slot=loader]:size-4"],
+      "sq-xs": ["touch-target shrink-0 size-7", "*:[svg]:size-3", "*:data-[slot=loader]:size-3"],
+      "sq-sm": ["touch-target shrink-0 size-8", "*:[svg]:size-4", "*:data-[slot=loader]:size-4"],
       "sq-md": [
-        "touch-target size-9",
-        "*:data-[slot=icon]:size-4.5",
+        "touch-target shrink-0 size-9",
+        "*:[svg]:size-4.5",
         "*:data-[slot=loader]:size-4.5",
       ],
-      "sq-lg": ["touch-target size-10", "*:data-[slot=icon]:size-5", "*:data-[slot=loader]:size-5"],
+      "sq-lg": ["touch-target shrink-0 size-10", "*:[svg]:size-5", "*:data-[slot=loader]:size-5"],
     },
 
     isCircle: {
