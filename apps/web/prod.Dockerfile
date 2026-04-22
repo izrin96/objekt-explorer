@@ -11,7 +11,7 @@ RUN bunx turbo@2.9.6 prune web --docker
 FROM base AS build
 COPY --from=prune /app/out/bun.lock ./bun.lock
 COPY --from=prune /app/out/json/ .
-RUN bun install
+RUN bun install --frozen-lockfile
 COPY --from=prune /app/out/full/ .
 
 ENV NEXT_TELEMETRY_DISABLED=1
