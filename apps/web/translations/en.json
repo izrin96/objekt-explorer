@@ -449,6 +449,7 @@
     "show_count": "Show count",
     "include_link": "Include link",
     "lower_case": "Lower case",
+    "show_member_emoji": "Member emoji",
     "bulleted_list": "Bulleted list",
     "group_by_label": "Group by",
     "group_by_placeholder": "Select grouping mode",

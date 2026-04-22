@@ -82,18 +82,21 @@ function Content() {
   const { artists } = useCosmoArtist();
   const content = useIntlayer("generate_discord");
 
-  const { handleSubmit, control, reset } = useForm({
+  const { handleSubmit, control, reset, setValue, watch } = useForm({
     defaultValues: {
       haveList: "",
       wantList: "",
       includeLink: false,
       showCount: false,
-      lowercase: false,
+      lowercaseCollection: false,
       bullet: false,
+      showMemberEmoji: false,
       groupBy: "none" as GroupByMode,
       style: "default" as FormatStyle,
     },
   });
+
+  const groupByValue = watch("groupBy");
 
   const generateDiscordFormat = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
@@ -137,8 +140,9 @@ function Content() {
             const haveCollectionsMap = mapByMember(haveCollections, haveMembers);
             const haveFormatted = format(haveCollectionsMap, {
               showQuantity: formData.showCount,
-              lowercase: formData.lowercase,
+              lowercaseCollection: formData.lowercaseCollection,
               bullet: formData.bullet,
+              showMemberEmoji: formData.showMemberEmoji,
               groupByMode: formData.groupBy,
               style: formData.style,
             });
@@ -160,8 +164,9 @@ function Content() {
             const wantCollectionsMap = mapByMember(wantCollections, wantMembers);
             const wantFormatted = format(wantCollectionsMap, {
               showQuantity: formData.showCount,
-              lowercase: formData.lowercase,
+              lowercaseCollection: formData.lowercaseCollection,
               bullet: formData.bullet,
+              showMemberEmoji: formData.showMemberEmoji,
               groupByMode: formData.groupBy,
               style: formData.style,
             });
@@ -279,7 +284,7 @@ function Content() {
       />
       <Controller
         control={control}
-        name="lowercase"
+        name="lowercaseCollection"
         render={({ field: { name, value, onChange, onBlur } }) => (
           <Checkbox
             name={name}
@@ -310,12 +315,33 @@ function Content() {
       />
       <Controller
         control={control}
+        name="showMemberEmoji"
+        render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            isInvalid={invalid}
+            validationBehavior="aria"
+          >
+            <Label>{content.show_member_emoji.value}</Label>
+          </Checkbox>
+        )}
+      />
+      <Controller
+        control={control}
         name="groupBy"
         render={({ field: { name, value, onChange, onBlur } }) => (
           <Select
             name={name}
             value={value}
-            onChange={onChange}
+            onChange={(val) => {
+              onChange(val);
+              if (val === "none") {
+                setValue("style", "default");
+              }
+            }}
             onBlur={onBlur}
             placeholder={content.group_by_placeholder.value}
             validationBehavior="aria"
@@ -347,6 +373,7 @@ function Content() {
             onBlur={onBlur}
             placeholder={content.style_placeholder.value}
             validationBehavior="aria"
+            isDisabled={groupByValue === "none"}
           >
             <Label>{content.style_label.value}</Label>
             <SelectTrigger />

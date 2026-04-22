@@ -39,6 +39,10 @@ const content = {
       en: "Lower case",
       ko: "소문자",
     }),
+    show_member_emoji: t({
+      en: "Member emoji",
+      ko: "멤버 이모지",
+    }),
     bulleted_list: t({
       en: "Bulleted list",
       ko: "글머리 기호 목록",

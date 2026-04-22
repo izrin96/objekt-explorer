@@ -41,23 +41,27 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
   const modalContent = useIntlayer("discord_format_modal");
   const [formatText, setFormatText] = useState("");
   const { artists } = useCosmoArtist();
-  const { handleSubmit, control } = useForm({
+  const { handleSubmit, control, setValue, watch } = useForm({
     defaultValues: {
       showCount: false,
-      lowercase: false,
+      lowercaseCollection: false,
       bullet: false,
+      showMemberEmoji: false,
       groupBy: "none" as GroupByMode,
       style: "default" as FormatStyle,
     },
   });
+
+  const groupByValue = watch("groupBy");
 
   const onSubmit = handleSubmit((data) => {
     const members = makeMemberOrderedList(objekts, artists);
     const haveCollections = mapByMember(objekts, members);
     const formatted = format(haveCollections, {
       showQuantity: data.showCount,
-      lowercase: data.lowercase,
+      lowercaseCollection: data.lowercaseCollection,
       bullet: data.bullet,
+      showMemberEmoji: data.showMemberEmoji,
       groupByMode: data.groupBy,
       style: data.style,
     });
@@ -90,7 +94,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
           />
           <Controller
             control={control}
-            name="lowercase"
+            name="lowercaseCollection"
             render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
               <Checkbox
                 name={name}
@@ -122,12 +126,33 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
           />
           <Controller
             control={control}
+            name="showMemberEmoji"
+            render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+              <Checkbox
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+                validationBehavior="aria"
+              >
+                <Label>{content.show_member_emoji.value}</Label>
+              </Checkbox>
+            )}
+          />
+          <Controller
+            control={control}
             name="groupBy"
             render={({ field: { name, value, onChange, onBlur } }) => (
               <Select
                 name={name}
                 value={value}
-                onChange={onChange}
+                onChange={(val) => {
+                  onChange(val);
+                  if (val === "none") {
+                    setValue("style", "default");
+                  }
+                }}
                 onBlur={onBlur}
                 placeholder={content.group_by_placeholder.value}
                 validationBehavior="aria"
@@ -159,6 +184,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 onBlur={onBlur}
                 placeholder={content.style_placeholder.value}
                 validationBehavior="aria"
+                isDisabled={groupByValue === "none"}
               >
                 <Label>{content.style_label.value}</Label>
                 <SelectTrigger />
