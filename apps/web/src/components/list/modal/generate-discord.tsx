@@ -32,6 +32,7 @@ import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import Portal from "@/components/portal";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilterData } from "@/hooks/use-filter-data";
 import {
   type FormatStyle,
   format,
@@ -79,7 +80,8 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
 function Content() {
   const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
   const [formatText, setFormatText] = useState("");
-  const { artists } = useCosmoArtist();
+  const { artists, compareMember } = useCosmoArtist();
+  const { compareSeason } = useFilterData();
   const content = useIntlayer("generate_discord");
 
   const { handleSubmit, control, reset, setValue, watch } = useForm({
@@ -145,6 +147,8 @@ function Content() {
               showMemberEmoji: formData.showMemberEmoji,
               groupByMode: formData.groupBy,
               style: formData.style,
+              compareSeason,
+              compareMember,
             });
 
             output.push("## Have", "", haveFormatted);
@@ -169,6 +173,8 @@ function Content() {
               showMemberEmoji: formData.showMemberEmoji,
               groupByMode: formData.groupBy,
               style: formData.style,
+              compareSeason,
+              compareMember,
             });
 
             output.push("## Want", "", wantFormatted);

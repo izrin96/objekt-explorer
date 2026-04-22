@@ -2,18 +2,16 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 
-import { compareByArray, sortObjekts } from "@/lib/filter-utils";
+import { sortObjekts } from "@/lib/filter-utils";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilterData } from "./use-filter-data";
 import { isFiltering, type Filters } from "./use-filters";
-import { useCompareMember } from "./use-objekt-compare-member";
 
 export function useShapeObjekts() {
-  const { seasons, classes } = useFilterData();
-  const { getArtist } = useCosmoArtist();
-  const compareMember = useCompareMember();
+  const { compareSeason, compareClass } = useFilterData();
+  const { getArtist, compareMember } = useCosmoArtist();
 
   return useCallback(
     (
@@ -46,15 +44,11 @@ export function useShapeObjekts() {
         }
 
         if (filters.group_by === "class") {
-          return groupDir === "asc"
-            ? compareByArray(classes, keyA, keyB)
-            : compareByArray(classes, keyB, keyA);
+          return groupDir === "asc" ? compareClass(keyA, keyB) : compareClass(keyB, keyA);
         }
 
         if (filters.group_by === "season") {
-          return groupDir === "asc"
-            ? compareByArray(seasons, keyA, keyB)
-            : compareByArray(seasons, keyB, keyA);
+          return groupDir === "asc" ? compareSeason(keyA, keyB) : compareSeason(keyB, keyA);
         }
 
         if (groupDir === "desc") return keyB.localeCompare(keyA);
@@ -63,7 +57,7 @@ export function useShapeObjekts() {
 
       return groupByKeySorted.map(([key, items]) => {
         // sort objekts
-        items = sortObjekts(items, filters, seasons, compareMember, rarityMap);
+        items = sortObjekts(items, filters, compareMember, compareSeason, rarityMap);
 
         // sort pin
         // if not filtering, pins should show first
@@ -97,6 +91,6 @@ export function useShapeObjekts() {
         return [key, grouped];
       });
     },
-    [getArtist, compareMember, seasons, classes],
+    [getArtist, compareMember, compareSeason, compareClass],
   );
 }

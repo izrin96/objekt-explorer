@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/i
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilterData } from "@/hooks/use-filter-data";
 import {
   type FormatStyle,
   format,
@@ -40,7 +41,8 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
   const content = useIntlayer("generate_discord");
   const modalContent = useIntlayer("discord_format_modal");
   const [formatText, setFormatText] = useState("");
-  const { artists } = useCosmoArtist();
+  const { artists, compareMember } = useCosmoArtist();
+  const { compareSeason } = useFilterData();
   const { handleSubmit, control, setValue, watch } = useForm({
     defaultValues: {
       showCount: false,
@@ -64,6 +66,8 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
       showMemberEmoji: data.showMemberEmoji,
       groupByMode: data.groupBy,
       style: data.style,
+      compareSeason,
+      compareMember,
     });
     setFormatText(["## Have", "", formatted].join("\n"));
   });

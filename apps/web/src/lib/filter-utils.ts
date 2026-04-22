@@ -163,17 +163,11 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
   });
 }
 
-export function compareByArray<T>(valid: readonly T[], a: T, b: T) {
-  const posA = valid.indexOf(a);
-  const posB = valid.indexOf(b);
-  return posA - posB;
-}
-
 export function sortObjekts(
   data: ValidObjekt[],
   filters: Filters,
-  seasons: string[],
   compareMember: (a: string, b: string) => number,
+  compareSeason: (a: string, b: string) => number,
   rarityMap?: Map<string, number>,
 ): ValidObjekt[] {
   let objekts = data;
@@ -203,18 +197,17 @@ export function sortObjekts(
       });
     }
   } else if (sort === "season" || sort === "collectionNo") {
-    // default to member sort (ascending)
     objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
 
     if (sortDir === "asc") {
       objekts = objekts.toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo));
       if (sort === "season") {
-        objekts = objekts.toSorted((a, b) => compareByArray(seasons, a.season, b.season));
+        objekts = objekts.toSorted((a, b) => compareSeason(a.season, b.season));
       }
     } else {
       objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
       if (sort === "season") {
-        objekts = objekts.toSorted((a, b) => compareByArray(seasons, b.season, a.season));
+        objekts = objekts.toSorted((a, b) => compareSeason(b.season, a.season));
       }
     }
   } else if (sort === "serial") {
@@ -228,10 +221,9 @@ export function sortObjekts(
       );
     }
   } else if (sort === "member") {
-    // default to season sort (ascending)
     objekts = objekts
       .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-      .toSorted((a, b) => compareByArray(seasons, a.season, b.season));
+      .toSorted((a, b) => compareSeason(a.season, b.season));
 
     if (sortDir === "asc") {
       objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));

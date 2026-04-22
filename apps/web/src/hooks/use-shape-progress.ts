@@ -2,16 +2,14 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { groupBy } from "es-toolkit";
 import { useCallback } from "react";
 
-import { compareByArray } from "@/lib/filter-utils";
-
+import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilterData } from "./use-filter-data";
-import { useCompareMember } from "./use-objekt-compare-member";
 
 export type ShapedProgress = [string, [string, ValidObjekt[][]][]][];
 
 export function useShapeProgress() {
-  const { seasons, classes } = useFilterData();
-  const compareMember = useCompareMember();
+  const { compareSeason, compareClass } = useFilterData();
+  const { compareMember } = useCosmoArtist();
 
   return useCallback(
     (data: ValidObjekt[]): ShapedProgress => {
@@ -24,7 +22,7 @@ export function useShapeProgress() {
       );
 
       memberSeasonEntries = memberSeasonEntries.toSorted(([, [objektA]], [, [objektB]]) =>
-        compareByArray(seasons, objektB?.season ?? "", objektA?.season ?? ""),
+        compareSeason(objektB?.season ?? "", objektA?.season ?? ""),
       );
 
       memberSeasonEntries = memberSeasonEntries.toSorted(([, [objektA]], [, [objektB]]) =>
@@ -37,13 +35,13 @@ export function useShapeProgress() {
         let classEntries = Object.entries(byClass).filter(([, objekts]) => objekts.length > 0);
 
         classEntries = classEntries.toSorted(([, [objektA]], [, [objektB]]) =>
-          compareByArray(classes, objektA?.class ?? "", objektB?.class ?? ""),
+          compareClass(objektA?.class ?? "", objektB?.class ?? ""),
         );
 
         const classGroups = classEntries.map(([classKey, classObjekts]) => {
           const sorted = classObjekts
             .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-            .toSorted((a, b) => compareByArray(seasons, a.season, b.season));
+            .toSorted((a, b) => compareSeason(a.season, b.season));
 
           return [classKey, Object.values(groupBy(sorted, (a) => a.collectionId))] as [
             string,
@@ -54,6 +52,6 @@ export function useShapeProgress() {
         return [memberSeasonKey, classGroups] as [string, [string, ValidObjekt[][]][]];
       });
     },
-    [compareMember, seasons, classes],
+    [compareMember, compareSeason, compareClass],
   );
 }

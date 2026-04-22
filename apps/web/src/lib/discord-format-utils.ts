@@ -66,6 +66,8 @@ export type FormatOptions = {
   showMemberEmoji: boolean;
   groupByMode?: GroupByMode;
   style?: FormatStyle;
+  compareSeason?: (a: string, b: string) => number;
+  compareMember?: (a: string, b: string) => number;
 };
 
 function formatCollection(
@@ -111,7 +113,9 @@ function formatMemberCollections(
 ): string[] {
   if (groupBySeason) {
     const seasonGroups = Object.groupBy(collections, (a) => a.season);
-    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) => a.localeCompare(b));
+    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) =>
+      options.compareSeason ? options.compareSeason(a, b) : a.localeCompare(b),
+    );
 
     return seasonEntries.flatMap(([season, seasonCollections]) => {
       const formatted = formatCollectionsById(seasonCollections!, options, false);
@@ -140,7 +144,9 @@ export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, option
     }
 
     const seasonGroups = Object.groupBy(allCollections, (a) => a.season);
-    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) => a.localeCompare(b));
+    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) =>
+      options.compareSeason ? options.compareSeason(a, b) : a.localeCompare(b),
+    );
 
     const results: string[] = [];
 
@@ -148,7 +154,9 @@ export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, option
       if (!seasonCollections) continue;
 
       const memberGroups = Object.groupBy(seasonCollections, (a) => a.member);
-      const memberEntries = Object.entries(memberGroups).toSorted(([a], [b]) => a.localeCompare(b));
+      const memberEntries = Object.entries(memberGroups).toSorted(([a], [b]) =>
+        options.compareMember ? options.compareMember(a, b) : a.localeCompare(b),
+      );
 
       if (style === "compact") {
         const memberParts = memberEntries.flatMap(([member, memberCollections]) => {
