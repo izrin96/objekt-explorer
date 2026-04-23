@@ -61,6 +61,20 @@ export function useCosmoArtist() {
       ? ctx.artists.filter((a) => selectedArtistIds.includes(a.id))
       : ctx.artists;
 
+  const compareMember = useCallback(
+    (memberA: string, memberB: string) => {
+      const memberAData = ctx.memberMap.get(memberA.toLowerCase());
+      const memberBData = ctx.memberMap.get(memberB.toLowerCase());
+      const orderA = memberAData?.order ?? -1;
+      const orderB = memberBData?.order ?? -1;
+      if (orderA === -1 && orderB === -1) return 0;
+      if (orderA === -1) return 1;
+      if (orderB === -1) return -1;
+      return orderA - orderB;
+    },
+    [ctx.memberMap],
+  );
+
   return {
     artists: ctx.artists,
     getArtist,
@@ -68,5 +82,6 @@ export function useCosmoArtist() {
     selectedArtistIds,
     selectedArtists,
     getSelectedArtistIds,
+    compareMember,
   };
 }

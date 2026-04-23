@@ -2,11 +2,11 @@
 
 import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/intentui/button";
 import {
   ModalClose,
   ModalContent,
@@ -14,7 +14,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
+} from "@/components/intentui/modal";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";
@@ -61,7 +61,7 @@ type LinkedAccountProps = {
 };
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
-  const t = useTranslations("auth.account.link_accounts");
+  const content = useIntlayer("auth");
   const [pullOpen, setPullOpen] = useState(false);
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
@@ -72,10 +72,10 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
         void client.invalidateQueries({
           queryKey: ["accounts"],
         });
-        toast.success(t("unlinked", { provider: provider.label }));
+        toast.success(content.account.link_accounts.unlinked({ provider: provider.label }).value);
       },
       onError: () => {
-        toast.error(t("unlink_error", { provider: provider.label }));
+        toast.error(content.account.link_accounts.unlink_error({ provider: provider.label }).value);
       },
     }),
   );
@@ -90,7 +90,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
       <div className="flex gap-2">
         <Button intent="outline" size="xs" onPress={() => setPullOpen(true)}>
           <ArrowsClockwiseIcon data-slot="icon" />
-          {t("refresh")}
+          {content.account.link_accounts.refresh.value}
         </Button>
         <Button
           intent="danger"
@@ -103,7 +103,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
           }
         >
           <LinkBreakIcon data-slot="icon" />
-          {t("unlink")}
+          {content.account.link_accounts.unlink.value}
         </Button>
       </div>
     </div>
@@ -115,7 +115,7 @@ type UnlinkedAccountProps = {
 };
 
 function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
-  const t = useTranslations("auth.account.link_accounts");
+  const content = useIntlayer("auth");
   const linkAccount = useMutation({
     mutationFn: async () => {
       const result = await authClient.linkSocial({
@@ -133,7 +133,7 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
       <span className="text-sm">{provider.label}</span>
       <Button intent="outline" size="xs" onPress={() => linkAccount.mutate()}>
         <LinkIcon data-slot="icon" />
-        {t("link")}
+        {content.account.link_accounts.link.value}
       </Button>
     </div>
   );
@@ -146,7 +146,8 @@ type PullProfileProps = {
 };
 
 function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
-  const t = useTranslations("auth.account.link_accounts");
+  const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const refreshProfile = useMutation(
     orpc.user.refreshProfile.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
@@ -154,30 +155,32 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
           queryKey: ["session"],
         });
         setOpen(false);
-        toast.success(t("profile_updated"));
+        toast.success(content.account.link_accounts.profile_updated.value);
       },
       onError: ({ message }) => {
-        toast.error(t("profile_update_error", { message }));
+        toast.error(content.account.link_accounts.profile_update_error({ message }).value);
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("update_profile_title", { provider: provider.label })}</ModalTitle>
+        <ModalTitle>
+          {content.account.link_accounts.update_profile_title({ provider: provider.label }).value}
+        </ModalTitle>
         <ModalDescription>
-          {t("update_profile_desc", { provider: provider.label })}
+          {content.account.link_accounts.update_profile_desc({ provider: provider.label }).value}
         </ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{t("cancel")}</ModalClose>
+        <ModalClose>{commonContent.modal.cancel.value}</ModalClose>
         <Button
           intent="primary"
           type="submit"
           isPending={refreshProfile.isPending}
           onPress={() => refreshProfile.mutate(provider.id)}
         >
-          {t("continue")}
+          {commonContent.actions.continue.value}
         </Button>
       </ModalFooter>
     </ModalContent>

@@ -1,12 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useMemo } from "react";
 import type { Selection } from "react-aria-components";
 
-import { Button } from "@/components/ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/ui/menu";
+import { Button } from "@/components/intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/intentui/menu";
 import { type ValidType, validType } from "@/lib/universal/transfers";
 
 export function useTypeFilter() {
@@ -14,17 +13,17 @@ export function useTypeFilter() {
 }
 
 export default function TypeFilter() {
-  const t = useTranslations("trades.filter_type");
+  const content = useIntlayer("trades");
   const [type, setType] = useTypeFilter();
   const selected = new Set(type ? [type] : ["all"]);
 
-  const map = useMemo(
-    () =>
-      Object.fromEntries(
-        validType.map((key) => [key, t(key as "all" | "mint" | "received" | "sent" | "spin")]),
-      ),
-    [t],
-  );
+  const map = {
+    all: content.filter_type.all.value,
+    mint: content.filter_type.mint.value,
+    received: content.filter_type.received.value,
+    sent: content.filter_type.sent.value,
+    spin: content.filter_type.spin.value,
+  };
 
   const update = (key: Selection) => {
     const value = Array.from((key as Set<ValidType>).values()).at(0) ?? "all";
@@ -34,7 +33,7 @@ export default function TypeFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={type}>
-        {t("label")}
+        {content.filter_type.label.value}
       </Button>
       <MenuContent selectionMode="single" selectedKeys={selected} onSelectionChange={update}>
         {validType.map((item) => (

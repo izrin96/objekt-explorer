@@ -11,7 +11,7 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -23,12 +23,11 @@ import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth";
 import { getListHref, parseNickname } from "@/lib/utils";
 
-import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
-import { CreateListModal } from "./list/modal/manage-list";
-import { Avatar } from "./ui/avatar-custom";
-import { buttonStyles } from "./ui/button";
-import { Link } from "./ui/link";
-import { Loader } from "./ui/loader";
+import { AboutMenu, AboutModal } from "./about";
+import { Avatar } from "./intentui/avatar-custom";
+import { buttonStyles } from "./intentui/button";
+import { Link } from "./intentui/link";
+import { Loader } from "./intentui/loader";
 import {
   Menu,
   MenuContent,
@@ -39,10 +38,12 @@ import {
   MenuSeparator,
   MenuSubMenu,
   MenuTrigger,
-} from "./ui/menu";
+} from "./intentui/menu";
+import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
+import { CreateListModal } from "./list/modal/manage-list";
 
 export default function UserNav() {
-  const t = useTranslations("nav");
+  const content = useIntlayer("nav");
   const { data } = useSession();
 
   return (
@@ -51,7 +52,7 @@ export default function UserNav() {
         <UserMenu user={data.user} />
       ) : (
         <Link href="/login" className={buttonStyles({ intent: "plain", size: "sm" })}>
-          {t("sign_in")}
+          {content.sign_in.value}
         </Link>
       )}
     </div>
@@ -59,20 +60,22 @@ export default function UserNav() {
 }
 
 function UserMenu({ user }: { user: User }) {
-  const t = useTranslations("nav");
+  const content = useIntlayer("nav");
   const queryClient = useQueryClient();
   const [genOpen, setGenOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const router = useRouter();
   return (
     <>
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
       <UserAccountModal open={accountOpen} setOpen={setAccountOpen} />
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
+      <AboutModal open={aboutOpen} setOpen={setAboutOpen} />
 
       <Menu>
-        <MenuTrigger aria-label={t("open_menu")}>
+        <MenuTrigger aria-label={content.open_menu.value}>
           <Avatar
             alt={user.name}
             initials={user.name.charAt(0)}
@@ -81,7 +84,7 @@ function UserMenu({ user }: { user: User }) {
             src={user.image}
           />
         </MenuTrigger>
-        <MenuContent placement="bottom left">
+        <MenuContent placement="bottom left" popover={{ offset: -2 }}>
           <MenuSection>
             <MenuHeader separator>
               <div className="flex flex-col">
@@ -113,12 +116,17 @@ function UserMenu({ user }: { user: User }) {
 
           <MenuItem onAction={() => setAccountOpen(true)}>
             <UserIcon data-slot="icon" />
-            <MenuLabel>{t("account")}</MenuLabel>
+            <MenuLabel>{content.account.value}</MenuLabel>
           </MenuItem>
 
           <MenuSeparator />
 
+          <AboutMenu onAction={() => setAboutOpen(true)} />
+
+          <MenuSeparator />
+
           <MenuItem
+            intent="danger"
             onAction={() =>
               authClient.signOut({
                 fetchOptions: {
@@ -126,7 +134,7 @@ function UserMenu({ user }: { user: User }) {
                     void queryClient.invalidateQueries({
                       queryKey: ["session"],
                     });
-                    toast(t("sign_out_success"));
+                    toast(content.sign_out_success.value);
                     router.refresh();
                   },
                 },
@@ -134,7 +142,7 @@ function UserMenu({ user }: { user: User }) {
             }
           >
             <SignOutIcon data-slot="icon" />
-            <MenuLabel>{t("sign_out")}</MenuLabel>
+            <MenuLabel>{content.sign_out.value}</MenuLabel>
           </MenuItem>
         </MenuContent>
       </Menu>
@@ -150,14 +158,14 @@ function MyListMenuItem({
   openDiscordFormat: () => void;
 }) {
   const { data } = useQuery(orpc.list.list.queryOptions());
-  const t = useTranslations("nav");
+  const content = useIntlayer("nav");
   return (
     <MenuSubMenu>
       <MenuItem>
         <HeartIcon data-slot="icon" />
-        <MenuLabel>{t("my_list")}</MenuLabel>
+        <MenuLabel>{content.my_list.value}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="left top">
+      <MenuContent placement="left top" popover={{ offset: -8 }}>
         {!data && (
           <MenuItem isDisabled>
             <MenuLabel>
@@ -168,7 +176,7 @@ function MyListMenuItem({
         {data && data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
-              <span>{t("no_list_found")}</span>
+              <span>{content.no_list_found.value}</span>
             </MenuLabel>
           </MenuItem>
         )}
@@ -186,15 +194,15 @@ function MyListMenuItem({
         ))}
         <MenuItem onAction={openCreateList}>
           <PlusIcon data-slot="icon" />
-          <MenuLabel>{t("create_list")}</MenuLabel>
+          <MenuLabel>{content.create_list.value}</MenuLabel>
         </MenuItem>
         <MenuItem onAction={openDiscordFormat}>
           <DiscordLogoIcon data-slot="icon" />
-          <MenuLabel>{t("discord_format")}</MenuLabel>
+          <MenuLabel>{content.discord_format.value}</MenuLabel>
         </MenuItem>
         <MenuItem href={`/list`}>
           <GearSixIcon data-slot="icon" />
-          <MenuLabel>{t("manage_list")}</MenuLabel>
+          <MenuLabel>{content.manage_list.value}</MenuLabel>
         </MenuItem>
       </MenuContent>
     </MenuSubMenu>
@@ -202,15 +210,15 @@ function MyListMenuItem({
 }
 
 function MyCosmoProfileMenuItem() {
-  const t = useTranslations("nav");
+  const content = useIntlayer("nav");
   const { data } = useQuery(orpc.profile.list.queryOptions());
   return (
     <MenuSubMenu>
       <MenuItem>
         <DeviceMobileIcon data-slot="icon" />
-        <MenuLabel>{t("my_cosmo_link")}</MenuLabel>
+        <MenuLabel>{content.my_cosmo_link.value}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="left top">
+      <MenuContent placement="left top" popover={{ offset: -8 }}>
         {!data && (
           <MenuItem isDisabled>
             <MenuLabel>
@@ -221,7 +229,7 @@ function MyCosmoProfileMenuItem() {
         {data && data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
-              <span>{t("no_cosmo_found")}</span>
+              <span>{content.no_cosmo_found.value}</span>
             </MenuLabel>
           </MenuItem>
         )}
@@ -232,7 +240,7 @@ function MyCosmoProfileMenuItem() {
         ))}
         <MenuItem href={`/link`}>
           <GearSixIcon data-slot="icon" />
-          <MenuLabel>{t("manage_cosmo_link")}</MenuLabel>
+          <MenuLabel>{content.manage_cosmo_link.value}</MenuLabel>
         </MenuItem>
       </MenuContent>
     </MenuSubMenu>

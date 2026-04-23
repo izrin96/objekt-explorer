@@ -1,8 +1,11 @@
 {
   "extends": "@repo/tsconfig/tsconfig.bun.json",
   "compilerOptions": {
+    "rootDir": "./src",
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", ".turbo"]
 }

@@ -31,7 +31,7 @@ export async function fetchMetadata(tokenId: string) {
     return await fetchMetadataV1(tokenId);
   } catch (error) {
     const statusInfo = error instanceof FetchError ? ` (status: ${error.status})` : "";
-    console.log(`[fetchMetadata] Error fetching v1 metadata${statusInfo}: ${error}`);
+    console.log(`[fetchMetadata] Error fetching v1 metadata${statusInfo}`);
 
     try {
       // fallback to v3

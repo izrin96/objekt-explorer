@@ -1,19 +1,18 @@
 "use client";
 
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Suspense, useState } from "react";
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Link } from "@/components/ui/link";
-import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Link } from "@/components/intentui/link";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalBody,
   ModalClose,
@@ -22,15 +21,16 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { Note } from "@/components/ui/note";
+} from "@/components/intentui/modal";
+import { Note } from "@/components/intentui/note";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectLabel,
   SelectTrigger,
-} from "@/components/ui/select";
+} from "@/components/intentui/select";
+import Portal from "@/components/portal";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
@@ -50,12 +50,12 @@ export function AddToListModal({
   setOpen: (val: boolean) => void;
   address?: string;
 }) {
-  const t = useTranslations("list.manage_objekt");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("add_title")}</ModalTitle>
+        <ModalTitle>{content.manage_objekt.add_title.value}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <QueryErrorResetBoundary>
@@ -75,7 +75,7 @@ export function AddToListModal({
         </QueryErrorResetBoundary>
       </ModalBody>
       <ModalFooter id="submit-form-add-to-list">
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
@@ -92,7 +92,7 @@ function AddToListForm({
   const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
-  const t = useTranslations("list.manage_objekt");
+  const content = useIntlayer("list");
 
   const { handleSubmit, control } = useForm({
     defaultValues: {
@@ -136,9 +136,9 @@ function AddToListForm({
       <>
         <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
         <Note intent="default">
-          {t("no_list_message")}{" "}
+          {content.manage_objekt.no_list_message.value}{" "}
           <Link className="cursor-pointer underline" onPress={() => setCreateListOpen(true)}>
-            {t("create_one_here")}
+            {content.manage_objekt.create_one_here.value}
           </Link>
           .
         </Note>
@@ -146,28 +146,29 @@ function AddToListForm({
     );
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-4">
         <Controller
           control={control}
           name="slug"
           rules={{
-            required: t("list_required"),
+            required: content.manage_objekt.list_required.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
             fieldState: { invalid, error },
           }) => (
             <Select
-              placeholder={t("list_placeholder")}
+              placeholder={content.manage_objekt.list_placeholder.value}
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("list_label")}</Label>
+              <Label>{content.manage_objekt.list_label.value}</Label>
               <SelectTrigger />
               <SelectContent>
                 {availableLists.map((item) => (
@@ -191,15 +192,21 @@ function AddToListForm({
           control={control}
           name="skipDups"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} onChange={onChange} onBlur={onBlur} isSelected={value}>
-              <Label>{t("skip_dups_label")}</Label>
-              <Description>{t("skip_dups_desc")}</Description>
+            <Checkbox
+              name={name}
+              onChange={onChange}
+              onBlur={onBlur}
+              isSelected={value}
+              validationBehavior="aria"
+            >
+              <Label>{content.manage_objekt.skip_dups_label.value}</Label>
+              <Description>{content.manage_objekt.skip_dups_desc.value}</Description>
             </Checkbox>
           )}
         />
         <Portal to="#submit-form-add-to-list">
           <Button isPending={addToList.isPending} onPress={() => onSubmit()}>
-            {t("add_button")}
+            {content.manage_objekt.add_button.value}
           </Button>
         </Portal>
       </div>
@@ -217,17 +224,16 @@ export function RemoveFromListModal({
   const target = useTarget((a) => a.list)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
-  const reset = useObjektSelect((a) => a.reset);
-  const t = useTranslations("list.manage_objekt");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("remove_title")}</ModalTitle>
-        <ModalDescription>{t("remove_description")}</ModalDescription>
+        <ModalTitle>{content.manage_objekt.remove_title.value}</ModalTitle>
+        <ModalDescription>{content.manage_objekt.remove_description.value}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
 
         <Button
           intent="danger"
@@ -242,13 +248,12 @@ export function RemoveFromListModal({
               {
                 onSuccess: () => {
                   setOpen(false);
-                  reset();
                 },
               },
             );
           }}
         >
-          {t("continue_button")}
+          {contentCommon.actions.continue.value}
         </Button>
       </ModalFooter>
     </ModalContent>

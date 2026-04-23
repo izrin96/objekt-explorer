@@ -1,0 +1,1 @@
+ALTER TABLE "pins" ADD COLUMN "order" integer;

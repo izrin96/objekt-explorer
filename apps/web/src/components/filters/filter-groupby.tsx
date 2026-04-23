@@ -1,26 +1,26 @@
 "use client";
 
 import { type ValidGroupBy, validGroupBy } from "@repo/cosmo/types/common";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function GroupByFilter() {
-  const t = useTranslations("filter.group_by");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   const map = {
-    artist: t("artist"),
-    class: t("class"),
-    collectionNo: t("collection_no"),
-    member: t("member"),
-    season: t("season"),
-    seasonCollectionNo: t("season_collection_no"),
+    artist: content.group_by.artist.value,
+    class: content.group_by.class.value,
+    collectionNo: content.group_by.collection_no.value,
+    member: content.group_by.member.value,
+    season: content.group_by.season.value,
+    seasonCollectionNo: content.group_by.season_collection_no.value,
   };
 
   const selected = new Set(filters.group_by ? [filters.group_by] : []);
@@ -39,7 +39,7 @@ export default function GroupByFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.group_by}>
-        {t("label")}
+        {content.group_by.label.value}
       </Button>
       <MenuContent
         selectionMode="single"

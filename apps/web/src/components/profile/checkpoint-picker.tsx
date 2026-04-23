@@ -13,13 +13,14 @@ import {
   toTime,
 } from "@internationalized/date";
 import { ClockCounterClockwiseIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useRef, useState } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
+import { getUserLocale } from "@/lib/utils";
 
-import { Button } from "../ui/button";
-import { Calendar } from "../ui/calendar";
+import { Button } from "../intentui/button";
+import { Calendar } from "../intentui/calendar";
 import {
   PopoverBody,
   PopoverClose,
@@ -28,8 +29,8 @@ import {
   PopoverFooter,
   PopoverHeader,
   PopoverTitle,
-} from "../ui/popover";
-import { TimeField, TimeInput } from "../ui/time-field";
+} from "../intentui/popover";
+import { TimeField, TimeInput } from "../intentui/time-field";
 
 const TIME_ZONE = getLocalTimeZone();
 
@@ -48,7 +49,7 @@ function formatCheckpointLabel(isoStr: string | null, defaultLabel: string) {
   if (!parsed) return defaultLabel;
 
   const date = parsed.toDate();
-  return new DateFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
+  return new DateFormatter(getUserLocale(), {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -60,14 +61,14 @@ function formatCheckpointLabel(isoStr: string | null, defaultLabel: string) {
 }
 
 export default function CheckpointPicker() {
-  const t = useTranslations("checkpoint");
+  const content = useIntlayer("checkpoint");
   const [filters, setFilters] = useFilters();
   const currentValue = safeParse(filters.at);
   const triggerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const [selectedDate, setSelectedDate] = useState<CalendarDate | null>(
+  const [selectedDate, setSelectedDate] = useState(
     currentValue ? toCalendarDate(currentValue) : null,
   );
   const [selectedTime, setSelectedTime] = useState<Time | null>(
@@ -81,7 +82,7 @@ export default function CheckpointPicker() {
     const dateTime = toCalendarDateTime(selectedDate, selectedTime);
     const isoString = dateTime.toDate(TIME_ZONE).toISOString();
     setIsOpen(false);
-    return setFilters({ at: isoString });
+    void setFilters({ at: isoString });
   };
 
   return (
@@ -93,7 +94,7 @@ export default function CheckpointPicker() {
         onPress={() => setIsOpen(true)}
       >
         <ClockCounterClockwiseIcon data-slot="icon" />
-        {formatCheckpointLabel(filters.at, t("title"))}
+        {formatCheckpointLabel(filters.at, content.title.value)}
       </Button>
       <PopoverContent
         placement="bottom left"
@@ -102,8 +103,8 @@ export default function CheckpointPicker() {
         onOpenChange={setIsOpen}
       >
         <PopoverHeader>
-          <PopoverTitle>{t("title")}</PopoverTitle>
-          <PopoverDescription>{t("description")}</PopoverDescription>
+          <PopoverTitle>{content.title.value}</PopoverTitle>
+          <PopoverDescription>{content.description.value}</PopoverDescription>
         </PopoverHeader>
         <PopoverBody className="space-y-4 select-none">
           <div className="flex flex-col items-center gap-3">
@@ -124,9 +125,9 @@ export default function CheckpointPicker() {
           </div>
         </PopoverBody>
         <PopoverFooter>
-          <PopoverClose onPress={() => setIsOpen(false)}>{t("close")}</PopoverClose>
+          <PopoverClose onPress={() => setIsOpen(false)}>{content.close.value}</PopoverClose>
           <Button onPress={handleApply} isDisabled={!selectedDate || !selectedTime}>
-            {t("apply")}
+            {content.apply.value}
           </Button>
         </PopoverFooter>
       </PopoverContent>
@@ -134,7 +135,7 @@ export default function CheckpointPicker() {
       {filters.at && (
         <Button intent="outline" onPress={() => setFilters({ at: null })}>
           <XIcon data-slot="icon" />
-          {t("reset")}
+          {content.reset.value}
         </Button>
       )}
     </div>

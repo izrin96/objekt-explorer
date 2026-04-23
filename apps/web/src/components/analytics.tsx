@@ -1,18 +1,16 @@
 import Script from "next/script";
 
-import { env } from "@/env";
+import { clientEnv } from "@/lib/env/client";
 
-const Analytics = () => {
+export default function Analytics() {
   if (process.env.NODE_ENV !== "production") return null;
 
   return (
     <Script
       strategy="afterInteractive"
       async
-      src={env.NEXT_PUBLIC_UMAMI_SCRIPT_URL}
-      data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+      src={clientEnv.NEXT_PUBLIC_UMAMI_SCRIPT_URL}
+      data-website-id={clientEnv.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
     />
   );
-};
-
-export { Analytics };
+}

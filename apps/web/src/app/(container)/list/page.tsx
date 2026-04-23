@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 import { redirect } from "next/navigation";
 
 import MyListRender from "@/components/list/my-list";
@@ -8,9 +8,9 @@ import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("page_titles");
+  const content = useIntlayer("page_titles");
   return {
-    title: t("my_list"),
+    title: content.my_list.value,
   };
 }
 

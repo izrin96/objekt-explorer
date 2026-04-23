@@ -1,18 +1,18 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel, MenuSection } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel, MenuSection } from "../intentui/menu";
 
 export default function MemberFilter() {
   const { selectedArtists } = useCosmoArtist();
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.member);
 
@@ -30,7 +30,7 @@ export default function MemberFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.member}>
-        {t("member")}
+        {content.member.value}
       </Button>
       <MenuContent
         selectionMode="multiple"

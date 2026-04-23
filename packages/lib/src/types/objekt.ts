@@ -5,7 +5,7 @@ type CollectionExtra = {
   tags?: string[];
   edition?: 1 | 2 | 3 | null;
   order?: number;
-  listPrice?: number | null;
+  price?: number | null;
   isQyop?: boolean;
   note?: string | null;
 };
@@ -67,70 +67,19 @@ export type ObjektTransferResult = {
 };
 
 // API response types
+export type OwnedObjektsCursor = {
+  receivedAt?: string;
+  serial?: number;
+  collectionNo?: string;
+  id: string;
+};
+
 export type OwnedObjektsResult = {
-  nextCursor?: {
-    receivedAt: string;
-    id: string;
-  };
+  nextCursor?: OwnedObjektsCursor;
   objekts: OwnedObjekt[];
+  total?: number;
 };
 
 export type CollectionResult = {
   collections: IndexedObjekt[];
-};
-
-// Member shortform aliases
-export const shortformMembers: Record<string, string> = {
-  naky: "NaKyoung",
-  n: "Nien",
-  nk: "NaKyoung",
-  tone: "Kotone",
-  sulin: "Sullin",
-  s: "Sullin",
-  sh: "SoHyun",
-  c: "Choerry",
-  ch: "Choerry",
-  choery: "Choerry",
-  cw: "ChaeWon",
-  cy: "ChaeYeon",
-  sy: "SeoYeon",
-  sm: "SooMin",
-  so: "ShiOn",
-  sa: "SeoAh",
-  sl: "Sullin",
-  jw: "JiWoo",
-  jb: "JooBin",
-  jy: "JiYeon",
-  js: "JinSoul",
-  dh: "DaHyun",
-  kd: "Kaede",
-  kl: "KimLip",
-  k: "Kaede",
-  hr: "HyeRin",
-  hy: "HaYeon",
-  hj: "HeeJin",
-  hs: "HaSeul",
-  yb: "YuBin",
-  yj: "YeonJi",
-  yy: "YooYeon",
-  x: "Xinyu",
-  m: "Mayu",
-  l: "Lynn",
-  soda: "DaHyun",
-  kwak: "YeonJi",
-  yubam: "YuBin",
-  ham: "SeoYeon",
-  ssaem: "SoHyun",
-  park: "SoHyun",
-  mg: "MinGyeol",
-  hh: "HwanHee",
-  jh: "JuHo",
-  ti: "TaeIn",
-  cm: "CheongMyeong",
-  t: "Towa",
-  kh: "KyuHyuk",
-  nr: "NuRi",
-  sj: "SeongJun",
-  gb: "GyeongBeen",
-  es: "EunSoo",
 };

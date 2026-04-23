@@ -2,8 +2,7 @@
 
 import type { LiveSession } from "@repo/cosmo/server/live";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { useIntlayer } from "next-intlayer";
 import { useSearchParams } from "next/navigation";
 import { ofetch } from "ofetch";
 import { Suspense } from "react";
@@ -13,28 +12,26 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { getBaseURL } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Avatar } from "../ui/avatar-custom";
-import { Badge } from "../ui/badge";
-import { Link } from "../ui/link";
-import { Loader } from "../ui/loader";
-import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
+import { Avatar } from "../intentui/avatar-custom";
+import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
+import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 
 export default function LiveSessionListRender() {
-  const t = useTranslations("live");
+  const content = useIntlayer("live");
   const { selectedArtists } = useCosmoArtist();
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">{t("title")}</h2>
-          <Badge intent="warning">{t("alpha")}</Badge>
+          <h2 className="text-xl font-semibold">{content.title.value}</h2>
         </div>
-        <p className="text-muted-fg text-sm">{t("description")}</p>
+        <span className="text-muted-fg text-sm">{content.description.value}</span>
       </div>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Tabs aria-label={t("tabs_label")} className="w-full">
+            <Tabs aria-label={content.tabs_label.value} className="w-full">
               <TabList className="w-fit">
                 {selectedArtists.map((artist) => (
                   <Tab key={artist.id} id={artist.id} aria-label={artist.name}>
@@ -64,7 +61,7 @@ export default function LiveSessionListRender() {
 }
 
 function LiveSessionList({ artistId }: { artistId: string }) {
-  const t = useTranslations("live");
+  const content = useIntlayer("live");
   const query = useSuspenseQuery({
     queryKey: ["live-session", artistId],
     queryFn: async () => {
@@ -76,7 +73,7 @@ function LiveSessionList({ artistId }: { artistId: string }) {
       });
       return result;
     },
-    staleTime: 5 * 1000,
+    staleTime: 1000 * 60 * 5,
   });
 
   return (
@@ -86,13 +83,15 @@ function LiveSessionList({ artistId }: { artistId: string }) {
           <LiveSessionCard key={live.id} live={live} />
         ))}
       </div>
-      {query.data.length === 0 && <div className="flex justify-center">{t("no_live")}</div>}
+      {query.data.length === 0 && (
+        <div className="flex justify-center">{content.no_live.value}</div>
+      )}
     </>
   );
 }
 
 function LiveSessionCard({ live }: { live: LiveSession }) {
-  const t = useTranslations("live");
+  const content = useIntlayer("live");
   const searchParams = useSearchParams();
   return (
     <Link
@@ -100,15 +99,14 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
     >
       <div className="flex flex-col gap-2">
         <div className="relative aspect-square overflow-hidden rounded">
-          <Image
-            className="size-full object-cover object-center"
-            fill
+          <img
+            className="absolute size-full object-cover object-center"
             src={live.thumbnailImage}
             alt={live.title}
           />
           {live.status === "in_progress" && (
             <div className="absolute top-2 left-2 rounded-lg bg-rose-500 px-1.5 py-0.5 text-sm font-semibold text-white shadow">
-              {t("live_badge")}
+              {content.live_badge.value}
             </div>
           )}
         </div>

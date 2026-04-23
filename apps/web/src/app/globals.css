@@ -1,16 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 @plugin "tailwindcss-react-aria-components";
 
 @variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans:
-    var(--font-inter), var(--font-noto-sans-kr), var(--font-noto-sans-sc), ui-sans-serif, system-ui,
+    var(--font-body), var(--font-noto-sans-kr), var(--font-noto-sans-sc), ui-sans-serif, system-ui,
     sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono:
-    var(--font-geist-mono), "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas",
-    '"Liberation Mono"', '"Courier New"', "monospace";
+  --font-mono: var(--font-fira-code);
 
   --font-sans--font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   --font-mono--font-feature-settings: "ss02", "zero";
@@ -94,6 +94,12 @@
   }
 
   --color-accent-solid: var(--accent-solid);
+
+  --font-body: var(--font-google-sans-flex);
+
+  --font-fira-code: var(--font-fira-code);
+
+  --font-google-sans-flex: var(--font-google-sans-flex);
 }
 
 :root {

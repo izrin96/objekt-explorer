@@ -2,7 +2,7 @@
 
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -10,10 +10,10 @@ import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Button, buttonStyles } from "../ui/button";
-import { Link } from "../ui/link";
-import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem } from "../ui/menu";
+import { Button, buttonStyles } from "../intentui/button";
+import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
+import { Menu, MenuContent, MenuItem } from "../intentui/menu";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
 
 export default function MyLinkRender() {
@@ -37,14 +37,14 @@ export default function MyLinkRender() {
 }
 
 function MyLink() {
-  const t = useTranslations("link");
+  const content = useIntlayer("link");
   const { data: links } = useSuspenseQuery(orpc.profile.list.queryOptions());
 
   return (
     <div className="flex flex-col gap-4">
       <div className="w-full">
         <Link href={`/link/connect`} className={buttonStyles()}>
-          {t("link_cosmo")}
+          {content.link_cosmo.value}
         </Link>
       </div>
 
@@ -65,7 +65,7 @@ type LinkCardProps = {
 };
 
 function LinkCard({ link }: LinkCardProps) {
-  const t = useTranslations("link.card");
+  const content = useIntlayer("link");
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const nickname = parseNickname(link.address, link.nickname);
@@ -87,18 +87,18 @@ function LinkCard({ link }: LinkCardProps) {
             <h3 className="truncate font-semibold">
               <Link href={href}>{nickname}</Link>
             </h3>
-            <p className="text-muted-fg truncate font-mono text-xs">
+            <span className="text-muted-fg truncate font-mono text-xs">
               <Link href={href}>{link.address}</Link>
-            </p>
+            </span>
           </div>
           <Menu>
             <Button intent="outline" size="sq-xs">
               <EllipsisVerticalIcon className="size-5" />
             </Button>
-            <MenuContent placement="bottom right">
-              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
+            <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+              <MenuItem onAction={() => setEditOpen(true)}>{content.card.edit.value}</MenuItem>
               <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
-                {t("unlink")}
+                {content.card.unlink.value}
               </MenuItem>
             </MenuContent>
           </Menu>

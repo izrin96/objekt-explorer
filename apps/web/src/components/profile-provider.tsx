@@ -1,7 +1,7 @@
 "use client";
 
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import type { PropsWithChildren } from "react";
 
 import { TargetProvider } from "@/hooks/use-target";
@@ -27,13 +27,13 @@ export function PrivateProfileGuard({
   profile: PublicProfile;
   children: React.ReactNode;
 }) {
-  const t = useTranslations("profile");
+  const content = useIntlayer("profile");
 
   if (profile.privateProfile && !profile.isOwned) {
     return (
       <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
         <LockIcon size={72} weight="thin" />
-        {t("profile_private")}
+        {content.profile_private.value}
       </div>
     );
   }

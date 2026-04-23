@@ -1,34 +1,25 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
 import { validArtists } from "@repo/cosmo/types/common";
 import { cookies } from "next/headers";
 import * as z from "zod";
 
-import { locales } from "@/i18n/config";
+import type { Outputs } from "@/lib/orpc/server";
+import { locales } from "@/lib/utils";
 
+import { getArtists } from "../../artist";
+import { parseSelectedArtists } from "../../cookie";
 import { setUserLocale } from "../../locale";
 import { fetchFilterData } from "../../objekt";
 import { pub } from "../orpc";
 
 export const configRouter = {
-  getArtists: pub.handler(async () => {
-    const cookie = await cookies();
-    const value = cookie.get("artists")?.value;
-
-    if (value === undefined) return [];
-
-    try {
-      return JSON.parse(value) as ValidArtist[];
-    } catch {
-      return [];
-    }
-  }),
+  getSelectedArtists: pub.handler(parseSelectedArtists),
 
   getFilterData: pub.handler(fetchFilterData),
 
   setArtists: pub.input(z.enum(validArtists).array()).handler(async ({ input: artists }) => {
     const cookie = await cookies();
     cookie.set("artists", JSON.stringify(artists), {
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 12 * 60 * 60 * 24 * 30,
       sameSite: "lax",
       httpOnly: true,
       secure: true,
@@ -38,4 +29,8 @@ export const configRouter = {
   setLocale: pub.input(z.enum(locales)).handler(async ({ input: locale }) => {
     await setUserLocale(locale);
   }),
+
+  getArtists: pub.handler(getArtists),
 };
+
+export type FilterDataOutput = Outputs["config"]["getFilterData"];

@@ -1,11 +1,10 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { parseAsNumberLiteral, useQueryState } from "nuqs";
 import {
   createContext,
   type PropsWithChildren,
-  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -29,7 +28,7 @@ type ProviderProps = PropsWithChildren<{
 }>;
 
 export function ObjektColumnProvider({ children, initialColumn = null }: ProviderProps) {
-  const t = useTranslations("column_override");
+  const content = useIntlayer("column_override");
   const isTablet = useMediaQuery("(min-width: 640px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [queryColumn] = useColumnFilter();
@@ -51,13 +50,10 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
 
   const columns = overrideColumn ?? columnStore;
 
-  const setColumns = useCallback(
-    (column: number) => {
-      setOverrideColumn(null);
-      setColumnStore(column);
-    },
-    [setColumnStore],
-  );
+  const setColumns = (column: number) => {
+    setOverrideColumn(null);
+    setColumnStore(column);
+  };
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -72,17 +68,17 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
       !toastShown.current
     ) {
       toastShown.current = true;
-      toast(t("title"), {
-        description: t("description", { count: String(newOverride) }),
+      toast(content.title.value, {
+        description: content.description({ count: String(newOverride) }).value,
         action: {
-          label: t("revert"),
+          label: content.revert.value,
           onClick: () => setOverrideColumn(null),
         },
         classNames: {
           cancelButton: "!bg-muted",
         },
         cancel: {
-          label: t("dismiss"),
+          label: content.dismiss.value,
           onClick: () => {},
         },
         duration: 5000,
@@ -91,7 +87,7 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
     } else if (newOverride === null || newOverride === undefined) {
       toastShown.current = false;
     }
-  }, [hasHydrated, initialColumn, queryColumn, t]);
+  }, [hasHydrated, initialColumn, queryColumn]);
 
   useEffect(() => {
     if (!hasHydrated || !breakpointReady) return;

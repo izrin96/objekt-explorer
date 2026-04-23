@@ -1,17 +1,17 @@
-FROM oven/bun:alpine AS base
+FROM oven/bun:1.3.13-slim AS base
 WORKDIR /app
 
 # prune monorepo
 FROM base AS prune
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
-RUN bunx turbo@2.8.20 prune web --docker
+RUN bunx turbo@2.9.6 prune web --docker
 
 # dependencies & build
 FROM base AS build
 COPY --from=prune /app/out/bun.lock ./bun.lock
 COPY --from=prune /app/out/json/ .
-RUN bun install
+RUN bun install --frozen-lockfile
 COPY --from=prune /app/out/full/ .
 
 ARG NEXT_PUBLIC_UMAMI_SCRIPT_URL
@@ -66,7 +66,7 @@ RUN bun run --filter web build:prod
 FROM base AS runner
 
 # Install curl for healthchecks
-RUN apk add --no-cache curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

@@ -5,7 +5,7 @@ import { Addresses } from "@repo/lib";
 import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import dynamic from "next/dynamic";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useRef } from "react";
@@ -13,10 +13,10 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import ErrorFallbackRender from "@/components/error-boundary";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
+import { Badge } from "@/components/intentui/badge";
+import { Card } from "@/components/intentui/card";
+import { Loader } from "@/components/intentui/loader";
 import ObjektModal, { useObjektModal } from "@/components/objekt/objekt-modal";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Loader } from "@/components/ui/loader";
 import UserLink from "@/components/user-link";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -57,7 +57,7 @@ function ProfileTradesRender() {
 }
 
 function ProfileTrades() {
-  const t = useTranslations("trades");
+  const content = useIntlayer("trades");
   const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
   const profile = useTarget((a) => a.profile)!;
   const [filters] = useFilters();
@@ -84,7 +84,7 @@ function ProfileTrades() {
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 60 * 5,
     retry: false,
   });
 
@@ -94,7 +94,7 @@ function ProfileTrades() {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <p>{t("history_private")}</p>
+        <span>{content.history_private.value}</span>
       </div>
     );
   }
@@ -121,7 +121,7 @@ function ProfileTradesVirtualizer({
   rows: AggregatedTransfer[];
   address: string;
 }) {
-  const t = useTranslations("trades.table_headers");
+  const content = useIntlayer("trades");
   const parentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
@@ -133,11 +133,13 @@ function ProfileTradesVirtualizer({
   return (
     <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
       <div className="flex min-w-fit border-b">
-        <div className="min-w-[210px] flex-1 px-3 py-2.5">{t("date")}</div>
-        <div className="min-w-[240px] flex-1 px-3 py-2.5">{t("objekt")}</div>
-        <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{t("serial")}</div>
-        <div className="min-w-[130px] flex-1 px-3 py-2.5">{t("action")}</div>
-        <div className="min-w-[200px] flex-1 px-3 py-2.5">{t("user")}</div>
+        <div className="min-w-[210px] flex-1 px-3 py-2.5">{content.table_headers.date.value}</div>
+        <div className="min-w-[240px] flex-1 px-3 py-2.5">{content.table_headers.objekt.value}</div>
+        <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">
+          {content.table_headers.serial.value}
+        </div>
+        <div className="min-w-[130px] flex-1 px-3 py-2.5">{content.table_headers.action.value}</div>
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">{content.table_headers.user.value}</div>
       </div>
 
       <div
@@ -182,18 +184,18 @@ const RowsRender = memo(function RowsRender({
 });
 
 function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }) {
-  const t = useTranslations("trades");
+  const content = useIntlayer("trades");
   const ctx = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const user = isReceiver ? (
     row.transfer.from === Addresses.NULL ? (
-      <span className="text-muted-fg font-mono">{t("cosmo")}</span>
+      <span className="text-muted-fg font-mono">{content.cosmo.value}</span>
     ) : (
       <UserLink address={row.transfer.from} nickname={row.nickname.from} />
     )
   ) : row.transfer.to === Addresses.SPIN ? (
-    <span className="text-muted-fg font-mono">{t("cosmo_spin")}</span>
+    <span className="text-muted-fg font-mono">{content.cosmo_spin.value}</span>
   ) : (
     <UserLink address={row.transfer.to} nickname={row.nickname.to} />
   );
@@ -213,7 +215,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
       <div className="min-w-[130px] flex-1 px-3 py-2.5">
         <Badge className="text-xs" intent={isReceiver ? "info" : "danger"}>
-          {isReceiver ? t("actions.received_from") : t("actions.sent_to")}
+          {isReceiver ? content.actions.received_from.value : content.actions.sent_to.value}
         </Badge>
       </div>
       <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>

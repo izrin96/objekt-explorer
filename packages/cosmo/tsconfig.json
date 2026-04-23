@@ -4,6 +4,7 @@
   "exclude": ["node_modules", ".turbo"],
 
   "compilerOptions": {
+    "rootDir": "./src",
     "lib": ["ESNext"],
     "moduleResolution": "bundler",
     "module": "ESNext",

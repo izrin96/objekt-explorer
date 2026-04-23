@@ -9,15 +9,15 @@
   "scripts": {
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsgo --noEmit",
     "format": "oxfmt ."
   },
   "dependencies": {
     "@repo/db": "workspace:*",
-    "drizzle-orm": "^1.0.0-beta.19-dca1773"
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
-    "@types/bun": "^1.3.11"
+    "@types/bun": "catalog:dev"
   }
 }

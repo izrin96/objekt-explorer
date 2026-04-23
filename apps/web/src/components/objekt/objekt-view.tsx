@@ -1,24 +1,22 @@
 import { NumberFormatter } from "@internationalized/number";
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useTranslations } from "next-intl";
-import NextImage from "next/image";
+import { useIntlayer } from "next-intlayer";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
-import { replaceUrlSize } from "@/lib/utils";
-import { cn } from "@/utils/classes";
+import { replaceUrlSize, cn, getUserLocale } from "@/lib/utils";
 
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Popover, PopoverContent } from "../ui/popover";
+import { Badge } from "../intentui/badge";
+import { Button } from "../intentui/button";
+import { Popover, PopoverContent } from "../intentui/popover";
 import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
 
-function formatListPrice(price: number, currency: string): string {
+function formatPrice(price: number, currency: string): string {
   try {
-    return new NumberFormatter(Intl.DateTimeFormat().resolvedOptions().locale, {
+    return new NumberFormatter(getUserLocale(), {
       style: "currency",
       currency,
     }).format(price);
@@ -51,7 +49,7 @@ export default function ObjektView({
   children,
   onSetPrice,
 }: Props) {
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const [ref, { width }] = useElementSize();
   const [loaded, setLoaded] = useState(false);
   const [objekt] = objekts;
@@ -67,9 +65,9 @@ export default function ObjektView({
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
 
-  const hasListPrice = objekt.listPrice !== undefined && objekt.listPrice !== null;
+  const hasPrice = objekt.price !== undefined && objekt.price !== null;
   const showPriceContent =
-    listCurrency && (objekt.isQyop || hasListPrice || objekt.note || onSetPrice !== undefined);
+    listCurrency && (objekt.isQyop || hasPrice || objekt.note || onSetPrice !== undefined);
   const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
@@ -77,13 +75,13 @@ export default function ObjektView({
       <div
         ref={ref}
         className={cn(
-          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md transition-all",
+          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md transition-opacity",
           "contain-layout contain-paint",
-          isSelected && "bg-fg outline-[calc(var(--width)*0.03)]",
+          isSelected && "bg-fg outline-[calc(var(--width)*0.034)]",
           !loaded && "opacity-0",
         )}
       >
-        <NextImage
+        <img
           draggable={false}
           onClick={ctx.handleClick}
           className="h-full w-full object-cover"
@@ -113,15 +111,15 @@ export default function ObjektView({
                   className={cn("font-semibold", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
-                  {t("qyop")}
+                  {content.qyop.value}
                 </Badge>
-              ) : hasListPrice ? (
+              ) : hasPrice ? (
                 <Badge
                   intent="secondary"
                   className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
-                  {formatListPrice(objekt.listPrice!, listCurrency)}
+                  {formatPrice(objekt.price!, listCurrency)}
                 </Badge>
               ) : (
                 onSetPrice && (
@@ -130,7 +128,7 @@ export default function ObjektView({
                     className="cursor-pointer font-semibold"
                     onClick={onSetPrice}
                   >
-                    {t("set_price")}
+                    {content.set_price.value}
                   </Badge>
                 )
               )}
@@ -141,7 +139,7 @@ export default function ObjektView({
                   </Button>
                   <PopoverContent arrow className="max-w-72">
                     <div className="p-3 text-sm">
-                      <span className="text-muted-fg">{t("note")}: </span>
+                      <span className="text-muted-fg">{content.note.value}: </span>
                       <span className="text-fg">{objekt.note}</span>
                     </div>
                   </PopoverContent>
@@ -162,7 +160,7 @@ export default function ObjektView({
             </Badge>
           )}
 
-          {unobtainable && <Badge intent="danger">{t("unobtainable")}</Badge>}
+          {unobtainable && <Badge intent="danger">{content.unobtainable.value}</Badge>}
         </div>
       )}
     </div>

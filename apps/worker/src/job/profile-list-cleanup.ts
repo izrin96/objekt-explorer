@@ -7,11 +7,9 @@ import {
   setProfileLists,
   getProfileLists,
 } from "@repo/lib/server/redis-profile-lists";
-import { RedisClient } from "bun";
 import { inArray, eq, and } from "drizzle-orm";
 
-const redisPubSubUrl = process.env.REDIS_PUBSUB_URL;
-const redisPubSub = redisPubSubUrl ? new RedisClient(redisPubSubUrl) : null;
+import { pubsub } from "@/lib/pubsub";
 
 type TransferData = {
   from: string;
@@ -23,14 +21,9 @@ type TransferData = {
 };
 
 void (async () => {
-  if (!redisPubSub) {
-    console.warn("[Profile List Cleanup] REDIS_PUBSUB_URL not set, skipping subscription");
-    return;
-  }
-
   console.log("[Profile List Cleanup] Subscribing to transfers channel");
 
-  await redisPubSub.subscribe("transfers", async (message, channel) => {
+  await pubsub.subscribe("transfers", async (message, channel) => {
     if (channel === "transfers") {
       try {
         const transfers = JSON.parse(message) as TransferData[];

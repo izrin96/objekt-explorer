@@ -14,19 +14,21 @@ export function useSession() {
 export function useUserProfiles() {
   const { data: session } = useSession();
 
-  return useQuery({
-    ...orpc.profile.list.queryOptions(),
-    enabled: session !== null,
-  });
+  return useQuery(
+    orpc.profile.list.queryOptions({
+      enabled: session !== null,
+    }),
+  );
 }
 
 export function useUserLists() {
   const { data: session } = useSession();
 
-  return useQuery({
-    ...orpc.list.list.queryOptions(),
-    enabled: session !== null,
-  });
+  return useQuery(
+    orpc.list.list.queryOptions({
+      enabled: session !== null,
+    }),
+  );
 }
 
 export function useProfileAuthed() {

@@ -5,12 +5,12 @@ import { motion } from "motion/react";
 
 import { SITE_NAME } from "@/lib/utils";
 
-import { Link } from "./ui/link";
+import { Link } from "./intentui/link";
 
 export default function AppLogo() {
   return (
     <Link href="/">
-      <motion.div className="flex items-center gap-2" whileHover="hover">
+      <motion.div className="flex h-8 items-center gap-2" whileHover="hover">
         <motion.div
           variants={{
             initial: { rotate: 0 },

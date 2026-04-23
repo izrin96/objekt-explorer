@@ -10,14 +10,14 @@ import {
   useStreamVideoClient,
   type VideoPlaceholderProps,
 } from "@stream-io/video-react-sdk";
-import Image from "next/image";
 import { type CSSProperties, useEffect, useState } from "react";
 
 import { useLiveSession } from "@/hooks/use-live-session";
 
-import { Button } from "../ui/button";
-import { Popover, PopoverContent } from "../ui/popover";
-import { Slider, SliderFill, SliderThumb, SliderTrack } from "../ui/slider";
+import { Button } from "../intentui/button";
+import { Popover, PopoverContent } from "../intentui/popover";
+import { Slider, SliderFill, SliderThumb, SliderTrack } from "../intentui/slider";
+import Portal from "../portal";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";
@@ -28,6 +28,7 @@ export const CustomLivestreamPlayer = (props: { callType: string; callId: string
   const client = useStreamVideoClient();
 
   const [call, setCall] = useState<Call>();
+
   useEffect(() => {
     if (!client) return;
     const myCall = client.call(callType, callId);
@@ -56,7 +57,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   const liveSession = useLiveSession();
   const { participant } = useParticipantViewContext();
   return (
-    <div className="flex aspect-9/16 h-full w-full items-center justify-center" style={style}>
+    <div className="flex h-full w-full items-center justify-center" style={style}>
       <div
         className="relative h-24 w-24 rounded-full outline-4 outline-(--color)"
         style={
@@ -65,9 +66,8 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
           } as CSSProperties
         }
       >
-        <Image
-          fill
-          className="size-full rounded-full object-contain object-center"
+        <img
+          className="absolute size-full rounded-full object-contain object-center"
           src={liveSession.channel.profileImageUrl}
           alt={participant.name}
         />
@@ -76,16 +76,24 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   );
 };
 
-function LiveControl() {
+function CustomParticipantViewUI() {
   const toggleFullscreen = useToggleFullScreen();
+
+  return (
+    <Portal to="#fullscreen-control-content">
+      <Button intent="outline" size="sq-sm" onPress={toggleFullscreen}>
+        <CornersOutIcon />
+      </Button>
+    </Portal>
+  );
+}
+
+function LiveControl() {
   return (
     <>
       <LiveDuration />
       <ParticipantCounter />
       <LiveVolumeControl />
-      <Button intent="outline" size="sq-sm" onPress={toggleFullscreen}>
-        <CornersOutIcon />
-      </Button>
     </>
   );
 }
@@ -148,36 +156,48 @@ const CustomLivestreamLayout = () => {
   const { useParticipants } = useCallStateHooks();
   const [currentSpeaker] = useParticipants();
   const [open, setOpen] = useState(false);
+
   return (
-    <div className="relative">
+    <>
       {currentSpeaker ? (
         <>
-          <ParticipantView
-            PictureInPicturePlaceholder={null}
-            className="relative flex aspect-9/16 h-[calc(100svh-140px)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
-            // render when video is disabled
-            VideoPlaceholder={CustomVideoPlaceholder}
-            // render after video element
-            ParticipantViewUI={
-              <LiveFooter>
-                <LiveControl />
-              </LiveFooter>
-            }
-            participant={currentSpeaker}
-            muteAudio={!open}
-            key={`${open}`}
-          />
-          {!open && (
-            <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
-              <Button intent="primary" onPress={() => setOpen((prev) => !prev)}>
-                Unmute
-              </Button>
-            </div>
-          )}
+          <div className="relative">
+            <ParticipantView
+              PictureInPicturePlaceholder={null}
+              className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
+              // render when video is disabled
+              VideoPlaceholder={CustomVideoPlaceholder}
+              // render after video element
+              ParticipantViewUI={<CustomParticipantViewUI />}
+              participant={currentSpeaker}
+              muteAudio={!open}
+              key={`${open}`}
+            />
+            {!open && (
+              <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
+                <Button intent="primary" onPress={() => setOpen((prev) => !prev)}>
+                  Unmute
+                </Button>
+              </div>
+            )}
+          </div>
+          <LiveFooter>
+            <LiveControl />
+            <div className="contents" id="fullscreen-control-content"></div>
+          </LiveFooter>
         </>
       ) : (
-        <LiveEnded />
+        <LiveEndedLayout />
       )}
-    </div>
+    </>
   );
 };
+
+export function LiveEndedLayout() {
+  return (
+    <>
+      <LiveEnded />
+      <LiveFooter />
+    </>
+  );
+}

@@ -10,10 +10,10 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { PropsWithChildren } from "react";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { cn } from "@/utils/classes";
+import { cn } from "@/lib/utils";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent } from "../intentui/menu";
 
 export function ObjektSelect({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts as [ValidObjekt];
@@ -41,7 +41,7 @@ export function ObjektOverlay({
   isPin?: boolean;
   isLocked?: boolean;
 }) {
-  if (!isPin && !isLocked) return;
+  if (!isPin && !isLocked) return null;
   return (
     <div className="pointer-events-none flex items-start justify-start gap-[.2em] self-start justify-self-start overflow-hidden rounded-lg bg-(--objekt-bg-color) p-1 text-(--objekt-text-color)">
       {isPin && <PushPinIcon weight="bold" className="size-2 sm:size-3" />}
@@ -56,11 +56,13 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
       <Button
         size="sq-xs"
         intent="plain"
-        className="pressed:block bg-bg/80 text-fg hover:bg-bg hidden px-2 group-hover:block"
+        className="pressed:block bg-bg/80 text-fg hover:bg-bg pressed:bg-bg hidden px-2 group-hover:block"
       >
         <DotsThreeVerticalIcon className="size-3" weight="bold" />
       </Button>
-      <MenuContent placement="bottom right">{children}</MenuContent>
+      <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+        {children}
+      </MenuContent>
     </Menu>
   );
 }

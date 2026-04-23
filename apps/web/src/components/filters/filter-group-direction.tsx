@@ -1,16 +1,16 @@
 "use client";
 
 import { SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Toggle } from "../ui/toggle";
+import { Toggle } from "../intentui/toggle";
 
 export default function GroupDirectionFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
-  if (!filters.group_by) return;
+  if (!filters.group_by) return null;
   return (
     <Toggle
       intent="outline"
@@ -28,7 +28,7 @@ export default function GroupDirectionFilter() {
       ) : (
         <SortAscendingIcon data-slot="icon" />
       )}
-      {filters.group_dir === "asc" ? t("asc") : t("desc")}
+      {filters.group_dir === "asc" ? content.asc.value : content.desc.value}
     </Toggle>
   );
 }

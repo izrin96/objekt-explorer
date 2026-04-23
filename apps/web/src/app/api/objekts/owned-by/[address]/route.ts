@@ -1,10 +1,15 @@
-import { validArtists } from "@repo/cosmo/types/common";
+import {
+  validArtists,
+  validCustomSorts,
+  validOnlineTypes,
+  validSortDirection,
+} from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { and, desc, eq, getColumns, inArray, lt, lte, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, getColumns, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import * as z from "zod";
 
@@ -17,18 +22,175 @@ type Params = {
   }>;
 };
 
-const PER_PAGE = 10000;
+const PER_PAGE = 8000;
+
+// Cursor schema - flexible for different sort modes
+const cursorSchema = z.object({
+  receivedAt: z.string().optional(),
+  serial: z.coerce.number().optional(),
+  collectionNo: z.string().optional(),
+  id: z.string(),
+});
 
 const schema = z.object({
-  artist: z.enum(validArtists).array(),
   at: z.string().optional(),
-  cursor: z
-    .object({
-      receivedAt: z.string(),
-      id: z.string(),
-    })
+  cursor: cursorSchema.optional(),
+  artist: z.enum(validArtists).array().optional(),
+  member: z.array(z.string()).optional(),
+  class: z.array(z.string()).optional(),
+  season: z.array(z.string()).optional(),
+  onOffline: z.array(z.enum(validOnlineTypes)).optional(),
+  transferable: z
+    .enum(["true", "false"])
+    .transform((v) => v === "true")
     .optional(),
+  collection: z.string().array().optional(),
+  sort: z.enum(validCustomSorts).optional(),
+  sort_dir: z.enum(validSortDirection).optional(),
+  includeCount: z
+    .enum(["true", "false"])
+    .transform((v) => v === "true")
+    .optional(),
+  limit: z.number().optional(),
 });
+
+type Query = z.infer<typeof schema>;
+
+function buildCollectionFilters(query: Query) {
+  const filters = [];
+
+  if (query.artist?.length) {
+    filters.push(
+      inArray(
+        collections.artist,
+        query.artist.map((a) => a.toLowerCase()),
+      ),
+    );
+  }
+
+  if (query.member?.length) {
+    filters.push(inArray(collections.member, query.member));
+  }
+
+  if (query.class?.length) {
+    filters.push(inArray(collections.class, query.class));
+  }
+
+  if (query.season?.length) {
+    filters.push(inArray(collections.season, query.season));
+  }
+
+  if (query.onOffline?.length) {
+    filters.push(inArray(collections.onOffline, query.onOffline));
+  }
+
+  if (query.collection?.length) {
+    filters.push(inArray(collections.collectionNo, query.collection));
+  }
+
+  return filters;
+}
+
+function buildObjektFilters(query: Query) {
+  const filters = [];
+
+  if (query.transferable !== undefined) {
+    filters.push(eq(objekts.transferable, query.transferable));
+  }
+
+  return filters;
+}
+
+function getSortConfig(query: Query) {
+  const sort = query.sort ?? "date";
+  const sortDir = query.sort_dir ?? "desc";
+  const isAsc = sortDir === "asc";
+
+  switch (sort) {
+    case "serial":
+      return {
+        orderBy: isAsc
+          ? [asc(objekts.serial), asc(objekts.id)]
+          : [desc(objekts.serial), desc(objekts.id)],
+        cursorWhere:
+          query.cursor?.serial !== undefined
+            ? isAsc
+              ? or(
+                  gt(objekts.serial, query.cursor.serial),
+                  and(eq(objekts.serial, query.cursor.serial), gt(objekts.id, query.cursor.id)),
+                )
+              : or(
+                  lt(objekts.serial, query.cursor.serial),
+                  and(eq(objekts.serial, query.cursor.serial), lt(objekts.id, query.cursor.id)),
+                )
+            : undefined,
+        nextCursor: (lastResult: { objekt: { serial: number; id: string } }) => ({
+          serial: lastResult.objekt.serial,
+          id: lastResult.objekt.id,
+        }),
+      };
+
+    case "collectionNo":
+      return {
+        orderBy: isAsc
+          ? [asc(collections.collectionNo), asc(objekts.id)]
+          : [desc(collections.collectionNo), desc(objekts.id)],
+        cursorWhere: query.cursor?.collectionNo
+          ? isAsc
+            ? or(
+                gt(collections.collectionNo, query.cursor.collectionNo),
+                and(
+                  eq(collections.collectionNo, query.cursor.collectionNo),
+                  gt(objekts.id, query.cursor.id),
+                ),
+              )
+            : or(
+                lt(collections.collectionNo, query.cursor.collectionNo),
+                and(
+                  eq(collections.collectionNo, query.cursor.collectionNo),
+                  lt(objekts.id, query.cursor.id),
+                ),
+              )
+          : undefined,
+        nextCursor: (lastResult: {
+          collection: { collectionNo: string };
+          objekt: { id: string };
+        }) => ({
+          collectionNo: lastResult.collection.collectionNo,
+          id: lastResult.objekt.id,
+        }),
+      };
+
+    // date (default)
+    default:
+      return {
+        orderBy: isAsc
+          ? [asc(objekts.receivedAt), asc(objekts.id)]
+          : [desc(objekts.receivedAt), desc(objekts.id)],
+        cursorWhere: query.cursor?.receivedAt
+          ? isAsc
+            ? or(
+                gt(objekts.receivedAt, query.cursor.receivedAt),
+                and(
+                  eq(objekts.receivedAt, query.cursor.receivedAt),
+                  gt(objekts.id, query.cursor.id),
+                ),
+              )
+            : or(
+                lt(objekts.receivedAt, query.cursor.receivedAt),
+                and(
+                  eq(objekts.receivedAt, query.cursor.receivedAt),
+                  lt(objekts.id, query.cursor.id),
+                ),
+              )
+          : undefined,
+        nextCursor: (lastResult: { objekt: { receivedAt: Date | string; id: string } }) => ({
+          receivedAt: new Date(lastResult.objekt.receivedAt).toISOString(),
+          id: lastResult.objekt.id,
+        }),
+      };
+  }
+}
 
 export async function GET(request: NextRequest, props: Params) {
   const [session, params] = await Promise.all([getSession(), props.params]);
@@ -64,6 +226,12 @@ export async function GET(request: NextRequest, props: Params) {
       });
   }
 
+  const collectionFilters = buildCollectionFilters(query);
+  const objektFilters = buildObjektFilters(query);
+  const sortConfig = getSortConfig(query);
+  const isFirstPage = !query.cursor;
+  const limit = query.limit ?? PER_PAGE;
+
   // snapshot
   if (query.at) {
     const latest = indexer.$with("latest").as(
@@ -83,7 +251,7 @@ export async function GET(request: NextRequest, props: Params) {
         .orderBy(transfers.objektId, desc(transfers.timestamp)),
     );
 
-    const results = await indexer
+    const mainQuery = indexer
       .with(latest)
       .select({
         objekt: {
@@ -99,47 +267,47 @@ export async function GET(request: NextRequest, props: Params) {
         and(
           eq(latest.to, addr),
           ne(collections.slug, "empty-collection"),
-          ...(query.artist.length
-            ? [
-                inArray(
-                  collections.artist,
-                  query.artist.map((a) => a.toLowerCase()),
-                ),
-              ]
-            : []),
-          ...(query.cursor
-            ? [
-                // sql`(${latest.timestamp}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
-                or(
-                  lt(latest.timestamp, query.cursor.receivedAt),
-                  and(
-                    eq(latest.timestamp, query.cursor.receivedAt),
-                    lt(objekts.id, query.cursor.id),
-                  ),
-                ),
-              ]
-            : []),
+          ...collectionFilters,
+          ...objektFilters,
+          sortConfig.cursorWhere,
         ),
       )
-      .orderBy(desc(latest.timestamp), desc(objekts.id))
-      .limit(PER_PAGE + 1);
+      .orderBy(...sortConfig.orderBy)
+      .limit(limit + 1);
 
-    const hasNext = results.length > PER_PAGE;
-    const nextCursor = hasNext
-      ? {
-          receivedAt: new Date(results[PER_PAGE - 1]!.objekt.receivedAt).toISOString(),
-          id: results[PER_PAGE - 1]!.objekt.id,
-        }
-      : undefined;
+    const countQuery =
+      query.includeCount && isFirstPage
+        ? indexer
+            .with(latest)
+            .select({ count: count() })
+            .from(latest)
+            .innerJoin(objekts, eq(latest.objektId, objekts.id))
+            .innerJoin(collections, eq(collections.id, objekts.collectionId))
+            .where(
+              and(
+                eq(latest.to, addr),
+                ne(collections.slug, "empty-collection"),
+                ...collectionFilters,
+                ...objektFilters,
+              ),
+            )
+        : null;
+
+    const [results, countResult] = await Promise.all([mainQuery, countQuery]);
+
+    const hasNext = results.length > limit;
+    const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
+    const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
 
     return Response.json({
       nextCursor,
-      objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+      objekts: results.slice(0, limit).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+      total,
     });
   }
 
   // current owner
-  const results = await indexer
+  const mainQuery = indexer
     .select({
       objekt: objekts,
       collection: getCollectionColumns(),
@@ -149,56 +317,60 @@ export async function GET(request: NextRequest, props: Params) {
     .where(
       and(
         eq(objekts.owner, addr),
-        ...(query.cursor
-          ? [
-              // sql`(${objekts.receivedAt}, ${objekts.id}) < (${new Date(query.cursor.receivedAt)}, ${query.cursor.id})`,
-              or(
-                lt(objekts.receivedAt, query.cursor.receivedAt),
-                and(
-                  eq(objekts.receivedAt, query.cursor.receivedAt),
-                  lt(objekts.id, query.cursor.id),
-                ),
-              ),
-            ]
-          : []),
-        ...(query.artist.length
-          ? [
-              inArray(
-                collections.artist,
-                query.artist.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
         ne(collections.slug, "empty-collection"),
+        ...collectionFilters,
+        ...objektFilters,
+        sortConfig.cursorWhere,
       ),
     )
-    .orderBy(desc(objekts.receivedAt), desc(objekts.id))
-    .limit(PER_PAGE + 1);
+    .orderBy(...sortConfig.orderBy)
+    .limit(limit + 1);
 
-  const hasNext = results.length > PER_PAGE;
-  const nextCursor = hasNext
-    ? {
-        receivedAt: new Date(results[PER_PAGE - 1]!.objekt.receivedAt).toISOString(),
-        id: results[PER_PAGE - 1]!.objekt.id,
-      }
-    : undefined;
+  const countQuery =
+    query.includeCount && isFirstPage
+      ? indexer
+          .select({ count: count() })
+          .from(objekts)
+          .innerJoin(collections, eq(objekts.collectionId, collections.id))
+          .where(
+            and(
+              eq(objekts.owner, addr),
+              ne(collections.slug, "empty-collection"),
+              ...collectionFilters,
+              ...objektFilters,
+            ),
+          )
+      : null;
+
+  const [results, countResult] = await Promise.all([mainQuery, countQuery]);
+  const total = countResult ? (countResult[0]?.count ?? 0) : undefined;
+
+  const hasNext = results.length > limit;
+  const nextCursor = hasNext ? sortConfig.nextCursor(results[limit - 1]!) : undefined;
 
   return Response.json({
     nextCursor,
-    objekts: results.slice(0, PER_PAGE).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    objekts: results.slice(0, limit).map((a) => mapOwnedObjekt(a.objekt, a.collection)),
+    total,
   });
 }
 
-function parseParams(params: URLSearchParams): z.infer<typeof schema> {
+function parseParams(params: URLSearchParams): Query {
   const result = schema.safeParse({
-    artist: params.getAll("artist"),
     at: params.get("at") ?? undefined,
     cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
+    artist: params.getAll("artist").length ? params.getAll("artist") : undefined,
+    member: params.getAll("member").length ? params.getAll("member") : undefined,
+    class: params.getAll("class").length ? params.getAll("class") : undefined,
+    season: params.getAll("season").length ? params.getAll("season") : undefined,
+    onOffline: params.getAll("onOffline").length ? params.getAll("onOffline") : undefined,
+    transferable: params.get("transferable") ?? undefined,
+    collection: params.getAll("collection").length ? params.getAll("collection") : undefined,
+    sort: params.get("sort") ?? undefined,
+    sort_dir: params.get("sort_dir") ?? undefined,
+    includeCount: params.get("includeCount") ?? undefined,
+    limit: params.get("limit") ? Number(params.get("limit")) : undefined,
   });
 
-  return result.success
-    ? result.data
-    : {
-        artist: [],
-      };
+  return result.success ? result.data : {};
 }

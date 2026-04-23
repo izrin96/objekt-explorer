@@ -1,19 +1,19 @@
 "use client";
 
 import type { ValidArtist } from "@repo/cosmo/types/common";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function ArtistFilter() {
   const { selectedArtists } = useCosmoArtist();
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.artist ?? []);
 
@@ -31,7 +31,7 @@ export default function ArtistFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.artist}>
-        {t("artist")}
+        {content.artist.value}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {selectedArtists.map((item) => (

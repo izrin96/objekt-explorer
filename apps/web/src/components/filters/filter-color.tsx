@@ -2,25 +2,25 @@
 
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { type Color, parseColor } from "@react-stately/color";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { type CSSProperties, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { ColorArea } from "../ui/color-area";
-import { ColorField } from "../ui/color-field";
-import { ColorPicker, EyeDropper } from "../ui/color-picker";
-import { ColorSlider, ColorSliderTrack } from "../ui/color-slider";
-import { ColorSwatch } from "../ui/color-swatch";
-import { ColorThumb } from "../ui/color-thumb";
-import { Input } from "../ui/input";
-import { Popover, PopoverBody, PopoverContent } from "../ui/popover";
+import { Button } from "../intentui/button";
+import { ColorArea } from "../intentui/color-area";
+import { ColorField } from "../intentui/color-field";
+import { ColorPicker, EyeDropper } from "../intentui/color-picker";
+import { ColorSlider, ColorSliderTrack } from "../intentui/color-slider";
+import { ColorSwatch } from "../intentui/color-swatch";
+import { ColorThumb } from "../intentui/color-thumb";
+import { Input } from "../intentui/input";
+import { Popover, PopoverBody, PopoverContent } from "../intentui/popover";
 import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   return (
@@ -42,7 +42,7 @@ export default function ColorFilter() {
             }
           >
             <XIcon data-slot="icon" />
-            {t("clear_color")}
+            {content.clear_color.value}
           </Button>
         </>
       )}
@@ -56,7 +56,7 @@ interface ColorPickerControlProps {
 }
 
 function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [localColor, setLocalColor] = useState(initialValue);
   const [color, setColor] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 60);
@@ -83,7 +83,7 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
             data-slot="control"
           >
             <ColorSwatch className="[--color-swatch-size:--spacing(5)]" />
-            {t("color")}
+            {content.color.value}
           </Button>
           <PopoverContent>
             <PopoverBody className="space-y-2 py-3 [--gutter:--spacing(3)]">

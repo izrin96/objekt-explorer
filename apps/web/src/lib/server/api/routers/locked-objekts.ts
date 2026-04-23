@@ -3,8 +3,6 @@ import { lockedObjekts } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
-import type { Outputs } from "@/lib/orpc/server";
-
 import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
@@ -38,12 +36,15 @@ export const lockedObjektsRouter = {
         .delete(lockedObjekts)
         .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
 
-      await db.insert(lockedObjekts).values(
-        tokenIds.map((tokenId) => ({
-          address,
-          tokenId,
-        })),
-      );
+      await db
+        .insert(lockedObjekts)
+        .values(
+          tokenIds.map((tokenId) => ({
+            address,
+            tokenId,
+          })),
+        )
+        .onConflictDoNothing();
     }),
 
   batchUnlock: authed
@@ -63,5 +64,3 @@ export const lockedObjektsRouter = {
         .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
     }),
 };
-
-export type LockListOutput = Outputs["lockedObjekt"]["list"];

@@ -1,18 +1,18 @@
 "use client";
 
 import { type ValidEdition, validEdition } from "@repo/cosmo/types/common";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
 
 import { useFilters } from "@/hooks/use-filters";
 import { getEditionStr } from "@/lib/utils";
 
-import { Button } from "../ui/button";
-import { Menu, MenuContent, MenuItem, MenuLabel } from "../ui/menu";
+import { Button } from "../intentui/button";
+import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function EditionFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.edition);
 
@@ -29,7 +29,7 @@ export default function EditionFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.edition?.length}>
-        {t("edition")}
+        {content.edition.value}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {validEdition.map((item) => (

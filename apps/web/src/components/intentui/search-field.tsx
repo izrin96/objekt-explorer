@@ -1,0 +1,43 @@
+"use client";
+
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/20/solid";
+import { Button } from "react-aria-components/Button";
+import type { InputProps } from "react-aria-components/Input";
+import {
+  SearchField as SearchFieldPrimitive,
+  type SearchFieldProps,
+} from "react-aria-components/SearchField";
+import { twJoin } from "tailwind-merge";
+
+import { fieldStyles } from "@/components/intentui/field";
+import { cx } from "@/lib/primitive";
+
+import { Input, InputGroup } from "./input";
+
+export function SearchField({ className, ...props }: SearchFieldProps) {
+  return (
+    <SearchFieldPrimitive
+      data-slot="control"
+      {...props}
+      aria-label={props["aria-label"] ?? "Search"}
+      className={cx(fieldStyles({ className: "group/search-field" }), className)}
+    />
+  );
+}
+
+export function SearchInput(props: InputProps) {
+  return (
+    <InputGroup className="[--input-gutter-end:--spacing(8)]">
+      <MagnifyingGlassIcon className="in-disabled:opacity-50" />
+      <Input {...props} />
+      <Button
+        className={twJoin(
+          "touch-target pressed:text-fg text-muted-fg hover:text-fg grid place-content-center group-empty/search-field:invisible",
+          "px-2.5 py-1.5 text-sm/5",
+        )}
+      >
+        <XMarkIcon className="size-4" />
+      </Button>
+    </InputGroup>
+  );
+}

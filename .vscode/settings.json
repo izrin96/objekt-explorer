@@ -1,11 +1,10 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
   "editor.defaultFormatter": "oxc.oxc-vscode",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.oxc": "always"
   },
-  "typescript.experimental.useTsgo": false,
+  "js/ts.experimental.useTsgo": true,
   "oxc.typeAware": true,
   "files.watcherExclude": {
     "**/routeTree.gen.ts": true
@@ -37,5 +36,39 @@
   "[json5]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
-  "tailwindCSS.lint.suggestCanonicalClasses": "ignore"
+  "[css]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[graphql]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[handlebars]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[less]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[vue-html]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "tailwindCSS.lint.suggestCanonicalClasses": "ignore",
+  "tailwindCSS.classFunctions": ["tv"],
+  "emmet.showExpandedAbbreviation": "never",
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }

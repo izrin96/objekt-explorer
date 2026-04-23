@@ -1,19 +1,35 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useDeferredValue } from "react";
+import { useDeferredValue, useMemo } from "react";
 
+import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
 
+import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
-import { useObjektFilter } from "./use-objekt-filter";
 import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useCollectionObjekts() {
-  const filter = useObjektFilter();
   const shape = useShapeObjekts();
   const { selectedArtistIds } = useCosmoArtist();
-  const query = useSuspenseQuery(collectionOptions(selectedArtistIds));
   const [filters] = useFilters();
-  const filtered = filter(query.data);
-  return useDeferredValue({ shaped: shape(filtered), filtered, filters });
+  const deferredFilters = useDeferredValue(filters);
+  const rarityMap = useCollectionRarity();
+
+  const serverFilters = {
+    artist: selectedArtistIds,
+  };
+  const query = useSuspenseQuery(collectionOptions(serverFilters));
+
+  const result = useMemo(() => {
+    const filtered = filterObjekts(deferredFilters, query.data);
+    return {
+      shaped: shape(filtered, deferredFilters, false, rarityMap),
+      filtered,
+      filters: deferredFilters,
+      isStale: filters !== deferredFilters,
+    };
+  }, [shape, deferredFilters, query.data, filters, rarityMap]);
+
+  return result;
 }

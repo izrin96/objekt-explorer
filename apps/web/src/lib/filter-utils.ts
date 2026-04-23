@@ -135,7 +135,7 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
       return false;
     }
 
-    if (filters.locked !== null && isObjektOwned(a) && a.isLocked !== filters.locked) {
+    if (filters.locked !== null && isObjektOwned(a) && (a.isLocked ?? false) !== filters.locked) {
       return false;
     }
 
@@ -163,8 +163,74 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
   });
 }
 
-export function compareByArray<T>(valid: readonly T[], a: T, b: T) {
-  const posA = valid.indexOf(a);
-  const posB = valid.indexOf(b);
-  return posA - posB;
+export function sortObjekts(
+  data: ValidObjekt[],
+  filters: Filters,
+  compareMember: (a: string, b: string) => number,
+  compareSeason: (a: string, b: string) => number,
+  rarityMap?: Map<string, number>,
+): ValidObjekt[] {
+  let objekts = data;
+
+  const sort = filters.sort ?? "date";
+  const sortDir = filters.sort_dir ?? "desc";
+
+  if (sort === "date" || sort === "rare") {
+    if (sortDir === "desc") {
+      objekts = objekts.toSorted((a, b) => getSortDate(b) - getSortDate(a));
+    } else {
+      objekts = objekts.toSorted((a, b) => getSortDate(a) - getSortDate(b));
+    }
+
+    if (sort === "rare") {
+      if (!rarityMap) return [];
+
+      objekts = objekts.toSorted((a, b) => {
+        const countA = rarityMap.get(a.slug) ?? Infinity;
+        const countB = rarityMap.get(b.slug) ?? Infinity;
+
+        if (sortDir === "asc") {
+          return countA - countB;
+        } else {
+          return countB - countA;
+        }
+      });
+    }
+  } else if (sort === "season" || sort === "collectionNo") {
+    objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
+
+    if (sortDir === "asc") {
+      objekts = objekts.toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo));
+      if (sort === "season") {
+        objekts = objekts.toSorted((a, b) => compareSeason(a.season, b.season));
+      }
+    } else {
+      objekts = objekts.toSorted((a, b) => b.collectionNo.localeCompare(a.collectionNo));
+      if (sort === "season") {
+        objekts = objekts.toSorted((a, b) => compareSeason(b.season, a.season));
+      }
+    }
+  } else if (sort === "serial") {
+    if (sortDir === "desc") {
+      objekts = objekts.toSorted((a, b) =>
+        isObjektOwned(a) && isObjektOwned(b) ? b.serial - a.serial : 0,
+      );
+    } else {
+      objekts = objekts.toSorted((a, b) =>
+        isObjektOwned(a) && isObjektOwned(b) ? a.serial - b.serial : 0,
+      );
+    }
+  } else if (sort === "member") {
+    objekts = objekts
+      .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
+      .toSorted((a, b) => compareSeason(a.season, b.season));
+
+    if (sortDir === "asc") {
+      objekts = objekts.toSorted((a, b) => compareMember(a.member, b.member));
+    } else {
+      objekts = objekts.toSorted((a, b) => compareMember(b.member, a.member));
+    }
+  }
+
+  return objekts;
 }

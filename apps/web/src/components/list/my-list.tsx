@@ -2,7 +2,7 @@
 
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -10,11 +10,11 @@ import { orpc } from "@/lib/orpc/client";
 import { getListHref, parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Button } from "../ui/button";
-import { Link } from "../ui/link";
-import { Loader } from "../ui/loader";
-import { Menu, MenuContent, MenuItem } from "../ui/menu";
-import { Tab, TabList, TabPanel, Tabs } from "../ui/tabs";
+import { Button } from "../intentui/button";
+import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
+import { Menu, MenuContent, MenuItem } from "../intentui/menu";
+import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
 import { CreateListModal, DeleteListModal, EditListModal } from "./modal/manage-list";
 
@@ -42,28 +42,28 @@ function MyList() {
   const [addOpen, setAddOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
-  const t = useTranslations("list");
+  const content = useIntlayer("list");
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-xl font-semibold">{t("title")}</div>
+      <div className="text-xl font-semibold">{content.title.value}</div>
 
       <CreateListModal open={addOpen} setOpen={setAddOpen} />
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
+      <div className="flex w-full gap-2">
+        <Button onPress={() => setAddOpen(true)}>{content.create_button.value}</Button>
+        <Button intent="outline" onPress={() => setGenOpen(true)}>
+          {content.generate_discord_button.value}
+        </Button>
+      </div>
+
       <Tabs aria-label="Navbar" className="w-full">
         <TabList className="w-fit">
-          <Tab id="a">{t("tabs.normal")}</Tab>
-          <Tab id="b">{t("tabs.profile")}</Tab>
+          <Tab id="a">{content.tabs.normal.value}</Tab>
+          <Tab id="b">{content.tabs.profile.value}</Tab>
         </TabList>
         <TabPanel id="a" className="flex flex-col gap-4">
-          <div className="flex w-full gap-2">
-            <Button onPress={() => setAddOpen(true)}>{t("create_button")}</Button>
-            <Button intent="outline" onPress={() => setGenOpen(true)}>
-              {t("generate_discord_button")}
-            </Button>
-          </div>
-
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {lists
               .filter((list) => list.listType === "normal")
@@ -73,13 +73,6 @@ function MyList() {
           </div>
         </TabPanel>
         <TabPanel id="b" className="flex flex-col gap-4">
-          <div className="flex w-full gap-2">
-            <Button onPress={() => setAddOpen(true)}>{t("create_button")}</Button>
-            <Button intent="outline" onPress={() => setGenOpen(true)}>
-              {t("generate_discord_button")}
-            </Button>
-          </div>
-
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {lists
               .filter((list) => list.listType === "profile")
@@ -106,7 +99,7 @@ type ListCardProps = {
 function ListCard({ list }: ListCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const t = useTranslations("list.card");
+  const content = useIntlayer("list");
 
   const href = getListHref(list);
 
@@ -130,10 +123,10 @@ function ListCard({ list }: ListCardProps) {
             <Button intent="outline" size="sq-xs">
               <EllipsisVerticalIcon className="size-5" />
             </Button>
-            <MenuContent placement="bottom right">
-              <MenuItem onAction={() => setEditOpen(true)}>{t("edit")}</MenuItem>
+            <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+              <MenuItem onAction={() => setEditOpen(true)}>{content.card.edit.value}</MenuItem>
               <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
-                {t("delete")}
+                {content.card.delete.value}
               </MenuItem>
             </MenuContent>
           </Menu>

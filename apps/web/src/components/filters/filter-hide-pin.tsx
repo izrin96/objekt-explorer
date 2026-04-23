@@ -1,13 +1,13 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Toggle } from "../ui/toggle";
+import { Toggle } from "../intentui/toggle";
 
 export default function HidePinFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
@@ -19,7 +19,7 @@ export default function HidePinFilter() {
         })
       }
     >
-      {t("disable_pin")}
+      {content.disable_pin.value}
     </Toggle>
   );
 }

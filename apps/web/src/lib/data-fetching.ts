@@ -2,8 +2,8 @@ import { fetchLiveSession } from "@repo/cosmo/server/live";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { fetchList } from "./server/api/routers/list";
 import { fetchUserByIdentifier } from "./server/auth";
+import { fetchList } from "./server/list";
 import { getAccessToken } from "./server/token";
 
 export const getUserByIdentifier = cache(async (identifier: string) => {

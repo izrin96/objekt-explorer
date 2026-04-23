@@ -1,16 +1,16 @@
 "use client";
 
 import { QuestionMarkIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
 
-import { Button } from "../ui/button";
-import { Input, InputGroup } from "../ui/input";
-import { Popover, PopoverContent } from "../ui/popover";
-import { TextField } from "../ui/text-field";
+import { Button } from "../intentui/button";
+import { Input, InputGroup } from "../intentui/input";
+import { Popover, PopoverContent } from "../intentui/popover";
+import { TextField } from "../intentui/text-field";
 
 export default function SearchFilter() {
   const [filters, setFilters] = useFilters();
@@ -30,9 +30,9 @@ interface SearchFilterFieldProps {
 function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
   const [localQuery, setLocalQuery] = useState(initialValue);
   const ref = useRef<HTMLInputElement>(null!);
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [query, setQuery] = useState(initialValue);
-  const debouncedCommit = useDebounceCallback(onCommit, 250);
+  const debouncedCommit = useDebounceCallback(onCommit, 80);
 
   if (initialValue !== localQuery) {
     setLocalQuery(initialValue);
@@ -70,7 +70,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       aria-label="Search"
     >
       <InputGroup>
-        <Input ref={ref} placeholder={t("quick_search")} />
+        <Input ref={ref} placeholder={content.quick_search.value} />
         {query.length > 0 ? (
           <Button intent="plain" size="sq-xs" onPress={() => handleChange("")}>
             <XIcon data-slot="icon" />
@@ -82,21 +82,21 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
             </Button>
             <PopoverContent className="max-w-sm">
               <div className="flex flex-col gap-2 p-6 text-sm">
-                <span>{t("search_help.intro")}</span>
+                <span>{content.search_help.intro.value}</span>
                 <ul className="list-inside list-disc leading-6">
-                  <li>{t("search_help.or_operation")}</li>
-                  <li>{t("search_help.and_operation")}</li>
-                  <li>{t("search_help.not_operation")}</li>
-                  <li>{t("search_help.artist_names")}</li>
-                  <li>{t("search_help.member_short_names")}</li>
-                  <li>{t("search_help.class")}</li>
-                  <li>{t("search_help.season")}</li>
-                  <li>{t("search_help.collection_numbers")}</li>
-                  <li>{t("search_help.collection_ranges")}</li>
-                  <li>{t("search_help.serial_numbers")}</li>
-                  <li>{t("search_help.serial_ranges")}</li>
+                  <li>{content.search_help.or_operation.value}</li>
+                  <li>{content.search_help.and_operation.value}</li>
+                  <li>{content.search_help.not_operation.value}</li>
+                  <li>{content.search_help.artist_names.value}</li>
+                  <li>{content.search_help.member_short_names.value}</li>
+                  <li>{content.search_help.class.value}</li>
+                  <li>{content.search_help.season.value}</li>
+                  <li>{content.search_help.collection_numbers.value}</li>
+                  <li>{content.search_help.collection_ranges.value}</li>
+                  <li>{content.search_help.serial_numbers.value}</li>
+                  <li>{content.search_help.serial_ranges.value}</li>
                 </ul>
-                <span>{t("search_help.example")}</span>
+                <span>{content.search_help.example.value}</span>
               </div>
             </PopoverContent>
           </Popover>

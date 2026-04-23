@@ -1,38 +1,30 @@
-import type { Metadata } from "next";
-import { NextIntlClientProvider } from "next-intl";
+import type { Metadata, Viewport } from "next";
 
 import "@/app/globals.css";
-import { getLocale } from "next-intl/server";
-import { Geist_Mono, Google_Sans_Flex, Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
+import { PublicEnvScript } from "next-runtime-env";
+import { Noto_Sans_KR, Noto_Sans_SC, Fira_Code, Google_Sans_Flex } from "next/font/google";
 import { type PropsWithChildren } from "react";
 
 import "@/lib/orpc/server";
-import { Analytics } from "@/components/analytics";
+import Analytics from "@/components/analytics";
 import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
-import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
-import { FilterDataProvider } from "@/hooks/use-filter-data";
-import { orpc } from "@/lib/orpc/client";
-import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
-import { getSession } from "@/lib/server/auth";
-import { artists } from "@/lib/server/cosmo/artists";
-import { SITE_NAME } from "@/lib/utils";
-import { cn } from "@/utils/classes";
+import { getUserLocale } from "@/lib/server/locale";
+import { SITE_NAME, cn } from "@/lib/utils";
 
-const inter = Google_Sans_Flex({
-  variable: "--font-inter",
-  display: "swap",
+import { Providers } from "./providers";
+
+const googleSansFlex = Google_Sans_Flex({
   subsets: ["latin"],
   weight: "variable",
-  adjustFontFallback: false,
+  variable: "--font-google-sans-flex",
   fallback: [],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  display: "swap",
-  subsets: ["latin"],
-  weight: "variable",
+const firaCodeFiraCode = Fira_Code({
+  subsets: ["cyrillic", "cyrillic-ext", "greek", "greek-ext", "latin", "latin-ext", "symbols2"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-fira-code",
 });
 
 const notoSansKr = Noto_Sans_KR({
@@ -48,6 +40,12 @@ const notoSansSc = Noto_Sans_SC({
   weight: "variable",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: {
@@ -87,60 +85,34 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {
-  const locale = await getLocale();
+  const locale = await getUserLocale();
 
   return (
     <html
       lang={locale}
       suppressHydrationWarning
-      className={cn(inter.variable, geistMono.variable, notoSansKr.variable, notoSansSc.variable)}
+      className={cn(
+        notoSansKr.variable,
+        notoSansSc.variable,
+        googleSansFlex.variable,
+        firaCodeFiraCode.variable,
+        "[scrollbar-gutter:stable]",
+      )}
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                if (localStorage.theme === 'dark' || ((!('theme' in localStorage) || localStorage.theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.querySelector('meta[name="theme-color"]').setAttribute('content', '#09090b')
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
-        <meta name="theme-color" content="var(--bg)" />
+        <PublicEnvScript />
       </head>
-      <body className="min-h-svh font-sans antialiased">
-        <ClientProviders>
-          <Providers>
-            <Navbar />
-            <main className="mx-auto w-full">{children}</main>
-            <Analytics />
-          </Providers>
-        </ClientProviders>
+      <body className="bg-bg text-fg font-sans antialiased">
+        <div className="relative flex min-h-svh flex-col">
+          <ClientProviders>
+            <Providers locale={locale}>
+              <Navbar />
+              <main>{children}</main>
+              <Analytics />
+            </Providers>
+          </ClientProviders>
+        </div>
       </body>
     </html>
-  );
-}
-
-function Providers({ children }: PropsWithChildren) {
-  const queryClient = getQueryClient();
-
-  void queryClient.prefetchQuery(orpc.config.getArtists.queryOptions());
-
-  void queryClient.prefetchQuery({
-    queryKey: ["session"],
-    queryFn: () => getSession(),
-  });
-
-  void queryClient.prefetchQuery(orpc.config.getFilterData.queryOptions());
-
-  return (
-    <HydrateClient client={queryClient}>
-      <NextIntlClientProvider>
-        <CosmoArtistProvider artists={artists}>
-          <FilterDataProvider>{children}</FilterDataProvider>
-        </CosmoArtistProvider>
-      </NextIntlClientProvider>
-    </HydrateClient>
   );
 }

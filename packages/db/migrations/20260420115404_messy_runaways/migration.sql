@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "locked_objekts_address_token_id_idx" ON "locked_objekts" ("address","token_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "pins_address_token_id_idx" ON "pins" ("address","token_id");

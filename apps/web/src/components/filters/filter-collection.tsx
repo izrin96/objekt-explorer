@@ -1,19 +1,21 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useCallback } from "react";
-import { Autocomplete, type Key, Popover, useFilter } from "react-aria-components";
+import type { Key } from "react-aria-components";
+import { Autocomplete, useFilter } from "react-aria-components/Autocomplete";
+import { Popover } from "react-aria-components/Popover";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 
-import { Dialog } from "../ui/dialog";
-import { ListBox } from "../ui/list-box";
-import { SearchField, SearchInput } from "../ui/search-field";
-import { Select, SelectItem, SelectTrigger } from "../ui/select";
+import { Dialog } from "../intentui/dialog";
+import { ListBox } from "../intentui/list-box";
+import { SearchField, SearchInput } from "../intentui/search-field";
+import { Select, SelectItem, SelectTrigger } from "../intentui/select";
 
 export default function CollectionFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const { contains } = useFilter({ sensitivity: "base" });
   const { collections } = useFilterData();
   const [filters, setFilters] = useFilters();
@@ -30,8 +32,8 @@ export default function CollectionFilter() {
       selectionMode="multiple"
       value={selected}
       onChange={update}
-      placeholder={t("collection_no")}
-      aria-label={t("collection_no")}
+      placeholder={content.collection_no.value}
+      aria-label={content.collection_no.value}
       className="max-w-52"
     >
       <SelectTrigger />

@@ -1,28 +1,36 @@
 "use client";
 
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { usePathname } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { Header, Menu, MenuItem, MenuSection, MenuTrigger, Popover } from "react-aria-components";
+import {
+  Header,
+  Menu,
+  MenuItem,
+  MenuSection,
+  MenuTrigger,
+  Popover,
+} from "react-aria-components/Menu";
 import { twJoin, twMerge } from "tailwind-merge";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/intentui/button";
+import { Separator } from "@/components/intentui/separator";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
 
 import Changelog from "./changelog";
-import { navMenuItems } from "./navbar";
+import { Container } from "./intentui/container";
+import { MenuLabel } from "./intentui/menu";
+import { useNavMenuItems } from "./navbar";
 import { SettingsButton } from "./settings-button";
-import { Container } from "./ui/container";
-import { MenuLabel } from "./ui/menu";
 
 export function MobileNavigation() {
-  const t = useTranslations("nav");
+  const content = useIntlayer("nav");
+  const navMenuItems = useNavMenuItems();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -56,7 +64,7 @@ export function MobileNavigation() {
                     )}
                   />
                 </span>
-                <span className="sr-only">{t("toggle_menu")}</span>
+                <span className="sr-only">{content.toggle_menu.value}</span>
               </span>
             </Button>
             <Popover
@@ -74,15 +82,15 @@ export function MobileNavigation() {
             >
               <Menu className="-mt-2 outline-hidden">
                 <MenuSection>
-                  <NavHeading>{t("navigation")}</NavHeading>
+                  <NavHeading>{content.navigation.value}</NavHeading>
                   <NavLink href="/">
                     <CubeIcon className="size-5" weight="fill" />
-                    <MenuLabel>{t("home")}</MenuLabel>
+                    <MenuLabel>{content.home.value}</MenuLabel>
                   </NavLink>
                   {navMenuItems.map((menu) => (
                     <NavLink key={menu.href} href={menu.href}>
                       {menu.icon && <menu.icon className="size-5" weight="regular" />}
-                      <MenuLabel>{t(menu.translationKey)}</MenuLabel>
+                      <MenuLabel>{menu.label}</MenuLabel>
                     </NavLink>
                   ))}
                 </MenuSection>

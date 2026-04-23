@@ -1,10 +1,10 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 
 import { parseNickname } from "@/lib/utils";
 
-import { Link } from "./ui/link";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Link } from "./intentui/link";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./intentui/tooltip";
 
 export default function UserLink({
   address,
@@ -13,7 +13,7 @@ export default function UserLink({
   address?: string | null;
   nickname?: string | null;
 }) {
-  const t = useTranslations("user_link");
+  const content = useIntlayer("user_link");
   return (
     <div className="inline-flex gap-2">
       {address ? (
@@ -21,15 +21,15 @@ export default function UserLink({
           <Link href={`/@${nickname || address}`}>{parseNickname(address, nickname)}</Link>
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
-              <TooltipTrigger aria-label={t("preview")}>
+              <TooltipTrigger aria-label={content.preview.value}>
                 <InfoIcon size={16} />
               </TooltipTrigger>
-              <TooltipContent inverse>{t("nickname_not_available")}</TooltipContent>
+              <TooltipContent inverse>{content.nickname_not_available.value}</TooltipContent>
             </Tooltip>
           )}
         </>
       ) : (
-        <span className="text-muted-fg font-mono">{t("deleted")}</span>
+        <span className="text-muted-fg font-mono">{content.deleted.value}</span>
       )}
     </div>
   );

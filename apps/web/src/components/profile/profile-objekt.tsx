@@ -1,12 +1,13 @@
 "use client";
 
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
-import { useFilters } from "@/hooks/use-filters";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useTarget } from "@/hooks/use-target";
 import { useProfileAuthed, useSession } from "@/hooks/use-user";
@@ -15,17 +16,19 @@ import { isObjektOwned } from "@/lib/objekt-utils";
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
-import type { ShapedData } from "../collection/objekt-virtual-grid";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
+import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
 import { AddToList } from "../filters/objekt/add-remove-list";
 import { LockObjekt, UnlockObjekt } from "../filters/objekt/lock-unlock";
 import { PinObjekt, UnpinObjekt } from "../filters/objekt/pin-unpin";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { GenerateDiscordButton } from "../generate-discord-button";
+import { Loader } from "../intentui/loader";
 import { ObjektOverlay } from "../objekt/objekt-action";
 import {
   AddToListMenu,
+  MovePinMenuItem,
   ObjektStaticMenu,
   SelectMenuItem,
   ToggleLockMenuItem,
@@ -47,11 +50,26 @@ function ProfileObjektRender() {
     <ObjektViewProvider initialColumn={profile.gridColumns ?? undefined} modalTab="owned">
       <div className="flex flex-col gap-4">
         <ProfileObjektFilters selectRef={setSelectTarget} discordRef={setDiscordTarget} />
-        <ProfileObjekt
-          selectTarget={selectTarget}
-          discordTarget={discordTarget}
-          address={profile.address}
-        />
+
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <ProfileObjekt
+                  selectTarget={selectTarget}
+                  discordTarget={discordTarget}
+                  address={profile.address}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </div>
     </ObjektViewProvider>
   );
@@ -64,19 +82,14 @@ function ProfileObjektFilters({
   selectRef: (el: HTMLDivElement | null) => void;
   discordRef: (el: HTMLDivElement | null) => void;
 }) {
-  const { data: session } = useSession();
-  const [filters] = useFilters();
-
   return (
-    <div className="mb-2 flex flex-col gap-6">
-      <FilterContainer>
-        <div className="flex w-full flex-col gap-6">
-          <Filter discordRef={discordRef} />
-          <CheckpointPicker />
-          {session && !filters.at && <div className="contents" ref={selectRef} />}
-        </div>
-      </FilterContainer>
-    </div>
+    <FilterContainer>
+      <div className="flex w-full flex-col gap-4">
+        <Filter discordRef={discordRef} />
+        <CheckpointPicker />
+        <div className="contents" ref={selectRef} />
+      </div>
+    </FilterContainer>
   );
 }
 
@@ -93,6 +106,7 @@ function ProfileObjekt({
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, grouped, filters, hasNextPage } = useProfileObjekts();
   const isProfileAuthed = useProfileAuthed();
+  const showSelectMode = session && !filters.at && selectTarget;
 
   const renderObjekt = useCallback(
     ({ item }: { item: ValidObjekt[] }) => {
@@ -114,6 +128,12 @@ function ProfileObjekt({
                 {isProfileAuthed && isOwned && (
                   <>
                     <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
+                    {objekt.isPin && (
+                      <>
+                        <MovePinMenuItem tokenId={objekt.id} direction="up" />
+                        <MovePinMenuItem tokenId={objekt.id} direction="down" />
+                      </>
+                    )}
                     <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
                   </>
                 )}
@@ -127,6 +147,12 @@ function ProfileObjekt({
                 {isProfileAuthed && isOwned && (
                   <>
                     <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
+                    {objekt.isPin && (
+                      <>
+                        <MovePinMenuItem tokenId={objekt.id} direction="up" />
+                        <MovePinMenuItem tokenId={objekt.id} direction="down" />
+                      </>
+                    )}
                     <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
                   </>
                 )}
@@ -166,7 +192,7 @@ function ProfileObjekt({
         )}
       </FloatingSelectMode>
 
-      {selectTarget &&
+      {showSelectMode &&
         createPortal(
           <SelectMode objekts={filtered}>
             <AddToList address={address} />
@@ -189,7 +215,7 @@ function ProfileObjekt({
         grouped={filters.grouped ? grouped : undefined}
         hasNextPage={hasNextPage}
       />
-      <ObjektVirtualGrid shaped={shaped as ShapedData} renderItem={renderObjekt} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
     </>
   );
 }

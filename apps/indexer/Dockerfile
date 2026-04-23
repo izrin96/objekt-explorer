@@ -1,11 +1,11 @@
 # stage 1: prune workspace with bun
-FROM oven/bun:alpine AS pruner
+FROM oven/bun:1.3.13-slim AS pruner
 WORKDIR /app
 COPY . .
-RUN bunx turbo@2.8.20 prune indexer --docker
+RUN bunx turbo@2.9.6 prune indexer --docker
 
 # stage 2: install dependencies with bun
-FROM oven/bun:alpine AS installer
+FROM oven/bun:1.3.13-slim AS installer
 WORKDIR /app
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
@@ -13,14 +13,14 @@ RUN bun install --frozen-lockfile --ignore-scripts
 COPY --from=pruner /app/out/full/ .
 
 # stage 3: build with node
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 COPY --from=installer /app .
 # this should be kept in sync with the build script in package.json
-RUN cd apps/indexer && rm -rf lib/ && npx tsc -p tsconfig.build.json
+RUN cd apps/indexer && rm -rf lib/ && npx tsgo -p tsconfig.build.json
 
 # stage 4: run with node due to the subsquid SDK not working in bun
-FROM node:22-alpine AS runner
+FROM node:22-slim AS runner
 WORKDIR /app/apps/indexer
 ENV NODE_ENV=production
 COPY --from=builder /app/apps/indexer/lib ./lib

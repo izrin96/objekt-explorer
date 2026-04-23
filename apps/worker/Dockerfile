@@ -1,10 +1,10 @@
-FROM oven/bun:alpine AS base
+FROM oven/bun:1.3.13-slim AS base
 
 # Prune the monorepo to only include worker and its dependencies
 FROM base AS pruner
 WORKDIR /app
 COPY . .
-RUN bunx turbo@2.8.20 prune worker --docker
+RUN bunx turbo@2.9.6 prune worker --docker
 
 # Install dependencies only for pruned workspace
 FROM base AS installer
@@ -13,7 +13,7 @@ WORKDIR /app
 # Copy lockfile and package.json's from pruned workspace
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Build the project
 COPY --from=pruner /app/out/full/ .
@@ -23,7 +23,7 @@ RUN bun run build --filter=worker
 FROM base AS runner
 
 # Install curl for healthchecks
-RUN apk add --no-cache curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/apps/worker
 ENV NODE_ENV=production

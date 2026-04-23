@@ -4,13 +4,15 @@ import type { CSSProperties, PropsWithChildren } from "react";
 
 import { useLiveSession } from "@/hooks/use-live-session";
 
-import { Avatar } from "../ui/avatar-custom";
+import { Avatar } from "../intentui/avatar-custom";
 
-export default function LiveFooter({ children }: PropsWithChildren) {
+type LiveFooterProps = PropsWithChildren;
+
+export default function LiveFooter({ children }: LiveFooterProps) {
   const liveSession = useLiveSession();
 
   return (
-    <div className="absolute -bottom-[54px] flex w-full items-center gap-2">
+    <div className="flex w-full items-center gap-2">
       <div className="min-w-0 grow">
         <div className="flex items-center gap-2">
           <Avatar

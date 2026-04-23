@@ -1,14 +1,14 @@
 import type { CollectionMetadata, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { ofetch } from "ofetch";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { getBaseURL, getEditionStr } from "@/lib/utils";
 
-import { Badge } from "../ui/badge";
-import { Skeleton } from "../ui/skeleton";
+import { Badge } from "../intentui/badge";
+import { Skeleton } from "../intentui/skeleton";
 
 type PillProps = {
   label: string;
@@ -26,7 +26,7 @@ function Pill({ label, value, className }: PillProps) {
 }
 
 function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const { data, status } = useQuery({
     queryKey: ["objekts", "metadata", objekt.slug],
     queryFn: () => {
@@ -39,36 +39,34 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   if (status === "pending") {
     return (
       <>
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-6 w-16" />
-        <Skeleton className="h-6 w-20" />
-        <Skeleton className="h-6 w-33" />
+        <Skeleton className="h-5 w-20" soft />
+        <Skeleton className="h-5 w-16" soft />
+        <Skeleton className="h-5 w-20" soft />
+        <Skeleton className="h-5 w-40" soft />
       </>
     );
   }
 
   if (status === "error") {
-    return <Badge intent="danger">{t("error_fetching_metadata")}</Badge>;
+    return <Badge intent="danger">{content.error_fetching_metadata.value}</Badge>;
   }
 
-  if (status === "success") {
-    return (
-      <>
-        <Pill
-          label={objekt.onOffline === "online" ? t("copies") : t("scanned_copies")}
-          value={data.total.toLocaleString()}
-        />
-        <Pill label={t("spin")} value={data.spin.toLocaleString()} />
-        <Pill label={t("non_spin")} value={(data.total - data.spin).toLocaleString()} />
-        <Pill
-          label={t("tradable")}
-          value={`${((data.transferable / data.total) * 100.0).toFixed(
-            2,
-          )}% (${data.transferable.toLocaleString()})`}
-        />
-      </>
-    );
-  }
+  return (
+    <>
+      <Pill
+        label={objekt.onOffline === "online" ? content.copies.value : content.scanned_copies.value}
+        value={data.total.toLocaleString()}
+      />
+      <Pill label={content.spin.value} value={data.spin.toLocaleString()} />
+      <Pill label={content.non_spin.value} value={(data.total - data.spin).toLocaleString()} />
+      <Pill
+        label={content.tradable.value}
+        value={`${((data.transferable / data.total) * 100.0).toFixed(
+          2,
+        )}% (${data.transferable.toLocaleString()})`}
+      />
+    </>
+  );
 }
 
 export function AttributePanel({
@@ -78,33 +76,38 @@ export function AttributePanel({
   objekt: ValidObjekt;
   unobtainable: boolean;
 }) {
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const { getArtist } = useCosmoArtist();
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Pill label={t("artist")} value={getArtist(objekt.artist)?.title ?? ""} />
-      <Pill label={t("member")} value={objekt.member} />
-      <Pill label={t("season")} value={objekt.season} />
-      <Pill label={t("class")} value={objekt.class} />
-      {objekt.edition && <Pill label={t("edition")} value={getEditionStr(objekt.edition)} />}
+      <Pill label={content.artist.value} value={getArtist(objekt.artist)?.title ?? ""} />
+      <Pill label={content.member.value} value={objekt.member} />
+      <Pill label={content.season.value} value={objekt.season} />
+      <Pill label={content.class.value} value={objekt.class} />
+      {objekt.edition && (
+        <Pill label={content.edition.value} value={getEditionStr(objekt.edition)} />
+      )}
       <Pill
-        label={t("type")}
-        value={objekt.onOffline === "online" ? t("digital") : t("physical")}
+        label={content.type.value}
+        value={objekt.onOffline === "online" ? content.digital.value : content.physical.value}
       />
-      <Pill label={t("collection_no")} value={objekt.collectionNo} />
+      <Pill label={content.collection_no.value} value={objekt.collectionNo} />
       <Pill
-        label={t("accent_color")}
+        label={content.accent_color.value}
         value={objekt.backgroundColor.toUpperCase()}
         className="bg-(--objekt-bg-color)! text-(--objekt-text-color)!"
       />
-      <Pill label={t("text_color")} value={objekt.textColor.toUpperCase()} />
+      <Pill label={content.text_color.value} value={objekt.textColor.toUpperCase()} />
       {unobtainable && (
         <Badge intent="danger" className="font-semibold">
-          {t("unobtainable")}
+          {content.unobtainable.value}
         </Badge>
       )}
-      <Pill label={t("created_at")} value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")} />
+      <Pill
+        label={content.created_at.value}
+        value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
+      />
       <PillMetadata objekt={objekt} />
     </div>
   );

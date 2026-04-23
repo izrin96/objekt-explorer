@@ -1,3 +1,5 @@
+import { collectionsRouter } from "./collections";
+import { compareRouter } from "./compare";
 import { configRouter } from "./config";
 import { cosmoLinkRouter } from "./cosmo-link";
 import { listRouter } from "./list";
@@ -16,4 +18,6 @@ export const router = {
   lockedObjekt: lockedObjektsRouter,
   config: configRouter,
   meta: metaRouter,
+  compare: compareRouter,
+  collections: collectionsRouter,
 };

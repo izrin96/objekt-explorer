@@ -7,7 +7,7 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 import * as z from "zod";
 
 import { getUserLocale } from "../../locale";
@@ -37,9 +37,12 @@ async function assertAddressNotLinked(address: string, userId: string) {
 
   if (existing) {
     const locale = await getUserLocale();
-    const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
+    const content = useIntlayer("api_errors", locale);
     throw new ORPCError("BAD_REQUEST", {
-      message: existing.userId === userId ? t("already_linked_self") : t("already_linked_other"),
+      message:
+        existing.userId === userId
+          ? content.cosmo_link.already_linked_self.value
+          : content.cosmo_link.already_linked_other.value,
     });
   }
 }
@@ -81,9 +84,9 @@ export const cosmoLinkRouter = {
       }
       if (attempts > 5) {
         const locale = await getUserLocale();
-        const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
+        const content = useIntlayer("api_errors", locale);
         throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: t("rate_limit"),
+          message: content.cosmo_link.rate_limit.value,
         });
       }
 
@@ -113,13 +116,13 @@ export const cosmoLinkRouter = {
     .input(z.string())
     .handler(async ({ input: address, context: { session } }) => {
       const locale = await getUserLocale();
-      const t = await getTranslations({ locale, namespace: "api_errors.cosmo_link" });
+      const content = useIntlayer("api_errors", locale);
 
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);
       if (!raw) {
         throw new ORPCError("BAD_REQUEST", {
-          message: t("verification_expired"),
+          message: content.cosmo_link.verification_expired.value,
         });
       }
 
@@ -135,13 +138,13 @@ export const cosmoLinkRouter = {
       // validate that the fetched profile matches claimed data
       if (profile.nickname.toLowerCase() !== data.nickname.toLowerCase()) {
         throw new ORPCError("BAD_REQUEST", {
-          message: t("profile_mismatch"),
+          message: content.cosmo_link.profile_mismatch.value,
         });
       }
 
       if (!profile.statusMessage?.toLowerCase().includes(data.code)) {
         throw new ORPCError("BAD_REQUEST", {
-          message: t("code_not_found"),
+          message: content.cosmo_link.code_not_found.value,
         });
       }
 

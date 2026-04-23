@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Objekt Tracker - A web application for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc. Currently undergoing major refactoring from Next.js to TanStack React Start.
+Objekt Tracker - A web application for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc.
 
 ## Architecture
 
@@ -16,12 +16,13 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 - `packages/db` - Database schema (Drizzle ORM + PostgreSQL)
 - `packages/lib` - Shared utilities
 - `packages/cosmo` - Cosmo SDK (from teamreflex/cosmo-web)
-- `packages/env` - Environment variables
+- `packages/lint` - Shared oxlint configuration
+- `packages/tsconfig` - Shared TypeScript configurations
 
 **Key Technologies**:
 
-- Runtime: Bun
-- Frontend: Next.js, TanStack React Start, React 19, Tailwind CSS 4
+- Runtime: Bun 1.3.11
+- Frontend: Next.js 16, TanStack React Start + Vite, React 19, Tailwind CSS 4
 - API: ORPC (type-safe RPC) with Zod validation
 - Database: PostgreSQL 18 with Drizzle ORM
 - State: React Query (server), Zustand (client)
@@ -36,28 +37,67 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 ## Code Style
 
 - Formatter: oxfmt (configured in `.oxfmtrc.json`)
-- Linter: oxlint (configured in `.oxlintrc.json`)
+- Linter: oxlint (configured in `packages/lint/oxlint.config.ts`)
 - TypeScript strict mode enabled
 - Path alias: `@/*` maps to `src/`
 
-<!-- intent-skills:start -->
+## Development Commands
 
-# Skill mappings - when working in these areas, load the linked skill file into context.
+All commands should be run from the monorepo root using Turbo:
 
-skills:
+```bash
+# Development
+bun run dev                    # Start all dev servers
+bun run dev --filter=web       # Start specific app
 
-- task: "Route definitions, loaders, navigation, search/path params, not-found handling"
-  load: "node_modules/.bun/@tanstack+router-core@1.168.2/node_modules/@tanstack/router-core/skills/router-core/SKILL.md"
-- task: "Server functions (createServerFn), input validation, server context"
-  load: "node_modules/.bun/@tanstack+start-client-core@1.167.2/node_modules/@tanstack/start-client-core/skills/start-core/server-functions/SKILL.md"
-- task: "Server middleware, request context, client-server data passing"
-  load: "node_modules/.bun/@tanstack+start-client-core@1.167.2/node_modules/@tanstack/start-client-core/skills/start-core/middleware/SKILL.md"
-- task: "Route protection, auth guards, authenticated layouts, RBAC"
-  load: "node_modules/.bun/@tanstack+router-core@1.168.2/node_modules/@tanstack/router-core/skills/router-core/auth-and-guards/SKILL.md"
-- task: "SSR, streaming, head/meta management, document shell"
-  load: "node_modules/.bun/@tanstack+router-core@1.168.2/node_modules/@tanstack/router-core/skills/router-core/ssr/SKILL.md"
-- task: "Deployment, prerendering, SPA mode, platform config"
-  load: "node_modules/.bun/@tanstack+start-client-core@1.167.2/node_modules/@tanstack/start-client-core/skills/start-core/deployment/SKILL.md"
-- task: "UI components, shadcn theming, component styling"
-load: "node_modules/.bun/@tanstack+router-core@1.168.2/node_modules/@tanstack/router-core/skills/router-core/SKILL.md"
-<!-- intent-skills:end -->
+# Build
+bun run build                  # Build all packages and apps
+bun run build --filter=web     # Build specific app
+
+# Linting
+bun run lint                   # Lint all packages (oxlint)
+bun run lint --filter=web      # Lint specific app
+bun run lint:fix               # Lint and auto-fix
+
+# Type Checking
+bun run typecheck              # Type check all packages
+bun run typecheck --filter=web # Type check specific app
+
+# Formatting
+bun run format                 # Format all code (oxfmt)
+```
+
+## Linting (Oxlint)
+
+- Base config: `packages/lint/oxlint.config.ts`
+- Each app/package has its own `oxlint.config.ts` extending the base
+- Config uses `extends: [baseConfig]` pattern (not spread)
+
+## TypeScript Configuration
+
+- Base configs: `packages/tsconfig/`
+  - `tsconfig.base.json` - Default for packages (bundler resolution)
+  - `tsconfig.bun.json` - For Bun-based apps (includes JSX, Bun types)
+  - `tsconfig.node.json` - For strict Node.js ESM projects (NodeNext resolution)
+- All tsconfigs have explicit `include` and `exclude` fields
+- Module resolution: `bundler` (not `NodeNext`) — no `.js` extensions needed on imports
+
+## Code Style
+
+Enforced by oxlint, oxfmt, and TypeScript config. Follow strictly.
+
+- `import * as z from "zod"`, never `import { z } from "zod"`
+- All promises must be awaited or explicitly voided
+- Avoid classes (use functions/objects) and enums (use `as const` or unions)
+- 2-space indent, oxfmt handles formatting — do not add Prettier or Biome
+- while using tailwing, prefer sizes in tw units like `-5` rather than in pixels via `-[20px]`
+- while using Zod, prefer not duplicate types, just infer them from schemas
+
+## Behavior
+
+- Never `git commit`, `git push`, or run database migrations without explicit approval or being asked
+- never edit past migrations, only way is generating new one
+
+## Next.js: ALWAYS read docs before coding
+
+Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.

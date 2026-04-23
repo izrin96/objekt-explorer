@@ -1,11 +1,12 @@
 "use client";
 
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import { Suspense } from "react";
 
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import { useTarget } from "@/hooks/use-target";
+import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
 
 import ArtistFilter from "../filters/filter-artist";
 import ClassFilter from "../filters/filter-class";
@@ -22,12 +23,19 @@ import SeasonFilter from "../filters/filter-season";
 import SortFilter from "../filters/filter-sort";
 import SortDirectionFilter from "../filters/filter-sort-direction";
 import ResetFilter from "../filters/reset-filter";
-import { GenerateDiscordButton } from "../generate-discord-button";
 
-export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
+export default function Filter({
+  discordRef,
+}: {
+  discordRef: (el: HTMLDivElement | null) => void;
+}) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
   const list = useTarget((a) => a.list)!;
+
+  const sortOptions: ValidCustomSort[] =
+    list.listType === "profile" ? defaultSortDuplicateSerial : defaultSortDuplicate;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
@@ -42,7 +50,7 @@ export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
         <EditionFilter />
         <OnlineFilter />
         <ColorFilter />
-        <SortFilter allowDuplicateSort allowSerialSort={list.listType === "profile"} />
+        <SortFilter enabled={sortOptions} />
         <SortDirectionFilter />
         <CombineDuplicateFilter />
         <GroupByFilter />
@@ -51,7 +59,7 @@ export default function Filter({ objekts }: { objekts: ValidObjekt[] }) {
       <div className="flex flex-wrap gap-2">
         <ColumnFilter />
         <SearchFilter />
-        <GenerateDiscordButton objekts={objekts} />
+        <div className="contents" ref={discordRef} />
         <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
       </div>
     </div>

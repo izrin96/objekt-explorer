@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { useIntlayer } from "next-intlayer/server";
 import { redirect } from "next/navigation";
 
 import { LiveStreamingRender } from "@/components/live/live-render";
-import { env } from "@/env";
 import { getLiveSession } from "@/lib/data-fetching";
+import { env } from "@/lib/env/server";
 
 export async function generateMetadata(props: PageProps<"/live/[id]">): Promise<Metadata> {
   const params = await props.params;
-  const [live, t] = await Promise.all([getLiveSession(params.id), getTranslations("page_titles")]);
+  const live = await getLiveSession(params.id);
+  const content = useIntlayer("page_titles");
 
-  const title = t("live_detail", { title: live.title, channel: live.channel.name });
+  const title = content.live_detail({ title: live.title, channel: live.channel.name }).value;
 
   return {
     title,

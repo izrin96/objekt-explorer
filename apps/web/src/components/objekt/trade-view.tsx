@@ -15,10 +15,10 @@ import { Addresses } from "@repo/lib";
 import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { NumberField as NumberFieldPrimitive } from "react-aria-components";
+import { NumberField as NumberFieldPrimitive } from "react-aria-components/NumberField";
 import { ErrorBoundary } from "react-error-boundary";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
@@ -26,13 +26,14 @@ import { useCopyToClipboard } from "usehooks-ts";
 import { getBaseURL } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Input, InputGroup } from "../ui/input";
-import { Link } from "../ui/link";
-import { Loader } from "../ui/loader";
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../ui/table";
+import { Badge } from "../intentui/badge";
+import { Button } from "../intentui/button";
+import { Card, CardContent } from "../intentui/card";
+import { Input, InputGroup } from "../intentui/input";
+import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
+import { Skeleton } from "../intentui/skeleton";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
 import UserLink from "../user-link";
 
 type TradeViewProps = {
@@ -67,7 +68,6 @@ function TradeViewRender({ objekt, serial }: TradeViewProps) {
       const url = new URL(`/api/objekts/list/${objekt.slug}`, getBaseURL());
       return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
     },
-    staleTime: 1000 * 60,
   });
 
   return (
@@ -169,86 +169,53 @@ function Trades({
         </Button>
       </div>
 
-      <TradeTable objekt={objekt} serial={serial} />
+      <TradeTable slug={objekt.slug} serial={serial} />
     </div>
   );
 }
 
-type TransferItem = ObjektTransferResult["transfers"][number];
-
-function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number }) {
-  const [, copy] = useCopyToClipboard();
-  const t = useTranslations("objekt");
+function TradeTable({ slug, serial }: { slug: string; serial: number }) {
+  const content = useIntlayer("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: () => {
-      const url = new URL(`/api/objekts/transfers/${objekt.slug}/${serial}`, getBaseURL());
+      const url = new URL(`/api/objekts/transfers/${slug}/${serial}`, getBaseURL());
       return ofetch<ObjektTransferResult>(url.toString());
     },
-    queryKey: ["objekts", "transfer", objekt.slug, serial],
+    queryKey: ["objekts", "transfer", slug, serial],
     retry: 1,
     staleTime: 0,
   });
 
-  const handleCopy = useCallback(
-    async (tokenId: string | undefined) => {
-      await copy(tokenId ?? "");
-      toast.success(t("token_id_copied"));
-    },
-    [copy, t],
-  );
-
-  const list = useAsyncList<TransferItem>({
-    async load() {
-      return {
-        items: data?.transfers ?? [],
-        sortDescriptor: {
-          column: "timestamp",
-          direction: "descending",
-        },
-      };
-    },
-    async sort({ items, sortDescriptor }) {
-      return {
-        items: items.toSorted((a, b) => {
-          let cmp = 0;
-          if (sortDescriptor.column === "timestamp") {
-            const aTime = new Date(a.timestamp).getTime();
-            const bTime = new Date(b.timestamp).getTime();
-            if (aTime < bTime) cmp = -1;
-            else if (aTime > bTime) cmp = 1;
-            else cmp = 0;
-          }
-          if (sortDescriptor.direction === "descending") cmp *= -1;
-          return cmp;
-        }),
-      };
-    },
-  });
-
-  useEffect(() => {
-    if (data) {
-      list.reload();
-    }
-  }, [data]);
-
   if (status === "pending")
     return (
-      <div className="self-center">
-        <Loader variant="ring" />
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">{content.owner.value}</span>
+            <Skeleton className="h-[24px] w-24" soft />
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">{content.token_id.value}</span>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-[24px] w-30" soft />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">{content.transferable.value}</span>
+            <Skeleton className="h-[20px] w-8" soft />
+          </div>
+        </div>
+        <Skeleton className="h-20 w-full rounded-lg" soft />
       </div>
     );
 
   if (status === "error") return <ErrorFallbackRender resetErrorBoundary={() => refetch()} />;
 
-  const ownerNickname = data.transfers.find(
-    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
-  )?.nickname;
-
   if (data.hide) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <p>{t("objekt_private")}</p>
+        <span>{content.objekt_private.value}</span>
       </div>
     );
   }
@@ -257,20 +224,69 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <QuestionMarkIcon size={64} weight="light" />
-        <p>{t("not_found_objekt")}</p>
+        <span>{content.not_found_objekt.value}</span>
       </div>
     );
   }
+
+  return <TradeTableContent data={data} />;
+}
+
+function TradeTableContent({ data }: { data: ObjektTransferResult }) {
+  const content = useIntlayer("objekt");
+  const [, copy] = useCopyToClipboard();
+
+  const list = useAsyncList({
+    load() {
+      return {
+        items: data.transfers,
+        sortDescriptor: {
+          column: "timestamp",
+          direction: "descending",
+        },
+      };
+    },
+    getKey(item) {
+      return item.id;
+    },
+    async sort({ items, sortDescriptor }) {
+      return {
+        items: items.toSorted((a, b) => {
+          let cmp = 0;
+          if (sortDescriptor.column === "timestamp") {
+            const aTime = new Date(a.timestamp).getTime();
+            const bTime = new Date(b.timestamp).getTime();
+            cmp = aTime < bTime ? -1 : aTime > bTime ? 1 : 0;
+          }
+          if (sortDescriptor.direction === "descending") cmp *= -1;
+          return cmp;
+        }),
+      };
+    },
+  });
+
+  const ownerNickname = data.transfers.find(
+    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
+  )?.nickname;
+
+  const handleCopy = async (tokenId: string | undefined) => {
+    await copy(tokenId ?? "");
+    toast.success(content.token_id_copied.value);
+  };
+
+  useEffect(() => {
+    list.reload();
+  }, [data]);
 
   return (
     <>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{t("owner")}</span>
+          <span className="text-sm font-semibold">{content.owner.value}</span>
           <UserLink address={data.owner} nickname={ownerNickname} />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{t("token_id")}</span>
+          <span className="text-sm font-semibold">{content.token_id.value}</span>
           <div className="flex items-center gap-2">
             <Link
               href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${data.tokenId}`}
@@ -278,19 +294,19 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
               target="_blank"
             >
               {data.tokenId}
-              <ArrowTopRightOnSquareIcon className="size-4" />
+              <ArrowTopRightOnSquareIcon className="text-muted-fg size-4" />
             </Link>
             <CopyIcon
               size={16}
-              className="cursor-pointer"
+              className="text-muted-fg cursor-pointer select-none"
               onClick={() => handleCopy(data.tokenId)}
             />
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{t("transferable")}</span>
+          <span className="text-sm font-semibold">{content.transferable.value}</span>
           <Badge intent={data.transferable ? "info" : "danger"}>
-            {data.transferable ? t("yes") : t("no")}
+            {data.transferable ? content.yes.value : content.no.value}
           </Badge>
         </div>
       </div>
@@ -305,12 +321,12 @@ function TradeTable({ objekt, serial }: { objekt: ValidObjekt; serial: number })
             onSortChange={(desc) => list.sort(desc)}
           >
             <TableHeader>
-              <TableColumn isRowHeader>{t("owner")}</TableColumn>
+              <TableColumn isRowHeader>{content.owner.value}</TableColumn>
               <TableColumn id="timestamp" allowsSorting minWidth={200}>
-                {t("date")}
+                {content.date.value}
               </TableColumn>
             </TableHeader>
-            <TableBody>
+            <TableBody renderEmptyState={() => null}>
               {list.items.map((item) => (
                 <TableRow key={item.id} id={item.id}>
                   <TableCell>

@@ -1,17 +1,17 @@
 "use client";
 
 import { GearIcon } from "@phosphor-icons/react/dist/ssr";
-import { useTranslations } from "next-intl";
+import { useIntlayer } from "next-intlayer";
 import { useState } from "react";
 
+import { Button } from "./intentui/button";
 import { SettingsModal } from "./settings-modal";
-import { Button } from "./ui/button";
 
 export function SettingsButton({
   intent = "plain",
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const t = useTranslations("common.settings");
+  const content = useIntlayer("common");
   const [open, setOpen] = useState(false);
 
   return (
@@ -20,9 +20,9 @@ export function SettingsButton({
         intent={intent}
         size="sm"
         className="px-2 [--btn-icon:var(--color-fg)] sm:px-2"
-        aria-label={t("title")}
-        {...props}
+        aria-label={content.settings.title.value}
         onPress={() => setOpen(true)}
+        {...props}
       >
         <GearIcon className="size-5 sm:size-4" />
       </Button>

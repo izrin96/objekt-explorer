@@ -5,21 +5,19 @@ import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import "./globals.css";
 import { Google_Sans_Flex } from "next/font/google";
 
-import { Button } from "@/components/ui/button";
-import { SITE_NAME } from "@/lib/utils";
+import { Button } from "@/components/intentui/button";
+import { cn, SITE_NAME } from "@/lib/utils";
 
-const inter = Google_Sans_Flex({
-  variable: "--font-inter",
-  display: "swap",
+const googleSansFlex = Google_Sans_Flex({
   subsets: ["latin"],
   weight: "variable",
-  adjustFontFallback: false,
+  variable: "--font-google-sans-flex",
   fallback: [],
 });
 
 export default function GlobalError() {
   return (
-    <html lang="en" className={`dark ${inter.variable}`}>
+    <html lang="en" className={cn("dark", googleSansFlex.variable)}>
       <head>
         <title>{SITE_NAME}</title>
       </head>

@@ -32,6 +32,23 @@ const activitySchema = z.object({
 
 type ActivityParams = z.infer<typeof activitySchema>;
 
+function getCollectionFilters(query: ActivityParams): SQL[] {
+  const filters: SQL[] = [];
+  if (query.artist.length)
+    filters.push(
+      inArray(
+        collections.artist,
+        query.artist.map((a) => a.toLowerCase()),
+      ),
+    );
+  if (query.member.length) filters.push(inArray(collections.member, query.member));
+  if (query.season.length) filters.push(inArray(collections.season, query.season));
+  if (query.class.length) filters.push(inArray(collections.class, query.class));
+  if (query.on_offline.length) filters.push(inArray(collections.onOffline, query.on_offline));
+  if (query.collection.length) filters.push(inArray(collections.collectionNo, query.collection));
+  return filters;
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const query = parseParams(searchParams);
@@ -46,11 +63,11 @@ export async function GET(request: NextRequest) {
 
   const knownAddresses = await fetchKnownAddresses(addressesUnique);
 
+  const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+
   const items = slicedResults.map((t) => {
-    const from = knownAddresses.find(
-      (a) => a.address.toLowerCase() === t.transfer.from.toLowerCase(),
-    );
-    const to = knownAddresses.find((a) => a.address.toLowerCase() === t.transfer.to.toLowerCase());
+    const from = addressMap.get(t.transfer.from.toLowerCase());
+    const to = addressMap.get(t.transfer.to.toLowerCase());
 
     return {
       nickname: {
@@ -107,21 +124,7 @@ async function fetchTransfers(query: ActivityParams) {
       ]
     : [];
 
-  const collectionFilters: SQL[] = [];
-  if (query.artist.length)
-    collectionFilters.push(
-      inArray(
-        collections.artist,
-        query.artist.map((a) => a.toLowerCase()),
-      ),
-    );
-  if (query.member.length) collectionFilters.push(inArray(collections.member, query.member));
-  if (query.season.length) collectionFilters.push(inArray(collections.season, query.season));
-  if (query.class.length) collectionFilters.push(inArray(collections.class, query.class));
-  if (query.on_offline.length)
-    collectionFilters.push(inArray(collections.onOffline, query.on_offline));
-  if (query.collection.length)
-    collectionFilters.push(inArray(collections.collectionNo, query.collection));
+  const collectionFilters = getCollectionFilters(query);
 
   if (collectionFilters.length > 0) {
     const matchingCollections = await indexer

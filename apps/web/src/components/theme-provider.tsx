@@ -10,6 +10,7 @@ const ThemeProvider = ({ children, ...props }: React.ComponentProps<typeof NextT
       enableSystem
       disableTransitionOnChange
       enableColorScheme
+      themeColor="var(--bg)"
       {...props}
     >
       {children}
