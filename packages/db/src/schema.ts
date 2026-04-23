@@ -32,7 +32,7 @@ export const userAddress = pgTable(
     userId: text("user_id").references(() => user.id, {
       onDelete: "set null",
     }),
-    linkedAt: timestamp("linked_at", { mode: "string" }),
+    linkedAt: timestamp("linked_at", { mode: "string", withTimezone: true }),
     bannerImgUrl: text("banner_img_url"),
     bannerImgType: text("banner_img_type"),
     hideUser: boolean("hide_user").default(true),
@@ -44,7 +44,7 @@ export const userAddress = pgTable(
     isAbstract: boolean("is_abstract").default(false),
     gridColumns: integer("grid_columns"),
     cosmoId: integer("cosmo_id"),
-    lastCosmoCheck: timestamp("last_cosmo_check", { mode: "string" }),
+    lastCosmoCheck: timestamp("last_cosmo_check", { mode: "string", withTimezone: true }),
   },
   (t) => [
     uniqueIndex("user_address_address_idx").on(t.address),
@@ -66,7 +66,9 @@ export const lists = pgTable(
     slug: varchar("slug", { length: 12 }).notNull(),
     name: text("name").notNull(),
     hideUser: boolean("hide_user").default(true),
-    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
     gridColumns: integer("grid_columns"),
     listType: varchar("list_type", { length: 20 })
       .notNull()
@@ -100,7 +102,9 @@ export const listEntries = pgTable(
     price: real("price"),
     isQyop: boolean("is_qyop").notNull().default(false),
     note: varchar("note", { length: 255 }),
-    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
     index("list_entries_list_idx").on(t.listId),
@@ -118,7 +122,9 @@ export const pins = pgTable(
     address: citext("address", { length: 42 }).notNull(),
     tokenId: integer("token_id").notNull(),
     order: integer("order"),
-    createdAt: timestamp("created_at", { mode: "string" }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
   (t) => [
     index("pins_address_idx").on(t.address),
