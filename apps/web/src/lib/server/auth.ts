@@ -7,7 +7,7 @@ import { isAddress } from "@repo/lib";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { username } from "better-auth/plugins/username";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import type { FetchError } from "ofetch";
 import { cache } from "react";
@@ -215,14 +215,7 @@ export async function fetchUserByIdentifier(
     if (needsCheck && cachedUser.nickname) {
       const user = await safeFetchByNickname(cachedUser.nickname);
 
-      // update last check
-      await db
-        .update(userAddress)
-        .set({ lastCosmoCheck: new Date().toISOString() })
-        .where(eq(userAddress.nickname, cachedUser.nickname));
-
-      // address changed
-      if (user && user.address.toLowerCase() !== cachedUser.address.toLowerCase()) {
+      if (user) {
         await cacheUsers([
           {
             address: user.address,
@@ -237,11 +230,18 @@ export async function fetchUserByIdentifier(
       if (user === null) {
         await db
           .update(userAddress)
-          .set({ nickname: null })
+          .set({ nickname: null, cosmoId: null, lastCosmoCheck: null })
           .where(eq(userAddress.nickname, cachedUser.nickname));
 
+        // todo: use redirect instead
         return await fetchUserByIdentifier(cachedUser.address);
       }
+
+      // update last check
+      await db
+        .update(userAddress)
+        .set({ lastCosmoCheck: sql`'now'` })
+        .where(eq(userAddress.nickname, cachedUser.nickname));
     }
 
     return {
@@ -287,19 +287,41 @@ export async function cacheUsers(
     nickname: a.nickname,
     address: a.address,
     cosmoId: a.cosmoId ?? null,
+    lastCosmoCheck: sql`'now'`,
   }));
 
   try {
-    await db
-      .insert(userAddress)
-      .values(values)
-      .onConflictDoUpdate({
-        target: userAddress.address,
-        set: {
-          nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
-          cosmoId: sql`coalesce(excluded.${sql.raw(userAddress.cosmoId.name)}, ${userAddress.cosmoId})`,
-        },
-      });
+    await db.transaction(async (tx) => {
+      // clear nickname from any existing row that has the same nickname
+      // but different address (unbind before insert)
+      await tx
+        .update(userAddress)
+        .set({ nickname: null, cosmoId: null, lastCosmoCheck: null })
+        .where(
+          and(
+            inArray(
+              userAddress.nickname,
+              values.map((v) => v.nickname),
+            ),
+            notInArray(
+              userAddress.address,
+              values.map((v) => v.address),
+            ),
+          ),
+        );
+
+      await tx
+        .insert(userAddress)
+        .values(values)
+        .onConflictDoUpdate({
+          target: userAddress.address,
+          set: {
+            nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
+            cosmoId: sql`coalesce(excluded.${sql.raw(userAddress.cosmoId.name)}, ${userAddress.cosmoId})`,
+            lastCosmoCheck: sql`'now'`,
+          },
+        });
+    });
   } catch (err) {
     console.error("Bulk user caching failed:", err);
   }
