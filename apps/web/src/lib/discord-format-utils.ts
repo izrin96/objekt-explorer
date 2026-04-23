@@ -1,4 +1,3 @@
-import type { CosmoArtistWithMembersBFF } from "@repo/cosmo/types/artists";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 // Minimal type for discord formatting - only the fields we actually use
@@ -66,8 +65,8 @@ export type FormatOptions = {
   showMemberEmoji: boolean;
   groupByMode?: GroupByMode;
   style?: FormatStyle;
-  compareSeason?: (a: string, b: string) => number;
-  compareMember?: (a: string, b: string) => number;
+  compareArtistMember: (a: string, b: string) => number;
+  compareSeason: (a: string, b: string) => number;
 };
 
 function formatCollection(
@@ -114,7 +113,7 @@ function formatMemberCollections(
   if (groupBySeason) {
     const seasonGroups = Object.groupBy(collections, (a) => a.season);
     const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) =>
-      options.compareSeason ? options.compareSeason(a, b) : a.localeCompare(b),
+      options.compareSeason(a, b),
     );
 
     return seasonEntries.flatMap(([season, seasonCollections]) => {
@@ -134,36 +133,35 @@ function formatMemberCollections(
   return formatCollectionsById(collections, options, true);
 }
 
-export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, options: FormatOptions) {
-  const { groupByMode = "none", style = "default", bullet } = options;
+export function format(collections: DiscordFormatObjekt[], options: FormatOptions) {
+  const {
+    groupByMode = "none",
+    style = "default",
+    bullet,
+    compareArtistMember,
+    compareSeason,
+  } = options;
 
   if (groupByMode === "season-first") {
-    const allCollections: DiscordFormatObjekt[] = [];
-    for (const collections of collectionMap.values()) {
-      allCollections.push(...collections);
-    }
-
-    const seasonGroups = Object.groupBy(allCollections, (a) => a.season);
-    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) =>
-      options.compareSeason ? options.compareSeason(a, b) : a.localeCompare(b),
-    );
+    const seasonGroups = Object.groupBy(collections, (a) => a.season);
+    const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) => compareSeason(a, b));
 
     const results: string[] = [];
 
     for (const [season, seasonCollections] of seasonEntries) {
       if (!seasonCollections) continue;
 
-      const memberGroups = Object.groupBy(seasonCollections, (a) => a.member);
-      const memberEntries = Object.entries(memberGroups).toSorted(([a], [b]) =>
-        options.compareMember ? options.compareMember(a, b) : a.localeCompare(b),
-      );
+      const orderedMembers = makeMemberOrderedList(seasonCollections, compareArtistMember);
+      const memberMap = mapByMember(seasonCollections, orderedMembers);
 
       if (style === "compact") {
-        const memberParts = memberEntries.flatMap(([member, memberCollections]) => {
-          const formatted = formatCollectionsById(memberCollections!, options, false);
-          const name = formatMemberName(member, options);
-          return formatted.length > 0 ? `**${name}** ${formatted.join(" ")}` : [];
-        });
+        const memberParts = Array.from(memberMap.entries()).flatMap(
+          ([member, memberCollections]) => {
+            const formatted = formatCollectionsById(memberCollections, options, false);
+            const name = formatMemberName(member, options);
+            return formatted.length > 0 ? `**${name}** ${formatted.join(" ")}` : [];
+          },
+        );
 
         if (memberParts.length > 0) {
           results.push(
@@ -171,13 +169,15 @@ export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, option
           );
         }
       } else {
-        const memberLines = memberEntries.flatMap(([member, memberCollections]) => {
-          const formatted = formatCollectionsById(memberCollections!, options, false);
-          const name = formatMemberName(member, options);
-          return formatted.length > 0
-            ? [`${bullet ? "- " : ""}${name} ${formatted.join(" ")}`]
-            : [];
-        });
+        const memberLines = Array.from(memberMap.entries()).flatMap(
+          ([member, memberCollections]) => {
+            const formatted = formatCollectionsById(memberCollections, options, false);
+            const name = formatMemberName(member, options);
+            return formatted.length > 0
+              ? [`${bullet ? "- " : ""}${name} ${formatted.join(" ")}`]
+              : [];
+          },
+        );
 
         if (memberLines.length > 0) {
           results.push(`**${getSeasonEmoji(season)}${season}**`, ...memberLines);
@@ -188,9 +188,17 @@ export function format(collectionMap: Map<string, DiscordFormatObjekt[]>, option
     return results.join("\n");
   }
 
-  const lines = Array.from(collectionMap.entries())
-    .map(([member, collections]) => {
-      const formatted = formatMemberCollections(collections, options, groupByMode === "season");
+  // group by member
+  const orderedMembers = makeMemberOrderedList(collections, compareArtistMember);
+  const memberMap = mapByMember(collections, orderedMembers);
+
+  const lines = Array.from(memberMap.entries())
+    .map(([member, memberCollections]) => {
+      const formatted = formatMemberCollections(
+        memberCollections,
+        options,
+        groupByMode === "season",
+      );
 
       if (formatted.length === 0) {
         return "";
@@ -230,11 +238,9 @@ export function mapByMember(
 
 export function makeMemberOrderedList(
   entries: DiscordFormatObjekt[],
-  artists: CosmoArtistWithMembersBFF[],
+  compareArtistMember: (memberA: string, memberB: string) => number,
 ) {
-  const artistsMembers = artists.flatMap((a) => a.artistMembers);
-
-  const grouped = Object.groupBy(entries, (a) => `${a.artist}-${a.member}`);
+  const grouped = Object.groupBy(entries, (a) => a.member);
 
   const groups = Object.values(grouped).filter(
     (group): group is DiscordFormatObjekt[] => group !== undefined,
@@ -242,20 +248,9 @@ export function makeMemberOrderedList(
 
   const members = groups
     .toSorted((a, b) => {
-      const firstA = a[0]!;
-      const firstB = b[0]!;
-      const posA = artistsMembers.findIndex((p) => p.name === firstA.member);
-      const posB = artistsMembers.findIndex((p) => p.name === firstB.member);
-
-      return posA - posB;
-    })
-    .toSorted((a, b) => {
-      const firstA = a[0]!;
-      const firstB = b[0]!;
-      const posA = artists.findIndex((p) => p.name === firstA.artist);
-      const posB = artists.findIndex((p) => p.name === firstB.artist);
-
-      return posA - posB;
+      const memberA = a[0]!.member;
+      const memberB = b[0]!.member;
+      return compareArtistMember(memberA, memberB);
     })
     .map((group) => group[0]!.member);
 

@@ -33,13 +33,7 @@ import { Textarea } from "@/components/intentui/textarea";
 import Portal from "@/components/portal";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
-import {
-  type FormatStyle,
-  format,
-  type GroupByMode,
-  makeMemberOrderedList,
-  mapByMember,
-} from "@/lib/discord-format-utils";
+import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
 import { getBaseURL, getListHref, parseNickname } from "@/lib/utils";
 
@@ -80,7 +74,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
 function Content() {
   const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
   const [formatText, setFormatText] = useState("");
-  const { artists, compareMember } = useCosmoArtist();
+  const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
   const content = useIntlayer("generate_discord");
 
@@ -136,20 +130,20 @@ function Content() {
           const { have: haveCollections, want: wantCollections } = data;
           const output: string[] = [];
 
+          const options = {
+            showQuantity: formData.showCount,
+            lowercaseCollection: formData.lowercaseCollection,
+            bullet: formData.bullet,
+            showMemberEmoji: formData.showMemberEmoji,
+            groupByMode: formData.groupBy,
+            style: formData.style,
+            compareArtistMember,
+            compareSeason,
+          };
+
           // Format have list if selected
           if (haveListSlug && haveCollections.length > 0) {
-            const haveMembers = makeMemberOrderedList(haveCollections, artists);
-            const haveCollectionsMap = mapByMember(haveCollections, haveMembers);
-            const haveFormatted = format(haveCollectionsMap, {
-              showQuantity: formData.showCount,
-              lowercaseCollection: formData.lowercaseCollection,
-              bullet: formData.bullet,
-              showMemberEmoji: formData.showMemberEmoji,
-              groupByMode: formData.groupBy,
-              style: formData.style,
-              compareSeason,
-              compareMember,
-            });
+            const haveFormatted = format(haveCollections, options);
 
             output.push("## Have", "", haveFormatted);
 
@@ -164,18 +158,7 @@ function Content() {
               output.push(""); // Add spacing between sections
             }
 
-            const wantMembers = makeMemberOrderedList(wantCollections, artists);
-            const wantCollectionsMap = mapByMember(wantCollections, wantMembers);
-            const wantFormatted = format(wantCollectionsMap, {
-              showQuantity: formData.showCount,
-              lowercaseCollection: formData.lowercaseCollection,
-              bullet: formData.bullet,
-              showMemberEmoji: formData.showMemberEmoji,
-              groupByMode: formData.groupBy,
-              style: formData.style,
-              compareSeason,
-              compareMember,
-            });
+            const wantFormatted = format(wantCollections, options);
 
             output.push("## Want", "", wantFormatted);
 
