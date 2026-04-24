@@ -1,5 +1,6 @@
 "use client";
 
+import NextLink from "next/link";
 import { createContext, use } from "react";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
 import { SelectionIndicator } from "react-aria-components/SelectionIndicator";
@@ -124,6 +125,13 @@ const Tab = ({ className, ref, ...props }: TabProps) => {
         "href" in props ? "cursor-pointer" : "cursor-default",
         className,
       )}
+      render={(domProps) =>
+        "href" in domProps ? (
+          <NextLink {...domProps} href={domProps.href as any} prefetch={false} />
+        ) : (
+          <span {...domProps} />
+        )
+      }
     >
       {composeRenderProps(props.children, (children) => (
         <>
