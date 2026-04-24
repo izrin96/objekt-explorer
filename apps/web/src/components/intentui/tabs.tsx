@@ -126,10 +126,10 @@ const Tab = ({ className, ref, ...props }: TabProps) => {
         className,
       )}
       render={(domProps) =>
-        "href" in domProps ? (
+        "href" in domProps && domProps.href !== undefined ? (
           <NextLink {...domProps} href={domProps.href as any} prefetch={false} />
         ) : (
-          <span {...domProps} />
+          <div {...(domProps as any)} />
         )
       }
     >
