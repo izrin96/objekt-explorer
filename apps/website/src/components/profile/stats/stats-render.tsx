@@ -1,31 +1,39 @@
-import { seasonColors } from "@repo/cosmo/types/common";
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import type React from "react";
 import { Suspense, useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { useIntlayer } from "react-intlayer";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import ErrorFallbackRender from "@/components/error-boundary";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Loader } from "@/components/ui/loader";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/intentui/card";
+import {
+  Chart,
+  type ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/intentui/chart";
+import { Loader } from "@/components/intentui/loader";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
-import { useObjektFilter } from "@/hooks/use-objekt-filter";
 import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useTarget } from "@/hooks/use-target";
-import { useTranslations } from "@/lib/i18n/context";
+import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
-import { cn, tradeableFilter } from "@/lib/utils";
+import { getSeasonColor, tradeableFilter, cn } from "@/lib/utils";
 
 import StatsFilter from "./stats-filter";
 
-export default ProfileStatsRender;
-
-export function ProfileStatsRender() {
+export default function ProfileStatsRender() {
   return (
     <div className="flex flex-col gap-4">
       <StatsFilter />
@@ -49,30 +57,31 @@ export function ProfileStatsRender() {
 }
 
 function ProfileStats() {
-  const t = useTranslations("stats");
+  const content = useIntlayer("stats");
   const profile = useTarget((a) => a.profile)!;
-  const filter = useObjektFilter();
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
+  const serverFilters = {
+    artist: selectedArtistIds,
+    at: filters.at ?? undefined,
+  };
+
   const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
     profile.address,
-    selectedArtistIds,
-    filters.at ?? undefined,
+    serverFilters,
   );
-  const collectionQuery = useSuspenseQuery(
-    collectionOptions(selectedArtistIds, !hasNextPage, filters.at ?? undefined),
-  );
+  const collectionQuery = useSuspenseQuery(collectionOptions(serverFilters, !hasNextPage));
 
-  const objekts = filter(allOwnedObjekts);
+  const objekts = filterObjekts(filters, allOwnedObjekts);
 
-  const collections = filter(collectionQuery.data);
+  const collections = filterObjekts(filters, collectionQuery.data);
 
   return (
     <div className="flex flex-col gap-4">
       {hasNextPage && (
         <div className="flex items-center gap-2 text-sm font-semibold">
-          {t("loading_objekts")} <Loader variant="ring" className="size-4" />
+          {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
         </div>
       )}
 
@@ -86,7 +95,7 @@ function ProfileStats() {
 }
 
 function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
-  const t = useTranslations("stats.breakdown_member");
+  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
@@ -112,8 +121,8 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <CardHeader className="items-center pb-0">
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
+        <CardTitle>{content.breakdown_member.title.value}</CardTitle>
+        <CardDescription>{content.breakdown_member.description.value}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart
@@ -178,13 +187,13 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
 }
 
 function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
-  const t = useTranslations("stats.breakdown_season");
+  const content = useIntlayer("stats");
   const { seasons } = useFilterData();
 
   const chartData = useMemo(() => {
-    const data = seasons.map((season, i) => ({
+    const data = seasons.map((season) => ({
       name: season,
-      fill: seasonColors[i],
+      fill: getSeasonColor(season),
       count: objekts.filter((obj) => obj.season === season).length,
     }));
     const total = data.reduce((sum, d) => sum + d.count, 0);
@@ -200,8 +209,8 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <CardHeader className="items-center pb-0">
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
+        <CardTitle>{content.breakdown_season.title.value}</CardTitle>
+        <CardDescription>{content.breakdown_season.description.value}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart
@@ -272,8 +281,7 @@ function MemberProgressChart({
   objekts: ValidObjekt[];
   collections: ValidObjekt[];
 }) {
-  const t = useTranslations("stats.member_progress");
-  const [filters] = useFilters();
+  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
@@ -302,11 +310,11 @@ function MemberProgressChart({
         };
       })
       .toSorted((a, b) => b.percentage - a.percentage);
-  }, [selectedArtists, objekts, collections, filters]);
+  }, [selectedArtists, objekts, collections]);
 
   const chartConfig = {
     percentage: {
-      label: t("percentage_label"),
+      label: content.member_progress.percentage_label.value,
       color: "var(--chart-1)",
     },
   } satisfies ChartConfig;
@@ -314,8 +322,8 @@ function MemberProgressChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t("title")}</CardTitle>
-        <CardDescription>{t("description")}</CardDescription>
+        <CardTitle>{content.member_progress.title.value}</CardTitle>
+        <CardDescription>{content.member_progress.description.value}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart

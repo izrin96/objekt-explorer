@@ -1,14 +1,14 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useIntlayer } from "react-intlayer";
 
 import { useTarget } from "@/hooks/use-target";
-import { useTranslations } from "@/lib/i18n/context";
 import { orpc } from "@/lib/orpc/client";
-import { getListToOptions } from "@/lib/utils";
+import { getListHref } from "@/lib/utils";
 
-import { Link } from "../ui/link";
+import { Link } from "../intentui/link";
 
 export default function ProfileLists() {
-  const t = useTranslations("list");
+  const content = useIntlayer("list");
   const profile = useTarget((a) => a.profile)!;
   const { data } = useSuspenseQuery(
     orpc.list.profileLists.queryOptions({
@@ -20,18 +20,20 @@ export default function ProfileLists() {
     <div className="flex flex-col gap-6">
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-          <p className="text-muted-fg text-sm">{t("no_lists_found")}</p>
-          {profile.isOwned && <p className="text-muted-fg text-sm">{t("no_lists_hint")}</p>}
+          <span className="text-muted-fg text-sm">{content.no_lists_found.value}</span>
+          {profile.isOwned && (
+            <span className="text-muted-fg text-sm">{content.no_lists_hint.value}</span>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((list) => {
-            const to = getListToOptions(list);
+            const href = getListHref(list);
 
             return (
               <Link
                 key={list.slug}
-                {...to}
+                to={href}
                 className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
               >
                 <div className="flex items-center gap-2">

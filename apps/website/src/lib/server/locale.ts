@@ -1,17 +1,17 @@
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 
-import { defaultLocale, type Locale } from "@/i18n/config";
+import type { Locale } from "../utils";
 
+const defaultLocale = "en";
 const COOKIE_NAME = "NEXT_LOCALE";
 
-export function getUserLocale() {
-  return (getCookie(COOKIE_NAME) as Locale) || defaultLocale;
+export async function getUserLocale(): Promise<Locale> {
+  const cookie = getCookie(COOKIE_NAME);
+  return cookie === "en" || cookie === "ko" ? cookie : defaultLocale;
 }
 
-export function setUserLocale(locale: Locale) {
+export async function setUserLocale(locale: Locale) {
   setCookie(COOKIE_NAME, locale, {
-    maxAge: 60 * 60 * 24 * 365,
-    sameSite: "lax",
-    path: "/",
+    maxAge: 12 * 60 * 60 * 24 * 30,
   });
 }

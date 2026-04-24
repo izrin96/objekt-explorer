@@ -1,20 +1,24 @@
 import { useMutation } from "@tanstack/react-query";
+import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
-import { useTranslations } from "@/lib/i18n/context";
 import { orpc } from "@/lib/orpc/client";
-import type { PinListOutput } from "@/lib/server/api/routers/pins";
+
+import { useObjektSelect } from "../use-objekt-select";
 
 export function useBatchPin() {
-  const t = useTranslations("actions.pin");
+  const content = useIntlayer("actions");
+  const reset = useObjektSelect((a) => a.reset);
 
   const batchPin = useMutation(
     orpc.pins.batchPin.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
-        const previousPins = client.getQueryData<PinListOutput>(
-          orpc.pins.list.queryKey({ input: address }),
-        );
-        client.setQueryData(orpc.pins.list.queryKey({ input: address }), (old = []) => {
+        await client.cancelQueries(orpc.pins.list.queryOptions({ input: address }));
+
+        const queryKey = orpc.pins.list.queryKey({ input: address });
+        const snapshot = client.getQueryData(queryKey);
+
+        client.setQueryData(queryKey, (old = []) => {
           const tokenIdSet = new Set(tokenIds.map(String));
           return [
             ...tokenIds.map((tokenId, index) => ({
@@ -24,18 +28,31 @@ export function useBatchPin() {
             ...old.filter((item) => !tokenIdSet.has(item.tokenId)),
           ];
         });
-        return { previousPins };
+
+        return { snapshot };
       },
       onSuccess: (_, { tokenIds }) => {
-        const key = tokenIds.length > 1 ? "success_multiple" : "success_single";
-        toast.success(t(key, { count: tokenIds.length.toLocaleString() }));
+        const message =
+          tokenIds.length > 1
+            ? content.pin.success_multiple({ count: tokenIds.length.toLocaleString() }).value
+            : content.pin.success_single.value;
+        toast.success(message);
+        reset();
       },
-      onError: (_err, { tokenIds, address }, context, { client }) => {
-        if (context?.previousPins) {
-          client.setQueryData(orpc.pins.list.queryKey({ input: address }), context.previousPins);
+      onError: async (_err, { tokenIds, address }, context, { client }) => {
+        const queryKey = orpc.pins.list.queryKey({ input: address });
+
+        if (context?.snapshot) {
+          client.setQueryData(queryKey, context.snapshot);
+        } else {
+          await client.invalidateQueries({ queryKey });
         }
-        const key = tokenIds.length > 1 ? "error_multiple" : "error_single";
-        toast.error(t(key, { count: tokenIds.length.toLocaleString() }));
+
+        const message =
+          tokenIds.length > 1
+            ? content.pin.error_multiple({ count: tokenIds.length.toLocaleString() }).value
+            : content.pin.error_single.value;
+        toast.error(message);
       },
     }),
   );

@@ -1,25 +1,38 @@
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
 import { Suspense } from "react";
+import { useIntlayer } from "react-intlayer";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
-import { Link } from "@/components/ui/link";
+import { Link } from "@/components/intentui/link";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useTranslations } from "@/lib/i18n/context";
 
 import Changelog from "./changelog";
+import { Container } from "./intentui/container";
 import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
-import { Container } from "./ui/container";
+
+export function useNavMenuItems() {
+  const content = useIntlayer("nav");
+  return [
+    {
+      href: "/activity",
+      label: content.activity.value,
+      icon: ChartLineIcon,
+    },
+  ];
+}
 
 export default function Navbar() {
-  const t = useTranslations("nav");
   const isMobile = useMediaQuery("(max-width: 1023px)");
+  const navMenuItems = useNavMenuItems();
 
   return (
     <>
+      {/* <Notice /> */}
+
       {/* Desktop Navbar */}
       <nav className="from-bg/80 sticky top-0 z-40 hidden h-12 bg-linear-to-b to-transparent lg:flex">
         <div className="absolute -z-1 size-full mask-b-from-40% backdrop-blur-lg"></div>
@@ -29,8 +42,8 @@ export default function Navbar() {
             <AppLogo />
             <div className="flex items-center gap-x-1">
               {navMenuItems.map((menu) => (
-                <NavLink key={menu.href} to={menu.href}>
-                  {t(menu.translationKey)}
+                <NavLink key={menu.href} href={menu.href}>
+                  {menu.label}
                   {menu.icon && <menu.icon className="size-4" weight="regular" />}
                 </NavLink>
               ))}
@@ -64,16 +77,8 @@ export default function Navbar() {
 function NavLink({ ...props }: React.ComponentProps<typeof Link>) {
   return (
     <Link
-      className="text-fg hover:text-fg flex items-center gap-x-2 rounded-full px-2.5 py-1 text-sm font-medium tracking-tight outline-hidden transition duration-200 focus-visible:ring-2"
+      className="text-fg hover:text-fg flex h-8 items-center gap-x-2 rounded-full px-2.5 py-1 text-sm font-medium tracking-tight outline-hidden transition duration-200 focus-visible:ring-2"
       {...props}
     />
   );
 }
-
-export const navMenuItems = [
-  {
-    href: "/activity",
-    translationKey: "activity" as const,
-    icon: ChartLineIcon,
-  },
-];

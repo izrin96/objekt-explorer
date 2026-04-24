@@ -7,17 +7,17 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useState, useTransition } from "react";
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
+import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
-import { useTranslations } from "@/lib/i18n/context";
 
-import { Button } from "../ui/button";
-import { FieldError, Label } from "../ui/field";
-import { Input } from "../ui/input";
-import { TextField } from "../ui/text-field";
+import { Button } from "../intentui/button";
+import { FieldError, Label } from "../intentui/field";
+import { Input } from "../intentui/input";
+import { TextField } from "../intentui/text-field";
 
 export default function SignIn() {
   const [state, setState] = useState<"sign-in" | "sign-up" | "forgot-password">("sign-in");
@@ -39,7 +39,8 @@ function SignInForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
-  const t = useTranslations("auth.sign_in");
+  const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
 
   const { handleSubmit, control } = useForm({
     defaultValues: {
@@ -58,14 +59,14 @@ function SignInForm({
       return result.data;
     },
     onSuccess: async (_, _v, _o, { client }) => {
-      toast.success(t("success"));
-      void client.refetchQueries({
+      toast.success(content.sign_in.success.value);
+      void client.invalidateQueries({
         queryKey: ["session"],
       });
       void router.navigate({ to: "/" });
     },
-    onError: (error) => {
-      toast.error(t("error", { message: error.message }));
+    onError: (err) => {
+      toast.error(content.sign_in.error({ message: err.message }).value);
     },
   });
 
@@ -76,15 +77,15 @@ function SignInForm({
   return (
     <>
       <div className="flex flex-col">
-        <h2 className="text-lg/8 font-semibold">{t("title")}</h2>
-        <span className="text-muted-fg text-sm">{t("description")}</span>
+        <h2 className="text-lg/8 font-semibold">{content.sign_in.title.value}</h2>
+        <span className="text-muted-fg text-sm">{content.sign_in.description.value}</span>
       </div>
-      <Form onSubmit={onSubmit} className="flex flex-col gap-4">
+      <Form onSubmit={onSubmit} className="flex flex-col gap-4" validationBehavior="aria">
         <Controller
           control={control}
           name="email"
           rules={{
-            required: t("email_required"),
+            required: commonContent.validation.required_email.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -98,9 +99,10 @@ function SignInForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("email_label")}</Label>
-              <Input placeholder={t("email_placeholder")} />
+              <Label>{content.sign_in.email_label.value}</Label>
+              <Input placeholder={content.sign_in.email_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -109,7 +111,7 @@ function SignInForm({
           control={control}
           name="password"
           rules={{
-            required: t("password_required"),
+            required: commonContent.validation.required_password.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -123,26 +125,27 @@ function SignInForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("password_label")}</Label>
-              <Input placeholder={t("password_placeholder")} />
+              <Label>{content.sign_in.password_label.value}</Label>
+              <Input placeholder={content.sign_in.password_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
-        <Button type="submit" intent="primary" isDisabled={mutation.isPending}>
-          {t("submit")}
+        <Button type="submit" intent="primary" isPending={mutation.isPending}>
+          {content.sign_in.submit.value}
         </Button>
       </Form>
 
       <div className="flex flex-col gap-2">
         <Button intent="outline" className="gap-2" onPress={() => setState("forgot-password")}>
           <EnvelopeSimpleIcon size={18} weight="light" />
-          {t("forgot_password")}
+          {content.sign_in.forgot_password.value}
         </Button>
         <Button intent="outline" className="gap-2" onPress={() => setState("sign-up")}>
           <UserPlusIcon size={18} weight="light" />
-          {t("create_account")}
+          {content.sign_in.create_account.value}
         </Button>
       </div>
 
@@ -150,7 +153,7 @@ function SignInForm({
         <div className="absolute inset-0 flex items-center">
           <div className="bg-border h-px w-full shrink-0"></div>
         </div>
-        <span className="bg-bg relative px-3">{t("or_continue")}</span>
+        <span className="bg-bg relative px-3">{content.sign_in.or_continue.value}</span>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -163,12 +166,12 @@ function SignInForm({
 
 function SignInWithDiscord() {
   const [isPending, startTransition] = useTransition();
-  const t = useTranslations("auth.sign_in");
+  const content = useIntlayer("auth");
   return (
     <Button
       intent="outline"
       className="gap-2"
-      isDisabled={isPending}
+      isPending={isPending}
       onPress={() => {
         startTransition(async () => {
           await authClient.signIn.social({
@@ -178,19 +181,19 @@ function SignInWithDiscord() {
       }}
     >
       <DiscordLogoIcon size={18} weight="light" />
-      {t("sign_in_discord")}
+      {content.sign_in.sign_in_discord.value}
     </Button>
   );
 }
 
 function SignInWithTwitter() {
   const [isPending, startTransition] = useTransition();
-  const t = useTranslations("auth.sign_in");
+  const content = useIntlayer("auth");
   return (
     <Button
       intent="outline"
       className="gap-2"
-      isDisabled={isPending}
+      isPending={isPending}
       onPress={() => {
         startTransition(async () => {
           await authClient.signIn.social({
@@ -200,7 +203,7 @@ function SignInWithTwitter() {
       }}
     >
       <XLogoIcon size={18} weight="light" />
-      {t("sign_in_twitter")}
+      {content.sign_in.sign_in_twitter.value}
     </Button>
   );
 }
@@ -211,7 +214,8 @@ function SignUpForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
-  const t = useTranslations("auth.sign_up");
+  const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       name: "",
@@ -229,14 +233,14 @@ function SignUpForm({
       return result.data;
     },
     onSuccess: async (_, _v, _o, { client }) => {
-      toast.success(t("success"));
-      void client.refetchQueries({
+      toast.success(content.sign_up.success.value);
+      void client.invalidateQueries({
         queryKey: ["session"],
       });
       void router.navigate({ to: "/" });
     },
-    onError: (error) => {
-      toast.error(t("error", { message: error.message }));
+    onError: (err) => {
+      toast.error(content.sign_up.error({ message: err.message }).value);
     },
   });
 
@@ -245,13 +249,13 @@ function SignUpForm({
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-4">
         <Controller
           control={control}
           name="name"
           rules={{
-            required: t("name_required"),
+            required: commonContent.validation.required_name.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -265,9 +269,10 @@ function SignUpForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("name_label")}</Label>
-              <Input placeholder={t("name_placeholder")} />
+              <Label>{content.sign_up.name_label.value}</Label>
+              <Input placeholder={content.sign_up.name_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -276,7 +281,7 @@ function SignUpForm({
           control={control}
           name="email"
           rules={{
-            required: t("email_required"),
+            required: commonContent.validation.required_email.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -290,9 +295,10 @@ function SignUpForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("email_label")}</Label>
-              <Input placeholder={t("email_placeholder")} />
+              <Label>{content.sign_up.email_label.value}</Label>
+              <Input placeholder={content.sign_up.email_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -301,7 +307,7 @@ function SignUpForm({
           control={control}
           name="password"
           rules={{
-            required: t("password_required"),
+            required: commonContent.validation.required_password.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -315,18 +321,19 @@ function SignUpForm({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("password_label")}</Label>
+              <Label>{content.sign_up.password_label.value}</Label>
               <Input />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
-        <Button type="submit" isDisabled={mutation.isPending}>
-          {t("submit")}
+        <Button type="submit" isPending={mutation.isPending}>
+          {content.sign_up.submit.value}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
-          {t("back")}
+          {content.sign_up.back.value}
         </Button>
       </div>
     </Form>
@@ -338,7 +345,8 @@ function ForgotPassword({
 }: {
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
-  const t = useTranslations("auth.forgot_password");
+  const content = useIntlayer("auth");
+  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email: "",
@@ -357,11 +365,11 @@ function ForgotPassword({
       return result.data;
     },
     onSuccess: () => {
-      toast.success(t("success"));
+      toast.success(content.forgot_password.success.value);
       setState("sign-in");
     },
-    onError: (error) => {
-      toast.error(t("error", { message: error.message }));
+    onError: (err) => {
+      toast.error(content.forgot_password.error({ message: err.message }).value);
     },
   });
 
@@ -370,13 +378,13 @@ function ForgotPassword({
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-4">
         <Controller
           control={control}
           name="email"
           rules={{
-            required: t("email_required"),
+            required: commonContent.validation.required_email.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -390,18 +398,19 @@ function ForgotPassword({
               onBlur={onBlur}
               isRequired
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("email_label")}</Label>
-              <Input placeholder={t("email_placeholder")} />
+              <Label>{content.forgot_password.email_label.value}</Label>
+              <Input placeholder={content.forgot_password.email_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
-        <Button type="submit" isDisabled={mutation.isPending}>
-          {t("submit")}
+        <Button type="submit" isPending={mutation.isPending}>
+          {content.forgot_password.submit.value}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
-          {t("back")}
+          {content.forgot_password.back.value}
         </Button>
       </div>
     </Form>

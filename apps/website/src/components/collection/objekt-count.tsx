@@ -1,23 +1,29 @@
-import { useTranslations } from "@/lib/i18n/context";
+import { useIntlayer } from "react-intlayer";
 
-import { Loader } from "../ui/loader";
+import { Loader } from "../intentui/loader";
 
 export interface ObjektCountProps {
   filtered: unknown[];
   grouped?: unknown[];
   hasNextPage?: boolean;
+  total?: number;
 }
 
-export function ObjektCount({ filtered, grouped, hasNextPage }: ObjektCountProps) {
-  const t = useTranslations("common.count");
+export function ObjektCount({ filtered, grouped, hasNextPage, total }: ObjektCountProps) {
+  const content = useIntlayer("common");
+
+  const displayCount = total !== undefined ? total : filtered.length;
+  const isLoading = hasNextPage && total === undefined;
 
   return (
-    <span className={hasNextPage ? "flex items-center gap-2 font-semibold" : "font-semibold"}>
+    <span className={isLoading ? "flex items-center gap-2 font-semibold" : "font-semibold"}>
       <span>
-        {t("total", { count: filtered.length.toLocaleString() })}
-        {grouped ? ` (${t("types", { count: grouped.length.toLocaleString() })})` : ""}
+        {content.count.total({ count: displayCount.toLocaleString() }).value}
+        {grouped
+          ? ` (${content.count.types({ count: grouped?.length.toLocaleString() ?? "0" }).value})`
+          : ""}
       </span>
-      {hasNextPage && <Loader variant="ring" className="size-4" />}
+      {isLoading && <Loader variant="ring" className="size-4" />}
     </span>
   );
 }

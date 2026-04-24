@@ -1,17 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 @plugin "tailwindcss-react-aria-components";
 
 @variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans:
-    "Google Sans Flex", var(--font-noto-sans-kr), var(--font-noto-sans-sc), ui-sans-serif,
-    system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
-    "Noto Color Emoji";
-  --font-mono:
-    var(--font-geist-mono), "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas",
-    '"Liberation Mono"', '"Courier New"', "monospace";
+    var(--font-body), var(--font-noto-sans-kr), var(--font-noto-sans-sc), ui-sans-serif, system-ui,
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: var(--font-fira-code);
 
   --font-sans--font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   --font-mono--font-feature-settings: "ss02", "zero";
@@ -95,6 +94,12 @@
   }
 
   --color-accent-solid: var(--accent-solid);
+
+  --font-body: var(--font-google-sans-flex);
+
+  --font-fira-code: var(--font-fira-code);
+
+  --font-google-sans-flex: var(--font-google-sans-flex);
 }
 
 :root {
@@ -217,6 +222,23 @@
   /* custom */
   --accent-solid: oklch(0.585 0.233 277.117);
 }
+/* 
+@utility touch-target {
+  position: relative;
+  &::before {
+    content: "";
+    position: absolute;
+    display: block;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    min-height: 44px;
+    min-width: 44px;
+    z-index: 9999;
+  }
+} */
 
 @layer base {
   *,

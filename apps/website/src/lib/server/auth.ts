@@ -1,18 +1,22 @@
+import { i18n } from "@better-auth/i18n";
 import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
 import { userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
-import { getRequest } from "@tanstack/react-start/server";
-import { betterAuth } from "better-auth";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { betterAuth } from "better-auth/minimal";
 import { username } from "better-auth/plugins/username";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
+import type { FetchError } from "ofetch";
 
-import { serverEnv } from "@/env/server";
+import { betterAuthLocale } from "@/i18n/better-auth";
+import { serverEnv } from "@/lib/env/server";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
 import { getBaseURL, SITE_NAME } from "../utils";
+import { getUserLocale } from "./locale";
 import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
 
 export const auth = betterAuth({
@@ -21,7 +25,18 @@ export const auth = betterAuth({
     provider: "pg",
     schema: authSchema,
   }),
-  plugins: [username()],
+  plugins: [
+    username(),
+    i18n({
+      defaultLocale: "en",
+      translations: betterAuthLocale,
+      detection: ["callback", "cookie"],
+      localeCookie: "NEXT_LOCALE",
+      getLocale: () => {
+        return getUserLocale();
+      },
+    }),
+  ],
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
@@ -92,9 +107,6 @@ export const auth = betterAuth({
     },
     changeEmail: {
       enabled: true,
-      sendChangeEmailConfirmation: async ({ user, url }) => {
-        await sendVerificationEmail(user.email, url);
-      },
     },
   },
   account: {
@@ -105,10 +117,10 @@ export const auth = betterAuth({
   },
   session: {
     freshAge: 0,
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60,
-    },
+    // cookieCache: {
+    //   enabled: true,
+    //   maxAge: 5 * 60,
+    // },
   },
   databaseHooks: {
     account: {
@@ -139,9 +151,17 @@ export const auth = betterAuth({
 });
 
 export async function getSession() {
-  const request = getRequest();
   return auth.api.getSession({
-    headers: request.headers,
+    headers: getRequestHeaders(),
+  });
+}
+
+async function safeFetchByNickname(identifier: string) {
+  return fetchByNickname(identifier).catch((error: FetchError<{ error: { code: string } }>) => {
+    if (error.data?.error.code === "USER_NOT_FOUND") {
+      return null;
+    }
+    return undefined;
   });
 }
 
@@ -161,6 +181,7 @@ export async function fetchUserByIdentifier(
       hideNickname: true,
       gridColumns: true,
       userId: true,
+      lastCosmoCheck: true,
     },
     with: {
       user: {
@@ -184,6 +205,44 @@ export async function fetchUserByIdentifier(
   });
 
   if (cachedUser) {
+    // double check address with cosmo if last check more than 1 hour
+    const ONE_HOUR = 60 * 60 * 1000;
+    const needsCheck =
+      !cachedUser.lastCosmoCheck ||
+      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > ONE_HOUR;
+
+    if (needsCheck && cachedUser.nickname) {
+      const user = await safeFetchByNickname(cachedUser.nickname);
+
+      if (user) {
+        await cacheUsers([
+          {
+            address: user.address,
+            nickname: user.nickname,
+          },
+        ]);
+
+        return await fetchUserByIdentifier(identifier);
+      }
+
+      // nickname not found, unbind
+      if (user === null) {
+        await db
+          .update(userAddress)
+          .set({ nickname: null, cosmoId: null, lastCosmoCheck: null })
+          .where(eq(userAddress.nickname, cachedUser.nickname));
+
+        // todo: use redirect instead
+        return await fetchUserByIdentifier(cachedUser.address);
+      }
+
+      // update last check
+      await db
+        .update(userAddress)
+        .set({ lastCosmoCheck: sql`'now'` })
+        .where(eq(userAddress.nickname, cachedUser.nickname));
+    }
+
     return {
       address: cachedUser.address,
       nickname: cachedUser.hideNickname ? null : cachedUser.nickname,
@@ -203,7 +262,7 @@ export async function fetchUserByIdentifier(
     };
   }
 
-  const user = await fetchByNickname(identifier).catch(() => undefined);
+  const user = await safeFetchByNickname(identifier);
   if (!user) {
     return undefined;
   }
@@ -215,23 +274,42 @@ export async function fetchUserByIdentifier(
     },
   ]);
 
-  return {
-    nickname: user.nickname,
-    address: user.address,
-  };
+  return await fetchUserByIdentifier(identifier);
 }
 
 export async function cacheUsers(
   newAddresses: { nickname: string; address: string; cosmoId?: number }[],
 ) {
-  if (newAddresses.length > 0) {
-    const values = newAddresses.map((a) => ({
-      nickname: a.nickname,
-      address: a.address,
-      cosmoId: a.cosmoId ?? null,
-    }));
-    try {
-      await db
+  if (newAddresses.length === 0) return;
+
+  const values = newAddresses.map((a) => ({
+    nickname: a.nickname,
+    address: a.address,
+    cosmoId: a.cosmoId ?? null,
+    lastCosmoCheck: sql`'now'`,
+  }));
+
+  try {
+    await db.transaction(async (tx) => {
+      // clear nickname from any existing row that has the same nickname
+      // but different address (unbind before insert)
+      await tx
+        .update(userAddress)
+        .set({ nickname: null, cosmoId: null, lastCosmoCheck: null })
+        .where(
+          and(
+            inArray(
+              userAddress.nickname,
+              values.map((v) => v.nickname),
+            ),
+            notInArray(
+              userAddress.address,
+              values.map((v) => v.address),
+            ),
+          ),
+        );
+
+      await tx
         .insert(userAddress)
         .values(values)
         .onConflictDoUpdate({
@@ -239,11 +317,12 @@ export async function cacheUsers(
           set: {
             nickname: sql.raw(`excluded.${userAddress.nickname.name}`),
             cosmoId: sql`coalesce(excluded.${sql.raw(userAddress.cosmoId.name)}, ${userAddress.cosmoId})`,
+            lastCosmoCheck: sql`'now'`,
           },
         });
-    } catch (err) {
-      console.error("Bulk user caching failed:", err);
-    }
+    });
+  } catch (err) {
+    console.error("Bulk user caching failed:", err);
   }
 }
 

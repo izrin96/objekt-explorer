@@ -1,8 +1,8 @@
 import { fetchLiveSession } from "@repo/cosmo/server/live";
 import { notFound } from "@tanstack/react-router";
 
-import { fetchList } from "./server/api/routers/list";
 import { fetchUserByIdentifier } from "./server/auth";
+import { fetchList } from "./server/list";
 import { getAccessToken } from "./server/token";
 
 export const getUserByIdentifier = async (identifier: string) => {

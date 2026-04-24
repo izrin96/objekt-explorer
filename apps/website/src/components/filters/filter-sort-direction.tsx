@@ -1,12 +1,12 @@
 import { SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react/dist/ssr";
+import { useIntlayer } from "react-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
-import { useTranslations } from "@/lib/i18n/context";
 
-import { Toggle } from "../ui/toggle";
+import { Toggle } from "../intentui/toggle";
 
 export default function SortDirectionFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
@@ -25,7 +25,7 @@ export default function SortDirectionFilter() {
       ) : (
         <SortAscendingIcon data-slot="icon" />
       )}
-      {filters.sort_dir === "asc" ? t("asc") : t("desc")}
+      {filters.sort_dir === "asc" ? content.asc.value : content.desc.value}
     </Toggle>
   );
 }

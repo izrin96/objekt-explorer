@@ -1,45 +1,70 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit";
 import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useIntlayer } from "react-intlayer";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
+import ErrorFallbackRender from "@/components/error-boundary";
+import {
+  Chart,
+  type ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/intentui/chart";
+import { Loader } from "@/components/intentui/loader";
+import {
+  ProgressBar,
+  ProgressBarTrack,
+  ProgressBarValue,
+} from "@/components/intentui/progress-bar";
 import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
-import { Chart, type ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Loader } from "@/components/ui/loader";
-import { ProgressBar, ProgressBarTrack, ProgressBarValue } from "@/components/ui/progress-bar";
 import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useSession } from "@/hooks/use-user";
-import { useTranslations } from "@/lib/i18n/context";
 import { unobtainables } from "@/lib/unobtainables";
-import { cn, tradeableFilter } from "@/lib/utils";
+import { tradeableFilter, cn } from "@/lib/utils";
 
 import { useShowCount } from "./filter-showcount";
 import ProgressFilter from "./progress-filter";
 
-export default ProgressRender;
-
-function ProgressRender() {
+export default function ProgressRender() {
   return (
     <ObjektViewProvider modalTab="owned">
       <div className="flex flex-col gap-4">
         <ProgressFilter />
-        <Progress />
+
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <Progress />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </div>
     </ObjektViewProvider>
   );
 }
 
 function Progress() {
-  const t = useTranslations("progress");
+  const content = useIntlayer("progress");
   const { columns } = useObjektColumn();
   const { shaped, filters, ownedSlugs, hasNextPage, stats, ownedFiltered, collectionsFiltered } =
     useProgressObjekts();
@@ -48,7 +73,7 @@ function Progress() {
     <>
       {hasNextPage && (
         <div className="flex items-center gap-2 text-sm font-semibold">
-          {t("loading_objekts")} <Loader variant="ring" className="size-4" />
+          {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
         </div>
       )}
 
@@ -113,7 +138,7 @@ interface ProgressCollapseProps extends ProgressGroupProps {
 }
 
 function ProgressCollapse(props: ProgressCollapseProps) {
-  const t = useTranslations("progress");
+  const content = useIntlayer("progress");
   const { data: session } = useSession();
   const { title, columns, grouped, percentage, ownedSlugs } = props;
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -126,7 +151,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
         role="none"
         className={cn(
           "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-muted/20 p-4 border transition hover:bg-muted",
-          percentage >= 100 && "border-accent-solid shadow-lg shadow-accent-solid/20",
+          percentage >= 100 && "border-accent-solid shadow-sm shadow-accent-solid/20",
         )}
         onClick={() => setShow(!show)}
       >
@@ -134,7 +159,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           {title}
         </div>
         <ProgressBar
-          aria-label={t("progress_bar_label")}
+          aria-label={content.progress_bar_label.value}
           className="flex w-fit min-w-[240px] items-center gap-2"
           valueLabel={`${props.owned.length}/${props.filtered.length} (${percentage}%)`}
           value={percentage}
@@ -207,7 +232,7 @@ function MemberProgressChart({
   objekts: ValidObjekt[];
   collections: ValidObjekt[];
 }) {
-  const t = useTranslations("stats.member_progress");
+  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
   const [_, setFilters] = useFilters();
 
@@ -241,7 +266,7 @@ function MemberProgressChart({
 
   const chartConfig = {
     percentage: {
-      label: t("percentage_label"),
+      label: content.member_progress.percentage_label.value,
       color: "var(--chart-1)",
     },
   } satisfies ChartConfig;

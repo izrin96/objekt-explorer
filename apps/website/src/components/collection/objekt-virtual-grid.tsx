@@ -1,10 +1,12 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { QueryStatus } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { useMemo } from "react";
 import { WindowVirtualizer } from "virtua";
 
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 
+import { InfiniteQueryNext } from "../infinite-query-pending";
 import { makeObjektRows, ObjektsRenderRow } from "./collection-render";
 
 export type ShapedData<T = ValidObjekt[]> = [string, T[]][];
@@ -18,12 +20,19 @@ export interface ObjektVirtualGridProps<T = ValidObjekt[]> {
     rowIndex: number;
     groupTitle: string;
   }) => ReactElement | null;
+  infiniteQueryProp?: {
+    status: QueryStatus;
+    hasNextPage: boolean;
+    isFetchingNextPage: boolean;
+    fetchNextPage: () => void;
+  };
 }
 
 export function ObjektVirtualGrid<T = ValidObjekt[]>({
   shaped,
   columns: columnsProp,
   renderItem,
+  infiniteQueryProp,
 }: ObjektVirtualGridProps<T>) {
   const { columns: contextColumns } = useObjektColumn();
   const columns = columnsProp ?? contextColumns;
@@ -50,11 +59,14 @@ export function ObjektVirtualGrid<T = ValidObjekt[]>({
 
   return (
     <div className="[&>*>*]:will-change-transform">
-      <WindowVirtualizer key={columns}>{virtualList}</WindowVirtualizer>
+      <WindowVirtualizer key={columns}>
+        {virtualList}
+        {infiniteQueryProp && <InfiniteQueryNext {...infiniteQueryProp} />}
+      </WindowVirtualizer>
     </div>
   );
 }
 
 function GroupLabelRender({ title }: { title: string }) {
-  return <div className={"pt-3 pb-3 text-base font-semibold"}>{title}</div>;
+  return <div className="pt-3 pb-3 text-base font-semibold">{title}</div>;
 }

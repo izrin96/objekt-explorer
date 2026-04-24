@@ -1,9 +1,8 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { createContext, type ReactNode, use, useState } from "react";
+import { useIntlayer } from "react-intlayer";
 
-import { useTranslations } from "@/lib/i18n/context";
-
-import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../ui/modal";
+import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../intentui/modal";
 import ObjektDetail from "./objekt-detail";
 
 type Props = {
@@ -21,7 +20,7 @@ export const useObjektModal = () => use(ObjektModalContext);
 
 export default function ObjektModal({ children, showOwned, objekts, menu }: Props) {
   const [open, setOpen] = useState(false);
-  const t = useTranslations("common.modal");
+  const content = useIntlayer("common");
 
   const handleClick = () => setOpen(true);
 
@@ -34,7 +33,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
           <ObjektDetail objekts={objekts} showOwned={showOwned} />
         </ModalBody>
         <ModalFooter className="sm:hidden">
-          <ModalClose>{t("close")}</ModalClose>
+          <ModalClose>{content.modal.close}</ModalClose>
         </ModalFooter>
       </ModalContent>
       {children}

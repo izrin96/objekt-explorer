@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ProfileStatsRender } from "@/components/profile/stats/stats-render";
+import ProfileStatsRender from "@/components/profile/stats/stats-render";
 
 export const Route = createFileRoute("/@$nickname/stats")({
   head: () => ({

@@ -4,8 +4,7 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import type { ReactNode } from "react";
 
 import ClientProviders from "./components/client-providers";
-import { DefaultCatchBoundary } from "./components/DefaultCatchBoundary";
-import { NotFound } from "./components/NotFound";
+import { orpc } from "./lib/orpc/client";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -21,13 +20,14 @@ export function getRouter() {
     routeTree,
     context: {
       queryClient,
+      orpc,
     },
     defaultPreload: "intent",
-    defaultErrorComponent: DefaultCatchBoundary,
-    defaultNotFoundComponent: () => <NotFound />,
+    // defaultErrorComponent: DefaultCatchBoundary,
+    // defaultNotFoundComponent: () => <NotFound />,
     scrollRestoration: true,
     Wrap: (props: { children: ReactNode }) => {
-      return <ClientProviders>{props.children}</ClientProviders>;
+      return <ClientProviders locale="en">{props.children}</ClientProviders>;
     },
   });
 

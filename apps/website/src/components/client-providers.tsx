@@ -1,42 +1,39 @@
-import type { NavigateOptions, ToOptions } from "@tanstack/react-router";
-import { useRouter } from "@tanstack/react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
-import { type PropsWithChildren } from "react";
-import { RouterProvider } from "react-aria-components";
+import { type PropsWithChildren, useState } from "react";
+import { I18nProvider } from "react-aria-components/I18nProvider";
 import { preconnect } from "react-dom";
+import { IntlayerProvider } from "react-intlayer";
 
 import { ThemeProvider } from "@/components/theme-provider";
-import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
-import { FilterDataProvider } from "@/hooks/use-filter-data";
-import { artists } from "@/lib/server/cosmo/artists";
+import { createQueryClient } from "@/lib/query/client";
 
-import { Toast } from "./ui/toast-custom";
+import { Toast } from "./intentui/toast-custom";
 
-declare module "react-aria-components" {
-  interface RouterConfig {
-    href: ToOptions["to"];
-    routerOptions: Omit<NavigateOptions, keyof ToOptions>;
-  }
-}
-
-export default function ClientProviders({ children }: PropsWithChildren) {
+export default function ClientProviders({
+  children,
+  locale,
+}: PropsWithChildren<{ locale: string }>) {
   preconnect("https://imagedelivery.net", { crossOrigin: "" });
   preconnect("https://resources.cosmo.fans", { crossOrigin: "" });
   preconnect("https://static.cosmo.fans", { crossOrigin: "" });
 
-  const router = useRouter();
+  const [queryClient] = useState(() => createQueryClient());
+
   return (
-    <ThemeProvider>
-      <RouterProvider navigate={(to, options) => router.navigate({ to, ...options })}>
-        <NuqsAdapter>
-          <CosmoArtistProvider artists={artists}>
-            <FilterDataProvider>
-              <div id="hello">{children}</div>
-            </FilterDataProvider>
-          </CosmoArtistProvider>
-          <Toast />
-        </NuqsAdapter>
-      </RouterProvider>
-    </ThemeProvider>
+    <I18nProvider locale={locale}>
+      <IntlayerProvider locale={locale}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <NuqsAdapter>
+              <Toast />
+              {children}
+              <ReactQueryDevtools />
+            </NuqsAdapter>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </IntlayerProvider>
+    </I18nProvider>
   );
 }

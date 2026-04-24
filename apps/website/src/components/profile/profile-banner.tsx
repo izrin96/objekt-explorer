@@ -1,10 +1,12 @@
 import { useElementSize } from "@/hooks/use-element-size";
 import type { PublicProfile } from "@/lib/universal/user";
 
+import { Container } from "../intentui/container";
+
 export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   const [bannerRef, { height }] = useElementSize();
 
-  if (!(profile.bannerImgUrl && profile.bannerImgType)) return;
+  if (!(profile.bannerImgUrl && profile.bannerImgType)) return null;
 
   const isVideo = profile.bannerImgType.startsWith("video");
 
@@ -15,7 +17,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         <div className="mx-auto w-full max-w-(--container-breakpoint) [--container-breakpoint:var(--breakpoint-2xl)]">
           <div
             ref={bannerRef}
-            className={"relative aspect-[2.3/1] mask-x-from-100% xl:mask-x-from-97%"}
+            className="relative aspect-[2.3/1] mask-x-from-100% xl:mask-x-from-97%"
           >
             {isVideo ? (
               <video
@@ -29,7 +31,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             ) : (
               <img
                 src={profile.bannerImgUrl}
-                className="size-full object-cover object-center"
+                className="absolute size-full object-cover object-center"
                 alt="Banner"
               />
             )}
@@ -38,7 +40,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         </div>
       </div>
       {/* background */}
-      <div className={"absolute inset-0 top-12 -z-10 xl:top-0"} style={{ height: `${height}px` }}>
+      <div className="absolute inset-0 top-12 -z-10 xl:top-0" style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
             className="size-full object-cover object-center"
@@ -51,16 +53,19 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         ) : (
           <img
             src={profile.bannerImgUrl}
-            className="size-full object-cover object-center"
+            className="absolute size-full object-cover object-center"
             alt="Banner"
           />
         )}
         <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100% backdrop-blur-xl"></div>
       </div>
+      <Container className="[--container-breakpoint:var(--breakpoint-2xl)]">
+        <ProfileBannerClearance />
+      </Container>
     </>
   );
 }
 
-export function ProfileBannerClearance() {
-  return <div className={"-mt-2 aspect-[2.3/1] xl:-mt-14"}></div>;
+function ProfileBannerClearance() {
+  return <div className="-mt-2 aspect-[2.3/1] xl:-mt-14"></div>;
 }

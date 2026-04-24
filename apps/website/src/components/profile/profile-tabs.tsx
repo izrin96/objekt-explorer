@@ -1,23 +1,35 @@
+import { Addresses } from "@repo/lib";
 import { useLocation } from "@tanstack/react-router";
+import { useIntlayer } from "react-intlayer";
 
-import { useTarget } from "@/hooks/use-target";
-import { useTranslations } from "@/lib/i18n/context";
+import type { PublicProfile } from "@/lib/universal/user";
 
-import { TabLink, TabList, Tabs } from "../ui/tabs";
+import { Tab, TabList, Tabs } from "../intentui/tabs";
 
-export default function ProfileTabs() {
-  const t = useTranslations("profile.tabs");
-  const profile = useTarget((a) => a.profile)!;
+export default function ProfileTabs({ user }: { user: PublicProfile }) {
+  const content = useIntlayer("profile");
   const { pathname } = useLocation();
-  const path = profile.nickname || profile.address;
+  const path = user.nickname || user.address;
+
+  const disabled = user.address.toLowerCase() === Addresses.SPIN;
+
+  const translationMap = {
+    collection: content.tabs.collection.value,
+    trade_history: content.tabs.trade_history.value,
+    progress: content.tabs.progress.value,
+    statistics: content.tabs.statistics.value,
+    lists: content.tabs.lists.value,
+  };
 
   const items = [
     { url: `/@${path}`, translationKey: "collection" as const },
     { url: `/@${path}/trades`, translationKey: "trade_history" as const },
-    { url: `/@${path}/progress`, translationKey: "progress" as const },
-    { url: `/@${path}/stats`, translationKey: "statistics" as const },
-    { url: `/@${path}/list`, translationKey: "lists" as const },
+    { url: `/@${path}/progress`, translationKey: "progress" as const, disabled },
+    { url: `/@${path}/stats`, translationKey: "statistics" as const, disabled },
+    { url: `/@${path}/list`, translationKey: "lists" as const, disabled },
   ];
+
+  const filteredItems = items.filter((a) => !a.disabled);
 
   return (
     <Tabs
@@ -26,10 +38,15 @@ export default function ProfileTabs() {
       selectedKey={decodeURIComponent(pathname)}
     >
       <TabList className="border-b-0">
-        {items.map((item) => (
-          <TabLink key={item.url} id={item.url} to={item.url} aria-label={t(item.translationKey)}>
-            {t(item.translationKey)}
-          </TabLink>
+        {filteredItems.map((item) => (
+          <Tab
+            key={item.url}
+            id={item.url}
+            href={item.url}
+            aria-label={translationMap[item.translationKey]}
+          >
+            {translationMap[item.translationKey]}
+          </Tab>
         ))}
       </TabList>
     </Tabs>

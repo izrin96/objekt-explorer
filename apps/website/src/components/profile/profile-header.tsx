@@ -1,53 +1,77 @@
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { useState } from "react";
+import { useRouter } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { useProfileAuthed } from "@/hooks/use-user";
-import { useTranslations } from "@/lib/i18n/context";
 import type { PublicProfile } from "@/lib/universal/user";
 import { parseNickname } from "@/lib/utils";
 
+import { Avatar } from "../intentui/avatar-custom";
+import { Button, buttonStyles } from "../intentui/button";
+import { ExternalLink } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
-import { Avatar } from "../ui/avatar-custom";
-import { Button, buttonStyles } from "../ui/button";
-import { Link } from "../ui/link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
+  const router = useRouter();
+  const ref = useRef<HTMLDivElement>(null);
   const [, copy] = useCopyToClipboard();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
-  const t = useTranslations("profile.header");
+  const content = useIntlayer("profile");
+
+  const onSave = () => {
+    void router.invalidate();
+  };
+
+  useEffect(() => {
+    if (user.bannerImgType && user.bannerImgUrl && ref.current) {
+      // instant scroll to profile header if banner exists
+      const offset = ref.current.offsetTop - 90;
+      if (offset > 0) {
+        window.scrollTo({
+          top: offset,
+          behavior: "instant",
+        });
+      }
+    }
+  }, [user.bannerImgType, user.bannerImgUrl]);
 
   return (
-    <div className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0">
+    <div
+      className="flex flex-col flex-wrap items-start gap-4 pb-2 md:flex-row md:items-center md:pb-0"
+      ref={ref}
+    >
       <div className="flex w-full flex-col md:w-auto">
-        <div className="text-xl font-semibold">{nickname}</div>
+        <h2 className="text-xl font-semibold">{nickname}</h2>
         <div className="text-muted-fg inline-flex gap-1 truncate font-mono text-xs">
           {user.address}{" "}
           <CopyIcon
             size={14}
-            className="text-fg cursor-pointer"
+            className="text-muted-fg cursor-pointer select-none"
             onClick={async () => {
               await copy(user.address);
-              toast.success(t("address_copied"));
+              toast.success(content.header.address_copied.value);
             }}
           />
         </div>
       </div>
 
-      <Link
+      <ExternalLink
         className={buttonStyles({
           size: "sm",
           className: "w-full flex-none md:w-auto",
           intent: "outline",
         })}
-        to={`https://apollo.cafe/@${user.nickname || user.address}` as string}
+        href={`https://apollo.cafe/@${user.nickname || user.address}`}
+        rel="noopener noreferrer"
         target="_blank"
       >
-        {t("view_in_apollo")}
-      </Link>
+        {content.header.view_in_apollo.value}
+      </ExternalLink>
 
       {isProfileAuthed && (
         <>
@@ -56,6 +80,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             nickname={nickname}
             open={editOpen}
             setOpen={setEditOpen}
+            onSave={onSave}
           />
           <Button
             size="sm"
@@ -63,7 +88,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             onPress={() => setEditOpen(true)}
             className="w-full flex-none md:w-auto"
           >
-            {t("edit_profile")}
+            {content.header.edit_profile.value}
           </Button>
         </>
       )}

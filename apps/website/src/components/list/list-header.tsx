@@ -1,14 +1,15 @@
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { Link } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
+import { useIntlayer } from "react-intlayer";
 
 import { useTarget } from "@/hooks/use-target";
 import { useListAuthed } from "@/hooks/use-user";
-import { useTranslations } from "@/lib/i18n/context";
 import { parseNickname } from "@/lib/utils";
 
-import { Avatar } from "../ui/avatar-custom";
-import { Button } from "../ui/button";
+import { Avatar } from "../intentui/avatar-custom";
+import { Button } from "../intentui/button";
+import { Link } from "../intentui/link";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
@@ -29,11 +30,12 @@ export default function ListHeader() {
         {isProfileContext && profile ? (
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold">{list.name}</span>
+              <h2 className="text-lg font-semibold">{list.name}</h2>
+              {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
             </div>
             <div className="text-muted-fg text-sm">
               <Link
-                to="/@$nickname"
+                to={`/@$nickname`}
                 params={{
                   nickname: profile.nickname || profile.address,
                 }}
@@ -58,6 +60,7 @@ export default function ListHeader() {
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{list.name}</span>
+                {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
               </div>
               {displayUser && (
                 <div className="flex items-center gap-2">
@@ -86,25 +89,34 @@ export default function ListHeader() {
         {isListAuthed && <EditList slug={list.slug} />}
       </div>
       {list.description && (
-        <p className="text-fg text-sm whitespace-pre-wrap">{list.description}</p>
+        <span className="text-fg text-sm whitespace-pre-wrap">{list.description}</span>
       )}
     </div>
   );
 }
 
 function EditList({ slug }: { slug: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const t = useTranslations("list.card");
+  const content = useIntlayer("list");
+
+  const onSave = () => {
+    void router.navigate({
+      to: `/list/${slug}`,
+      replace: true,
+    });
+  };
+
   return (
     <>
-      <EditListModal slug={slug} open={open} setOpen={setOpen} />
+      <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
       <Button
         size="sm"
         intent="outline"
         onPress={() => setOpen(true)}
         className="w-full flex-none sm:w-auto"
       >
-        {t("edit_list")}
+        {content.card.edit_list.value}
       </Button>
     </>
   );

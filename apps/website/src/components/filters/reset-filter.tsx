@@ -1,8 +1,7 @@
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { useIntlayer } from "react-intlayer";
 
-import { useTranslations } from "@/lib/i18n/context";
-
-import { Button } from "../ui/button";
+import { Button } from "../intentui/button";
 
 export default function ResetFilter({
   onReset,
@@ -11,11 +10,11 @@ export default function ResetFilter({
   onReset: () => void;
   isDisabled?: boolean;
 }) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   return (
     <Button intent="outline" onPress={onReset} isDisabled={isDisabled}>
       <XIcon data-slot="icon" />
-      {t("reset_filter")}
+      {content.reset_filter.value}
     </Button>
   );
 }

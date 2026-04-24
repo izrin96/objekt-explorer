@@ -1,7 +1,6 @@
 {
   "extends": "@repo/tsconfig/tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "types": ["node", "@types/pg"]
   },
   "include": ["src/**/*.ts"],

@@ -11,20 +11,20 @@ import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
 import { Suspense, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
+import { useIntlayer } from "react-intlayer";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
-import { useTranslations } from "@/lib/i18n/context";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
 import { OBJEKT_SIZE } from "@/lib/utils";
 
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
-import { Link } from "../ui/link";
-import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../ui/table";
-import { Tab, TabLink, TabList, TabPanel, Tabs } from "../ui/tabs";
+import { Badge } from "../intentui/badge";
+import { Button } from "../intentui/button";
+import { Card, CardContent } from "../intentui/card";
+import { ExternalLink } from "../intentui/link";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
+import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import { AttributePanel } from "./objekt-attribute";
 import ObjektSidebar from "./objekt-sidebar";
 import TradeView from "./trade-view";
@@ -67,7 +67,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
 function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
   const [objekt] = objekts;
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const currentTab = useObjektModal((a) => a.currentTab);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
   const [serial, setSerial] = useState(() => {
@@ -88,19 +88,15 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       <TabList className="px-2.5">
         {showOwned && (
           <Tab id="owned">
-            {t("owned")}
+            {content.owned.value}
             {objekts.length > 1 ? ` (${objekts.length.toLocaleString()})` : ""}
           </Tab>
         )}
-        <Tab id="trades">{t("trades")}</Tab>
-        <TabLink
-          id="apollo"
-          to={`https://apollo.cafe/?id=${objekt.slug}` as string}
-          target="_blank"
-        >
+        <Tab id="trades">{content.trades.value}</Tab>
+        <Tab href={`https://apollo.cafe/?id=${objekt.slug}`} target="_blank">
           <ArrowTopRightOnSquareIcon className="size-5" />
-          {t("view_in_apollo")}
-        </TabLink>
+          {content.view_in_apollo.value}
+        </Tab>
       </TabList>
       {showOwned && (
         <TabPanel id="owned">
@@ -109,7 +105,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
               <ArchiveBoxXMarkIcon className="size-16" strokeWidth={1} />
-              <p>{t("not_owned")}</p>
+              <span>{content.not_owned.value}</span>
             </div>
           )}
         </TabPanel>
@@ -180,15 +176,17 @@ export function ObjektCard({
         </div>
         {/* Back side */}
         <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
-          <img
-            className="h-full w-full object-cover"
-            width={OBJEKT_SIZE.width}
-            height={OBJEKT_SIZE.height}
-            loading="eager"
-            src={urls.backUrl}
-            alt={objekt.collectionId}
-            onLoad={() => setBackLoaded(true)}
-          />
+          {urls.backUrl && (
+            <img
+              className="h-full w-full object-cover"
+              width={OBJEKT_SIZE.width}
+              height={OBJEKT_SIZE.height}
+              loading="eager"
+              src={urls.backUrl}
+              alt={objekt.collectionId}
+              onLoad={() => setBackLoaded(true)}
+            />
+          )}
           {!backLoaded && (
             <div className="aspect-photocard relative flex size-full bg-white">
               <div className="h-[88%] w-[91%] self-center rounded-r-lg bg-(--objekt-bg-color) p-5"></div>
@@ -209,17 +207,14 @@ function OwnedListPanel({
   objekts: OwnedObjekt[];
   setSerial: (serial: number) => void;
 }) {
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const [currentPage, setCurrentPage] = useState(1);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
 
-  const openTrades = useCallback(
-    (serial: number) => {
-      setSerial(serial);
-      setCurrentTab("trades");
-    },
-    [setCurrentTab, setSerial],
-  );
+  const openTrades = (serial: number) => {
+    setSerial(serial);
+    setCurrentTab("trades");
+  };
 
   const handleSort = useCallback(
     ({ items, sortDescriptor }: { items: OwnedObjekt[]; sortDescriptor: SortDescriptor }) => {
@@ -279,13 +274,13 @@ function OwnedListPanel({
           >
             <TableHeader>
               <TableColumn id="serial" allowsSorting isRowHeader maxWidth={110}>
-                {t("serial")}
+                {content.serial.value}
               </TableColumn>
-              <TableColumn>{t("token_id")}</TableColumn>
+              <TableColumn>{content.token_id.value}</TableColumn>
               <TableColumn id="receivedAt" allowsSorting minWidth={200}>
-                {t("received")}
+                {content.received.value}
               </TableColumn>
-              <TableColumn>{t("transferable")}</TableColumn>
+              <TableColumn>{content.transferable.value}</TableColumn>
             </TableHeader>
             <TableBody>
               {currentItems.map((item) => (
@@ -298,21 +293,20 @@ function OwnedListPanel({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Link
-                      to={
-                        `https://opensea.io/item/abstract/${Addresses.OBJEKT}/${item.tokenId}` as string
-                      }
+                    <ExternalLink
+                      href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${item.tokenId}`}
                       className="inline-flex cursor-pointer items-center gap-2"
+                      rel="noopener noreferrer"
                       target="_blank"
                     >
                       {item.tokenId}
-                      <ArrowTopRightOnSquareIcon className="size-4" />
-                    </Link>
+                      <ArrowTopRightOnSquareIcon className="text-muted-fg size-4" />
+                    </ExternalLink>
                   </TableCell>
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
                   <TableCell>
                     <Badge intent={item.transferable ? "info" : "danger"}>
-                      {item.transferable ? t("yes") : t("no")}
+                      {item.transferable ? content.yes.value : content.no.value}
                     </Badge>
                   </TableCell>
                 </TableRow>

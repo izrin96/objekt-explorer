@@ -3,25 +3,27 @@ import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanst
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
 
-import { Analytics } from "@/components/analytics";
-import { DefaultCatchBoundary } from "@/components/DefaultCatchBoundary";
+import Analytics from "@/components/analytics";
 import Navbar from "@/components/navbar";
-import { NotFound } from "@/components/NotFound";
+import NotFound from "@/components/not-found";
+import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
+import { FilterDataProvider } from "@/hooks/use-filter-data";
+import type { orpc } from "@/lib/orpc/client";
 
 import appCss from "@/styles/app.css?url";
 
 export interface RouterContext {
   queryClient: QueryClient;
+  orpc: typeof orpc;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1" },
       { title: "Objekt Tracker" },
       { name: "description", content: "Cosmo objekt explorer" },
-      { name: "theme-color", content: "#09090b" },
       {
         name: "keywords",
         content:
@@ -65,43 +67,51 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: "preconnect", href: "https://static.cosmo.fans" },
     ],
   }),
-  errorComponent: DefaultCatchBoundary,
+  // errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
   shellComponent: RootDocument,
   component: RootComponent,
+  loader: async ({ context }) => {
+    const filterData = await context.queryClient.ensureQueryData(
+      context.orpc.config.getFilterData.queryOptions(),
+    );
+    const artists = await context.queryClient.ensureQueryData(
+      context.orpc.config.getArtists.queryOptions(),
+    );
+    return {
+      filterData,
+      artists,
+    };
+  },
 });
 
 function RootComponent() {
+  const { artists, filterData } = Route.useLoaderData();
   return (
     <>
-      <Navbar />
-      <Outlet />
+      <CosmoArtistProvider artists={artists}>
+        <FilterDataProvider data={filterData}>
+          <Navbar />
+          <main>
+            <Outlet />
+          </main>
+        </FilterDataProvider>
+      </CosmoArtistProvider>
     </>
   );
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // const params = Route.useParams();
+  // const locale = params?.locale ?? defaultLocale;
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={"en"} dir="ltr" suppressHydrationWarning>
       <head>
         <HeadContent />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                const theme = localStorage.theme;
-                const isDark = theme === 'dark' || ((!theme || theme === 'system') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                if (isDark) {
-                  document.documentElement.classList.add('dark');
-                  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#09090b');
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
       </head>
-      <body className="min-h-svh font-sans antialiased">
-        {children}
+      <body className="bg-bg text-fg font-sans antialiased">
+        <div className="relative flex min-h-svh flex-col">{children}</div>
         <Analytics />
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />

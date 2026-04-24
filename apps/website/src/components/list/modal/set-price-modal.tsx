@@ -1,11 +1,13 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { Form } from "react-aria-components";
+import { useEffect } from "react";
+import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
+import { useIntlayer } from "react-intlayer";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Input } from "@/components/intentui/input";
 import {
   ModalBody,
   ModalClose,
@@ -14,12 +16,11 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { NumberField, NumberInput } from "@/components/ui/number-field";
-import { TextField } from "@/components/ui/text-field";
+} from "@/components/intentui/modal";
+import { NumberField, NumberInput } from "@/components/intentui/number-field";
+import { TextField } from "@/components/intentui/text-field";
 import { useUpdateEntryPrices } from "@/hooks/actions/update-entry-prices";
 import { useTarget } from "@/hooks/use-target";
-import { useTranslations } from "@/lib/i18n/context";
 
 type SetPriceModalProps = {
   open: boolean;
@@ -35,19 +36,14 @@ type FormValues = {
 
 export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
   const [objekt] = objekts;
-  const t = useTranslations("list.manage_objekt");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   const list = useTarget((a) => a.list)!;
   const updateEntryPrices = useUpdateEntryPrices();
 
   const { handleSubmit, control, watch, reset } = useForm<FormValues>({
-    defaultValues: {
-      price: 0,
-      isQyop: false,
-      note: "",
-    },
     values: {
-      price: objekt?.listPrice ?? 0,
+      price: objekt?.price ?? 0,
       isQyop: objekt?.isQyop ?? false,
       note: objekt?.note ?? "",
     },
@@ -94,25 +90,31 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
     );
   };
 
+  useEffect(() => {
+    if (open) {
+      reset();
+    }
+  }, [open]);
+
   if (!list.currency) return null;
 
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("set_price_title")}</ModalTitle>
+        <ModalTitle>{content.manage_objekt.set_price_title.value}</ModalTitle>
         <ModalDescription>
-          {t("set_price_desc")} ({list.currency})
+          {content.manage_objekt.set_price_desc.value} ({list.currency})
         </ModalDescription>
       </ModalHeader>
       <ModalBody>
-        <Form onSubmit={onSubmit}>
+        <Form onSubmit={onSubmit} validationBehavior="aria">
           <div className="flex flex-col gap-4">
             <Controller
               control={control}
               name="isQyop"
               render={({ field: { value, onChange } }) => (
-                <Checkbox isSelected={value} onChange={onChange}>
-                  {t("set_price_qyop")}
+                <Checkbox isSelected={value} onChange={onChange} validationBehavior="aria">
+                  {content.manage_objekt.set_price_qyop.value}
                 </Checkbox>
               )}
             />
@@ -135,11 +137,12 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
                   isInvalid={invalid}
                   minValue={0}
                   isDisabled={isQyop}
+                  validationBehavior="aria"
                 >
-                  <Label>{t("set_price_label")}</Label>
+                  <Label>{content.manage_objekt.set_price_label.value}</Label>
                   <NumberInput />
                   <Description>
-                    {list.currency} ({t("set_price_clear_hint")})
+                    {list.currency} ({content.manage_objekt.set_price_clear_hint.value})
                   </Description>
                   <FieldError>{error?.message}</FieldError>
                 </NumberField>
@@ -149,9 +152,15 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
               control={control}
               name="note"
               render={({ field: { name, value, onChange, onBlur } }) => (
-                <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
-                  <Label>{t("set_price_note")}</Label>
-                  <Input placeholder={t("set_price_note_placeholder")} />
+                <TextField
+                  name={name}
+                  value={value}
+                  onChange={onChange}
+                  onBlur={onBlur}
+                  validationBehavior="aria"
+                >
+                  <Label>{content.manage_objekt.set_price_note.value}</Label>
+                  <Input placeholder={content.manage_objekt.set_price_note_placeholder.value} />
                 </TextField>
               )}
             />
@@ -159,12 +168,12 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
         </Form>
       </ModalBody>
       <ModalFooter id="set-price-form">
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
         <Button className="hidden" intent="secondary" onPress={handleClearPrice}>
-          {t("set_price_clear")}
+          {content.manage_objekt.set_price_clear.value}
         </Button>
         <Button isPending={updateEntryPrices.isPending} onPress={() => onSubmit()}>
-          {t("set_price_title")}
+          {content.manage_objekt.set_price_title.value}
         </Button>
       </ModalFooter>
     </ModalContent>

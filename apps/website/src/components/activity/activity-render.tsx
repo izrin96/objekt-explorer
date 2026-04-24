@@ -12,23 +12,23 @@ import { format } from "date-fns";
 import { ofetch } from "ofetch";
 import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { useIntlayer } from "react-intlayer";
 import useWebSocket from "react-use-websocket";
 
-import { env } from "@/env";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
-import { useTranslations } from "@/lib/i18n/context";
+import { clientEnv } from "@/lib/env/client";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
-import { cn, getBaseURL } from "@/lib/utils";
+import { getBaseURL, cn } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
+import { Badge } from "../intentui/badge";
+import { Card } from "../intentui/card";
+import { Loader } from "../intentui/loader";
 import ObjektModal, { useObjektModal } from "../objekt/objekt-modal";
-import { Badge } from "../ui/badge";
-import { Card } from "../ui/card";
-import { Loader } from "../ui/loader";
 import UserLink from "../user-link";
 import ActivityFilter from "./activity-filter";
 import { useTypeFilter } from "./filter-type";
@@ -69,18 +69,15 @@ const EVENT_CONFIG: Record<
   },
 };
 
-export default ActivityRender;
-
-function ActivityRender() {
-  const t = useTranslations("activity");
+export default function ActivityRender() {
+  const content = useIntlayer("activity");
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">{t("title")}</h2>
-          <Badge intent="primary">{t("beta")}</Badge>
+          <h2 className="text-xl font-semibold">{content.title.value}</h2>
         </div>
-        <p className="text-muted-fg text-sm">{t("description")}</p>
+        <span className="text-muted-fg text-sm">{content.description.value}</span>
       </div>
       <ObjektModalProvider initialTab="trades">
         <ActivityFilter />
@@ -106,13 +103,13 @@ function ActivityRender() {
 }
 
 function Activity() {
-  const t = useTranslations("activity");
+  const content = useIntlayer("activity");
   const queryClient = useQueryClient();
   const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const [type] = useTypeFilter();
   const [realtimeTransfers, setRealtimeTransfers] = useState<ActivityData[]>([]);
-  const [newTransferIds, setNewTransferIds] = useState<Set<string>>(new Set());
+  const [newTransferIds, setNewTransferIds] = useState(new Set());
   const [isHovering, setIsHovering] = useState(false);
   const [queuedTransfers, setQueuedTransfers] = useState<ActivityData[]>([]);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -154,7 +151,7 @@ function Activity() {
     });
 
   const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
-    !(isPending || isRefetching) ? env.VITE_ACTIVITY_WEBSOCKET_URL : null,
+    !(isPending || isRefetching) ? clientEnv.VITE_ACTIVITY_WEBSOCKET_URL : null,
     {
       shouldReconnect: () => true,
       reconnectAttempts: Infinity,
@@ -280,14 +277,14 @@ function Activity() {
       <Card className="py-0">
         <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
           <div className="flex min-w-fit border-b">
-            <div className="min-w-[120px] flex-1 px-3 py-2.5">{t("table.event")}</div>
-            <div className="min-w-[250px] flex-1 px-3 py-2.5">{t("table.objekt")}</div>
+            <div className="min-w-[120px] flex-1 px-3 py-2.5">{content.table.event.value}</div>
+            <div className="min-w-[250px] flex-1 px-3 py-2.5">{content.table.objekt.value}</div>
             <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">
-              {t("table.serial")}
+              {content.table.serial.value}
             </div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">{t("table.from")}</div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">{t("table.to")}</div>
-            <div className="min-w-[250px] flex-1 px-3 py-2.5">{t("table.time")}</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">{content.table.from.value}</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">{content.table.to.value}</div>
+            <div className="min-w-[250px] flex-1 px-3 py-2.5">{content.table.time.value}</div>
           </div>
 
           <ObjektModal objekts={currentObjekt}>
@@ -295,7 +292,7 @@ function Activity() {
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
               className="relative min-w-fit"
               role="region"
-              aria-label={t("table.aria_label")}
+              aria-label={content.table.aria_label.value}
               onMouseEnter={() => {
                 setIsHovering(true);
                 isHoveringRef.current = true;
@@ -312,7 +309,7 @@ function Activity() {
                 return (
                   <div
                     className={cn(
-                      "absolute top-0 left-0 min-w-full overflow-hidden will-change-transform",
+                      "absolute top-0 left-0 min-w-full overflow-hidden",
                       isNew &&
                         "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
                     )}
@@ -334,7 +331,7 @@ function Activity() {
           {isHovering && (
             <div className="bg-fg/10 pointer-events-none fixed right-0 bottom-0 left-0 flex h-12 w-full flex-col justify-center px-2 py-3 backdrop-blur-md">
               <span className="text-center font-mono text-sm leading-tight uppercase">
-                {t("paused_on_hover")}
+                {content.paused_on_hover.value}
               </span>
             </div>
           )}
@@ -357,7 +354,7 @@ const ActivityRow = memo(function ActivityRow({
   item: ActivityData;
   setCurrentObjekt: (objekts: ValidObjekt[]) => void;
 }) {
-  const t = useTranslations();
+  const content = useIntlayer("activity");
   const ctx = useObjektModal();
 
   const openObjekt = useCallback(() => {
@@ -374,7 +371,9 @@ const ActivityRow = memo(function ActivityRow({
       <div className="min-w-[120px] flex-1 px-3 py-2.5">
         <div className="flex items-center gap-2 font-semibold">
           <Icon size={18} weight="light" />
-          <Badge className={cn("text-xs", config.className)}>{t(config.labelKey as any)}</Badge>
+          <Badge className={cn("text-xs", config.className)}>
+            {content.event_type[event].value}
+          </Badge>
         </div>
       </div>
       <div
@@ -387,14 +386,14 @@ const ActivityRow = memo(function ActivityRow({
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">
         {event === "mint" ? (
-          <span className="text-muted-fg font-mono">{t("activity.cosmo")}</span>
+          <span className="text-muted-fg font-mono">{content.cosmo.value}</span>
         ) : (
           <UserLink address={item.transfer.from} nickname={item.nickname.from} />
         )}
       </div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">
         {event === "spin" ? (
-          <span className="text-muted-fg font-mono">{t("activity.cosmo_spin")}</span>
+          <span className="text-muted-fg font-mono">{content.cosmo_spin.value}</span>
         ) : (
           <UserLink address={item.transfer.to} nickname={item.nickname.to} />
         )}

@@ -1,10 +1,11 @@
-import { useFilters } from "@/hooks/use-filters";
-import { useTranslations } from "@/lib/i18n/context";
+import { useIntlayer } from "react-intlayer";
 
-import { Toggle } from "../ui/toggle";
+import { useFilters } from "@/hooks/use-filters";
+
+import { Toggle } from "../intentui/toggle";
 
 export default function HidePinFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
@@ -16,7 +17,7 @@ export default function HidePinFilter() {
         })
       }
     >
-      {t("disable_pin")}
+      {content.disable_pin.value}
     </Toggle>
   );
 }

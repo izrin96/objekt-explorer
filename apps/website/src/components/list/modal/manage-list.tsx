@@ -4,21 +4,20 @@ import {
   useSuspenseQueries,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { Suspense } from "react";
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
+import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import ErrorFallbackRender from "@/components/error-boundary";
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Description, FieldError, Label } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Link } from "@/components/ui/link";
-import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { Description, FieldError, Label } from "@/components/intentui/field";
+import { Input } from "@/components/intentui/input";
+import { Link } from "@/components/intentui/link";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalBody,
   ModalClose,
@@ -27,9 +26,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
-import { Radio, RadioGroup } from "@/components/ui/radio";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+} from "@/components/intentui/modal";
+import { Radio, RadioGroup } from "@/components/intentui/radio";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
 import {
   SheetBody,
   SheetClose,
@@ -38,11 +37,11 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { TextField } from "@/components/ui/text-field";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/intentui/sheet";
+import { TextField } from "@/components/intentui/text-field";
+import { Textarea } from "@/components/intentui/textarea";
+import Portal from "@/components/portal";
 import { useUserProfiles } from "@/hooks/use-user";
-import { useTranslations } from "@/lib/i18n/context";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
 
@@ -52,26 +51,41 @@ type CreateListModalProps = {
 };
 
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
-  const t = useTranslations("list.create");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
 
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
+        <ModalTitle>{content.create.title.value}</ModalTitle>
       </ModalHeader>
       <ModalBody>
-        <CreateListForm setOpen={setOpen} />
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <CreateListForm setOpen={setOpen} />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
       </ModalBody>
-      <ModalFooter id="submit-form">
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+      <ModalFooter id="submit-form-create-list">
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
 }
 
 function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const t = useTranslations("list.create");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   const { data: profiles } = useUserProfiles();
   const { data: currencies } = useSuspenseQuery(orpc.meta.supportedCurrencies.queryOptions());
   const { handleSubmit, control, watch } = useForm({
@@ -91,13 +105,13 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     orpc.list.create.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(t("success"));
+        toast.success(content.create.success.value);
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.create.error.value);
       },
     }),
   );
@@ -114,13 +128,13 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-6">
         <Controller
           control={control}
           name="name"
           rules={{
-            required: t("name_required"),
+            required: contentCommon.validation.required_name.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -134,9 +148,10 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("name_label")}</Label>
-              <Input placeholder={t("name_placeholder")} />
+              <Label>{contentCommon.form.name.label.value}</Label>
+              <Input placeholder={contentCommon.form.name.placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -145,9 +160,15 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="description"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("description_label")}</Label>
-              <Textarea placeholder={t("description_placeholder")} rows={3} />
+            <TextField
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
+              <Label>{contentCommon.form.description.label.value}</Label>
+              <Textarea placeholder={content.create.description_placeholder.value} rows={3} />
             </TextField>
           )}
         />
@@ -159,16 +180,17 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={t("currency_label")}
-              placeholder={t("currency_placeholder")}
+              aria-label={content.create.currency_label.value}
+              placeholder={contentCommon.form.none.value}
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("currency_label")}</Label>
-              <Description>{t("currency_desc")}</Description>
+              <Label>{content.create.currency_label.value}</Label>
+              <Description>{content.create.currency_desc.value}</Description>
               <SelectTrigger />
               <SelectContent>
                 <SelectItem id="" textValue="None">
@@ -188,16 +210,16 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="listType"
           render={({ field: { name, value, onChange } }) => (
-            <RadioGroup name={name} value={value} onChange={onChange}>
-              <Label>{t("list_type_label")}</Label>
-              <Description>{t("list_type_desc")}</Description>
+            <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
+              <Label>{content.create.list_type_label.value}</Label>
+              <Description>{content.create.list_type_desc.value}</Description>
               <Radio value="normal">
-                <Label>{t("normal_list_label")}</Label>
-                <Description>{t("normal_list_desc")}</Description>
+                <Label>{content.create.normal_list_label.value}</Label>
+                <Description>{content.create.normal_list_desc.value}</Description>
               </Radio>
               <Radio value="profile">
-                <Label>{t("profile_list_label")}</Label>
-                <Description>{t("profile_list_desc")}</Description>
+                <Label>{content.create.profile_list_label.value}</Label>
+                <Description>{content.create.profile_list_desc.value}</Description>
               </Radio>
             </RadioGroup>
           )}
@@ -207,30 +229,35 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             control={control}
             name="profileAddress"
             rules={{
-              required: watchedListType === "profile" ? t("profile_required") : false,
+              required:
+                watchedListType === "profile" ? content.create.profile_required.value : false,
             }}
             render={({
               field: { name, value, onChange, onBlur },
               fieldState: { invalid, error },
             }) => (
               <Select
-                aria-label={t("profile_label")}
-                placeholder={t("profile_placeholder")}
+                aria-label={content.create.profile_label.value}
+                placeholder={content.create.profile_placeholder.value}
                 name={name}
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
+                validationBehavior="aria"
+                isRequired={watchedListType === "profile"}
               >
-                <Label>{t("profile_label")}</Label>
+                <Label>{content.create.profile_label.value}</Label>
                 <Description>
-                  {watchedListType === "profile" ? t("profile_desc") : t("display_profile_desc")}
+                  {watchedListType === "profile"
+                    ? content.create.profile_desc.value
+                    : content.create.display_profile_desc.value}
                 </Description>
                 <SelectTrigger />
                 <SelectContent>
                   {watchedListType === "normal" && (
-                    <SelectItem id="" textValue={t("display_profile_none")}>
-                      {t("display_profile_none")}
+                    <SelectItem id="" textValue={contentCommon.form.none.value}>
+                      {contentCommon.form.none.value}
                     </SelectItem>
                   )}
                   {profiles?.map((profile) => (
@@ -252,16 +279,24 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_user_label")}</Label>
-              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
+              <Label>{content.create.hide_user_label.value}</Label>
+              <Description>
+                {content.create.hide_user_desc({ siteName: SITE_NAME }).value}
+              </Description>
             </Checkbox>
           )}
         />
 
-        <Portal to="#submit-form">
+        <Portal to="#submit-form-create-list">
           <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
-            {t("submit")}
+            {contentCommon.actions.create.value}
           </Button>
         </Portal>
       </div>
@@ -276,37 +311,37 @@ type DeleteListModalProps = {
 };
 
 export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
-  const t = useTranslations("list.delete");
-  const tCommon = useTranslations("common.modal");
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   const deleteList = useMutation(
     orpc.list.delete.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(t("success"));
+        toast.success(content.delete.success.value);
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.delete.error.value);
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
-        <ModalDescription>{t("description")}</ModalDescription>
+        <ModalTitle>{content.delete.title.value}</ModalTitle>
+        <ModalDescription>{content.delete.description.value}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{tCommon("cancel")}</ModalClose>
+        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
         <Button
           intent="danger"
           type="submit"
           isPending={deleteList.isPending}
           onPress={() => deleteList.mutate({ slug })}
         >
-          {t("submit")}
+          {contentCommon.actions.continue.value}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -317,16 +352,17 @@ type EditListModalProps = {
   slug: string;
   open: boolean;
   setOpen: (val: boolean) => void;
+  onSave?: () => void;
 };
 
-export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
-  const t = useTranslations("list.edit");
-  const tCommon = useTranslations("common.modal");
+export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProps) {
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   return (
     <SheetContent className="sm:max-w-sm" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>{t("title")}</SheetTitle>
-        <SheetDescription>{t("description")}</SheetDescription>
+        <SheetTitle>{content.edit.title.value}</SheetTitle>
+        <SheetDescription>{content.edit.description.value}</SheetDescription>
       </SheetHeader>
       <SheetBody>
         <QueryErrorResetBoundary>
@@ -339,22 +375,30 @@ export function EditListModal({ slug, open, setOpen }: EditListModalProps) {
                   </div>
                 }
               >
-                <EditListForm slug={slug} setOpen={setOpen} />
+                <EditListForm slug={slug} setOpen={setOpen} onSave={onSave} />
               </Suspense>
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
       </SheetBody>
-      <SheetFooter id="submit-form">
-        <SheetClose>{tCommon("cancel")}</SheetClose>
+      <SheetFooter id="submit-form-edit-list">
+        <SheetClose>{contentCommon.modal.cancel.value}</SheetClose>
       </SheetFooter>
     </SheetContent>
   );
 }
 
-function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean) => void }) {
-  const router = useRouter();
-  const t = useTranslations("list.edit");
+function EditListForm({
+  slug,
+  setOpen,
+  onSave,
+}: {
+  slug: string;
+  setOpen: (val: boolean) => void;
+  onSave?: () => void;
+}) {
+  const content = useIntlayer("list");
+  const contentCommon = useIntlayer("common");
   const { data: profiles } = useUserProfiles();
   const [{ data: currencies }, { data }] = useSuspenseQueries({
     queries: [
@@ -367,16 +411,16 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   });
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
-      onSuccess: (_, { slug }, _o, { client }) => {
+      onSuccess: (_, _d, _o, { client }) => {
         setOpen(false);
-        toast.success(t("success"));
-        void router.navigate({ to: `/list/${slug}`, replace: true });
+        toast.success(content.edit.success.value);
         void client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
+        onSave?.();
       },
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.edit.error.value);
       },
     }),
   );
@@ -408,13 +452,13 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
   });
 
   return (
-    <Form onSubmit={onSubmit}>
+    <Form onSubmit={onSubmit} validationBehavior="aria">
       <div className="flex flex-col gap-6">
         <Controller
           control={control}
           name="name"
           rules={{
-            required: t("name_required"),
+            required: contentCommon.validation.required_name.value,
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -428,9 +472,10 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("name_label")}</Label>
-              <Input placeholder={t("name_placeholder")} />
+              <Label>{contentCommon.form.name.label.value}</Label>
+              <Input placeholder={content.edit.name_placeholder.value} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -440,9 +485,15 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="description"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <TextField name={name} value={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("description_label")}</Label>
-              <Textarea placeholder={t("description_placeholder")} rows={3} />
+            <TextField
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
+              <Label>{contentCommon.form.description.label.value}</Label>
+              <Textarea placeholder={content.edit.description_placeholder.value} rows={3} />
             </TextField>
           )}
         />
@@ -455,16 +506,17 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={t("currency_label")}
-              placeholder={t("currency_placeholder")}
+              aria-label={content.edit.currency_label.value}
+              placeholder={contentCommon.form.none.value}
               name={name}
               value={value}
               onChange={onChange}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("currency_label")}</Label>
-              <Description>{t("currency_desc")}</Description>
+              <Label>{content.edit.currency_label.value}</Label>
+              <Description>{content.edit.currency_desc.value}</Description>
               <SelectTrigger />
               <SelectContent>
                 <SelectItem id="" textValue="None">
@@ -490,20 +542,21 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
               fieldState: { invalid, error },
             }) => (
               <Select
-                aria-label={t("display_profile_label")}
-                placeholder={t("display_profile_none")}
+                aria-label={content.edit.display_profile_label.value}
+                placeholder={contentCommon.form.none.value}
                 name={name}
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isInvalid={invalid}
+                validationBehavior="aria"
               >
-                <Label>{t("display_profile_label")}</Label>
-                <Description>{t("display_profile_desc")}</Description>
+                <Label>{content.edit.display_profile_label.value}</Label>
+                <Description>{content.edit.display_profile_desc.value}</Description>
                 <SelectTrigger />
                 <SelectContent>
-                  <SelectItem id="" textValue={t("display_profile_none")}>
-                    {t("display_profile_none")}
+                  <SelectItem id="" textValue={contentCommon.form.none.value}>
+                    {contentCommon.form.none.value}
                   </SelectItem>
                   {profiles?.map((profile) => (
                     <SelectItem
@@ -525,9 +578,17 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-              <Label>{t("hide_user_label")}</Label>
-              <Description>{t("hide_user_desc", { siteName: SITE_NAME })}</Description>
+            <Checkbox
+              name={name}
+              isSelected={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              validationBehavior="aria"
+            >
+              <Label>{content.edit.hide_user_label.value}</Label>
+              <Description>
+                {content.edit.hide_user_desc({ siteName: SITE_NAME }).value}
+              </Description>
             </Checkbox>
           )}
         />
@@ -540,23 +601,24 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={t("objekt_columns_label")}
-              placeholder={t("objekt_columns_label")}
+              aria-label={content.edit.objekt_columns_label.value}
+              placeholder={content.edit.objekt_columns_label.value}
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
               isInvalid={invalid}
+              validationBehavior="aria"
             >
-              <Label>{t("objekt_columns_label")}</Label>
-              <Description>{t("objekt_columns_desc")}</Description>
+              <Label>{content.edit.objekt_columns_label.value}</Label>
+              <Description>{content.edit.objekt_columns_desc.value}</Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
-                  { id: 0, name: t("objekt_columns_not_set") },
+                  { id: 0, name: content.edit.objekt_columns_not_set.value },
                   ...validColumns.map((a) => ({
                     id: a,
-                    name: t("objekt_columns_count", { count: String(a) }),
+                    name: content.edit.objekt_columns_count({ count: a }).value,
                   })),
                 ].map((item) => (
                   <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
@@ -570,18 +632,18 @@ function EditListForm({ slug, setOpen }: { slug: string; setOpen: (val: boolean)
         />
 
         <span className="text-muted-fg text-sm">
-          {t.rich("delete_note", {
-            link: (chunks) => (
+          {content.edit.delete_note.use({
+            link: (props) => (
               <Link to="/list" className="underline">
-                {chunks}
+                {props.children}
               </Link>
             ),
           })}
         </span>
 
-        <Portal to="#submit-form">
+        <Portal to="#submit-form-edit-list">
           <Button isPending={editList.isPending} onPress={() => onSubmit()}>
-            {t("submit")}
+            {contentCommon.actions.save.value}
           </Button>
         </Portal>
       </div>

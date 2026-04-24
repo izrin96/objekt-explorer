@@ -1,15 +1,14 @@
 import type { LiveSession } from "@repo/cosmo/server/live";
 import { StreamVideo, StreamVideoClient, type User } from "@stream-io/video-react-sdk";
 
-import { env } from "@/env";
 import { LiveSessionProvider } from "@/hooks/use-live-session";
+import { clientEnv } from "@/lib/env/client";
 
-import { CustomLivestreamPlayer } from "./custom-player";
-import LiveEnded from "./live-ended";
+import { CustomLivestreamPlayer, LiveEndedLayout } from "./custom-player";
 
 const user: User = { type: "anonymous" };
 const client = new StreamVideoClient({
-  apiKey: env.VITE_LIVE_API_KEY,
+  apiKey: clientEnv.VITE_LIVE_API_KEY,
   user,
 });
 
@@ -17,17 +16,17 @@ type Props = {
   live: LiveSession;
 };
 
-export default LiveStreamingRender;
-
-export function LiveStreamingRender({ live }: Props) {
+export default function LiveStreamingRender({ live }: Props) {
   return (
     <LiveSessionProvider live={live}>
       <StreamVideo client={client}>
-        {live.endedAt !== null ? (
-          <LiveEnded />
-        ) : (
-          <CustomLivestreamPlayer callType="livestream" callId={live.videoCallId} />
-        )}
+        <div className="relative flex flex-col gap-2">
+          {live.endedAt !== null ? (
+            <LiveEndedLayout />
+          ) : (
+            <CustomLivestreamPlayer callType="livestream" callId={live.videoCallId} />
+          )}
+        </div>
       </StreamVideo>
     </LiveSessionProvider>
   );

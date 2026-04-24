@@ -1,45 +1,39 @@
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { Suspense, useState } from "react";
-import { Form } from "react-aria-components";
+import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
+import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { CopyButton } from "@/components/copy-button";
 import ErrorFallbackRender from "@/components/error-boundary";
-import Portal from "@/components/portal";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FieldError, Label } from "@/components/ui/field";
-import { Loader } from "@/components/ui/loader";
+import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
+import { FieldError, Label } from "@/components/intentui/field";
+import { Loader } from "@/components/intentui/loader";
 import {
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "@/components/ui/modal";
+} from "@/components/intentui/modal";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectLabel,
   SelectTrigger,
-} from "@/components/ui/select";
-import { TextField } from "@/components/ui/text-field";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/components/intentui/select";
+import { TextField } from "@/components/intentui/text-field";
+import { Textarea } from "@/components/intentui/textarea";
+import Portal from "@/components/portal";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import {
-  type FormatStyle,
-  format,
-  type GroupByMode,
-  makeMemberOrderedList,
-  mapByMember,
-} from "@/lib/discord-format-utils";
-import { useTranslations } from "@/lib/i18n/context";
+import { useFilterData } from "@/hooks/use-filter-data";
+import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
-import { getBaseURL, getListToOptions, parseNickname } from "@/lib/utils";
+import { getBaseURL, getListHref, parseNickname } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -47,11 +41,11 @@ type Props = {
 };
 
 export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
-  const t = useTranslations("generate_discord");
+  const content = useIntlayer("generate_discord");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
+        <ModalTitle>{content.title.value}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <QueryErrorResetBoundary>
@@ -70,7 +64,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
           )}
         </QueryErrorResetBoundary>
       </ModalBody>
-      <ModalFooter className="flex justify-end" id="submit-form"></ModalFooter>
+      <ModalFooter className="flex justify-end" id="submit-form-discord"></ModalFooter>
     </ModalContent>
   );
 }
@@ -78,27 +72,30 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
 function Content() {
   const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
   const [formatText, setFormatText] = useState("");
-  const { artists } = useCosmoArtist();
-  const t = useTranslations("generate_discord");
-  const router = useRouter();
+  const { compareArtistMember } = useCosmoArtist();
+  const { compareSeason } = useFilterData();
+  const content = useIntlayer("generate_discord");
 
-  const { handleSubmit, control, reset } = useForm({
+  const { handleSubmit, control, reset, setValue, watch } = useForm({
     defaultValues: {
       haveList: "",
       wantList: "",
       includeLink: false,
       showCount: false,
-      lowercase: false,
+      lowercaseCollection: false,
       bullet: false,
+      showMemberEmoji: false,
       groupBy: "none" as GroupByMode,
       style: "default" as FormatStyle,
     },
   });
 
+  const groupByValue = watch("groupBy");
+
   const generateDiscordFormat = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
       onError: () => {
-        toast.error(t("error"));
+        toast.error(content.error.value);
       },
     }),
   );
@@ -113,7 +110,7 @@ function Content() {
     const wantListSlug = formData.wantList || undefined;
 
     if (!haveListSlug && !wantListSlug) {
-      toast.error(t("select_at_least_one"));
+      toast.error(content.select_at_least_one.value);
       return;
     }
 
@@ -131,24 +128,25 @@ function Content() {
           const { have: haveCollections, want: wantCollections } = data;
           const output: string[] = [];
 
+          const options = {
+            showQuantity: formData.showCount,
+            lowercaseCollection: formData.lowercaseCollection,
+            bullet: formData.bullet,
+            showMemberEmoji: formData.showMemberEmoji,
+            groupByMode: formData.groupBy,
+            style: formData.style,
+            compareArtistMember,
+            compareSeason,
+          };
+
           // Format have list if selected
           if (haveListSlug && haveCollections.length > 0) {
-            const haveMembers = makeMemberOrderedList(haveCollections, artists);
-            const haveCollectionsMap = mapByMember(haveCollections, haveMembers);
-            const haveFormatted = format(haveCollectionsMap, {
-              showQuantity: formData.showCount,
-              lowercase: formData.lowercase,
-              bullet: formData.bullet,
-              groupByMode: formData.groupBy,
-              style: formData.style,
-            });
+            const haveFormatted = format(haveCollections, options);
 
             output.push("## Have", "", haveFormatted);
 
             if (formData.includeLink && haveList) {
-              const to = getListToOptions(haveList);
-              const { href } = router.buildLocation(to);
-              output.push("", `[View this list](<${getBaseURL()}${href}>)`);
+              output.push("", `[View this list](<${getBaseURL()}${getListHref(haveList)}>)`);
             }
           }
 
@@ -158,22 +156,12 @@ function Content() {
               output.push(""); // Add spacing between sections
             }
 
-            const wantMembers = makeMemberOrderedList(wantCollections, artists);
-            const wantCollectionsMap = mapByMember(wantCollections, wantMembers);
-            const wantFormatted = format(wantCollectionsMap, {
-              showQuantity: formData.showCount,
-              lowercase: formData.lowercase,
-              bullet: formData.bullet,
-              groupByMode: formData.groupBy,
-              style: formData.style,
-            });
+            const wantFormatted = format(wantCollections, options);
 
             output.push("## Want", "", wantFormatted);
 
             if (formData.includeLink && wantList) {
-              const to = getListToOptions(wantList);
-              const { href } = router.buildLocation(to);
-              output.push("", `[View this list](<${getBaseURL()}${href}>)`);
+              output.push("", `[View this list](<${getBaseURL()}${getListHref(wantList)}>)`);
             }
           }
 
@@ -184,20 +172,21 @@ function Content() {
   });
 
   return (
-    <Form className="flex flex-col gap-2" onSubmit={onSubmit}>
+    <Form className="flex flex-col gap-2" onSubmit={onSubmit} validationBehavior="aria">
       <Controller
         control={control}
         name="haveList"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder={t("list_placeholder")}
+            placeholder={content.list_placeholder.value}
             name={name}
             value={value}
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
+            validationBehavior="aria"
           >
-            <Label>{t("have_list_label")}</Label>
+            <Label>{content.have_list_label.value}</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -222,14 +211,15 @@ function Content() {
         name="wantList"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder={t("list_placeholder")}
+            placeholder={content.list_placeholder.value}
             name={name}
             value={value}
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
+            validationBehavior="aria"
           >
-            <Label>{t("want_list_label")}</Label>
+            <Label>{content.want_list_label.value}</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -253,8 +243,14 @@ function Content() {
         control={control}
         name="showCount"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-            <Label>{t("show_count")}</Label>
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            validationBehavior="aria"
+          >
+            <Label>{content.show_count.value}</Label>
           </Checkbox>
         )}
       />
@@ -262,17 +258,29 @@ function Content() {
         control={control}
         name="includeLink"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-            <Label>{t("include_link")}</Label>
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            validationBehavior="aria"
+          >
+            <Label>{content.include_link.value}</Label>
           </Checkbox>
         )}
       />
       <Controller
         control={control}
-        name="lowercase"
+        name="lowercaseCollection"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-            <Label>{t("lower_case")}</Label>
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            validationBehavior="aria"
+          >
+            <Label>{content.lower_case.value}</Label>
           </Checkbox>
         )}
       />
@@ -286,8 +294,25 @@ function Content() {
             onChange={onChange}
             onBlur={onBlur}
             isInvalid={invalid}
+            validationBehavior="aria"
           >
-            <Label>{t("bulleted_list")}</Label>
+            <Label>{content.bulleted_list.value}</Label>
+          </Checkbox>
+        )}
+      />
+      <Controller
+        control={control}
+        name="showMemberEmoji"
+        render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+          <Checkbox
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            isInvalid={invalid}
+            validationBehavior="aria"
+          >
+            <Label>{content.show_member_emoji.value}</Label>
           </Checkbox>
         )}
       />
@@ -298,21 +323,27 @@ function Content() {
           <Select
             name={name}
             value={value}
-            onChange={onChange}
+            onChange={(val) => {
+              onChange(val);
+              if (val === "none") {
+                setValue("style", "default");
+              }
+            }}
             onBlur={onBlur}
-            placeholder={t("group_by_placeholder")}
+            placeholder={content.group_by_placeholder.value}
+            validationBehavior="aria"
           >
-            <Label>{t("group_by_label")}</Label>
+            <Label>{content.group_by_label.value}</Label>
             <SelectTrigger />
             <SelectContent>
               <SelectItem id="none" textValue="none">
-                {t("group_by_none")}
+                {content.group_by_none.value}
               </SelectItem>
               <SelectItem id="season" textValue="season">
-                {t("group_by_season")}
+                {content.group_by_season.value}
               </SelectItem>
               <SelectItem id="season-first" textValue="season-first">
-                {t("group_by_season_first")}
+                {content.group_by_season_first.value}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -327,23 +358,25 @@ function Content() {
             value={value}
             onChange={onChange}
             onBlur={onBlur}
-            placeholder={t("style_placeholder")}
+            placeholder={content.style_placeholder.value}
+            validationBehavior="aria"
+            isDisabled={groupByValue === "none"}
           >
-            <Label>{t("style_label")}</Label>
+            <Label>{content.style_label.value}</Label>
             <SelectTrigger />
             <SelectContent>
               <SelectItem id="default" textValue="default">
-                {t("style_default")}
+                {content.style_default.value}
               </SelectItem>
               <SelectItem id="compact" textValue="compact">
-                {t("style_compact")}
+                {content.style_compact.value}
               </SelectItem>
             </SelectContent>
           </Select>
         )}
       />
       <TextField>
-        <Label>{t("formatted_text_label")}</Label>
+        <Label>{content.formatted_text_label.value}</Label>
         <Textarea
           value={formatText}
           onChange={(e) => setFormatText(e.target.value)}
@@ -354,13 +387,13 @@ function Content() {
         <CopyButton text={formatText} />
       </div>
 
-      <Portal to="#submit-form">
+      <Portal to="#submit-form-discord">
         <div className="flex gap-2">
           <Button intent="outline" onPress={handleReset}>
-            {t("reset_button")}
+            {content.reset_button.value}
           </Button>
           <Button isPending={generateDiscordFormat.isPending} onPress={() => onSubmit()}>
-            {t("generate_button")}
+            {content.generate_button.value}
           </Button>
         </div>
       </Portal>

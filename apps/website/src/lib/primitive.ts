@@ -1,4 +1,6 @@
-import { composeRenderProps } from "react-aria-components";
+"use client";
+
+import { composeRenderProps } from "react-aria-components/composeRenderProps";
 import { type ClassNameValue, twMerge } from "tailwind-merge";
 
 /** @deprecated Use cx */

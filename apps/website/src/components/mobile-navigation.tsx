@@ -1,26 +1,34 @@
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useLocation } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
-import { Header, Menu, MenuSection, MenuTrigger, Popover } from "react-aria-components";
+import {
+  Header,
+  Menu,
+  MenuItem,
+  MenuSection,
+  MenuTrigger,
+  Popover,
+} from "react-aria-components/Menu";
+import { useIntlayer } from "react-intlayer";
 import { twJoin, twMerge } from "tailwind-merge";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/intentui/button";
+import { Separator } from "@/components/intentui/separator";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
-import { useTranslations } from "@/lib/i18n/context";
 import { cx } from "@/lib/primitive";
 
 import Changelog from "./changelog";
-import { navMenuItems } from "./navbar";
+import { Container } from "./intentui/container";
+import { MenuLabel } from "./intentui/menu";
+import { useNavMenuItems } from "./navbar";
 import { SettingsButton } from "./settings-button";
-import { Container } from "./ui/container";
-import { MenuItemLink, MenuLabel } from "./ui/menu";
 
 export function MobileNavigation() {
-  const t = useTranslations("nav");
+  const content = useIntlayer("nav");
+  const navMenuItems = useNavMenuItems();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
 
@@ -54,7 +62,7 @@ export function MobileNavigation() {
                     )}
                   />
                 </span>
-                <span className="sr-only">{t("toggle_menu")}</span>
+                <span className="sr-only">{content.toggle_menu.value}</span>
               </span>
             </Button>
             <Popover
@@ -72,15 +80,15 @@ export function MobileNavigation() {
             >
               <Menu className="-mt-2 outline-hidden">
                 <MenuSection>
-                  <NavHeading>{t("navigation")}</NavHeading>
-                  <NavLink to="/">
+                  <NavHeading>{content.navigation.value}</NavHeading>
+                  <NavLink href="/">
                     <CubeIcon className="size-5" weight="fill" />
-                    <MenuLabel>{t("home")}</MenuLabel>
+                    <MenuLabel>{content.home.value}</MenuLabel>
                   </NavLink>
                   {navMenuItems.map((menu) => (
-                    <NavLink key={menu.href} to={menu.href}>
+                    <NavLink key={menu.href} href={menu.href}>
                       {menu.icon && <menu.icon className="size-5" weight="regular" />}
-                      <MenuLabel>{t(menu.translationKey)}</MenuLabel>
+                      <MenuLabel>{menu.label}</MenuLabel>
                     </NavLink>
                   ))}
                 </MenuSection>
@@ -111,19 +119,19 @@ export function MobileNavigation() {
   );
 }
 
-interface NavLinkProps extends React.ComponentProps<typeof MenuItemLink> {
+interface NavLinkProps extends React.ComponentProps<typeof MenuItem> {
   isActive?: boolean;
-  to: string;
+  href: string;
 }
 
-function NavLink({ to, ...props }: NavLinkProps) {
+function NavLink({ href, ...props }: NavLinkProps) {
   const { pathname } = useLocation();
-  const isActive = pathname === to;
+  const isActive = pathname === href;
 
   return (
-    <MenuItemLink
+    <MenuItem
       {...props}
-      to={to}
+      href={href}
       className={twMerge(
         "mb-0.5 flex items-center gap-x-3 rounded-lg px-3 py-2.5 text-xl/6 font-medium",
         "focus:outline-hidden",

@@ -4,29 +4,29 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { ofetch } from "ofetch";
 import { useState } from "react";
+import { useIntlayer } from "react-intlayer";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
-import { useTranslations } from "@/lib/i18n/context";
 import { getBaseURL } from "@/lib/utils";
 
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 import {
   CommandMenu,
   CommandMenuItem,
   CommandMenuList,
   CommandMenuSearch,
   CommandMenuSection,
-} from "./ui/command-menu";
+} from "./intentui/command-menu";
 
 export default function UserSearch() {
-  const t = useTranslations("nav.search_user");
+  const content = useIntlayer("nav");
   const recentUsers = useUserSearchStore((a) => a.users);
   const addRecent = useUserSearchStore((a) => a.add);
   const clearAll = useUserSearchStore((a) => a.clearAll);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [debouncedQuery, setQuery] = useDebounceValue<string>("", 350);
+  const [debouncedQuery, setQuery] = useDebounceValue("", 350);
   const enable = debouncedQuery.length > 0;
 
   const { data, isPending } = useQuery({
@@ -44,14 +44,19 @@ export default function UserSearch() {
     setQuery("");
     setIsOpen(false);
     addRecent(user);
-    void router.navigate({ to: `/@${user.nickname}` });
+    void router.navigate({
+      to: "/@$nickname",
+      params: {
+        nickname: user.nickname,
+      },
+    });
   };
 
   return (
     <>
       <Button onPress={() => setIsOpen(true)} size="sm" intent="primary">
         <MagnifyingGlassIcon data-slot="icon" />
-        <span className="hidden sm:block">{t("label")}</span>
+        <span className="hidden sm:block">{content.search_user.label.value}</span>
       </Button>
       <CommandMenu
         shortcut="k"
@@ -60,9 +65,9 @@ export default function UserSearch() {
         isOpen={isOpen}
         onOpenChange={setIsOpen}
       >
-        <CommandMenuSearch placeholder={t("placeholder")} />
+        <CommandMenuSearch placeholder={content.search_user.placeholder.value} />
         <CommandMenuList autoFocus="first" shouldFocusWrap>
-          <CommandMenuSection label={t("result_label")}>
+          <CommandMenuSection label={content.search_user.result_label.value}>
             {data?.map((user) => (
               <CommandMenuItem
                 onAction={() => handleAction(user)}
@@ -74,7 +79,7 @@ export default function UserSearch() {
               </CommandMenuItem>
             ))}
           </CommandMenuSection>
-          <CommandMenuSection label={t("recent_label")}>
+          <CommandMenuSection label={content.search_user.recent_label.value}>
             {[
               ...recentUsers.map((user) => (
                 <CommandMenuItem
@@ -90,11 +95,11 @@ export default function UserSearch() {
                 ? [
                     <CommandMenuItem
                       key="clear"
-                      textValue={t("clear_history")}
+                      textValue={content.search_user.clear_history.value}
                       onAction={() => clearAll()}
                       intent="danger"
                     >
-                      {t("clear_history")}
+                      {content.search_user.clear_history.value}
                     </CommandMenuItem>,
                   ]
                 : []),

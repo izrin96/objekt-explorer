@@ -1,12 +1,51 @@
+import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import type { ToOptions } from "@tanstack/react-router";
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { env } from "@/env";
+import { clientEnv } from "@/lib/env/client";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+import { unobtainables } from "./unobtainables";
+
+export const locales = ["en", "ko"] as const;
+export type Locale = (typeof locales)[number];
+
+export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
+
+export const defaultSort: ValidCustomSort[] = ["date", "season", "collectionNo", "member", "rare"];
+export const defaultSortDuplicate: ValidCustomSort[] = [
+  "date",
+  "season",
+  "collectionNo",
+  "member",
+  "duplicate",
+  "rare",
+];
+export const defaultSortDuplicateSerial: ValidCustomSort[] = [
+  "date",
+  "season",
+  "collectionNo",
+  "member",
+  "serial",
+  "duplicate",
+  "rare",
+];
+
+const baseSeasonColors: Record<string, string> = {
+  Atom: "#FFDD00",
+  Binary: "#75FB4C",
+  Cream: "#FF7477",
+  Divine: "#B400FF",
+  Ever: "#33ECFD",
+  Spring: "#FFE527",
+  Summer: "#619AFF",
+  Autumn: "#B5315A",
+  Winter: "#C6C6C6",
+};
+
+export function getSeasonColor(season: string): string {
+  const base = season.replace(/\d+$/, "");
+  return baseSeasonColors[base] ?? "#C6C6C6";
 }
 
 export const SITE_NAME = "Objekt Tracker";
@@ -27,36 +66,30 @@ export function parseNickname(address: string, nickname?: string | null) {
   return nickname || `${address.substring(0, 8)}...`;
 }
 
-export function getListToOptions(list: {
+export function getListHref(list: {
   listType?: "normal" | "profile";
   slug: string;
   profileSlug?: string | null;
   nickname?: string | null;
   profileAddress?: string | null;
-}): ToOptions {
+}) {
   const isProfileContext = list.listType === "profile" || !!list.profileAddress;
   if (isProfileContext && (list.nickname || list.profileAddress)) {
-    return {
-      to: "/@$nickname/list",
-      params: {
-        nickname: `${list.nickname || list.profileAddress}`,
-      },
-    };
-    // todo: should return `/@${list.nickname || list.profileAddress}/list/${list.profileSlug || list.slug}`;
+    return `/@${list.nickname || list.profileAddress}/list/${list.profileSlug || list.slug}`;
   }
-  return {
-    to: "/list/$slug",
-    params: {
-      slug: list.slug,
-    },
-  };
+  return `/list/${list.slug}`;
 }
 
 export function getBaseURL() {
-  if (typeof window !== "undefined") {
-    return window.location.origin;
+  return clientEnv.VITE_SITE_URL;
+}
+
+export function getUserLocale() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().locale;
+  } catch {
+    return "en";
   }
-  return env.VITE_SITE_URL;
 }
 
 export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
@@ -64,7 +97,6 @@ export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "o
 }
 
 export function tradeableFilter(obj: ValidObjekt) {
-  const unobtainables: string[] = [];
   return !unobtainables.includes(obj.slug) && !["Welcome", "Zero"].includes(obj.class);
 }
 
@@ -74,25 +106,21 @@ export function msToCountdown(ms: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export const mimeTypes = {
-  // Images
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  gif: "image/gif",
-  webp: "image/webp",
-  bmp: "image/bmp",
-  svg: "image/svg+xml",
-
-  // Videos
-  mp4: "video/mp4",
-  webm: "video/webm",
-  ogg: "video/ogg",
-  mov: "video/quicktime",
-  avi: "video/x-msvideo",
-  mkv: "video/x-matroska",
-  m4v: "video/x-m4v",
-} as const;
+export const acceptedFileMimeTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/bmp",
+  "image/svg+xml",
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/x-matroska",
+  "video/x-m4v",
+] as const;
 
 export function getEditionStr(edition: number) {
   return edition === 1 ? "1st" : edition === 2 ? "2nd" : edition === 3 ? "3rd" : "";

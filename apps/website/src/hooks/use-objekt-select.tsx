@@ -1,9 +1,8 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { createContext, type PropsWithChildren, useContext, useRef } from "react";
+import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { createStore, type StoreApi, useStore } from "zustand";
-
-import { useTranslations } from "@/lib/i18n/context";
 
 type ObjektSelectedState = {
   mode: boolean;
@@ -76,10 +75,10 @@ const createObjektSelectStore = (errorMessage: string) =>
 const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(null);
 
 export function ObjektSelectProvider({ children }: PropsWithChildren) {
-  const t = useTranslations("objekt");
+  const content = useIntlayer("objekt");
   const storeRef = useRef<StoreApi<ObjektSelectedState> | null>(null);
   if (!storeRef.current) {
-    storeRef.current = createObjektSelectStore(t("must_select_one"));
+    storeRef.current = createObjektSelectStore(content.must_select_one.value);
   }
 
   return <ObjektSelectContext value={storeRef.current}>{children}</ObjektSelectContext>;

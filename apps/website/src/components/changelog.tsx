@@ -1,14 +1,14 @@
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
+import { useIntlayer } from "react-intlayer";
 
-import { useTranslations } from "@/lib/i18n/context";
-
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 import {
   Disclosure,
   DisclosureGroup,
   DisclosurePanel,
   DisclosureTrigger,
-} from "./ui/disclosure-group";
+} from "./intentui/disclosure-group";
+import { ExternalLink } from "./intentui/link";
 import {
   Modal,
   ModalBody,
@@ -17,43 +17,29 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./ui/modal";
+} from "./intentui/modal";
+import { Note } from "./intentui/note";
 
 export default function Changelog() {
-  const t = useTranslations("common");
+  const content = useIntlayer("common");
 
   const changelog = [
     {
-      date: "2026-02-28",
-      items: ["Added objekt selling note to the list."],
-    },
-    {
-      date: "2026-02-26",
+      date: "2026-04-20 - 2026-04-23",
       items: [
-        "Added objekt price support to the list. Requires setting a currency. Currently, prices can only be set after adding an objekt.",
-        "Added a description field to the list.",
+        "Added move pin order. You can now move your objekt pin.",
+        "Added export button to list view to export as csv file. This could be useful in future to import into third party service like Apollo.",
+        "Added member emoji option in Generate Discord format.",
       ],
     },
     {
-      date: "2026-02-22",
+      date: "2026-04-10",
+      items: ["Added sorting by Rarity. Mint counts are updated hourly."],
+    },
+    {
+      date: "2026-04-06",
       items: [
-        "Added a profile list feature that bound to a profile, allowing serial numbers to be displayed. Good for want-to-sell list.",
-        "Added member progress chart to profile progress page.",
-      ],
-    },
-    {
-      date: "2026-02-09",
-      items: ["Rework COSMO verification with new method, replacing old QR method."],
-    },
-    {
-      date: "2026-02-06",
-      items: ["Added Snapshot feature to view collection at given time."],
-    },
-    {
-      date: "Others",
-      items: [
-        "Improve query performance on Activity and Trade History.",
-        "Added Korean translation.",
+        "Added a Compare button to the list view. You can now compare the current list with your profile or another list. Note: This is an early implementation, UX is still being refined.",
       ],
     },
   ] as const;
@@ -63,11 +49,12 @@ export default function Changelog() {
       <Button size="xs" intent="plain" className="px-1.5 sm:px-1.5">
         <NoteIcon size={16} weight="duotone" />
       </Button>
-      <ModalContent size="xl">
+      <ModalContent size="2xl">
         <ModalHeader>
-          <ModalTitle>{t("changelog")}</ModalTitle>
+          <ModalTitle>{content.changelog.value}</ModalTitle>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="flex flex-col gap-4">
+          <ChangelogNotice />
           <DisclosureGroup defaultExpandedKeys="1">
             {changelog.map((entry, index) => (
               <Disclosure key={entry.date} id={String(index + 1)}>
@@ -86,9 +73,25 @@ export default function Changelog() {
           </DisclosureGroup>
         </ModalBody>
         <ModalFooter>
-          <ModalClose>Close</ModalClose>
+          <ModalClose>{content.modal.close.value}</ModalClose>
         </ModalFooter>
       </ModalContent>
     </Modal>
+  );
+}
+
+function ChangelogNotice() {
+  return (
+    <Note intent="default">
+      Join our support Discord server for bug reporting or suggestions.{" "}
+      <ExternalLink
+        className="underline"
+        href="https://discord.gg/SWEm6RbJD3"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        discord.gg/SWEm6RbJD3
+      </ExternalLink>
+    </Note>
   );
 }

@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { z } from "zod";
 
+import { Loader } from "@/components/intentui/loader";
+import { Note } from "@/components/intentui/note";
 import LiveSessionListRender from "@/components/live/session-list";
-import { Loader } from "@/components/ui/loader";
-import { Note } from "@/components/ui/note";
 
 const liveSearchSchema = z.object({
   token: z.string().optional().default(""),

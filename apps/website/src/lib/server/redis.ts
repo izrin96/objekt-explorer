@@ -1,6 +1,6 @@
 import { RedisClient } from "bun";
 
-import { serverEnv } from "@/env/server";
+import { serverEnv } from "@/lib/env/server";
 
 export const redis = new RedisClient(serverEnv.REDIS_URL);
 

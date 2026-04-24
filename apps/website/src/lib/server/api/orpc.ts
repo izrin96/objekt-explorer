@@ -1,12 +1,12 @@
 import { os } from "@orpc/server";
-import { getRequest } from "@tanstack/react-start/server";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { auth, type Session } from "../auth";
 
 const requiredAuthMiddleware = os
   .$context<{ session?: Session; headers?: Headers }>()
   .middleware(async ({ next, context }) => {
-    const heads = context.headers ?? getRequest().headers;
+    const heads = context.headers ?? getRequestHeaders();
 
     const session =
       context.session ??

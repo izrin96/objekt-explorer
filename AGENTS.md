@@ -34,13 +34,6 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 - Relations defined with Drizzle relations
 - Key tables: user, user_address, lists, profile_list, pins, locked_objekts
 
-## Code Style
-
-- Formatter: oxfmt (configured in `.oxfmtrc.json`)
-- Linter: oxlint (configured in `packages/lint/oxlint.config.ts`)
-- TypeScript strict mode enabled
-- Path alias: `@/*` maps to `src/`
-
 ## Development Commands
 
 All commands should be run from the monorepo root using Turbo:
@@ -86,6 +79,10 @@ bun run format                 # Format all code (oxfmt)
 
 Enforced by oxlint, oxfmt, and TypeScript config. Follow strictly.
 
+- Formatter: oxfmt (configured in `.oxfmtrc.json`)
+- Linter: oxlint (configured in `packages/lint/oxlint.config.ts`)
+- TypeScript strict mode enabled
+- Path alias: `@/*` maps to `src/`
 - `import * as z from "zod"`, never `import { z } from "zod"`
 - All promises must be awaited or explicitly voided
 - Avoid classes (use functions/objects) and enums (use `as const` or unions)
@@ -101,3 +98,12 @@ Enforced by oxlint, oxfmt, and TypeScript config. Follow strictly.
 ## Next.js: ALWAYS read docs before coding
 
 Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
+
+## Skill Loading
+
+Before substantial work:
+
+- Skill check: run `npx @tanstack/intent@latest list`, or use skills already listed in context.
+- Skill guidance: if one local skill clearly matches the task, run `npx @tanstack/intent@latest load <package>#<skill>` and follow the returned `SKILL.md`.
+- Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
+- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.

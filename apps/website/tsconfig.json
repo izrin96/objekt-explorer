@@ -1,11 +1,12 @@
 {
   "extends": "@repo/tsconfig/tsconfig.bun.json",
   "compilerOptions": {
-    "rootDir": "./src",
+    "types": ["vite/client"],
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "allowArbitraryExtensions": true
-  }
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".intlayer/**/*.ts"],
+  "exclude": ["node_modules", "dist", ".turbo"]
 }

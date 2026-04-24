@@ -55,7 +55,7 @@ export function useIsFiltering() {
   return isFiltering(filters);
 }
 
-function isFiltering(filters: Filters) {
+export function isFiltering(filters: Filters) {
   return (
     filters.member !== null ||
     filters.artist !== null ||

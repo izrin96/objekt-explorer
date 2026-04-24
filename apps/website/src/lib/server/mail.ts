@@ -1,6 +1,6 @@
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
 
-import { serverEnv } from "@/env/server";
+import { serverEnv } from "@/lib/env/server";
 
 import { SITE_NAME } from "../utils";
 

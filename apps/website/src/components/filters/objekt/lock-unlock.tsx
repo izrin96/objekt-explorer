@@ -1,17 +1,17 @@
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/ssr";
+import { useIntlayer } from "react-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
-import type { ButtonProps } from "@/components/ui/button";
-import { Button } from "@/components/ui/button";
+import type { ButtonProps } from "@/components/intentui/button";
+import { Button } from "@/components/intentui/button";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useTarget } from "@/hooks/use-target";
-import { useTranslations } from "@/lib/i18n/context";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -33,13 +33,13 @@ export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
       }
     >
       <LockSimpleIcon data-slot="icon" />
-      {t("lock")}
+      {content.lock.value}
     </Button>
   );
 }
 
 export function UnlockObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const t = useTranslations("objekt_menu");
+  const content = useIntlayer("objekt_menu");
   const target = useTarget((a) => a.profile)!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -61,7 +61,7 @@ export function UnlockObjekt({ size }: { size?: ButtonProps["size"] }) {
       }}
     >
       <LockSimpleOpenIcon data-slot="icon" />
-      {t("unlock")}
+      {content.unlock.value}
     </Button>
   );
 }

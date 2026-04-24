@@ -1,29 +1,25 @@
 import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
-import { useState } from "react";
+import { useIntlayer } from "react-intlayer";
+import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import { useTranslations } from "@/lib/i18n/context";
-
-import { Button } from "./ui/button";
+import { Button } from "./intentui/button";
 
 export function CopyButton({ text }: { text: string }) {
   const [, copy] = useCopyToClipboard();
-  const [copied, setCopied] = useState(false);
-  const t = useTranslations("common.copy");
+  const content = useIntlayer("common");
   return (
     <Button
       intent="outline"
       onPress={() => {
-        setCopied(true);
-        return copy(text).then(() => {
-          setTimeout(() => setCopied(false), 2000);
-        });
+        toast.success(content.copy.copied.value);
+        return copy(text);
       }}
       size="xs"
       className="flex items-center gap-1.5"
     >
       <CopyIcon data-slot="icon" />
-      {copied ? t("copied") : t("button")}
+      {content.copy.button.value}
     </Button>
   );
 }

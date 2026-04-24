@@ -1,19 +1,19 @@
 import { parseAsBoolean, useQueryState } from "nuqs";
+import { useIntlayer } from "react-intlayer";
 
-import { Toggle } from "@/components/ui/toggle";
-import { useTranslations } from "@/lib/i18n/context";
+import { Toggle } from "@/components/intentui/toggle";
 
 export function useShowCount() {
   return useQueryState("showCount", parseAsBoolean.withDefault(false));
 }
 
 export default function ShowCountFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [showCount, setShowCount] = useShowCount();
 
   return (
     <Toggle intent="outline" isSelected={showCount ?? false} onChange={setShowCount}>
-      {t("show_count")}
+      {content.show_count.value}
     </Toggle>
   );
 }

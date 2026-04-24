@@ -1,17 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { useEffect, useTransition } from "react";
+import { useTheme } from "next-themes";
+import { useTransition } from "react";
+import { useLocale, useIntlayer } from "react-intlayer";
 
-import type { Theme } from "@/components/theme-provider";
-import { useTheme } from "@/components/theme-provider";
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
-import type { Locale } from "@/i18n/config";
-import { useLocale, useTranslations } from "@/lib/i18n/context";
 import { orpc } from "@/lib/orpc/client";
+import type { Locale } from "@/lib/utils";
 
-import { Description, Label } from "./ui/field";
+import { Description, Label } from "./intentui/field";
 import {
   ModalBody,
   ModalClose,
@@ -19,9 +18,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./ui/modal";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "./ui/select";
-import { Switch } from "./ui/switch";
+} from "./intentui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "./intentui/select";
+import { Switch } from "./intentui/switch";
 
 export function SettingsModal({
   open,
@@ -30,9 +29,9 @@ export function SettingsModal({
   open: boolean;
   setOpen: (val: boolean) => void;
 }) {
-  const t = useTranslations("common.settings");
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const locale = useLocale() as Locale;
+  const content = useIntlayer("common");
+  const { theme, setTheme } = useTheme();
+  const { locale } = useLocale();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const isCompact = useMediaQuery("(max-width: 1560px)");
@@ -42,17 +41,9 @@ export function SettingsModal({
   const hideLabel = useConfigStore((s) => s.hideLabel);
   const setHideLabel = useConfigStore((s) => s.setHideLabel);
 
-  useEffect(() => {
-    if (resolvedTheme === "dark") {
-      document.querySelector('meta[name="theme-color"]')!.setAttribute("content", "#09090b");
-    } else {
-      document.querySelector('meta[name="theme-color"]')!.setAttribute("content", "#ffffff");
-    }
-  }, [resolvedTheme]);
-
-  const handleLocaleChange = (value: string) => {
+  const handleLocaleChange = (value: Locale) => {
     startTransition(async () => {
-      await setLocale.mutateAsync(value as Locale);
+      await setLocale.mutateAsync(value);
       void router.invalidate();
     });
   };
@@ -60,26 +51,26 @@ export function SettingsModal({
   return (
     <ModalContent size="md" isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{t("title")}</ModalTitle>
+        <ModalTitle>{content.settings.title.value}</ModalTitle>
       </ModalHeader>
       <ModalBody className="space-y-4">
         <div className="flex space-y-2">
           <div className="grow">
-            <Label>{t("theme.label")}</Label>
-            <Description>{t("theme.desc")}</Description>
+            <Label>{content.settings.theme.label.value}</Label>
+            <Description>{content.settings.theme.desc.value}</Description>
           </div>
           <div className="flex self-center">
             <Select
               className="shrink"
               value={theme}
-              onChange={(key) => setTheme(key as Theme)}
-              aria-label={t("theme.label")}
+              onChange={(key) => setTheme(key as string)}
+              aria-label={content.settings.theme.label.value}
             >
               <SelectTrigger />
               <SelectContent>
-                <SelectItem id="light">{t("theme.light")}</SelectItem>
-                <SelectItem id="dark">{t("theme.dark")}</SelectItem>
-                <SelectItem id="system">{t("theme.system")}</SelectItem>
+                <SelectItem id="light">{content.settings.theme.light.value}</SelectItem>
+                <SelectItem id="dark">{content.settings.theme.dark.value}</SelectItem>
+                <SelectItem id="system">{content.settings.theme.system.value}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -87,47 +78,51 @@ export function SettingsModal({
 
         <div className="flex space-y-2">
           <div className="grow">
-            <Label>{t("language.label")}</Label>
-            <Description>{t("language.desc")}</Description>
+            <Label>{content.settings.language.label.value}</Label>
+            <Description>{content.settings.language.desc.value}</Description>
           </div>
           <div className="flex self-center">
             <Select
               value={locale}
-              onChange={(key) => handleLocaleChange(key as string)}
+              onChange={(key) => handleLocaleChange(key as Locale)}
               isDisabled={isPending}
-              aria-label={t("language.label")}
+              aria-label={content.settings.language.label.value}
             >
               <SelectTrigger />
               <SelectContent>
-                <SelectItem id="en">{t("language.en")}</SelectItem>
-                <SelectItem id="ko">{t("language.ko")}</SelectItem>
+                <SelectItem id="en">{content.settings.language.en.value}</SelectItem>
+                <SelectItem id="ko">{content.settings.language.ko.value}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-sm font-medium">{t("filters.label")}</h3>
+          <h3 className="text-sm font-medium">{content.settings.filters.label.value}</h3>
 
           {!isCompact && (
-            <Switch isSelected={wide} onChange={setWide} aria-label={t("filters.wide")}>
-              <Label>{t("filters.wide")}</Label>
-              <Description>{t("filters.wide_desc")}</Description>
+            <Switch
+              isSelected={wide}
+              onChange={setWide}
+              aria-label={content.settings.filters.wide.value}
+            >
+              <Label>{content.settings.filters.wide.value}</Label>
+              <Description>{content.settings.filters.wide_desc.value}</Description>
             </Switch>
           )}
 
           <Switch
             isSelected={hideLabel}
             onChange={setHideLabel}
-            aria-label={t("filters.hide_label")}
+            aria-label={content.settings.filters.hide_label.value}
           >
-            <Label>{t("filters.hide_label")}</Label>
-            <Description>{t("filters.hide_label_desc")}</Description>
+            <Label>{content.settings.filters.hide_label.value}</Label>
+            <Description>{content.settings.filters.hide_label_desc.value}</Description>
           </Switch>
         </div>
       </ModalBody>
       <ModalFooter>
-        <ModalClose>Close</ModalClose>
+        <ModalClose>{content.modal.close.value}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );

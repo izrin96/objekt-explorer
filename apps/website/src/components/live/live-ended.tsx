@@ -1,17 +1,16 @@
-import { useLiveSession } from "@/hooks/use-live-session";
-import { useTranslations } from "@/lib/i18n/context";
+import { useIntlayer } from "react-intlayer";
 
-import LiveFooter from "./live-footer";
+import { useLiveSession } from "@/hooks/use-live-session";
 
 export default function LiveEnded() {
-  const t = useTranslations("live");
+  const content = useIntlayer("live");
   const liveSession = useLiveSession();
   return (
-    <div className="relative flex aspect-9/16 h-[calc(100svh-140px)] w-full flex-col items-center justify-center gap-2">
+    <div className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2">
       <div className="relative aspect-square size-full overflow-hidden rounded">
         {liveSession.thumbnailImage && (
           <img
-            className="size-full object-contain object-center"
+            className="absolute size-full object-contain object-center"
             src={liveSession.thumbnailImage}
             alt={liveSession.title}
           />
@@ -19,9 +18,8 @@ export default function LiveEnded() {
       </div>
       <div className="bg-bg/50 absolute size-full"></div>
       <div className="text-fg absolute flex justify-center font-semibold">
-        {t("live_stream_ended")}
+        {content.live_stream_ended.value}
       </div>
-      <LiveFooter />
     </div>
   );
 }

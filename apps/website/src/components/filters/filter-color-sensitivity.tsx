@@ -1,21 +1,21 @@
 import { type CSSProperties, useState } from "react";
+import { useIntlayer } from "react-intlayer";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
-import { useTranslations } from "@/lib/i18n/context";
 
-import { Button } from "../ui/button";
-import { Label } from "../ui/field";
-import { Popover, PopoverBody, PopoverContent } from "../ui/popover";
-import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../ui/slider";
+import { Button } from "../intentui/button";
+import { Label } from "../intentui/field";
+import { Popover, PopoverBody, PopoverContent } from "../intentui/popover";
+import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../intentui/slider";
 
 export default function ColorSensitivityFilter() {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   return (
     <Popover>
-      <Button intent="outline">{t("color_sensitivity")}</Button>
+      <Button intent="outline">{content.color_sensitivity.value}</Button>
       <PopoverContent>
         <PopoverBody className="py-2 [--gutter:--spacing(4)]">
           <ColorSensitivitySlider
@@ -36,9 +36,9 @@ interface ColorSensitivitySliderProps {
 }
 
 function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitivitySliderProps) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const [value, setValue] = useState(initialValue);
-  const debouncedCommit = useDebounceCallback(onCommit, 150);
+  const debouncedCommit = useDebounceCallback(onCommit, 100);
 
   return (
     <Slider
@@ -55,7 +55,7 @@ function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitiv
       style={{ "--primary": color ?? undefined } as CSSProperties}
     >
       <div className="flex min-w-56 items-center justify-between">
-        <Label>{t("color_sensitivity")}</Label>
+        <Label>{content.color_sensitivity.value}</Label>
         <SliderOutput />
       </div>
       <SliderTrack>

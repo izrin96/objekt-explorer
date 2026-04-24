@@ -1,20 +1,20 @@
-import { ChecksIcon, HandPointingIcon, BroomIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChecksIcon, HandPointingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { AnimatePresence, motion } from "motion/react";
 import type { PropsWithChildren } from "react";
+import { useIntlayer } from "react-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { useTranslations } from "@/lib/i18n/context";
 import { replaceUrlSize } from "@/lib/utils";
 
-import { Button } from "../ui/button";
-import { Toggle } from "../ui/toggle";
+import { Button } from "../intentui/button";
+import { Toggle } from "../intentui/toggle";
 
 type Props = PropsWithChildren<{ objekts: ValidObjekt[] }>;
 
 export function SelectMode({ children, objekts }: Props) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const mode = useObjektSelect((a) => a.mode);
   const batchSelect = useObjektSelect((a) => a.batchSelect);
   const toggleMode = useObjektSelect((a) => a.toggleMode);
@@ -24,23 +24,23 @@ export function SelectMode({ children, objekts }: Props) {
     <div className="flex flex-wrap items-center gap-2">
       <Toggle isSelected={mode} intent="outline" onPress={toggleMode}>
         <HandPointingIcon weight="regular" data-slot="icon" />
-        {t("select_mode")}
+        {content.select_mode.value}
       </Toggle>
       <Button intent="outline" onPress={() => batchSelect(objekts)}>
         <ChecksIcon weight="regular" data-slot="icon" />
-        {t("select_all")}
-      </Button>
-      <Button intent="outline" onPress={reset}>
-        <BroomIcon weight="regular" data-slot="icon" />
-        {t("clear_select")}
+        {content.select_all.value}
       </Button>
       {children}
+      <Button intent="outline" onPress={reset}>
+        <XIcon weight="regular" data-slot="icon" />
+        {content.clear_select.value}
+      </Button>
     </div>
   );
 }
 
 export function FloatingSelectMode({ children, objekts }: Props) {
-  const t = useTranslations("filter");
+  const content = useIntlayer("filter");
   const mode = useObjektSelect((a) => a.mode);
   const batchSelect = useObjektSelect((a) => a.batchSelect);
   const reset = useObjektSelect((a) => a.reset);
@@ -76,19 +76,19 @@ export function FloatingSelectMode({ children, objekts }: Props) {
             </div>
 
             <span className="text-sm">
-              {t("selected_count", { count: selected.length.toLocaleString() })}
+              {content.selected_count({ count: selected.length.toLocaleString() }).value}
             </span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button size="sm" intent="outline" onPress={() => batchSelect(objekts)}>
               <ChecksIcon weight="regular" data-slot="icon" />
-              {t("select_all")}
+              {content.select_all.value}
             </Button>
 
             {children}
 
             <Button size="sm" intent="plain" onPress={reset}>
-              {t("clear")}
+              {content.clear.value}
             </Button>
           </div>
         </motion.div>

@@ -1,6 +1,6 @@
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/lib/env/client";
 
-const Analytics = () => {
+export default function Analytics() {
   if (process.env.NODE_ENV !== "production") return null;
 
   return (
@@ -10,6 +10,4 @@ const Analytics = () => {
       data-website-id={clientEnv.VITE_UMAMI_WEBSITE_ID}
     />
   );
-};
-
-export { Analytics };
+}
