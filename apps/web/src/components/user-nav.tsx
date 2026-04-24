@@ -165,7 +165,7 @@ function MyListMenuItem({
         <HeartIcon data-slot="icon" />
         <MenuLabel>{content.my_list.value}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="left top" popover={{ offset: -8 }}>
+      <MenuContent placement="left top" popover={{ offset: -6 }}>
         {!data && (
           <MenuItem isDisabled>
             <MenuLabel>
@@ -218,7 +218,7 @@ function MyCosmoProfileMenuItem() {
         <DeviceMobileIcon data-slot="icon" />
         <MenuLabel>{content.my_cosmo_link.value}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="left top" popover={{ offset: -8 }}>
+      <MenuContent placement="left top" popover={{ offset: -6 }}>
         {!data && (
           <MenuItem isDisabled>
             <MenuLabel>

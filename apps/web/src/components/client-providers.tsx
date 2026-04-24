@@ -2,10 +2,10 @@
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useRouter } from "next/navigation";
+import { IntlayerClientProvider } from "next-intlayer";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { type PropsWithChildren, useState } from "react";
-import { RouterProvider } from "react-aria-components";
+import { I18nProvider } from "react-aria-components/I18nProvider";
 import { preconnect } from "react-dom";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -13,31 +13,29 @@ import { createQueryClient } from "@/lib/query/client";
 
 import { Toast } from "./intentui/toast-custom";
 
-declare module "react-aria-components" {
-  interface RouterConfig {
-    routerOptions: NonNullable<Parameters<ReturnType<typeof useRouter>["push"]>[1]>;
-  }
-}
-
-export default function ClientProviders({ children }: PropsWithChildren) {
+export default function ClientProviders({
+  children,
+  locale,
+}: PropsWithChildren<{ locale: string }>) {
   preconnect("https://imagedelivery.net", { crossOrigin: "" });
   preconnect("https://resources.cosmo.fans", { crossOrigin: "" });
   preconnect("https://static.cosmo.fans", { crossOrigin: "" });
 
-  const router = useRouter();
   const [queryClient] = useState(() => createQueryClient());
 
   return (
-    <RouterProvider navigate={router.push as any}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <NuqsAdapter>
-            <Toast />
-            {children}
-            <ReactQueryDevtools />
-          </NuqsAdapter>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </RouterProvider>
+    <I18nProvider locale={locale}>
+      <IntlayerClientProvider locale={locale}>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <NuqsAdapter>
+              <Toast />
+              {children}
+              <ReactQueryDevtools />
+            </NuqsAdapter>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </IntlayerClientProvider>
+    </I18nProvider>
   );
 }
