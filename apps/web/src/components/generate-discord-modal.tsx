@@ -23,13 +23,7 @@ import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
-import {
-  type FormatStyle,
-  format,
-  type GroupByMode,
-  makeMemberOrderedList,
-  mapByMember,
-} from "@/lib/discord-format-utils";
+import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 
 type Props = {
   open: boolean;
@@ -41,7 +35,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
   const content = useIntlayer("generate_discord");
   const modalContent = useIntlayer("discord_format_modal");
   const [formatText, setFormatText] = useState("");
-  const { artists, compareMember } = useCosmoArtist();
+  const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
   const { handleSubmit, control, setValue, watch } = useForm({
     defaultValues: {
@@ -57,17 +51,15 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
   const groupByValue = watch("groupBy");
 
   const onSubmit = handleSubmit((data) => {
-    const members = makeMemberOrderedList(objekts, artists);
-    const haveCollections = mapByMember(objekts, members);
-    const formatted = format(haveCollections, {
+    const formatted = format(objekts, {
       showQuantity: data.showCount,
       lowercaseCollection: data.lowercaseCollection,
       bullet: data.bullet,
       showMemberEmoji: data.showMemberEmoji,
       groupByMode: data.groupBy,
       style: data.style,
+      compareArtistMember,
       compareSeason,
-      compareMember,
     });
     setFormatText(["## Have", "", formatted].join("\n"));
   });
