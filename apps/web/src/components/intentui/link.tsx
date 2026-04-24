@@ -1,5 +1,6 @@
 "use client";
 
+import NextLink from "next/link";
 import {
   Link as LinkPrimitive,
   type LinkProps as LinkPrimitiveProps,
@@ -25,6 +26,13 @@ export function Link({ className, ref, ...props }: LinkProps) {
         className,
       )}
       {...props}
+      render={(domProps) =>
+        "href" in domProps ? (
+          <NextLink {...domProps} href={domProps.href as any} prefetch={false} />
+        ) : (
+          <span {...domProps} />
+        )
+      }
     />
   );
 }

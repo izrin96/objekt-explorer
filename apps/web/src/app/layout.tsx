@@ -90,13 +90,13 @@ export default async function RootLayout({ children }: PropsWithChildren) {
   return (
     <html
       lang={locale}
+      dir="ltr"
       suppressHydrationWarning
       className={cn(
         notoSansKr.variable,
         notoSansSc.variable,
         googleSansFlex.variable,
         firaCodeFiraCode.variable,
-        "[scrollbar-gutter:stable]",
       )}
     >
       <head>
@@ -104,8 +104,8 @@ export default async function RootLayout({ children }: PropsWithChildren) {
       </head>
       <body className="bg-bg text-fg font-sans antialiased">
         <div className="relative flex min-h-svh flex-col">
-          <ClientProviders>
-            <Providers locale={locale}>
+          <ClientProviders locale={locale}>
+            <Providers>
               <Navbar />
               <main>{children}</main>
               <Analytics />

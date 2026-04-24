@@ -1,4 +1,3 @@
-import { IntlayerClientProvider } from "next-intlayer";
 import { type PropsWithChildren } from "react";
 
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
@@ -7,9 +6,7 @@ import { orpc } from "@/lib/orpc/client";
 import { getQueryClient, HydrateClient } from "@/lib/query/hydration";
 import { getSession } from "@/lib/server/auth";
 
-type ProvidersProps = PropsWithChildren<{ locale: string }>;
-
-export async function Providers({ children, locale }: ProvidersProps) {
+export async function Providers({ children }: PropsWithChildren) {
   const queryClient = getQueryClient();
 
   const filterData = await queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions());
@@ -24,11 +21,9 @@ export async function Providers({ children, locale }: ProvidersProps) {
 
   return (
     <HydrateClient client={queryClient}>
-      <IntlayerClientProvider locale={locale}>
-        <CosmoArtistProvider artists={artists}>
-          <FilterDataProvider data={filterData}>{children}</FilterDataProvider>
-        </CosmoArtistProvider>
-      </IntlayerClientProvider>
+      <CosmoArtistProvider artists={artists}>
+        <FilterDataProvider data={filterData}>{children}</FilterDataProvider>
+      </CosmoArtistProvider>
     </HydrateClient>
   );
 }
