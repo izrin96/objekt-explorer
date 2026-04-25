@@ -30,8 +30,8 @@ import { Loader } from "@/components/intentui/loader";
 import { useCompareObjekts } from "@/hooks/use-compare-objekt";
 import { useConfigStore } from "@/hooks/use-config";
 import { useIsFiltering } from "@/hooks/use-filters";
+import { useListTarget } from "@/hooks/use-list-target";
 import { useResetFilters } from "@/hooks/use-reset-filters";
-import { useTarget } from "@/hooks/use-target";
 import { useSession } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/compare/schemas";
 import type { PublicList } from "@/lib/universal/user";
@@ -42,7 +42,7 @@ interface CompareViewProps {
 }
 
 export default function CompareView({ input }: CompareViewProps) {
-  const list = useTarget((a) => a.list)!;
+  const list = useListTarget();
 
   const isProfileList = list.listType === "profile";
 

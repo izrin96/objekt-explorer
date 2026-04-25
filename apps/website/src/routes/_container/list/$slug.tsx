@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
-import { ProfileProvider } from "@/components/profile-provider";
+import { ListProvider } from "@/hooks/use-list-target";
 import { getListBySlug } from "@/lib/server/functions/list.server";
 
 export const Route = createFileRoute("/_container/list/$slug")({
@@ -20,11 +20,11 @@ function ListDetailPage() {
   const { list } = Route.useLoaderData();
 
   return (
-    <ProfileProvider targetList={list}>
+    <ListProvider list={list}>
       <div className="flex flex-col gap-4 pt-2 pb-36">
         <ListHeader />
         <ListRender />
       </div>
-    </ProfileProvider>
+    </ListProvider>
   );
 }

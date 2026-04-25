@@ -3,7 +3,8 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { orpc } from "@/lib/orpc/client";
 import { sessionOptions } from "@/lib/query-options";
 
-import { useTarget } from "./use-target";
+import { useListTarget } from "./use-list-target";
+import { useProfileTarget } from "./use-profile-target";
 
 export function useSession() {
   return useSuspenseQuery(sessionOptions);
@@ -30,11 +31,11 @@ export function useUserLists() {
 }
 
 export function useProfileAuthed() {
-  const target = useTarget((a) => a.profile);
-  return target?.isOwned ?? false;
+  const target = useProfileTarget();
+  return target.isOwned ?? false;
 }
 
 export function useListAuthed() {
-  const target = useTarget((a) => a.list);
-  return target?.isOwned ?? false;
+  const target = useListTarget();
+  return target.isOwned ?? false;
 }

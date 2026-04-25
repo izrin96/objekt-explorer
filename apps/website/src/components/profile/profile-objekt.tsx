@@ -6,7 +6,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
-import { useTarget } from "@/hooks/use-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useProfileAuthed, useSession } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
@@ -35,7 +35,7 @@ import CheckpointPicker from "./checkpoint-picker";
 import Filter from "./filter";
 
 export default function ProfileObjektRender() {
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 

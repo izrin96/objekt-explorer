@@ -1,22 +1,7 @@
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
-import type { PropsWithChildren } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { TargetProvider } from "@/hooks/use-target";
-import type { PublicList, PublicProfile } from "@/lib/universal/user";
-
-type Props = {
-  targetProfile?: PublicProfile;
-  targetList?: PublicList;
-};
-
-export function ProfileProvider({ children, targetProfile, targetList }: PropsWithChildren<Props>) {
-  return (
-    <TargetProvider profile={targetProfile} list={targetList}>
-      {children}
-    </TargetProvider>
-  );
-}
+import type { PublicProfile } from "@/lib/universal/user";
 
 export function PrivateProfileGuard({
   profile,
@@ -36,5 +21,5 @@ export function PrivateProfileGuard({
     );
   }
 
-  return <>{children}</>;
+  return children;
 }

@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useIntlayer } from "react-intlayer";
 
-import { useTarget } from "@/hooks/use-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { orpc } from "@/lib/orpc/client";
 import { getListHref } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ import { Link } from "../intentui/link";
 
 export default function ProfileLists() {
   const content = useIntlayer("list");
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const { data } = useSuspenseQuery(
     orpc.list.profileLists.queryOptions({
       input: { profileAddress: profile.address },

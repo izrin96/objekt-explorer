@@ -31,8 +31,8 @@ import {
 import Portal from "@/components/portal";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
+import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { useTarget } from "@/hooks/use-target";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 
@@ -222,7 +222,7 @@ export function RemoveFromListModal({
   open: boolean;
   setOpen: (val: boolean) => void;
 }) {
-  const target = useTarget((a) => a.list)!;
+  const target = useListTarget();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
   const content = useIntlayer("list");

@@ -8,7 +8,7 @@ import { useLocale } from "react-intlayer";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useProfileObjektsServer } from "@/hooks/use-profile-objekt-server";
-import { useTarget } from "@/hooks/use-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useSession } from "@/hooks/use-user";
 
 import { ObjektCount } from "../collection/objekt-count";
@@ -25,7 +25,7 @@ import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objek
 import FilterServer from "./filter-server";
 
 export default function ProfileObjektServerRender() {
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const { locale } = useLocale();
 

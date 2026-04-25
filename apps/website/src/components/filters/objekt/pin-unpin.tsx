@@ -7,12 +7,12 @@ import { Button } from "@/components/intentui/button";
 import { useBatchPin } from "@/hooks/actions/batch-pin";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { useTarget } from "@/hooks/use-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
   const content = useIntlayer("objekt_menu");
-  const target = useTarget((a) => a.profile)!;
+  const target = useProfileTarget();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
   const batchPin = useBatchPin();
@@ -40,7 +40,7 @@ export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
 
 export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
   const content = useIntlayer("objekt_menu");
-  const target = useTarget((a) => a.profile)!;
+  const target = useProfileTarget();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
   const batchUnpin = useBatchUnpin();

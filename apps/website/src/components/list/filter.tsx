@@ -2,8 +2,8 @@ import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import { Suspense } from "react";
 
 import { useIsFiltering } from "@/hooks/use-filters";
+import { useListTarget } from "@/hooks/use-list-target";
 import { useResetFilters } from "@/hooks/use-reset-filters";
-import { useTarget } from "@/hooks/use-target";
 import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
 
 import ArtistFilter from "../filters/filter-artist";
@@ -29,7 +29,7 @@ export default function Filter({
 }) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
-  const list = useTarget((a) => a.list)!;
+  const list = useListTarget();
 
   const sortOptions: ValidCustomSort[] =
     list.listType === "profile" ? defaultSortDuplicateSerial : defaultSortDuplicate;

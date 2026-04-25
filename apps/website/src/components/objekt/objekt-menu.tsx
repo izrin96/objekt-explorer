@@ -23,8 +23,9 @@ import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useMovePin } from "@/hooks/actions/move-pin";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
+import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { useTarget } from "@/hooks/use-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
 
@@ -109,7 +110,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
 }
 
 export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
-  const target = useTarget((a) => a.list)!;
+  const target = useListTarget();
   const removeObjektsFromList = useRemoveFromList();
   const content = useIntlayer("objekt_menu");
 
@@ -136,7 +137,7 @@ export function TogglePinMenuItem({
   isPin?: boolean;
   tokenId: string;
 }) {
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
   const content = useIntlayer("objekt_menu");
@@ -169,7 +170,7 @@ export function MovePinMenuItem({
   tokenId: string;
   direction: "up" | "down";
 }) {
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const movePin = useMovePin();
   const content = useIntlayer("objekt_menu");
   return (
@@ -195,7 +196,7 @@ export function ToggleLockMenuItem({
   isLocked?: boolean;
   tokenId: string;
 }) {
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const lock = useBatchLock();
   const unlock = useBatchUnlock();
   const content = useIntlayer("objekt_menu");

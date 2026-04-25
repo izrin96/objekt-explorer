@@ -26,7 +26,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
 import { useOwnedCollections } from "@/hooks/use-owned-collections";
-import { useTarget } from "@/hooks/use-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
 import { getSeasonColor, tradeableFilter, cn } from "@/lib/utils";
@@ -58,7 +58,7 @@ export default function ProfileStatsRender() {
 
 function ProfileStats() {
   const content = useIntlayer("stats");
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 

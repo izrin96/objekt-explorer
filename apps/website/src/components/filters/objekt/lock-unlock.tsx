@@ -7,12 +7,12 @@ import { Button } from "@/components/intentui/button";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
 import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { useTarget } from "@/hooks/use-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
   const content = useIntlayer("objekt_menu");
-  const target = useTarget((a) => a.profile)!;
+  const target = useProfileTarget();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
   const batchLock = useBatchLock();
@@ -40,7 +40,7 @@ export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
 
 export function UnlockObjekt({ size }: { size?: ButtonProps["size"] }) {
   const content = useIntlayer("objekt_menu");
-  const target = useTarget((a) => a.profile)!;
+  const target = useProfileTarget();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
   const batchUnlock = useBatchUnlock();

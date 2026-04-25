@@ -8,11 +8,11 @@ import { orpc } from "@/lib/orpc/client";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useFilters } from "./use-filters";
+import { useListTarget } from "./use-list-target";
 import { useShapeObjekts } from "./use-shape-objekt";
-import { useTarget } from "./use-target";
 
 export function useListObjekts() {
-  const list = useTarget((a) => a.list)!;
+  const list = useListTarget();
   const shape = useShapeObjekts();
   const query = useSuspenseQuery(
     orpc.list.listEntries.queryOptions({

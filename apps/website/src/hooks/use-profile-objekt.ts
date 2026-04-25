@@ -10,12 +10,12 @@ import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useOwnedCollections } from "./use-owned-collections";
+import { useProfileTarget } from "./use-profile-target";
 import { useShapeObjekts } from "./use-shape-objekt";
-import { useTarget } from "./use-target";
 
 export function useProfileObjekts() {
   const shape = useShapeObjekts();
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const deferredFilters = useDeferredValue(filters);

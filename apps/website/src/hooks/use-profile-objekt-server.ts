@@ -1,12 +1,12 @@
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useOwnedCollectionsServer } from "./use-owned-collections-server";
+import { useProfileTarget } from "./use-profile-target";
 import { useShapeObjekts } from "./use-shape-objekt";
-import { useTarget } from "./use-target";
 
 export function useProfileObjektsServer() {
   const shape = useShapeObjekts();
-  const profile = useTarget((a) => a.profile)!;
+  const profile = useProfileTarget();
   const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 

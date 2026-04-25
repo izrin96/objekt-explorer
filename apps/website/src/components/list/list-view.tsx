@@ -7,7 +7,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
-import { useTarget } from "@/hooks/use-target";
+import { useListTarget } from "@/hooks/use-list-target";
 import { useListAuthed, useSession } from "@/hooks/use-user";
 import type { PublicList } from "@/lib/universal/user";
 
@@ -34,7 +34,7 @@ import Filter from "./filter";
 import { SetPriceModal } from "./modal/set-price-modal";
 
 export default function ListRender() {
-  const list = useTarget((a) => a.list)!;
+  const list = useListTarget();
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 

@@ -3,7 +3,8 @@ import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { useTarget } from "@/hooks/use-target";
+import { useListTarget } from "@/hooks/use-list-target";
+import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useListAuthed } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 
@@ -13,8 +14,8 @@ import { Link } from "../intentui/link";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
-  const list = useTarget((a) => a.list)!;
-  const profile = useTarget((a) => a.profile);
+  const list = useListTarget();
+  const profile = useProfileTarget();
   const isListAuthed = useListAuthed();
 
   const isProfileList = list.listType === "profile";

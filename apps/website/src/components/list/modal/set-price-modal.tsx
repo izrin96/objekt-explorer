@@ -20,7 +20,7 @@ import {
 import { NumberField, NumberInput } from "@/components/intentui/number-field";
 import { TextField } from "@/components/intentui/text-field";
 import { useUpdateEntryPrices } from "@/hooks/actions/update-entry-prices";
-import { useTarget } from "@/hooks/use-target";
+import { useListTarget } from "@/hooks/use-list-target";
 
 type SetPriceModalProps = {
   open: boolean;
@@ -38,7 +38,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
   const [objekt] = objekts;
   const content = useIntlayer("list");
   const contentCommon = useIntlayer("common");
-  const list = useTarget((a) => a.list)!;
+  const list = useListTarget();
   const updateEntryPrices = useUpdateEntryPrices();
 
   const { handleSubmit, control, watch, reset } = useForm<FormValues>({
