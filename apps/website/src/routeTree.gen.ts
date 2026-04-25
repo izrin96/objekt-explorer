@@ -10,9 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ContainerRouteImport } from './routes/_container'
-import { Route as AtnicknameRouteImport } from './routes/@$nickname'
+import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$nickname}/route'
 import { Route as ContainerIndexRouteImport } from './routes/_container/index'
-import { Route as AtnicknameIndexRouteImport } from './routes/@$nickname/index'
+import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
 import { Route as RpcSplatRouteImport } from './routes/rpc.$'
 import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
 import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
@@ -23,10 +23,10 @@ import { Route as ContainerTermsPrivacyRouteImport } from './routes/_container/t
 import { Route as ContainerLoginRouteImport } from './routes/_container/login'
 import { Route as ContainerCompareToolRouteImport } from './routes/_container/compare-tool'
 import { Route as ContainerActivityRouteImport } from './routes/_container/activity'
-import { Route as AtnicknameTradesRouteImport } from './routes/@$nickname/trades'
-import { Route as AtnicknameStatsRouteImport } from './routes/@$nickname/stats'
-import { Route as AtnicknameProgressRouteImport } from './routes/@$nickname/progress'
-import { Route as AtnicknameListRouteImport } from './routes/@$nickname/list'
+import { Route as AtChar123nicknameChar125TradesRouteImport } from './routes/@{$nickname}/trades'
+import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$nickname}/stats'
+import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@{$nickname}/progress'
+import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
 import { Route as ContainerLiveIndexRouteImport } from './routes/_container/live/index'
 import { Route as ContainerListIndexRouteImport } from './routes/_container/list/index'
 import { Route as ContainerLinkIndexRouteImport } from './routes/_container/link/index'
@@ -38,7 +38,7 @@ import { Route as ContainerListSlugRouteImport } from './routes/_container/list/
 import { Route as ContainerLinkConnectRouteImport } from './routes/_container/link/connect'
 import { Route as ContainerAuthVerifiedRouteImport } from './routes/_container/auth/verified'
 import { Route as ContainerAuthResetPasswordRouteImport } from './routes/_container/auth/reset-password'
-import { Route as AtnicknameListSlugRouteImport } from './routes/@$nickname/list.$slug'
+import { Route as AtChar123nicknameChar125ListSlugRouteImport } from './routes/@{$nickname}/list.$slug'
 import { Route as ApiObjektsOwnedByAddressRouteImport } from './routes/api/objekts/owned-by.$address'
 import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
 import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
@@ -48,21 +48,23 @@ const ContainerRoute = ContainerRouteImport.update({
   id: '/_container',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AtnicknameRoute = AtnicknameRouteImport.update({
-  id: '/@$nickname',
-  path: '/@$nickname',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AtChar123nicknameChar125RouteRoute =
+  AtChar123nicknameChar125RouteRouteImport.update({
+    id: '/@{$nickname}',
+    path: '/@{$nickname}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ContainerIndexRoute = ContainerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ContainerRoute,
 } as any)
-const AtnicknameIndexRoute = AtnicknameIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AtnicknameRoute,
-} as any)
+const AtChar123nicknameChar125IndexRoute =
+  AtChar123nicknameChar125IndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
 const RpcSplatRoute = RpcSplatRouteImport.update({
   id: '/rpc/$',
   path: '/rpc/$',
@@ -113,26 +115,30 @@ const ContainerActivityRoute = ContainerActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => ContainerRoute,
 } as any)
-const AtnicknameTradesRoute = AtnicknameTradesRouteImport.update({
-  id: '/trades',
-  path: '/trades',
-  getParentRoute: () => AtnicknameRoute,
-} as any)
-const AtnicknameStatsRoute = AtnicknameStatsRouteImport.update({
-  id: '/stats',
-  path: '/stats',
-  getParentRoute: () => AtnicknameRoute,
-} as any)
-const AtnicknameProgressRoute = AtnicknameProgressRouteImport.update({
-  id: '/progress',
-  path: '/progress',
-  getParentRoute: () => AtnicknameRoute,
-} as any)
-const AtnicknameListRoute = AtnicknameListRouteImport.update({
-  id: '/list',
-  path: '/list',
-  getParentRoute: () => AtnicknameRoute,
-} as any)
+const AtChar123nicknameChar125TradesRoute =
+  AtChar123nicknameChar125TradesRouteImport.update({
+    id: '/trades',
+    path: '/trades',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125StatsRoute =
+  AtChar123nicknameChar125StatsRouteImport.update({
+    id: '/stats',
+    path: '/stats',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125ProgressRoute =
+  AtChar123nicknameChar125ProgressRouteImport.update({
+    id: '/progress',
+    path: '/progress',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125ListRoute =
+  AtChar123nicknameChar125ListRouteImport.update({
+    id: '/list',
+    path: '/list',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
 const ContainerLiveIndexRoute = ContainerLiveIndexRouteImport.update({
   id: '/live/',
   path: '/live/',
@@ -189,11 +195,12 @@ const ContainerAuthResetPasswordRoute =
     path: '/auth/reset-password',
     getParentRoute: () => ContainerRoute,
   } as any)
-const AtnicknameListSlugRoute = AtnicknameListSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => AtnicknameListRoute,
-} as any)
+const AtChar123nicknameChar125ListSlugRoute =
+  AtChar123nicknameChar125ListSlugRouteImport.update({
+    id: '/$slug',
+    path: '/$slug',
+    getParentRoute: () => AtChar123nicknameChar125ListRoute,
+  } as any)
 const ApiObjektsOwnedByAddressRoute =
   ApiObjektsOwnedByAddressRouteImport.update({
     id: '/api/objekts/owned-by/$address',
@@ -220,12 +227,12 @@ const ApiObjektsTransfersCollectionSlugSerialRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/@$nickname': typeof AtnicknameRouteWithChildren
+  '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/': typeof ContainerIndexRoute
-  '/@$nickname/list': typeof AtnicknameListRouteWithChildren
-  '/@$nickname/progress': typeof AtnicknameProgressRoute
-  '/@$nickname/stats': typeof AtnicknameStatsRoute
-  '/@$nickname/trades': typeof AtnicknameTradesRoute
+  '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRouteWithChildren
+  '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
+  '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
+  '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/activity': typeof ContainerActivityRoute
   '/compare-tool': typeof ContainerCompareToolRoute
   '/login': typeof ContainerLoginRoute
@@ -236,8 +243,8 @@ export interface FileRoutesByFullPath {
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
   '/rpc/$': typeof RpcSplatRoute
-  '/@$nickname/': typeof AtnicknameIndexRoute
-  '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
+  '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
+  '/@{$nickname}/list/$slug': typeof AtChar123nicknameChar125ListSlugRoute
   '/auth/reset-password': typeof ContainerAuthResetPasswordRoute
   '/auth/verified': typeof ContainerAuthVerifiedRoute
   '/link/connect': typeof ContainerLinkConnectRoute
@@ -255,10 +262,10 @@ export interface FileRoutesByFullPath {
   '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRoutesByTo {
-  '/@$nickname/list': typeof AtnicknameListRouteWithChildren
-  '/@$nickname/progress': typeof AtnicknameProgressRoute
-  '/@$nickname/stats': typeof AtnicknameStatsRoute
-  '/@$nickname/trades': typeof AtnicknameTradesRoute
+  '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRouteWithChildren
+  '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
+  '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
+  '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/activity': typeof ContainerActivityRoute
   '/compare-tool': typeof ContainerCompareToolRoute
   '/login': typeof ContainerLoginRoute
@@ -269,9 +276,9 @@ export interface FileRoutesByTo {
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
   '/rpc/$': typeof RpcSplatRoute
-  '/@$nickname': typeof AtnicknameIndexRoute
+  '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
   '/': typeof ContainerIndexRoute
-  '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
+  '/@{$nickname}/list/$slug': typeof AtChar123nicknameChar125ListSlugRoute
   '/auth/reset-password': typeof ContainerAuthResetPasswordRoute
   '/auth/verified': typeof ContainerAuthVerifiedRoute
   '/link/connect': typeof ContainerLinkConnectRoute
@@ -290,12 +297,12 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/@$nickname': typeof AtnicknameRouteWithChildren
+  '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/_container': typeof ContainerRouteWithChildren
-  '/@$nickname/list': typeof AtnicknameListRouteWithChildren
-  '/@$nickname/progress': typeof AtnicknameProgressRoute
-  '/@$nickname/stats': typeof AtnicknameStatsRoute
-  '/@$nickname/trades': typeof AtnicknameTradesRoute
+  '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRouteWithChildren
+  '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
+  '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
+  '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/_container/activity': typeof ContainerActivityRoute
   '/_container/compare-tool': typeof ContainerCompareToolRoute
   '/_container/login': typeof ContainerLoginRoute
@@ -306,9 +313,9 @@ export interface FileRoutesById {
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
   '/rpc/$': typeof RpcSplatRoute
-  '/@$nickname/': typeof AtnicknameIndexRoute
+  '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
   '/_container/': typeof ContainerIndexRoute
-  '/@$nickname/list/$slug': typeof AtnicknameListSlugRoute
+  '/@{$nickname}/list/$slug': typeof AtChar123nicknameChar125ListSlugRoute
   '/_container/auth/reset-password': typeof ContainerAuthResetPasswordRoute
   '/_container/auth/verified': typeof ContainerAuthVerifiedRoute
   '/_container/link/connect': typeof ContainerLinkConnectRoute
@@ -328,12 +335,12 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/@$nickname'
+    | '/@{$nickname}'
     | '/'
-    | '/@$nickname/list'
-    | '/@$nickname/progress'
-    | '/@$nickname/stats'
-    | '/@$nickname/trades'
+    | '/@{$nickname}/list'
+    | '/@{$nickname}/progress'
+    | '/@{$nickname}/stats'
+    | '/@{$nickname}/trades'
     | '/activity'
     | '/compare-tool'
     | '/login'
@@ -344,8 +351,8 @@ export interface FileRouteTypes {
     | '/api/live-sessions'
     | '/api/open-app'
     | '/rpc/$'
-    | '/@$nickname/'
-    | '/@$nickname/list/$slug'
+    | '/@{$nickname}/'
+    | '/@{$nickname}/list/$slug'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -363,10 +370,10 @@ export interface FileRouteTypes {
     | '/api/objekts/transfers/$collectionSlug/$serial'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/@$nickname/list'
-    | '/@$nickname/progress'
-    | '/@$nickname/stats'
-    | '/@$nickname/trades'
+    | '/@{$nickname}/list'
+    | '/@{$nickname}/progress'
+    | '/@{$nickname}/stats'
+    | '/@{$nickname}/trades'
     | '/activity'
     | '/compare-tool'
     | '/login'
@@ -377,9 +384,9 @@ export interface FileRouteTypes {
     | '/api/live-sessions'
     | '/api/open-app'
     | '/rpc/$'
-    | '/@$nickname'
+    | '/@{$nickname}'
     | '/'
-    | '/@$nickname/list/$slug'
+    | '/@{$nickname}/list/$slug'
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
@@ -397,12 +404,12 @@ export interface FileRouteTypes {
     | '/api/objekts/transfers/$collectionSlug/$serial'
   id:
     | '__root__'
-    | '/@$nickname'
+    | '/@{$nickname}'
     | '/_container'
-    | '/@$nickname/list'
-    | '/@$nickname/progress'
-    | '/@$nickname/stats'
-    | '/@$nickname/trades'
+    | '/@{$nickname}/list'
+    | '/@{$nickname}/progress'
+    | '/@{$nickname}/stats'
+    | '/@{$nickname}/trades'
     | '/_container/activity'
     | '/_container/compare-tool'
     | '/_container/login'
@@ -413,9 +420,9 @@ export interface FileRouteTypes {
     | '/api/live-sessions'
     | '/api/open-app'
     | '/rpc/$'
-    | '/@$nickname/'
+    | '/@{$nickname}/'
     | '/_container/'
-    | '/@$nickname/list/$slug'
+    | '/@{$nickname}/list/$slug'
     | '/_container/auth/reset-password'
     | '/_container/auth/verified'
     | '/_container/link/connect'
@@ -434,7 +441,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  AtnicknameRoute: typeof AtnicknameRouteWithChildren
+  AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
   ContainerRoute: typeof ContainerRouteWithChildren
   ApiActivityRoute: typeof ApiActivityRoute
   ApiCollectionRoute: typeof ApiCollectionRoute
@@ -460,11 +467,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContainerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/@$nickname': {
-      id: '/@$nickname'
-      path: '/@$nickname'
-      fullPath: '/@$nickname'
-      preLoaderRoute: typeof AtnicknameRouteImport
+    '/@{$nickname}': {
+      id: '/@{$nickname}'
+      path: '/@{$nickname}'
+      fullPath: '/@{$nickname}'
+      preLoaderRoute: typeof AtChar123nicknameChar125RouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_container/': {
@@ -474,12 +481,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContainerIndexRouteImport
       parentRoute: typeof ContainerRoute
     }
-    '/@$nickname/': {
-      id: '/@$nickname/'
+    '/@{$nickname}/': {
+      id: '/@{$nickname}/'
       path: '/'
-      fullPath: '/@$nickname/'
-      preLoaderRoute: typeof AtnicknameIndexRouteImport
-      parentRoute: typeof AtnicknameRoute
+      fullPath: '/@{$nickname}/'
+      preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
     '/rpc/$': {
       id: '/rpc/$'
@@ -551,33 +558,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContainerActivityRouteImport
       parentRoute: typeof ContainerRoute
     }
-    '/@$nickname/trades': {
-      id: '/@$nickname/trades'
+    '/@{$nickname}/trades': {
+      id: '/@{$nickname}/trades'
       path: '/trades'
-      fullPath: '/@$nickname/trades'
-      preLoaderRoute: typeof AtnicknameTradesRouteImport
-      parentRoute: typeof AtnicknameRoute
+      fullPath: '/@{$nickname}/trades'
+      preLoaderRoute: typeof AtChar123nicknameChar125TradesRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
-    '/@$nickname/stats': {
-      id: '/@$nickname/stats'
+    '/@{$nickname}/stats': {
+      id: '/@{$nickname}/stats'
       path: '/stats'
-      fullPath: '/@$nickname/stats'
-      preLoaderRoute: typeof AtnicknameStatsRouteImport
-      parentRoute: typeof AtnicknameRoute
+      fullPath: '/@{$nickname}/stats'
+      preLoaderRoute: typeof AtChar123nicknameChar125StatsRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
-    '/@$nickname/progress': {
-      id: '/@$nickname/progress'
+    '/@{$nickname}/progress': {
+      id: '/@{$nickname}/progress'
       path: '/progress'
-      fullPath: '/@$nickname/progress'
-      preLoaderRoute: typeof AtnicknameProgressRouteImport
-      parentRoute: typeof AtnicknameRoute
+      fullPath: '/@{$nickname}/progress'
+      preLoaderRoute: typeof AtChar123nicknameChar125ProgressRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
-    '/@$nickname/list': {
-      id: '/@$nickname/list'
+    '/@{$nickname}/list': {
+      id: '/@{$nickname}/list'
       path: '/list'
-      fullPath: '/@$nickname/list'
-      preLoaderRoute: typeof AtnicknameListRouteImport
-      parentRoute: typeof AtnicknameRoute
+      fullPath: '/@{$nickname}/list'
+      preLoaderRoute: typeof AtChar123nicknameChar125ListRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
     '/_container/live/': {
       id: '/_container/live/'
@@ -656,12 +663,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContainerAuthResetPasswordRouteImport
       parentRoute: typeof ContainerRoute
     }
-    '/@$nickname/list/$slug': {
-      id: '/@$nickname/list/$slug'
+    '/@{$nickname}/list/$slug': {
+      id: '/@{$nickname}/list/$slug'
       path: '/$slug'
-      fullPath: '/@$nickname/list/$slug'
-      preLoaderRoute: typeof AtnicknameListSlugRouteImport
-      parentRoute: typeof AtnicknameListRoute
+      fullPath: '/@{$nickname}/list/$slug'
+      preLoaderRoute: typeof AtChar123nicknameChar125ListSlugRouteImport
+      parentRoute: typeof AtChar123nicknameChar125ListRoute
     }
     '/api/objekts/owned-by/$address': {
       id: '/api/objekts/owned-by/$address'
@@ -694,37 +701,44 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AtnicknameListRouteChildren {
-  AtnicknameListSlugRoute: typeof AtnicknameListSlugRoute
+interface AtChar123nicknameChar125ListRouteChildren {
+  AtChar123nicknameChar125ListSlugRoute: typeof AtChar123nicknameChar125ListSlugRoute
 }
 
-const AtnicknameListRouteChildren: AtnicknameListRouteChildren = {
-  AtnicknameListSlugRoute: AtnicknameListSlugRoute,
+const AtChar123nicknameChar125ListRouteChildren: AtChar123nicknameChar125ListRouteChildren =
+  {
+    AtChar123nicknameChar125ListSlugRoute:
+      AtChar123nicknameChar125ListSlugRoute,
+  }
+
+const AtChar123nicknameChar125ListRouteWithChildren =
+  AtChar123nicknameChar125ListRoute._addFileChildren(
+    AtChar123nicknameChar125ListRouteChildren,
+  )
+
+interface AtChar123nicknameChar125RouteRouteChildren {
+  AtChar123nicknameChar125ListRoute: typeof AtChar123nicknameChar125ListRouteWithChildren
+  AtChar123nicknameChar125ProgressRoute: typeof AtChar123nicknameChar125ProgressRoute
+  AtChar123nicknameChar125StatsRoute: typeof AtChar123nicknameChar125StatsRoute
+  AtChar123nicknameChar125TradesRoute: typeof AtChar123nicknameChar125TradesRoute
+  AtChar123nicknameChar125IndexRoute: typeof AtChar123nicknameChar125IndexRoute
 }
 
-const AtnicknameListRouteWithChildren = AtnicknameListRoute._addFileChildren(
-  AtnicknameListRouteChildren,
-)
+const AtChar123nicknameChar125RouteRouteChildren: AtChar123nicknameChar125RouteRouteChildren =
+  {
+    AtChar123nicknameChar125ListRoute:
+      AtChar123nicknameChar125ListRouteWithChildren,
+    AtChar123nicknameChar125ProgressRoute:
+      AtChar123nicknameChar125ProgressRoute,
+    AtChar123nicknameChar125StatsRoute: AtChar123nicknameChar125StatsRoute,
+    AtChar123nicknameChar125TradesRoute: AtChar123nicknameChar125TradesRoute,
+    AtChar123nicknameChar125IndexRoute: AtChar123nicknameChar125IndexRoute,
+  }
 
-interface AtnicknameRouteChildren {
-  AtnicknameListRoute: typeof AtnicknameListRouteWithChildren
-  AtnicknameProgressRoute: typeof AtnicknameProgressRoute
-  AtnicknameStatsRoute: typeof AtnicknameStatsRoute
-  AtnicknameTradesRoute: typeof AtnicknameTradesRoute
-  AtnicknameIndexRoute: typeof AtnicknameIndexRoute
-}
-
-const AtnicknameRouteChildren: AtnicknameRouteChildren = {
-  AtnicknameListRoute: AtnicknameListRouteWithChildren,
-  AtnicknameProgressRoute: AtnicknameProgressRoute,
-  AtnicknameStatsRoute: AtnicknameStatsRoute,
-  AtnicknameTradesRoute: AtnicknameTradesRoute,
-  AtnicknameIndexRoute: AtnicknameIndexRoute,
-}
-
-const AtnicknameRouteWithChildren = AtnicknameRoute._addFileChildren(
-  AtnicknameRouteChildren,
-)
+const AtChar123nicknameChar125RouteRouteWithChildren =
+  AtChar123nicknameChar125RouteRoute._addFileChildren(
+    AtChar123nicknameChar125RouteRouteChildren,
+  )
 
 interface ContainerRouteChildren {
   ContainerActivityRoute: typeof ContainerActivityRoute
@@ -763,7 +777,8 @@ const ContainerRouteWithChildren = ContainerRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  AtnicknameRoute: AtnicknameRouteWithChildren,
+  AtChar123nicknameChar125RouteRoute:
+    AtChar123nicknameChar125RouteRouteWithChildren,
   ContainerRoute: ContainerRouteWithChildren,
   ApiActivityRoute: ApiActivityRoute,
   ApiCollectionRoute: ApiCollectionRoute,

@@ -19,7 +19,7 @@ export const getListBySlug = createServerFn({ method: "GET" })
     if (sanitized.profileAddress && (sanitized.profileSlug || sanitized.slug)) {
       const profile = await fetchUserByIdentifier(sanitized.profileAddress);
       throw redirect({
-        to: "/@$nickname/list/$slug",
+        to: "/@{$nickname}/list/$slug",
         params: {
           nickname: profile?.nickname || profile?.address || sanitized.profileAddress,
           slug: sanitized.profileSlug || sanitized.slug,

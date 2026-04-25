@@ -4,9 +4,9 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import ProfileObjektRender from "@/components/profile/profile-objekt";
 import ProfileObjektServer from "@/components/profile/profile-objekt-server";
 
-const nicknameRouteApi = getRouteApi("/@$nickname");
+const nicknameRouteApi = getRouteApi("/@{$nickname}");
 
-export const Route = createFileRoute("/@$nickname/")({
+export const Route = createFileRoute("/@{$nickname}/")({
   head: () => ({
     meta: [{ title: "Profile · Objekt Tracker" }],
   }),

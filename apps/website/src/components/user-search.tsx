@@ -45,7 +45,7 @@ export default function UserSearch() {
     setIsOpen(false);
     addRecent(user);
     void router.navigate({
-      to: "/@$nickname",
+      to: "/@{$nickname}",
       params: {
         nickname: user.nickname,
       },

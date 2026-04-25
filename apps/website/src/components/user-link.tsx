@@ -19,7 +19,7 @@ export default function UserLink({
       {address ? (
         <>
           <Link
-            to="/@$nickname"
+            to="/@{$nickname}"
             params={{
               nickname: nickname || address,
             }}

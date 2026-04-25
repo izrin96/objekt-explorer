@@ -411,7 +411,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
           className={buttonStyles({
             intent: "outline",
           })}
-          to="/@$nickname"
+          to="/@{$nickname}"
           params={{
             nickname: nickname,
           }}

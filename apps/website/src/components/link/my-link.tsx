@@ -83,7 +83,7 @@ function LinkCard({ link }: LinkCardProps) {
           <div className="flex min-w-0 flex-1 flex-col gap-3">
             <h3 className="truncate font-semibold">
               <Link
-                to="/@$nickname"
+                to="/@{$nickname}"
                 params={{
                   nickname: link.nickname || link.address,
                 }}
@@ -93,7 +93,7 @@ function LinkCard({ link }: LinkCardProps) {
             </h3>
             <span className="text-muted-fg truncate font-mono text-xs">
               <Link
-                to="/@$nickname"
+                to="/@{$nickname}"
                 params={{
                   nickname: link.nickname || link.address,
                 }}

@@ -36,7 +36,7 @@ export default function ListHeader() {
             </div>
             <div className="text-muted-fg text-sm">
               <Link
-                to={`/@$nickname`}
+                to={`/@{$nickname}`}
                 params={{
                   nickname: profile.nickname || profile.address,
                 }}

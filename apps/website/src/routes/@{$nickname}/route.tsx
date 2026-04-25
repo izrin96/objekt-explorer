@@ -8,7 +8,7 @@ import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/hooks/use-profile-target";
 import { getProfileByNickname } from "@/lib/functions/profile";
 
-export const Route = createFileRoute("/@$nickname")({
+export const Route = createFileRoute("/@{$nickname}")({
   loader: async ({ params }) => {
     const profile = await getProfileByNickname({ data: { nickname: params.nickname } });
     return { profile };
