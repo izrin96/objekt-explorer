@@ -8,9 +8,9 @@ import type { CollectionResult, OwnedObjektsCursor } from "@repo/lib/types/objek
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
-import { authClient } from "./auth-client";
 import { fetchOwnedObjektsByCursor } from "./fetching-util";
 import { mapObjektWithTag } from "./objekt-utils";
+import { orpc } from "./orpc/client";
 import { getBaseURL } from "./utils";
 
 export type ServerFilters = {
@@ -64,11 +64,8 @@ export const ownedCollectionOptions = (address: string, filters?: ServerFilters)
 export const sessionOptions = queryOptions({
   queryKey: ["session"],
   queryFn: async () => {
-    const result = await authClient.getSession();
-    if (result.error) {
-      throw new Error(result.error.message);
-    }
-    return result.data;
+    const result = await orpc.user.session.call();
+    return result;
   },
   staleTime: Infinity,
   refetchOnWindowFocus: false,

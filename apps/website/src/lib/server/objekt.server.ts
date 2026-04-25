@@ -4,9 +4,9 @@ import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { asc, getColumns, ne } from "drizzle-orm";
 
-import { classOrder } from "@/lib/server/utils";
+import { classOrder } from "@/lib/server/utils.server";
 
-import { getCache } from "./redis";
+import { getCache } from "./redis.server";
 
 export async function fetchUniqueCollections() {
   const result = await indexer

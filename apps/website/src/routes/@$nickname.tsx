@@ -5,18 +5,11 @@ import { PrivateProfileGuard, ProfileProvider } from "@/components/profile-provi
 import { ProfileBanner } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
-import { getUserByIdentifier } from "@/lib/data-fetching";
-import { getSession } from "@/lib/server/auth";
-import { sanitizePublicProfile } from "@/lib/server/profile";
 
 export const Route = createFileRoute("/@$nickname")({
-  loader: async ({ params }) => {
-    const [result, session] = await Promise.all([
-      getUserByIdentifier(params.nickname),
-      getSession(),
-    ]);
-
-    const profile = sanitizePublicProfile(result, session?.user.id);
+  loader: async ({ params, context: { orpc } }) => {
+    // todo: move to serverFn
+    const profile = await orpc.profile.get.call(params.nickname);
     return { profile };
   },
   component: ProfileLayout,

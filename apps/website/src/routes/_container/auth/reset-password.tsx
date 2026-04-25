@@ -1,5 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useIntlayer } from "react-intlayer";
 import { z } from "zod";
+
+import ResetPassword from "@/components/auth/reset-password";
 
 const resetPasswordSearchSchema = z.object({
   token: z.string().optional().default(""),
@@ -14,11 +17,12 @@ export const Route = createFileRoute("/_container/auth/reset-password")({
 });
 
 function ResetPasswordPage() {
+  const content = useIntlayer("auth");
   const { token } = Route.useSearch();
 
   if (!token) {
-    return <div>Invalid token</div>;
+    return <div>{content.reset_password.invalid_token.value}</div>;
   }
 
-  return <div>Reset Password</div>;
+  return <ResetPassword token={token as string} />;
 }

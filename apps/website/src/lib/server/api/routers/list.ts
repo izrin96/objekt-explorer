@@ -14,7 +14,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
 
-import { parseSelectedArtists } from "../../cookie";
+import { parseSelectedArtists } from "../../cookie.server";
 import {
   buildListEntries,
   checkProfileOwnership,
@@ -24,11 +24,26 @@ import {
   findOwnedList,
   generateProfileSlug,
   resolveProfileSlugUpdate,
-} from "../../list";
-import { escapeCSV } from "../../utils";
+  fetchList,
+} from "../../list.server";
+import { escapeCSV } from "../../utils.server";
 import { authed, pub } from "../orpc";
 
 export const listRouter = {
+  get: pub
+    .input(
+      z.object({
+        slug: z.string(),
+        profileAddress: z.string().optional(),
+      }),
+    )
+    .handler(async ({ input: { slug, profileAddress } }) => {
+      // todo: move to serverFn
+      const list = await fetchList(slug, profileAddress);
+      if (!list) throw new ORPCError("NOT_FOUND");
+      return list;
+    }),
+
   find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
     const result = await db.query.lists.findFirst({
       columns: {

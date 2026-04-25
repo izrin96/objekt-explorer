@@ -3,6 +3,7 @@ import { compareRouter } from "./compare";
 import { configRouter } from "./config";
 import { cosmoLinkRouter } from "./cosmo-link";
 import { listRouter } from "./list";
+import { liveRouter } from "./live";
 import { lockedObjektsRouter } from "./locked-objekts";
 import { metaRouter } from "./meta";
 import { pinsRouter } from "./pins";
@@ -20,4 +21,5 @@ export const router = {
   meta: metaRouter,
   compare: compareRouter,
   collections: collectionsRouter,
+  live: liveRouter,
 };

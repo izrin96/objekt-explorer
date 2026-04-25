@@ -2,14 +2,13 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useIntlayer } from "react-intlayer";
 
 import MyLinkRender from "@/components/link/my-link";
-import { getSession } from "@/lib/server/auth";
 
 export const Route = createFileRoute("/_container/link/")({
   head: () => ({
     meta: [{ title: "My Cosmo Link · Objekt Tracker" }],
   }),
-  beforeLoad: async () => {
-    const session = await getSession();
+  beforeLoad: async ({ context: { queryClient, orpc } }) => {
+    const session = await queryClient.ensureQueryData(orpc.user.session.queryOptions());
     if (!session) {
       throw redirect({ to: "/" });
     }

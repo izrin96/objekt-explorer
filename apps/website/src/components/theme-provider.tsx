@@ -1,18 +1,17 @@
-import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes";
+import { ThemeProvider as AppThemesProvider, useTheme } from "tanstack-theme-kit";
 
-const ThemeProvider = ({ children, ...props }: React.ComponentProps<typeof NextThemesProvider>) => {
+const ThemeProvider = ({ children, ...props }: React.ComponentProps<typeof AppThemesProvider>) => {
   return (
-    <NextThemesProvider
+    <AppThemesProvider
       attribute="class"
       defaultTheme="system"
       enableSystem
       disableTransitionOnChange
       enableColorScheme
-      themeColor="var(--bg)"
       {...props}
     >
       {children}
-    </NextThemesProvider>
+    </AppThemesProvider>
   );
 };
 

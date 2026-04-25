@@ -8,10 +8,10 @@ import { eq } from "drizzle-orm";
 import { useIntlayer } from "react-intlayer/server";
 
 import { compareInputSchema } from "../../../compare/schemas";
-import { parseSelectedArtists } from "../../cookie";
-import { buildListEntries, fetchListWithEntries } from "../../list";
-import { getUserLocale } from "../../locale";
-import { getCollectionColumns } from "../../objekt";
+import { parseSelectedArtists } from "../../cookie.server";
+import { buildListEntries, fetchListWithEntries } from "../../list.server";
+import { getUserLocale } from "../../locale.server";
+import { getCollectionColumns } from "../../objekt.server";
 import { pub } from "../orpc";
 
 export const compareRouter = {

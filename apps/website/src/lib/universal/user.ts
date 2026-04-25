@@ -1,4 +1,4 @@
-import type { User } from "../server/auth";
+import type { User } from "../server/auth.server";
 
 export type PublicProfile = {
   address: string;

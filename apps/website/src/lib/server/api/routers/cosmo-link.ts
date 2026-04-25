@@ -10,9 +10,9 @@ import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { useIntlayer } from "react-intlayer/server";
 import * as z from "zod";
 
-import { getUserLocale } from "../../locale";
-import { redis } from "../../redis";
-import { getAccessToken } from "../../token";
+import { getUserLocale } from "../../locale.server";
+import { redis } from "../../redis.server";
+import { getAccessToken } from "../../token.server";
 import { authed } from "../orpc";
 
 type VerificationData = {

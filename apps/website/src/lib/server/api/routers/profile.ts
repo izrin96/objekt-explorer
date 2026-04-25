@@ -6,11 +6,22 @@ import { and, eq } from "drizzle-orm";
 import { useIntlayer } from "react-intlayer/server";
 import * as z from "zod";
 
-import { getUserLocale } from "../../locale";
-import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3";
-import { authed } from "../orpc";
+import { fetchUserByIdentifier, getSession } from "../../auth.server";
+import { getUserLocale } from "../../locale.server";
+import { sanitizePublicProfile } from "../../profile.server";
+import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3.server";
+import { authed, pub } from "../orpc";
 
 export const profileRouter = {
+  get: pub.input(z.string()).handler(async ({ input: identifier }) => {
+    // todo: move getSession outside
+    // use serverFn instead to handle with redirect/notFound
+    const [user, session] = await Promise.all([fetchUserByIdentifier(identifier), getSession()]);
+    if (!user) throw new ORPCError("NOT_FOUND");
+    const profile = sanitizePublicProfile(user, session?.user.id);
+    return profile;
+  }),
+
   list: authed.handler(async ({ context: { session } }) => {
     return await fetchUserProfiles(session.user.id);
   }),

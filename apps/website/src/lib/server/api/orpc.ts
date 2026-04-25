@@ -1,7 +1,7 @@
 import { os } from "@orpc/server";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
-import { auth, type Session } from "../auth";
+import { auth, type Session } from "../auth.server";
 
 const requiredAuthMiddleware = os
   .$context<{ session?: Session; headers?: Headers }>()

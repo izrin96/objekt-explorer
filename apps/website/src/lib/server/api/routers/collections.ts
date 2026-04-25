@@ -1,4 +1,4 @@
-import { fetchCollectionRarity } from "@/lib/server/rarity";
+import { fetchCollectionRarity } from "@/lib/server/rarity.server";
 
 import { pub } from "../orpc";
 

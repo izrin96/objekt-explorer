@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { useTheme } from "next-themes";
 import { useTransition } from "react";
 import { useLocale, useIntlayer } from "react-intlayer";
 
+import { useTheme } from "@/components/theme-provider";
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
@@ -63,7 +63,7 @@ export function SettingsModal({
             <Select
               className="shrink"
               value={theme}
-              onChange={(key) => setTheme(key as string)}
+              onChange={(key) => setTheme(key as "dark" | "light" | "system")}
               aria-label={content.settings.theme.label.value}
             >
               <SelectTrigger />

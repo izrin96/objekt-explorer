@@ -1,11 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import LinkRender from "@/components/link/link-process";
-import { getSession } from "@/lib/server/auth";
 
 export const Route = createFileRoute("/_container/link/connect")({
-  beforeLoad: async () => {
-    const session = await getSession();
+  beforeLoad: async ({ context: { queryClient, orpc } }) => {
+    const session = await queryClient.ensureQueryData(orpc.user.session.queryOptions());
     if (!session) {
       throw redirect({ to: "/" });
     }

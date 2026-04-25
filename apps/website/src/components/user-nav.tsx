@@ -18,7 +18,7 @@ import UserAccountModal from "@/components/auth/account/user-account";
 import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
-import type { User } from "@/lib/server/auth";
+import type { User } from "@/lib/server/auth.server";
 import { getListHref, parseNickname } from "@/lib/utils";
 
 import { AboutMenu, AboutModal } from "./about";

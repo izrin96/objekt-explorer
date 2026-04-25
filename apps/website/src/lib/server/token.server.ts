@@ -3,7 +3,7 @@ import { type RefreshTokenResult } from "@repo/cosmo/types/auth";
 import { db } from "@repo/db";
 import { accessToken } from "@repo/db/schema";
 
-import { validateExpiry } from "./jwt";
+import { validateExpiry } from "./jwt.server";
 
 export async function getAccessToken() {
   const result = await db.query.accessToken.findFirst();

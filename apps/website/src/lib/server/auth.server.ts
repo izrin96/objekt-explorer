@@ -16,8 +16,12 @@ import { serverEnv } from "@/lib/env/server";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
 import { getBaseURL, SITE_NAME } from "../utils";
-import { getUserLocale } from "./locale";
-import { sendDeleteAccountVerification, sendResetPassword, sendVerificationEmail } from "./mail";
+import { getUserLocale } from "./locale.server";
+import {
+  sendDeleteAccountVerification,
+  sendResetPassword,
+  sendVerificationEmail,
+} from "./mail.server";
 
 export const auth = betterAuth({
   appName: SITE_NAME,

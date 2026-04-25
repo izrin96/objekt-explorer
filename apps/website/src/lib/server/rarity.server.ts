@@ -2,7 +2,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { count, eq, ne } from "drizzle-orm";
 
-import { getCache } from "./redis";
+import { getCache } from "./redis.server";
 
 export async function fetchCollectionRarity() {
   return getCache("collection-rarity", 2 * 60 * 60, async () => {

@@ -12,8 +12,8 @@ import { and, eq, inArray, ne } from "drizzle-orm";
 import slugify from "slugify";
 
 import type { PublicList } from "../universal/user";
-import { mapPublicUser } from "./auth";
-import { getCollectionColumns } from "./objekt";
+import { mapPublicUser } from "./auth.server";
+import { getCollectionColumns } from "./objekt.server";
 
 export interface ListEntryTransformConfig {
   artists?: ValidArtist[];

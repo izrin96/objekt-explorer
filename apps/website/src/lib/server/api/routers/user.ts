@@ -7,9 +7,9 @@ import * as z from "zod";
 
 import { providersMap } from "@/lib/universal/user";
 
-import { auth } from "../../auth";
-import { getUserLocale } from "../../locale";
-import { authed } from "../orpc";
+import { auth, getSession } from "../../auth.server";
+import { getUserLocale } from "../../locale.server";
+import { authed, pub } from "../orpc";
 
 export const userRouter = {
   refreshProfile: authed.input(z.enum(["discord", "twitter"])).handler(
@@ -99,4 +99,6 @@ export const userRouter = {
           .where(eq(userSchema.id, user.id));
       },
     ),
+
+  session: pub.handler(getSession),
 };

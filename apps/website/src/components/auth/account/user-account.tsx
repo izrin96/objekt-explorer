@@ -38,7 +38,7 @@ import {
 import { TextField } from "@/components/intentui/text-field";
 import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
-import type { User } from "@/lib/server/auth";
+import type { User } from "@/lib/server/auth.server";
 
 import { ListAccounts } from "./link-account";
 

@@ -3,8 +3,8 @@ import type { CosmoMemberBFF } from "@repo/cosmo/types/artists";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { validArtists } from "@repo/cosmo/types/common";
 
-import { getCache } from "./redis";
-import { getAccessToken } from "./token";
+import { getCache } from "./redis.server";
+import { getAccessToken } from "./token.server";
 
 const missingMembers: CosmoMemberBFF[] = [
   {

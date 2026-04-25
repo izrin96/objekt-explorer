@@ -1,13 +1,13 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
 
-import Analytics from "@/components/analytics";
+import ClientProviders from "@/components/client-providers";
 import Navbar from "@/components/navbar";
 import NotFound from "@/components/not-found";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { FilterDataProvider } from "@/hooks/use-filter-data";
+import { clientEnv } from "@/lib/env/client";
 import type { orpc } from "@/lib/orpc/client";
 
 import appCss from "@/styles/app.css?url";
@@ -32,7 +32,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      // Fonts
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Noto+Sans+KR:wght@100..900&family=Noto+Sans+SC:wght@100..900&display=swap",
@@ -41,7 +40,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..900&display=swap",
       },
-      // Icons
       {
         rel: "apple-touch-icon",
         sizes: "180x180",
@@ -59,13 +57,20 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         sizes: "16x16",
         href: "/favicon-16x16.png",
       },
-      { rel: "manifest", href: "/site.webmanifest" },
       { rel: "icon", href: "/favicon.ico" },
-      // Preconnect for external resources
       { rel: "preconnect", href: "https://imagedelivery.net" },
       { rel: "preconnect", href: "https://resources.cosmo.fans" },
       { rel: "preconnect", href: "https://static.cosmo.fans" },
     ],
+    scripts: clientEnv.VITE_UMAMI_SCRIPT_URL
+      ? [
+          {
+            src: clientEnv.VITE_UMAMI_SCRIPT_URL,
+            "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
+            defer: true,
+          },
+        ]
+      : [],
   }),
   // errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
@@ -88,16 +93,14 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootComponent() {
   const { artists, filterData } = Route.useLoaderData();
   return (
-    <>
-      <CosmoArtistProvider artists={artists}>
-        <FilterDataProvider data={filterData}>
-          <Navbar />
-          <main>
-            <Outlet />
-          </main>
-        </FilterDataProvider>
-      </CosmoArtistProvider>
-    </>
+    <CosmoArtistProvider artists={artists}>
+      <FilterDataProvider data={filterData}>
+        <Navbar />
+        <main>
+          <Outlet />
+        </main>
+      </FilterDataProvider>
+    </CosmoArtistProvider>
   );
 }
 
@@ -111,9 +114,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="bg-bg text-fg font-sans antialiased">
-        <div className="relative flex min-h-svh flex-col">{children}</div>
-        <Analytics />
-        <TanStackRouterDevtools position="bottom-right" />
+        <ClientProviders locale="en">
+          <div className="relative flex min-h-svh flex-col">{children}</div>
+        </ClientProviders>
         <Scripts />
       </body>
     </html>

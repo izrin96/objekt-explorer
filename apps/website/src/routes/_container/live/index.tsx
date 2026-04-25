@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Loader } from "@/components/intentui/loader";
 import { Note } from "@/components/intentui/note";
 import LiveSessionListRender from "@/components/live/session-list";
+import { serverEnv } from "@/lib/env/server";
 
 const liveSearchSchema = z.object({
   token: z.string().optional().default(""),
@@ -27,7 +28,8 @@ function LivePage() {
         As this feature violates Cosmo&apos;s Terms of Service, we will no longer continue offering
         it. Please watch the live stream on the Cosmo app instead.
       </Note>
-      {token && (
+      {/* todo: move to serverFn */}
+      {token === serverEnv.BYPASS_LIVE_KEY && (
         <Suspense
           fallback={
             <div className="flex justify-center">

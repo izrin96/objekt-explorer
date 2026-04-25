@@ -5,10 +5,10 @@ import * as z from "zod";
 import type { Outputs } from "@/lib/orpc/server";
 import { locales } from "@/lib/utils";
 
-import { getArtists } from "../../artist";
-import { parseSelectedArtists } from "../../cookie";
-import { setUserLocale } from "../../locale";
-import { fetchFilterData } from "../../objekt";
+import { getArtists } from "../../artist.server";
+import { parseSelectedArtists } from "../../cookie.server";
+import { setUserLocale } from "../../locale.server";
+import { fetchFilterData } from "../../objekt.server";
 import { pub } from "../orpc";
 
 export const configRouter = {

@@ -1,9 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
-import type { ReactNode } from "react";
 
-import ClientProviders from "./components/client-providers";
 import { orpc } from "./lib/orpc/client";
 import { routeTree } from "./routeTree.gen";
 
@@ -26,9 +24,6 @@ export function getRouter() {
     // defaultErrorComponent: DefaultCatchBoundary,
     // defaultNotFoundComponent: () => <NotFound />,
     scrollRestoration: true,
-    Wrap: (props: { children: ReactNode }) => {
-      return <ClientProviders locale="en">{props.children}</ClientProviders>;
-    },
   });
 
   setupRouterSsrQueryIntegration({
