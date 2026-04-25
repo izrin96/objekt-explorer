@@ -15,7 +15,7 @@ import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useProfileObjekts() {
   const shape = useShapeObjekts();
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const deferredFilters = useDeferredValue(filters);

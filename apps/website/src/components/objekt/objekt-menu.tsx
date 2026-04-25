@@ -110,7 +110,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
 }
 
 export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
-  const target = useListTarget();
+  const target = useListTarget()!;
   const removeObjektsFromList = useRemoveFromList();
   const content = useIntlayer("objekt_menu");
 
@@ -137,7 +137,7 @@ export function TogglePinMenuItem({
   isPin?: boolean;
   tokenId: string;
 }) {
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
   const content = useIntlayer("objekt_menu");
@@ -170,7 +170,7 @@ export function MovePinMenuItem({
   tokenId: string;
   direction: "up" | "down";
 }) {
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const movePin = useMovePin();
   const content = useIntlayer("objekt_menu");
   return (
@@ -196,7 +196,7 @@ export function ToggleLockMenuItem({
   isLocked?: boolean;
   tokenId: string;
 }) {
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const lock = useBatchLock();
   const unlock = useBatchUnlock();
   const content = useIntlayer("objekt_menu");

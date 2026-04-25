@@ -4,8 +4,6 @@ import { Addresses } from "@repo/lib";
 import { createFileRoute } from "@tanstack/react-router";
 import { count, eq, sql } from "drizzle-orm";
 
-import { cacheHeaders } from "@/lib/server/api/common.server";
-
 export const Route = createFileRoute("/api/objekts/metadata/$collectionSlug")({
   server: {
     handlers: {
@@ -33,9 +31,7 @@ export const Route = createFileRoute("/api/objekts/metadata/$collectionSlug")({
             transferable: 0,
           });
 
-        return Response.json(results[0], {
-          headers: cacheHeaders(),
-        });
+        return Response.json(results[0]);
       },
     },
   },

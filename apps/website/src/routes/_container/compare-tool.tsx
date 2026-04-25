@@ -5,8 +5,8 @@ import { z } from "zod";
 import CompareView from "@/components/compare/compare-view";
 import { ListProvider } from "@/hooks/use-list-target";
 import { compareInputSchema } from "@/lib/compare/schemas";
+import { getListBySlug } from "@/lib/functions/list";
 import { client } from "@/lib/orpc/client";
-import { getListBySlug } from "@/lib/server/functions/list.server";
 
 const compareSearchSchema = z.object({
   sourceId: z.string().optional(),

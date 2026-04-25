@@ -9,7 +9,7 @@ import { Link } from "../intentui/link";
 
 export default function ProfileLists() {
   const content = useIntlayer("list");
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const { data } = useSuspenseQuery(
     orpc.list.profileLists.queryOptions({
       input: { profileAddress: profile.address },

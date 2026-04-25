@@ -32,10 +32,10 @@ export function useUserLists() {
 
 export function useProfileAuthed() {
   const target = useProfileTarget();
-  return target.isOwned ?? false;
+  return target?.isOwned ?? false;
 }
 
 export function useListAuthed() {
   const target = useListTarget();
-  return target.isOwned ?? false;
+  return target?.isOwned ?? false;
 }

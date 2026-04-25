@@ -35,7 +35,7 @@ import CheckpointPicker from "./checkpoint-picker";
 import Filter from "./filter";
 
 export default function ProfileObjektRender() {
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 

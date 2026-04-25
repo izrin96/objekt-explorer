@@ -14,7 +14,7 @@ import { useShapeProgress } from "./use-shape-progress";
 
 export function useProgressObjekts() {
   const shape = useShapeProgress();
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
   const deferredFilters = useDeferredValue(filters);

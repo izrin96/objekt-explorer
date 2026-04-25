@@ -3,7 +3,7 @@ import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
-import { getAccessToken } from "../token.server";
+import { getAccessToken } from "../server/token.server";
 
 export const getLiveSessionById = createServerFn({ method: "GET" })
   .inputValidator(z.object({ id: z.string() }))

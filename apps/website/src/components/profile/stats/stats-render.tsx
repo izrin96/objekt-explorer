@@ -58,7 +58,7 @@ export default function ProfileStatsRender() {
 
 function ProfileStats() {
   const content = useIntlayer("stats");
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 

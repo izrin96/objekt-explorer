@@ -38,7 +38,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
   const [objekt] = objekts;
   const content = useIntlayer("list");
   const contentCommon = useIntlayer("common");
-  const list = useListTarget();
+  const list = useListTarget()!;
   const updateEntryPrices = useUpdateEntryPrices();
 
   const { handleSubmit, control, watch, reset } = useForm<FormValues>({

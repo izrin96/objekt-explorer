@@ -29,7 +29,7 @@ export default function Filter({
 }) {
   const reset = useResetFilters();
   const isFiltering = useIsFiltering();
-  const list = useListTarget();
+  const list = useListTarget()!;
 
   const sortOptions: ValidCustomSort[] =
     list.listType === "profile" ? defaultSortDuplicateSerial : defaultSortDuplicate;

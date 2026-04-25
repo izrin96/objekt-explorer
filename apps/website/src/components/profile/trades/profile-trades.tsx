@@ -52,7 +52,7 @@ export default function ProfileTradesRender() {
 function ProfileTrades() {
   const content = useIntlayer("trades");
   const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const [filters] = useFilters();
   const [type] = useTypeFilter();
 

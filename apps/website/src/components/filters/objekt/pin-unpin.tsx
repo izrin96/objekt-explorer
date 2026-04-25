@@ -12,7 +12,7 @@ import { isObjektOwned } from "@/lib/objekt-utils";
 
 export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
   const content = useIntlayer("objekt_menu");
-  const target = useProfileTarget();
+  const target = useProfileTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
   const batchPin = useBatchPin();
@@ -40,7 +40,7 @@ export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
 
 export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
   const content = useIntlayer("objekt_menu");
-  const target = useProfileTarget();
+  const target = useProfileTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
   const batchUnpin = useBatchUnpin();

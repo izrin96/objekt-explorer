@@ -6,7 +6,7 @@ import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useProfileObjektsServer() {
   const shape = useShapeObjekts();
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 

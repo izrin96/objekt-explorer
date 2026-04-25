@@ -17,6 +17,5 @@ export function ListProvider({ children, list }: ProviderProps) {
 
 export function useListTarget() {
   const ctx = useContext(ListContext);
-  if (!ctx) throw new Error("useListTarget must be used within ListProvider");
-  return ctx.list;
+  return ctx?.list;
 }

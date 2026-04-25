@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 
 import LiveStreamingRender from "@/components/live/live-render";
-import { getLiveSessionById } from "@/lib/server/functions/live.server";
+import { getLiveSessionById } from "@/lib/functions/live";
 
 const liveDetailSearchSchema = z.object({
   token: z.string().optional().default(""),

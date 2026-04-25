@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ListProvider } from "@/hooks/use-list-target";
-import { getListBySlug } from "@/lib/server/functions/list.server";
+import { getListBySlug } from "@/lib/functions/list";
 
 export const Route = createFileRoute("/_container/list/$slug")({
   loader: async ({ params }) => {

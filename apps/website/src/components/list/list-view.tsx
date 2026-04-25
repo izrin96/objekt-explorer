@@ -34,7 +34,7 @@ import Filter from "./filter";
 import { SetPriceModal } from "./modal/set-price-modal";
 
 export default function ListRender() {
-  const list = useListTarget();
+  const list = useListTarget()!;
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 

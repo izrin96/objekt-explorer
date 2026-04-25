@@ -12,7 +12,7 @@ import { useListTarget } from "./use-list-target";
 import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useListObjekts() {
-  const list = useListTarget();
+  const list = useListTarget()!;
   const shape = useShapeObjekts();
   const query = useSuspenseQuery(
     orpc.list.listEntries.queryOptions({

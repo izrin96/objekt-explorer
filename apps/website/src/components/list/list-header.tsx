@@ -14,7 +14,7 @@ import { Link } from "../intentui/link";
 import { EditListModal } from "./modal/manage-list";
 
 export default function ListHeader() {
-  const list = useListTarget();
+  const list = useListTarget()!;
   const profile = useProfileTarget();
   const isListAuthed = useListAuthed();
 

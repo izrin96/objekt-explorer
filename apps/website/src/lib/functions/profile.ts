@@ -2,9 +2,9 @@ import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
-import { fetchUserByIdentifier } from "../auth.server";
-import { optionalAuth } from "../middleware.server";
-import { sanitizePublicProfile } from "../profile.server";
+import { fetchUserByIdentifier } from "../server/auth.server";
+import { optionalAuth } from "../server/middleware";
+import { sanitizePublicProfile } from "../server/profile.server";
 
 export const getProfileByNickname = createServerFn({ method: "GET" })
   .middleware([optionalAuth])

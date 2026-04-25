@@ -42,7 +42,7 @@ interface CompareViewProps {
 }
 
 export default function CompareView({ input }: CompareViewProps) {
-  const list = useListTarget();
+  const list = useListTarget()!;
 
   const isProfileList = list.listType === "profile";
 

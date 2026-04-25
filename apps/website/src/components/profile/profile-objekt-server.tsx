@@ -25,7 +25,7 @@ import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objek
 import FilterServer from "./filter-server";
 
 export default function ProfileObjektServerRender() {
-  const profile = useProfileTarget();
+  const profile = useProfileTarget()!;
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const { locale } = useLocale();
 

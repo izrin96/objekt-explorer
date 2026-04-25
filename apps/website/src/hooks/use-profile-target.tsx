@@ -17,6 +17,5 @@ export function ProfileProvider({ children, profile }: ProviderProps) {
 
 export function useProfileTarget() {
   const ctx = useContext(ProfileContext);
-  if (!ctx) throw new Error("useProfileTarget must be used within ProfileProvider");
-  return ctx.profile;
+  return ctx?.profile;
 }

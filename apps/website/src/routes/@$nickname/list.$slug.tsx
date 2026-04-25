@@ -4,8 +4,8 @@ import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ListProvider } from "@/hooks/use-list-target";
 import { ProfileProvider } from "@/hooks/use-profile-target";
-import { getListBySlug } from "@/lib/server/functions/list.server";
-import { getProfileByNickname } from "@/lib/server/functions/profile.server";
+import { getListBySlug } from "@/lib/functions/list";
+import { getProfileByNickname } from "@/lib/functions/profile";
 
 export const Route = createFileRoute("/@$nickname/list/$slug")({
   loader: async ({ params }) => {

@@ -6,7 +6,7 @@ import { ProfileBanner } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/hooks/use-profile-target";
-import { getProfileByNickname } from "@/lib/server/functions/profile.server";
+import { getProfileByNickname } from "@/lib/functions/profile";
 
 export const Route = createFileRoute("/@$nickname")({
   loader: async ({ params }) => {

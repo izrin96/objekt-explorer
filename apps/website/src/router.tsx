@@ -2,7 +2,6 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
-import { orpc } from "./lib/orpc/client";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -18,7 +17,6 @@ export function getRouter() {
     routeTree,
     context: {
       queryClient,
-      orpc,
     },
     defaultPreload: "intent",
     // defaultErrorComponent: DefaultCatchBoundary,

@@ -8,13 +8,12 @@ import NotFound from "@/components/not-found";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { FilterDataProvider } from "@/hooks/use-filter-data";
 import { clientEnv } from "@/lib/env/client";
-import type { orpc } from "@/lib/orpc/client";
+import { orpc } from "@/lib/orpc/client";
 
 import appCss from "@/styles/app.css?url";
 
 export interface RouterContext {
   queryClient: QueryClient;
-  orpc: typeof orpc;
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -76,13 +75,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   notFoundComponent: () => <NotFound />,
   shellComponent: RootDocument,
   component: RootComponent,
-  loader: async ({ context }) => {
-    const filterData = await context.queryClient.ensureQueryData(
-      context.orpc.config.getFilterData.queryOptions(),
-    );
-    const artists = await context.queryClient.ensureQueryData(
-      context.orpc.config.getArtists.queryOptions(),
-    );
+  loader: async ({ context: { queryClient } }) => {
+    const filterData = await queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions());
+    const artists = await queryClient.ensureQueryData(orpc.config.getArtists.queryOptions());
     return {
       filterData,
       artists,

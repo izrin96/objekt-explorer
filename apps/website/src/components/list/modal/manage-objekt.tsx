@@ -222,7 +222,7 @@ export function RemoveFromListModal({
   open: boolean;
   setOpen: (val: boolean) => void;
 }) {
-  const target = useListTarget();
+  const target = useListTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
   const content = useIntlayer("list");

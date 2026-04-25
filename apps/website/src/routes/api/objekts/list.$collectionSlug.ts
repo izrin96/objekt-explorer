@@ -3,8 +3,6 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, asc, eq, ne } from "drizzle-orm";
 
-import { cacheHeaders } from "@/lib/server/api/common.server";
-
 export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
   server: {
     handlers: {
@@ -18,14 +16,9 @@ export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
           .where(and(eq(collections.slug, params.collectionSlug), ne(objekts.serial, 0)))
           .orderBy(asc(objekts.serial));
 
-        return Response.json(
-          {
-            serials: results.map((a) => a.serial),
-          },
-          {
-            headers: cacheHeaders(60),
-          },
-        );
+        return Response.json({
+          serials: results.map((a) => a.serial),
+        });
       },
     },
   },

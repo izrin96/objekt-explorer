@@ -2,9 +2,9 @@ import { notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
-import { fetchUserByIdentifier } from "../auth.server";
-import { fetchList, sanitizePublicList } from "../list.server";
-import { optionalAuth } from "../middleware.server";
+import { fetchUserByIdentifier } from "../server/auth.server";
+import { fetchList, sanitizePublicList } from "../server/list.server";
+import { optionalAuth } from "../server/middleware";
 
 export const getListBySlug = createServerFn({ method: "GET" })
   .middleware([optionalAuth])
