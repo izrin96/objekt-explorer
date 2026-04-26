@@ -11,6 +11,7 @@ export const Route = createFileRoute("/@{$nickname}/")({
     meta: [{ title: "Profile · Objekt Tracker" }],
   }),
   component: ProfileCollectionPage,
+  ssr: false,
 });
 
 function ProfileCollectionPage() {

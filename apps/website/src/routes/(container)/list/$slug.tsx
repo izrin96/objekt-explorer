@@ -14,6 +14,7 @@ export const Route = createFileRoute("/(container)/list/$slug")({
     meta: [{ title: `${loaderData?.list?.name ?? "List"} · Objekt Tracker` }],
   }),
   component: ListDetailPage,
+  ssr: false,
 });
 
 function ListDetailPage() {

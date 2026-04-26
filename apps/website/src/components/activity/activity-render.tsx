@@ -11,7 +11,7 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 
@@ -85,15 +85,7 @@ export default function ActivityRender() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <Activity />
-              </Suspense>
+              <Activity />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>

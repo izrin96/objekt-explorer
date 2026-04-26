@@ -7,6 +7,7 @@ export const Route = createFileRoute("/@{$nickname}/progress")({
     meta: [{ title: "Progress · Objekt Tracker" }],
   }),
   component: ProfileProgressPage,
+  ssr: false,
 });
 
 function ProfileProgressPage() {

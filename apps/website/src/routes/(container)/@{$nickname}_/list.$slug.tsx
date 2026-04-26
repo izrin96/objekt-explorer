@@ -19,6 +19,7 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
     meta: [{ title: `${loaderData?.list?.name ?? "List"} · Objekt Tracker` }],
   }),
   component: ProfileListDetailPage,
+  ssr: false,
 });
 
 function ProfileListDetailPage() {

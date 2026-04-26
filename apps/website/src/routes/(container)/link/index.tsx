@@ -15,6 +15,7 @@ export const Route = createFileRoute("/(container)/link/")({
     }
   },
   component: LinkPage,
+  ssr: false,
 });
 
 function LinkPage() {

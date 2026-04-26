@@ -7,6 +7,7 @@ export const Route = createFileRoute("/@{$nickname}/stats")({
     meta: [{ title: "Stats · Objekt Tracker" }],
   }),
   component: ProfileStatsPage,
+  ssr: false,
 });
 
 function ProfileStatsPage() {

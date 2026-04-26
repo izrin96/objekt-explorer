@@ -14,6 +14,7 @@ export const Route = createFileRoute("/(container)/list/")({
     }
   },
   component: ListPage,
+  ssr: false,
 });
 
 function ListPage() {

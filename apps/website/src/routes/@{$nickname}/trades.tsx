@@ -7,6 +7,7 @@ export const Route = createFileRoute("/@{$nickname}/trades")({
     meta: [{ title: "Trades · Objekt Tracker" }],
   }),
   component: ProfileTradesPage,
+  ssr: false,
 });
 
 function ProfileTradesPage() {

@@ -24,6 +24,7 @@ export const Route = createFileRoute("/(container)/live/")({
     meta: [{ title: "Live · Objekt Tracker" }],
   }),
   component: LivePage,
+  ssr: false,
 });
 
 function LivePage() {
