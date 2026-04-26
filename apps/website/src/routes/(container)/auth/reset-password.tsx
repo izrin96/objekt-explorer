@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useIntlayer } from "react-intlayer";
-import { z } from "zod";
+import * as z from "zod";
 
 import ResetPassword from "@/components/auth/reset-password";
 
@@ -8,7 +8,7 @@ const resetPasswordSearchSchema = z.object({
   token: z.string().optional().default(""),
 });
 
-export const Route = createFileRoute("/_container/auth/reset-password")({
+export const Route = createFileRoute("/(container)/auth/reset-password")({
   validateSearch: resetPasswordSearchSchema,
   head: () => ({
     meta: [{ title: "Reset Password · Objekt Tracker" }],

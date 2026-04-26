@@ -7,9 +7,6 @@ import { clientEnv } from "@/lib/env/client";
 
 import { unobtainables } from "./unobtainables";
 
-export const locales = ["en", "ko"] as const;
-export type Locale = (typeof locales)[number];
-
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
 
 export const defaultSort: ValidCustomSort[] = ["date", "season", "collectionNo", "member", "rare"];
@@ -67,15 +64,15 @@ export function parseNickname(address: string, nickname?: string | null) {
 }
 
 export function getListHref(list: {
-  listType?: "normal" | "profile";
+  listType: "normal" | "profile";
   slug: string;
   profileSlug?: string | null;
   nickname?: string | null;
   profileAddress?: string | null;
 }) {
   const isProfileContext = list.listType === "profile" || !!list.profileAddress;
-  if (isProfileContext && (list.nickname || list.profileAddress)) {
-    return `/@${list.nickname || list.profileAddress}/list/${list.profileSlug || list.slug}`;
+  if (isProfileContext && (list.nickname || list.profileAddress) && list.profileSlug) {
+    return `/@${list.nickname || list.profileAddress}/list/${list.profileSlug}`;
   }
   return `/list/${list.slug}`;
 }
@@ -84,7 +81,7 @@ export function getBaseURL() {
   return clientEnv.VITE_SITE_URL;
 }
 
-export function getUserLocale() {
+export function getClientLocale() {
   try {
     return Intl.DateTimeFormat().resolvedOptions().locale;
   } catch {

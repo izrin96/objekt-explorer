@@ -8,24 +8,30 @@ import { optionalAuth } from "../server/middleware";
 
 export const getListBySlug = createServerFn({ method: "GET" })
   .middleware([optionalAuth])
-  .inputValidator(z.object({ slug: z.string() }))
+  .inputValidator(
+    z.object({
+      slug: z.string(),
+      profileAddress: z.string().optional(),
+      redirect: z.boolean().default(false),
+    }),
+  )
   .handler(async ({ data, context: { session } }) => {
-    const list = await fetchList(data.slug);
+    const list = await fetchList(data.slug, data.profileAddress);
     if (!list) throw notFound();
 
-    const sanitized = sanitizePublicList(list, session?.user.id);
-
     // Redirect profile-bound lists
-    if (sanitized.profileAddress && (sanitized.profileSlug || sanitized.slug)) {
-      const profile = await fetchUserByIdentifier(sanitized.profileAddress);
+    if (list.profileAddress && list.profileSlug && data.redirect) {
+      const profile = await fetchUserByIdentifier(list.profileAddress);
+      if (!profile) throw notFound();
       throw redirect({
         to: "/@{$nickname}/list/$slug",
         params: {
-          nickname: profile?.nickname || profile?.address || sanitized.profileAddress,
-          slug: sanitized.profileSlug || sanitized.slug,
+          nickname: profile.nickname || profile.address,
+          slug: list.profileSlug,
         },
       });
     }
 
+    const sanitized = sanitizePublicList(list, session?.user.id);
     return sanitized;
   });

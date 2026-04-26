@@ -88,7 +88,7 @@ type ListCardProps = {
   list: {
     name: string;
     slug: string;
-    listType?: "normal" | "profile";
+    listType: "normal" | "profile";
     nickname?: string | null;
     profileAddress?: string | null;
   };

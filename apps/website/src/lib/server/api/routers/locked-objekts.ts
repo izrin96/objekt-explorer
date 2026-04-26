@@ -27,8 +27,8 @@ export const lockedObjektsRouter = {
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
+    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
+      await checkAddressOwned(address, session.user.id, locale);
 
       if (tokenIds.length === 0) return;
 
@@ -54,8 +54,8 @@ export const lockedObjektsRouter = {
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
+    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
+      await checkAddressOwned(address, session.user.id, locale);
 
       if (tokenIds.length === 0) return;
 

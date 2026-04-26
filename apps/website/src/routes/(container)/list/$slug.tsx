@@ -5,9 +5,9 @@ import ListRender from "@/components/list/list-view";
 import { ListProvider } from "@/hooks/use-list-target";
 import { getListBySlug } from "@/lib/functions/list";
 
-export const Route = createFileRoute("/_container/list/$slug")({
+export const Route = createFileRoute("/(container)/list/$slug")({
   loader: async ({ params }) => {
-    const list = await getListBySlug({ data: { slug: params.slug } });
+    const list = await getListBySlug({ data: { slug: params.slug, redirect: true } });
     return { list };
   },
   head: ({ loaderData }) => ({

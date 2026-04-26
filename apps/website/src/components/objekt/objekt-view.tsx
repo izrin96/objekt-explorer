@@ -6,7 +6,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
-import { replaceUrlSize, cn, getUserLocale } from "@/lib/utils";
+import { replaceUrlSize, cn, getClientLocale } from "@/lib/utils";
 
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
@@ -16,7 +16,7 @@ import ObjektSidebar from "./objekt-sidebar";
 
 function formatPrice(price: number, currency: string): string {
   try {
-    return new NumberFormatter(getUserLocale(), {
+    return new NumberFormatter(getClientLocale(), {
       style: "currency",
       currency,
     }).format(price);

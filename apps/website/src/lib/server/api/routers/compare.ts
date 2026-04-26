@@ -8,21 +8,19 @@ import { eq } from "drizzle-orm";
 import { useIntlayer } from "react-intlayer/server";
 
 import { compareInputSchema } from "../../../compare/schemas";
-import { parseSelectedArtists } from "../../cookie.server";
 import { buildListEntries, fetchListWithEntries } from "../../list.server";
-import { getUserLocale } from "../../locale.server";
 import { getCollectionColumns } from "../../objekt.server";
-import { pub } from "../orpc";
+import { pub, selectedArtistsMiddleware } from "../orpc";
 
 export const compareRouter = {
   compare: pub
+    .use(selectedArtistsMiddleware)
     .input(compareInputSchema)
     .handler(
       async ({
+        context: { locale, artists },
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
-        const artists = await parseSelectedArtists();
-        const locale = await getUserLocale();
         const content = useIntlayer("api_errors", locale);
 
         const sourceList = await fetchListWithEntries(sourceId);

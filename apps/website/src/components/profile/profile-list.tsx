@@ -1,4 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Suspense } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useProfileTarget } from "@/hooks/use-profile-target";
@@ -6,8 +7,23 @@ import { orpc } from "@/lib/orpc/client";
 import { getListHref } from "@/lib/utils";
 
 import { Link } from "../intentui/link";
+import { Loader } from "../intentui/loader";
 
 export default function ProfileLists() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center">
+          <Loader variant="ring" />
+        </div>
+      }
+    >
+      <ProfileList />
+    </Suspense>
+  );
+}
+
+function ProfileList() {
   const content = useIntlayer("list");
   const profile = useProfileTarget()!;
   const { data } = useSuspenseQuery(

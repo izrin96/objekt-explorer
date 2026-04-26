@@ -10,7 +10,8 @@ import { and, eq, isNotNull, sql } from "drizzle-orm";
 import { useIntlayer } from "react-intlayer/server";
 import * as z from "zod";
 
-import { getUserLocale } from "../../locale.server";
+import type { Locale } from "@/lib/locale";
+
 import { redis } from "../../redis.server";
 import { getAccessToken } from "../../token.server";
 import { authed } from "../orpc";
@@ -28,7 +29,7 @@ function generateCode() {
   return `verify-${hex}`;
 }
 
-async function assertAddressNotLinked(address: string, userId: string) {
+async function assertAddressNotLinked(address: string, userId: string, locale: Locale) {
   const [existing] = await db
     .select({ userId: userAddress.userId })
     .from(userAddress)
@@ -36,7 +37,6 @@ async function assertAddressNotLinked(address: string, userId: string) {
     .limit(1);
 
   if (existing) {
-    const locale = await getUserLocale();
     const content = useIntlayer("api_errors", locale);
     throw new ORPCError("BAD_REQUEST", {
       message:
@@ -51,8 +51,8 @@ export const cosmoLinkRouter = {
   // check if address is already linked
   checkAddress: authed
     .input(z.string())
-    .handler(async ({ input: address, context: { session } }) => {
-      await assertAddressNotLinked(address, session.user.id);
+    .handler(async ({ input: address, context: { session, locale } }) => {
+      await assertAddressNotLinked(address, session.user.id, locale);
     }),
 
   // remove link
@@ -75,7 +75,7 @@ export const cosmoLinkRouter = {
         artistId: z.enum(validArtists),
       }),
     )
-    .handler(async ({ input, context: { session } }) => {
+    .handler(async ({ input, context: { session, locale } }) => {
       // rate limit: 1 active code per user per address (Redis key is scoped)
       const rateLimitKey = `cosmo-verify-rate:${session.user.id}`;
       const attempts = await redis.incr(rateLimitKey);
@@ -83,7 +83,6 @@ export const cosmoLinkRouter = {
         await redis.expire(rateLimitKey, 30);
       }
       if (attempts > 5) {
-        const locale = await getUserLocale();
         const content = useIntlayer("api_errors", locale);
         throw new ORPCError("TOO_MANY_REQUESTS", {
           message: content.cosmo_link.rate_limit.value,
@@ -91,7 +90,7 @@ export const cosmoLinkRouter = {
       }
 
       // re-check link status server-side
-      await assertAddressNotLinked(input.address, session.user.id);
+      await assertAddressNotLinked(input.address, session.user.id, locale);
 
       const code = generateCode();
 
@@ -114,8 +113,7 @@ export const cosmoLinkRouter = {
   // verify bio contains the code and link the account
   verifyStatusMessage: authed
     .input(z.string())
-    .handler(async ({ input: address, context: { session } }) => {
-      const locale = await getUserLocale();
+    .handler(async ({ input: address, context: { session, locale } }) => {
       const content = useIntlayer("api_errors", locale);
 
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
@@ -129,7 +127,7 @@ export const cosmoLinkRouter = {
       const data = JSON.parse(raw) as VerificationData;
 
       // re-check link status
-      await assertAddressNotLinked(data.address, session.user.id);
+      await assertAddressNotLinked(data.address, session.user.id, locale);
 
       const { accessToken } = await getAccessToken();
 

@@ -18,7 +18,6 @@ import { getCollectionColumns } from "@/lib/server/objekt.server";
 
 const PER_PAGE = 8000;
 
-// Cursor schema - flexible for different sort modes
 const cursorSchema = z.object({
   receivedAt: z.string().optional(),
   serial: z.coerce.number().optional(),

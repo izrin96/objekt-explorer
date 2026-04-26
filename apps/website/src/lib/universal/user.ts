@@ -40,7 +40,7 @@ export type PublicList = {
   name: string;
   gridColumns?: number | null;
   user?: PublicUser | null;
-  listType?: "normal" | "profile";
+  listType: "normal" | "profile";
   profileAddress?: string | null;
   ownerId?: string | null;
   isOwned?: boolean;

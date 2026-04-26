@@ -90,7 +90,7 @@ function LiveSessionList({ artistId }: { artistId: string }) {
 
 function LiveSessionCard({ live }: { live: LiveSession }) {
   const content = useIntlayer("live");
-  const searchParams = useSearch({ from: "/_container/live/" });
+  const searchParams = useSearch({ from: "/(container)/live/" });
   return (
     <Link to="/live/$id" params={{ id: `${live.id}` }} search={{ token: searchParams.token }}>
       <div className="flex flex-col gap-2">

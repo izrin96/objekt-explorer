@@ -1,14 +1,14 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import MyListRender from "@/components/list/my-list";
-import { orpc } from "@/lib/orpc/client";
+import { sessionOptions } from "@/lib/query-options";
 
-export const Route = createFileRoute("/_container/list/")({
+export const Route = createFileRoute("/(container)/list/")({
   head: () => ({
     meta: [{ title: "My List · Objekt Tracker" }],
   }),
   beforeLoad: async ({ context: { queryClient } }) => {
-    const session = await queryClient.ensureQueryData(orpc.user.session.queryOptions());
+    const session = await queryClient.ensureQueryData(sessionOptions);
     if (!session) {
       throw redirect({ to: "/" });
     }

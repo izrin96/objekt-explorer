@@ -1,6 +1,6 @@
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 
-import type { Locale } from "../utils";
+import type { Locale } from "../locale";
 
 const defaultLocale = "en";
 const COOKIE_NAME = "NEXT_LOCALE";

@@ -9,6 +9,7 @@ import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { FilterDataProvider } from "@/hooks/use-filter-data";
 import { clientEnv } from "@/lib/env/client";
 import { orpc } from "@/lib/orpc/client";
+import { sessionOptions } from "@/lib/query-options";
 
 import appCss from "@/styles/app.css?url";
 
@@ -61,26 +62,32 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: "preconnect", href: "https://resources.cosmo.fans" },
       { rel: "preconnect", href: "https://static.cosmo.fans" },
     ],
-    scripts: clientEnv.VITE_UMAMI_SCRIPT_URL
-      ? [
-          {
-            src: clientEnv.VITE_UMAMI_SCRIPT_URL,
-            "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
-            defer: true,
-          },
-        ]
-      : [],
+    scripts:
+      import.meta.env.PROD && clientEnv.VITE_UMAMI_SCRIPT_URL
+        ? [
+            {
+              src: clientEnv.VITE_UMAMI_SCRIPT_URL,
+              "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
+              defer: true,
+            },
+          ]
+        : [],
   }),
   // errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
   shellComponent: RootDocument,
   component: RootComponent,
   loader: async ({ context: { queryClient } }) => {
-    const filterData = await queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions());
-    const artists = await queryClient.ensureQueryData(orpc.config.getArtists.queryOptions());
+    const [filterData, artists, locale] = await Promise.all([
+      orpc.config.getFilterData.call(),
+      orpc.config.getArtists.call(),
+      orpc.config.getLocale.call(),
+    ]);
+    void queryClient.prefetchQuery(sessionOptions);
     return {
       filterData,
       artists,
+      locale,
     };
   },
 });
@@ -100,16 +107,15 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  // const params = Route.useParams();
-  // const locale = params?.locale ?? defaultLocale;
+  const { locale } = Route.useLoaderData();
 
   return (
-    <html lang={"en"} dir="ltr" suppressHydrationWarning>
+    <html lang={locale} dir="ltr" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body className="bg-bg text-fg font-sans antialiased">
-        <ClientProviders locale="en">
+        <ClientProviders locale={locale}>
           <div className="relative flex min-h-svh flex-col">{children}</div>
         </ClientProviders>
         <Scripts />

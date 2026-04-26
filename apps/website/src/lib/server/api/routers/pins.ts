@@ -50,8 +50,8 @@ export const pinsRouter = {
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
+    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
+      await checkAddressOwned(address, session.user.id, locale);
 
       if (tokenIds.length === 0) return;
 
@@ -82,8 +82,8 @@ export const pinsRouter = {
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
+    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
+      await checkAddressOwned(address, session.user.id, locale);
 
       if (tokenIds.length === 0) return;
 
@@ -98,8 +98,8 @@ export const pinsRouter = {
         direction: z.enum(["up", "down"]),
       }),
     )
-    .handler(async ({ input: { address, tokenId, direction }, context: { session } }) => {
-      await checkAddressOwned(address, session.user.id);
+    .handler(async ({ input: { address, tokenId, direction }, context: { session, locale } }) => {
+      await checkAddressOwned(address, session.user.id, locale);
 
       const validPins = await getValidPins(address);
 

@@ -7,8 +7,8 @@ import { useTheme } from "@/components/theme-provider";
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
+import type { Locale } from "@/lib/locale";
 import { orpc } from "@/lib/orpc/client";
-import type { Locale } from "@/lib/utils";
 
 import { Description, Label } from "./intentui/field";
 import {

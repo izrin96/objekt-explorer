@@ -14,7 +14,6 @@ import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
 
-import { parseSelectedArtists } from "../../cookie.server";
 import {
   buildListEntries,
   checkProfileOwnership,
@@ -24,26 +23,11 @@ import {
   findOwnedList,
   generateProfileSlug,
   resolveProfileSlugUpdate,
-  fetchList,
 } from "../../list.server";
 import { escapeCSV } from "../../utils.server";
-import { authed, pub } from "../orpc";
+import { authed, pub, selectedArtistsMiddleware } from "../orpc";
 
 export const listRouter = {
-  get: pub
-    .input(
-      z.object({
-        slug: z.string(),
-        profileAddress: z.string().optional(),
-      }),
-    )
-    .handler(async ({ input: { slug, profileAddress } }) => {
-      // todo: move to serverFn
-      const list = await fetchList(slug, profileAddress);
-      if (!list) throw new ORPCError("NOT_FOUND");
-      return list;
-    }),
-
   find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
     const result = await db.query.lists.findFirst({
       columns: {
@@ -64,13 +48,13 @@ export const listRouter = {
   }),
 
   listEntries: pub
+    .use(selectedArtistsMiddleware)
     .input(
       z.object({
         slug: z.string(),
       }),
     )
-    .handler(async ({ input: { slug } }) => {
-      const artists = await parseSelectedArtists();
+    .handler(async ({ input: { slug }, context: { artists } }) => {
       const result = await fetchListWithEntries(slug);
 
       if (!result) throw new ORPCError("NOT_FOUND");
@@ -124,6 +108,7 @@ export const listRouter = {
     }),
 
   addObjektsToList: authed
+    .use(selectedArtistsMiddleware)
     .input(
       z.object({
         slug: z.string(),
@@ -137,10 +122,10 @@ export const listRouter = {
         input: { slug, skipDups, collectionSlugs, objekts: inputObjekts },
         context: {
           session: { user },
+          artists,
         },
       }) => {
         const list = await findOwnedList(slug, user.id);
-        const artists = await parseSelectedArtists();
 
         if (list.listType === "profile") {
           if (!inputObjekts || inputObjekts.length === 0) {
@@ -458,52 +443,54 @@ export const listRouter = {
       return { have: haveCollections, want: wantCollections };
     }),
 
-  export: pub.input(z.object({ slug: z.string() })).handler(async ({ input: { slug } }) => {
-    const artists = await parseSelectedArtists();
-    const result = await fetchListWithEntries(slug);
+  export: pub
+    .use(selectedArtistsMiddleware)
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ input: { slug }, context: { artists } }) => {
+      const result = await fetchListWithEntries(slug);
 
-    if (!result) throw new ORPCError("NOT_FOUND");
+      if (!result) throw new ORPCError("NOT_FOUND");
 
-    const entries = await buildListEntries(result.entries, result.listType, { artists });
+      const entries = await buildListEntries(result.entries, result.listType, { artists });
 
-    const headers = [
-      "collection_slug",
-      "collection_id",
-      "season",
-      "member",
-      "artist",
-      "class",
-      "collection_no",
-      "on_offline",
-      "serial",
-      "token_id",
-      "transferable",
-      "price",
-      "is_qyop",
-      "note",
-    ];
+      const headers = [
+        "collection_slug",
+        "collection_id",
+        "season",
+        "member",
+        "artist",
+        "class",
+        "collection_no",
+        "on_offline",
+        "serial",
+        "token_id",
+        "transferable",
+        "price",
+        "is_qyop",
+        "note",
+      ];
 
-    const rows = entries.map((e) => {
-      return [
-        e.slug,
-        e.collectionId,
-        e.season,
-        e.member,
-        e.artist,
-        e.class,
-        e.collectionNo,
-        e.onOffline,
-        "serial" in e ? e.serial : "",
-        "tokenId" in e ? e.tokenId : "",
-        "transferable" in e ? e.transferable : "",
-        e.price,
-        e.isQyop,
-        e.note ? escapeCSV(e.note) : "",
-      ].join(",");
-    });
+      const rows = entries.map((e) => {
+        return [
+          e.slug,
+          e.collectionId,
+          e.season,
+          e.member,
+          e.artist,
+          e.class,
+          e.collectionNo,
+          e.onOffline,
+          "serial" in e ? e.serial : "",
+          "tokenId" in e ? e.tokenId : "",
+          "transferable" in e ? e.transferable : "",
+          e.price,
+          e.isQyop,
+          e.note ? escapeCSV(e.note) : "",
+        ].join(",");
+      });
 
-    const csv = [headers.join(","), ...rows].join("\n");
+      const csv = [headers.join(","), ...rows].join("\n");
 
-    return new File([csv], `Export - ${slug}.csv`, { type: "text/csv" });
-  }),
+      return new File([csv], `Export - ${slug}.csv`, { type: "text/csv" });
+    }),
 };

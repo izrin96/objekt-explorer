@@ -1,3 +1,4 @@
+import { useWebSocket } from "@custom-react-hooks/use-websocket";
 import type { IconProps } from "@phosphor-icons/react";
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
@@ -13,7 +14,6 @@ import { ofetch } from "ofetch";
 import { memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
-import useWebSocket from "react-use-websocket";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -150,10 +150,10 @@ function Activity() {
       refetchOnReconnect: false,
     });
 
-  const { lastJsonMessage, sendJsonMessage } = useWebSocket<WebSocketMessage>(
+  const { lastMessage, sendMessage, readyState } = useWebSocket(
     !(isPending || isRefetching) ? clientEnv.VITE_ACTIVITY_WEBSOCKET_URL : null,
     {
-      shouldReconnect: () => true,
+      shouldReconnect: true,
       reconnectAttempts: Infinity,
       reconnectInterval: 3000,
     },
@@ -191,9 +191,10 @@ function Activity() {
   }, []);
 
   const handleWebSocketMessage = useCallback(
-    (message: WebSocketMessage) => {
+    (message: MessageEvent) => {
+      const parsedData = JSON.parse(message.data) as WebSocketMessage;
       const filtered = filterData(
-        message.data.map((item) =>
+        parsedData.data.map((item) =>
           Object.assign({}, item, { objekt: mapObjektWithTag(item.objekt) }),
         ),
         type ?? "all",
@@ -203,7 +204,7 @@ function Activity() {
         },
       );
 
-      if (message.type === "transfer") {
+      if (parsedData.type === "transfer") {
         if (isHoveringRef.current) {
           setQueuedTransfers((prev) => [...filtered, ...prev]);
         } else {
@@ -212,7 +213,7 @@ function Activity() {
         }
       }
 
-      if (message.type === "history") {
+      if (parsedData.type === "history") {
         const latestData = queryClient.getQueryData<InfiniteData<ActivityResponse>>([
           "activity",
           type,
@@ -235,10 +236,10 @@ function Activity() {
 
   // handle incoming message
   useEffect(() => {
-    if (lastJsonMessage) {
-      handleWebSocketMessage(lastJsonMessage);
+    if (lastMessage) {
+      handleWebSocketMessage(lastMessage);
     }
-  }, [lastJsonMessage, handleWebSocketMessage]);
+  }, [lastMessage, handleWebSocketMessage]);
 
   // clear realtime on query key changes
   useEffect(() => {
@@ -250,10 +251,10 @@ function Activity() {
   // send history request to websocket on query success
   useEffect(() => {
     if (isPending || isRefetching) return;
-    if (status === "success") {
-      sendJsonMessage({ type: "request_history" });
+    if (status === "success" && readyState === WebSocket.OPEN) {
+      sendMessage(JSON.stringify({ type: "request_history" }));
     }
-  }, [status, isPending, isRefetching, sendJsonMessage]);
+  }, [status, isPending, isRefetching, sendMessage, readyState]);
 
   // flush queued transfers when hover ends
   useEffect(() => {

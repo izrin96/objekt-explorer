@@ -7,12 +7,12 @@ import { ProfileProvider } from "@/hooks/use-profile-target";
 import { getListBySlug } from "@/lib/functions/list";
 import { getProfileByNickname } from "@/lib/functions/profile";
 
-export const Route = createFileRoute("/@{$nickname}/list/$slug")({
+export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   loader: async ({ params }) => {
-    const [profile, list] = await Promise.all([
-      getProfileByNickname({ data: { nickname: params.nickname } }),
-      getListBySlug({ data: { slug: params.slug } }),
-    ]);
+    const profile = await getProfileByNickname({ data: { nickname: params.nickname } });
+    const list = await getListBySlug({
+      data: { slug: params.slug, profileAddress: profile.address },
+    });
     return { profile, list };
   },
   head: ({ loaderData }) => ({

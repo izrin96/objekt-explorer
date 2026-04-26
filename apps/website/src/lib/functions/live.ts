@@ -3,6 +3,7 @@ import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
+import { serverEnv } from "../env/server";
 import { getAccessToken } from "../server/token.server";
 
 export const getLiveSessionById = createServerFn({ method: "GET" })
@@ -12,4 +13,13 @@ export const getLiveSessionById = createServerFn({ method: "GET" })
     const live = await fetchLiveSession(accessToken, data.id).catch(() => undefined);
     if (!live) throw notFound();
     return live;
+  });
+
+export const checkAccess = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ token: z.string().optional() }))
+  .handler(async ({ data: { token } }) => {
+    if (!token) return false;
+    const bypassToken = serverEnv.BYPASS_LIVE_KEY;
+    const isBypass = bypassToken === token;
+    return isBypass;
   });

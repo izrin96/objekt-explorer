@@ -19,7 +19,7 @@ const InternalLink = ({ className, ref, ...props }: LinkProps) => {
           "font-medium text-(--text)",
           "outline-0 outline-offset-2 focus-visible:outline-2 focus-visible:outline-ring forced-colors:outline-[Highlight]",
           "disabled:cursor-default disabled:opacity-50 forced-colors:disabled:text-[GrayText]",
-          "href" in props && "cursor-pointer",
+          ("to" in props || "href" in props) && "cursor-pointer",
         ],
         className,
       )}

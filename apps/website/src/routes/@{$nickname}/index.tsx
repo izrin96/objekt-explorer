@@ -4,7 +4,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import ProfileObjektRender from "@/components/profile/profile-objekt";
 import ProfileObjektServer from "@/components/profile/profile-objekt-server";
 
-const nicknameRouteApi = getRouteApi("/@{$nickname}");
+const profileRouteApi = getRouteApi("/@{$nickname}");
 
 export const Route = createFileRoute("/@{$nickname}/")({
   head: () => ({
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/@{$nickname}/")({
 });
 
 function ProfileCollectionPage() {
-  const { profile } = nicknameRouteApi.useLoaderData();
+  const { profile } = profileRouteApi.useLoaderData();
 
   if (profile.address.toLowerCase() === Addresses.SPIN) {
     return <ProfileObjektServer />;

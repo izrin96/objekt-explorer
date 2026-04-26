@@ -4,7 +4,7 @@ import { useIntlayer } from "react-intlayer";
 import { ExternalLink } from "@/components/intentui/link";
 import { SITE_NAME } from "@/lib/utils";
 
-export const Route = createFileRoute("/_container/terms-privacy")({
+export const Route = createFileRoute("/(container)/terms-privacy")({
   head: () => ({
     meta: [{ title: "Terms & Privacy · Objekt Tracker" }],
   }),

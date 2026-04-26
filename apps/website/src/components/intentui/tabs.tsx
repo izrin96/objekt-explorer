@@ -1,4 +1,4 @@
-import { createLink } from "@tanstack/react-router";
+import { createLink, Link } from "@tanstack/react-router";
 import { createContext, use } from "react";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
 import { SelectionIndicator } from "react-aria-components/SelectionIndicator";
@@ -120,9 +120,16 @@ const InternalTab = ({ className, ref, ...props }: TabProps) => {
         "*:[svg]:-ms-0.5 *:[svg]:me-2 *:[svg]:size-4 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-muted-fg selected:*:[svg]:text-primary-subtle-fg",
         "selected:text-fg text-muted-fg hover:bg-secondary selected:hover:bg-primary-subtle hover:text-fg selected:hover:text-fg focus:ring-0",
         "disabled:opacity-50",
-        "href" in props ? "cursor-pointer" : "cursor-default",
+        "to" in props || "href" in props ? "cursor-pointer" : "cursor-default",
         className,
       )}
+      render={(domProps) => {
+        return "to" in props || "href" in props ? (
+          <Link {...(domProps as any)} />
+        ) : (
+          <div {...(domProps as any)} />
+        );
+      }}
     >
       {composeRenderProps(props.children, (children) => (
         <>
@@ -162,7 +169,6 @@ const TabPanel = ({ className, ref, ...props }: TabPanelProps) => {
     />
   );
 };
-
 const Tab = InternalTab;
 const TabLink = createLink(InternalTab);
 

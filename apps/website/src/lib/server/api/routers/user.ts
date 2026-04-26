@@ -8,7 +8,6 @@ import * as z from "zod";
 import { providersMap } from "@/lib/universal/user";
 
 import { auth, getSession } from "../../auth.server";
-import { getUserLocale } from "../../locale.server";
 import { authed, pub } from "../orpc";
 
 export const userRouter = {
@@ -16,10 +15,10 @@ export const userRouter = {
     async ({
       input: providerId,
       context: {
+        locale,
         session: { user },
       },
     }) => {
-      const locale = await getUserLocale();
       const content = useIntlayer("api_errors", locale);
 
       // get accessToken from account

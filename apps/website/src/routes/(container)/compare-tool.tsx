@@ -1,6 +1,6 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
+import * as z from "zod";
 
 import CompareView from "@/components/compare/compare-view";
 import { ListProvider } from "@/hooks/use-list-target";
@@ -25,11 +25,15 @@ type CompareLoaderResult =
     }
   | { ok: false; error: string };
 
-export const Route = createFileRoute("/_container/compare-tool")({
+export const Route = createFileRoute("/(container)/compare-tool")({
   validateSearch: compareSearchSchema,
-  loaderDeps: ({ search }) => {
-    return search;
-  },
+  loaderDeps: ({ search }) => ({
+    sourceId: search.sourceId,
+    targetType: search.targetType,
+    targetProfile: search.targetProfile,
+    targetListId: search.targetListId,
+    mode: search.mode,
+  }),
   loader: async ({ deps }) => {
     const parseResult = compareInputSchema.safeParse(deps);
     if (!parseResult.success) {

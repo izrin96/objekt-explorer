@@ -155,6 +155,7 @@
         "@aws-sdk/s3-presigned-post": "^3.1036.0",
         "@base-ui/react": "^1.4.1",
         "@better-auth/i18n": "^1.6.9",
+        "@custom-react-hooks/use-websocket": "^1.0.0",
         "@heroicons/react": "^2.2.0",
         "@internationalized/date": "^3.12.1",
         "@internationalized/number": "^3.6.6",
@@ -198,7 +199,6 @@
         "react-hook-form": "^7.73.1",
         "react-intersection-observer": "^10.0.3",
         "react-intlayer": "^8.7.6",
-        "react-use-websocket": "^4.13.0",
         "recharts": "^3.8.1",
         "slugify": "^1.6.9",
         "sonner": "^2.0.7",
@@ -544,6 +544,8 @@
     "@clack/prompts": ["@clack/prompts@0.11.0", "", { "dependencies": { "@clack/core": "0.5.0", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw=="],
 
     "@cspotcode/source-map-support": ["@cspotcode/source-map-support@0.8.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.9" } }, "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw=="],
+
+    "@custom-react-hooks/use-websocket": ["@custom-react-hooks/use-websocket@1.0.0", "", { "peerDependencies": { "react": ">=16.8.0" } }, "sha512-Dp7MKm08NeAYyfIzoczzWeXvGFZPMWi6TD/cFdyYAAZZS2n3AkBMA/X7HvtbjtEtNiRRijA5CezHT7OFKHkooA=="],
 
     "@drizzle-team/brocli": ["@drizzle-team/brocli@0.11.0", "", {}, "sha512-hD3pekGiPg0WPCCGAZmusBBJsDqGUR66Y452YgQsZOnkdQ7ViEPKuyP4huUGEZQefp8g34RRodXYmJ2TbCH+tg=="],
 

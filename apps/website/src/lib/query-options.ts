@@ -63,10 +63,7 @@ export const ownedCollectionOptions = (address: string, filters?: ServerFilters)
 
 export const sessionOptions = queryOptions({
   queryKey: ["session"],
-  queryFn: async () => {
-    const result = await orpc.user.session.call();
-    return result;
-  },
+  queryFn: () => orpc.user.session.call(),
   staleTime: Infinity,
   refetchOnWindowFocus: false,
 });

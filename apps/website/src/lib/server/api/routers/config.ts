@@ -2,12 +2,12 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { setCookie } from "@tanstack/react-start/server";
 import * as z from "zod";
 
+import { locales } from "@/lib/locale";
 import type { Outputs } from "@/lib/orpc/server";
-import { locales } from "@/lib/utils";
 
 import { getArtists } from "../../artist.server";
 import { parseSelectedArtists } from "../../cookie.server";
-import { setUserLocale } from "../../locale.server";
+import { getUserLocale, setUserLocale } from "../../locale.server";
 import { fetchFilterData } from "../../objekt.server";
 import { pub } from "../orpc";
 
@@ -28,6 +28,8 @@ export const configRouter = {
   setLocale: pub.input(z.enum(locales)).handler(async ({ input: locale }) => {
     await setUserLocale(locale);
   }),
+
+  getLocale: pub.handler(getUserLocale),
 
   getArtists: pub.handler(getArtists),
 };
