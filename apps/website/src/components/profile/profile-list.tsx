@@ -4,7 +4,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { orpc } from "@/lib/orpc/client";
-import { getListHref } from "@/lib/utils";
+import { getListLinkOption } from "@/lib/utils";
 
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
@@ -44,12 +44,10 @@ function ProfileList() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((list) => {
-            const href = getListHref(list);
-
             return (
               <Link
                 key={list.slug}
-                to={href}
+                {...getListLinkOption(list)}
                 className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors"
               >
                 <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
-import { useLocation } from "@tanstack/react-router";
+import { createLink, useLocation, useMatchRoute, Link as RouterLink } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
+import type { MenuItemProps } from "react-aria-components/Menu";
 import {
   Header,
   Menu,
@@ -86,7 +87,7 @@ export function MobileNavigation() {
                     <MenuLabel>{content.home.value}</MenuLabel>
                   </NavLink>
                   {navMenuItems.map((menu) => (
-                    <NavLink key={menu.href} href={menu.href}>
+                    <NavLink key={menu.to} to={menu.to}>
                       {menu.icon && <menu.icon className="size-5" weight="regular" />}
                       <MenuLabel>{menu.label}</MenuLabel>
                     </NavLink>
@@ -119,19 +120,22 @@ export function MobileNavigation() {
   );
 }
 
-interface NavLinkProps extends React.ComponentProps<typeof MenuItem> {
-  isActive?: boolean;
-  href: string;
-}
+const MenuItemLinkWrapper = ({ ...props }: MenuItemProps) => {
+  return <MenuItem {...props} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
+};
+const MenuItemLink = createLink(MenuItemLinkWrapper);
 
-function NavLink({ href, ...props }: NavLinkProps) {
-  const { pathname } = useLocation();
-  const isActive = pathname === href;
+interface NavLinkProps extends React.ComponentProps<typeof MenuItemLink> {}
+
+function NavLink(props: NavLinkProps) {
+  const matchRoute = useMatchRoute();
+  const isActive = matchRoute({
+    to: props.to,
+  });
 
   return (
-    <MenuItem
+    <MenuItemLink
       {...props}
-      href={href}
       className={twMerge(
         "mb-0.5 flex items-center gap-x-3 rounded-lg px-3 py-2.5 text-xl/6 font-medium",
         "focus:outline-hidden",

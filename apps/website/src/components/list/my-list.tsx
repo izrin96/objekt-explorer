@@ -5,7 +5,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 
 import { orpc } from "@/lib/orpc/client";
-import { getListHref, parseNickname } from "@/lib/utils";
+import { getListLinkOption, parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Button } from "../intentui/button";
@@ -99,8 +99,6 @@ function ListCard({ list }: ListCardProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const content = useIntlayer("list");
 
-  const href = getListHref(list);
-
   return (
     <>
       <EditListModal slug={list.slug} open={editOpen} setOpen={setEditOpen} />
@@ -109,7 +107,7 @@ function ListCard({ list }: ListCardProps) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h3 className="font-semibold">
-              <Link to={href}>{list.name}</Link>
+              <Link {...getListLinkOption(list)}>{list.name}</Link>
             </h3>
             {list.profileAddress && (
               <span className="text-muted-fg text-sm">

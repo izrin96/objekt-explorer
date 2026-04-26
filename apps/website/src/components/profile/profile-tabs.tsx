@@ -1,7 +1,5 @@
 import { Addresses } from "@repo/lib";
-import type { LinkOptions } from "@tanstack/react-router";
 import { linkOptions, useLocation, useRouter } from "@tanstack/react-router";
-import { useCallback } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import type { PublicProfile } from "@/lib/universal/user";
@@ -15,13 +13,6 @@ export default function ProfileTabs({ user }: { user: PublicProfile }) {
   const nickname = user.nickname || user.address;
 
   const disabled = user.address.toLowerCase() === Addresses.SPIN;
-
-  const resolvePathname = useCallback(
-    (options: LinkOptions) => {
-      return router.buildLocation(options).pathname;
-    },
-    [router],
-  );
 
   const items = linkOptions([
     {
@@ -49,26 +40,21 @@ export default function ProfileTabs({ user }: { user: PublicProfile }) {
       disabled,
     },
     { to: `/@{$nickname}/list`, params: { nickname }, label: content.tabs.lists.value, disabled },
-  ]).map((link) => {
-    return Object.assign(link, { resolvedPathname: resolvePathname(link) });
-  });
+  ]);
 
   const filteredItems = items.filter((a) => !a.disabled);
 
   return (
     <Tabs aria-label="Navbar" className="w-full overflow-x-auto px-3 py-1" selectedKey={pathname}>
       <TabList className="border-b-0">
-        {filteredItems.map(({ resolvedPathname, label, disabled: _, ...item }) => (
-          <TabLink
-            {...item}
-            id={resolvedPathname}
-            key={resolvedPathname}
-            aria-label={label}
-            resetScroll={false}
-          >
-            {label}
-          </TabLink>
-        ))}
+        {filteredItems.map(({ label, disabled: _, ...item }) => {
+          const pathname = router.buildLocation(item).pathname;
+          return (
+            <TabLink {...item} id={pathname} key={pathname} aria-label={label} resetScroll={false}>
+              {label}
+            </TabLink>
+          );
+        })}
       </TabList>
     </Tabs>
   );

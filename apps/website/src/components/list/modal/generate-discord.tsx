@@ -1,4 +1,5 @@
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
@@ -33,7 +34,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
-import { getBaseURL, getListHref, parseNickname } from "@/lib/utils";
+import { getListLinkOption, parseNickname } from "@/lib/utils";
 
 type Props = {
   open: boolean;
@@ -75,6 +76,7 @@ function Content() {
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
   const content = useIntlayer("generate_discord");
+  const router = useRouter();
 
   const { handleSubmit, control, reset, setValue, watch } = useForm({
     defaultValues: {
@@ -146,7 +148,9 @@ function Content() {
             output.push("## Have", "", haveFormatted);
 
             if (formData.includeLink && haveList) {
-              output.push("", `[View this list](<${getBaseURL()}${getListHref(haveList)}>)`);
+              const linkOption = getListLinkOption(haveList);
+              const href = router.buildLocation(linkOption).publicHref;
+              output.push("", `[View this list](<${href}>)`);
             }
           }
 
@@ -161,7 +165,9 @@ function Content() {
             output.push("## Want", "", wantFormatted);
 
             if (formData.includeLink && wantList) {
-              output.push("", `[View this list](<${getBaseURL()}${getListHref(wantList)}>)`);
+              const linkOption = getListLinkOption(wantList);
+              const href = router.buildLocation(linkOption).publicHref;
+              output.push("", `[View this list](<${href}>)`);
             }
           }
 

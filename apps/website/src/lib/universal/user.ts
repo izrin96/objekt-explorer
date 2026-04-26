@@ -47,3 +47,11 @@ export type PublicList = {
   description?: string | null;
   currency?: string | null;
 };
+
+export type ListInfo = {
+  listType: "normal" | "profile";
+  slug: string;
+  profileSlug?: string | null;
+  nickname?: string | null;
+  profileAddress?: string | null;
+};

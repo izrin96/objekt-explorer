@@ -19,7 +19,7 @@ import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth.server";
-import { getListHref, parseNickname } from "@/lib/utils";
+import { getListLinkOption, parseNickname } from "@/lib/utils";
 
 import { AboutMenu, AboutModal } from "./about";
 import { Avatar } from "./intentui/avatar-custom";
@@ -31,6 +31,7 @@ import {
   MenuContent,
   MenuHeader,
   MenuItem,
+  MenuItemLink,
   MenuLabel,
   MenuSection,
   MenuSeparator,
@@ -179,7 +180,7 @@ function MyListMenuItem({
           </MenuItem>
         )}
         {data?.map((a) => (
-          <MenuItem key={a.slug} href={getListHref(a)}>
+          <MenuItemLink key={a.slug} {...getListLinkOption(a)}>
             <MenuLabel>
               {a.name}{" "}
               {a.profileAddress && (
@@ -188,7 +189,7 @@ function MyListMenuItem({
                 </span>
               )}
             </MenuLabel>
-          </MenuItem>
+          </MenuItemLink>
         ))}
         <MenuItem onAction={openCreateList}>
           <PlusIcon data-slot="icon" />
@@ -198,10 +199,10 @@ function MyListMenuItem({
           <DiscordLogoIcon data-slot="icon" />
           <MenuLabel>{content.discord_format.value}</MenuLabel>
         </MenuItem>
-        <MenuItem href={`/list`}>
+        <MenuItemLink to="/list">
           <GearSixIcon data-slot="icon" />
           <MenuLabel>{content.manage_list.value}</MenuLabel>
-        </MenuItem>
+        </MenuItemLink>
       </MenuContent>
     </MenuSubMenu>
   );
@@ -232,14 +233,18 @@ function MyCosmoProfileMenuItem() {
           </MenuItem>
         )}
         {data?.map((a) => (
-          <MenuItem key={a.address} href={`/@${a.nickname || a.address}`}>
+          <MenuItemLink
+            key={a.address}
+            to="/@{$nickname}"
+            params={{ nickname: a.nickname || a.address }}
+          >
             <MenuLabel>{parseNickname(a.address, a.nickname)}</MenuLabel>
-          </MenuItem>
+          </MenuItemLink>
         ))}
-        <MenuItem href={`/link`}>
+        <MenuItemLink to="/link">
           <GearSixIcon data-slot="icon" />
           <MenuLabel>{content.manage_cosmo_link.value}</MenuLabel>
-        </MenuItem>
+        </MenuItemLink>
       </MenuContent>
     </MenuSubMenu>
   );

@@ -1,4 +1,5 @@
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import { createLink, Link as RouterLink } from "@tanstack/react-router";
 import { Button, type ButtonProps } from "react-aria-components/Button";
 import { Collection } from "react-aria-components/Collection";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
@@ -193,6 +194,11 @@ const MenuShortcut = DropdownKeyboard;
 const MenuLabel = DropdownLabel;
 const MenuDescription = DropdownDescription;
 
+const MenuItemLinkWrapper = ({ ...props }: MenuItemProps) => {
+  return <MenuItem {...props} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
+};
+const MenuItemLink = createLink(MenuItemLinkWrapper);
+
 export type { MenuContentProps, MenuItemProps, MenuSectionProps, MenuTriggerProps };
 export {
   Menu,
@@ -200,6 +206,7 @@ export {
   MenuDescription,
   MenuHeader,
   MenuItem,
+  MenuItemLink,
   MenuLabel,
   MenuSection,
   MenuSeparator,

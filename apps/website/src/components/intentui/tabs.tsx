@@ -1,4 +1,4 @@
-import { createLink, Link } from "@tanstack/react-router";
+import { createLink, Link as RouterLink } from "@tanstack/react-router";
 import { createContext, use } from "react";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
 import { SelectionIndicator } from "react-aria-components/SelectionIndicator";
@@ -102,7 +102,7 @@ export function TabScrollArea({ className, ...props }: React.ComponentProps<"div
 interface TabProps extends TabPrimitiveProps {
   ref?: React.RefObject<HTMLDivElement>;
 }
-const InternalTab = ({ className, ref, ...props }: TabProps) => {
+const Tab = ({ className, ref, ...props }: TabProps) => {
   const { orientation } = useSlottedContext(TabsContext)!;
   const { selectionIndicator } = useTabListContext();
   return (
@@ -123,13 +123,6 @@ const InternalTab = ({ className, ref, ...props }: TabProps) => {
         "to" in props || "href" in props ? "cursor-pointer" : "cursor-default",
         className,
       )}
-      render={(domProps) => {
-        return "to" in props || "href" in props ? (
-          <Link {...(domProps as any)} />
-        ) : (
-          <div {...(domProps as any)} />
-        );
-      }}
     >
       {composeRenderProps(props.children, (children) => (
         <>
@@ -169,8 +162,12 @@ const TabPanel = ({ className, ref, ...props }: TabPanelProps) => {
     />
   );
 };
-const Tab = InternalTab;
-const TabLink = createLink(InternalTab);
+
+const TabLinkWrapper = ({ ref, ...props }: TabProps) => {
+  return <Tab {...props} ref={ref} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
+};
+
+const TabLink = createLink(TabLinkWrapper);
 
 export type { TabListProps, TabPanelProps, TabProps, TabsProps };
 export { Tab, TabLink, TabList, TabPanel, TabPanels, Tabs };

@@ -9,6 +9,7 @@
     "build:prod": "bun run --bun vite build",
     "preview": "bun run --bun --env-file=../../.env vite preview",
     "start": "bun run --bun server.ts",
+    "start:preview": "bun run --bun --env-file=../../.env server.ts",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
     "typecheck": "tsgo --noEmit",

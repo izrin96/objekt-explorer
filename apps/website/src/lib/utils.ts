@@ -1,10 +1,12 @@
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { linkOptions } from "@tanstack/react-router";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 import { clientEnv } from "@/lib/env/client";
 
+import type { ListInfo } from "./universal/user";
 import { unobtainables } from "./unobtainables";
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
@@ -63,18 +65,26 @@ export function parseNickname(address: string, nickname?: string | null) {
   return nickname || `${address.substring(0, 8)}...`;
 }
 
-export function getListHref(list: {
-  listType: "normal" | "profile";
-  slug: string;
-  profileSlug?: string | null;
-  nickname?: string | null;
-  profileAddress?: string | null;
-}) {
+export function getListLinkOption(list: ListInfo) {
   const isProfileContext = list.listType === "profile" || !!list.profileAddress;
-  if (isProfileContext && (list.nickname || list.profileAddress) && list.profileSlug) {
-    return `/@${list.nickname || list.profileAddress}/list/${list.profileSlug}`;
+  const identifier = list.nickname || list.profileAddress;
+
+  if (isProfileContext && identifier && list.profileSlug) {
+    return linkOptions({
+      to: "/@{$nickname}/list/$slug",
+      params: {
+        nickname: identifier,
+        slug: list.profileSlug,
+      },
+    });
   }
-  return `/list/${list.slug}`;
+
+  return linkOptions({
+    to: "/list/$slug",
+    params: {
+      slug: list.slug,
+    },
+  });
 }
 
 export function getBaseURL() {

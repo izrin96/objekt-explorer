@@ -1,4 +1,5 @@
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
+import { linkOptions } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -16,13 +17,13 @@ import { SettingsButton } from "./settings-button";
 
 export function useNavMenuItems() {
   const content = useIntlayer("nav");
-  return [
+  return linkOptions([
     {
-      href: "/activity",
+      to: "/activity",
       label: content.activity.value,
       icon: ChartLineIcon,
     },
-  ];
+  ]);
 }
 
 export default function Navbar() {
@@ -42,7 +43,7 @@ export default function Navbar() {
             <AppLogo />
             <div className="flex items-center gap-x-1">
               {navMenuItems.map((menu) => (
-                <NavLink key={menu.href} href={menu.href}>
+                <NavLink key={menu.to} to={menu.to}>
                   {menu.label}
                   {menu.icon && <menu.icon className="size-4" weight="regular" />}
                 </NavLink>
