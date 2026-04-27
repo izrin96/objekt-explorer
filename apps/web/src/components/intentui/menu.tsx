@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+import NextLink from "next/link";
 import { Button, type ButtonProps } from "react-aria-components/Button";
 import { Collection } from "react-aria-components/Collection";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
@@ -125,6 +126,13 @@ const MenuItem = ({ className, intent, children, ...props }: MenuItemProps) => {
       )}
       textValue={textValue}
       {...props}
+      render={(domProps) =>
+        "href" in domProps && domProps.href !== undefined ? (
+          <NextLink {...domProps} href={domProps.href as any} prefetch={false} />
+        ) : (
+          <div {...(domProps as any)} />
+        )
+      }
     >
       {(values) => (
         <>
