@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { groupBy } from "es-toolkit";
+import { groupBy } from "es-toolkit/array";
 import { useDeferredValue, useMemo } from "react";
 
 import type { CompareInput } from "@/lib/compare/schemas";

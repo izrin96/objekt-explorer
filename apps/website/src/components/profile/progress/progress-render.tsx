@@ -1,6 +1,6 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { groupBy } from "es-toolkit";
+import { groupBy } from "es-toolkit/array";
 import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
 import { Suspense, useMemo, useState } from "react";

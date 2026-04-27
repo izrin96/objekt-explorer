@@ -1,5 +1,5 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { groupBy } from "es-toolkit";
+import { groupBy } from "es-toolkit/array";
 import { useCallback } from "react";
 
 import { sortObjekts } from "@/lib/filter-utils";

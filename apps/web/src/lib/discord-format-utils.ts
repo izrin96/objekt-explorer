@@ -1,4 +1,5 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { groupBy } from "es-toolkit/array";
 
 // Minimal type for discord formatting - only the fields we actually use
 export type DiscordFormatObjekt = Pick<
@@ -95,7 +96,7 @@ function formatCollectionsById(
   options: FormatOptions,
   showSeason: boolean,
 ): string[] {
-  const groups = Object.groupBy(collections, (c) => c.collectionId);
+  const groups = groupBy(collections, (c) => c.collectionId);
   return Object.values(groups)
     .filter((group): group is DiscordFormatObjekt[] => group !== undefined)
     .map((group) => {
@@ -111,7 +112,7 @@ function formatMemberCollections(
   groupBySeason: boolean,
 ): string[] {
   if (groupBySeason) {
-    const seasonGroups = Object.groupBy(collections, (a) => a.season);
+    const seasonGroups = groupBy(collections, (a) => a.season);
     const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) =>
       options.compareSeason(a, b),
     );
@@ -143,7 +144,7 @@ export function format(collections: DiscordFormatObjekt[], options: FormatOption
   } = options;
 
   if (groupByMode === "season-first") {
-    const seasonGroups = Object.groupBy(collections, (a) => a.season);
+    const seasonGroups = groupBy(collections, (a) => a.season);
     const seasonEntries = Object.entries(seasonGroups).toSorted(([a], [b]) => compareSeason(a, b));
 
     const results: string[] = [];
@@ -226,7 +227,7 @@ export function mapByMember(
   entries: DiscordFormatObjekt[],
   members: string[],
 ): Map<string, DiscordFormatObjekt[]> {
-  const grouped = Object.groupBy(entries, (e) => e.member);
+  const grouped = groupBy(entries, (e) => e.member);
   const output = new Map<string, DiscordFormatObjekt[]>();
   for (const member of members) {
     if (grouped[member]) {
@@ -240,7 +241,7 @@ export function makeMemberOrderedList(
   entries: DiscordFormatObjekt[],
   compareArtistMember: (memberA: string, memberB: string) => number,
 ) {
-  const grouped = Object.groupBy(entries, (a) => a.member);
+  const grouped = groupBy(entries, (a) => a.member);
 
   const groups = Object.values(grouped).filter(
     (group): group is DiscordFormatObjekt[] => group !== undefined,
