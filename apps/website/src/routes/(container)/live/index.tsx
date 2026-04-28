@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
+import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
 import { Loader } from "@/components/intentui/loader";
 import { Note } from "@/components/intentui/note";
 import LiveSessionListRender from "@/components/live/session-list";
 import { checkAccess } from "@/lib/functions/live";
+import { generateMetadata } from "@/lib/meta";
 
 const liveSearchSchema = z.object({
   token: z.string().optional(),
@@ -20,9 +22,10 @@ export const Route = createFileRoute("/(container)/live/")({
       isAllowed,
     };
   },
-  head: () => ({
-    meta: [{ title: "Live · Objekt Tracker" }],
-  }),
+  head: () => {
+    const content = getIntlayer("page_titles");
+    return generateMetadata({ title: content.live.value });
+  },
   component: LivePage,
   ssr: false,
 });

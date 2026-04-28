@@ -1,32 +1,16 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { createFileRoute } from "@tanstack/react-router";
-import * as z from "zod";
+import { getIntlayer } from "react-intlayer";
 
 import CompareView from "@/components/compare/compare-view";
 import { ListProvider } from "@/hooks/use-list-target";
-import { compareInputSchema } from "@/lib/compare/schemas";
 import { getListBySlug } from "@/lib/functions/list";
-import { client } from "@/lib/orpc/client";
-
-const compareSearchSchema = z.object({
-  sourceId: z.string().optional(),
-  targetType: z.enum(["profile", "list"]).optional(),
-  targetProfile: z.string().optional(),
-  targetListId: z.string().optional(),
-  mode: z.enum(["missing", "matches"]).optional(),
-});
-
-type CompareLoaderResult =
-  | {
-      ok: true;
-      input: z.infer<typeof compareInputSchema>;
-      list: Awaited<ReturnType<typeof getListBySlug>>;
-      compareResult: unknown;
-    }
-  | { ok: false; error: string };
+import { generateMetadata } from "@/lib/meta";
+import { orpc } from "@/lib/orpc/client";
+import { compareInputSchema } from "@/lib/universal/compare";
 
 export const Route = createFileRoute("/(container)/compare-tool")({
-  validateSearch: compareSearchSchema,
+  validateSearch: compareInputSchema,
   loaderDeps: ({ search }) => ({
     sourceId: search.sourceId,
     targetType: search.targetType,
@@ -34,51 +18,45 @@ export const Route = createFileRoute("/(container)/compare-tool")({
     targetListId: search.targetListId,
     mode: search.mode,
   }),
-  loader: async ({ deps }) => {
-    const parseResult = compareInputSchema.safeParse(deps);
-    if (!parseResult.success) {
-      return { ok: false, error: "Invalid params" } satisfies CompareLoaderResult;
-    }
-
-    const input = parseResult.data;
-    const list = await getListBySlug({ data: { slug: input.sourceId } });
-
-    try {
-      const compareResult = await client.compare.compare(input);
-      return { ok: true, input, list, compareResult } satisfies CompareLoaderResult;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Compare failed";
-      return { ok: false, error: message } satisfies CompareLoaderResult;
-    }
+  errorComponent: ({ error }) => <ErrorComponent error={error.message} />,
+  loader: async ({ deps, context: { queryClient } }) => {
+    const [list, data] = await Promise.all([
+      getListBySlug({ data: { slug: deps.sourceId } }),
+      queryClient.ensureQueryData(orpc.compare.compare.queryOptions({ input: deps })),
+    ]);
+    return { deps, list, data };
   },
   head: ({ loaderData }) => {
-    if (!loaderData || !loaderData.ok) {
-      return { meta: [{ title: "Compare Tool · Objekt Tracker" }] };
-    }
-    const source = loaderData.input.sourceId;
-    const target = loaderData.input.targetProfile ?? loaderData.input.targetListId ?? "";
-    return { meta: [{ title: `Compare ${source} vs ${target} · Objekt Tracker` }] };
+    const content = getIntlayer("page_titles");
+
+    const sourceId = loaderData?.deps?.sourceId ?? "";
+    const targetId = loaderData?.deps?.targetProfile ?? loaderData?.deps?.targetListId ?? "";
+
+    return generateMetadata({
+      title: content.compare_tool({ source: sourceId, target: targetId }).value,
+    });
   },
   component: CompareToolPage,
 });
 
 function CompareToolPage() {
-  const data = Route.useLoaderData();
-
-  if (!data.ok) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3">
-        <HeartBreakIcon size={64} weight="light" />
-        <span className="font-medium">{data.error}</span>
-      </div>
-    );
-  }
+  const { list } = Route.useLoaderData();
+  const input = Route.useLoaderDeps();
 
   return (
-    <ListProvider list={data.list}>
+    <ListProvider list={list}>
       <div className="flex flex-col gap-4 pt-2 pb-36">
-        <CompareView input={data.input} />
+        <CompareView input={input} />
       </div>
     </ListProvider>
+  );
+}
+
+function ErrorComponent({ error }: { error: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3">
+      <HeartBreakIcon size={64} weight="light" />
+      <span className="font-medium">{error}</span>
+    </div>
   );
 }

@@ -5,9 +5,10 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { isAddress } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { eq } from "drizzle-orm";
-import { useIntlayer } from "react-intlayer/server";
+import { getIntlayer } from "react-intlayer";
 
-import { compareInputSchema } from "../../../compare/schemas";
+import { compareInputSchema } from "@/lib/universal/compare";
+
 import { buildListEntries, fetchListWithEntries } from "../../list.server";
 import { getCollectionColumns } from "../../objekt.server";
 import { pub, selectedArtistsMiddleware } from "../orpc";
@@ -21,7 +22,7 @@ export const compareRouter = {
         context: { locale, artists },
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
-        const content = useIntlayer("api_errors", locale);
+        const content = getIntlayer("api_errors", locale);
 
         const sourceList = await fetchListWithEntries(sourceId);
 

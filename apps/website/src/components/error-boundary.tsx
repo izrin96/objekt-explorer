@@ -3,15 +3,6 @@ import { useIntlayer } from "react-intlayer";
 
 import { Button } from "./intentui/button";
 
-export default function ErrorFallbackRender({
-  resetErrorBoundary,
-}: {
-  resetErrorBoundary: () => void;
-}) {
-  const content = useIntlayer("common");
-  return <ErrorRender onRetry={resetErrorBoundary} message={content.error.loading_data.value} />;
-}
-
 export function ErrorRender({ message, onRetry }: { message: string; onRetry: () => void }) {
   const content = useIntlayer("common");
   return (
@@ -22,5 +13,24 @@ export function ErrorRender({ message, onRetry }: { message: string; onRetry: ()
         {content.error.retry.value}
       </Button>
     </div>
+  );
+}
+
+export default function ErrorFallbackRender({
+  resetErrorBoundary,
+}: {
+  resetErrorBoundary: () => void;
+}) {
+  const content = useIntlayer("common");
+  return <ErrorRender onRetry={resetErrorBoundary} message={content.error.loading_data.value} />;
+}
+
+export function CommonErrorComponent() {
+  const content = useIntlayer("common");
+  return (
+    <ErrorRender
+      onRetry={() => window.location.reload()}
+      message={content.error.loading_data.value}
+    />
   );
 }

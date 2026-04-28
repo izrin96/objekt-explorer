@@ -3,9 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useIntlayer } from "react-intlayer";
 
 export const Route = createFileRoute("/(container)/auth/verified")({
-  head: () => ({
-    meta: [{ title: "Email Verified · Objekt Tracker" }],
-  }),
   component: VerifiedPage,
 });
 

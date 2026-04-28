@@ -1,8 +1,7 @@
 import { Addresses } from "@repo/lib";
 
 import type { Filters } from "@/hooks/use-filters";
-import type { ValidType } from "@/lib/universal/activity";
-import type { ActivityData } from "@/lib/universal/activity";
+import type { ValidType, ActivityData } from "@/lib/universal/activity";
 
 export type EventType = "mint" | "spin" | "transfer";
 

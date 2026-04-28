@@ -10,9 +10,6 @@ const resetPasswordSearchSchema = z.object({
 
 export const Route = createFileRoute("/(container)/auth/reset-password")({
   validateSearch: resetPasswordSearchSchema,
-  head: () => ({
-    meta: [{ title: "Reset Password · Objekt Tracker" }],
-  }),
   component: ResetPasswordPage,
 });
 

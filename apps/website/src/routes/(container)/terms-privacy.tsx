@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useIntlayer } from "react-intlayer";
+import { getIntlayer, useIntlayer } from "react-intlayer";
 
 import { ExternalLink } from "@/components/intentui/link";
+import { generateMetadata } from "@/lib/meta";
 import { SITE_NAME } from "@/lib/utils";
 
 export const Route = createFileRoute("/(container)/terms-privacy")({
-  head: () => ({
-    meta: [{ title: "Terms & Privacy · Objekt Tracker" }],
-  }),
+  head: () => {
+    const content = getIntlayer("terms_privacy");
+    return generateMetadata({ title: content.title.value });
+  },
   component: TermsPrivacyPage,
 });
 

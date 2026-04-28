@@ -1,6 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { getIntlayer } from "react-intlayer";
 
 import LinkRender from "@/components/link/link-process";
+import { generateMetadata } from "@/lib/meta";
 import { sessionOptions } from "@/lib/query-options";
 
 export const Route = createFileRoute("/(container)/link/connect")({
@@ -9,6 +11,10 @@ export const Route = createFileRoute("/(container)/link/connect")({
     if (!session) {
       throw redirect({ to: "/" });
     }
+  },
+  head: () => {
+    const content = getIntlayer("page_titles");
+    return generateMetadata({ title: content.my_cosmo_link.value });
   },
   component: LinkConnectPage,
 });

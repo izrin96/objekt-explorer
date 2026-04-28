@@ -7,7 +7,7 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
-import { useIntlayer } from "react-intlayer/server";
+import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
 import type { Locale } from "@/lib/locale";
@@ -37,7 +37,7 @@ async function assertAddressNotLinked(address: string, userId: string, locale: L
     .limit(1);
 
   if (existing) {
-    const content = useIntlayer("api_errors", locale);
+    const content = getIntlayer("api_errors", locale);
     throw new ORPCError("BAD_REQUEST", {
       message:
         existing.userId === userId
@@ -83,7 +83,7 @@ export const cosmoLinkRouter = {
         await redis.expire(rateLimitKey, 30);
       }
       if (attempts > 5) {
-        const content = useIntlayer("api_errors", locale);
+        const content = getIntlayer("api_errors", locale);
         throw new ORPCError("TOO_MANY_REQUESTS", {
           message: content.cosmo_link.rate_limit.value,
         });
@@ -114,7 +114,7 @@ export const cosmoLinkRouter = {
   verifyStatusMessage: authed
     .input(z.string())
     .handler(async ({ input: address, context: { session, locale } }) => {
-      const content = useIntlayer("api_errors", locale);
+      const content = getIntlayer("api_errors", locale);
 
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);

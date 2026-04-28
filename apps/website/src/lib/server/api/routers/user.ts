@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { user as userSchema } from "@repo/db/auth-schema";
 import { eq } from "drizzle-orm";
-import { useIntlayer } from "react-intlayer/server";
+import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
 import { providersMap } from "@/lib/universal/user";
@@ -19,7 +19,7 @@ export const userRouter = {
         session: { user },
       },
     }) => {
-      const content = useIntlayer("api_errors", locale);
+      const content = getIntlayer("api_errors", locale);
 
       // get accessToken from account
       const account = await db.query.account.findFirst({

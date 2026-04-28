@@ -33,7 +33,7 @@ import { useIsFiltering } from "@/hooks/use-filters";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import { useSession } from "@/hooks/use-user";
-import type { CompareInput } from "@/lib/compare/schemas";
+import type { CompareInput } from "@/lib/universal/compare";
 import type { PublicList } from "@/lib/universal/user";
 import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
 

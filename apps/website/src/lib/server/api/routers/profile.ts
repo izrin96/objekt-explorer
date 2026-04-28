@@ -3,7 +3,7 @@ import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, eq } from "drizzle-orm";
-import { useIntlayer } from "react-intlayer/server";
+import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
 import type { Locale } from "@/lib/locale";
@@ -88,7 +88,7 @@ export async function checkAddressOwned(address: string, userId: string, locale:
   );
 
   if (count < 1) {
-    const content = useIntlayer("api_errors", locale);
+    const content = getIntlayer("api_errors", locale);
     throw new ORPCError("UNAUTHORIZED", {
       message: content.profile.not_linked.value,
     });
@@ -116,7 +116,7 @@ async function fetchOwnedProfile(address: string, userId: string, locale: Locale
   });
 
   if (!profile) {
-    const content = useIntlayer("api_errors", locale);
+    const content = getIntlayer("api_errors", locale);
     throw new ORPCError("NOT_FOUND", {
       message: content.profile.not_found.value,
     });

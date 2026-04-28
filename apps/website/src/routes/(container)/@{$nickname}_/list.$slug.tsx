@@ -1,4 +1,6 @@
+import { ImageBrokenIcon } from "@phosphor-icons/react/dist/ssr";
 import { createFileRoute } from "@tanstack/react-router";
+import { getIntlayer, useIntlayer } from "react-intlayer";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
@@ -6,6 +8,7 @@ import { ListProvider } from "@/hooks/use-list-target";
 import { ProfileProvider } from "@/hooks/use-profile-target";
 import { getListBySlug } from "@/lib/functions/list";
 import { getProfileByNickname } from "@/lib/functions/profile";
+import { generateMetadata } from "@/lib/meta";
 
 export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   loader: async ({ params }) => {
@@ -15,10 +18,16 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
     });
     return { profile, list };
   },
-  head: ({ loaderData }) => ({
-    meta: [{ title: `${loaderData?.list?.name ?? "List"} · Objekt Tracker` }],
-  }),
+  head: async ({ loaderData }) => {
+    const content = getIntlayer("page_titles");
+    return loaderData?.list
+      ? generateMetadata({
+          title: content.list_detail({ name: loaderData.list.name }).value,
+        })
+      : {};
+  },
   component: ProfileListDetailPage,
+  notFoundComponent: NotFoundComponent,
   ssr: false,
 });
 
@@ -34,5 +43,15 @@ function ProfileListDetailPage() {
         </div>
       </ListProvider>
     </ProfileProvider>
+  );
+}
+
+function NotFoundComponent() {
+  const content = useIntlayer("not_found");
+  return (
+    <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
+      <ImageBrokenIcon size={72} weight="thin" />
+      {content.list.value}
+    </div>
   );
 }

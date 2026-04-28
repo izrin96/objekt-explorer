@@ -2,10 +2,10 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
 import { useDeferredValue, useMemo } from "react";
 
-import type { CompareInput } from "@/lib/compare/schemas";
 import { filterObjekts } from "@/lib/filter-utils";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import { orpc } from "@/lib/orpc/client";
+import type { CompareInput } from "@/lib/universal/compare";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useFilters } from "./use-filters";
