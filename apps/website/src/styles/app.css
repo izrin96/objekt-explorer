@@ -6,11 +6,48 @@
 
 @variant dark (&:is(.dark *));
 
+@font-face {
+  font-family: "Google Sans Flex Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-wght-normal.woff2)
+    format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Fira Code Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url(@fontsource-variable/fira-code/files/fira-code-latin-wght-normal.woff2)
+    format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Noto Sans KR Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(@fontsource-variable/noto-sans-kr/files/noto-sans-kr-latin-wght-normal.woff2)
+    format("woff2-variations");
+}
+
+@font-face {
+  font-family: "Noto Sans SC Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(@fontsource-variable/noto-sans-sc/files/noto-sans-sc-latin-wght-normal.woff2)
+    format("woff2-variations");
+}
+
 @theme inline {
   --font-sans:
-    var(--font-body), var(--font-noto-sans-kr), var(--font-noto-sans-sc), ui-sans-serif, system-ui,
-    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: var(--font-fira-code);
+    "Google Sans Flex Variable", "Noto Sans KR Variable", "Noto Sans SC Variable", ui-sans-serif,
+    system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+  --font-mono: "Fira Code Variable";
 
   --font-sans--font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   --font-mono--font-feature-settings: "ss02", "zero";
@@ -94,12 +131,6 @@
   }
 
   --color-accent-solid: var(--accent-solid);
-
-  --font-body: var(--font-google-sans-flex);
-
-  --font-fira-code: var(--font-fira-code);
-
-  --font-google-sans-flex: var(--font-google-sans-flex);
 }
 
 :root {
