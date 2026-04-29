@@ -9,7 +9,6 @@ import {
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
@@ -65,7 +64,6 @@ function UserMenu({ user }: { user: User }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
-  const router = useRouter();
   return (
     <>
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
@@ -130,11 +128,8 @@ function UserMenu({ user }: { user: User }) {
               authClient.signOut({
                 fetchOptions: {
                   onSuccess: () => {
-                    void queryClient.invalidateQueries({
-                      queryKey: ["session"],
-                    });
+                    void queryClient.invalidateQueries();
                     toast(content.sign_out_success.value);
-                    void router.invalidate();
                   },
                 },
               })

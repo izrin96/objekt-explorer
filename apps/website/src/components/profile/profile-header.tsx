@@ -1,5 +1,5 @@
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { useRouter } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
@@ -15,16 +15,16 @@ import { ExternalLink } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
-  const router = useRouter();
   const ref = useRef<HTMLDivElement>(null);
   const [, copy] = useCopyToClipboard();
+  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
   const content = useIntlayer("profile");
 
   const onSave = () => {
-    void router.invalidate();
+    void queryClient.invalidateQueries();
   };
 
   useEffect(() => {

@@ -1,6 +1,5 @@
 import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
@@ -124,7 +123,6 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
 }
 
 function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean) => void }) {
-  const router = useRouter();
   const content = useIntlayer("auth");
   const commonContent = useIntlayer("common");
 
@@ -147,10 +145,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
     },
     onSuccess: async (_, _v, _o, { client }) => {
       setOpen(false);
-      void client.invalidateQueries({
-        queryKey: ["session"],
-      });
-      void router.invalidate();
+      void client.invalidateQueries();
       toast.success(content.account.account_updated.value);
     },
     onError: ({ message }) => {

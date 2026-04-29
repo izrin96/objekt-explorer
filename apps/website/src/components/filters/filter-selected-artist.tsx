@@ -1,6 +1,5 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
 import { useCallback, useTransition } from "react";
 import type { Selection } from "react-aria-components";
 
@@ -14,7 +13,6 @@ import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function SelectedArtistFilter() {
   const queryClient = useQueryClient();
-  const router = useRouter();
   const { artists, selectedArtistIds, selectedArtists } = useCosmoArtist();
   const [isPending, startTransition] = useTransition();
   const selected = new Set(selectedArtistIds);
@@ -25,7 +23,6 @@ export default function SelectedArtistFilter() {
       const values = Array.from((key as Set<ValidArtist>).values());
       await setArtists.mutateAsync(values);
       void queryClient.invalidateQueries();
-      void router.invalidate();
     });
   }, []);
 

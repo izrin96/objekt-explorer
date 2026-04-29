@@ -131,7 +131,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { locale } = Route.useLoaderData();
 
   return (
-    <html lang={locale} dir="ltr" suppressHydrationWarning>
+    <html lang={locale} dir="ltr" suppressHydrationWarning className="overflow-y-scroll">
       <head>
         <HeadContent />
       </head>
