@@ -92,68 +92,11 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
 
-  # web
-  web:
-    restart: always
-    ports:
-      - "3000:3000"
-    build:
-      context: .
-      dockerfile: ./apps/web/Dockerfile
-      args:
-        - NEXT_PUBLIC_UMAMI_SCRIPT_URL
-        - NEXT_PUBLIC_UMAMI_WEBSITE_ID
-        - NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
-        - BETTER_AUTH_SECRET
-        - DISCORD_CLIENT_ID
-        - DISCORD_CLIENT_SECRET
-        - TWITTER_CLIENT_ID
-        - TWITTER_CLIENT_SECRET
-        - NEXT_PUBLIC_SITE_URL
-        - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
-        - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
-        - S3_ENDPOINT=http://rustfs:9000
-        - S3_ACCESS_KEY=rustfsadmin
-        - S3_SECRET_KEY=rustfsadmin
-        - SES_REGION
-        - SES_ACCESS_KEY
-        - SES_SECRET_KEY
-        - SES_MAIL_FROM
-        - NEXT_PUBLIC_LIVE_API_KEY
-        - BYPASS_LIVE_KEY
-        - REDIS_URL=redis://valkey:6379
-    environment:
-      - NEXT_PUBLIC_UMAMI_SCRIPT_URL
-      - NEXT_PUBLIC_UMAMI_WEBSITE_ID
-      - NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
-      - BETTER_AUTH_SECRET
-      - DISCORD_CLIENT_ID
-      - DISCORD_CLIENT_SECRET
-      - TWITTER_CLIENT_ID
-      - TWITTER_CLIENT_SECRET
-      - NEXT_PUBLIC_SITE_URL
-      - DATABASE_URL
-      - INDEXER_DATABASE_URL
-      - S3_ENDPOINT=http://rustfs:9000
-      - S3_ACCESS_KEY=rustfsadmin
-      - S3_SECRET_KEY=rustfsadmin
-      - SES_REGION
-      - SES_ACCESS_KEY
-      - SES_SECRET_KEY
-      - SES_MAIL_FROM
-      - NEXT_PUBLIC_LIVE_API_KEY
-      - BYPASS_LIVE_KEY
-      - REDIS_URL=redis://valkey:6379
-    healthcheck:
-      test: test ! -f /tmp/drain && curl -f http://localhost:3000/api/healthcheck
-      interval: 5s
-      retries: 1
-
   # website
   website:
     restart: always
     ports:
-      - "3001:3000"
+      - "3000:3000"
     build:
       context: .
       dockerfile: ./apps/website/Dockerfile
