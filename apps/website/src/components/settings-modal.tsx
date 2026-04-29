@@ -1,5 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTransition } from "react";
 import { useLocale, useIntlayer } from "react-intlayer";
 
@@ -32,7 +31,7 @@ export function SettingsModal({
   const content = useIntlayer("common");
   const { theme, setTheme } = useTheme();
   const { locale } = useLocale();
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const isCompact = useMediaQuery("(max-width: 1560px)");
 
@@ -44,7 +43,9 @@ export function SettingsModal({
   const handleLocaleChange = (value: Locale) => {
     startTransition(async () => {
       await setLocale.mutateAsync(value);
-      void router.invalidate();
+      void queryClient.invalidateQueries({
+        queryKey: orpc.config.getLocale.key(),
+      });
     });
   };
 
