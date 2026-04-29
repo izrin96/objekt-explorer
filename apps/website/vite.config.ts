@@ -57,7 +57,7 @@ export default defineConfig(({ command }) => {
       viteReact(),
       babel({ presets: [reactCompilerPreset()] }),
       {
-        ...optimizeLocales.rolldown({
+        ...optimizeLocales.vite({
           locales: ["en"],
         }),
         enforce: "pre",
