@@ -1,6 +1,9 @@
 import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@repo/cosmo/types/artists";
 import type { ValidArtist } from "@repo/cosmo/types/common";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
+
+import { orpc } from "@/lib/orpc/client";
 
 import { useSelectedArtists } from "./use-selected-artists";
 
@@ -14,11 +17,10 @@ type ContextProps = {
 
 const CosmoArtistContext = createContext<ContextProps | null>(null);
 
-export type CosmoArtistProviderProps = PropsWithChildren<{
-  artists: CosmoArtistWithMembersBFF[];
-}>;
+export type CosmoArtistProviderProps = PropsWithChildren;
 
-export function CosmoArtistProvider({ children, artists }: CosmoArtistProviderProps) {
+export function CosmoArtistProvider({ children }: CosmoArtistProviderProps) {
+  const { data: artists } = useSuspenseQuery(orpc.config.getArtists.queryOptions());
   const artistMap = new Map(artists.map((artist) => [artist.id.toLowerCase(), artist]));
   const memberMap = new Map(
     artists.flatMap((artist) =>

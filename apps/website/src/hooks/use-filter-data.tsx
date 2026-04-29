@@ -1,7 +1,8 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
 import { createContext, useCallback, useContext } from "react";
 
-import type { FilterDataOutput } from "@/lib/server/api/routers/config";
+import { orpc } from "@/lib/orpc/client";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 
@@ -17,11 +18,10 @@ type FilterDataContextValue = {
 
 const FilterDataContext = createContext<FilterDataContextValue | null>(null);
 
-type Props = PropsWithChildren<{
-  data: FilterDataOutput;
-}>;
+type Props = PropsWithChildren;
 
-export function FilterDataProvider({ children, data }: Props) {
+export function FilterDataProvider({ children }: Props) {
+  const { data } = useSuspenseQuery(orpc.config.getFilterData.queryOptions());
   const { selectedArtistIds } = useCosmoArtist();
 
   const selectedSeasonMap =

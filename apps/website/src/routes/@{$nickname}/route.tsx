@@ -4,8 +4,6 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useIntlayer } from "react-intlayer";
 
 import DynamicContainer from "@/components/dynamic-container";
-import { CommonErrorComponent } from "@/components/error-boundary";
-import { PendingComponent } from "@/components/pending-component";
 import { PrivateProfileGuard } from "@/components/profile-guard";
 import { ProfileBanner } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
@@ -18,8 +16,6 @@ export const Route = createFileRoute("/@{$nickname}")({
     await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
   },
   notFoundComponent: NotFoundComponent,
-  errorComponent: CommonErrorComponent,
-  pendingComponent: PendingComponent,
   component: ProfileLayout,
 });
 
