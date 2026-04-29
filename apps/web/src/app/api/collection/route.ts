@@ -10,7 +10,7 @@ import * as z from "zod";
 
 import { getCollectionColumns } from "@/lib/server/objekt";
 
-const schema = z.object({
+const activitySchema = z.object({
   artist: z.enum(validArtists).array(),
   at: z.string().optional(),
 });
@@ -80,8 +80,8 @@ export async function GET(request: NextRequest) {
   });
 }
 
-function parseParams(params: URLSearchParams): z.infer<typeof schema> {
-  const result = schema.safeParse({
+function parseParams(params: URLSearchParams): z.infer<typeof activitySchema> {
+  const result = activitySchema.safeParse({
     artist: params.getAll("artist"),
     at: params.get("at") ?? undefined,
   });

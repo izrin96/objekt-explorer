@@ -2,7 +2,7 @@
 
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { groupBy } from "es-toolkit";
+import { groupBy } from "es-toolkit/array";
 import { useIntlayer } from "next-intlayer";
 import dynamic from "next/dynamic";
 import type React from "react";

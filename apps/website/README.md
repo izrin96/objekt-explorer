@@ -1,3 +1,3 @@
-# Tanstack Start Website (todo)
+# Tanstack Start Website
 
-Complete rework from Next.js web app
+Complete rework from Next.js to Tanstack Start.

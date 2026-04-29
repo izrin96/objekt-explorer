@@ -92,46 +92,30 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
 
-  # web
-  web:
+  # website
+  website:
     restart: always
     ports:
       - "3000:3000"
     build:
       context: .
-      dockerfile: ./apps/web/Dockerfile
+      dockerfile: ./apps/website/Dockerfile
       args:
-        - NEXT_PUBLIC_UMAMI_SCRIPT_URL
-        - NEXT_PUBLIC_UMAMI_WEBSITE_ID
-        - NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
-        - BETTER_AUTH_SECRET
-        - DISCORD_CLIENT_ID
-        - DISCORD_CLIENT_SECRET
-        - TWITTER_CLIENT_ID
-        - TWITTER_CLIENT_SECRET
-        - NEXT_PUBLIC_SITE_URL
-        - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
-        - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
-        - S3_ENDPOINT=http://rustfs:9000
-        - S3_ACCESS_KEY=rustfsadmin
-        - S3_SECRET_KEY=rustfsadmin
-        - SES_REGION
-        - SES_ACCESS_KEY
-        - SES_SECRET_KEY
-        - SES_MAIL_FROM
-        - NEXT_PUBLIC_LIVE_API_KEY
-        - BYPASS_LIVE_KEY
-        - REDIS_URL=redis://valkey:6379
+        - VITE_UMAMI_SCRIPT_URL
+        - VITE_UMAMI_WEBSITE_ID
+        - VITE_ACTIVITY_WEBSOCKET_URL
+        - VITE_SITE_URL
+        - VITE_LIVE_API_KEY
     environment:
-      - NEXT_PUBLIC_UMAMI_SCRIPT_URL
-      - NEXT_PUBLIC_UMAMI_WEBSITE_ID
-      - NEXT_PUBLIC_ACTIVITY_WEBSOCKET_URL
+      - VITE_UMAMI_SCRIPT_URL
+      - VITE_UMAMI_WEBSITE_ID
+      - VITE_ACTIVITY_WEBSOCKET_URL
       - BETTER_AUTH_SECRET
       - DISCORD_CLIENT_ID
       - DISCORD_CLIENT_SECRET
       - TWITTER_CLIENT_ID
       - TWITTER_CLIENT_SECRET
-      - NEXT_PUBLIC_SITE_URL
+      - VITE_SITE_URL
       - DATABASE_URL
       - INDEXER_DATABASE_URL
       - S3_ENDPOINT=http://rustfs:9000
@@ -141,7 +125,7 @@ services:
       - SES_ACCESS_KEY
       - SES_SECRET_KEY
       - SES_MAIL_FROM
-      - NEXT_PUBLIC_LIVE_API_KEY
+      - VITE_LIVE_API_KEY
       - BYPASS_LIVE_KEY
       - REDIS_URL=redis://valkey:6379
     healthcheck:

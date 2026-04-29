@@ -2,7 +2,7 @@
 
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { groupBy } from "es-toolkit";
+import { groupBy } from "es-toolkit/array";
 import { AnimatePresence, motion } from "motion/react";
 import { useIntlayer } from "next-intlayer";
 import dynamic from "next/dynamic";

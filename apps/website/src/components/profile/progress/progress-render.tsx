@@ -1,0 +1,352 @@
+import { type ValidObjekt } from "@repo/lib/types/objekt";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { groupBy } from "es-toolkit/array";
+import { AnimatePresence, motion } from "motion/react";
+import type React from "react";
+import { Suspense, useMemo, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useIntlayer } from "react-intlayer";
+import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
+
+import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
+import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
+import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
+import ErrorFallbackRender from "@/components/error-boundary";
+import {
+  Chart,
+  type ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/intentui/chart";
+import { Loader } from "@/components/intentui/loader";
+import {
+  ProgressBar,
+  ProgressBarTrack,
+  ProgressBarValue,
+} from "@/components/intentui/progress-bar";
+import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
+import { useConfigStore } from "@/hooks/use-config";
+import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { useFilters } from "@/hooks/use-filters";
+import { useObjektColumn } from "@/hooks/use-objekt-column";
+import { useProgressObjekts } from "@/hooks/use-progress-objekt";
+import { useSession } from "@/hooks/use-user";
+import { unobtainables } from "@/lib/unobtainables";
+import { tradeableFilter, cn } from "@/lib/utils";
+
+import { useShowCount } from "./filter-showcount";
+import ProgressFilter from "./progress-filter";
+
+export default function ProgressRender() {
+  return (
+    <ObjektViewProvider modalTab="owned">
+      <div className="flex flex-col gap-4">
+        <ProgressFilter />
+
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <Suspense
+                fallback={
+                  <div className="flex justify-center">
+                    <Loader variant="ring" />
+                  </div>
+                }
+              >
+                <Progress />
+              </Suspense>
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </div>
+    </ObjektViewProvider>
+  );
+}
+
+function Progress() {
+  const content = useIntlayer("progress");
+  const { columns } = useObjektColumn();
+  const { shaped, filters, ownedSlugs, hasNextPage, stats, ownedFiltered, collectionsFiltered } =
+    useProgressObjekts();
+
+  return (
+    <>
+      {hasNextPage && (
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
+        </div>
+      )}
+
+      {!filters.artist && !filters.member ? (
+        <MemberProgressChart objekts={ownedFiltered} collections={collectionsFiltered} />
+      ) : (
+        <div className="flex flex-col gap-8">
+          <div className="text-sm font-semibold">
+            {stats.owned}/{stats.total} ({stats.percentage}%)
+          </div>
+
+          {shaped.map(([memberSeasonKey, classGroups]) => (
+            <div key={memberSeasonKey} className="flex flex-col gap-4">
+              <div className="text-base font-semibold">{memberSeasonKey}</div>
+              <div className="flex flex-col gap-6">
+                {classGroups.map(([classKey, grouped]) => (
+                  <ProgressGroup
+                    key={`${memberSeasonKey}-${classKey}`}
+                    title={classKey}
+                    grouped={grouped}
+                    ownedSlugs={ownedSlugs}
+                    columns={columns}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+type ProgressGroupProps = {
+  title: string;
+  grouped: ValidObjekt[][];
+  ownedSlugs: Set<string>;
+  columns: number;
+};
+
+function ProgressGroup(props: ProgressGroupProps) {
+  const { percentage, owned, filtered } = useMemo(() => {
+    const filtered = props.grouped
+      .map(([objekt]) => objekt)
+      .filter((a): a is ValidObjekt => a !== undefined && !unobtainables.includes(a.slug));
+
+    const owned = filtered.filter((a) => props.ownedSlugs.has(a.slug));
+
+    const percentage =
+      filtered.length > 0 ? Number(((owned.length / filtered.length) * 100).toFixed(1)) : 0;
+
+    return { percentage, owned, filtered };
+  }, [props.grouped, props.ownedSlugs]);
+
+  return <ProgressCollapse {...props} percentage={percentage} owned={owned} filtered={filtered} />;
+}
+
+interface ProgressCollapseProps extends ProgressGroupProps {
+  percentage: number;
+  owned: ValidObjekt[];
+  filtered: ValidObjekt[];
+}
+
+function ProgressCollapse(props: ProgressCollapseProps) {
+  const content = useIntlayer("progress");
+  const { data: session } = useSession();
+  const { title, columns, grouped, percentage, ownedSlugs } = props;
+  const hideLabel = useConfigStore((a) => a.hideLabel);
+  const [showCount] = useShowCount();
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="flex flex-col">
+      <div
+        role="none"
+        className={cn(
+          "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-muted/20 p-4 border transition hover:bg-muted",
+          percentage >= 100 && "border-accent-solid shadow-sm shadow-accent-solid/20",
+        )}
+        onClick={() => setShow(!show)}
+      >
+        <div className="inline-flex min-w-72 items-center gap-2 text-base font-semibold">
+          {title}
+        </div>
+        <ProgressBar
+          aria-label={content.progress_bar_label.value}
+          className="flex w-fit min-w-[240px] items-center gap-2"
+          valueLabel={`${props.owned.length}/${props.filtered.length} (${percentage}%)`}
+          value={percentage}
+        >
+          <div className="relative">
+            <ProgressBarTrack className="h-2 min-w-32 [--progress-content-bg:var(--color-accent-solid)]" />
+          </div>
+          <ProgressBarValue className="text-muted-fg flex-none text-sm tabular-nums" />
+        </ProgressBar>
+      </div>
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+            className="mt-4 flex flex-col"
+          >
+            {makeObjektRows({
+              items: grouped,
+              columns,
+              renderItem: ({ items: rowItems, rowIndex }) => (
+                <ObjektsRenderRow
+                  key={`${title}-${rowIndex}`}
+                  columns={columns}
+                  rowIndex={rowIndex}
+                  items={rowItems}
+                >
+                  {({ item: objekts }) => {
+                    const objekt = objekts[0];
+                    if (!objekt) return null;
+                    return (
+                      <ObjektGridItem
+                        objekts={objekts}
+                        session={!!session}
+                        showSelect={false}
+                        staticMenu={
+                          session && (
+                            <ObjektStaticMenu>
+                              <AddToListMenu objekts={[objekt]} />
+                            </ObjektStaticMenu>
+                          )
+                        }
+                        hoverMenu={session && <AddToListMenu objekts={[objekt]} />}
+                        viewProps={{
+                          hideLabel,
+                          showCount,
+                          showOwned: true,
+                          isFade: !ownedSlugs.has(objekt.slug),
+                          unobtainable: unobtainables.includes(objekt.slug),
+                        }}
+                      />
+                    );
+                  }}
+                </ObjektsRenderRow>
+              ),
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function MemberProgressChart({
+  objekts,
+  collections,
+}: {
+  objekts: ValidObjekt[];
+  collections: ValidObjekt[];
+}) {
+  const content = useIntlayer("stats");
+  const { selectedArtists } = useCosmoArtist();
+  const [_, setFilters] = useFilters();
+
+  const chartData = useMemo(() => {
+    const members = selectedArtists
+      .flatMap((a) => a.artistMembers)
+      .map((a) => ({ color: a.primaryColorHex, name: a.name }));
+
+    const grouped = Object.values(groupBy(objekts, (a) => a.collectionId));
+
+    return members
+      .map((member) => {
+        const owned = grouped.filter(([objekt]) => {
+          return objekt?.member === member.name && tradeableFilter(objekt);
+        }).length;
+        const total = collections.filter(
+          (a) => a.member === member.name && tradeableFilter(a),
+        ).length;
+        const percentage = total > 0 ? (owned / total) * 100 : 0;
+
+        return {
+          name: member.name,
+          count: owned,
+          total,
+          percentage: Number(percentage.toFixed(1)),
+          fill: member.color,
+        };
+      })
+      .toSorted((a, b) => b.percentage - a.percentage);
+  }, [selectedArtists, objekts, collections]);
+
+  const chartConfig = {
+    percentage: {
+      label: content.member_progress.percentage_label.value,
+      color: "var(--chart-1)",
+    },
+  } satisfies ChartConfig;
+
+  return (
+    <Chart
+      layout="vertical"
+      data={chartData}
+      dataKey="percentage"
+      config={chartConfig}
+      containerHeight={chartData.length * 40}
+      className="w-full"
+    >
+      <BarChart accessibilityLayer data={chartData} layout="vertical" barSize={32}>
+        <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={90} />
+        <XAxis dataKey="percentage" type="number" hide domain={[0, 100]} />
+        <Bar
+          animationBegin={0}
+          animationDuration={500}
+          dataKey="percentage"
+          radius={5}
+          className="cursor-pointer"
+          shape={(props: any) => (
+            <>
+              <Rectangle
+                {...props}
+                onClick={() => {
+                  return setFilters({
+                    member: [props.name],
+                  });
+                }}
+              />
+              <text
+                x={props.background.width + props.x - 10}
+                y={props.y + 20}
+                textAnchor="end"
+                fill="var(--fg)"
+              >
+                {props.count}/{props.total} ({props.percentage}%)
+              </text>
+            </>
+          )}
+        />
+        <ChartTooltip
+          content={
+            <ChartTooltipContent
+              labelSeparator={false}
+              accessibilityLayer
+              indicator="line"
+              formatter={(value, _name, _item, _index, payload) => (
+                <>
+                  <div
+                    className={cn(
+                      "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
+                      "w-1",
+                    )}
+                    style={
+                      {
+                        "--color-bg": (payload as any).fill,
+                        "--color-border": (payload as any).fill,
+                      } as React.CSSProperties
+                    }
+                  />
+                  <div className={cn("flex flex-1 justify-between leading-none", "items-center")}>
+                    <div className="grid gap-1.5">
+                      {(payload as any).name}
+                      <span className="text-fg">
+                        {(payload as any).count}/{(payload as any).total}
+                      </span>
+                    </div>
+                    <span className="text-fg font-mono font-medium tabular-nums">
+                      {value?.toLocaleString()}%
+                    </span>
+                  </div>
+                </>
+              )}
+            />
+          }
+        />
+      </BarChart>
+    </Chart>
+  );
+}

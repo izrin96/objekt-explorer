@@ -1,0 +1,67 @@
+import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
+import { useIntlayer } from "react-intlayer";
+import { useShallow } from "zustand/react/shallow";
+
+import type { ButtonProps } from "@/components/intentui/button";
+import { Button } from "@/components/intentui/button";
+import { useBatchPin } from "@/hooks/actions/batch-pin";
+import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
+import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { useProfileTarget } from "@/hooks/use-profile-target";
+import { isObjektOwned } from "@/lib/objekt-utils";
+
+export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
+  const content = useIntlayer("objekt_menu");
+  const target = useProfileTarget()!;
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const handleAction = useObjektSelect((a) => a.handleAction);
+  const batchPin = useBatchPin();
+  return (
+    <Button
+      size={size}
+      intent="outline"
+      onPress={() =>
+        handleAction(() => {
+          batchPin.mutate({
+            address: target.address,
+            tokenIds: selected
+              .filter(isObjektOwned)
+              .map((a) => Number(a.id))
+              .filter(Boolean),
+          });
+        })
+      }
+    >
+      <PushPinIcon data-slot="icon" />
+      {content.pin.value}
+    </Button>
+  );
+}
+
+export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
+  const content = useIntlayer("objekt_menu");
+  const target = useProfileTarget()!;
+  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
+  const handleAction = useObjektSelect((a) => a.handleAction);
+  const batchUnpin = useBatchUnpin();
+  return (
+    <Button
+      size={size}
+      intent="outline"
+      onPress={() => {
+        handleAction(() => {
+          batchUnpin.mutate({
+            address: target.address,
+            tokenIds: selected
+              .filter(isObjektOwned)
+              .map((a) => Number(a.id))
+              .filter(Boolean),
+          });
+        });
+      }}
+    >
+      <PushPinSlashIcon data-slot="icon" />
+      {content.unpin.value}
+    </Button>
+  );
+}
