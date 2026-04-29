@@ -1,10 +1,10 @@
 import { Addresses } from "@repo/lib";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { getIntlayer } from "react-intlayer";
 
 import ProfileObjektRender from "@/components/profile/profile-objekt";
-import ProfileObjektServer from "@/components/profile/profile-objekt-server";
 import { generateMetadata } from "@/lib/meta";
 import { profileQuery } from "@/lib/queries/profile";
 import { parseNickname } from "@/lib/utils";
@@ -27,13 +27,21 @@ export const Route = createFileRoute("/@{$nickname}/")({
   component: ProfileCollectionPage,
 });
 
+const ProfileObjektServerLazy = lazy(() => import("@/components/profile/profile-objekt-server"));
+
 function ProfileCollectionPage() {
   const params = Route.useParams();
   const { data: profile } = useSuspenseQuery(profileQuery({ nickname: params.nickname }));
 
-  if (profile.address.toLowerCase() === Addresses.SPIN) {
-    return <ProfileObjektServer />;
-  }
-
-  return <ProfileObjektRender />;
+  return (
+    <>
+      {profile.address.toLowerCase() === Addresses.SPIN ? (
+        <Suspense>
+          <ProfileObjektServerLazy />
+        </Suspense>
+      ) : (
+        <ProfileObjektRender />
+      )}
+    </>
+  );
 }
