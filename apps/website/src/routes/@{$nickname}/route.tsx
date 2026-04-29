@@ -5,6 +5,7 @@ import { useIntlayer } from "react-intlayer";
 
 import DynamicContainer from "@/components/dynamic-container";
 import { CommonErrorComponent } from "@/components/error-boundary";
+import { PendingComponent } from "@/components/pending-component";
 import { PrivateProfileGuard } from "@/components/profile-guard";
 import { ProfileBanner } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
@@ -18,8 +19,8 @@ export const Route = createFileRoute("/@{$nickname}")({
   },
   notFoundComponent: NotFoundComponent,
   errorComponent: CommonErrorComponent,
+  pendingComponent: PendingComponent,
   component: ProfileLayout,
-  wrapInSuspense: true,
 });
 
 function ProfileLayout() {

@@ -2,11 +2,12 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import DynamicContainer from "@/components/dynamic-container";
 import { CommonErrorComponent } from "@/components/error-boundary";
+import { PendingComponent } from "@/components/pending-component";
 
 export const Route = createFileRoute("/(container)")({
   component: ContainerLayout,
   errorComponent: CommonErrorComponent,
-  wrapInSuspense: true,
+  pendingComponent: PendingComponent,
 });
 
 function ContainerLayout() {

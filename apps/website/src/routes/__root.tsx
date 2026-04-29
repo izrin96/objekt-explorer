@@ -6,8 +6,8 @@ import { useIntlayer } from "react-intlayer";
 
 import ClientProviders from "@/components/client-providers";
 import { CommonErrorComponent } from "@/components/error-boundary";
-import { Loader } from "@/components/intentui/loader";
 import Navbar from "@/components/navbar";
+import { PendingComponent } from "@/components/pending-component";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { FilterDataProvider } from "@/hooks/use-filter-data";
 import { clientEnv } from "@/lib/env/client";
@@ -85,20 +85,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       <CommonErrorComponent />
     </RootDocument>
   ),
-  wrapInSuspense: true,
   notFoundComponent: NotFoundComponent,
   shellComponent: RootDocument,
   component: RootComponent,
   pendingComponent: PendingComponent,
 });
-
-function PendingComponent() {
-  return (
-    <div className="flex w-full flex-col items-center justify-center gap-2 py-12">
-      <Loader variant="ring" />
-    </div>
-  );
-}
 
 function NotFoundComponent() {
   const content = useIntlayer("not_found");
