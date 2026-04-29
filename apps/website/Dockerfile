@@ -23,7 +23,7 @@ ENV VITE_LIVE_API_KEY=$VITE_LIVE_API_KEY
 
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
-RUN bun install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
 RUN bun run --filter website build:prod
 

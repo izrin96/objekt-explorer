@@ -9,7 +9,7 @@ FROM oven/bun:1.3.13-slim AS installer
 WORKDIR /app
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
-RUN bun install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile --ignore-scripts
 COPY --from=pruner /app/out/full/ .
 
 # stage 3: build with node
