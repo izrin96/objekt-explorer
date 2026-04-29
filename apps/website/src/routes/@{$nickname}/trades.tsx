@@ -22,7 +22,7 @@ export const Route = createFileRoute("/@{$nickname}/trades")({
       : {};
   },
   component: ProfileTradesPage,
-  ssr: "data-only",
+  ssr: false,
 });
 
 function ProfileTradesPage() {

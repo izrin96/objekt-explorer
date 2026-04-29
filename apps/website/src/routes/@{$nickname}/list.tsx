@@ -16,7 +16,6 @@ export const Route = createFileRoute("/@{$nickname}/list")({
     return { profile };
   },
   component: ProfileListsPage,
-  ssr: "data-only",
 });
 
 function ProfileListsPage() {

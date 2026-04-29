@@ -21,7 +21,6 @@ export const Route = createFileRoute("/(container)/link/")({
     return generateMetadata({ title: content.my_cosmo_link.value });
   },
   component: LinkPage,
-  ssr: "data-only",
 });
 
 function LinkPage() {
