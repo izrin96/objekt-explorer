@@ -12,7 +12,7 @@ export default function ClientProviders({
 }: PropsWithChildren<{ locale: string }>) {
   return (
     <ThemeProvider>
-      <I18nProvider locale={locale}>
+      <I18nProvider locale="en">
         <IntlayerProvider locale={locale}>
           <NuqsAdapter>
             <Toast />

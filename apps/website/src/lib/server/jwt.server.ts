@@ -1,4 +1,4 @@
-import { decodeJwt } from "jose";
+import { decodeJwt } from "jose/jwt/decode";
 
 export function validateExpiry(token: string): boolean {
   const claims = decodeJwt(token);

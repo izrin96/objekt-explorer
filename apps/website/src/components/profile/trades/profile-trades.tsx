@@ -20,7 +20,6 @@ import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
-import { getBaseURL } from "@/lib/utils";
 
 import { useTypeFilter } from "./filter-type";
 import TradesFilter from "./trades-filter";
@@ -59,8 +58,7 @@ function ProfileTrades() {
   const query = useSuspenseInfiniteQuery<TransferResult>({
     queryKey: ["transfers", profile.address, type, filters, selectedArtistIds],
     queryFn: ({ pageParam }) => {
-      const url = new URL(`/api/transfers/${profile.address}`, getBaseURL());
-      return ofetch<TransferResult>(url.toString(), {
+      return ofetch<TransferResult>(`/api/transfers/${profile.address}`, {
         query: {
           cursor: pageParam ? JSON.stringify(pageParam) : undefined,
           type: type ?? undefined,

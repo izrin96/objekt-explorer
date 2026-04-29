@@ -1,5 +1,5 @@
 import { FileDashedIcon } from "@phosphor-icons/react/dist/ssr";
-import type { QueryClient } from "@tanstack/react-query";
+import { type QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import * as React from "react";
 import { useIntlayer } from "react-intlayer";
@@ -27,6 +27,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       orpc.config.getArtists.call(),
       orpc.config.getLocale.call(),
     ]);
+    void queryClient.prefetchQuery(orpc.config.getSelectedArtists.queryOptions());
     void queryClient.prefetchQuery(sessionOptions);
     return {
       filterData,
@@ -70,6 +71,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         ],
         apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
       },
+      // todo: add webmanifest?
       // manifest: "/site.webmanifest",
     });
 
@@ -85,19 +87,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { rel: "preconnect", href: "https://static.cosmo.fans" },
         ...links,
       ],
-      scripts:
-        import.meta.env.PROD && clientEnv.VITE_UMAMI_SCRIPT_URL
-          ? [
-              {
-                src: clientEnv.VITE_UMAMI_SCRIPT_URL,
-                "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
-                defer: true,
-              },
-            ]
-          : [],
     };
   },
-  errorComponent: CommonErrorComponent,
+  errorComponent: () => (
+    <RootDocument>
+      <CommonErrorComponent />
+    </RootDocument>
+  ),
   notFoundComponent: NotFoundComponent,
   shellComponent: RootDocument,
   component: RootComponent,
@@ -128,6 +124,8 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  // todo: currently loader is possible to throw error
+  // move loader data somewhere else
   const { locale } = Route.useLoaderData();
 
   return (
@@ -140,6 +138,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <div className="relative flex min-h-svh flex-col">{children}</div>
         </ClientProviders>
         <Scripts />
+        <script
+          defer
+          data-website-id={clientEnv.VITE_UMAMI_WEBSITE_ID}
+          src={clientEnv.VITE_UMAMI_SCRIPT_URL}
+        />
       </body>
     </html>
   );

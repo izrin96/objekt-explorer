@@ -4,6 +4,9 @@
   "tasks": {
     "build": {
       "outputs": ["lib/**"]
+    },
+    "lint": {
+      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.mts"]
     }
   }
 }

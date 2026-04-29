@@ -21,7 +21,7 @@ import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { clientEnv } from "@/lib/env/client";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
-import { getBaseURL, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
@@ -114,8 +114,7 @@ function Activity() {
     useInfiniteQuery<ActivityResponse>({
       queryKey: ["activity", type, filters, parsedSelectedArtistIds],
       queryFn: async ({ pageParam, signal }) => {
-        const url = new URL("/api/activity", getBaseURL());
-        const response = await ofetch<ActivityResponse>(url.toString(), {
+        const response = await ofetch<ActivityResponse>("/api/activity", {
           query: {
             cursor: pageParam ? JSON.stringify(pageParam) : undefined,
             type: type ?? undefined,

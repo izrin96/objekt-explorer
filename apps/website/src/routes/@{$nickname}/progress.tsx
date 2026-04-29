@@ -22,7 +22,7 @@ export const Route = createFileRoute("/@{$nickname}/progress")({
       : {};
   },
   component: ProfileProgressPage,
-  ssr: false,
+  ssr: "data-only",
 });
 
 function ProfileProgressPage() {

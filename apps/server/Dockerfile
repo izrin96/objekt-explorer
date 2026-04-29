@@ -23,7 +23,7 @@ RUN bun run build --filter=server
 FROM base AS runner
 
 # Install curl for healthchecks
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/apps/server
 ENV NODE_ENV=production

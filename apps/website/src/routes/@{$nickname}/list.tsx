@@ -4,7 +4,7 @@ import ProfileLists from "@/components/profile/profile-list";
 
 export const Route = createFileRoute("/@{$nickname}/list")({
   component: ProfileListsPage,
-  ssr: false,
+  ssr: "data-only",
 });
 
 function ProfileListsPage() {

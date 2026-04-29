@@ -25,7 +25,7 @@ export const Route = createFileRoute("/(container)/live/")({
     return generateMetadata({ title: content.live.value });
   },
   component: LivePage,
-  ssr: false,
+  ssr: "data-only",
 });
 
 function LivePage() {

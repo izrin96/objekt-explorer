@@ -4,8 +4,7 @@ import { linkOptions } from "@tanstack/react-router";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-import { clientEnv } from "@/lib/env/client";
-
+import { clientEnv } from "./env/client";
 import type { ListInfo } from "./universal/user";
 import { unobtainables } from "./unobtainables";
 

@@ -7,7 +7,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { getBaseURL } from "@/lib/utils";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Avatar } from "../intentui/avatar-custom";
@@ -63,8 +62,7 @@ function LiveSessionList({ artistId }: { artistId: string }) {
   const query = useSuspenseQuery({
     queryKey: ["live-session", artistId],
     queryFn: async () => {
-      const url = new URL("/api/live-sessions", getBaseURL());
-      const result = await ofetch<LiveSession[]>(url.toString(), {
+      const result = await ofetch<LiveSession[]>("/api/live-sessions", {
         query: {
           artistId,
         },

@@ -10,7 +10,7 @@ import { useDebounceValue, useInterval } from "usehooks-ts";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
-import { getBaseURL, msToCountdown } from "@/lib/utils";
+import { msToCountdown } from "@/lib/utils";
 
 import { Button, buttonStyles } from "../intentui/button";
 import { Link } from "../intentui/link";
@@ -115,8 +115,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
   const { data, isPending } = useQuery({
     queryKey: ["user-search", debouncedQuery],
     queryFn: () => {
-      const url = new URL("/api/user/search", getBaseURL());
-      return ofetch<CosmoSearchResult>(url.toString(), {
+      return ofetch<CosmoSearchResult>("/api/user/search", {
         query: { query: debouncedQuery },
       }).then((res) => res.results);
     },

@@ -36,7 +36,7 @@ export const Route = createFileRoute("/(container)/list/$slug")({
       : {};
   },
   component: ListDetailPage,
-  ssr: false,
+  ssr: "data-only",
 });
 
 function ListDetailPage() {

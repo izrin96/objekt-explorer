@@ -5,7 +5,7 @@ import { ofetch } from "ofetch";
 import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import { getBaseURL, getEditionStr } from "@/lib/utils";
+import { getEditionStr } from "@/lib/utils";
 
 import { Badge } from "../intentui/badge";
 import { Skeleton } from "../intentui/skeleton";
@@ -30,8 +30,7 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   const { data, status } = useQuery({
     queryKey: ["objekts", "metadata", objekt.slug],
     queryFn: () => {
-      const url = new URL(`/api/objekts/metadata/${objekt.slug}`, getBaseURL());
-      return ofetch<CollectionMetadata>(url.toString());
+      return ofetch<CollectionMetadata>(`/api/objekts/metadata/${objekt.slug}`);
     },
     staleTime: 0,
   });

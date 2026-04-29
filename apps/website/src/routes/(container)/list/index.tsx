@@ -17,7 +17,7 @@ export const Route = createFileRoute("/(container)/list/")({
     return generateMetadata({ title: content.my_list.value });
   },
   component: ListPage,
-  ssr: false,
+  ssr: "data-only",
 });
 
 function ListPage() {

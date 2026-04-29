@@ -35,6 +35,7 @@
     "@orpc/tanstack-query": "^1.14.0",
     "@phosphor-icons/react": "^2.1.10",
     "@react-aria/i18n": "^3.13.0",
+    "@react-aria/optimize-locales-plugin": "^1.2.0",
     "@react-stately/color": "^3.10.0",
     "@react-stately/data": "^3.16.0",
     "@repo/cosmo": "workspace:*",

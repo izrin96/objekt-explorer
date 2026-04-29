@@ -21,8 +21,6 @@ import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
-import { getBaseURL } from "@/lib/utils";
-
 import ErrorFallbackRender from "../error-boundary";
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
@@ -63,8 +61,9 @@ function TradeViewRender({ objekt, serial }: TradeViewProps) {
   const { data } = useSuspenseQuery({
     queryKey: ["objekts", "list", objekt.slug],
     queryFn: () => {
-      const url = new URL(`/api/objekts/list/${objekt.slug}`, getBaseURL());
-      return ofetch<{ serials: number[] }>(url.toString()).then((res) => res.serials);
+      return ofetch<{ serials: number[] }>(`/api/objekts/list/${objekt.slug}`).then(
+        (res) => res.serials,
+      );
     },
   });
 
@@ -176,8 +175,7 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
   const content = useIntlayer("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: () => {
-      const url = new URL(`/api/objekts/transfers/${slug}/${serial}`, getBaseURL());
-      return ofetch<ObjektTransferResult>(url.toString());
+      return ofetch<ObjektTransferResult>(`/api/objekts/transfers/${slug}/${serial}`);
     },
     queryKey: ["objekts", "transfer", slug, serial],
     retry: 1,

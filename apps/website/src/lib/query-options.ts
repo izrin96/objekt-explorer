@@ -11,7 +11,6 @@ import { ofetch } from "ofetch";
 import { fetchOwnedObjektsByCursor } from "./fetching-util";
 import { mapObjektWithTag } from "./objekt-utils";
 import { orpc } from "./orpc/client";
-import { getBaseURL } from "./utils";
 
 export type ServerFilters = {
   at?: string;
@@ -35,8 +34,7 @@ export const collectionOptions = (filters?: ServerFilters, enable = true) =>
     refetchOnWindowFocus: false,
     enabled: enable,
     queryFn: async () => {
-      const url = new URL("/api/collection", getBaseURL());
-      const result = await ofetch<CollectionResult>(url.toString(), {
+      const result = await ofetch<CollectionResult>("/api/collection", {
         query: {
           ...filters,
         },

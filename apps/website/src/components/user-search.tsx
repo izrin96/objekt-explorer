@@ -8,7 +8,6 @@ import { useIntlayer } from "react-intlayer";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
-import { getBaseURL } from "@/lib/utils";
 
 import { Button } from "./intentui/button";
 import {
@@ -32,8 +31,7 @@ export default function UserSearch() {
   const { data, isPending } = useQuery({
     queryKey: ["user-search", debouncedQuery],
     queryFn: () => {
-      const url = new URL("/api/user/search", getBaseURL());
-      return ofetch<CosmoSearchResult>(url.toString(), {
+      return ofetch<CosmoSearchResult>("/api/user/search", {
         query: { query: debouncedQuery },
       }).then((res) => res.results);
     },

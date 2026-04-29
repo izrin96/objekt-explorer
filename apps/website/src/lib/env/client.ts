@@ -11,4 +11,5 @@ export const clientEnv = createEnv({
   },
   clientPrefix: "VITE_",
   runtimeEnv: import.meta.env,
+  emptyStringAsUndefined: true,
 });

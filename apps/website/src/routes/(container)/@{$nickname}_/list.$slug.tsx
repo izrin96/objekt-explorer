@@ -29,7 +29,7 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   },
   component: ProfileListDetailPage,
   notFoundComponent: NotFoundComponent,
-  ssr: false,
+  ssr: "data-only",
 });
 
 function ProfileListDetailPage() {

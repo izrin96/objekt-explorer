@@ -15,7 +15,7 @@ import { betterAuthLocale } from "@/i18n/better-auth";
 import { serverEnv } from "@/lib/env/server";
 
 import type { PublicProfile, PublicUser } from "../universal/user";
-import { getBaseURL, SITE_NAME } from "../utils";
+import { SITE_NAME } from "../utils";
 import { getUserLocale } from "./locale.server";
 import {
   sendDeleteAccountVerification,
@@ -72,7 +72,12 @@ export const auth = betterAuth({
       }),
     },
   },
-  baseURL: getBaseURL(),
+  baseURL: serverEnv.VITE_SITE_URL,
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-client-ip", "x-forwarded-for", "cf-connecting-ip"],
+    },
+  },
   user: {
     additionalFields: {
       discord: {

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**", ".tanstack/**"]
+    },
+    "build:prod": {
+      "outputs": ["dist/**", ".tanstack/**"]
+    },
+    "lint": {
+      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts"]
+    }
+  }
+}
