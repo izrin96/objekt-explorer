@@ -1,12 +1,12 @@
 import type { OwnedObjektsResult } from "@repo/lib/types/objekt";
 import { ofetch } from "ofetch";
 
-import type { ServerFilters } from "@/lib/query-options";
+import type { OwnedBySchema } from "./universal/owned-by";
 
 export async function fetchOwnedObjektsByCursor(
   address: string,
   cursor?: OwnedObjektsResult["nextCursor"],
-  filters?: ServerFilters,
+  filters?: OwnedBySchema,
 ) {
   const result = await ofetch<OwnedObjektsResult>(`/api/objekts/owned-by/${address}`, {
     query: {

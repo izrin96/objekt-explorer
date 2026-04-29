@@ -1,12 +1,13 @@
-import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { ownedCollectionOptions, type ServerFilters } from "@/lib/query-options";
+import { ownedCollectionOptions } from "@/lib/query-options";
+import type { OwnedBySchema } from "@/lib/universal/owned-by";
 
-export function useOwnedCollectionsServer(address: string, filters?: ServerFilters) {
-  const query = useSuspenseInfiniteQuery(ownedCollectionOptions(address, filters));
+export function useOwnedCollectionsServer(address: string, filters?: OwnedBySchema) {
+  const query = useInfiniteQuery(ownedCollectionOptions(address, filters));
 
-  const objekts = query.data.pages.flatMap((page) => page.objekts);
-  const total = query.data.pages[0]?.total;
+  const objekts = query.data?.pages.flatMap((page) => page.objekts) ?? [];
+  const total = query.data?.pages[0]?.total ?? 0;
 
   return {
     objekts,

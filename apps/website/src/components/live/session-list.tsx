@@ -1,8 +1,7 @@
 import type { LiveSession } from "@repo/cosmo/server/live";
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { ofetch } from "ofetch";
-import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 
@@ -38,15 +37,7 @@ export default function LiveSessionListRender() {
               </TabList>
               {selectedArtists.map((artist) => (
                 <TabPanel key={artist.id} id={artist.id}>
-                  <Suspense
-                    fallback={
-                      <div className="flex justify-center">
-                        <Loader variant="ring" />
-                      </div>
-                    }
-                  >
-                    <LiveSessionList artistId={artist.id} />
-                  </Suspense>
+                  <LiveSessionList artistId={artist.id} />
                 </TabPanel>
               ))}
             </Tabs>
@@ -59,7 +50,7 @@ export default function LiveSessionListRender() {
 
 function LiveSessionList({ artistId }: { artistId: string }) {
   const content = useIntlayer("live");
-  const query = useSuspenseQuery({
+  const query = useQuery({
     queryKey: ["live-session", artistId],
     queryFn: async () => {
       const result = await ofetch<LiveSession[]>("/api/live-sessions", {
@@ -70,18 +61,26 @@ function LiveSessionList({ artistId }: { artistId: string }) {
       return result;
     },
     staleTime: 1000 * 60 * 5,
+    throwOnError: true,
   });
+  const lives = query.data ?? [];
+
+  if (query.isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {query.data.map((live) => (
+        {lives.map((live) => (
           <LiveSessionCard key={live.id} live={live} />
         ))}
       </div>
-      {query.data.length === 0 && (
-        <div className="flex justify-center">{content.no_live.value}</div>
-      )}
+      {lives.length === 0 && <div className="flex justify-center">{content.no_live.value}</div>}
     </>
   );
 }

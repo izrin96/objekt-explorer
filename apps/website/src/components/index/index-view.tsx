@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { Suspense, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -30,15 +30,7 @@ export default function IndexRender() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <IndexView selectTarget={selectTarget} />
-              </Suspense>
+              <IndexView selectTarget={selectTarget} />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -61,7 +53,7 @@ function IndexFilter({ selectRef }: { selectRef: (el: HTMLDivElement | null) => 
 function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
   const { data: session } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered } = useCollectionObjekts();
+  const { shaped, filtered, isPending } = useCollectionObjekts();
 
   const renderObjekt = useCallback(
     ({ item }: { item: ValidObjekt[] }) => {
@@ -84,6 +76,14 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
     },
     [session, hideLabel],
   );
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <>

@@ -1,9 +1,3 @@
-import type {
-  ValidArtist,
-  ValidCustomSort,
-  ValidOnlineType,
-  ValidSortDirection,
-} from "@repo/cosmo/types/common";
 import type { CollectionResult, OwnedObjektsCursor } from "@repo/lib/types/objekt";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
@@ -11,23 +5,9 @@ import { ofetch } from "ofetch";
 import { fetchOwnedObjektsByCursor } from "./fetching-util";
 import { mapObjektWithTag } from "./objekt-utils";
 import { orpc } from "./orpc/client";
+import type { OwnedBySchema } from "./universal/owned-by";
 
-export type ServerFilters = {
-  at?: string;
-  artist?: ValidArtist[];
-  member?: string[];
-  class?: string[];
-  season?: string[];
-  onOffline?: ValidOnlineType[];
-  transferable?: boolean;
-  collection?: string[];
-  sort?: ValidCustomSort;
-  sort_dir?: ValidSortDirection;
-  includeCount?: boolean;
-  limit?: number;
-};
-
-export const collectionOptions = (filters?: ServerFilters, enable = true) =>
+export const collectionOptions = (filters?: OwnedBySchema, enable = true) =>
   queryOptions({
     queryKey: ["collections", filters],
     staleTime: Infinity,
@@ -42,9 +22,10 @@ export const collectionOptions = (filters?: ServerFilters, enable = true) =>
 
       return result.map(mapObjektWithTag);
     },
+    throwOnError: true,
   });
 
-export const ownedCollectionOptions = (address: string, filters?: ServerFilters) =>
+export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema) =>
   infiniteQueryOptions({
     queryKey: ["owned-collections", address, filters],
     queryFn: ({ pageParam }) =>
@@ -57,11 +38,10 @@ export const ownedCollectionOptions = (address: string, filters?: ServerFilters)
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     refetchOnWindowFocus: false,
     staleTime: filters?.at ? Infinity : 1000 * 60 * 5,
+    throwOnError: true,
   });
 
-export const sessionOptions = queryOptions({
-  queryKey: ["session"],
-  queryFn: () => orpc.user.session.call(),
+export const sessionOptions = orpc.user.session.queryOptions({
   staleTime: Infinity,
   refetchOnWindowFocus: false,
 });

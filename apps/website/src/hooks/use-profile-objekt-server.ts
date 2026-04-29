@@ -1,3 +1,5 @@
+import type { OwnedBySchema } from "@/lib/universal/owned-by";
+
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useOwnedCollectionsServer } from "./use-owned-collections-server";
@@ -12,9 +14,8 @@ export function useProfileObjektsServer() {
 
   const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
 
-  const serverFilters = {
+  const serverFilters: OwnedBySchema = {
     at: filters.at ?? undefined,
-    includeCount: true,
     limit: 300,
     artist: parsedSelectedArtistIds ?? undefined,
     member: filters.member ?? undefined,

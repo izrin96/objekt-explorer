@@ -1,10 +1,10 @@
 import { LockIcon } from "@phosphor-icons/react/dist/ssr";
 import { Addresses } from "@repo/lib";
-import { QueryErrorResetBoundary, useSuspenseInfiniteQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { memo, Suspense, useRef } from "react";
+import { memo, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 
@@ -32,15 +32,7 @@ export default function ProfileTradesRender() {
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Suspense
-              fallback={
-                <div className="flex justify-center">
-                  <Loader variant="ring" />
-                </div>
-              }
-            >
-              <ProfileTrades />
-            </Suspense>
+            <ProfileTrades />
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
@@ -55,7 +47,7 @@ function ProfileTrades() {
   const [filters] = useFilters();
   const [type] = useTypeFilter();
 
-  const query = useSuspenseInfiniteQuery<TransferResult>({
+  const query = useInfiniteQuery<TransferResult>({
     queryKey: ["transfers", profile.address, type, filters, selectedArtistIds],
     queryFn: ({ pageParam }) => {
       return ofetch<TransferResult>(`/api/transfers/${profile.address}`, {
@@ -77,11 +69,20 @@ function ProfileTrades() {
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 5,
     retry: false,
+    throwOnError: true,
   });
 
-  const rows = query.data.pages.flatMap((p) => p.results);
+  if (query.isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
-  if (query.data.pages[0]?.hide) {
+  const rows = query.data?.pages.flatMap((p) => p.results) ?? [];
+
+  if (query.data?.pages[0]?.hide) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />

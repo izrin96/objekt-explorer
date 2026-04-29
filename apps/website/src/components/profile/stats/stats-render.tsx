@@ -1,8 +1,8 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
 import type React from "react";
-import { Suspense, useMemo } from "react";
+import { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
@@ -29,6 +29,7 @@ import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
+import type { OwnedBySchema } from "@/lib/universal/owned-by";
 import { getSeasonColor, tradeableFilter, cn } from "@/lib/utils";
 
 import StatsFilter from "./stats-filter";
@@ -40,15 +41,7 @@ export default function ProfileStatsRender() {
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Suspense
-              fallback={
-                <div className="flex justify-center">
-                  <Loader variant="ring" />
-                </div>
-              }
-            >
-              <ProfileStats />
-            </Suspense>
+            <ProfileStats />
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>
@@ -62,33 +55,38 @@ function ProfileStats() {
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
 
-  const serverFilters = {
+  const serverFilters: OwnedBySchema = {
     artist: selectedArtistIds,
     at: filters.at ?? undefined,
   };
 
-  const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
-    profile.address,
-    serverFilters,
-  );
-  const collectionQuery = useSuspenseQuery(collectionOptions(serverFilters, !hasNextPage));
+  const { objekts, query } = useOwnedCollections(profile.address, serverFilters);
+  const collectionQuery = useQuery(collectionOptions(serverFilters, !query.hasNextPage));
 
-  const objekts = filterObjekts(filters, allOwnedObjekts);
+  const filteredObjekts = filterObjekts(filters, objekts);
 
-  const collections = filterObjekts(filters, collectionQuery.data);
+  const filteredCollections = filterObjekts(filters, collectionQuery.data ?? []);
+
+  if (query.isPending || collectionQuery.isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
-      {hasNextPage && (
+      {query.hasNextPage && (
         <div className="flex items-center gap-2 text-sm font-semibold">
           {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <BreakdownByMemberChart objekts={objekts} />
-        <BreakdownBySeasonChart objekts={objekts} />
-        <MemberProgressChart objekts={objekts} collections={collections} />
+        <BreakdownByMemberChart objekts={filteredObjekts} />
+        <BreakdownBySeasonChart objekts={filteredObjekts} />
+        <MemberProgressChart objekts={filteredObjekts} collections={filteredCollections} />
       </div>
     </div>
   );

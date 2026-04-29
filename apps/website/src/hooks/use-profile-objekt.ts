@@ -5,6 +5,7 @@ import { useDeferredValue, useMemo } from "react";
 import { filterObjekts } from "@/lib/filter-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions } from "@/lib/query-options";
+import type { OwnedBySchema } from "@/lib/universal/owned-by";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";
@@ -21,15 +22,12 @@ export function useProfileObjekts() {
   const deferredFilters = useDeferredValue(filters);
   const rarityMap = useCollectionRarity();
 
-  const serverFilters = {
+  const serverFilters: OwnedBySchema = {
     artist: selectedArtistIds,
     at: filters.at ?? undefined,
   };
 
-  const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
-    profile.address,
-    serverFilters,
-  );
+  const { objekts, query } = useOwnedCollections(profile.address, serverFilters);
 
   const [pinsQuery, lockedObjektQuery] = useSuspenseQueries({
     queries: [
@@ -48,7 +46,7 @@ export function useProfileObjekts() {
     ],
   });
 
-  const objektsQuery = useQuery(collectionOptions(serverFilters, !hasNextPage));
+  const collectionQuery = useQuery(collectionOptions(serverFilters, !query.hasNextPage));
 
   const result = useMemo(() => {
     // augment owned objekts with pin/lock status
@@ -56,8 +54,8 @@ export function useProfileObjekts() {
     const lockedSet = lockedObjektQuery.data;
 
     const ownedWithPinLock = deferredFilters.at
-      ? allOwnedObjekts
-      : allOwnedObjekts.map((objekt) => {
+      ? objekts
+      : objekts.map((objekt) => {
           const isPin = pinsMap.has(objekt.id);
           const isLocked = lockedSet.has(objekt.id);
           return Object.assign(objekt, {
@@ -73,7 +71,7 @@ export function useProfileObjekts() {
     const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
     const missingObjekts =
       deferredFilters.unowned || deferredFilters.missing
-        ? (objektsQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug))
+        ? (collectionQuery.data ?? []).filter((obj) => !ownedSlugs.has(obj.slug))
         : [];
     const missingFiltered = filterObjekts(deferredFilters, missingObjekts);
 
@@ -85,17 +83,19 @@ export function useProfileObjekts() {
       filtered,
       grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
       filters: deferredFilters,
-      hasNextPage,
+      hasNextPage: query.hasNextPage,
+      isPending: query.isPending,
       isStale: filters !== deferredFilters,
     };
   }, [
     shape,
     deferredFilters,
-    allOwnedObjekts,
+    objekts,
     pinsQuery.data,
     lockedObjektQuery.data,
-    objektsQuery.data,
-    hasNextPage,
+    collectionQuery.data,
+    query.hasNextPage,
+    query.isPending,
     filters,
     rarityMap,
   ]);

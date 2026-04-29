@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { Suspense, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -47,19 +47,11 @@ export default function ProfileObjektRender() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <ProfileObjekt
-                  selectTarget={selectTarget}
-                  discordTarget={discordTarget}
-                  address={profile.address}
-                />
-              </Suspense>
+              <ProfileObjekt
+                selectTarget={selectTarget}
+                discordTarget={discordTarget}
+                address={profile.address}
+              />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -97,7 +89,7 @@ function ProfileObjekt({
 }) {
   const { data: session } = useSession();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, grouped, filters, hasNextPage } = useProfileObjekts();
+  const { shaped, filtered, grouped, filters, hasNextPage, isPending } = useProfileObjekts();
   const isProfileAuthed = useProfileAuthed();
   const showSelectMode = session && !filters.at && selectTarget;
 
@@ -170,6 +162,14 @@ function ProfileObjekt({
     },
     [session, hideLabel, isProfileAuthed, address, filters.grouped, filters.at],
   );
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <>

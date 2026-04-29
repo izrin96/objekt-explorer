@@ -1,9 +1,3 @@
-import {
-  validArtists,
-  validCustomSorts,
-  validOnlineTypes,
-  validSortDirection,
-} from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
@@ -11,45 +5,15 @@ import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { fetchUserProfiles } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, asc, count, desc, eq, getColumns, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
-import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth.server";
 import { getCollectionColumns } from "@/lib/server/objekt.server";
+import { ownedBySchema, type OwnedBySchema } from "@/lib/universal/owned-by";
 
 const PER_PAGE = 8000;
+const ENABLE_COUNT = false;
 
-const cursorSchema = z.object({
-  receivedAt: z.string().optional(),
-  serial: z.coerce.number().optional(),
-  collectionNo: z.string().optional(),
-  id: z.string(),
-});
-
-const schema = z.object({
-  at: z.string().optional(),
-  cursor: cursorSchema.optional(),
-  artist: z.enum(validArtists).array().optional(),
-  member: z.array(z.string()).optional(),
-  class: z.array(z.string()).optional(),
-  season: z.array(z.string()).optional(),
-  onOffline: z.array(z.enum(validOnlineTypes)).optional(),
-  transferable: z
-    .enum(["true", "false"])
-    .transform((v) => v === "true")
-    .optional(),
-  collection: z.string().array().optional(),
-  sort: z.enum(validCustomSorts).optional(),
-  sort_dir: z.enum(validSortDirection).optional(),
-  includeCount: z
-    .enum(["true", "false"])
-    .transform((v) => v === "true")
-    .optional(),
-  limit: z.number().optional(),
-});
-
-type Query = z.infer<typeof schema>;
-
-function buildCollectionFilters(query: Query) {
+function buildCollectionFilters(query: OwnedBySchema) {
   const filters = [];
 
   if (query.artist?.length) {
@@ -84,7 +48,7 @@ function buildCollectionFilters(query: Query) {
   return filters;
 }
 
-function buildObjektFilters(query: Query) {
+function buildObjektFilters(query: OwnedBySchema) {
   const filters = [];
 
   if (query.transferable !== undefined) {
@@ -94,7 +58,7 @@ function buildObjektFilters(query: Query) {
   return filters;
 }
 
-function getSortConfig(query: Query) {
+function getSortConfig(query: OwnedBySchema) {
   const sort = query.sort ?? "date";
   const sortDir = query.sort_dir ?? "desc";
   const isAsc = sortDir === "asc";
@@ -272,7 +236,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
             .limit(limit + 1);
 
           const countQuery =
-            query.includeCount && isFirstPage
+            ENABLE_COUNT && isFirstPage
               ? indexer
                   .with(latest)
                   .select({ count: count() })
@@ -323,7 +287,7 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
           .limit(limit + 1);
 
         const countQuery =
-          query.includeCount && isFirstPage
+          ENABLE_COUNT && isFirstPage
             ? indexer
                 .select({ count: count() })
                 .from(objekts)
@@ -354,8 +318,8 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
   },
 });
 
-function parseParams(params: URLSearchParams): Query {
-  const result = schema.safeParse({
+function parseParams(params: URLSearchParams): OwnedBySchema {
+  const result = ownedBySchema.safeParse({
     at: params.get("at") ?? undefined,
     cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
     artist: params.getAll("artist").length ? params.getAll("artist") : undefined,
@@ -367,7 +331,6 @@ function parseParams(params: URLSearchParams): Query {
     collection: params.getAll("collection").length ? params.getAll("collection") : undefined,
     sort: params.get("sort") ?? undefined,
     sort_dir: params.get("sort_dir") ?? undefined,
-    includeCount: params.get("includeCount") ?? undefined,
     limit: params.get("limit") ? Number(params.get("limit")) : undefined,
   });
 

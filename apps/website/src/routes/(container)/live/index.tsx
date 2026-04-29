@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense } from "react";
 import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
-import { Loader } from "@/components/intentui/loader";
 import { Note } from "@/components/intentui/note";
 import LiveSessionListRender from "@/components/live/session-list";
 import { checkAccess } from "@/lib/functions/live";
@@ -25,7 +23,6 @@ export const Route = createFileRoute("/(container)/live/")({
     return generateMetadata({ title: content.live.value });
   },
   component: LivePage,
-  ssr: false,
 });
 
 function LivePage() {
@@ -37,17 +34,7 @@ function LivePage() {
         As this feature violates Cosmo&apos;s Terms of Service, we will no longer continue offering
         it. Please watch the live stream on the Cosmo app instead.
       </Note>
-      {isAllowed && (
-        <Suspense
-          fallback={
-            <div className="flex justify-center">
-              <Loader variant="ring" />
-            </div>
-          }
-        >
-          <LiveSessionListRender />
-        </Suspense>
-      )}
+      {isAllowed && <LiveSessionListRender />}
     </div>
   );
 }

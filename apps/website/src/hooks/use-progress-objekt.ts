@@ -1,9 +1,10 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
 import { useDeferredValue, useMemo } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
+import type { OwnedBySchema } from "@/lib/universal/owned-by";
 import { tradeableFilter } from "@/lib/utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
@@ -19,23 +20,20 @@ export function useProgressObjekts() {
   const [filters] = useFilters();
   const deferredFilters = useDeferredValue(filters);
 
-  const serverFilters = {
+  const serverFilters: OwnedBySchema = {
     artist: selectedArtistIds,
     at: filters.at ?? undefined,
   };
 
-  const { objekts: allOwnedObjekts, hasNextPage } = useOwnedCollections(
-    profile.address,
-    serverFilters,
-  );
-  const objektsQuery = useSuspenseQuery(collectionOptions(serverFilters, !hasNextPage));
+  const { objekts, query } = useOwnedCollections(profile.address, serverFilters);
+  const collectionQuery = useQuery(collectionOptions(serverFilters, !query.hasNextPage));
 
   const result = useMemo(() => {
     // owned objekts
-    const ownedFiltered = filterObjekts(deferredFilters, allOwnedObjekts);
+    const ownedFiltered = filterObjekts(deferredFilters, objekts);
 
     // all collections filtered
-    const collectionsFiltered = filterObjekts(deferredFilters, objektsQuery.data);
+    const collectionsFiltered = filterObjekts(deferredFilters, collectionQuery.data ?? []);
 
     // find missing objekts based on owned slug
     const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
@@ -61,13 +59,23 @@ export function useProgressObjekts() {
       shaped: shape(filtered),
       filters: deferredFilters,
       ownedSlugs,
-      hasNextPage,
+      hasNextPage: query.hasNextPage,
+      isPending: query.isPending || collectionQuery.isPending,
       stats,
       ownedFiltered,
       collectionsFiltered,
       isStale: filters !== deferredFilters,
     };
-  }, [shape, deferredFilters, allOwnedObjekts, objektsQuery.data, hasNextPage, filters]);
+  }, [
+    shape,
+    deferredFilters,
+    objekts,
+    collectionQuery.data,
+    query.hasNextPage,
+    query.isPending,
+    collectionQuery.isPending,
+    filters,
+  ]);
 
   return result;
 }

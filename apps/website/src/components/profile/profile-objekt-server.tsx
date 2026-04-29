@@ -1,7 +1,7 @@
 import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { Suspense, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 import { useLocale } from "react-intlayer";
@@ -45,15 +45,7 @@ export default function ProfileObjektServerRender() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <ProfileObjektServer selectTarget={selectTarget} address={profile.address} />
-              </Suspense>
+              <ProfileObjektServer selectTarget={selectTarget} address={profile.address} />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -117,6 +109,14 @@ function ProfileObjektServer({
     },
     [session, hideLabel, address],
   );
+
+  if (query.isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <>

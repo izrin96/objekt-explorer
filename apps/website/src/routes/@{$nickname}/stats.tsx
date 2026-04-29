@@ -22,7 +22,6 @@ export const Route = createFileRoute("/@{$nickname}/stats")({
       : {};
   },
   component: ProfileStatsPage,
-  ssr: false,
 });
 
 function ProfileStatsPage() {

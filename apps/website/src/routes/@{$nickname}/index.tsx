@@ -25,7 +25,6 @@ export const Route = createFileRoute("/@{$nickname}/")({
       : {};
   },
   component: ProfileCollectionPage,
-  ssr: false,
 });
 
 function ProfileCollectionPage() {

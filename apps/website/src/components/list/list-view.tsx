@@ -1,6 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { type PropsWithChildren, Suspense, use } from "react";
+import { type PropsWithChildren, use } from "react";
 import { createContext, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
@@ -52,15 +52,7 @@ export default function ListRender() {
           <QueryErrorResetBoundary>
             {({ reset }) => (
               <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-                <Suspense
-                  fallback={
-                    <div className="flex justify-center">
-                      <Loader variant="ring" />
-                    </div>
-                  }
-                >
-                  <ListView list={list} selectTarget={selectTarget} discordTarget={discordTarget} />
-                </Suspense>
+                <ListView list={list} selectTarget={selectTarget} discordTarget={discordTarget} />
               </ErrorBoundary>
             )}
           </QueryErrorResetBoundary>
@@ -133,7 +125,7 @@ function ListView({
   const { data: session } = useSession();
   const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, grouped, filters } = useListObjekts();
+  const { shaped, filtered, grouped, filters, isPending } = useListObjekts();
   const { openSetPrice } = use(SetPriceContext);
 
   const isProfileList = list.listType === "profile";
@@ -176,6 +168,14 @@ function ListView({
     },
     [session, hideLabel, isOwned, list.currency, isProfileList, filters.grouped, openSetPrice],
   );
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <>

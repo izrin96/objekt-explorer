@@ -22,7 +22,6 @@ export const Route = createFileRoute("/@{$nickname}/trades")({
       : {};
   },
   component: ProfileTradesPage,
-  ssr: false,
 });
 
 function ProfileTradesPage() {

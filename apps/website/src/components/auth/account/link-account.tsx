@@ -65,7 +65,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
     orpc.user.unlinkAccount.mutationOptions({
       onSuccess: async (_, _v, _o, { client }) => {
         void client.invalidateQueries({
-          queryKey: ["session"],
+          queryKey: orpc.user.session.key(),
         });
         void client.invalidateQueries({
           queryKey: ["accounts"],
@@ -150,7 +150,7 @@ function PullProfileModal({ provider, open, setOpen }: PullProfileProps) {
     orpc.user.refreshProfile.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         void client.invalidateQueries({
-          queryKey: ["session"],
+          queryKey: orpc.user.session.key(),
         });
         setOpen(false);
         toast.success(content.account.link_accounts.profile_updated.value);

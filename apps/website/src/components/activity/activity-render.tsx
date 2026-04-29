@@ -139,6 +139,7 @@ function Activity() {
       staleTime: 0,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
+      throwOnError: true,
     });
 
   const { lastMessage, sendMessage, readyState } = useWebSocket(

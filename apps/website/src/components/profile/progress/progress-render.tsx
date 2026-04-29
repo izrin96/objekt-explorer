@@ -3,7 +3,7 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
 import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
-import { Suspense, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
@@ -46,15 +46,7 @@ export default function ProgressRender() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <Progress />
-              </Suspense>
+              <Progress />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -66,8 +58,24 @@ export default function ProgressRender() {
 function Progress() {
   const content = useIntlayer("progress");
   const { columns } = useObjektColumn();
-  const { shaped, filters, ownedSlugs, hasNextPage, stats, ownedFiltered, collectionsFiltered } =
-    useProgressObjekts();
+  const {
+    shaped,
+    filters,
+    ownedSlugs,
+    hasNextPage,
+    isPending,
+    stats,
+    ownedFiltered,
+    collectionsFiltered,
+  } = useProgressObjekts();
+
+  if (isPending) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   return (
     <>

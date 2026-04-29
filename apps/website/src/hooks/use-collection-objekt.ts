@@ -1,8 +1,9 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useDeferredValue, useMemo } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
+import type { OwnedBySchema } from "@/lib/universal/owned-by";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";
@@ -16,20 +17,21 @@ export function useCollectionObjekts() {
   const deferredFilters = useDeferredValue(filters);
   const rarityMap = useCollectionRarity();
 
-  const serverFilters = {
+  const serverFilters: OwnedBySchema = {
     artist: selectedArtistIds,
   };
-  const query = useSuspenseQuery(collectionOptions(serverFilters));
+  const query = useQuery(collectionOptions(serverFilters));
 
   const result = useMemo(() => {
-    const filtered = filterObjekts(deferredFilters, query.data);
+    const filtered = filterObjekts(deferredFilters, query.data ?? []);
     return {
       shaped: shape(filtered, deferredFilters, false, rarityMap),
       filtered,
       filters: deferredFilters,
       isStale: filters !== deferredFilters,
+      isPending: query.isPending,
     };
-  }, [shape, deferredFilters, query.data, filters, rarityMap]);
+  }, [shape, deferredFilters, query.data, query.isPending, filters, rarityMap]);
 
   return result;
 }

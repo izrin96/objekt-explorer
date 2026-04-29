@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
 import { useDeferredValue, useMemo } from "react";
 
@@ -14,13 +14,14 @@ import { useShapeObjekts } from "./use-shape-objekt";
 export function useListObjekts() {
   const list = useListTarget()!;
   const shape = useShapeObjekts();
-  const query = useSuspenseQuery(
+  const query = useQuery(
     orpc.list.listEntries.queryOptions({
       input: {
         slug: list.slug,
       },
       select: (data) => data.map(mapObjektWithTag),
       staleTime: 1000 * 60 * 5,
+      throwOnError: true,
     }),
   );
   const [filters] = useFilters();
@@ -28,15 +29,16 @@ export function useListObjekts() {
   const rarityMap = useCollectionRarity();
 
   const result = useMemo(() => {
-    const filtered = filterObjekts(deferredFilters, query.data);
+    const filtered = filterObjekts(deferredFilters, query.data ?? []);
     return {
       shaped: shape(filtered, deferredFilters, false, rarityMap),
       filtered,
       grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
       filters: deferredFilters,
       isStale: filters !== deferredFilters,
+      isPending: query.isPending,
     };
-  }, [shape, deferredFilters, query.data, filters, rarityMap]);
+  }, [shape, deferredFilters, query.data, query.isPending, filters, rarityMap]);
 
   return result;
 }

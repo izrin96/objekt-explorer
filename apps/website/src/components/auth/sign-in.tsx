@@ -13,6 +13,7 @@ import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
+import { orpc } from "@/lib/orpc/client";
 
 import { Button } from "../intentui/button";
 import { FieldError, Label } from "../intentui/field";
@@ -61,7 +62,7 @@ function SignInForm({
     onSuccess: async (_, _v, _o, { client }) => {
       toast.success(content.sign_in.success.value);
       void client.invalidateQueries({
-        queryKey: ["session"],
+        queryKey: orpc.user.session.key(),
       });
       void router.navigate({ to: "/" });
     },
@@ -235,7 +236,7 @@ function SignUpForm({
     onSuccess: async (_, _v, _o, { client }) => {
       toast.success(content.sign_up.success.value);
       void client.invalidateQueries({
-        queryKey: ["session"],
+        queryKey: orpc.user.session.key(),
       });
       void router.navigate({ to: "/" });
     },
