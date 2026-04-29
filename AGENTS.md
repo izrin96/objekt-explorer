@@ -8,7 +8,7 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 
 **Monorepo Structure** (Bun workspaces + Turbo):
 
-- `apps/web` - Main frontend (Next.js)
+- `apps/web` - Main frontend (Next.js) (Deprecated)
 - `apps/website` - Main frontend (TanStack React Start + Vite)
 - `apps/server` - WebSocket activity server
 - `apps/worker` - Background job worker (Croner)
