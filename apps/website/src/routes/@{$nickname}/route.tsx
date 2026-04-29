@@ -1,4 +1,5 @@
 import { GhostIcon } from "@phosphor-icons/react/dist/ssr";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { useIntlayer } from "react-intlayer";
 
@@ -8,21 +9,19 @@ import { ProfileBanner } from "@/components/profile/profile-banner";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/hooks/use-profile-target";
-import { profileByNicknameQuery } from "@/lib/queries/profile";
+import { profileQuery } from "@/lib/queries/profile";
 
 export const Route = createFileRoute("/@{$nickname}")({
   loader: async ({ params, context: { queryClient } }) => {
-    const profile = await queryClient.ensureQueryData(
-      profileByNicknameQuery({ nickname: params.nickname }),
-    );
-    return { profile };
+    await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
   },
   notFoundComponent: NotFoundComponent,
   component: ProfileLayout,
 });
 
 function ProfileLayout() {
-  const { profile } = Route.useLoaderData();
+  const params = Route.useParams();
+  const { data: profile } = useSuspenseQuery(profileQuery({ nickname: params.nickname }));
 
   return (
     <ProfileProvider profile={profile}>

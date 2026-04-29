@@ -1,12 +1,13 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "react-intlayer";
 
 import CompareView from "@/components/compare/compare-view";
 import { ListProvider } from "@/hooks/use-list-target";
-import { getListBySlug } from "@/lib/functions/list";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
+import { listBySlugQuery } from "@/lib/queries/list";
 import { compareInputSchema } from "@/lib/universal/compare";
 
 export const Route = createFileRoute("/(container)/compare-tool")({
@@ -20,11 +21,11 @@ export const Route = createFileRoute("/(container)/compare-tool")({
   }),
   errorComponent: ({ error }) => <ErrorComponent error={error.message} />,
   loader: async ({ deps, context: { queryClient } }) => {
-    const [list, data] = await Promise.all([
-      getListBySlug({ data: { slug: deps.sourceId } }),
+    await Promise.all([
+      queryClient.ensureQueryData(listBySlugQuery({ slug: deps.sourceId })),
       queryClient.ensureQueryData(orpc.compare.compare.queryOptions({ input: deps })),
     ]);
-    return { deps, list, data };
+    return { deps };
   },
   head: ({ loaderData }) => {
     const content = getIntlayer("page_titles");
@@ -40,8 +41,8 @@ export const Route = createFileRoute("/(container)/compare-tool")({
 });
 
 function CompareToolPage() {
-  const { list } = Route.useLoaderData();
   const input = Route.useLoaderDeps();
+  const { data: list } = useSuspenseQuery(listBySlugQuery({ slug: input.sourceId }));
 
   return (
     <ListProvider list={list}>

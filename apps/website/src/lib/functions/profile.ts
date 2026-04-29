@@ -6,11 +6,11 @@ import { fetchUserByIdentifier } from "../server/auth.server";
 import { optionalAuth } from "../server/middleware";
 import { sanitizePublicProfile } from "../server/profile.server";
 
-export const profileByNicknameSchema = z.object({ nickname: z.string() });
+export const profileInputSchema = z.object({ nickname: z.string() });
 
-export const getProfileByNickname = createServerFn({ method: "GET" })
+export const getProfile = createServerFn({ method: "GET" })
   .middleware([optionalAuth])
-  .inputValidator(profileByNicknameSchema)
+  .inputValidator(profileInputSchema)
   .handler(async ({ data, context: { session } }) => {
     const profile = await fetchUserByIdentifier(data.nickname);
     if (!profile) throw notFound();

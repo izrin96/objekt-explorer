@@ -1,4 +1,5 @@
 import { ImageBrokenIcon } from "@phosphor-icons/react/dist/ssr";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer, useIntlayer } from "react-intlayer";
 
@@ -6,21 +7,21 @@ import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import { ListProvider } from "@/hooks/use-list-target";
 import { ProfileProvider } from "@/hooks/use-profile-target";
-import { getListBySlug } from "@/lib/functions/list";
-import { getProfileByNickname } from "@/lib/functions/profile";
 import { generateMetadata } from "@/lib/meta";
+import { listBySlugQuery } from "@/lib/queries/list";
+import { profileQuery } from "@/lib/queries/profile";
 
 export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
-  loader: async ({ params }) => {
-    const profile = await getProfileByNickname({ data: { nickname: params.nickname } });
-    const list = await getListBySlug({
-      data: { slug: params.slug, profileAddress: profile.address },
-    });
-    return { profile, list };
+  loader: async ({ params, context: { queryClient } }) => {
+    const profile = await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
+    const list = await queryClient.ensureQueryData(
+      listBySlugQuery({ slug: params.slug, profileAddress: profile.address }),
+    );
+    return { list };
   },
   head: async ({ loaderData }) => {
     const content = getIntlayer("page_titles");
-    return loaderData?.list
+    return loaderData
       ? generateMetadata({
           title: content.list_detail({ name: loaderData.list.name }).value,
         })
@@ -32,7 +33,11 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
 });
 
 function ProfileListDetailPage() {
-  const { profile, list } = Route.useLoaderData();
+  const params = Route.useParams();
+  const { data: profile } = useSuspenseQuery(profileQuery({ nickname: params.nickname }));
+  const { data: list } = useSuspenseQuery(
+    listBySlugQuery({ slug: params.slug, profileAddress: profile.address }),
+  );
 
   return (
     <ProfileProvider profile={profile}>

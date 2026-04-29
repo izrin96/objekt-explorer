@@ -19,8 +19,6 @@ export function getRouter() {
       queryClient,
     },
     defaultPreload: "intent",
-    // defaultErrorComponent: DefaultCatchBoundary,
-    // defaultNotFoundComponent: () => <NotFound />,
     scrollRestoration: true,
   });
 

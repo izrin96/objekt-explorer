@@ -1,11 +1,11 @@
 import { queryOptions } from "@tanstack/react-query";
 import type * as z from "zod";
 
-import type { profileByNicknameSchema } from "../functions/profile";
-import { getProfileByNickname } from "../functions/profile";
+import type { profileInputSchema } from "../functions/profile";
+import { getProfile } from "../functions/profile";
 
-export const profileByNicknameQuery = (data: z.infer<typeof profileByNicknameSchema>) =>
+export const profileQuery = (data: z.infer<typeof profileInputSchema>) =>
   queryOptions({
     queryKey: ["profile", data.nickname],
-    queryFn: () => getProfileByNickname({ data }),
+    queryFn: () => getProfile({ data }),
   });

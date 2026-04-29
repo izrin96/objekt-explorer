@@ -18,9 +18,7 @@ export const Route = createFileRoute("/(container)/live/")({
   loaderDeps: ({ search }) => ({ token: search.token }),
   loader: async ({ deps }) => {
     const isAllowed = await checkAccess({ data: { token: deps.token } });
-    return {
-      isAllowed,
-    };
+    return { isAllowed };
   },
   head: () => {
     const content = getIntlayer("page_titles");
