@@ -19,6 +19,7 @@ export const Route = createFileRoute("/@{$nickname}")({
   notFoundComponent: NotFoundComponent,
   errorComponent: CommonErrorComponent,
   component: ProfileLayout,
+  wrapInSuspense: true,
 });
 
 function ProfileLayout() {

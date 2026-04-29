@@ -1,5 +1,5 @@
 import { FileDashedIcon } from "@phosphor-icons/react/dist/ssr";
-import { type QueryClient } from "@tanstack/react-query";
+import { useSuspenseQueries, type QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import * as React from "react";
 import { useIntlayer } from "react-intlayer";
@@ -23,18 +23,8 @@ export interface RouterContext {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {
-    const [filterData, artists, locale] = await Promise.all([
-      orpc.config.getFilterData.call(),
-      orpc.config.getArtists.call(),
-      orpc.config.getLocale.call(),
-    ]);
     void queryClient.prefetchQuery(orpc.config.getSelectedArtists.queryOptions());
     void queryClient.prefetchQuery(sessionOptions);
-    return {
-      filterData,
-      artists,
-      locale,
-    };
   },
   head: () => {
     const { meta, links } = generateMetadata({
@@ -95,6 +85,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       <CommonErrorComponent />
     </RootDocument>
   ),
+  wrapInSuspense: true,
   notFoundComponent: NotFoundComponent,
   shellComponent: RootDocument,
   component: RootComponent,
@@ -103,7 +94,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function PendingComponent() {
   return (
-    <div className="flex w-full flex-col items-center justify-center gap-2">
+    <div className="flex w-full flex-col items-center justify-center gap-2 py-12">
       <Loader variant="ring" />
     </div>
   );
@@ -120,23 +111,26 @@ function NotFoundComponent() {
 }
 
 function RootComponent() {
-  const { artists, filterData } = Route.useLoaderData();
   return (
-    <CosmoArtistProvider artists={artists}>
-      <FilterDataProvider data={filterData}>
-        <Navbar />
-        <main>
-          <Outlet />
-        </main>
-      </FilterDataProvider>
-    </CosmoArtistProvider>
+    <>
+      <Navbar />
+      <main>
+        <Outlet />
+      </main>
+    </>
   );
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   // todo: currently loader is possible to throw error
   // move loader data somewhere else
-  const { locale } = Route.useLoaderData();
+  const [{ data: locale }, { data: artists }, { data: filterData }] = useSuspenseQueries({
+    queries: [
+      orpc.config.getLocale.queryOptions(),
+      orpc.config.getArtists.queryOptions(),
+      orpc.config.getFilterData.queryOptions(),
+    ],
+  });
 
   return (
     <html lang={locale} dir="ltr" suppressHydrationWarning className="overflow-y-scroll">
@@ -145,7 +139,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body className="bg-bg text-fg font-sans antialiased">
         <ClientProviders locale={locale}>
-          <div className="relative flex min-h-svh flex-col">{children}</div>
+          <CosmoArtistProvider artists={artists}>
+            <FilterDataProvider data={filterData}>
+              <div className="relative flex min-h-svh flex-col">{children}</div>
+            </FilterDataProvider>
+          </CosmoArtistProvider>
         </ClientProviders>
         <Scripts />
         <script

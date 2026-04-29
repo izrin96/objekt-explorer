@@ -6,6 +6,7 @@ import { CommonErrorComponent } from "@/components/error-boundary";
 export const Route = createFileRoute("/(container)")({
   component: ContainerLayout,
   errorComponent: CommonErrorComponent,
+  wrapInSuspense: true,
 });
 
 function ContainerLayout() {
