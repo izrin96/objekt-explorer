@@ -3,6 +3,7 @@ import { getIntlayer, useIntlayer } from "react-intlayer";
 
 import MyLinkRender from "@/components/link/my-link";
 import { generateMetadata } from "@/lib/meta";
+import { orpc } from "@/lib/orpc/client";
 import { sessionOptions } from "@/lib/query-options";
 
 export const Route = createFileRoute("/(container)/link/")({
@@ -11,6 +12,9 @@ export const Route = createFileRoute("/(container)/link/")({
     if (!session) {
       throw redirect({ to: "/" });
     }
+  },
+  loader: ({ context: { queryClient } }) => {
+    void queryClient.prefetchQuery(orpc.profile.list.queryOptions());
   },
   head: () => {
     const content = getIntlayer("page_titles");

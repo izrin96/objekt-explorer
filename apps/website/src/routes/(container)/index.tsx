@@ -4,7 +4,7 @@ import IndexRender from "@/components/index/index-view";
 
 export const Route = createFileRoute("/(container)/")({
   component: Home,
-  ssr: "data-only",
+  ssr: false,
 });
 
 function Home() {

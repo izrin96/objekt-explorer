@@ -3,6 +3,7 @@ import { getIntlayer } from "react-intlayer";
 
 import MyListRender from "@/components/list/my-list";
 import { generateMetadata } from "@/lib/meta";
+import { orpc } from "@/lib/orpc/client";
 import { sessionOptions } from "@/lib/query-options";
 
 export const Route = createFileRoute("/(container)/list/")({
@@ -11,6 +12,9 @@ export const Route = createFileRoute("/(container)/list/")({
     if (!session) {
       throw redirect({ to: "/" });
     }
+  },
+  loader: ({ context: { queryClient } }) => {
+    void queryClient.prefetchQuery(orpc.list.list.queryOptions());
   },
   head: () => {
     const content = getIntlayer("page_titles");
