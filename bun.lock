@@ -102,6 +102,7 @@
         "better-auth": "^1.6.9",
         "chroma-js": "^3.2.0",
         "clsx": "^2.1.1",
+        "core-js": "^3.49.0",
         "date-fns": "^4.1.0",
         "drizzle-orm": "catalog:",
         "es-toolkit": "^1.46.0",
