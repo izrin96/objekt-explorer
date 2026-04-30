@@ -2,6 +2,7 @@ import optimizeLocales from "@react-aria/optimize-locales-plugin";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import legacy from "@vitejs/plugin-legacy";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { intlayer } from "vite-intlayer";
@@ -12,7 +13,6 @@ export default defineConfig(({ command }) => {
       port: 3000,
     },
     build: {
-      target: "es2020",
       chunkSizeWarningLimit: 1600,
       rolldownOptions: {
         output: {
@@ -56,6 +56,15 @@ export default defineConfig(({ command }) => {
       }),
       viteReact(),
       babel({ presets: [reactCompilerPreset()] }),
+      legacy({
+        renderLegacyChunks: false,
+        modernPolyfills: [
+          "es.array.to-sorted",
+          "es.array.to-reversed",
+          "es.array.find-last",
+          "es.array.at",
+        ],
+      }),
       {
         ...optimizeLocales.vite({
           locales: ["en"],
