@@ -1,7 +1,11 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { Suspense, type PropsWithChildren } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 
 import { Button } from "./intentui/button";
+import { Loader } from "./intentui/loader";
 
 export function ErrorRender({ message, onRetry }: { message: string; onRetry: () => void }) {
   const content = useIntlayer("common");
@@ -32,5 +36,25 @@ export function CommonErrorComponent() {
       onRetry={() => window.location.reload()}
       message={content.error.loading_data.value}
     />
+  );
+}
+
+export function QueryErrorResetWrapper({ children }: PropsWithChildren) {
+  return (
+    <QueryErrorResetBoundary>
+      {({ reset }) => (
+        <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+          <Suspense
+            fallback={
+              <div className="flex justify-center py-2">
+                <Loader variant="ring" />
+              </div>
+            }
+          >
+            {children}
+          </Suspense>
+        </ErrorBoundary>
+      )}
+    </QueryErrorResetBoundary>
   );
 }

@@ -1,6 +1,5 @@
 import type { LiveSession } from "@repo/cosmo/server/live";
 import { StreamVideo, StreamVideoClient } from "@stream-io/video-react-sdk";
-import { useState } from "react";
 
 import { LiveSessionProvider } from "@/hooks/use-live-session";
 import { clientEnv } from "@/lib/env/client";
@@ -11,14 +10,12 @@ type Props = {
   live: LiveSession;
 };
 
-export default function LiveStreamingRender({ live }: Props) {
-  const [client] = useState(
-    new StreamVideoClient({
-      apiKey: clientEnv.VITE_LIVE_API_KEY,
-      user: { type: "anonymous" },
-    }),
-  );
+const client = new StreamVideoClient({
+  apiKey: clientEnv.VITE_LIVE_API_KEY,
+  user: { type: "anonymous" },
+});
 
+export default function LiveStreamingRender({ live }: Props) {
   return (
     <LiveSessionProvider live={live}>
       <StreamVideo client={client}>
