@@ -31,7 +31,7 @@ export function MobileNavigation() {
   const content = useIntlayer("nav");
   const navMenuItems = useNavMenuItems();
   const [open, setOpen] = useState(false);
-  const { pathname } = useLocation();
+  const pathname = useLocation({ select: (s) => s.pathname });
 
   useEffect(() => {
     setOpen(false);

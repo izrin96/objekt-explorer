@@ -9,7 +9,7 @@ import { TabLink, TabList, Tabs } from "../intentui/tabs";
 export default function ProfileTabs({ user }: { user: PublicProfile }) {
   const content = useIntlayer("profile");
   const router = useRouter();
-  const { pathname } = useLocation();
+  const pathname = useLocation({ select: (s) => s.pathname });
   const nickname = user.nickname || user.address;
 
   const disabled = user.address.toLowerCase() === Addresses.SPIN;
