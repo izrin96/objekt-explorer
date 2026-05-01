@@ -1,11 +1,9 @@
-import { FileDashedIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery, type QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import * as React from "react";
-import { useIntlayer } from "react-intlayer";
 
 import ClientProviders from "@/components/client-providers";
-import { CommonErrorComponent } from "@/components/error-boundary";
+import { Toast } from "@/components/intentui/toast-custom";
 import Navbar from "@/components/navbar";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { FilterDataProvider } from "@/hooks/use-filter-data";
@@ -80,61 +78,49 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { rel: "preconnect", href: "https://static.cosmo.fans" },
         ...links,
       ],
+      scripts: import.meta.env.DEV
+        ? []
+        : [
+            {
+              defer: true,
+              src: clientEnv.VITE_UMAMI_SCRIPT_URL,
+              "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
+            },
+          ],
     };
   },
-  notFoundComponent: NotFoundComponent,
-  errorComponent: () => (
-    <div className="flex w-full flex-col items-center justify-center py-12">
-      <CommonErrorComponent />
-    </div>
-  ),
   shellComponent: RootDocument,
   component: RootComponent,
 });
 
-function NotFoundComponent() {
-  const content = useIntlayer("not_found");
-  return (
-    <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
-      <FileDashedIcon size={72} weight="thin" />
-      {content.page.value}
-    </div>
-  );
-}
-
 function RootComponent() {
+  const { data: locale } = useSuspenseQuery(orpc.config.getLocale.queryOptions());
   return (
-    <>
-      <Navbar />
-      <main>
-        <Outlet />
-      </main>
-    </>
+    <ClientProviders locale={locale}>
+      <CosmoArtistProvider>
+        <FilterDataProvider>
+          <div className="relative flex min-h-svh flex-col">
+            <Navbar />
+            <main>
+              <Outlet />
+            </main>
+          </div>
+          <Toast />
+        </FilterDataProvider>
+      </CosmoArtistProvider>
+    </ClientProviders>
   );
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { data: locale } = useSuspenseQuery(orpc.config.getLocale.queryOptions());
-
   return (
-    <html lang={locale} dir="ltr" suppressHydrationWarning className="overflow-y-scroll">
+    <html lang="en" dir="ltr" suppressHydrationWarning className="overflow-y-scroll">
       <head>
         <HeadContent />
       </head>
       <body className="bg-bg text-fg font-sans antialiased">
-        <ClientProviders locale={locale}>
-          <CosmoArtistProvider>
-            <FilterDataProvider>
-              <div className="relative flex min-h-svh flex-col">{children}</div>
-            </FilterDataProvider>
-          </CosmoArtistProvider>
-        </ClientProviders>
+        {children}
         <Scripts />
-        <script
-          defer
-          data-website-id={clientEnv.VITE_UMAMI_WEBSITE_ID}
-          src={clientEnv.VITE_UMAMI_SCRIPT_URL}
-        />
       </body>
     </html>
   );

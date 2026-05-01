@@ -3,7 +3,6 @@ import { type PropsWithChildren } from "react";
 import { I18nProvider } from "react-aria-components/I18nProvider";
 import { IntlayerProvider } from "react-intlayer";
 
-import { Toast } from "./intentui/toast-custom";
 import { ThemeProvider } from "./theme-provider";
 
 export default function ClientProviders({
@@ -14,10 +13,7 @@ export default function ClientProviders({
     <ThemeProvider>
       <I18nProvider locale="en">
         <IntlayerProvider locale={locale}>
-          <NuqsAdapter>
-            <Toast />
-            {children}
-          </NuqsAdapter>
+          <NuqsAdapter>{children}</NuqsAdapter>
         </IntlayerProvider>
       </I18nProvider>
     </ThemeProvider>

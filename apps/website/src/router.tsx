@@ -3,6 +3,7 @@ import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
 import { CommonErrorComponent } from "./components/error-boundary";
+import { NotFoundComponent } from "./components/notfound-component";
 import { PendingComponent } from "./components/pending-component";
 import { routeTree } from "./routeTree.gen";
 
@@ -22,8 +23,11 @@ export function getRouter() {
     },
     defaultPreload: "intent",
     scrollRestoration: true,
+    defaultPreloadStaleTime: 0,
+    defaultStaleTime: 0,
     defaultErrorComponent: CommonErrorComponent,
     defaultPendingComponent: PendingComponent,
+    defaultNotFoundComponent: NotFoundComponent,
   });
 
   setupRouterSsrQueryIntegration({

@@ -29,6 +29,7 @@ export default function ErrorFallbackRender({
   return <ErrorRender onRetry={resetErrorBoundary} message={content.error.loading_data.value} />;
 }
 
+// todo: rework and use useQueryErrorResetBoundary
 export function CommonErrorComponent() {
   const content = useIntlayer("common");
   return (
