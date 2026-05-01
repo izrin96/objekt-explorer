@@ -4,7 +4,7 @@ FROM oven/bun:1.3.13-slim AS base
 FROM base AS pruner
 WORKDIR /app
 COPY . .
-RUN bunx turbo@2.9.6 prune worker --docker
+RUN bunx turbo@2.9.7 prune worker --docker
 
 # Install dependencies only for pruned workspace
 FROM base AS installer
