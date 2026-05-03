@@ -11,6 +11,7 @@ export interface ObjektViewProps {
   showCount?: boolean;
   showSerial?: boolean;
   showOwned?: boolean;
+  isPriority?: boolean;
   isFade?: boolean;
   unobtainable?: boolean;
   listCurrency?: string | null;

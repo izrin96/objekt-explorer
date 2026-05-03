@@ -78,7 +78,7 @@ function ProfileObjektServer({
   const showSelectMode = session && !filters.at && selectTarget;
 
   const renderObjekt = useCallback(
-    ({ item }: { item: ValidObjekt[] }) => {
+    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
 
@@ -103,6 +103,7 @@ function ProfileObjektServer({
             showCount: true,
             showSerial: true,
             showOwned: true,
+            isPriority: rowIndex < 3,
           }}
         />
       );

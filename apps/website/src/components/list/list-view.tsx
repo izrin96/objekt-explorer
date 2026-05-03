@@ -131,7 +131,7 @@ function ListView({
   const isProfileList = list.listType === "profile";
 
   const renderObjekt = useCallback(
-    ({ item }: { item: ValidObjekt[] }) => {
+    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
 
@@ -162,6 +162,7 @@ function ListView({
             showOwned: isProfileList,
             listCurrency: list.currency,
             onSetPrice: isOwned ? () => openSetPrice(item) : undefined,
+            isPriority: rowIndex < 3,
           }}
         />
       );

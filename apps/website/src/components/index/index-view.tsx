@@ -56,7 +56,7 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
   const { shaped, filtered, isPending } = useCollectionObjekts();
 
   const renderObjekt = useCallback(
-    ({ item }: { item: ValidObjekt[] }) => {
+    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
       return (
@@ -70,7 +70,7 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
             </ObjektStaticMenu>
           }
           hoverMenu={<AddToListMenu objekts={[objekt]} />}
-          viewProps={{ hideLabel }}
+          viewProps={{ hideLabel, isPriority: rowIndex < 3 }}
         />
       );
     },

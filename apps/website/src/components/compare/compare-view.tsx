@@ -143,7 +143,7 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
   const isProfileList = list.listType === "profile";
 
   const renderObjekt = useCallback(
-    ({ item }: { item: ValidObjekt[] }) => {
+    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
 
@@ -158,6 +158,7 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
             showSerial: !filters.grouped && isProfileList,
             showOwned: isProfileList,
             listCurrency: list.currency,
+            isPriority: rowIndex < 3,
           }}
         />
       );

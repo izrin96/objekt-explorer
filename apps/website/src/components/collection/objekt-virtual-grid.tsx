@@ -14,12 +14,7 @@ export type ShapedData<T = ValidObjekt[]> = [string, T[]][];
 export interface ObjektVirtualGridProps<T = ValidObjekt[]> {
   shaped: ShapedData<T>;
   columns?: number;
-  renderItem: (props: {
-    item: T;
-    items: T[];
-    rowIndex: number;
-    groupTitle: string;
-  }) => ReactElement | null;
+  renderItem: (props: { item: T; rowIndex: number; groupTitle: string }) => ReactElement | null;
   infiniteQueryProp?: {
     status: QueryStatus;
     hasNextPage: boolean;
@@ -50,7 +45,7 @@ export function ObjektVirtualGrid<T = ValidObjekt[]>({
             rowIndex={rowIndex}
             items={rowItems}
           >
-            {({ item }) => renderItem({ item, items: rowItems, rowIndex, groupTitle: title })}
+            {({ item }) => renderItem({ item, rowIndex, groupTitle: title })}
           </ObjektsRenderRow>
         ),
       }),

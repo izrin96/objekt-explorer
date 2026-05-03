@@ -31,6 +31,7 @@ type Props = PropsWithChildren<{
   unobtainable?: boolean;
   showCount?: boolean;
   showSerial?: boolean;
+  isPriority?: boolean;
   isSelected?: boolean;
   hideLabel?: boolean;
   listCurrency?: string | null;
@@ -45,6 +46,7 @@ export default function ObjektView({
   showSerial = false,
   isSelected = false,
   hideLabel = false,
+  isPriority = false,
   listCurrency,
   children,
   onSetPrice,
@@ -90,7 +92,8 @@ export default function ObjektView({
           height={900}
           alt={objekt.collectionId}
           onLoad={() => setLoaded(true)}
-          fetchPriority="high"
+          fetchPriority={isPriority ? "high" : "auto"}
+          decoding="async"
         />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
