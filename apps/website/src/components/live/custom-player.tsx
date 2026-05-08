@@ -79,6 +79,7 @@ function CustomParticipantViewUI() {
 
   return (
     <Portal to="#fullscreen-control-content">
+      <LiveControl />
       <Button intent="outline" size="sq-sm" onPress={toggleFullscreen}>
         <CornersOutIcon />
       </Button>
@@ -180,7 +181,6 @@ const CustomLivestreamLayout = () => {
             )}
           </div>
           <LiveFooter>
-            <LiveControl />
             <div className="contents" id="fullscreen-control-content"></div>
           </LiveFooter>
         </>
