@@ -1,19 +1,13 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { and, eq, gte, asc, gt } from "drizzle-orm";
+import { and, eq, asc, gt } from "drizzle-orm";
 
 export async function populateSerial() {
   const collectionDiscover = await indexer
     .selectDistinctOn([collections.id], { id: collections.id })
     .from(collections)
     .innerJoin(objekts, eq(objekts.collectionId, collections.id))
-    .where(
-      and(
-        eq(objekts.serial, 0),
-        eq(collections.onOffline, "online"),
-        gte(collections.createdAt, "2026-03-23T01:00:00.000Z"),
-      ),
-    );
+    .where(and(eq(objekts.serial, 0), eq(collections.onOffline, "online")));
 
   if (collectionDiscover.length === 0) {
     console.log("[populateSerial] No collections with zero serials found");
@@ -44,12 +38,21 @@ async function processCollection(collectionId: string) {
     const sortedAllObjekts = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
 
     const updates: { id: string; newSerial: number }[] = [];
+    // [{serial:0},{serial:1},{serial:0}] isNew=false
+    // [{serial:0},{serial:0},{serial:0}] isNew=true
+    // [{serial:1},{serial:2},{serial:0}] isNew=false
+
+    const isNew = sortedAllObjekts.every((a) => a.serial === 0);
+    let assignedCount = 0;
 
     sortedAllObjekts.forEach((obj, idx) => {
-      const newSerial = idx + 1;
-      if (obj.serial !== newSerial) {
-        updates.push({ id: obj.id, newSerial });
+      if (obj.serial !== 0) {
+        assignedCount++;
+        return;
       }
+      if (idx === 0 && !isNew) return;
+      updates.push({ id: obj.id, newSerial: assignedCount + 1 });
+      assignedCount++;
     });
 
     if (updates.length === 0) {
