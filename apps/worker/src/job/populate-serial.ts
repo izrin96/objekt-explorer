@@ -38,21 +38,15 @@ async function processCollection(collectionId: string) {
     const sortedAllObjekts = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
 
     const updates: { id: string; newSerial: number }[] = [];
-    // [{serial:0},{serial:1},{serial:0}] isNew=false
-    // [{serial:0},{serial:0},{serial:0}] isNew=true
-    // [{serial:1},{serial:2},{serial:0}] isNew=false
 
     const isNew = sortedAllObjekts.every((a) => a.serial === 0);
-    let assignedCount = 0;
+    const maxSerial = Math.max(...sortedAllObjekts.map((a) => a.serial));
+    let nextSerial = maxSerial + 1;
 
     sortedAllObjekts.forEach((obj, idx) => {
-      if (obj.serial !== 0) {
-        assignedCount++;
-        return;
+      if (obj.serial === 0 && !(idx === 0 && !isNew)) {
+        updates.push({ id: obj.id, newSerial: nextSerial++ });
       }
-      if (idx === 0 && !isNew) return;
-      updates.push({ id: obj.id, newSerial: assignedCount + 1 });
-      assignedCount++;
     });
 
     if (updates.length === 0) {
