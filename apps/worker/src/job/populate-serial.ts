@@ -41,9 +41,11 @@ async function processCollection(collectionId: string) {
       return;
     }
 
+    const sortedAllObjekts = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
+
     const updates: { id: string; newSerial: number }[] = [];
 
-    allObjekts.forEach((obj, idx) => {
+    sortedAllObjekts.forEach((obj, idx) => {
       const newSerial = idx + 1;
       if (obj.serial !== newSerial) {
         updates.push({ id: obj.id, newSerial });
