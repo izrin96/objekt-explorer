@@ -1,8 +1,9 @@
-import { fetchMetadataV1 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
+
+import { safeFetchMetadataV1 } from "@/lib/metadata-utils";
 
 export async function fixTransferable() {
   // get all basic and first class objekt
@@ -23,15 +24,6 @@ export async function fixTransferable() {
   });
 }
 
-async function fetchMetadata(tokenId: string) {
-  try {
-    return await fetchMetadataV1(tokenId);
-  } catch (error: any) {
-    console.log(`[fetchMetadata] Error fetching metadata (status: ${error?.status ?? "unknown"})`);
-    return null;
-  }
-}
-
 async function processBatch(batch: { id: string }[], batchNumber: number, totalBatches: number) {
   console.log(
     `[fix transferable] Processing batch ${batchNumber}/${totalBatches} (${batch.length} objekts)`,
@@ -41,7 +33,7 @@ async function processBatch(batch: { id: string }[], batchNumber: number, totalB
   const metadataResults = await Promise.all(
     batch.map(async (objekt) => ({
       id: objekt.id,
-      metadata: await fetchMetadata(objekt.id),
+      metadata: await safeFetchMetadataV1(objekt.id),
     })),
   );
 

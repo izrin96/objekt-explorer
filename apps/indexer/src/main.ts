@@ -1,4 +1,4 @@
-import { enrichUpdateMetadata, fetchMetadata } from "@repo/cosmo/server/metadata";
+import { enrichUpdateMetadata } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { addr, chunk, slugifyObjekt } from "@repo/lib";
 import { Addresses } from "@repo/lib";
@@ -6,6 +6,7 @@ import { TypeormDatabase, type Store } from "@subsquid/typeorm-store";
 import { v7 as randomUUID } from "uuid";
 
 import { env } from "./env";
+import { fetchMetadata } from "./metadata";
 import { Collection, ComoBalance, Objekt, type Transfer, Vote } from "./model";
 import {
   type ComoBalanceEvent,

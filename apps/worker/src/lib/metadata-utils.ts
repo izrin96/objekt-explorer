@@ -1,70 +1,25 @@
-import { fetchMetadataV1, fetchMetadataV3 } from "@repo/cosmo/server/metadata";
-import { normalizeV3 } from "@repo/cosmo/server/metadata";
-import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
-import { indexer } from "@repo/db/indexer";
-import { collections } from "@repo/db/indexer/schema";
-import { slugifyObjekt } from "@repo/lib";
-import { eq } from "drizzle-orm";
+import { fetchMetadataV1, fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { FetchError } from "ofetch";
 
-async function enrichWithCollectionData(
-  metadata: CosmoObjektMetadataV1,
-): Promise<CosmoObjektMetadataV1> {
-  const slug = slugifyObjekt(metadata.objekt.collectionId);
-
-  const [collection] = await indexer
-    .select({
-      backImage: collections.backImage,
-      accentColor: collections.accentColor,
-      textColor: collections.textColor,
-      contract: collections.contract,
-    })
-    .from(collections)
-    .where(eq(collections.slug, slug));
-
-  if (!collection) return metadata;
-
-  return {
-    ...metadata,
-    objekt: {
-      ...metadata.objekt,
-      backImage: collection.backImage,
-      accentColor: collection.accentColor,
-      textColor: collection.textColor,
-      objektNo: 0, // v3 metadata doesn't include serial numbers
-      tokenAddress: collection.contract,
-      transferable: false, // v3 metadata doesn't include transfer status
-    },
-  };
+export async function safeFetchMetadataV1(tokenId: string) {
+  try {
+    return await fetchMetadataV1(tokenId);
+  } catch (error) {
+    if (error instanceof FetchError) {
+      console.log(`[fetchMetadata] Error fetching v3 metadata (status: ${error.status})`);
+    }
+    return null;
+  }
 }
 
-export async function fetchMetadata(tokenId: string): Promise<CosmoObjektMetadataV1 | null> {
+export async function safeFetchMetadataV3(tokenId: string) {
   try {
-    const v1Metadata = await fetchMetadataV1(tokenId);
-    return v1Metadata;
+    const metadata = await fetchMetadataV3(tokenId);
+    return normalizeV3(metadata, tokenId);
   } catch (error) {
-    // if not 404 error, just return null and try again next time because service probably down
-    if (!(error instanceof FetchError) || error.status !== 404) {
-      console.log(
-        `[fetchMetadata] Error fetching v1 metadata (status: ${error instanceof FetchError ? error.status : "unknown"})`,
-      );
-      return null;
+    if (error instanceof FetchError) {
+      console.log(`[fetchMetadata] Error fetching v3 metadata (status: ${error.status})`);
     }
-
-    // if 404 error, proceed with v3
-    // console.log(
-    //   `[fetchMetadata] Error fetching v1 metadata (status: ${error.status}). Trying with v3..`,
-    // );
-  }
-
-  try {
-    const v3Metadata = await fetchMetadataV3(tokenId);
-    const metadata = normalizeV3(v3Metadata, tokenId);
-    return await enrichWithCollectionData(metadata);
-  } catch (error) {
-    console.log(
-      `[fetchMetadata] Error fetching v3 metadata (status: ${error instanceof FetchError ? error.status : "unknown"})`,
-    );
     return null;
   }
 }

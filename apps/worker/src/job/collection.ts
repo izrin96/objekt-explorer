@@ -1,9 +1,11 @@
-import { enrichUpdateMetadata, fetchMetadata } from "@repo/cosmo/server/metadata";
+import { enrichUpdateMetadata } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { chunk, slugifyObjekt } from "@repo/lib";
 import { and, eq, gte, inArray } from "drizzle-orm";
+
+import { safeFetchMetadataV3 } from "@/lib/metadata-utils";
 
 const BATCH_SIZE = 50;
 
@@ -55,7 +57,7 @@ async function processMetadataBatch(
   const metadataResults = await Promise.all(
     batch.map(async (objekt) => ({
       objektId: objekt.id,
-      metadata: await fetchMetadata(objekt.id),
+      metadata: await safeFetchMetadataV3(objekt.id),
     })),
   );
 
@@ -77,7 +79,7 @@ async function processMetadataBatch(
     const slug = slugifyObjekt(result.metadata.objekt.collectionId);
     collectionSlugMap.set(result.objektId, slug);
 
-    if (result.metadata.objekt.objektNo !== 0 && !collectionMetadataUpdates.has(slug)) {
+    if (!collectionMetadataUpdates.has(slug)) {
       collectionMetadataUpdates.set(slug, result.metadata);
     }
   }
@@ -100,7 +102,7 @@ async function processMetadataBatch(
       continue;
     }
 
-    const metadata = metadataResults.find((r) => r.objektId === objektId)?.metadata;
+    const metadata = collectionMetadataUpdates.get(slug);
     if (!metadata) continue;
 
     updates.push({

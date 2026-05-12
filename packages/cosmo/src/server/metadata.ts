@@ -1,4 +1,4 @@
-import { FetchError, ofetch } from "ofetch";
+import { ofetch } from "ofetch";
 
 import type { CosmoObjektMetadataV1, CosmoObjektMetadataV3 } from "../types/metadata";
 
@@ -21,33 +21,6 @@ export async function fetchMetadataV3(tokenId: string) {
     `https://api.cosmo.fans/bff/v3/objekts/nft-metadata/${tokenId}`,
     { retry: 2, retryDelay: 500 }, // 500ms backoff
   );
-}
-
-/**
- * For indexer use.
- */
-export async function fetchMetadata(tokenId: string) {
-  try {
-    return await fetchMetadataV1(tokenId);
-  } catch (error) {
-    const statusInfo = error instanceof FetchError ? ` (status: ${error.status})` : "";
-    console.log(`[fetchMetadata] Error fetching v1 metadata${statusInfo}`);
-
-    try {
-      // fallback to v3
-      const metadata = await fetchMetadataV3(tokenId);
-      return normalizeV3(metadata, tokenId);
-    } catch (error) {
-      if (error instanceof FetchError) {
-        console.log(`[fetchMetadata] Error fetching v3 metadata: ${error}`);
-      }
-      if (error instanceof Error) {
-        console.log(`[fetchMetadata] Error: ${error}`);
-      }
-      // fallback to empty metadata
-      return emptyMetadata(tokenId);
-    }
-  }
 }
 
 /**
