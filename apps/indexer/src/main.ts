@@ -182,13 +182,8 @@ async function handleCollection(
     });
   }
 
-  // skip update metadata if data is v3 normalized
-  if (metadata.objekt.objektNo === 0) {
-    return collection;
-  }
-
   // set and/or update metadata
-  Object.assign(collection, enrichUpdateMetadata(metadata));
+  Object.assign(collection, enrichUpdateMetadata(metadata, false));
 
   return collection;
 }

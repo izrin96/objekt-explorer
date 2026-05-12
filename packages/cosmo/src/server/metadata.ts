@@ -124,7 +124,7 @@ export function normalizeV3(
 /**
  * Partial data for db update
  */
-export function enrichUpdateMetadata(metadata: CosmoObjektMetadataV1) {
+export function enrichUpdateMetadata(metadata: CosmoObjektMetadataV1, includeV1 = true) {
   return {
     season: metadata.objekt.season,
     member: metadata.objekt.member,
@@ -137,9 +137,14 @@ export function enrichUpdateMetadata(metadata: CosmoObjektMetadataV1) {
       : ("offline" as const),
     thumbnailImage: metadata.objekt.thumbnailImage,
     frontImage: metadata.objekt.frontImage,
-    backImage: metadata.objekt.backImage,
     backgroundColor: metadata.objekt.backgroundColor,
-    textColor: metadata.objekt.textColor,
-    accentColor: metadata.objekt.accentColor,
+    ...(includeV1
+      ? {
+          // not possible to get from v3
+          backImage: metadata.objekt.backImage,
+          textColor: metadata.objekt.textColor,
+          accentColor: metadata.objekt.accentColor,
+        }
+      : {}),
   };
 }
