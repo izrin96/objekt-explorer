@@ -21,7 +21,7 @@
         "@repo/lib": "workspace:*",
         "@subsquid/evm-abi": "^0.3.1",
         "@subsquid/evm-codec": "^0.3.0",
-        "@subsquid/evm-processor": "^1.30.0",
+        "@subsquid/evm-processor": "^1.28.0-portal-api.721f49",
         "@subsquid/graphql-server": "^4.12.0",
         "@subsquid/typeorm-migration": "^1.3.1",
         "@subsquid/typeorm-store": "^1.9.0",
@@ -1049,7 +1049,7 @@
 
     "@subsquid/evm-codec": ["@subsquid/evm-codec@0.3.0", "", { "dependencies": { "@subsquid/util-internal-hex": "^1.2.2" } }, "sha512-W6EIiC7MJN2oWdbgzpUSDop+UtROdFAlvsrzc10g3AnCAaK31nH59tkTjylRxgECewWFCFWZrwsVp+a+lwvXMA=="],
 
-    "@subsquid/evm-processor": ["@subsquid/evm-processor@1.30.1", "", { "dependencies": { "@subsquid/http-client": "^1.8.1", "@subsquid/logger": "^1.6.0", "@subsquid/rpc-client": "^4.15.0", "@subsquid/util-internal": "^3.3.0", "@subsquid/util-internal-archive-client": "^0.2.1", "@subsquid/util-internal-hex": "^1.2.3", "@subsquid/util-internal-ingest-tools": "^1.1.5", "@subsquid/util-internal-processor-tools": "^4.4.0", "@subsquid/util-internal-range": "^0.3.0", "@subsquid/util-internal-validation": "^0.9.0", "@subsquid/util-timeout": "^2.3.2" } }, "sha512-7wOZaaw2lBVfSnhiDBDwUTf93jv7G6A6AdmqV4OWs9GWXLcQAdmL8PgcCFTKguMFvxgXsSx5y+uWs7llWDecLA=="],
+    "@subsquid/evm-processor": ["@subsquid/evm-processor@1.28.0-portal-api.721f49", "", { "dependencies": { "@subsquid/http-client": "^1.7.0", "@subsquid/logger": "^1.4.0", "@subsquid/portal-client": "^0.3.2", "@subsquid/rpc-client": "^4.13.0", "@subsquid/util-internal": "^3.2.0", "@subsquid/util-internal-archive-client": "^0.1.2", "@subsquid/util-internal-hex": "^1.2.2", "@subsquid/util-internal-ingest-tools": "^1.1.4", "@subsquid/util-internal-processor-tools": "^4.2.1", "@subsquid/util-internal-range": "^0.3.0", "@subsquid/util-internal-validation": "^0.8.0", "@subsquid/util-timeout": "^2.3.2" } }, "sha512-FNs/tcbFgLA+5FODWthiQC1v3qHJ3NIqSGNHnkA7hxFlZ4AIbwwjSrif8B1bpMawKpb9LAeXLiHHAzHPUqqniA=="],
 
     "@subsquid/evm-typegen": ["@subsquid/evm-typegen@4.6.0", "", { "dependencies": { "@subsquid/evm-abi": "^0.3.1", "@subsquid/evm-codec": "^0.3.0", "@subsquid/http-client": "^1.8.0", "@subsquid/logger": "^1.4.0", "@subsquid/util-internal": "^3.2.0", "@subsquid/util-internal-code-printer": "^1.2.2", "@subsquid/util-internal-commander": "^1.4.0", "commander": "^11.1.0", "fastest-levenshtein": "^1.0.16" }, "bin": { "squid-evm-typegen": "bin/run.js" } }, "sha512-cEZRhiuUc/iL85exBmZaBJBjvdIbF1V7Dg51OtRblooLmGFXK3emE3CCNxpKGhObWUN7OytFE5kYEqRHFzYIRA=="],
 
@@ -1064,6 +1064,8 @@
     "@subsquid/logger": ["@subsquid/logger@1.5.0", "", { "dependencies": { "@subsquid/util-internal-hex": "^1.2.2", "@subsquid/util-internal-json": "^1.2.3", "supports-color": "^8.1.1" } }, "sha512-UQvMk7eUen83S11cukNpPXUmOYkSYWSV3wvA0wuJQqdMWxRxQrAwfFgPBN4DYlCSAMxzik1W2aN6+NyBrb9wmg=="],
 
     "@subsquid/openreader": ["@subsquid/openreader@5.5.0", "", { "dependencies": { "@graphql-tools/merge": "^9.0.1", "@subsquid/apollo-server-core": "^3.14.0", "@subsquid/apollo-server-express": "^3.14.1", "@subsquid/graphiql-console": "^0.3.0", "@subsquid/logger": "^1.5.0", "@subsquid/util-internal": "^3.2.0", "@subsquid/util-internal-commander": "^1.4.0", "@subsquid/util-internal-hex": "^1.2.2", "@subsquid/util-internal-http-server": "^2.0.1", "@subsquid/util-naming": "^1.3.0", "commander": "^11.1.0", "deep-equal": "^2.2.3", "express": "^4.18.2", "graphql": "^15.8.0", "graphql-parse-resolve-info": "^4.14.0", "graphql-ws": "^5.14.2", "inflected": "^2.1.0", "pg": "^8.11.3", "ws": "^8.14.2" }, "peerDependencies": { "@subsquid/big-decimal": "^1.0.0" }, "optionalPeers": ["@subsquid/big-decimal"], "bin": { "openreader": "bin/main.js" } }, "sha512-+O+rQIxGPFeGC1R+IzeoAvNmufJ6QXUzGB+Exi3aTGoddbqjSnuUc3qiNa/lIIOuKGtJT3qK8wbA5vMsv5pGmQ=="],
+
+    "@subsquid/portal-client": ["@subsquid/portal-client@0.3.2", "", { "dependencies": { "@subsquid/util-internal": "^3.2.0", "@subsquid/util-internal-validation": "^0.8.0" }, "peerDependencies": { "@subsquid/http-client": "^1.7.0" } }, "sha512-FSB6rfLAlTMCy6N0vSck/yz69h6sMCaTKdgxfM/RuQA1WYIFfJtm4jbiNpDIvRd/CguKyg41iWWbWJXrvOUJvw=="],
 
     "@subsquid/rpc-client": ["@subsquid/rpc-client@4.15.0", "", { "dependencies": { "@subsquid/http-client": "^1.8.1", "@subsquid/logger": "^1.6.0", "@subsquid/util-internal": "^3.3.0", "@subsquid/util-internal-binary-heap": "^1.0.0", "@subsquid/util-internal-counters": "^1.3.2", "@subsquid/util-internal-json-fix-unsafe-integers": "^0.0.0", "websocket": "^1.0.34" } }, "sha512-RwE0TNvX6fyUKk5DB4xXKlZgTLeENkYEHWeCIJH4GJylO4Os2GXYaytzr3NeZc8of7E49qz/HMFSxQvw//Hxyw=="],
 
@@ -1083,7 +1085,7 @@
 
     "@subsquid/util-internal": ["@subsquid/util-internal@3.3.0", "", {}, "sha512-WmMPHnqJcVIjM7BRNSd5uGYHVqlakr4fbyUIM2vQmfVx8V2ks+EWoreV0vsnSIyvDEqnoGJl8945xVhYkGkE3A=="],
 
-    "@subsquid/util-internal-archive-client": ["@subsquid/util-internal-archive-client@0.2.1", "", { "dependencies": { "@subsquid/util-internal": "^3.2.0", "@subsquid/util-internal-range": "^0.3.0" }, "peerDependencies": { "@subsquid/http-client": "^1.8.0", "@subsquid/logger": "^1.5.0" }, "optionalPeers": ["@subsquid/logger"] }, "sha512-jGO3revw8fPSnbEDOZ1ciyZ6sbk9oPbieC8O0n9LipF5Bpc7BBIN6SyTfG9r3bXL86AzN4iMtCKuLtUbkvaFlw=="],
+    "@subsquid/util-internal-archive-client": ["@subsquid/util-internal-archive-client@0.1.2", "", { "dependencies": { "@subsquid/util-internal": "^3.1.0", "@subsquid/util-internal-range": "^0.3.0" }, "peerDependencies": { "@subsquid/http-client": "^1.4.0", "@subsquid/logger": "^1.3.3" }, "optionalPeers": ["@subsquid/logger"] }, "sha512-XATZWOIHUqIuqzb9hxaFIsz/BItb5qLoYjk6uhFcR9ART2AExXLU5l26SvSrq3hUnqfznIkQMZVQ1SKqnGzx4g=="],
 
     "@subsquid/util-internal-binary-heap": ["@subsquid/util-internal-binary-heap@1.0.0", "", {}, "sha512-88auuc8yNFmCZugmJSTYzS7WM/nN2obKGQCgrl8Jty5rJUFbqazGSi8icqftKhv6MPtUMJ3PSTRLiTFXAUGnAA=="],
 
@@ -1115,7 +1117,7 @@
 
     "@subsquid/util-internal-ts-node": ["@subsquid/util-internal-ts-node@0.0.0", "", {}, "sha512-VBnrKrkNcqbT3hMLrjpEPuwMAihFhW9oUmK53bccBCCXrUiATNUblQD2S4IWd9/UBO5Q33ohpbE9sAodDq2DXw=="],
 
-    "@subsquid/util-internal-validation": ["@subsquid/util-internal-validation@0.9.0", "", { "peerDependencies": { "@subsquid/logger": "^1.6.0" }, "optionalPeers": ["@subsquid/logger"] }, "sha512-S9j/o1gmKz4qTf0O8B9mpGV6Z+WhIe6xDLhKvpzJ7IaMqkDUHTu386Hx8IXyTJf/RY9ABunfGLI9q9uJln9wSA=="],
+    "@subsquid/util-internal-validation": ["@subsquid/util-internal-validation@0.8.0", "", { "peerDependencies": { "@subsquid/logger": "^1.4.0" }, "optionalPeers": ["@subsquid/logger"] }, "sha512-qrQ1L871pAtVy0LJ+JLTZk6x4QyHZqgMGCrlSJvXw3VZLBXDBDycTcKlZ96p5VcQRp6xFnYmVSPy9dl9SPXZHQ=="],
 
     "@subsquid/util-naming": ["@subsquid/util-naming@1.3.0", "", { "dependencies": { "camelcase": "^6.3.0", "inflected": "^2.1.0" } }, "sha512-PfYg1uFHwb7e6egbkzIbQTWf7DVlZIQr2gHy4VE35ZNiA15R9wkJLo/Mym6OkwLQyjJwhhq7pCFhkz6tm19m+A=="],
 
@@ -2747,6 +2749,8 @@
 
     "@subsquid/squid-gen-evm/@subsquid/evm-abi": ["@subsquid/evm-abi@0.2.4", "", { "dependencies": { "@subsquid/evm-codec": "^0.3.0", "keccak256": "^1.0.6" } }, "sha512-mGVBuc07nfTP/WRq3dqm697FCLBQ5cDTutNrxnXI21+vu6/0PYS+50xv6AUTp5LqTzEWTR1dsSUVZ0FD7Ew3lw=="],
 
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor": ["@subsquid/evm-processor@1.30.1", "", { "dependencies": { "@subsquid/http-client": "^1.8.1", "@subsquid/logger": "^1.6.0", "@subsquid/rpc-client": "^4.15.0", "@subsquid/util-internal": "^3.3.0", "@subsquid/util-internal-archive-client": "^0.2.1", "@subsquid/util-internal-hex": "^1.2.3", "@subsquid/util-internal-ingest-tools": "^1.1.5", "@subsquid/util-internal-processor-tools": "^4.4.0", "@subsquid/util-internal-range": "^0.3.0", "@subsquid/util-internal-validation": "^0.9.0", "@subsquid/util-timeout": "^2.3.2" } }, "sha512-7wOZaaw2lBVfSnhiDBDwUTf93jv7G6A6AdmqV4OWs9GWXLcQAdmL8PgcCFTKguMFvxgXsSx5y+uWs7llWDecLA=="],
+
     "@subsquid/squid-gen-evm/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
 
     "@subsquid/squid-gen-targets/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
@@ -2759,15 +2763,13 @@
 
     "@subsquid/typeorm-store/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
 
-    "@subsquid/util-internal-archive-client/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
-
     "@subsquid/util-internal-ingest-tools/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
+
+    "@subsquid/util-internal-ingest-tools/@subsquid/util-internal-archive-client": ["@subsquid/util-internal-archive-client@0.2.1", "", { "dependencies": { "@subsquid/util-internal": "^3.2.0", "@subsquid/util-internal-range": "^0.3.0" }, "peerDependencies": { "@subsquid/http-client": "^1.8.0", "@subsquid/logger": "^1.5.0" }, "optionalPeers": ["@subsquid/logger"] }, "sha512-jGO3revw8fPSnbEDOZ1ciyZ6sbk9oPbieC8O0n9LipF5Bpc7BBIN6SyTfG9r3bXL86AzN4iMtCKuLtUbkvaFlw=="],
 
     "@subsquid/util-internal-processor-tools/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
 
     "@subsquid/util-internal-range/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
-
-    "@subsquid/util-internal-validation/@subsquid/logger": ["@subsquid/logger@1.6.0", "", { "dependencies": { "@subsquid/util-internal-hex": "^1.2.3", "@subsquid/util-internal-json": "^1.2.3", "supports-color": "^8.1.1" } }, "sha512-k33Cw1uO+Boha08arS8nhr0VHfT+bTWGe/hTZDeCDMoa2i0SUgkiDGDkgqTQof6y/N/kl30KzPvAAGqwJ6MJNw=="],
 
     "@swc/helpers/tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
@@ -3017,7 +3019,17 @@
 
     "@subsquid/rpc-client/@subsquid/logger/@subsquid/util-internal-hex": ["@subsquid/util-internal-hex@1.2.3", "", {}, "sha512-rGIQKHP+RpriJR56oL/AD43H/KX1EQwsvUy8nP6IHnk/vmaLyC2ECTp5n0jB7kq4NYK4C2VotP3lXHR0vWpa0A=="],
 
-    "@subsquid/util-internal-validation/@subsquid/logger/@subsquid/util-internal-hex": ["@subsquid/util-internal-hex@1.2.3", "", {}, "sha512-rGIQKHP+RpriJR56oL/AD43H/KX1EQwsvUy8nP6IHnk/vmaLyC2ECTp5n0jB7kq4NYK4C2VotP3lXHR0vWpa0A=="],
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor/@subsquid/http-client": ["@subsquid/http-client@1.8.1", "", { "dependencies": { "@subsquid/logger": "^1.6.0", "@subsquid/util-internal": "^3.3.0", "node-fetch": "^3.3.2" } }, "sha512-JDOqZ2DxhOfmZaoeo0+l3MOseTbbhVAz+3VkNBAhfOdenHTKHTYrywjC1AbqtzFZCswW7ErSFsEsIk+y5GsbGQ=="],
+
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor/@subsquid/logger": ["@subsquid/logger@1.6.0", "", { "dependencies": { "@subsquid/util-internal-hex": "^1.2.3", "@subsquid/util-internal-json": "^1.2.3", "supports-color": "^8.1.1" } }, "sha512-k33Cw1uO+Boha08arS8nhr0VHfT+bTWGe/hTZDeCDMoa2i0SUgkiDGDkgqTQof6y/N/kl30KzPvAAGqwJ6MJNw=="],
+
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor/@subsquid/util-internal": ["@subsquid/util-internal@3.3.0", "", {}, "sha512-WmMPHnqJcVIjM7BRNSd5uGYHVqlakr4fbyUIM2vQmfVx8V2ks+EWoreV0vsnSIyvDEqnoGJl8945xVhYkGkE3A=="],
+
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor/@subsquid/util-internal-archive-client": ["@subsquid/util-internal-archive-client@0.2.1", "", { "dependencies": { "@subsquid/util-internal": "^3.2.0", "@subsquid/util-internal-range": "^0.3.0" }, "peerDependencies": { "@subsquid/http-client": "^1.8.0", "@subsquid/logger": "^1.5.0" }, "optionalPeers": ["@subsquid/logger"] }, "sha512-jGO3revw8fPSnbEDOZ1ciyZ6sbk9oPbieC8O0n9LipF5Bpc7BBIN6SyTfG9r3bXL86AzN4iMtCKuLtUbkvaFlw=="],
+
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor/@subsquid/util-internal-hex": ["@subsquid/util-internal-hex@1.2.3", "", {}, "sha512-rGIQKHP+RpriJR56oL/AD43H/KX1EQwsvUy8nP6IHnk/vmaLyC2ECTp5n0jB7kq4NYK4C2VotP3lXHR0vWpa0A=="],
+
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor/@subsquid/util-internal-validation": ["@subsquid/util-internal-validation@0.9.0", "", { "peerDependencies": { "@subsquid/logger": "^1.6.0" }, "optionalPeers": ["@subsquid/logger"] }, "sha512-S9j/o1gmKz4qTf0O8B9mpGV6Z+WhIe6xDLhKvpzJ7IaMqkDUHTu386Hx8IXyTJf/RY9ABunfGLI9q9uJln9wSA=="],
 
     "@tanstack/router-plugin/chokidar/readdirp": ["readdirp@3.6.0", "", { "dependencies": { "picomatch": "^2.2.1" } }, "sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA=="],
 
@@ -3138,6 +3150,8 @@
     "@subsquid/commands/glob/minimatch/brace-expansion": ["brace-expansion@2.1.0", "", { "dependencies": { "balanced-match": "^1.0.0" } }, "sha512-TN1kCZAgdgweJhWWpgKYrQaMNHcDULHkWwQIspdtjV4Y5aurRdZpjAqn6yX3FPqTA9ngHCc4hJxMAMgGfve85w=="],
 
     "@subsquid/commands/glob/path-scurry/lru-cache": ["lru-cache@10.4.3", "", {}, "sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ=="],
+
+    "@subsquid/squid-gen-evm/@subsquid/evm-processor/@subsquid/util-internal-archive-client/@subsquid/util-internal": ["@subsquid/util-internal@3.2.0", "", {}, "sha512-foNCjOmZaP8MKMa9sNe2GXTjFSDM9UqA0I0C0/ZvCxM1lCmG3mxZb70f8Wyi7TePXC/eV8eARbIqFyz0GjQmzA=="],
 
     "@tanstack/router-plugin/chokidar/readdirp/picomatch": ["picomatch@2.3.2", "", {}, "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA=="],
 
