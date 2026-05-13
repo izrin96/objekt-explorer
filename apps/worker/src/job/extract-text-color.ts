@@ -4,6 +4,7 @@ import { chat } from "@tanstack/ai";
 import { createOllamaChat } from "@tanstack/ai-ollama";
 import { and, eq, gte, ne } from "drizzle-orm";
 import { ofetch } from "ofetch";
+import sharp from "sharp";
 
 const CUTOFF = "2026-05-13T02:00:00.000Z";
 
@@ -11,7 +12,13 @@ async function urlToBase64(url: string): Promise<string> {
   const response = await ofetch(url, {
     responseType: "arrayBuffer",
   });
-  return Buffer.from(response).toString("base64");
+  const buffer = Buffer.from(response);
+  const meta = await sharp(buffer).metadata();
+  const cropped = await sharp(buffer)
+    .extract({ left: (meta.width ?? 300) - 100, top: 120, width: 100, height: 300 })
+    .jpeg()
+    .toBuffer();
+  return cropped.toString("base64");
 }
 
 function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
@@ -32,7 +39,7 @@ export async function extractTextColor() {
 
   for (const col of records) {
     try {
-      const resized = replaceUrlSize(col.frontImage, "2x");
+      const resized = replaceUrlSize(col.frontImage, "original");
       const base64 = await urlToBase64(resized);
 
       const result = await chat({
@@ -56,7 +63,7 @@ export async function extractTextColor() {
                 type: "image",
                 source: {
                   type: "data",
-                  mimeType: "image/avif",
+                  mimeType: "image/jpeg",
                   value: base64,
                 },
               },

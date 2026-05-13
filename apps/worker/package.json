@@ -19,7 +19,8 @@
     "@tanstack/ai": "^0.16.0",
     "@tanstack/ai-ollama": "^0.6.13",
     "drizzle-orm": "catalog:",
-    "ofetch": "catalog:"
+    "ofetch": "catalog:",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@repo/lint": "workspace:*",
