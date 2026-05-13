@@ -61,13 +61,13 @@ export function emptyMetadata(tokenId: string): CosmoObjektMetadataV1 {
 export function getTrait(metadata: CosmoObjektMetadataV3, tokenId: string, trait: string) {
   const isUnit = metadata.attributes.some((a) => a.trait_type === "Class" && a.value === "Unit");
 
-  let attr;
+  let attr = metadata.attributes.findLast((a) => a.trait_type === trait);
 
   if (trait === "Member" && isUnit) {
     // special case: find combined member (e.g. "id4 X id8")
-    attr = metadata.attributes.find((a) => a.trait_type === "Member" && a.value.includes(" X "));
-  } else {
-    attr = metadata.attributes.find((a) => a.trait_type === trait);
+    attr = metadata.attributes.findLast(
+      (a) => a.trait_type === "Member" && a.value.toLowerCase().includes(" x "),
+    );
   }
 
   if (!attr) {
@@ -99,7 +99,7 @@ export function normalizeV3(
     image: metadata.image,
     background_color: metadata.background_color,
     objekt: {
-      collectionId: `${season} ${member} ${collection}`,
+      collectionId: metadata.name.replace(/ #\d+$/, ""),
       season: season,
       member: member,
       collectionNo: collection,
