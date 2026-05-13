@@ -2,8 +2,8 @@
   "compilerOptions": {
     // Environment setup & latest features
     "lib": ["ESNext"],
-    "target": "ESNext",
-    "module": "Preserve",
+    "target": "esnext",
+    "module": "preserve",
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
@@ -29,7 +29,7 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noPropertyAccessFromIndexSignature": false,
+    "noPropertyAccessFromIndexSignature": false
   },
-  "exclude": ["node_modules", "dist", ".turbo"],
+  "exclude": ["node_modules", "dist", ".turbo"]
 }

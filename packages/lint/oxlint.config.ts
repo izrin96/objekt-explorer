@@ -27,5 +27,6 @@ export default defineConfig({
     "typescript/consistent-return": "off",
     "no-await-in-loop": "off",
     "no-shadow": "off",
+    "no-underscore-dangle": "off",
   },
 });

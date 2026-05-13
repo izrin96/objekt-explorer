@@ -13,17 +13,11 @@
   "arrowParens": "always",
   "experimentalTailwindcss": {
     "attributes": ["classList"],
-    "functions": [
-      "twMerge",
-      "twJoin",
-      "tv",
-      "composeRenderProps",
-      "composeTailwindRenderProps"
-    ]
+    "functions": ["twMerge", "twJoin", "tv", "composeRenderProps", "composeTailwindRenderProps"]
   },
   "experimentalSortImports": {
     "enable": true,
     "type": "natural"
   },
-  "ignorePatterns": []
+  "ignorePatterns": ["**/src/routeTree.gen.ts"]
 }
