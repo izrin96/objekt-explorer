@@ -69,7 +69,7 @@ export const Route = createFileRoute("/api/collection")({
             });
 
           const createdAtMs = new Date(singleResult.createdAt).getTime();
-          const lastModifiedMs = Math.max(createdAtMs, overrideMs);
+          const lastModifiedMs = Math.floor(Math.max(createdAtMs, overrideMs) / 1000) * 1000;
 
           if (ifModifiedSinceMs >= lastModifiedMs) {
             return new Response(null, {
@@ -94,7 +94,10 @@ export const Route = createFileRoute("/api/collection")({
         });
 
         const lastModifiedMs =
-          result.length > 0 ? Math.max(new Date(result[0]!.createdAt).getTime(), overrideMs) : 0;
+          result.length > 0
+            ? Math.floor(Math.max(new Date(result[0]!.createdAt).getTime(), overrideMs) / 1000) *
+              1000
+            : 0;
 
         return new Response(body, {
           status: 200,
