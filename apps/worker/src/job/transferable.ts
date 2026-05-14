@@ -55,16 +55,14 @@ async function processBatch(batch: { id: string }[], batchNumber: number, totalB
 
   // batch update all objekts in a transaction
   await indexer.transaction(async (tx) => {
-    await Promise.all(
-      updates.map((update) =>
-        tx
-          .update(objekts)
-          .set({
-            transferable: update.transferable,
-          })
-          .where(eq(objekts.id, update.id)),
-      ),
-    );
+    for (const update of updates) {
+      await tx
+        .update(objekts)
+        .set({
+          transferable: update.transferable,
+        })
+        .where(eq(objekts.id, update.id));
+    }
   });
 
   console.log(

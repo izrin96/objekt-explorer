@@ -120,40 +120,34 @@ async function processMetadataBatch(
 
   await indexer.transaction(async (tx) => {
     if (collectionMetadataUpdates.size > 0) {
-      await Promise.all(
-        Array.from(collectionMetadataUpdates.entries()).map(([slug, metadata]) =>
-          tx
-            .update(collections)
-            .set(enrichUpdateMetadata(metadata))
-            .where(eq(collections.slug, slug)),
-        ),
-      );
+      for (const [slug, metadata] of collectionMetadataUpdates.entries()) {
+        await tx
+          .update(collections)
+          .set(enrichUpdateMetadata(metadata))
+          .where(eq(collections.slug, slug));
+      }
     }
 
     if (updates.length > 0) {
-      await Promise.all(
-        updates.map((update) =>
-          tx
-            .update(objekts)
-            .set({
-              serial: update.serial,
-              transferable: update.transferable,
-              collectionId: update.collectionId,
-            })
-            .where(eq(objekts.id, update.objektId)),
-        ),
-      );
+      for (const update of updates) {
+        await tx
+          .update(objekts)
+          .set({
+            serial: update.serial,
+            transferable: update.transferable,
+            collectionId: update.collectionId,
+          })
+          .where(eq(objekts.id, update.objektId));
+      }
 
-      await Promise.all(
-        updates.map((update) =>
-          tx
-            .update(transfers)
-            .set({
-              collectionId: update.collectionId,
-            })
-            .where(eq(transfers.objektId, update.objektId)),
-        ),
-      );
+      for (const update of updates) {
+        await tx
+          .update(transfers)
+          .set({
+            collectionId: update.collectionId,
+          })
+          .where(eq(transfers.objektId, update.objektId));
+      }
     }
   });
 

@@ -63,11 +63,9 @@ async function processCollection(collectionId: string) {
     for (let i = 0; i < updates.length; i += batchSize) {
       const batch = updates.slice(i, i + batchSize);
 
-      await Promise.all(
-        batch.map((update) =>
-          tx.update(objekts).set({ serial: update.newSerial }).where(eq(objekts.id, update.id)),
-        ),
-      );
+      for (const update of batch) {
+        await tx.update(objekts).set({ serial: update.newSerial }).where(eq(objekts.id, update.id));
+      }
     }
   });
 
@@ -233,11 +231,10 @@ async function processCollectionOffline(collectionId: string) {
     const batchSize = 100;
     for (let i = 0; i < updates.length; i += batchSize) {
       const batch = updates.slice(i, i + batchSize);
-      await Promise.all(
-        batch.map((update) =>
-          tx.update(objekts).set({ serial: update.newSerial }).where(eq(objekts.id, update.id)),
-        ),
-      );
+
+      for (const update of batch) {
+        await tx.update(objekts).set({ serial: update.newSerial }).where(eq(objekts.id, update.id));
+      }
     }
   });
 
