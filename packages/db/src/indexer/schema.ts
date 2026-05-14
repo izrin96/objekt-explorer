@@ -36,6 +36,7 @@ export const collections = pgTable(
     onOffline: text("on_offline").notNull().$type<"online" | "offline">(),
     bandImageUrl: varchar("band_image_url", { length: 255 }),
     frontMedia: varchar("front_media", { length: 255 }),
+    hasAudio: boolean("has_audio").notNull().default(false),
   },
   (table) => [
     index("IDX_429351eac26f87942861266e48").using("btree", table.onOffline.asc().nullsLast()),

@@ -1,4 +1,3 @@
-import { enrichUpdateMetadata } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { addr, chunk, slugifyObjekt } from "@repo/lib";
 import { Addresses } from "@repo/lib";
@@ -8,6 +7,7 @@ import { v7 as randomUUID } from "uuid";
 import { env } from "./env";
 import { fetchMetadata } from "./metadata";
 import { Collection, ComoBalance, Objekt, type Transfer, Vote } from "./model";
+import { ListEventOutbox } from "./model";
 import {
   type ComoBalanceEvent,
   type RevealFunction,
@@ -79,14 +79,35 @@ processor.run(db, async (ctx) => {
         await ctx.store.upsert(transferBatch);
         transferBatchAll.push(...transferBatch);
       }
-    });
 
-    // publish transfers to redis for websocket broadcast
-    if (transferBatchAll.length > 0) {
-      redis
-        .publish("transfers", JSON.stringify(transferBatchAll))
-        .catch((error) => ctx.log.warn(`Failed to publish transfers to Redis: ${error}`));
-    }
+      // mints should not be inserted into the outbox
+      const userTransfers = transferBatch.filter((t) => t.from !== Addresses.NULL);
+
+      // insert outbox rows
+      if (userTransfers.length > 0) {
+        const outboxRows = userTransfers.map(
+          (t) =>
+            new ListEventOutbox({
+              transferId: t.id,
+              fromAddress: t.from,
+              toAddress: t.to,
+              // store the slug (not the UUID) so the web-side drain can match
+              // it directly against objekt_list_entries.collection_id, which is also a slug.
+              collectionId: t.collection.slug,
+              tokenId: t.tokenId,
+              timestamp: new Date(t.timestamp),
+            }),
+        );
+        await ctx.store.insert(outboxRows);
+      }
+
+      // publish transfers to redis for websocket broadcast
+      if (transferBatchAll.length > 0) {
+        redis
+          .publish("transfers", JSON.stringify(transferBatchAll))
+          .catch((error) => ctx.log.warn(`Failed to publish transfers to Redis: ${error}`));
+      }
+    });
 
     // process transferability updates separately from transfers
     if (transferability.length > 0) {
@@ -177,13 +198,23 @@ async function handleCollection(
       createdAt: new Date(transfer.timestamp),
       collectionId: metadata.objekt.collectionId,
       slug: slug,
-      // if create, set metadata even if data is v3 normalized
-      ...enrichUpdateMetadata(metadata),
+      textColor: metadata.objekt.textColor,
+      backImage: metadata.objekt.backImage,
+      accentColor: metadata.objekt.accentColor,
     });
   }
 
   // set and/or update metadata
-  Object.assign(collection, enrichUpdateMetadata(metadata, false));
+  collection.season = metadata.objekt.season;
+  collection.member = metadata.objekt.member;
+  collection.artist = metadata.objekt.artists[0]!.toLowerCase();
+  collection.collectionNo = metadata.objekt.collectionNo;
+  collection.class = metadata.objekt.class;
+  collection.comoAmount = metadata.objekt.comoAmount;
+  collection.onOffline = metadata.objekt.collectionNo.includes("Z") ? "online" : "offline";
+  collection.thumbnailImage = metadata.objekt.thumbnailImage;
+  collection.frontImage = metadata.objekt.frontImage;
+  collection.backgroundColor = metadata.objekt.backgroundColor;
 
   return collection;
 }
@@ -261,14 +292,14 @@ async function handleComoBalanceUpdate(
 ) {
   const toUpdate: ComoBalance[] = [];
 
-  if (!EXCLUDE.includes(event.from)) {
+  if (EXCLUDE.includes(event.from) === false) {
     const from = await getBalance(ctx, buffer, event.from, event.tokenId);
 
     from.amount -= event.value;
     toUpdate.push(from);
   }
 
-  if (!EXCLUDE.includes(event.to)) {
+  if (EXCLUDE.includes(event.to) === false) {
     const to = await getBalance(ctx, buffer, event.to, event.tokenId);
 
     to.amount += event.value;
