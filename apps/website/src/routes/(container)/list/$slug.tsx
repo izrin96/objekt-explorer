@@ -10,7 +10,7 @@ import { listBySlugQuery } from "@/lib/queries/list";
 import { profileQuery } from "@/lib/queries/profile";
 
 export const Route = createFileRoute("/(container)/list/$slug")({
-  loader: async ({ params, context: { queryClient } }) => {
+  beforeLoad: async ({ params, context: { queryClient } }) => {
     const list = await queryClient.ensureQueryData(listBySlugQuery({ slug: params.slug }));
 
     if (list.profileAddress && list.profileSlug) {
@@ -27,6 +27,9 @@ export const Route = createFileRoute("/(container)/list/$slug")({
       });
     }
 
+    return { list };
+  },
+  loader: async ({ context: { list } }) => {
     return { list };
   },
   head: ({ loaderData }) => {

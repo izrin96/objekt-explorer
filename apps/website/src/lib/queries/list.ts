@@ -6,6 +6,6 @@ import { getListBySlug } from "../functions/list";
 
 export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
   queryOptions({
-    queryKey: ["list", data.slug],
+    queryKey: ["list", data],
     queryFn: () => getListBySlug({ data }),
   });

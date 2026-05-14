@@ -1,5 +1,6 @@
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQueryClient } from "@tanstack/react-query";
+import { useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
@@ -22,9 +23,12 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
   const content = useIntlayer("profile");
+  const params = useParams({ from: "/@{$nickname}" });
 
   const onSave = () => {
-    void queryClient.invalidateQueries();
+    void queryClient.invalidateQueries({
+      queryKey: ["profile", params.nickname],
+    });
   };
 
   useEffect(() => {

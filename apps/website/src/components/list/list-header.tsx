@@ -105,6 +105,7 @@ function EditList({ slug }: { slug: string }) {
     void router.navigate({
       to: `/list/${slug}`,
       replace: true,
+      reloadDocument: true,
     });
   };
 
