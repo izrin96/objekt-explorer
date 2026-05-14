@@ -1,6 +1,9 @@
+import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
+import { slugifyObjekt } from "@repo/lib";
 import { and, eq, asc, gt } from "drizzle-orm";
+import { FetchError } from "ofetch";
 
 export async function populateSerial() {
   const collectionDiscover = await indexer
@@ -24,38 +27,38 @@ export async function populateSerial() {
 }
 
 async function processCollection(collectionId: string) {
+  const allObjekts = await indexer
+    .select({ id: objekts.id, serial: objekts.serial })
+    .from(objekts)
+    .where(eq(objekts.collectionId, collectionId))
+    .orderBy(asc(objekts.id));
+
+  if (allObjekts.length === 0) {
+    return;
+  }
+
+  const sortedAllObjekts = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
+
+  const updates: { id: string; newSerial: number }[] = [];
+
+  const isNew = sortedAllObjekts.every((a) => a.serial === 0);
+  const maxSerial = Math.max(...sortedAllObjekts.map((a) => a.serial));
+  let nextSerial = maxSerial + 1;
+
+  sortedAllObjekts.forEach((obj, idx) => {
+    if (obj.serial === 0 && !(idx === 0 && !isNew)) {
+      updates.push({ id: obj.id, newSerial: nextSerial++ });
+    }
+  });
+
+  if (updates.length === 0) {
+    console.log(`[populateSerial] Collection ${collectionId}: No updates needed`);
+    return;
+  }
+
+  console.log(`[populateSerial] Collection ${collectionId}: Updating ${updates.length} objekts`);
+
   await indexer.transaction(async (tx) => {
-    const allObjekts = await tx
-      .select({ id: objekts.id, serial: objekts.serial })
-      .from(objekts)
-      .where(eq(objekts.collectionId, collectionId))
-      .orderBy(asc(objekts.id));
-
-    if (allObjekts.length === 0) {
-      return;
-    }
-
-    const sortedAllObjekts = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
-
-    const updates: { id: string; newSerial: number }[] = [];
-
-    const isNew = sortedAllObjekts.every((a) => a.serial === 0);
-    const maxSerial = Math.max(...sortedAllObjekts.map((a) => a.serial));
-    let nextSerial = maxSerial + 1;
-
-    sortedAllObjekts.forEach((obj, idx) => {
-      if (obj.serial === 0 && !(idx === 0 && !isNew)) {
-        updates.push({ id: obj.id, newSerial: nextSerial++ });
-      }
-    });
-
-    if (updates.length === 0) {
-      console.log(`[populateSerial] Collection ${collectionId}: No updates needed`);
-      return;
-    }
-
-    console.log(`[populateSerial] Collection ${collectionId}: Updating ${updates.length} objekts`);
-
     const batchSize = 100;
     for (let i = 0; i < updates.length; i += batchSize) {
       const batch = updates.slice(i, i + batchSize);
@@ -66,9 +69,53 @@ async function processCollection(collectionId: string) {
         ),
       );
     }
-
-    console.log(`[populateSerial] Collection ${collectionId}: Updated ${updates.length} objekts`);
   });
+
+  console.log(`[populateSerial] Collection ${collectionId}: Updated ${updates.length} objekts`);
+}
+
+const BATCH_SIZE = 20;
+
+async function findBaseTokenId(
+  targetCollectionId: string,
+  minTokenId: number,
+): Promise<number | null> {
+  const targetSlug = slugifyObjekt(targetCollectionId);
+
+  for (let offset = 0; ; offset += BATCH_SIZE) {
+    const batch: number[] = [];
+    for (let i = 0; i < BATCH_SIZE; i++) {
+      const tokenId = minTokenId - offset - i;
+      if (tokenId < 1) break;
+      batch.push(tokenId);
+    }
+
+    if (batch.length === 0) break;
+
+    const results = await Promise.all(
+      batch.map(async (tokenId) => {
+        try {
+          const raw = await fetchMetadataV3(String(tokenId));
+          const metadata = normalizeV3(raw, String(tokenId));
+          return { tokenId, slug: slugifyObjekt(metadata.objekt.collectionId) };
+        } catch (error) {
+          if (error instanceof FetchError && error.status === 404) {
+            return { tokenId, slug: null };
+          }
+          throw error;
+        }
+      }),
+    );
+
+    for (const result of results) {
+      if (result.slug === null) continue;
+      if (result.slug !== targetSlug) {
+        return result.tokenId + 1;
+      }
+    }
+  }
+
+  return null;
 }
 
 export async function populateSerialOffline() {
@@ -95,31 +142,58 @@ export async function populateSerialOffline() {
 }
 
 async function processCollectionOffline(collectionId: string) {
-  await indexer.transaction(async (tx) => {
-    const knownObjekts = await tx
-      .select({ id: objekts.id, serial: objekts.serial })
-      .from(objekts)
-      .where(and(eq(objekts.collectionId, collectionId), gt(objekts.serial, 0)))
-      .orderBy(asc(objekts.id));
+  const knownObjekts = await indexer
+    .select({ id: objekts.id, serial: objekts.serial })
+    .from(objekts)
+    .where(and(eq(objekts.collectionId, collectionId), gt(objekts.serial, 0)))
+    .orderBy(asc(objekts.id));
 
-    if (knownObjekts.length === 0) {
-      console.log(
-        `[populateSerialOffline] Collection ${collectionId}: No known serials to reference`,
-      );
+  const zeroObjekts = await indexer
+    .select({ id: objekts.id })
+    .from(objekts)
+    .where(and(eq(objekts.collectionId, collectionId), eq(objekts.serial, 0)));
+
+  if (zeroObjekts.length === 0) {
+    return;
+  }
+
+  const updates: { id: string; newSerial: number }[] = [];
+
+  if (knownObjekts.length === 0) {
+    const [collection] = await indexer
+      .select({ collectionId: collections.collectionId })
+      .from(collections)
+      .where(eq(collections.id, collectionId))
+      .limit(1);
+
+    if (!collection) {
+      console.log(`[populateSerialOffline] Collection ${collectionId}: Not found`);
       return;
     }
 
-    const zeroObjekts = await tx
-      .select({ id: objekts.id })
-      .from(objekts)
-      .where(and(eq(objekts.collectionId, collectionId), eq(objekts.serial, 0)));
+    const minTokenId = Math.min(...zeroObjekts.map((o) => parseInt(o.id)));
 
-    if (zeroObjekts.length === 0) {
+    try {
+      const baseTokenId = await findBaseTokenId(collection.collectionId, minTokenId);
+
+      if (baseTokenId === null) {
+        console.log(
+          `[populateSerialOffline] Collection ${collectionId}: Could not determine base token ID`,
+        );
+        return;
+      }
+
+      for (const zeroObj of zeroObjekts) {
+        const newSerial = parseInt(zeroObj.id) - baseTokenId + 1;
+        if (newSerial > 0) {
+          updates.push({ id: zeroObj.id, newSerial });
+        }
+      }
+    } catch {
+      console.log(`[populateSerialOffline] Collection ${collectionId}: API error, skipping`);
       return;
     }
-
-    const updates: { id: string; newSerial: number }[] = [];
-
+  } else {
     for (const zeroObj of zeroObjekts) {
       const zeroId = parseInt(zeroObj.id);
 
@@ -144,16 +218,18 @@ async function processCollectionOffline(collectionId: string) {
         }
       }
     }
+  }
 
-    if (updates.length === 0) {
-      console.log(`[populateSerialOffline] Collection ${collectionId}: No valid updates`);
-      return;
-    }
+  if (updates.length === 0) {
+    console.log(`[populateSerialOffline] Collection ${collectionId}: No valid updates`);
+    return;
+  }
 
-    console.log(
-      `[populateSerialOffline] Collection ${collectionId}: Updating ${updates.length} objekts`,
-    );
+  console.log(
+    `[populateSerialOffline] Collection ${collectionId}: Updating ${updates.length} objekts`,
+  );
 
+  await indexer.transaction(async (tx) => {
     const batchSize = 100;
     for (let i = 0; i < updates.length; i += batchSize) {
       const batch = updates.slice(i, i + batchSize);
@@ -163,9 +239,9 @@ async function processCollectionOffline(collectionId: string) {
         ),
       );
     }
-
-    console.log(
-      `[populateSerialOffline] Collection ${collectionId}: Updated ${updates.length} objekts`,
-    );
   });
+
+  console.log(
+    `[populateSerialOffline] Collection ${collectionId}: Updated ${updates.length} objekts`,
+  );
 }

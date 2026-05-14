@@ -20,7 +20,7 @@ type TransferData = {
   };
 };
 
-void (async () => {
+export async function subscribeToTransfers() {
   console.log("[Profile List Cleanup] Subscribing to transfers channel");
 
   await pubsub.subscribe("transfers", async (message, channel) => {
@@ -33,7 +33,7 @@ void (async () => {
       }
     }
   });
-})();
+}
 
 async function handleTransfers(transfers: TransferData[]) {
   const addressToObjektIds = new Map<string, string[]>();
