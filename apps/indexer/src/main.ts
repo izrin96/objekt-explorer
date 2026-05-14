@@ -7,7 +7,7 @@ import { v7 as randomUUID } from "uuid";
 import { env } from "./env";
 import { fetchMetadata } from "./metadata";
 import { Collection, ComoBalance, Objekt, type Transfer, Vote } from "./model";
-import { ListEventOutbox } from "./model";
+// import { ListEventOutbox } from "./model";
 import {
   type ComoBalanceEvent,
   type RevealFunction,
@@ -81,25 +81,25 @@ processor.run(db, async (ctx) => {
       }
 
       // mints should not be inserted into the outbox
-      const userTransfers = transferBatch.filter((t) => t.from !== Addresses.NULL);
+      // const userTransfers = transferBatch.filter((t) => t.from !== Addresses.NULL);
 
       // insert outbox rows
-      if (userTransfers.length > 0) {
-        const outboxRows = userTransfers.map(
-          (t) =>
-            new ListEventOutbox({
-              transferId: t.id,
-              fromAddress: t.from,
-              toAddress: t.to,
-              // store the slug (not the UUID) so the web-side drain can match
-              // it directly against objekt_list_entries.collection_id, which is also a slug.
-              collectionId: t.collection.slug,
-              tokenId: t.tokenId,
-              timestamp: new Date(t.timestamp),
-            }),
-        );
-        await ctx.store.insert(outboxRows);
-      }
+      // if (userTransfers.length > 0) {
+      //   const outboxRows = userTransfers.map(
+      //     (t) =>
+      //       new ListEventOutbox({
+      //         transferId: t.id,
+      //         fromAddress: t.from,
+      //         toAddress: t.to,
+      //         // store the slug (not the UUID) so the web-side drain can match
+      //         // it directly against objekt_list_entries.collection_id, which is also a slug.
+      //         collectionId: t.collection.slug,
+      //         tokenId: t.tokenId,
+      //         timestamp: new Date(t.timestamp),
+      //       }),
+      //   );
+      //   await ctx.store.insert(outboxRows);
+      // }
 
       // publish transfers to redis for websocket broadcast
       if (transferBatchAll.length > 0) {
