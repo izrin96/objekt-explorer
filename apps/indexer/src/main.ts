@@ -100,14 +100,14 @@ processor.run(db, async (ctx) => {
       //   );
       //   await ctx.store.insert(outboxRows);
       // }
-
-      // publish transfers to redis for websocket broadcast
-      if (transferBatchAll.length > 0) {
-        redis
-          .publish("transfers", JSON.stringify(transferBatchAll))
-          .catch((error) => ctx.log.warn(`Failed to publish transfers to Redis: ${error}`));
-      }
     });
+
+    // publish transfers to redis for websocket broadcast
+    if (transferBatchAll.length > 0) {
+      redis
+        .publish("transfers", JSON.stringify(transferBatchAll))
+        .catch((error) => ctx.log.warn(`Failed to publish transfers to Redis: ${error}`));
+    }
 
     // process transferability updates separately from transfers
     if (transferability.length > 0) {
