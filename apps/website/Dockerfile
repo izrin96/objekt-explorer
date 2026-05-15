@@ -9,23 +9,21 @@ RUN bunx turbo@2.9.14 prune website --docker
 FROM base AS builder
 WORKDIR /app
 
-ARG VITE_SITE_URL
-ARG VITE_UMAMI_SCRIPT_URL
-ARG VITE_UMAMI_WEBSITE_ID
-ARG VITE_ACTIVITY_WEBSOCKET_URL
-ARG VITE_LIVE_API_KEY
-
-ENV VITE_SITE_URL=$VITE_SITE_URL
-ENV VITE_UMAMI_SCRIPT_URL=$VITE_UMAMI_SCRIPT_URL
-ENV VITE_UMAMI_WEBSITE_ID=$VITE_UMAMI_WEBSITE_ID
-ENV VITE_ACTIVITY_WEBSOCKET_URL=$VITE_ACTIVITY_WEBSOCKET_URL
-ENV VITE_LIVE_API_KEY=$VITE_LIVE_API_KEY
-
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
-RUN bun run --filter website build:prod
+RUN --mount=type=secret,id=VITE_SITE_URL \
+    --mount=type=secret,id=VITE_UMAMI_SCRIPT_URL \
+    --mount=type=secret,id=VITE_UMAMI_WEBSITE_ID \
+    --mount=type=secret,id=VITE_ACTIVITY_WEBSOCKET_URL \
+    --mount=type=secret,id=VITE_LIVE_API_KEY \
+    export VITE_SITE_URL=$(cat /run/secrets/VITE_SITE_URL) && \
+    export VITE_UMAMI_SCRIPT_URL=$(cat /run/secrets/VITE_UMAMI_SCRIPT_URL) && \
+    export VITE_UMAMI_WEBSITE_ID=$(cat /run/secrets/VITE_UMAMI_WEBSITE_ID) && \
+    export VITE_ACTIVITY_WEBSOCKET_URL=$(cat /run/secrets/VITE_ACTIVITY_WEBSOCKET_URL) && \
+    export VITE_LIVE_API_KEY=$(cat /run/secrets/VITE_LIVE_API_KEY) && \
+    bun run --filter website build:prod
 
 # Compile server.ts into a standalone binary
 FROM base AS compiler
