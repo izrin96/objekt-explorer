@@ -88,7 +88,7 @@ export function parseTransferEvent(log: Log): TransferEvent | undefined {
       };
     }
     return undefined;
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }
@@ -148,7 +148,7 @@ export function parseComoBalanceEvents(log: Log): ComoBalanceEvent[] {
       default:
         return [];
     }
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -183,7 +183,7 @@ export function parseVote(log: Log): VoteEvent | undefined {
       blockNumber: log.block.height,
       logIndex: log.logIndex,
     };
-  } catch (err) {
+  } catch {
     return undefined;
   }
 }
@@ -219,7 +219,7 @@ export function parseRevealFunction(tx: Transaction): RevealFunction[] {
     }
 
     return reveals;
-  } catch (err) {
+  } catch {
     return [];
   }
 }
@@ -240,7 +240,7 @@ export function parseTransferabilityUpdate(tx: Transaction): TransferabilityUpda
       tokenId: tokenId.toString(),
       transferable: transferable,
     }));
-  } catch (err) {
+  } catch {
     return [];
   }
 }
