@@ -58,10 +58,15 @@ async function processBatch(batch: { id: string }[], batchNumber: number, totalB
       serial: sql`data.serial`,
       transferable: sql`data.transferable`,
     })
-    .from(sql`(VALUES ${sql.join(
-      updates.map((u) => sql`(${u.id}, ${u.metadata.objekt.objektNo}::integer, ${u.metadata.objekt.transferable}::boolean)`),
-      sql`, `,
-    )}) AS data(id, serial, transferable)`)
+    .from(
+      sql`(VALUES ${sql.join(
+        updates.map(
+          (u) =>
+            sql`(${u.id}, ${u.metadata.objekt.objektNo}::integer, ${u.metadata.objekt.transferable}::boolean)`,
+        ),
+        sql`, `,
+      )}) AS data(id, serial, transferable)`,
+    )
     .where(sql`${objekts.id} = data.id`);
 
   console.log(

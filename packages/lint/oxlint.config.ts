@@ -9,6 +9,7 @@ export default defineConfig({
     style: "off",
   },
   rules: {
+    "no-unnecessary-boolean-literal-compare": "off",
     "eslint/no-unused-vars": "off",
     "eslint/no-console": "off",
     "eslint/prefer-const": "warn",
