@@ -14,7 +14,7 @@ import type { Locale } from "@/lib/locale";
 
 import { redis } from "../../redis.server";
 import { getAccessToken } from "../../token.server";
-import { authed } from "../orpc";
+import { authed, localeMiddleware } from "../orpc";
 
 type VerificationData = {
   code: string;
@@ -50,6 +50,7 @@ async function assertAddressNotLinked(address: string, userId: string, locale: L
 export const cosmoLinkRouter = {
   // check if address is already linked
   checkAddress: authed
+    .use(localeMiddleware)
     .input(z.string())
     .handler(async ({ input: address, context: { session, locale } }) => {
       await assertAddressNotLinked(address, session.user.id, locale);
@@ -67,6 +68,7 @@ export const cosmoLinkRouter = {
 
   // generate verification code for a specific artist profile
   generateCode: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -112,6 +114,7 @@ export const cosmoLinkRouter = {
 
   // verify bio contains the code and link the account
   verifyStatusMessage: authed
+    .use(localeMiddleware)
     .input(z.string())
     .handler(async ({ input: address, context: { session, locale } }) => {
       const content = getIntlayer("api_errors", locale);

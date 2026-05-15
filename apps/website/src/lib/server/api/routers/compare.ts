@@ -11,10 +11,11 @@ import { compareInputSchema } from "@/lib/universal/compare";
 
 import { buildListEntries, fetchListWithEntries } from "../../list.server";
 import { getCollectionColumns } from "../../objekt.server";
-import { pub, selectedArtistsMiddleware } from "../orpc";
+import { localeMiddleware, pub, selectedArtistsMiddleware } from "../orpc";
 
 export const compareRouter = {
   compare: pub
+    .use(localeMiddleware)
     .use(selectedArtistsMiddleware)
     .input(compareInputSchema)
     .handler(

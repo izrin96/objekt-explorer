@@ -27,7 +27,7 @@ const requiredAuthMiddleware = os
     });
   });
 
-const localeMiddleware = os.middleware(async ({ next, context }) => {
+export const localeMiddleware = os.middleware(async ({ next, context }) => {
   const locale = await getUserLocale();
   return next({
     context: { ...context, locale },
@@ -41,6 +41,6 @@ export const selectedArtistsMiddleware = os.middleware(async ({ next, context })
   });
 });
 
-export const pub = os.use(localeMiddleware);
+export const pub = os;
 
 export const authed = pub.use(requiredAuthMiddleware);

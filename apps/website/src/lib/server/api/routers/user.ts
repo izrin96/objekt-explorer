@@ -8,60 +8,64 @@ import * as z from "zod";
 import { providersMap } from "@/lib/universal/user";
 
 import { auth, getSession } from "../../auth.server";
-import { authed, pub } from "../orpc";
+import { authed, localeMiddleware, pub } from "../orpc";
 
 export const userRouter = {
-  refreshProfile: authed.input(z.enum(["discord", "twitter"])).handler(
-    async ({
-      input: providerId,
-      context: {
-        locale,
-        session: { user },
-      },
-    }) => {
-      const content = getIntlayer("api_errors", locale);
-
-      // get accessToken from account
-      const account = await db.query.account.findFirst({
-        columns: {
-          idToken: true,
-          accessToken: true,
-          refreshToken: true,
+  refreshProfile: authed
+    .use(localeMiddleware)
+    .input(z.enum(["discord", "twitter"]))
+    .handler(
+      async ({
+        input: providerId,
+        context: {
+          locale,
+          session: { user },
         },
-        where: { userId: user.id, providerId },
-      });
+      }) => {
+        const content = getIntlayer("api_errors", locale);
 
-      if (!account)
-        throw new ORPCError("BAD_REQUEST", {
-          message: content.user.not_linked_provider.value,
+        // get accessToken from account
+        const account = await db.query.account.findFirst({
+          columns: {
+            idToken: true,
+            accessToken: true,
+            refreshToken: true,
+          },
+          where: { userId: user.id, providerId },
         });
 
-      const authContext = await auth.$context;
+        if (!account)
+          throw new ORPCError("BAD_REQUEST", {
+            message: content.user.not_linked_provider.value,
+          });
 
-      const provider = authContext.socialProviders.find((p) => p.id === providerId);
+        const authContext = await auth.$context;
 
-      // fetch from provider
-      const info = await provider!.getUserInfo({
-        idToken: account.idToken ?? undefined,
-        accessToken: account.accessToken ?? undefined,
-        refreshToken: account.refreshToken ?? undefined,
-      });
+        const provider = authContext.socialProviders.find((p) => p.id === providerId);
 
-      if (!info)
-        throw new ORPCError("INTERNAL_SERVER_ERROR", {
-          message: content.user.failed_get_info({ provider: providersMap[providerId].label }).value,
+        // fetch from provider
+        const info = await provider!.getUserInfo({
+          idToken: account.idToken ?? undefined,
+          accessToken: account.accessToken ?? undefined,
+          refreshToken: account.refreshToken ?? undefined,
         });
 
-      // update user
-      await db
-        .update(userSchema)
-        .set({
-          [providerId]: providerId === "discord" ? info.data.username : info.data.data?.username,
-          image: info.user.image,
-        })
-        .where(eq(userSchema.id, user.id));
-    },
-  ),
+        if (!info)
+          throw new ORPCError("INTERNAL_SERVER_ERROR", {
+            message: content.user.failed_get_info({ provider: providersMap[providerId].label })
+              .value,
+          });
+
+        // update user
+        await db
+          .update(userSchema)
+          .set({
+            [providerId]: providerId === "discord" ? info.data.username : info.data.data?.username,
+            image: info.user.image,
+          })
+          .where(eq(userSchema.id, user.id));
+      },
+    ),
 
   unlinkAccount: authed
     .input(

@@ -5,7 +5,7 @@ import { pins } from "@repo/db/schema";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 
-import { authed, pub } from "../orpc";
+import { authed, localeMiddleware, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
 async function getValidPins(address: string) {
@@ -44,6 +44,7 @@ export const pinsRouter = {
   }),
 
   batchPin: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -76,6 +77,7 @@ export const pinsRouter = {
     }),
 
   batchUnpin: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -91,6 +93,7 @@ export const pinsRouter = {
     }),
 
   movePin: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),

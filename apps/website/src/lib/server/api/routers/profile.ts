@@ -9,7 +9,7 @@ import * as z from "zod";
 import type { Locale } from "@/lib/locale";
 
 import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3.server";
-import { authed } from "../orpc";
+import { authed, localeMiddleware } from "../orpc";
 
 export const profileRouter = {
   list: authed.handler(async ({ context: { session } }) => {
@@ -17,6 +17,7 @@ export const profileRouter = {
   }),
 
   find: authed
+    .use(localeMiddleware)
     .input(z.string())
     .handler(async ({ input: address, context: { session, locale } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id, locale);
@@ -24,6 +25,7 @@ export const profileRouter = {
     }),
 
   edit: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -60,6 +62,7 @@ export const profileRouter = {
     }),
 
   getPresignedPost: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),

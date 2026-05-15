@@ -3,7 +3,7 @@ import { lockedObjekts } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
-import { authed, pub } from "../orpc";
+import { authed, localeMiddleware, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
 export const lockedObjektsRouter = {
@@ -21,6 +21,7 @@ export const lockedObjektsRouter = {
   }),
 
   batchLock: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -48,6 +49,7 @@ export const lockedObjektsRouter = {
     }),
 
   batchUnlock: authed
+    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
