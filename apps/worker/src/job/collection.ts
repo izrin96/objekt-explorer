@@ -5,7 +5,7 @@ import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { chunk, slugifyObjekt } from "@repo/lib";
 import { and, eq, gte, inArray } from "drizzle-orm";
 
-import { safeFetchMetadataV3 } from "@/lib/metadata-utils";
+import { safeFetchMetadataV1 } from "@/lib/metadata-utils";
 
 const BATCH_SIZE = 50;
 
@@ -57,7 +57,7 @@ async function processMetadataBatch(
   const metadataResults = await Promise.all(
     batch.map(async (objekt) => ({
       objektId: objekt.id,
-      metadata: await safeFetchMetadataV3(objekt.id),
+      metadata: await safeFetchMetadataV1(objekt.id),
     })),
   );
 
