@@ -1,9 +1,9 @@
 diff --git a/lib/hot.js b/lib/hot.js
-index 9cd3aacb45adb43a2447bc77ac0b90ec171c8d6b..911881a5bee2e58a458cadc39c6dc4d6e7235ba9 100644
+index 88bb139dced393fffa91b514d340bba818967ff7..d0331137d11ebe54b5f86dfdc8fa015e49ac50fa 100644
 --- a/lib/hot.js
 +++ b/lib/hot.js
-@@ -58,7 +58,7 @@ class ChangeTracker {
-         }));
+@@ -115,7 +115,7 @@ class ChangeTracker {
+         return promise;
      }
      async fetchEntities(meta, ids) {
 -        let entities = await this.em.query(`SELECT * FROM ${this.escape(meta.tableName)} WHERE id = ANY($1::text[])`, [ids]);
@@ -12,10 +12,10 @@ index 9cd3aacb45adb43a2447bc77ac0b90ec171c8d6b..911881a5bee2e58a458cadc39c6dc4d6
          // JSON variant in such a way, that `driver.query('UPDATE entity SET field = $1', [json.field])`
          // would be always correctly handled.
 diff --git a/src/hot.ts b/src/hot.ts
-index 189674b45b89b0420a2f048c08295db61354d206..3a3c246e0efdc9b08f9e79a2601fcf250caf41cb 100644
+index 36fe84e1e1f4f0bda3185cdd914d4f2fdb0b7bbe..e63de109640ba55be6458fa81cadf3e1ef04dbb7 100644
 --- a/src/hot.ts
 +++ b/src/hot.ts
-@@ -110,7 +110,7 @@ export class ChangeTracker {
+@@ -192,7 +192,7 @@ export class ChangeTracker {
  
      private async fetchEntities(meta: EntityMetadata, ids: string[]): Promise<Entity[]> {
          let entities = await this.em.query(
