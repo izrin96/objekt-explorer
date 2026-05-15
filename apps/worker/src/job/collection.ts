@@ -102,7 +102,7 @@ async function processMetadataBatch(
       continue;
     }
 
-    const metadata = collectionMetadataUpdates.get(slug);
+    const metadata = metadataResults.find((a) => a.objektId === objektId)?.metadata;
     if (!metadata) continue;
 
     updates.push({
