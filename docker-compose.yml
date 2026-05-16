@@ -129,6 +129,7 @@ services:
       - VITE_LIVE_API_KEY
       - BYPASS_LIVE_KEY
       - REDIS_URL=redis://valkey:6379
+      - COSMO_KEY
     healthcheck:
       test: test ! -f /tmp/drain && curl -f http://localhost:3000/api/healthcheck
       interval: 5s
