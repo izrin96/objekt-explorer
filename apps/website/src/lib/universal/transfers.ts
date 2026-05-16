@@ -1,22 +1,29 @@
-import type { Transfer } from "@repo/db/indexer/schema";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
+import * as z from "zod";
 
-export type AggregatedTransfer = {
-  transfer: Pick<Transfer, "id" | "from" | "to" | "timestamp">;
-  objekt: OwnedObjekt;
-  nickname: {
-    from?: string | null;
-    to?: string | null;
-  };
-};
+const partialTransferSchema = z.object({
+  id: z.string(),
+  from: z.string(),
+  to: z.string(),
+  timestamp: z.string(),
+});
 
-export type TransferResult = {
-  hide?: boolean | undefined;
-  results: AggregatedTransfer[];
-  nextCursor?: {
-    id: string;
-  };
-};
+export const aggregatedTransferSchema = z.object({
+  transfer: partialTransferSchema,
+  objekt: z.custom<OwnedObjekt>(),
+  nickname: z.object({
+    from: z.string().nullish(),
+    to: z.string().nullish(),
+  }),
+});
+export type AggregatedTransfer = z.infer<typeof aggregatedTransferSchema>;
+
+export const transferResultSchema = z.object({
+  hide: z.boolean().optional(),
+  results: z.array(aggregatedTransferSchema),
+  nextCursor: z.object({ id: z.string() }).optional(),
+});
+export type TransferResult = z.infer<typeof transferResultSchema>;
 
 export const validType = ["all", "mint", "received", "sent", "spin"] as const;
 export type ValidType = (typeof validType)[number];

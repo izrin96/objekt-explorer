@@ -1,23 +1,29 @@
-import type { Transfer } from "@repo/db/indexer/schema";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
+import * as z from "zod";
 
-export type PartialTransfer = Pick<Transfer, "id" | "from" | "to" | "timestamp" | "hash">;
+const partialTransferSchema = z.object({
+  id: z.string(),
+  from: z.string(),
+  to: z.string(),
+  timestamp: z.string(),
+  hash: z.string(),
+});
 
-export type ActivityData = {
-  transfer: PartialTransfer;
-  objekt: OwnedObjekt;
-  nickname: {
-    from?: string | null;
-    to?: string | null;
-  };
-};
+export const activityDataSchema = z.object({
+  transfer: partialTransferSchema,
+  objekt: z.custom<OwnedObjekt>(),
+  nickname: z.object({
+    from: z.string().nullish(),
+    to: z.string().nullish(),
+  }),
+});
+export type ActivityData = z.infer<typeof activityDataSchema>;
 
-export type ActivityResponse = {
-  items: ActivityData[];
-  nextCursor?: {
-    id: string;
-  };
-};
+export const activityResponseSchema = z.object({
+  items: z.array(activityDataSchema),
+  nextCursor: z.object({ id: z.string() }).optional(),
+});
+export type ActivityResponse = z.infer<typeof activityResponseSchema>;
 
 export const validType = ["all", "mint", "transfer", "spin"] as const;
 export type ValidType = (typeof validType)[number];

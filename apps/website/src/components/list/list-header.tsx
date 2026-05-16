@@ -54,8 +54,8 @@ export default function ListHeader() {
                 size="xl"
                 className="self-center"
                 src={displayUser.image}
-                alt={displayUser.name}
-                initials={displayUser.name.charAt(0)}
+                alt={displayUser.name ?? undefined}
+                initials={(displayUser.name ?? "").charAt(0)}
               />
             )}
             <div className="flex flex-col">

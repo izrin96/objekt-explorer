@@ -16,7 +16,7 @@ import * as z from "zod";
 import { betterAuthLocale } from "@/i18n/better-auth";
 import { serverEnv } from "@/lib/env/server";
 
-import type { PublicProfile, PublicUser } from "../universal/user";
+import { publicUserSchema, type PublicProfile, type PublicUser } from "../universal/user";
 import { SITE_NAME } from "../utils";
 import { getUserLocale } from "./locale.server";
 import {
@@ -198,7 +198,7 @@ const cachedUserSchema = z.object({
   userId: z.string().nullable(),
   hideNickname: z.boolean().nullable(),
   hideUser: z.boolean().nullable(),
-  user: z.custom<PublicUser>().nullable(),
+  user: publicUserSchema.nullable(),
 });
 
 function toPublicProfile(data: z.infer<typeof cachedUserSchema>): PublicProfile {

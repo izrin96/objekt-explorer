@@ -1,27 +1,37 @@
-import type { User } from "../server/auth.server";
+import * as z from "zod";
 
-export type PublicProfile = {
-  address: string;
-  nickname?: string | null;
-  bannerImgUrl?: string | null;
-  bannerImgType?: string | null;
-  privateProfile?: boolean | null;
-  gridColumns?: number | null;
-  user?: PublicUser | null;
-  ownerId?: string | null;
-  isOwned?: boolean;
-};
+export const publicUserSchema = z.object({
+  name: z.string().nullable(),
+  image: z.string().nullable(),
+  username: z.string().nullable(),
+  discord: z.string().nullable(),
+  twitter: z.string().nullable(),
+  displayUsername: z.string().nullable(),
+  showSocial: z.boolean().nullable(),
+});
+export type PublicUser = z.infer<typeof publicUserSchema>;
 
-export type PublicUser = Pick<
-  User,
-  "name" | "image" | "username" | "discord" | "twitter" | "displayUsername" | "showSocial"
->;
+export const publicProfileSchema = z.object({
+  address: z.string(),
+  nickname: z.string().nullish(),
+  bannerImgUrl: z.string().nullish(),
+  bannerImgType: z.string().nullish(),
+  privateProfile: z.boolean().nullish(),
+  gridColumns: z.number().nullish(),
+  user: publicUserSchema.nullish(),
+  ownerId: z.string().nullish(),
+  isOwned: z.boolean().optional(),
+});
+export type PublicProfile = z.infer<typeof publicProfileSchema>;
 
-export type ProviderId = "twitter" | "discord";
-export type Provider = {
-  id: ProviderId;
-  label: string;
-};
+export const providerIdSchema = z.enum(["twitter", "discord"]);
+export type ProviderId = z.infer<typeof providerIdSchema>;
+
+export const providerSchema = z.object({
+  id: providerIdSchema,
+  label: z.string(),
+});
+export type Provider = z.infer<typeof providerSchema>;
 
 export const providersMap: Record<ProviderId, Provider> = {
   twitter: {
@@ -34,24 +44,26 @@ export const providersMap: Record<ProviderId, Provider> = {
   },
 };
 
-export type PublicList = {
-  slug: string;
-  profileSlug?: string | null;
-  name: string;
-  gridColumns?: number | null;
-  user?: PublicUser | null;
-  listType: "normal" | "profile";
-  profileAddress?: string | null;
-  ownerId?: string | null;
-  isOwned?: boolean;
-  description?: string | null;
-  currency?: string | null;
-};
+export const publicListSchema = z.object({
+  slug: z.string(),
+  profileSlug: z.string().nullish(),
+  name: z.string(),
+  gridColumns: z.number().nullish(),
+  user: publicUserSchema.nullish(),
+  listType: z.enum(["normal", "profile"]),
+  profileAddress: z.string().nullish(),
+  ownerId: z.string().nullish(),
+  isOwned: z.boolean().optional(),
+  description: z.string().nullish(),
+  currency: z.string().nullish(),
+});
+export type PublicList = z.infer<typeof publicListSchema>;
 
-export type ListInfo = {
-  listType: "normal" | "profile";
-  slug: string;
-  profileSlug?: string | null;
-  nickname?: string | null;
-  profileAddress?: string | null;
-};
+export const listInfoSchema = z.object({
+  listType: z.enum(["normal", "profile"]),
+  slug: z.string(),
+  profileSlug: z.string().nullish(),
+  nickname: z.string().nullish(),
+  profileAddress: z.string().nullish(),
+});
+export type ListInfo = z.infer<typeof listInfoSchema>;
