@@ -8,7 +8,6 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 
 **Monorepo Structure** (Bun workspaces + Turbo):
 
-- `apps/web` - Main frontend (Next.js) (Deprecated)
 - `apps/website` - Main frontend (TanStack React Start + Vite)
 - `apps/server` - WebSocket activity server
 - `apps/worker` - Background job worker (Croner)
@@ -22,7 +21,7 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 **Key Technologies**:
 
 - Runtime: Bun 1.3.11
-- Frontend: Next.js 16, TanStack React Start + Vite, React 19, Tailwind CSS 4
+- Frontend: TanStack React Start + Vite, React 19, Tailwind CSS 4
 - API: ORPC (type-safe RPC) with Zod validation
 - Database: PostgreSQL 18 with Drizzle ORM
 - State: React Query (server), Zustand (client)
@@ -108,8 +107,6 @@ Before substantial work:
 
 skills:
 
-- when: "Step-by-step migration from Next.js App Router to TanStack Start: route definition conversion, API mapping, server function conversion from Server Actions, middleware conversion, data fetching pattern changes."
-  use: "@tanstack/react-start#lifecycle/migrate-from-nextjs"
 - when: "React bindings for TanStack Start: createStart, StartClient, StartServer, React-specific imports, re-exports from @tanstack/react-router, full project setup with React, useServerFn hook."
   use: "@tanstack/react-start#react-start"
 - when: "Implement, review, debug, and refactor TanStack Start React Server Components in React 19 apps. Use when tasks mention @tanstack/react-start/rsc, renderServerComponent, createCompositeComponent, CompositeComponent, renderToReadableStream, createFromReadableStream, createFromFetch, Composite Components, React Flight streams, loader or query owned RSC caching, router.invalidate, structuralSharing: false, selective SSR, stale names like renderRsc or .validator, or migration from Next App Router RSC patterns. Do not use for generic SSR or non-TanStack RSC frameworks except brief comparison."
@@ -152,7 +149,3 @@ skills:
   use: "@tanstack/start-server-core#start-server-core"
 - when: "Programmatic route tree building as an alternative to filesystem conventions: rootRoute, index, route, layout, physical, defineVirtualSubtreeConfig. Use with TanStack Router plugin's virtualRouteConfig option."
   use: "@tanstack/virtual-file-routes#virtual-file-routes"
-
-## Next.js: ALWAYS read docs before coding
-
-Before any Next.js work, find and read the relevant doc in `node_modules/next/dist/docs/`. Your training data is outdated — the docs are the source of truth.
