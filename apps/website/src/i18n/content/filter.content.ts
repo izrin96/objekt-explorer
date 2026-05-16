@@ -27,6 +27,10 @@ const content = {
       en: "Type",
       ko: "타입",
     }),
+    all: t({
+      en: "All",
+      ko: "전체",
+    }),
     physical: t({
       en: "Physical",
       ko: "피지컬",
