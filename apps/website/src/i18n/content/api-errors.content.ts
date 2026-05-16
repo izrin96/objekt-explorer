@@ -64,6 +64,10 @@ const content = {
         en: "Target list not found",
         ko: "대상 목록을 찾을 수 없습니다",
       }),
+      target_profile_private: t({
+        en: "This profile is private and cannot be used for comparison.",
+        ko: "이 프로필은 비공개로 설정되어 있어 비교할 수 없습니다.",
+      }),
     },
   },
 } satisfies Dictionary;

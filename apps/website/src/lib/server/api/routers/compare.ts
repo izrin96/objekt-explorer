@@ -46,6 +46,7 @@ export const compareRouter = {
             columns: {
               address: true,
               nickname: true,
+              privateProfile: true,
             },
             where: {
               [targetIsAddress ? "address" : "nickname"]: targetProfileId,
@@ -56,6 +57,12 @@ export const compareRouter = {
             throw new ORPCError("NOT_FOUND", {
               message: content.compare.target_profile_not_found.value,
             });
+
+          if (targetProfile.privateProfile) {
+            throw new ORPCError("FORBIDDEN", {
+              message: content.compare.target_profile_private.value,
+            });
+          }
 
           const ownedObjekts = await indexer
             .select({

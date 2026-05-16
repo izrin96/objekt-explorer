@@ -343,9 +343,9 @@ export async function findOwnedList(slug: string, userId: string) {
   return list;
 }
 
-export async function fetchListCollectionsBySlug(listSlug: string) {
+export async function fetchListCollectionsBySlug(listSlug: string, userId?: string) {
   const list = await db.query.lists.findFirst({
-    where: { slug: listSlug },
+    where: { slug: listSlug, ...(userId ? { userId } : {}) },
     with: {
       entries: {
         columns: {

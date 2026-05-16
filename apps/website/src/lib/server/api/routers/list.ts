@@ -434,14 +434,21 @@ export const listRouter = {
         wantListSlug: z.string().optional(),
       }),
     )
-    .handler(async ({ input: { haveListSlug, wantListSlug } }) => {
-      const [haveCollections, wantCollections] = await Promise.all([
-        haveListSlug ? fetchListCollectionsBySlug(haveListSlug) : [],
-        wantListSlug ? fetchListCollectionsBySlug(wantListSlug) : [],
-      ]);
+    .handler(
+      async ({
+        input: { haveListSlug, wantListSlug },
+        context: {
+          session: { user },
+        },
+      }) => {
+        const [haveCollections, wantCollections] = await Promise.all([
+          haveListSlug ? fetchListCollectionsBySlug(haveListSlug, user.id) : [],
+          wantListSlug ? fetchListCollectionsBySlug(wantListSlug, user.id) : [],
+        ]);
 
-      return { have: haveCollections, want: wantCollections };
-    }),
+        return { have: haveCollections, want: wantCollections };
+      },
+    ),
 
   export: pub
     .use(selectedArtistsMiddleware)

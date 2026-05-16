@@ -80,10 +80,8 @@ export const cosmoLinkRouter = {
     .handler(async ({ input, context: { session, locale } }) => {
       // rate limit: 1 active code per user per address (Redis key is scoped)
       const rateLimitKey = `cosmo-verify-rate:${session.user.id}`;
+      await redis.set(rateLimitKey, "0", "EX", "30", "NX");
       const attempts = await redis.incr(rateLimitKey);
-      if (attempts === 1) {
-        await redis.expire(rateLimitKey, 30);
-      }
       if (attempts > 5) {
         const content = getIntlayer("api_errors", locale);
         throw new ORPCError("TOO_MANY_REQUESTS", {
@@ -129,9 +127,6 @@ export const cosmoLinkRouter = {
 
       const data = JSON.parse(raw) as VerificationData;
 
-      // re-check link status
-      await assertAddressNotLinked(data.address, session.user.id, locale);
-
       const { accessToken } = await getAccessToken();
 
       const profile = await fetchUserProfile(accessToken, data.cosmoId, data.artistId);
@@ -149,7 +144,7 @@ export const cosmoLinkRouter = {
         });
       }
 
-      await db
+      const [linked] = await db
         .insert(userAddress)
         .values([
           {
@@ -170,7 +165,15 @@ export const cosmoLinkRouter = {
             userId: session.user.id,
             hideUser: true,
           },
+          where: sql`${userAddress.userId} IS NULL`,
+        })
+        .returning({ linkedUserId: userAddress.userId });
+
+      if (!linked || linked.linkedUserId !== session.user.id) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: content.cosmo_link.already_linked_other.value,
         });
+      }
 
       await redis.del(redisKey);
 
