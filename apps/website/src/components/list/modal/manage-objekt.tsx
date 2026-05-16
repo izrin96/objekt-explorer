@@ -85,6 +85,13 @@ function AddToListForm({
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const content = useIntlayer("list");
 
+  const { handleSubmit, control } = useForm({
+    defaultValues: {
+      slug: "",
+      skipDups: true,
+    },
+  });
+
   if (!session) {
     return <div className="flex justify-center">{content.manage_objekt.sign_in_message.value}</div>;
   }
@@ -96,13 +103,6 @@ function AddToListForm({
       </div>
     );
   }
-
-  const { handleSubmit, control } = useForm({
-    defaultValues: {
-      slug: "",
-      skipDups: true,
-    },
-  });
 
   const availableLists = lists.filter((list) => {
     if (address) {
