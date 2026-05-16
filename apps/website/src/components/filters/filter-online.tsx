@@ -31,7 +31,7 @@ export default function OnlineFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.on_offline?.length}>
-        {content.physical.value}
+        {content.type.value}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {Object.values(validOnlineTypes).map((item) => (

@@ -23,6 +23,10 @@ const content = {
       en: "Edition",
       ko: "에디션",
     }),
+    type: t({
+      en: "Type",
+      ko: "타입",
+    }),
     physical: t({
       en: "Physical",
       ko: "피지컬",
