@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: ["main"]
   workflow_dispatch:
+    branches: ["main"]
     inputs:
       force_build_all:
         description: "Force build all apps regardless of changes"
@@ -149,41 +150,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate Docker metadata
-        id: meta
-        if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
-        run: |
-          # Generate tags based on event type
-          if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # PR tags: pr-123-sha, pr-123-latest
-            echo "tags<<EOF" >> $GITHUB_OUTPUT
-            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:pr-${{ github.event.pull_request.number }}-${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:pr-${{ github.event.pull_request.number }}-latest" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            # Main branch tags: sha, latest, short-sha
-            SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-            echo "tags<<EOF" >> $GITHUB_OUTPUT
-            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:${{ github.sha }}" >> $GITHUB_OUTPUT
-            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:latest" >> $GITHUB_OUTPUT
-            echo "ghcr.io/${{ github.repository }}-${{ matrix.app }}:${SHORT_SHA}" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate build secrets for ${{ matrix.app }}
-        id: gen-secrets
-        run: |
-          if [ "${{ matrix.app }}" == "web" ]; then
-            delimiter=$(uuidgen)
-            echo "secrets<<$delimiter" >> "$GITHUB_OUTPUT"
-            echo "VITE_SITE_URL=${{ secrets.VITE_SITE_URL }}" >> "$GITHUB_OUTPUT"
-            echo "VITE_UMAMI_SCRIPT_URL=${{ secrets.VITE_UMAMI_SCRIPT_URL }}" >> "$GITHUB_OUTPUT"
-            echo "VITE_UMAMI_WEBSITE_ID=${{ secrets.VITE_UMAMI_WEBSITE_ID }}" >> "$GITHUB_OUTPUT"
-            echo "VITE_ACTIVITY_WEBSOCKET_URL=${{ secrets.VITE_ACTIVITY_WEBSOCKET_URL }}" >> "$GITHUB_OUTPUT"
-            echo "VITE_LIVE_API_KEY=${{ secrets.VITE_LIVE_API_KEY }}" >> "$GITHUB_OUTPUT"
-            echo "$delimiter" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Build and push ${{ matrix.app }} docker image
         # Only build if this specific app has changes or force build is enabled
         if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
@@ -196,16 +162,17 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           # Load image locally on PRs for validation
           load: ${{ github.event_name == 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}-${{ matrix.app }}:buildcache
-          cache-to: type=registry,mode=max,ref=ghcr.io/${{ github.repository }}-${{ matrix.app }}:buildcache
-          secrets: ${{ steps.gen-secrets.outputs.secrets }}
-
-      - name: Verify pushed image
-        if: github.event_name != 'pull_request' && (needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true')
-        run: |
-          docker pull ghcr.io/${{ github.repository }}-${{ matrix.app }}:latest
-          echo "Image verified successfully"
+          tags: |
+            ghcr.io/${{ github.repository }}-${{ matrix.app }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}-${{ matrix.app }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          secrets: |
+            VITE_SITE_URL=${{ secrets.VITE_SITE_URL }}
+            VITE_UMAMI_SCRIPT_URL=${{ secrets.VITE_UMAMI_SCRIPT_URL }}
+            VITE_UMAMI_WEBSITE_ID=${{ secrets.VITE_UMAMI_WEBSITE_ID }}
+            VITE_ACTIVITY_WEBSOCKET_URL=${{ secrets.VITE_ACTIVITY_WEBSOCKET_URL }}
+            VITE_LIVE_API_KEY=${{ secrets.VITE_LIVE_API_KEY }}
 
   cleanup:
     runs-on: ubuntu-latest
@@ -220,7 +187,7 @@ jobs:
       matrix:
         app: [web, server, worker, indexer]
     steps:
-      - name: Delete all untagged ${{ matrix.app }} images
+      - name: Delete untagged ${{ matrix.app }} images
         if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
         uses: actions/delete-package-versions@v5
         continue-on-error: true
@@ -228,27 +195,4 @@ jobs:
           package-name: ${{ github.event.repository.name }}-${{ matrix.app }}
           package-type: container
           delete-only-untagged-versions: true
-          min-versions-to-keep: 3
-
-      - name: Cleanup old buildcache tags
-        if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
-        continue-on-error: true
-        shell: bash
-        run: |
-          owner="${{ github.repository_owner }}"
-          pkg="${{ github.event.repository.name }}-${{ matrix.app }}"
-
-          api_base="/users/${owner}"
-          type=$(gh api "${api_base}" --jq '.type' 2>/dev/null || echo "User")
-          if [ "$type" = "Organization" ]; then
-            api_base="/orgs/${owner}"
-          fi
-
-          stale=$(gh api "${api_base}/packages/container/${pkg}/versions" \
-            --jq '[.[] | select(.metadata.container.tags[]? | contains("buildcache")) | {id, created_at}] | sort_by(.created_at) | reverse | .[5:] | .[].id' \
-            2>/dev/null || echo "")
-
-          for id in $stale; do
-            echo "Deleting stale buildcache version $id for $pkg"
-            gh api -X DELETE "${api_base}/packages/container/${pkg}/versions/${id}" 2>/dev/null || true
-          done
+          min-versions-to-keep: 10

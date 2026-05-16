@@ -20,7 +20,7 @@ Objekt Tracker - A web application for exploring digital collectibles (Objekts) 
 
 **Key Technologies**:
 
-- Runtime: Bun 1.3.11
+- Runtime: Bun
 - Frontend: TanStack React Start + Vite, React 19, Tailwind CSS 4
 - API: ORPC (type-safe RPC) with Zod validation
 - Database: PostgreSQL 18 with Drizzle ORM
