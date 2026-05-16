@@ -141,19 +141,27 @@ function ListView({
           session={!!session}
           showSelect
           staticMenu={
-            <ObjektStaticMenu>
-              <SelectMenuItem objekts={item} />
-              {isOwned && <RemoveFromListMenu objekts={item} />}
-              {isOwned && list.currency && <SetPriceMenuItem onAction={() => openSetPrice(item)} />}
-              <AddToListMenu objekts={[objekt]} />
-            </ObjektStaticMenu>
+            session && (
+              <ObjektStaticMenu>
+                <SelectMenuItem objekts={item} />
+                {isOwned && <RemoveFromListMenu objekts={item} />}
+                {isOwned && list.currency && (
+                  <SetPriceMenuItem onAction={() => openSetPrice(item)} />
+                )}
+                <AddToListMenu objekts={[objekt]} />
+              </ObjektStaticMenu>
+            )
           }
           hoverMenu={
-            <>
-              {isOwned && <RemoveFromListMenu objekts={item} />}
-              {isOwned && list.currency && <SetPriceMenuItem onAction={() => openSetPrice(item)} />}
-              <AddToListMenu objekts={[objekt]} />
-            </>
+            session && (
+              <>
+                {isOwned && <RemoveFromListMenu objekts={item} />}
+                {isOwned && list.currency && (
+                  <SetPriceMenuItem onAction={() => openSetPrice(item)} />
+                )}
+                <AddToListMenu objekts={[objekt]} />
+              </>
+            )
           }
           viewProps={{
             hideLabel,

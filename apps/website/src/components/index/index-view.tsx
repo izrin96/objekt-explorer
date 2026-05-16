@@ -64,12 +64,14 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
           objekts={item}
           session={!!session}
           staticMenu={
-            <ObjektStaticMenu>
-              <SelectMenuItem objekts={item} />
-              <AddToListMenu objekts={[objekt]} />
-            </ObjektStaticMenu>
+            session && (
+              <ObjektStaticMenu>
+                <SelectMenuItem objekts={item} />
+                <AddToListMenu objekts={[objekt]} />
+              </ObjektStaticMenu>
+            )
           }
-          hoverMenu={<AddToListMenu objekts={[objekt]} />}
+          hoverMenu={session && <AddToListMenu objekts={[objekt]} />}
           viewProps={{ hideLabel, isPriority: rowIndex < 3 }}
         />
       );

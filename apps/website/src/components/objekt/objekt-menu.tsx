@@ -12,7 +12,6 @@ import {
   TrashSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useQuery } from "@tanstack/react-query";
 import { type PropsWithChildren } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -26,7 +25,7 @@ import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useProfileTarget } from "@/hooks/use-profile-target";
-import { orpc } from "@/lib/orpc/client";
+import { useUserLists } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 
 import { Button } from "../intentui/button";
@@ -47,7 +46,7 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 }
 
 export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; address?: string }) {
-  const { data: lists } = useQuery(orpc.list.list.queryOptions());
+  const { data: lists } = useUserLists();
   const addToList = useAddToList();
   const content = useIntlayer("objekt_menu");
 

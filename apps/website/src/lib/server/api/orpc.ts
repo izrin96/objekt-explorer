@@ -1,5 +1,5 @@
-import { os } from "@orpc/server";
-import { getRequestHeaders, getRequestUrl } from "@tanstack/react-start/server";
+import { ORPCError, os } from "@orpc/server";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { auth, type Session } from "../auth.server";
 import { parseSelectedArtists } from "../cookie.server";
@@ -17,9 +17,7 @@ const requiredAuthMiddleware = os
       }));
 
     if (!session?.user) {
-      const url = getRequestUrl();
-      console.info("[debug]", url.pathname);
-      throw new Error("UNAUTHORIZED");
+      throw new ORPCError("UNAUTHORIZED");
     }
 
     return next({
