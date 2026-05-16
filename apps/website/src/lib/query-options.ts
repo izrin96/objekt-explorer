@@ -42,6 +42,6 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema)
   });
 
 export const sessionOptions = orpc.user.session.queryOptions({
-  staleTime: Infinity,
+  staleTime: 5 * 60 * 1000,
   refetchOnWindowFocus: false,
 });

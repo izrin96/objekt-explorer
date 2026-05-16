@@ -4,7 +4,7 @@ import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
 import { userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { username } from "better-auth/plugins/username";
@@ -160,9 +160,21 @@ export const auth = betterAuth({
 });
 
 export async function getSession() {
-  return auth.api.getSession({
+  const session = await auth.api.getSession({
     headers: getRequestHeaders(),
+    returnHeaders: true,
   });
+
+  if (!session.response) {
+    return null;
+  }
+
+  const cookies = session.headers.getSetCookie();
+  if (cookies.length) {
+    setResponseHeader("Set-Cookie", cookies);
+  }
+
+  return session.response;
 }
 
 async function safeFetchByNickname(identifier: string) {

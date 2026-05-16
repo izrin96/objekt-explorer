@@ -1,5 +1,5 @@
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
-import { Suspense, useState } from "react";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
@@ -33,7 +33,7 @@ import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { orpc } from "@/lib/orpc/client";
+import { useSession, useUserLists } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 
 import ErrorFallbackRender from "../../error-boundary";
@@ -59,15 +59,7 @@ export function AddToListModal({
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <Suspense
-                fallback={
-                  <div className="flex justify-center">
-                    <Loader variant="ring" />
-                  </div>
-                }
-              >
-                <AddToListForm setOpen={setOpen} address={address} />
-              </Suspense>
+              <AddToListForm setOpen={setOpen} address={address} />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -86,11 +78,24 @@ function AddToListForm({
   setOpen: (val: boolean) => void;
   address?: string;
 }) {
+  const { data: session } = useSession();
+  const { data: lists } = useUserLists();
   const [createListOpen, setCreateListOpen] = useState(false);
-  const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const content = useIntlayer("list");
+
+  if (!session) {
+    return <div className="flex justify-center">{content.manage_objekt.sign_in_message.value}</div>;
+  }
+
+  if (!lists) {
+    return (
+      <div className="flex justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
 
   const { handleSubmit, control } = useForm({
     defaultValues: {

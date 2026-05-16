@@ -322,6 +322,10 @@ const content = {
         en: "This will permanently remove the selected objekt from the list. Continue?",
         ko: "목록에서 선택한 오브젝트가 영구적으로 제거됩니다. 계속하시겠습니까?",
       }),
+      sign_in_message: t({
+        en: "Sign in to add objekts to a list",
+        ko: "목록에 오브젝트를 추가하려면 로그인하세요",
+      }),
     },
   },
 } satisfies Dictionary;

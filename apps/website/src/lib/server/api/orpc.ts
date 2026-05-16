@@ -1,5 +1,5 @@
 import { ORPCError, os } from "@orpc/server";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 
 import { auth, type Session } from "../auth.server";
 import { parseSelectedArtists } from "../cookie.server";
@@ -10,18 +10,22 @@ const requiredAuthMiddleware = os
   .middleware(async ({ next, context }) => {
     const headers = context.headers ?? getRequestHeaders();
 
-    const session =
-      context.session ??
-      (await auth.api.getSession({
-        headers,
-      }));
+    const session = await auth.api.getSession({
+      headers,
+      returnHeaders: true,
+    });
 
-    if (!session?.user) {
+    if (!session.response) {
       throw new ORPCError("UNAUTHORIZED");
     }
 
+    const cookies = session.headers.getSetCookie();
+    if (cookies.length) {
+      setResponseHeader("Set-Cookie", cookies);
+    }
+
     return next({
-      context: { session, headers },
+      context: { ...context, session: session.response },
     });
   });
 
