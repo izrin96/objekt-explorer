@@ -1,8 +1,9 @@
-import { refresh } from "@repo/cosmo/server/auth";
+import { refreshV3 } from "@repo/cosmo/server/auth";
 import { type RefreshTokenResult } from "@repo/cosmo/types/auth";
 import { db } from "@repo/db";
 import { accessToken } from "@repo/db/schema";
 
+import { serverEnv } from "../env/server";
 import { validateExpiry } from "./jwt.server";
 
 export async function getAccessToken() {
@@ -15,7 +16,7 @@ export async function getAccessToken() {
 
   if (!validateExpiry(result.accessToken)) {
     if (validateExpiry(result.refreshToken)) {
-      const newTokens = await refresh(result.refreshToken);
+      const newTokens = await refreshV3(result.refreshToken, serverEnv.COSMO_KEY);
       await updateAccessToken(newTokens);
       return newTokens;
     }
