@@ -7,6 +7,7 @@ const config: IntlayerConfig = {
   },
   content: {
     contentDir: ["./src/i18n/content"],
+    watch: false,
   },
 };
 

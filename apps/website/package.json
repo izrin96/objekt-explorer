@@ -6,13 +6,14 @@
   "scripts": {
     "dev": "bun run --bun --env-file=../../.env vite dev",
     "build": "bun run --bun --env-file=../../.env vite build",
+    "build:intlayer": "intlayer build",
     "build:prod": "bun run --bun vite build",
     "preview": "bun run --bun --env-file=../../.env vite preview",
     "start": "bun run --bun server.ts",
     "start:preview": "bun run --bun --env-file=../../.env server.ts",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "tsgo --noEmit",
+    "typecheck": "bun run build:intlayer && tsgo --noEmit",
     "format": "oxfmt .",
     "scan": "bunx react-scan@latest localhost:3000"
   },
