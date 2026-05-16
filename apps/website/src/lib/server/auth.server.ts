@@ -201,6 +201,13 @@ const cachedUserSchema = z.object({
   user: publicUserSchema.nullable(),
 });
 
+async function touchLastCheck(nickname: string) {
+  await db
+    .update(userAddress)
+    .set({ lastCosmoCheck: sql`'now'` })
+    .where(eq(userAddress.nickname, nickname));
+}
+
 function toPublicProfile(data: z.infer<typeof cachedUserSchema>): PublicProfile {
   return {
     address: data.address,
@@ -268,6 +275,8 @@ export async function fetchUserByIdentifier(
           user.address.toLowerCase() !== cachedUser.address.toLowerCase() ||
           user.nickname.toLowerCase() !== cachedUser.nickname.toLowerCase()
         ) {
+          await touchLastCheck(cachedUser.nickname);
+
           await cacheUsers([
             {
               address: user.address,
@@ -300,10 +309,7 @@ export async function fetchUserByIdentifier(
       }
 
       // update last check
-      await db
-        .update(userAddress)
-        .set({ lastCosmoCheck: sql`'now'` })
-        .where(eq(userAddress.nickname, cachedUser.nickname));
+      await touchLastCheck(cachedUser.nickname);
     }
 
     return toPublicProfile(cachedUser);
