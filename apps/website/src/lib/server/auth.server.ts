@@ -264,7 +264,10 @@ export async function fetchUserByIdentifier(
       const user = await safeFetchByNickname(cachedUser.nickname);
 
       if (user) {
-        if (user.address !== cachedUser.address || user.nickname !== cachedUser.nickname) {
+        if (
+          user.address.toLowerCase() !== cachedUser.address.toLowerCase() ||
+          user.nickname.toLowerCase() !== cachedUser.nickname.toLowerCase()
+        ) {
           await cacheUsers([
             {
               address: user.address,
