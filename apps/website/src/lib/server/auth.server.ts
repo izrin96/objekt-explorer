@@ -4,12 +4,14 @@ import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
 import { userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
+import { redirect } from "@tanstack/react-router";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { username } from "better-auth/plugins/username";
 import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
+import * as z from "zod";
 
 import { betterAuthLocale } from "@/i18n/better-auth";
 import { serverEnv } from "@/lib/env/server";
@@ -186,6 +188,32 @@ async function safeFetchByNickname(identifier: string) {
   });
 }
 
+const cachedUserSchema = z.object({
+  address: z.string(),
+  nickname: z.string().nullable(),
+  bannerImgUrl: z.string().nullable(),
+  bannerImgType: z.string().nullable(),
+  privateProfile: z.boolean().nullable(),
+  gridColumns: z.number().nullable(),
+  userId: z.string().nullable(),
+  hideNickname: z.boolean().nullable(),
+  hideUser: z.boolean().nullable(),
+  user: z.custom<PublicUser>().nullable(),
+});
+
+function toPublicProfile(data: z.infer<typeof cachedUserSchema>): PublicProfile {
+  return {
+    address: data.address,
+    nickname: data.hideNickname ? null : data.nickname,
+    bannerImgType: data.bannerImgType,
+    bannerImgUrl: data.bannerImgUrl,
+    privateProfile: data.privateProfile,
+    gridColumns: data.gridColumns,
+    user: data.hideUser ? null : data.user ? mapPublicUser(data.user) : null,
+    ownerId: data.userId,
+  };
+}
+
 export async function fetchUserByIdentifier(
   identifier: string,
 ): Promise<PublicProfile | undefined> {
@@ -236,14 +264,23 @@ export async function fetchUserByIdentifier(
       const user = await safeFetchByNickname(cachedUser.nickname);
 
       if (user) {
-        await cacheUsers([
-          {
-            address: user.address,
-            nickname: user.nickname,
-          },
-        ]);
+        if (user.address !== cachedUser.address || user.nickname !== cachedUser.nickname) {
+          await cacheUsers([
+            {
+              address: user.address,
+              nickname: user.nickname,
+            },
+          ]);
 
-        return await fetchUserByIdentifier(identifier);
+          return await fetchUserByIdentifier(identifier);
+        }
+
+        await db
+          .update(userAddress)
+          .set({ lastCosmoCheck: sql`'now'` })
+          .where(eq(userAddress.nickname, cachedUser.nickname));
+
+        return toPublicProfile(cachedUser);
       }
 
       // nickname not found, unbind
@@ -253,8 +290,10 @@ export async function fetchUserByIdentifier(
           .set({ nickname: null, cosmoId: null, lastCosmoCheck: null })
           .where(eq(userAddress.nickname, cachedUser.nickname));
 
-        // todo: use redirect instead
-        return await fetchUserByIdentifier(cachedUser.address);
+        throw redirect({
+          to: "/@{$nickname}",
+          params: { nickname: cachedUser.address },
+        });
       }
 
       // update last check
@@ -264,16 +303,7 @@ export async function fetchUserByIdentifier(
         .where(eq(userAddress.nickname, cachedUser.nickname));
     }
 
-    return {
-      address: cachedUser.address,
-      nickname: cachedUser.hideNickname ? null : cachedUser.nickname,
-      bannerImgType: cachedUser.bannerImgType,
-      bannerImgUrl: cachedUser.bannerImgUrl,
-      privateProfile: cachedUser.privateProfile,
-      gridColumns: cachedUser.gridColumns,
-      user: cachedUser.hideUser ? null : cachedUser.user ? mapPublicUser(cachedUser.user) : null,
-      ownerId: cachedUser.userId,
-    };
+    return toPublicProfile(cachedUser);
   }
 
   if (identifierIsAddress) {
