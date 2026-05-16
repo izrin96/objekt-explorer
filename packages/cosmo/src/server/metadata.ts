@@ -65,9 +65,10 @@ export function getTrait(metadata: CosmoObjektMetadataV3, tokenId: string, trait
 
   if (trait === "Member" && isUnit) {
     // special case: find combined member (e.g. "id4 X id8")
-    attr = metadata.attributes.findLast(
+    const newAttr = metadata.attributes.findLast(
       (a) => a.trait_type === "Member" && a.value.toLowerCase().includes(" x "),
     );
+    if (newAttr) attr = newAttr;
   }
 
   if (!attr) {
