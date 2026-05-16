@@ -46,7 +46,6 @@ const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
 const CardDescription = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
-      {...props}
       data-slot="card-description"
       className={twMerge("text-muted-fg row-start-2 text-sm/6 text-pretty", className)}
       {...props}

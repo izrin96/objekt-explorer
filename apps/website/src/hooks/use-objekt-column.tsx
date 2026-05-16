@@ -85,7 +85,7 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
     } else if (newOverride === null || newOverride === undefined) {
       toastShown.current = false;
     }
-  }, [hasHydrated, initialColumn, queryColumn]);
+  }, [hasHydrated, initialColumn, columnStore, queryColumn, content]);
 
   useEffect(() => {
     if (!hasHydrated || !breakpointReady) return;

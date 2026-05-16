@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useContext } from "react";
 
 import { orpc } from "@/lib/orpc/client";
 
@@ -39,29 +39,23 @@ export function FilterDataProvider({ children }: Props) {
   const classes = Array.from(new Set(selectedClassMap.flatMap((a) => a.classes)));
   const classMap = new Map(classes.map((cls, index) => [cls, index]));
 
-  const compareSeason = useCallback(
-    (a: string, b: string) => {
-      const posA = seasonMap.get(a) ?? -1;
-      const posB = seasonMap.get(b) ?? -1;
-      if (posA === -1 && posB === -1) return 0;
-      if (posA === -1) return 1;
-      if (posB === -1) return -1;
-      return posA - posB;
-    },
-    [seasonMap],
-  );
+  const compareSeason = (a: string, b: string) => {
+    const posA = seasonMap.get(a) ?? -1;
+    const posB = seasonMap.get(b) ?? -1;
+    if (posA === -1 && posB === -1) return 0;
+    if (posA === -1) return 1;
+    if (posB === -1) return -1;
+    return posA - posB;
+  };
 
-  const compareClass = useCallback(
-    (a: string, b: string) => {
-      const posA = classMap.get(a) ?? -1;
-      const posB = classMap.get(b) ?? -1;
-      if (posA === -1 && posB === -1) return 0;
-      if (posA === -1) return 1;
-      if (posB === -1) return -1;
-      return posA - posB;
-    },
-    [classMap],
-  );
+  const compareClass = (a: string, b: string) => {
+    const posA = classMap.get(a) ?? -1;
+    const posB = classMap.get(b) ?? -1;
+    if (posA === -1 && posB === -1) return 0;
+    if (posA === -1) return 1;
+    if (posB === -1) return -1;
+    return posA - posB;
+  };
 
   const value = {
     collections: data.collections,

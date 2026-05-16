@@ -207,7 +207,6 @@ const Chart = ({
     setSelectedLegend(legendItem);
   }, []);
 
-  const _data = data ?? [];
   const _dataKey = dataKey ?? "value";
 
   const value = useMemo(
@@ -215,11 +214,11 @@ const Chart = ({
       config,
       selectedLegend,
       onLegendSelect,
-      data: _data,
+      data: data ?? [],
       dataKey: _dataKey,
       layout,
     }),
-    [config, selectedLegend, onLegendSelect, _data, _dataKey, layout],
+    [config, selectedLegend, onLegendSelect, data, _dataKey, layout],
   );
 
   return (

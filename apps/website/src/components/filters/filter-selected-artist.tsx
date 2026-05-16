@@ -18,13 +18,16 @@ export default function SelectedArtistFilter() {
   const selected = new Set(selectedArtistIds);
   const setArtists = useMutation(orpc.config.setArtists.mutationOptions());
 
-  const update = useCallback((key: Selection) => {
-    startTransition(async () => {
-      const values = Array.from((key as Set<ValidArtist>).values());
-      await setArtists.mutateAsync(values);
-      void queryClient.invalidateQueries();
-    });
-  }, []);
+  const update = useCallback(
+    (key: Selection) => {
+      startTransition(async () => {
+        const values = Array.from((key as Set<ValidArtist>).values());
+        await setArtists.mutateAsync(values);
+        void queryClient.invalidateQueries();
+      });
+    },
+    [setArtists, queryClient],
+  );
 
   return (
     <Menu>

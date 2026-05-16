@@ -274,7 +274,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
 
   useEffect(() => {
     list.reload();
-  }, [data]);
+  }, [data, list]);
 
   return (
     <>
