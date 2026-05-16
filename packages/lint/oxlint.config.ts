@@ -20,7 +20,12 @@ export default defineConfig({
     "typescript/no-floating-promises": "warn",
     "typescript/no-non-null-assertion": "off",
     "typescript/prefer-ts-expect-error": "warn",
-    "typescript/consistent-type-imports": "warn",
+    "typescript/consistent-type-imports": [
+      "warn",
+      {
+        fixStyle: "inline-type-imports",
+      },
+    ],
     "typescript/no-unsafe-type-assertion": "off",
     "typescript/unbound-method": "off",
     "typescript/restrict-template-expressions": "off",
