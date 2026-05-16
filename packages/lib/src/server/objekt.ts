@@ -2,6 +2,8 @@ import type { Objekt, Transfer } from "@repo/db/indexer/schema";
 
 import type { IndexedObjekt, ValidObjekt } from "../types/objekt";
 
+type CollectionOverride = Partial<Pick<ValidObjekt, "backgroundColor" | "textColor">>;
+
 /**
  * Override color for some collection
  */
@@ -29,7 +31,7 @@ const collectionOverrides = {
 
   // Ever collections
   "ever01-seoyeon-338z": { textColor: "#07328D" },
-} as const satisfies Record<string, Partial<Pick<ValidObjekt, "backgroundColor" | "textColor">>>;
+} as const satisfies Record<string, CollectionOverride>;
 
 /**
  * Get custom band image

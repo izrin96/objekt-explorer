@@ -1,5 +1,6 @@
-import type { OwnedObjektsResult } from "@repo/lib/types/objekt";
 import { ofetch } from "ofetch";
+
+import type { OwnedObjektsResult } from "@/lib/types/objekt";
 
 import type { OwnedBySchema } from "./universal/owned-by";
 

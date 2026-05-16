@@ -10,7 +10,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
 import { Addresses } from "@repo/lib";
-import type { ObjektTransferResult, ValidObjekt } from "@repo/lib/types/objekt";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
@@ -20,6 +20,8 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
+
+import type { ObjektTransferResult } from "@/lib/types/objekt";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Badge } from "../intentui/badge";

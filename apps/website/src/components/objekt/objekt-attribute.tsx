@@ -1,10 +1,11 @@
-import type { CollectionMetadata, ValidObjekt } from "@repo/lib/types/objekt";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
 import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import type { CollectionMetadata } from "@/lib/types/objekt";
 import { getEditionStr } from "@/lib/utils";
 
 import { Badge } from "../intentui/badge";
