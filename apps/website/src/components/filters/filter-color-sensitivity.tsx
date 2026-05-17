@@ -1,8 +1,8 @@
 import { type CSSProperties, useState } from "react";
-import { useIntlayer } from "react-intlayer";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Label } from "../intentui/field";
@@ -10,12 +10,11 @@ import { Popover, PopoverBody, PopoverContent } from "../intentui/popover";
 import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "../intentui/slider";
 
 export default function ColorSensitivityFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   return (
     <Popover>
-      <Button intent="outline">{content.color_sensitivity.value}</Button>
+      <Button intent="outline">{m.filter_color_sensitivity()}</Button>
       <PopoverContent>
         <PopoverBody className="py-2 [--gutter:--spacing(4)]">
           <ColorSensitivitySlider
@@ -36,7 +35,6 @@ interface ColorSensitivitySliderProps {
 }
 
 function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitivitySliderProps) {
-  const content = useIntlayer("filter");
   const [value, setValue] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 100);
 
@@ -55,7 +53,7 @@ function ColorSensitivitySlider({ initialValue, color, onCommit }: ColorSensitiv
       style={{ "--primary": color ?? undefined } as CSSProperties}
     >
       <div className="flex min-w-56 items-center justify-between">
-        <Label>{content.color_sensitivity.value}</Label>
+        <Label>{m.filter_color_sensitivity()}</Label>
         <SliderOutput />
       </div>
       <SliderTrack>

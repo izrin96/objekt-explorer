@@ -7,11 +7,11 @@ import {
   useRef,
   useState,
 } from "react";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET, validColumns } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { useBreakpointColumnStore } from "./use-breakpoint-column";
 
@@ -26,7 +26,6 @@ type ProviderProps = PropsWithChildren<{
 }>;
 
 export function ObjektColumnProvider({ children, initialColumn = null }: ProviderProps) {
-  const content = useIntlayer("column_override");
   const isTablet = useMediaQuery("(min-width: 640px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [queryColumn] = useColumnFilter();
@@ -66,17 +65,17 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
       !toastShown.current
     ) {
       toastShown.current = true;
-      toast(content.title.value, {
-        description: content.description({ count: String(newOverride) }).value,
+      toast(m.column_override_title(), {
+        description: m.column_override_description({ count: String(newOverride) }),
         action: {
-          label: content.revert.value,
+          label: m.column_override_revert(),
           onClick: () => setOverrideColumn(null),
         },
         classNames: {
           cancelButton: "!bg-muted",
         },
         cancel: {
-          label: content.dismiss.value,
+          label: m.column_override_dismiss(),
           onClick: () => {},
         },
         duration: 5000,

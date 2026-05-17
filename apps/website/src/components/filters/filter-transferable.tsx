@@ -1,11 +1,9 @@
-import { useIntlayer } from "react-intlayer";
-
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Toggle } from "../intentui/toggle";
 
 export default function TransferableFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
@@ -17,7 +15,7 @@ export default function TransferableFilter() {
         })
       }
     >
-      {content.transferable.value}
+      {m.filter_transferable()}
     </Toggle>
   );
 }

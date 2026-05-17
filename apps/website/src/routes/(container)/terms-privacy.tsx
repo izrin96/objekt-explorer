@@ -1,40 +1,38 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getIntlayer, useIntlayer } from "react-intlayer";
 
 import { ExternalLink } from "@/components/intentui/link";
 import { generateMetadata } from "@/lib/meta";
 import { SITE_NAME } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/terms-privacy")({
   head: () => {
-    const content = getIntlayer("terms_privacy");
-    return generateMetadata({ title: content.title.value });
+    return generateMetadata({ title: m.terms_privacy_title() });
   },
   component: TermsPrivacyPage,
 });
 
 function TermsPrivacyPage() {
-  const content = useIntlayer("terms_privacy");
   return (
     <div className="flex flex-col items-center gap-6 py-8">
-      <h2 className="text-lg font-semibold">{content.heading.value}</h2>
+      <h2 className="text-lg font-semibold">{m.terms_privacy_heading()}</h2>
 
       <div className="text-fg text-sm">
         <ul className="list-disc leading-8">
-          <li>{content.points.login_info.value}</li>
-          <li>{content.points.no_post.value}</li>
-          <li>{content.points.no_sell.value}</li>
-          <li>{content.points.only_app.value}</li>
-          <li>{content.points.delete_anytime.value}</li>
+          <li>{m.terms_privacy_points_login_info()}</li>
+          <li>{m.terms_privacy_points_no_post()}</li>
+          <li>{m.terms_privacy_points_no_sell()}</li>
+          <li>{m.terms_privacy_points_only_app()}</li>
+          <li>{m.terms_privacy_points_delete_anytime()}</li>
           <li>
-            {content.points.open_source_prefix({ siteName: SITE_NAME }).value}{" "}
+            {m.terms_privacy_points_open_source_prefix({ siteName: SITE_NAME })}{" "}
             <ExternalLink
               href="https://github.com/izrin96/objekt-explorer"
               className="underline"
               target="_blank"
               rel="noreferrer"
             >
-              {content.points.available_here.value}
+              {m.terms_privacy_points_available_here()}
             </ExternalLink>
             .
           </li>

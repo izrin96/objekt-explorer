@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { useObjektSelect } from "../use-objekt-select";
 
 export function useRemoveFromList() {
-  const content = useIntlayer("actions");
   const reset = useObjektSelect((a) => a.reset);
 
   const removeObjektsFromList = useMutation(
@@ -28,9 +27,8 @@ export function useRemoveFromList() {
       onSuccess: (_, { ids }) => {
         const message =
           ids.length > 1
-            ? content.remove_from_list.success_multiple({ count: ids.length.toLocaleString() })
-                .value
-            : content.remove_from_list.success_single.value;
+            ? m.actions_remove_from_list_success_multiple({ count: ids.length.toLocaleString() })
+            : m.actions_remove_from_list_success_single();
         toast.success(message);
         reset();
       },
@@ -43,7 +41,7 @@ export function useRemoveFromList() {
           await client.invalidateQueries({ queryKey });
         }
 
-        toast.error(content.remove_from_list.error.value);
+        toast.error(m.actions_remove_from_list_error());
       },
     }),
   );

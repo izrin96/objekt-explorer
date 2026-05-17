@@ -1,12 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 export function useMovePin() {
-  const content = useIntlayer("actions");
-
   const movePin = useMutation(
     orpc.pins.movePin.mutationOptions({
       onMutate: async ({ tokenId, direction, address }, { client }) => {
@@ -36,7 +34,7 @@ export function useMovePin() {
         return { snapshot };
       },
       onSuccess: () => {
-        toast.success(content.move_pin.success.value);
+        toast.success(m.actions_move_pin_success());
       },
       onError: async (_err, { address }, context, { client }) => {
         const queryKey = orpc.pins.list.queryKey({ input: address });
@@ -47,7 +45,7 @@ export function useMovePin() {
           await client.invalidateQueries({ queryKey });
         }
 
-        toast.error(content.move_pin.error.value);
+        toast.error(m.actions_move_pin_error());
       },
     }),
   );

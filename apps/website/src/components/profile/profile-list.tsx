@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { orpc } from "@/lib/orpc/client";
 import { getListLinkOption } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
@@ -24,7 +24,6 @@ export default function ProfileLists() {
 }
 
 function ProfileList() {
-  const content = useIntlayer("list");
   const profile = useProfileTarget()!;
   const { data } = useSuspenseQuery(
     orpc.list.profileLists.queryOptions({
@@ -36,9 +35,9 @@ function ProfileList() {
     <div className="flex flex-col gap-6">
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-          <span className="text-muted-fg text-sm">{content.no_lists_found.value}</span>
+          <span className="text-muted-fg text-sm">{m.list_no_lists_found()}</span>
           {profile.isOwned && (
-            <span className="text-muted-fg text-sm">{content.no_lists_hint.value}</span>
+            <span className="text-muted-fg text-sm">{m.list_no_lists_hint()}</span>
           )}
         </div>
       ) : (

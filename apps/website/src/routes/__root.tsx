@@ -1,4 +1,4 @@
-import { useSuspenseQuery, type QueryClient } from "@tanstack/react-query";
+import { type QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import * as React from "react";
 
@@ -11,6 +11,7 @@ import { clientEnv } from "@/lib/env/client";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
 import { sessionOptions } from "@/lib/query-options";
+import { getLocale } from "@/paraglide/runtime";
 
 import appCss from "@/styles/app.css?url";
 
@@ -20,7 +21,6 @@ export interface RouterContext {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {
-    void queryClient.prefetchQuery(orpc.config.getLocale.queryOptions());
     void queryClient.prefetchQuery(orpc.config.getArtists.queryOptions());
     void queryClient.prefetchQuery(orpc.config.getFilterData.queryOptions());
     void queryClient.prefetchQuery(orpc.config.getSelectedArtists.queryOptions());
@@ -62,8 +62,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         ],
         apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
       },
-      // todo: add webmanifest?
-      // manifest: "/site.webmanifest",
     });
 
     return {
@@ -94,9 +92,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootComponent() {
-  const { data: locale } = useSuspenseQuery(orpc.config.getLocale.queryOptions());
   return (
-    <ClientProviders locale={locale}>
+    <ClientProviders>
       <CosmoArtistProvider>
         <FilterDataProvider>
           <div className="relative flex min-h-svh flex-col">
@@ -114,7 +111,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" dir="ltr" suppressHydrationWarning className="overflow-y-scroll">
+    <html lang={getLocale()} dir="ltr" suppressHydrationWarning className="overflow-y-scroll">
       <head>
         <HeadContent />
       </head>

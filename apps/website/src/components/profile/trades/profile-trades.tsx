@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { ofetch } from "ofetch";
 import { memo, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 
 import ErrorFallbackRender from "@/components/error-boundary";
 import { InfiniteQueryNext } from "@/components/infinite-query-pending";
@@ -20,6 +19,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import type { AggregatedTransfer, TransferResult } from "@/lib/universal/transfers";
+import { m } from "@/paraglide/messages";
 
 import { useTypeFilter } from "./filter-type";
 import TradesFilter from "./trades-filter";
@@ -41,7 +41,6 @@ export default function ProfileTradesRender() {
 }
 
 function ProfileTrades() {
-  const content = useIntlayer("trades");
   const { getSelectedArtistIds, selectedArtistIds } = useCosmoArtist();
   const profile = useProfileTarget()!;
   const [filters] = useFilters();
@@ -86,7 +85,7 @@ function ProfileTrades() {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <span>{content.history_private.value}</span>
+        <span>{m.trades_history_private()}</span>
       </div>
     );
   }
@@ -113,7 +112,6 @@ function ProfileTradesVirtualizer({
   rows: AggregatedTransfer[];
   address: string;
 }) {
-  const content = useIntlayer("trades");
   const parentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
@@ -125,13 +123,13 @@ function ProfileTradesVirtualizer({
   return (
     <div className="relative w-full overflow-auto text-sm" ref={parentRef}>
       <div className="flex min-w-fit border-b">
-        <div className="min-w-[210px] flex-1 px-3 py-2.5">{content.table_headers.date.value}</div>
-        <div className="min-w-[240px] flex-1 px-3 py-2.5">{content.table_headers.objekt.value}</div>
+        <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.trades_table_headers_date()}</div>
+        <div className="min-w-[240px] flex-1 px-3 py-2.5">{m.trades_table_headers_objekt()}</div>
         <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">
-          {content.table_headers.serial.value}
+          {m.trades_table_headers_serial()}
         </div>
-        <div className="min-w-[130px] flex-1 px-3 py-2.5">{content.table_headers.action.value}</div>
-        <div className="min-w-[200px] flex-1 px-3 py-2.5">{content.table_headers.user.value}</div>
+        <div className="min-w-[130px] flex-1 px-3 py-2.5">{m.trades_table_headers_action()}</div>
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">{m.trades_table_headers_user()}</div>
       </div>
 
       <div
@@ -176,18 +174,17 @@ const RowsRender = memo(function RowsRender({
 });
 
 function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }) {
-  const content = useIntlayer("trades");
   const ctx = useObjektModal();
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   const user = isReceiver ? (
     row.transfer.from === Addresses.NULL ? (
-      <span className="text-muted-fg font-mono">{content.cosmo.value}</span>
+      <span className="text-muted-fg font-mono">{m.trades_cosmo()}</span>
     ) : (
       <UserLink address={row.transfer.from} nickname={row.nickname.from} />
     )
   ) : row.transfer.to === Addresses.SPIN ? (
-    <span className="text-muted-fg font-mono">{content.cosmo_spin.value}</span>
+    <span className="text-muted-fg font-mono">{m.trades_cosmo_spin()}</span>
   ) : (
     <UserLink address={row.transfer.to} nickname={row.nickname.to} />
   );
@@ -207,7 +204,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{row.objekt.serial}</div>
       <div className="min-w-[130px] flex-1 px-3 py-2.5">
         <Badge className="text-xs" intent={isReceiver ? "info" : "danger"}>
-          {isReceiver ? content.actions.received_from.value : content.actions.sent_to.value}
+          {isReceiver ? m.trades_actions_received_from() : m.trades_actions_sent_to()}
         </Badge>
       </div>
       <div className="min-w-[200px] flex-1 px-3 py-2.5">{user}</div>

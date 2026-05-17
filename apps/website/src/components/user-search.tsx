@@ -4,10 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { ofetch } from "ofetch";
 import { useState } from "react";
-import { useIntlayer } from "react-intlayer";
 import { useDebounceValue } from "usehooks-ts";
 
 import { useUserSearchStore } from "@/hooks/use-user-search-store";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "./intentui/button";
 import {
@@ -19,7 +19,6 @@ import {
 } from "./intentui/command-menu";
 
 export default function UserSearch() {
-  const content = useIntlayer("nav");
   const recentUsers = useUserSearchStore((a) => a.users);
   const addRecent = useUserSearchStore((a) => a.add);
   const clearAll = useUserSearchStore((a) => a.clearAll);
@@ -54,7 +53,7 @@ export default function UserSearch() {
     <>
       <Button onPress={() => setIsOpen(true)} size="sm" intent="primary">
         <MagnifyingGlassIcon data-slot="icon" />
-        <span className="hidden sm:block">{content.search_user.label.value}</span>
+        <span className="hidden sm:block">{m.nav_search_user_label()}</span>
       </Button>
       <CommandMenu
         shortcut="k"
@@ -63,9 +62,9 @@ export default function UserSearch() {
         isOpen={isOpen}
         onOpenChange={setIsOpen}
       >
-        <CommandMenuSearch placeholder={content.search_user.placeholder.value} />
+        <CommandMenuSearch placeholder={m.nav_search_user_placeholder()} />
         <CommandMenuList autoFocus="first" shouldFocusWrap>
-          <CommandMenuSection label={content.search_user.result_label.value}>
+          <CommandMenuSection label={m.nav_search_user_result_label()}>
             {data?.map((user) => (
               <CommandMenuItem
                 onAction={() => handleAction(user)}
@@ -77,7 +76,7 @@ export default function UserSearch() {
               </CommandMenuItem>
             ))}
           </CommandMenuSection>
-          <CommandMenuSection label={content.search_user.recent_label.value}>
+          <CommandMenuSection label={m.nav_search_user_recent_label()}>
             {[
               ...recentUsers.map((user) => (
                 <CommandMenuItem
@@ -93,11 +92,11 @@ export default function UserSearch() {
                 ? [
                     <CommandMenuItem
                       key="clear"
-                      textValue={content.search_user.clear_history.value}
+                      textValue={m.nav_search_user_clear_history()}
                       onAction={() => clearAll()}
                       intent="danger"
                     >
-                      {content.search_user.clear_history.value}
+                      {m.nav_search_user_clear_history()}
                     </CommandMenuItem>,
                   ]
                 : []),

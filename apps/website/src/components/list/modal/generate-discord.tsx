@@ -4,7 +4,6 @@ import { Suspense, useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { CopyButton } from "@/components/copy-button";
@@ -35,6 +34,7 @@ import { useFilterData } from "@/hooks/use-filter-data";
 import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 type Props = {
   open: boolean;
@@ -42,11 +42,10 @@ type Props = {
 };
 
 export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
-  const content = useIntlayer("generate_discord");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.title.value}</ModalTitle>
+        <ModalTitle>{m.generate_discord_title()}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <QueryErrorResetBoundary>
@@ -75,7 +74,6 @@ function Content() {
   const [formatText, setFormatText] = useState("");
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
-  const content = useIntlayer("generate_discord");
   const router = useRouter();
 
   const { handleSubmit, control, reset, setValue, watch } = useForm({
@@ -97,7 +95,7 @@ function Content() {
   const generateDiscordFormat = useMutation(
     orpc.list.generateDiscordFormat.mutationOptions({
       onError: () => {
-        toast.error(content.error.value);
+        toast.error(m.generate_discord_error());
       },
     }),
   );
@@ -112,7 +110,7 @@ function Content() {
     const wantListSlug = formData.wantList || undefined;
 
     if (!haveListSlug && !wantListSlug) {
-      toast.error(content.select_at_least_one.value);
+      toast.error(m.generate_discord_select_at_least_one());
       return;
     }
 
@@ -184,7 +182,7 @@ function Content() {
         name="haveList"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder={content.list_placeholder.value}
+            placeholder={m.generate_discord_list_placeholder()}
             name={name}
             value={value}
             onChange={onChange}
@@ -192,7 +190,7 @@ function Content() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <Label>{content.have_list_label.value}</Label>
+            <Label>{m.generate_discord_have_list_label()}</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -217,7 +215,7 @@ function Content() {
         name="wantList"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid, error } }) => (
           <Select
-            placeholder={content.list_placeholder.value}
+            placeholder={m.generate_discord_list_placeholder()}
             name={name}
             value={value}
             onChange={onChange}
@@ -225,7 +223,7 @@ function Content() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <Label>{content.want_list_label.value}</Label>
+            <Label>{m.generate_discord_want_list_label()}</Label>
             <SelectTrigger />
             <SelectContent>
               {data.map((item) => (
@@ -256,7 +254,7 @@ function Content() {
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <Label>{content.show_count.value}</Label>
+            <Label>{m.generate_discord_show_count()}</Label>
           </Checkbox>
         )}
       />
@@ -271,7 +269,7 @@ function Content() {
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <Label>{content.include_link.value}</Label>
+            <Label>{m.generate_discord_include_link()}</Label>
           </Checkbox>
         )}
       />
@@ -286,7 +284,7 @@ function Content() {
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <Label>{content.lower_case.value}</Label>
+            <Label>{m.generate_discord_lower_case()}</Label>
           </Checkbox>
         )}
       />
@@ -302,7 +300,7 @@ function Content() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <Label>{content.bulleted_list.value}</Label>
+            <Label>{m.generate_discord_bulleted_list()}</Label>
           </Checkbox>
         )}
       />
@@ -318,7 +316,7 @@ function Content() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <Label>{content.show_member_emoji.value}</Label>
+            <Label>{m.generate_discord_show_member_emoji()}</Label>
           </Checkbox>
         )}
       />
@@ -336,20 +334,20 @@ function Content() {
               }
             }}
             onBlur={onBlur}
-            placeholder={content.group_by_placeholder.value}
+            placeholder={m.generate_discord_group_by_placeholder()}
             validationBehavior="aria"
           >
-            <Label>{content.group_by_label.value}</Label>
+            <Label>{m.generate_discord_group_by_label()}</Label>
             <SelectTrigger />
             <SelectContent>
               <SelectItem id="none" textValue="none">
-                {content.group_by_none.value}
+                {m.generate_discord_group_by_none()}
               </SelectItem>
               <SelectItem id="season" textValue="season">
-                {content.group_by_season.value}
+                {m.generate_discord_group_by_season()}
               </SelectItem>
               <SelectItem id="season-first" textValue="season-first">
-                {content.group_by_season_first.value}
+                {m.generate_discord_group_by_season_first()}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -364,25 +362,25 @@ function Content() {
             value={value}
             onChange={onChange}
             onBlur={onBlur}
-            placeholder={content.style_placeholder.value}
+            placeholder={m.generate_discord_style_placeholder()}
             validationBehavior="aria"
             isDisabled={groupByValue === "none"}
           >
-            <Label>{content.style_label.value}</Label>
+            <Label>{m.generate_discord_style_label()}</Label>
             <SelectTrigger />
             <SelectContent>
               <SelectItem id="default" textValue="default">
-                {content.style_default.value}
+                {m.generate_discord_style_default()}
               </SelectItem>
               <SelectItem id="compact" textValue="compact">
-                {content.style_compact.value}
+                {m.generate_discord_style_compact()}
               </SelectItem>
             </SelectContent>
           </Select>
         )}
       />
       <TextField>
-        <Label>{content.formatted_text_label.value}</Label>
+        <Label>{m.generate_discord_formatted_text_label()}</Label>
         <Textarea
           value={formatText}
           onChange={(e) => setFormatText(e.target.value)}
@@ -396,10 +394,10 @@ function Content() {
       <Portal to="#submit-form-discord">
         <div className="flex gap-2">
           <Button intent="outline" onPress={handleReset}>
-            {content.reset_button.value}
+            {m.generate_discord_reset_button()}
           </Button>
           <Button isPending={generateDiscordFormat.isPending} onPress={() => onSubmit()}>
-            {content.generate_button.value}
+            {m.generate_discord_generate_button()}
           </Button>
         </div>
       </Portal>

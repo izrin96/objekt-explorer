@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
 import { Note } from "@/components/intentui/note";
 import LiveSessionListRender from "@/components/live/session-list";
 import { checkAccess } from "@/lib/functions/live";
 import { generateMetadata } from "@/lib/meta";
+import { m } from "@/paraglide/messages";
 
 const liveSearchSchema = z.object({
   token: z.string().optional(),
@@ -19,8 +19,7 @@ export const Route = createFileRoute("/(container)/live/")({
     return { isAllowed };
   },
   head: () => {
-    const content = getIntlayer("page_titles");
-    return generateMetadata({ title: content.live.value });
+    return generateMetadata({ title: m.page_titles_live() });
   },
   component: LivePage,
 });

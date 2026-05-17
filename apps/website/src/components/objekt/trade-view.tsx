@@ -17,11 +17,11 @@ import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components/NumberField";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import type { ObjektTransferResult } from "@/lib/types/objekt";
+import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Badge } from "../intentui/badge";
@@ -174,7 +174,6 @@ function Trades({
 }
 
 function TradeTable({ slug, serial }: { slug: string; serial: number }) {
-  const content = useIntlayer("objekt");
   const { data, status, refetch } = useQuery({
     queryFn: () => {
       return ofetch<ObjektTransferResult>(`/api/objekts/transfers/${slug}/${serial}`);
@@ -189,17 +188,17 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold">{content.owner.value}</span>
+            <span className="text-sm font-semibold">{m.objekt_owner()}</span>
             <Skeleton className="h-[24px] w-24" soft />
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold">{content.token_id.value}</span>
+            <span className="text-sm font-semibold">{m.objekt_token_id()}</span>
             <div className="flex items-center gap-2">
               <Skeleton className="h-[24px] w-30" soft />
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm font-semibold">{content.transferable.value}</span>
+            <span className="text-sm font-semibold">{m.objekt_transferable()}</span>
             <Skeleton className="h-[20px] w-8" soft />
           </div>
         </div>
@@ -213,7 +212,7 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <LockIcon size={64} weight="light" />
-        <span>{content.objekt_private.value}</span>
+        <span>{m.objekt_objekt_private()}</span>
       </div>
     );
   }
@@ -222,7 +221,7 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-3">
         <QuestionMarkIcon size={64} weight="light" />
-        <span>{content.not_found_objekt.value}</span>
+        <span>{m.objekt_not_found_objekt()}</span>
       </div>
     );
   }
@@ -231,7 +230,6 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
 }
 
 function TradeTableContent({ data }: { data: ObjektTransferResult }) {
-  const content = useIntlayer("objekt");
   const [, copy] = useCopyToClipboard();
 
   const list = useAsyncList({
@@ -269,7 +267,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
 
   const handleCopy = async (tokenId: string | undefined) => {
     await copy(tokenId ?? "");
-    toast.success(content.token_id_copied.value);
+    toast.success(m.objekt_token_id_copied());
   };
 
   useEffect(() => {
@@ -280,11 +278,11 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
     <>
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{content.owner.value}</span>
+          <span className="text-sm font-semibold">{m.objekt_owner()}</span>
           <UserLink address={data.owner} nickname={ownerNickname} />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{content.token_id.value}</span>
+          <span className="text-sm font-semibold">{m.objekt_token_id()}</span>
           <div className="flex items-center gap-2">
             <ExternalLink
               href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${data.tokenId}`}
@@ -303,9 +301,9 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold">{content.transferable.value}</span>
+          <span className="text-sm font-semibold">{m.objekt_transferable()}</span>
           <Badge intent={data.transferable ? "info" : "danger"}>
-            {data.transferable ? content.yes.value : content.no.value}
+            {data.transferable ? m.objekt_yes() : m.objekt_no()}
           </Badge>
         </div>
       </div>
@@ -320,9 +318,9 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
             onSortChange={(desc) => list.sort(desc)}
           >
             <TableHeader>
-              <TableColumn isRowHeader>{content.owner.value}</TableColumn>
+              <TableColumn isRowHeader>{m.objekt_owner()}</TableColumn>
               <TableColumn id="timestamp" allowsSorting minWidth={200}>
-                {content.date.value}
+                {m.objekt_date()}
               </TableColumn>
             </TableHeader>
             <TableBody renderEmptyState={() => null}>

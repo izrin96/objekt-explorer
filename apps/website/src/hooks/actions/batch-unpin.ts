@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { useObjektSelect } from "../use-objekt-select";
 
 export function useBatchUnpin() {
-  const content = useIntlayer("actions");
   const reset = useObjektSelect((a) => a.reset);
 
   const batchUnpin = useMutation(
@@ -28,8 +27,8 @@ export function useBatchUnpin() {
       onSuccess: (_, { tokenIds }) => {
         const message =
           tokenIds.length > 1
-            ? content.unpin.success_multiple({ count: tokenIds.length.toLocaleString() }).value
-            : content.unpin.success_single.value;
+            ? m.actions_unpin_success_multiple({ count: tokenIds.length.toLocaleString() })
+            : m.actions_unpin_success_single();
         toast.success(message);
         reset();
       },
@@ -44,8 +43,8 @@ export function useBatchUnpin() {
 
         const message =
           tokenIds.length > 1
-            ? content.unpin.error_multiple({ count: tokenIds.length.toLocaleString() }).value
-            : content.unpin.error_single.value;
+            ? m.actions_unpin_error_multiple({ count: tokenIds.length.toLocaleString() })
+            : m.actions_unpin_error_single();
         toast.error(message);
       },
     }),

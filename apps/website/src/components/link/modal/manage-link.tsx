@@ -1,3 +1,4 @@
+import { ParaglideMessage } from "@inlang/paraglide-js-react";
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -6,13 +7,12 @@ import { Cropper } from "react-advanced-cropper";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import ErrorFallbackRender from "@/components/error-boundary";
+import { Button } from "@/components/intentui/button";
 
 import "react-advanced-cropper/dist/style.css";
-import { Button } from "@/components/intentui/button";
 import { Checkbox } from "@/components/intentui/checkbox";
 import { Description, Label } from "@/components/intentui/field";
 import { FileTrigger } from "@/components/intentui/file-trigger";
@@ -39,6 +39,7 @@ import {
 import Portal from "@/components/portal";
 import { orpc } from "@/lib/orpc/client";
 import { acceptedFileMimeTypes, SITE_NAME, validColumns } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -49,38 +50,35 @@ type RemoveLinkModalProps = {
 };
 
 export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps) {
-  const content = useIntlayer("link");
-  const contentCommon = useIntlayer("common");
-
   const removeLink = useMutation(
     orpc.cosmoLink.removeLink.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(content.unlink.success.value);
+        toast.success(m.link_unlink_success());
         void client.invalidateQueries({
           queryKey: orpc.profile.list.key(),
         });
       },
       onError: () => {
-        toast.error(content.unlink.error.value);
+        toast.error(m.link_unlink_error());
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.unlink.title.value}</ModalTitle>
-        <ModalDescription>{content.unlink.description.value}</ModalDescription>
+        <ModalTitle>{m.link_unlink_title()}</ModalTitle>
+        <ModalDescription>{m.link_unlink_description()}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
         <Button
           intent="danger"
           type="submit"
           isPending={removeLink.isPending}
           onPress={() => removeLink.mutate(address)}
         >
-          {content.unlink.submit}
+          {m.link_unlink_submit()}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -102,17 +100,18 @@ export function EditProfileModal({
   setOpen,
   onSave,
 }: EditProfileModalProps) {
-  const content = useIntlayer("profile");
-  const contentCommon = useIntlayer("common");
-
   return (
     <SheetContent className="sm:max-w-md" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>{content.edit.title.value}</SheetTitle>
+        <SheetTitle>{m.profile_edit_title()}</SheetTitle>
         <SheetDescription>
-          {content.edit.desc.use({
-            nickname: () => <span className="text-fg">{nickname}</span>,
-          })}
+          <ParaglideMessage
+            message={m.profile_edit_desc}
+            inputs={{}}
+            markup={{
+              nickname: () => <span className="text-fg">{nickname}</span>,
+            }}
+          />
         </SheetDescription>
       </SheetHeader>
       <SheetBody>
@@ -133,7 +132,7 @@ export function EditProfileModal({
         </QueryErrorResetBoundary>
       </SheetBody>
       <SheetFooter id="submit-form-edit-profile">
-        <SheetClose>{contentCommon.modal.cancel.value}</SheetClose>
+        <SheetClose>{m.common_modal_cancel()}</SheetClose>
       </SheetFooter>
     </SheetContent>
   );
@@ -153,8 +152,6 @@ type BannerImageProps = {
 
 function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const content = useIntlayer("profile");
-
   useEffect(() => {
     if (droppedImage) {
       const url = URL.createObjectURL(droppedImage);
@@ -190,10 +187,10 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
       )}
       <div className="flex items-center justify-between">
         <span className="text-muted-fg truncate text-sm">
-          {content.edit.banner_selected({ name: droppedImage.name }).value}
+          {m.profile_edit_banner_selected({ name: droppedImage.name })}
         </span>
         <Button size="xs" intent="outline" onPress={onClear}>
-          {content.edit.banner_clear.value}
+          {m.profile_edit_banner_clear()}
         </Button>
       </div>
     </>
@@ -203,8 +200,6 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
 function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
-  const content = useIntlayer("profile");
-
   const { data } = useSuspenseQuery(
     orpc.profile.find.queryOptions({
       input: address,
@@ -236,11 +231,11 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
       onSuccess: () => {
         setOpen(false);
         setDroppedImage(null);
-        toast.success(content.edit.success.value);
+        toast.success(m.profile_edit_success());
         onSave?.();
       },
       onError: () => {
-        toast.error(content.edit.error.value);
+        toast.error(m.profile_edit_error());
       },
     }),
   );
@@ -248,7 +243,7 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
   const getPresignedPost = useMutation(
     orpc.profile.getPresignedPost.mutationOptions({
       onError: () => {
-        toast.error(content.edit.upload_error.value);
+        toast.error(m.profile_edit_upload_error());
       },
       retry: 2,
     }),
@@ -269,10 +264,10 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
       });
 
       if (!response.ok) {
-        throw new Error(content.edit.upload_error.value);
+        throw new Error(m.profile_edit_upload_error());
       }
     } catch {
-      throw new Error(content.edit.upload_error.value);
+      throw new Error(m.profile_edit_upload_error());
     }
   };
 
@@ -282,7 +277,7 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
     if (!item) return;
 
     if (item.size > MAX_FILE_SIZE) {
-      toast.error(content.edit.file_too_large({ name: item.name }).value);
+      toast.error(m.profile_edit_file_too_large({ name: item.name }));
       return;
     }
 
@@ -321,7 +316,7 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
       try {
         await handleUpload(url, fields, croppedFile ?? droppedImage);
       } catch {
-        toast.error(content.edit.upload_error.value);
+        toast.error(m.profile_edit_upload_error());
         return;
       }
 
@@ -367,10 +362,8 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.hide_user_label.value}</Label>
-              <Description>
-                {content.edit.hide_user_desc({ siteName: SITE_NAME }).value}
-              </Description>
+              <Label>{m.profile_edit_hide_user_label()}</Label>
+              <Description>{m.profile_edit_hide_user_desc({ siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}
         />
@@ -385,8 +378,8 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.hide_nickname_label.value}</Label>
-              <Description>{content.edit.hide_nickname_desc.value}</Description>
+              <Label>{m.profile_edit_hide_nickname_label()}</Label>
+              <Description>{m.profile_edit_hide_nickname_desc()}</Description>
             </Checkbox>
           )}
         />
@@ -401,8 +394,8 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.private_serial_label.value}</Label>
-              <Description>{content.edit.private_serial_desc.value}</Description>
+              <Label>{m.profile_edit_private_serial_label()}</Label>
+              <Description>{m.profile_edit_private_serial_desc()}</Description>
             </Checkbox>
           )}
         />
@@ -417,8 +410,8 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.hide_transfer_label.value}</Label>
-              <Description>{content.edit.hide_transfer_desc.value}</Description>
+              <Label>{m.profile_edit_hide_transfer_label()}</Label>
+              <Description>{m.profile_edit_hide_transfer_desc()}</Description>
             </Checkbox>
           )}
         />
@@ -433,8 +426,8 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.private_profile_label.value}</Label>
-              <Description>{content.edit.private_profile_desc.value}</Description>
+              <Label>{m.profile_edit_private_profile_label()}</Label>
+              <Description>{m.profile_edit_private_profile_desc()}</Description>
             </Checkbox>
           )}
         />
@@ -444,23 +437,23 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
           name="gridColumns"
           render={({ field: { name, value, onChange, onBlur } }) => (
             <Select
-              aria-label={content.edit.grid_columns_label.value}
-              placeholder={content.edit.grid_columns_label.value}
+              aria-label={m.profile_edit_grid_columns_label()}
+              placeholder={m.profile_edit_grid_columns_label()}
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.grid_columns_label.value}</Label>
-              <Description>{content.edit.grid_columns_desc.value}</Description>
+              <Label>{m.profile_edit_grid_columns_label()}</Label>
+              <Description>{m.profile_edit_grid_columns_desc()}</Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
-                  { id: 0, name: content.edit.grid_columns_not_set.value },
+                  { id: 0, name: m.profile_edit_grid_columns_not_set() },
                   ...validColumns.map((a) => ({
                     id: a,
-                    name: content.edit.grid_columns_count({ count: String(a) }).value,
+                    name: m.profile_edit_grid_columns_count({ count: String(a) }),
                   })),
                 ].map((item) => (
                   <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
@@ -473,14 +466,14 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
         />
 
         <div className="group flex flex-col gap-y-2">
-          <Label>{content.edit.banner_label.value}</Label>
+          <Label>{m.profile_edit_banner_label()}</Label>
           <FileTrigger acceptedFileTypes={acceptedFileMimeTypes} onSelect={handleSelectImage} />
           <BannerImage
             droppedImage={droppedImage}
             cropperRef={cropperRef}
             onClear={() => setDroppedImage(null)}
           />
-          <span className="text-muted-fg text-sm">{content.edit.banner_recommendation.value}</span>
+          <span className="text-muted-fg text-sm">{m.profile_edit_banner_recommendation()}</span>
         </div>
         <Controller
           control={control}
@@ -493,23 +486,27 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.remove_banner_label.value}</Label>
+              <Label>{m.profile_edit_remove_banner_label()}</Label>
             </Checkbox>
           )}
         />
         <span className="text-muted-fg text-sm">
-          {content.edit.unlink_note.use({
-            link: (props) => (
-              <Link to="/link" className="underline">
-                {props.children}
-              </Link>
-            ),
-          })}
+          <ParaglideMessage
+            message={m.profile_edit_unlink_note}
+            inputs={{}}
+            markup={{
+              link: (props) => (
+                <Link to="/link" className="underline">
+                  {props.children}
+                </Link>
+              ),
+            }}
+          />
         </span>
 
         <Portal to="#submit-form-edit-profile">
           <Button intent="primary" isPending={isSubmitting} onPress={() => onSubmit()}>
-            {content.edit.submit.value}
+            {m.profile_edit_submit()}
           </Button>
         </Portal>
       </div>

@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { useObjektSelect } from "../use-objekt-select";
 
 export function useBatchPin() {
-  const content = useIntlayer("actions");
   const reset = useObjektSelect((a) => a.reset);
 
   const batchPin = useMutation(
@@ -34,8 +33,8 @@ export function useBatchPin() {
       onSuccess: (_, { tokenIds }) => {
         const message =
           tokenIds.length > 1
-            ? content.pin.success_multiple({ count: tokenIds.length.toLocaleString() }).value
-            : content.pin.success_single.value;
+            ? m.actions_pin_success_multiple({ count: tokenIds.length.toLocaleString() })
+            : m.actions_pin_success_single();
         toast.success(message);
         reset();
       },
@@ -50,8 +49,8 @@ export function useBatchPin() {
 
         const message =
           tokenIds.length > 1
-            ? content.pin.error_multiple({ count: tokenIds.length.toLocaleString() }).value
-            : content.pin.error_single.value;
+            ? m.actions_pin_error_multiple({ count: tokenIds.length.toLocaleString() })
+            : m.actions_pin_error_single();
         toast.error(message);
       },
     }),

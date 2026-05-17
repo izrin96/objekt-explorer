@@ -1,12 +1,11 @@
 import { SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react/dist/ssr";
-import { useIntlayer } from "react-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Toggle } from "../intentui/toggle";
 
 export default function SortDirectionFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
@@ -25,7 +24,7 @@ export default function SortDirectionFilter() {
       ) : (
         <SortAscendingIcon data-slot="icon" />
       )}
-      {filters.sort_dir === "asc" ? content.asc.value : content.desc.value}
+      {filters.sort_dir === "asc" ? m.filter_asc() : m.filter_desc()}
     </Toggle>
   );
 }

@@ -2,11 +2,11 @@ import { NumberFormatter } from "@internationalized/number";
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
 import { replaceUrlSize, cn, getClientLocale } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
@@ -51,7 +51,6 @@ export default function ObjektView({
   children,
   onSetPrice,
 }: Props) {
-  const content = useIntlayer("objekt");
   const [ref, { width }] = useElementSize();
   const [loaded, setLoaded] = useState(false);
   const [objekt] = objekts;
@@ -114,7 +113,7 @@ export default function ObjektView({
                   className={cn("font-semibold", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
-                  {content.qyop.value}
+                  {m.objekt_qyop()}
                 </Badge>
               ) : hasPrice ? (
                 <Badge
@@ -131,7 +130,7 @@ export default function ObjektView({
                     className="cursor-pointer font-semibold"
                     onClick={onSetPrice}
                   >
-                    {content.set_price.value}
+                    {m.objekt_set_price()}
                   </Badge>
                 )
               )}
@@ -142,7 +141,7 @@ export default function ObjektView({
                   </Button>
                   <PopoverContent arrow className="max-w-72">
                     <div className="p-3 text-sm">
-                      <span className="text-muted-fg">{content.note.value}: </span>
+                      <span className="text-muted-fg">{m.objekt_note()}: </span>
                       <span className="text-fg">{objekt.note}</span>
                     </div>
                   </PopoverContent>
@@ -163,7 +162,7 @@ export default function ObjektView({
             </Badge>
           )}
 
-          {unobtainable && <Badge intent="danger">{content.unobtainable.value}</Badge>}
+          {unobtainable && <Badge intent="danger">{m.objekt_unobtainable()}</Badge>}
         </div>
       )}
     </div>

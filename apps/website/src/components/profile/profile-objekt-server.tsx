@@ -4,12 +4,12 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
-import { useLocale } from "react-intlayer";
 
 import { useConfigStore } from "@/hooks/use-config";
 import { useProfileObjektsServer } from "@/hooks/use-profile-objekt-server";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useSession } from "@/hooks/use-user";
+import { getLocale } from "@/paraglide/runtime";
 
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
@@ -27,7 +27,7 @@ import FilterServer from "./filter-server";
 export default function ProfileObjektServerRender() {
   const profile = useProfileTarget()!;
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
-  const { locale } = useLocale();
+  const locale = getLocale();
 
   return (
     <ObjektViewProvider initialColumn={profile.gridColumns ?? undefined} modalTab="owned">

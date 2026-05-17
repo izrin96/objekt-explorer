@@ -2,10 +2,10 @@ import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 
 import { orpc } from "@/lib/orpc/client";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Button } from "../intentui/button";
@@ -40,26 +40,24 @@ function MyList() {
   const [addOpen, setAddOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
   const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
-  const content = useIntlayer("list");
-
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-xl font-semibold">{content.title.value}</div>
+      <div className="text-xl font-semibold">{m.list_title()}</div>
 
       <CreateListModal open={addOpen} setOpen={setAddOpen} />
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
       <div className="flex w-full gap-2">
-        <Button onPress={() => setAddOpen(true)}>{content.create_button.value}</Button>
+        <Button onPress={() => setAddOpen(true)}>{m.list_create_button()}</Button>
         <Button intent="outline" onPress={() => setGenOpen(true)}>
-          {content.generate_discord_button.value}
+          {m.list_generate_discord_button()}
         </Button>
       </div>
 
       <Tabs aria-label="Navbar" className="w-full">
         <TabList className="w-fit">
-          <Tab id="a">{content.tabs.normal.value}</Tab>
-          <Tab id="b">{content.tabs.profile.value}</Tab>
+          <Tab id="a">{m.list_tabs_normal()}</Tab>
+          <Tab id="b">{m.list_tabs_profile()}</Tab>
         </TabList>
         <TabPanel id="a" className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -97,8 +95,6 @@ type ListCardProps = {
 function ListCard({ list }: ListCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const content = useIntlayer("list");
-
   return (
     <>
       <EditListModal slug={list.slug} open={editOpen} setOpen={setEditOpen} />
@@ -120,9 +116,9 @@ function ListCard({ list }: ListCardProps) {
               <EllipsisVerticalIcon className="size-5" />
             </Button>
             <MenuContent placement="bottom right" popover={{ offset: -2 }}>
-              <MenuItem onAction={() => setEditOpen(true)}>{content.card.edit.value}</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>{m.list_card_edit()}</MenuItem>
               <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
-                {content.card.delete.value}
+                {m.list_card_delete()}
               </MenuItem>
             </MenuContent>
           </Menu>

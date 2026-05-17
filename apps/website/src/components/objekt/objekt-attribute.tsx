@@ -2,11 +2,11 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import type { CollectionMetadata } from "@/lib/types/objekt";
 import { getEditionStr } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
 import { Skeleton } from "../intentui/skeleton";
@@ -27,7 +27,6 @@ function Pill({ label, value, className }: PillProps) {
 }
 
 function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
-  const content = useIntlayer("objekt");
   const { data, status } = useQuery({
     queryKey: ["objekts", "metadata", objekt.slug],
     queryFn: () => {
@@ -48,19 +47,19 @@ function PillMetadata({ objekt }: { objekt: ValidObjekt }) {
   }
 
   if (status === "error") {
-    return <Badge intent="danger">{content.error_fetching_metadata.value}</Badge>;
+    return <Badge intent="danger">{m.objekt_error_fetching_metadata()}</Badge>;
   }
 
   return (
     <>
       <Pill
-        label={objekt.onOffline === "online" ? content.copies.value : content.scanned_copies.value}
+        label={objekt.onOffline === "online" ? m.objekt_copies() : m.objekt_scanned_copies()}
         value={data.total.toLocaleString()}
       />
-      <Pill label={content.spin.value} value={data.spin.toLocaleString()} />
-      <Pill label={content.non_spin.value} value={(data.total - data.spin).toLocaleString()} />
+      <Pill label={m.objekt_spin()} value={data.spin.toLocaleString()} />
+      <Pill label={m.objekt_non_spin()} value={(data.total - data.spin).toLocaleString()} />
       <Pill
-        label={content.tradable.value}
+        label={m.objekt_tradable()}
         value={`${((data.transferable / data.total) * 100.0).toFixed(
           2,
         )}% (${data.transferable.toLocaleString()})`}
@@ -76,36 +75,33 @@ export function AttributePanel({
   objekt: ValidObjekt;
   unobtainable: boolean;
 }) {
-  const content = useIntlayer("objekt");
   const { getArtist } = useCosmoArtist();
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Pill label={content.artist.value} value={getArtist(objekt.artist)?.title ?? ""} />
-      <Pill label={content.member.value} value={objekt.member} />
-      <Pill label={content.season.value} value={objekt.season} />
-      <Pill label={content.class.value} value={objekt.class} />
-      {objekt.edition && (
-        <Pill label={content.edition.value} value={getEditionStr(objekt.edition)} />
-      )}
+      <Pill label={m.objekt_artist()} value={getArtist(objekt.artist)?.title ?? ""} />
+      <Pill label={m.objekt_member()} value={objekt.member} />
+      <Pill label={m.objekt_season()} value={objekt.season} />
+      <Pill label={m.objekt_class()} value={objekt.class} />
+      {objekt.edition && <Pill label={m.objekt_edition()} value={getEditionStr(objekt.edition)} />}
       <Pill
-        label={content.type.value}
-        value={objekt.onOffline === "online" ? content.digital.value : content.physical.value}
+        label={m.objekt_type()}
+        value={objekt.onOffline === "online" ? m.objekt_digital() : m.objekt_physical()}
       />
-      <Pill label={content.collection_no.value} value={objekt.collectionNo} />
+      <Pill label={m.objekt_collection_no()} value={objekt.collectionNo} />
       <Pill
-        label={content.accent_color.value}
+        label={m.objekt_accent_color()}
         value={objekt.backgroundColor.toUpperCase()}
         className="bg-(--objekt-bg-color)! text-(--objekt-text-color)!"
       />
-      <Pill label={content.text_color.value} value={objekt.textColor.toUpperCase()} />
+      <Pill label={m.objekt_text_color()} value={objekt.textColor.toUpperCase()} />
       {unobtainable && (
         <Badge intent="danger" className="font-semibold">
-          {content.unobtainable.value}
+          {m.objekt_unobtainable()}
         </Badge>
       )}
       <Pill
-        label={content.created_at.value}
+        label={m.objekt_created_at()}
         value={format(objekt.createdAt, "yyyy/MM/dd hh:mm:ss a")}
       />
       <PillMetadata objekt={objekt} />

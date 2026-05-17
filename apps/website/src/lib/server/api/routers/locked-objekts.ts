@@ -3,7 +3,7 @@ import { lockedObjekts } from "@repo/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
-import { authed, localeMiddleware, pub } from "../orpc";
+import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
 export const lockedObjektsRouter = {
@@ -21,15 +21,14 @@ export const lockedObjektsRouter = {
   }),
 
   batchLock: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
-      await checkAddressOwned(address, session.user.id, locale);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
@@ -49,15 +48,14 @@ export const lockedObjektsRouter = {
     }),
 
   batchUnlock: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
-      await checkAddressOwned(address, session.user.id, locale);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 

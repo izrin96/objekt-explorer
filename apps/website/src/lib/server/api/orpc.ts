@@ -3,7 +3,6 @@ import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/serv
 
 import { auth, type Session } from "../auth.server";
 import { parseSelectedArtists } from "../cookie.server";
-import { getUserLocale } from "../locale.server";
 
 const requiredAuthMiddleware = os
   .$context<{ session?: Session; headers?: Headers }>()
@@ -28,13 +27,6 @@ const requiredAuthMiddleware = os
       context: { ...context, session: session.response },
     });
   });
-
-export const localeMiddleware = os.middleware(async ({ next, context }) => {
-  const locale = await getUserLocale();
-  return next({
-    context: { ...context, locale },
-  });
-});
 
 export const selectedArtistsMiddleware = os.middleware(async ({ next, context }) => {
   const artists = await parseSelectedArtists();

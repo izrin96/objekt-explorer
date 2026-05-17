@@ -2,10 +2,10 @@ import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Button, buttonStyles } from "../intentui/button";
@@ -35,14 +35,13 @@ export default function MyLinkRender() {
 }
 
 function MyLink() {
-  const content = useIntlayer("link");
   const { data: links } = useSuspenseQuery(orpc.profile.list.queryOptions());
 
   return (
     <div className="flex flex-col gap-4">
       <div className="w-full">
         <Link to="/link/connect" className={buttonStyles()}>
-          {content.link_cosmo.value}
+          {m.link_link_cosmo()}
         </Link>
       </div>
 
@@ -63,7 +62,6 @@ type LinkCardProps = {
 };
 
 function LinkCard({ link }: LinkCardProps) {
-  const content = useIntlayer("link");
   const [editOpen, setEditOpen] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const nickname = parseNickname(link.address, link.nickname);
@@ -107,9 +105,9 @@ function LinkCard({ link }: LinkCardProps) {
               <EllipsisVerticalIcon className="size-5" />
             </Button>
             <MenuContent placement="bottom right" popover={{ offset: -2 }}>
-              <MenuItem onAction={() => setEditOpen(true)}>{content.card.edit.value}</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>{m.link_card_edit()}</MenuItem>
               <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
-                {content.card.unlink.value}
+                {m.link_card_unlink()}
               </MenuItem>
             </MenuContent>
           </Menu>

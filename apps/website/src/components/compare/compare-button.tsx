@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { CompareModal } from "@/components/compare/modal/compare-modal";
 import { Button } from "@/components/intentui/button";
+import { m } from "@/paraglide/messages";
 
 type SourceList = {
   id: string;
@@ -10,14 +10,13 @@ type SourceList = {
 };
 
 export function CompareButton({ sourceList }: { sourceList: SourceList }) {
-  const content = useIntlayer("common");
   const [compareOpen, setCompareOpen] = useState(false);
 
   return (
     <>
       <CompareModal open={compareOpen} setOpen={setCompareOpen} sourceList={sourceList} />
       <Button intent="outline" onPress={() => setCompareOpen(true)}>
-        {content.actions.compare.value}
+        {m.common_actions_compare()}
       </Button>
     </>
   );

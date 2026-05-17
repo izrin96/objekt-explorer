@@ -11,13 +11,13 @@ import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
 import { Suspense, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { useElementSize } from "@/hooks/use-element-size";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
 import { OBJEKT_SIZE } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
@@ -67,7 +67,6 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
 function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
   const [objekt] = objekts;
-  const content = useIntlayer("objekt");
   const currentTab = useObjektModal((a) => a.currentTab);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
   const [serial, setSerial] = useState(() => {
@@ -88,18 +87,18 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       <TabList className="px-2.5">
         {showOwned && (
           <Tab id="owned">
-            {content.owned.value}
+            {m.objekt_owned()}
             {objekts.length > 1 ? ` (${objekts.length.toLocaleString()})` : ""}
           </Tab>
         )}
-        <Tab id="trades">{content.trades.value}</Tab>
+        <Tab id="trades">{m.objekt_trades()}</Tab>
         <Tab
           href={`https://apollo.cafe/?id=${objekt.slug}`}
           rel="noopener noreferrer"
           target="_blank"
         >
           <ArrowTopRightOnSquareIcon className="size-5" />
-          {content.view_in_apollo.value}
+          {m.objekt_view_in_apollo()}
         </Tab>
       </TabList>
       {showOwned && (
@@ -109,7 +108,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           ) : (
             <div className="flex flex-col items-center justify-center gap-3">
               <ArchiveBoxXMarkIcon className="size-16" strokeWidth={1} />
-              <span>{content.not_owned.value}</span>
+              <span>{m.objekt_not_owned()}</span>
             </div>
           )}
         </TabPanel>
@@ -211,7 +210,6 @@ function OwnedListPanel({
   objekts: OwnedObjekt[];
   setSerial: (serial: number) => void;
 }) {
-  const content = useIntlayer("objekt");
   const [currentPage, setCurrentPage] = useState(1);
   const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
 
@@ -278,13 +276,13 @@ function OwnedListPanel({
           >
             <TableHeader>
               <TableColumn id="serial" allowsSorting isRowHeader maxWidth={110}>
-                {content.serial.value}
+                {m.objekt_serial()}
               </TableColumn>
-              <TableColumn>{content.token_id.value}</TableColumn>
+              <TableColumn>{m.objekt_token_id()}</TableColumn>
               <TableColumn id="receivedAt" allowsSorting minWidth={200}>
-                {content.received.value}
+                {m.objekt_received()}
               </TableColumn>
-              <TableColumn>{content.transferable.value}</TableColumn>
+              <TableColumn>{m.objekt_transferable()}</TableColumn>
             </TableHeader>
             <TableBody>
               {currentItems.map((item) => (
@@ -310,7 +308,7 @@ function OwnedListPanel({
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
                   <TableCell>
                     <Badge intent={item.transferable ? "info" : "danger"}>
-                      {item.transferable ? content.yes.value : content.no.value}
+                      {item.transferable ? m.objekt_yes() : m.objekt_no()}
                     </Badge>
                   </TableCell>
                 </TableRow>

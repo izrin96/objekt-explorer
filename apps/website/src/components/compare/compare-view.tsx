@@ -3,7 +3,6 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 
 import { ObjektCount } from "@/components/collection/objekt-count";
 import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
@@ -36,6 +35,7 @@ import { useSession } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/universal/compare";
 import type { PublicList } from "@/lib/universal/user";
 import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 interface CompareViewProps {
   input: CompareInput;
@@ -74,23 +74,22 @@ export default function CompareView({ input }: CompareViewProps) {
 }
 
 function ListCompareHeader({ input }: { input: CompareInput }) {
-  const content = useIntlayer("compare");
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <h2 className="text-fg text-sm font-medium">
           {input.mode === "missing"
-            ? content.view.showing_missing.value
-            : content.view.showing_matches.value}
+            ? m.compare_view_showing_missing()
+            : m.compare_view_showing_matches()}
         </h2>
       </div>
       <div className="text-muted-fg text-xs">
-        {content.view.source_label.value}: <span className="text-fg">{input.sourceId}</span> -{" "}
-        {content.view.target_label.value}:{" "}
+        {m.compare_view_source_label()}: <span className="text-fg">{input.sourceId}</span> -{" "}
+        {m.compare_view_target_label()}:{" "}
         <span className="text-fg">
           {input.targetType === "list" ? input.targetListId : input.targetProfile}
         </span>
-        {` (${input.targetType === "list" ? content.view.type_list.value : content.view.type_profile.value})`}
+        {` (${input.targetType === "list" ? m.compare_view_type_list() : m.compare_view_type_profile()})`}
       </div>
     </div>
   );

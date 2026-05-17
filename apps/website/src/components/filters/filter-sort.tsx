@@ -1,9 +1,9 @@
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
 import { defaultSort } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../intentui/menu";
@@ -13,21 +13,20 @@ type Props = {
 };
 
 export default function SortFilter({ enabled = defaultSort }: Props) {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.sort ? [filters.sort] : ["date"]);
 
   const map: Record<ValidCustomSort, { label: string; desc: string }> = {
-    date: { label: content.sort_by.date.label.value, desc: content.sort_by.date.desc.value },
-    season: { label: content.sort_by.season.label.value, desc: content.sort_by.season.desc.value },
+    date: { label: m.filter_sort_by_date_label(), desc: m.filter_sort_by_date_desc() },
+    season: { label: m.filter_sort_by_season_label(), desc: m.filter_sort_by_season_desc() },
     collectionNo: {
-      label: content.sort_by.collection_no.label.value,
-      desc: content.sort_by.collection_no.desc.value,
+      label: m.filter_sort_by_collection_no_label(),
+      desc: m.filter_sort_by_collection_no_desc(),
     },
-    serial: { label: content.sort_by.serial.label.value, desc: content.sort_by.serial.desc.value },
-    duplicate: { label: content.sort_by.dups.label.value, desc: content.sort_by.dups.desc.value },
-    member: { label: content.sort_by.member.label.value, desc: content.sort_by.member.desc.value },
-    rare: { label: content.sort_by.rare.label.value, desc: content.sort_by.rare.desc.value },
+    serial: { label: m.filter_sort_by_serial_label(), desc: m.filter_sort_by_serial_desc() },
+    duplicate: { label: m.filter_sort_by_dups_label(), desc: m.filter_sort_by_dups_desc() },
+    member: { label: m.filter_sort_by_member_label(), desc: m.filter_sort_by_member_desc() },
+    rare: { label: m.filter_sort_by_rare_label(), desc: m.filter_sort_by_rare_desc() },
   };
 
   function update(key: Selection) {
@@ -43,7 +42,7 @@ export default function SortFilter({ enabled = defaultSort }: Props) {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.sort}>
-        {content.sort_by.label.value}
+        {m.filter_sort_by_label()}
       </Button>
       <MenuContent
         selectionMode="single"

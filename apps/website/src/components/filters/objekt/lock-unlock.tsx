@@ -1,5 +1,4 @@
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react/dist/ssr";
-import { useIntlayer } from "react-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/intentui/button";
@@ -9,9 +8,9 @@ import { useBatchUnlock } from "@/hooks/actions/batch-unlock";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
+import { m } from "@/paraglide/messages";
 
 export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const content = useIntlayer("objekt_menu");
   const target = useProfileTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -33,13 +32,12 @@ export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
       }
     >
       <LockSimpleIcon data-slot="icon" />
-      {content.lock.value}
+      {m.objekt_menu_lock()}
     </Button>
   );
 }
 
 export function UnlockObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const content = useIntlayer("objekt_menu");
   const target = useProfileTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -61,7 +59,7 @@ export function UnlockObjekt({ size }: { size?: ButtonProps["size"] }) {
       }}
     >
       <LockSimpleOpenIcon data-slot="icon" />
-      {content.unlock.value}
+      {m.objekt_menu_unlock()}
     </Button>
   );
 }

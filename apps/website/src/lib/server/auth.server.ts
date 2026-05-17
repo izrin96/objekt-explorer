@@ -15,10 +15,10 @@ import * as z from "zod";
 
 import { betterAuthLocale } from "@/i18n/better-auth";
 import { serverEnv } from "@/lib/env/server";
+import { getLocale as getParaglideLocale } from "@/paraglide/runtime";
 
 import { publicUserSchema, type PublicProfile, type PublicUser } from "../universal/user";
 import { SITE_NAME } from "../utils";
-import { getUserLocale } from "./locale.server";
 import {
   sendDeleteAccountVerification,
   sendResetPassword,
@@ -37,9 +37,9 @@ export const auth = betterAuth({
       defaultLocale: "en",
       translations: betterAuthLocale,
       detection: ["callback", "cookie"],
-      localeCookie: "NEXT_LOCALE",
+      localeCookie: "PARAGLIDE_LOCALE",
       getLocale: () => {
-        return getUserLocale();
+        return getParaglideLocale();
       },
     }),
   ],

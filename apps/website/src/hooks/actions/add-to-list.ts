@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { useObjektSelect } from "../use-objekt-select";
 
 export function useAddToList() {
-  const content = useIntlayer("actions");
   const reset = useObjektSelect((a) => a.reset);
 
   const addToList = useMutation(
@@ -26,13 +25,13 @@ export function useAddToList() {
 
         const message =
           rows.length > 1
-            ? content.add_to_list.success_multiple({ count: rows.length.toLocaleString() }).value
-            : content.add_to_list.success_single.value;
+            ? m.actions_add_to_list_success_multiple({ count: rows.length.toLocaleString() })
+            : m.actions_add_to_list_success_single();
         toast.success(message);
         reset();
       },
       onError: () => {
-        toast.error(content.add_to_list.error.value);
+        toast.error(m.actions_add_to_list_error());
       },
     }),
   );

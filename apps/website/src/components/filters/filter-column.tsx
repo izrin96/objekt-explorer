@@ -1,12 +1,10 @@
-import { useIntlayer } from "react-intlayer";
-
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { validColumns } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../intentui/select";
 
 export default function ColumnFilter() {
-  const content = useIntlayer("filter");
   const { columns, setColumns } = useObjektColumn();
 
   return (
@@ -16,12 +14,12 @@ export default function ColumnFilter() {
       onChange={(value) => {
         setColumns(Number(value));
       }}
-      aria-label={content.column.value}
+      aria-label={m.filter_column()}
     >
       <SelectTrigger />
       <SelectContent className="min-w-[160px]">
         {validColumns
-          .map((a) => ({ id: a, name: `${a} ${content.column.value.toLowerCase()}` }))
+          .map((a) => ({ id: a, name: `${a} ${m.filter_column().toLowerCase()}` }))
           .map((item) => (
             <SelectItem key={item.id} id={item.id} textValue={item.name}>
               {item.name}

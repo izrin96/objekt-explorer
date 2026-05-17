@@ -1,5 +1,4 @@
 import { PushPinIcon, PushPinSlashIcon } from "@phosphor-icons/react/dist/ssr";
-import { useIntlayer } from "react-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/intentui/button";
@@ -9,9 +8,9 @@ import { useBatchUnpin } from "@/hooks/actions/batch-unpin";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { isObjektOwned } from "@/lib/objekt-utils";
+import { m } from "@/paraglide/messages";
 
 export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const content = useIntlayer("objekt_menu");
   const target = useProfileTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -33,13 +32,12 @@ export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
       }
     >
       <PushPinIcon data-slot="icon" />
-      {content.pin.value}
+      {m.objekt_menu_pin()}
     </Button>
   );
 }
 
 export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
-  const content = useIntlayer("objekt_menu");
   const target = useProfileTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const handleAction = useObjektSelect((a) => a.handleAction);
@@ -61,7 +59,7 @@ export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
       }}
     >
       <PushPinSlashIcon data-slot="icon" />
-      {content.unpin.value}
+      {m.objekt_menu_unpin()}
     </Button>
   );
 }

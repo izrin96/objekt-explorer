@@ -1,7 +1,6 @@
 import { ImageBrokenIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { getIntlayer, useIntlayer } from "react-intlayer";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
@@ -10,6 +9,7 @@ import { ProfileProvider } from "@/hooks/use-profile-target";
 import { generateMetadata } from "@/lib/meta";
 import { listBySlugQuery } from "@/lib/queries/list";
 import { profileQuery } from "@/lib/queries/profile";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -20,10 +20,9 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
     return { list };
   },
   head: async ({ loaderData }) => {
-    const content = getIntlayer("page_titles");
     return loaderData
       ? generateMetadata({
-          title: content.list_detail({ name: loaderData.list.name }).value,
+          title: m.page_titles_list_detail({ name: loaderData.list.name }),
         })
       : {};
   },
@@ -51,11 +50,10 @@ function ProfileListDetailPage() {
 }
 
 function NotFoundComponent() {
-  const content = useIntlayer("not_found");
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
       <ImageBrokenIcon size={72} weight="thin" />
-      {content.list.value}
+      {m.not_found_list()}
     </div>
   );
 }

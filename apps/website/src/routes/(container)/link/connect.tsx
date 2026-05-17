@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getIntlayer } from "react-intlayer";
 
 import LinkRender from "@/components/link/link-process";
 import { generateMetadata } from "@/lib/meta";
 import { sessionOptions } from "@/lib/query-options";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/link/connect")({
   beforeLoad: async ({ context: { queryClient } }) => {
@@ -13,8 +13,7 @@ export const Route = createFileRoute("/(container)/link/connect")({
     }
   },
   head: () => {
-    const content = getIntlayer("page_titles");
-    return generateMetadata({ title: content.my_cosmo_link.value });
+    return generateMetadata({ title: m.page_titles_my_cosmo_link() });
   },
   component: LinkConnectPage,
 });

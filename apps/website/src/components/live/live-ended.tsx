@@ -1,9 +1,7 @@
-import { useIntlayer } from "react-intlayer";
-
 import { useLiveSession } from "@/hooks/use-live-session";
+import { m } from "@/paraglide/messages";
 
 export default function LiveEnded() {
-  const content = useIntlayer("live");
   const liveSession = useLiveSession();
   return (
     <div className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2">
@@ -18,7 +16,7 @@ export default function LiveEnded() {
       </div>
       <div className="bg-bg/50 absolute size-full"></div>
       <div className="text-fg absolute flex justify-center font-semibold">
-        {content.live_stream_ended.value}
+        {m.live_live_stream_ended()}
       </div>
     </div>
   );

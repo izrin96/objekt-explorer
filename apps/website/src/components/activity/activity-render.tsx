@@ -13,7 +13,6 @@ import { format } from "date-fns";
 import { ofetch } from "ofetch";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
@@ -22,6 +21,7 @@ import { clientEnv } from "@/lib/env/client";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
 import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../error-boundary";
 import { InfiniteQueryNext } from "../infinite-query-pending";
@@ -45,39 +45,38 @@ const EVENT_CONFIG: Record<
   EventType,
   {
     icon: React.ComponentType<IconProps>;
-    labelKey: string;
+    label: () => string;
     className: string;
   }
 > = {
   mint: {
     icon: LeafIcon,
-    labelKey: "activity.event_type.mint",
+    label: () => m.activity_event_type_mint(),
     className:
       "[--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]",
   },
   spin: {
     icon: ArrowsClockwiseIcon,
-    labelKey: "activity.event_type.spin",
+    label: () => m.activity_event_type_spin(),
     className:
       "[--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]",
   },
   transfer: {
     icon: PaperPlaneTiltIcon,
-    labelKey: "activity.event_type.transfer",
+    label: () => m.activity_event_type_transfer(),
     className:
       "[--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]",
   },
 };
 
 export default function ActivityRender() {
-  const content = useIntlayer("activity");
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">{content.title.value}</h2>
+          <h2 className="text-xl font-semibold">{m.activity_title()}</h2>
         </div>
-        <span className="text-muted-fg text-sm">{content.description.value}</span>
+        <span className="text-muted-fg text-sm">{m.activity_description()}</span>
       </div>
       <ObjektModalProvider initialTab="trades">
         <ActivityFilter />
@@ -95,7 +94,6 @@ export default function ActivityRender() {
 }
 
 function Activity() {
-  const content = useIntlayer("activity");
   const queryClient = useQueryClient();
   const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
@@ -270,14 +268,14 @@ function Activity() {
       <Card className="py-0">
         <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
           <div className="flex min-w-fit border-b">
-            <div className="min-w-[120px] flex-1 px-3 py-2.5">{content.table.event.value}</div>
-            <div className="min-w-[250px] flex-1 px-3 py-2.5">{content.table.objekt.value}</div>
+            <div className="min-w-[120px] flex-1 px-3 py-2.5">{m.activity_table_event()}</div>
+            <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.activity_table_objekt()}</div>
             <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">
-              {content.table.serial.value}
+              {m.activity_table_serial()}
             </div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">{content.table.from.value}</div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">{content.table.to.value}</div>
-            <div className="min-w-[250px] flex-1 px-3 py-2.5">{content.table.time.value}</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">{m.activity_table_from()}</div>
+            <div className="min-w-[300px] flex-1 px-3 py-2.5">{m.activity_table_to()}</div>
+            <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.activity_table_time()}</div>
           </div>
 
           <ObjektModal objekts={currentObjekt}>
@@ -285,7 +283,7 @@ function Activity() {
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
               className="relative min-w-fit"
               role="region"
-              aria-label={content.table.aria_label.value}
+              aria-label={m.activity_table_aria_label()}
               onMouseEnter={() => {
                 setIsHovering(true);
                 isHoveringRef.current = true;
@@ -324,7 +322,7 @@ function Activity() {
           {isHovering && (
             <div className="bg-fg/10 pointer-events-none fixed right-0 bottom-0 left-0 flex h-12 w-full flex-col justify-center px-2 py-3 backdrop-blur-md">
               <span className="text-center font-mono text-sm leading-tight uppercase">
-                {content.paused_on_hover.value}
+                {m.activity_paused_on_hover()}
               </span>
             </div>
           )}
@@ -347,7 +345,6 @@ const ActivityRow = memo(function ActivityRow({
   item: ActivityData;
   setCurrentObjekt: (objekts: ValidObjekt[]) => void;
 }) {
-  const content = useIntlayer("activity");
   const ctx = useObjektModal();
 
   const openObjekt = useCallback(() => {
@@ -364,9 +361,7 @@ const ActivityRow = memo(function ActivityRow({
       <div className="min-w-[120px] flex-1 px-3 py-2.5">
         <div className="flex items-center gap-2 font-semibold">
           <Icon size={18} weight="light" />
-          <Badge className={cn("text-xs", config.className)}>
-            {content.event_type[event].value}
-          </Badge>
+          <Badge className={cn("text-xs", config.className)}>{config.label()}</Badge>
         </div>
       </div>
       <div
@@ -379,14 +374,14 @@ const ActivityRow = memo(function ActivityRow({
       <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">
         {event === "mint" ? (
-          <span className="text-muted-fg font-mono">{content.cosmo.value}</span>
+          <span className="text-muted-fg font-mono">{m.activity_cosmo()}</span>
         ) : (
           <UserLink address={item.transfer.from} nickname={item.nickname.from} />
         )}
       </div>
       <div className="min-w-[300px] flex-1 px-3 py-2.5">
         {event === "spin" ? (
-          <span className="text-muted-fg font-mono">{content.cosmo_spin.value}</span>
+          <span className="text-muted-fg font-mono">{m.activity_cosmo_spin()}</span>
         ) : (
           <UserLink address={item.transfer.to} nickname={item.nickname.to} />
         )}

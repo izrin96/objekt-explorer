@@ -1,7 +1,6 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { getIntlayer } from "react-intlayer";
 
 import CompareView from "@/components/compare/compare-view";
 import { ListProvider } from "@/hooks/use-list-target";
@@ -9,6 +8,7 @@ import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
 import { listBySlugQuery } from "@/lib/queries/list";
 import { compareInputSchema } from "@/lib/universal/compare";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/compare-tool")({
   validateSearch: compareInputSchema,
@@ -28,13 +28,11 @@ export const Route = createFileRoute("/(container)/compare-tool")({
     return { deps };
   },
   head: ({ loaderData }) => {
-    const content = getIntlayer("page_titles");
-
     const sourceId = loaderData?.deps?.sourceId ?? "";
     const targetId = loaderData?.deps?.targetProfile ?? loaderData?.deps?.targetListId ?? "";
 
     return generateMetadata({
-      title: content.compare_tool({ source: sourceId, target: targetId }).value,
+      title: m.page_titles_compare_tool({ source: sourceId, target: targetId }),
     });
   },
   component: CompareToolPage,

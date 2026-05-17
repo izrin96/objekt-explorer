@@ -2,10 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { FieldError, Label } from "../intentui/field";
@@ -14,8 +14,6 @@ import { TextField } from "../intentui/text-field";
 
 export default function ResetPassword({ token }: { token: string }) {
   const router = useRouter();
-  const content = useIntlayer("auth");
-
   const { handleSubmit, control } = useForm({
     defaultValues: {
       password: "",
@@ -32,11 +30,11 @@ export default function ResetPassword({ token }: { token: string }) {
       return result.data;
     },
     onSuccess: () => {
-      toast.success(content.reset_password.success.value);
+      toast.success(m.auth_reset_password_success());
       void router.navigate({ to: "/login" });
     },
     onError: ({ message }) => {
-      toast.error(content.reset_password.error({ message }).value);
+      toast.error(m.auth_reset_password_error({ message }));
     },
   });
 
@@ -49,14 +47,14 @@ export default function ResetPassword({ token }: { token: string }) {
   return (
     <div className="flex flex-col pt-2 pb-36">
       <div className="flex w-full max-w-xl flex-col gap-4 self-center">
-        <div className="text-xl font-semibold">{content.reset_password.title.value}</div>
+        <div className="text-xl font-semibold">{m.auth_reset_password_title()}</div>
         <Form onSubmit={onSubmit} validationBehavior="aria">
           <div className="flex flex-col gap-4">
             <Controller
               control={control}
               name="password"
               rules={{
-                required: content.reset_password.password_required.value,
+                required: m.auth_reset_password_password_required(),
               }}
               render={({
                 field: { name, value, onChange, onBlur },
@@ -72,14 +70,14 @@ export default function ResetPassword({ token }: { token: string }) {
                   isInvalid={invalid}
                   validationBehavior="aria"
                 >
-                  <Label>{content.reset_password.password_label.value}</Label>
-                  <Input placeholder={content.reset_password.password_placeholder.value} />
+                  <Label>{m.auth_reset_password_password_label()}</Label>
+                  <Input placeholder={m.auth_reset_password_password_placeholder()} />
                   <FieldError>{error?.message}</FieldError>
                 </TextField>
               )}
             />
             <Button type="submit" isPending={mutation.isPending}>
-              {content.reset_password.submit.value}
+              {m.auth_reset_password_submit()}
             </Button>
           </div>
         </Form>

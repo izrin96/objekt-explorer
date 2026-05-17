@@ -3,29 +3,24 @@ import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, eq } from "drizzle-orm";
-import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
-import type { Locale } from "@/lib/locale";
+import { m } from "@/paraglide/messages";
 
 import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3.server";
-import { authed, localeMiddleware } from "../orpc";
+import { authed } from "../orpc";
 
 export const profileRouter = {
   list: authed.handler(async ({ context: { session } }) => {
     return await fetchUserProfiles(session.user.id);
   }),
 
-  find: authed
-    .use(localeMiddleware)
-    .input(z.string())
-    .handler(async ({ input: address, context: { session, locale } }) => {
-      const profile = await fetchOwnedProfile(address, session.user.id, locale);
-      return profile;
-    }),
+  find: authed.input(z.string()).handler(async ({ input: address, context: { session } }) => {
+    const profile = await fetchOwnedProfile(address, session.user.id);
+    return profile;
+  }),
 
   edit: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -39,8 +34,8 @@ export const profileRouter = {
         gridColumns: z.number().min(2).max(18).optional().nullable(),
       }),
     )
-    .handler(async ({ input: { address, ...rest }, context: { session, locale } }) => {
-      const profile = await fetchOwnedProfile(address, session.user.id, locale);
+    .handler(async ({ input: { address, ...rest }, context: { session } }) => {
+      const profile = await fetchOwnedProfile(address, session.user.id);
 
       // Delete previous banner if it exists and new banner is being set
       if (profile.bannerImgUrl && rest.bannerImgUrl !== undefined) {
@@ -62,7 +57,6 @@ export const profileRouter = {
     }),
 
   getPresignedPost: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -70,8 +64,8 @@ export const profileRouter = {
         mimeType: z.string(),
       }),
     )
-    .handler(async ({ input: { address, fileName, mimeType }, context: { session, locale } }) => {
-      await checkAddressOwned(address, session.user.id, locale);
+    .handler(async ({ input: { address, fileName, mimeType }, context: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
 
       const ext = fileName.split(".").pop();
       const data = await createPresignedPostToUpload({
@@ -84,21 +78,20 @@ export const profileRouter = {
     }),
 };
 
-export async function checkAddressOwned(address: string, userId: string, locale: Locale) {
+export async function checkAddressOwned(address: string, userId: string) {
   const count = await db.$count(
     userAddress,
     and(eq(userAddress.address, address), eq(userAddress.userId, userId)),
   );
 
   if (count < 1) {
-    const content = getIntlayer("api_errors", locale);
     throw new ORPCError("UNAUTHORIZED", {
-      message: content.profile.not_linked.value,
+      message: m.api_errors_profile_not_linked(),
     });
   }
 }
 
-async function fetchOwnedProfile(address: string, userId: string, locale: Locale) {
+async function fetchOwnedProfile(address: string, userId: string) {
   const profile = await db.query.userAddress.findFirst({
     columns: {
       nickname: true,
@@ -119,9 +112,8 @@ async function fetchOwnedProfile(address: string, userId: string, locale: Locale
   });
 
   if (!profile) {
-    const content = getIntlayer("api_errors", locale);
     throw new ORPCError("NOT_FOUND", {
-      message: content.profile.not_found.value,
+      message: m.api_errors_profile_not_found(),
     });
   }
 

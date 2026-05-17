@@ -1,6 +1,5 @@
 import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 
 import { ListSelector } from "@/components/compare/modal/list-selector";
 import { ProfileSelector } from "@/components/compare/modal/profile-selector";
@@ -17,6 +16,7 @@ import {
 } from "@/components/intentui/modal";
 import { Radio, RadioGroup } from "@/components/intentui/radio";
 import Portal from "@/components/portal";
+import { m } from "@/paraglide/messages";
 
 type SourceList = {
   id: string;
@@ -37,30 +37,25 @@ type CompareFormData = {
 };
 
 export function CompareModal({ open, setOpen, sourceList }: CompareModalProps) {
-  const content = useIntlayer("compare");
-  const commonContent = useIntlayer("common");
-
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.modal.title.value}</ModalTitle>
+        <ModalTitle>{m.compare_modal_title()}</ModalTitle>
         <ModalDescription>
-          {content.modal.comparing_from({ name: sourceList.name }).value} (ID: {sourceList.id})
+          {m.compare_modal_comparing_from({ name: sourceList.name })} (ID: {sourceList.id})
         </ModalDescription>
       </ModalHeader>
       <ModalBody>
         <CompareForm sourceList={sourceList} setOpen={setOpen} />
       </ModalBody>
       <ModalFooter id="submit-form-compare">
-        <ModalClose>{commonContent.modal.cancel.value}</ModalClose>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
 }
 
 function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: boolean) => void }) {
-  const content = useIntlayer("compare");
-
   const { control, watch, handleSubmit } = useForm<CompareFormData>({
     defaultValues: {
       targetType: "profile",
@@ -96,15 +91,15 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
           name="targetType"
           render={({ field: { name, value, onChange } }) => (
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
-              <Label>{content.modal.target_type.label.value}</Label>
-              <Description>{content.modal.target_type.description.value}</Description>
+              <Label>{m.compare_modal_target_type_label()}</Label>
+              <Description>{m.compare_modal_target_type_description()}</Description>
               <Radio value="profile">
-                <Label>{content.modal.target_type.profile.label.value}</Label>
-                <Description>{content.modal.target_type.profile.description.value}</Description>
+                <Label>{m.compare_modal_target_type_profile_label()}</Label>
+                <Description>{m.compare_modal_target_type_profile_description()}</Description>
               </Radio>
               <Radio value="list">
-                <Label>{content.modal.target_type.list.label.value}</Label>
-                <Description>{content.modal.target_type.list.description.value}</Description>
+                <Label>{m.compare_modal_target_type_list_label()}</Label>
+                <Description>{m.compare_modal_target_type_list_description()}</Description>
               </Radio>
             </RadioGroup>
           )}
@@ -121,15 +116,15 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
           name="mode"
           render={({ field: { name, value, onChange } }) => (
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
-              <Label>{content.modal.comparison_type.label.value}</Label>
-              <Description>{content.modal.comparison_type.description.value}</Description>
+              <Label>{m.compare_modal_comparison_type_label()}</Label>
+              <Description>{m.compare_modal_comparison_type_description()}</Description>
               <Radio value="missing">
-                <Label>{content.modal.comparison_type.missing.label.value}</Label>
-                <Description>{content.modal.comparison_type.missing.description.value}</Description>
+                <Label>{m.compare_modal_comparison_type_missing_label()}</Label>
+                <Description>{m.compare_modal_comparison_type_missing_description()}</Description>
               </Radio>
               <Radio value="matches">
-                <Label>{content.modal.comparison_type.matches.label.value}</Label>
-                <Description>{content.modal.comparison_type.matches.description.value}</Description>
+                <Label>{m.compare_modal_comparison_type_matches_label()}</Label>
+                <Description>{m.compare_modal_comparison_type_matches_description()}</Description>
               </Radio>
             </RadioGroup>
           )}
@@ -137,7 +132,7 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
 
         <Portal to="#submit-form-compare">
           <Button type="submit" onPress={() => onSubmit()}>
-            {content.modal.submit.value}
+            {m.compare_modal_submit()}
           </Button>
         </Portal>
       </div>

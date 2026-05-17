@@ -1,6 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
-import { getIntlayer } from "react-intlayer";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
@@ -8,6 +7,7 @@ import { ListProvider } from "@/hooks/use-list-target";
 import { generateMetadata } from "@/lib/meta";
 import { listBySlugQuery } from "@/lib/queries/list";
 import { profileQuery } from "@/lib/queries/profile";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/$slug")({
   beforeLoad: async ({ params, context: { queryClient } }) => {
@@ -33,9 +33,8 @@ export const Route = createFileRoute("/(container)/list/$slug")({
     return { list };
   },
   head: ({ loaderData }) => {
-    const content = getIntlayer("page_titles");
     return loaderData
-      ? generateMetadata({ title: content.list_detail({ name: loaderData.list.name }).value })
+      ? generateMetadata({ title: m.page_titles_list_detail({ name: loaderData.list.name }) })
       : {};
   },
   component: ListDetailPage,

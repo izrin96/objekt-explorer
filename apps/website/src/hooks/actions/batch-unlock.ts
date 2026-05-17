@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { useObjektSelect } from "../use-objekt-select";
 
 export function useBatchUnlock() {
-  const content = useIntlayer("actions");
   const reset = useObjektSelect((a) => a.reset);
 
   const batchUnlock = useMutation(
@@ -28,8 +27,8 @@ export function useBatchUnlock() {
       onSuccess: (_, { tokenIds }) => {
         const message =
           tokenIds.length > 1
-            ? content.unlock.success_multiple({ count: tokenIds.length.toLocaleString() }).value
-            : content.unlock.success_single.value;
+            ? m.actions_unlock_success_multiple({ count: tokenIds.length.toLocaleString() })
+            : m.actions_unlock_success_single();
         toast.success(message);
         reset();
       },
@@ -44,8 +43,8 @@ export function useBatchUnlock() {
 
         const message =
           tokenIds.length > 1
-            ? content.unlock.error_multiple({ count: tokenIds.length.toLocaleString() }).value
-            : content.unlock.error_single.value;
+            ? m.actions_unlock_error_multiple({ count: tokenIds.length.toLocaleString() })
+            : m.actions_unlock_error_single();
         toast.error(message);
       },
     }),

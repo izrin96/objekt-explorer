@@ -9,11 +9,11 @@ import { useRouter } from "@tanstack/react-router";
 import { useState, useTransition } from "react";
 import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { FieldError, Label } from "../intentui/field";
@@ -40,9 +40,6 @@ function SignInForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
-  const content = useIntlayer("auth");
-  const commonContent = useIntlayer("common");
-
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email: "",
@@ -60,14 +57,14 @@ function SignInForm({
       return result.data;
     },
     onSuccess: async (_, _v, _o, { client }) => {
-      toast.success(content.sign_in.success.value);
+      toast.success(m.auth_sign_in_success());
       void client.invalidateQueries({
         queryKey: orpc.user.session.key(),
       });
       void router.navigate({ to: "/" });
     },
     onError: (err) => {
-      toast.error(content.sign_in.error({ message: err.message }).value);
+      toast.error(m.auth_sign_in_error({ message: err.message }));
     },
   });
 
@@ -78,15 +75,15 @@ function SignInForm({
   return (
     <>
       <div className="flex flex-col">
-        <h2 className="text-lg/8 font-semibold">{content.sign_in.title.value}</h2>
-        <span className="text-muted-fg text-sm">{content.sign_in.description.value}</span>
+        <h2 className="text-lg/8 font-semibold">{m.auth_sign_in_title()}</h2>
+        <span className="text-muted-fg text-sm">{m.auth_sign_in_description()}</span>
       </div>
       <Form onSubmit={onSubmit} className="flex flex-col gap-4" validationBehavior="aria">
         <Controller
           control={control}
           name="email"
           rules={{
-            required: commonContent.validation.required_email.value,
+            required: m.common_validation_required_email(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -102,8 +99,8 @@ function SignInForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.sign_in.email_label.value}</Label>
-              <Input placeholder={content.sign_in.email_placeholder.value} />
+              <Label>{m.auth_sign_in_email_label()}</Label>
+              <Input placeholder={m.auth_sign_in_email_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -112,7 +109,7 @@ function SignInForm({
           control={control}
           name="password"
           rules={{
-            required: commonContent.validation.required_password.value,
+            required: m.common_validation_required_password(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -128,25 +125,25 @@ function SignInForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.sign_in.password_label.value}</Label>
-              <Input placeholder={content.sign_in.password_placeholder.value} />
+              <Label>{m.auth_sign_in_password_label()}</Label>
+              <Input placeholder={m.auth_sign_in_password_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
         <Button type="submit" intent="primary" isPending={mutation.isPending}>
-          {content.sign_in.submit.value}
+          {m.auth_sign_in_submit()}
         </Button>
       </Form>
 
       <div className="flex flex-col gap-2">
         <Button intent="outline" className="gap-2" onPress={() => setState("forgot-password")}>
           <EnvelopeSimpleIcon size={18} weight="light" />
-          {content.sign_in.forgot_password.value}
+          {m.auth_sign_in_forgot_password()}
         </Button>
         <Button intent="outline" className="gap-2" onPress={() => setState("sign-up")}>
           <UserPlusIcon size={18} weight="light" />
-          {content.sign_in.create_account.value}
+          {m.auth_sign_in_create_account()}
         </Button>
       </div>
 
@@ -154,7 +151,7 @@ function SignInForm({
         <div className="absolute inset-0 flex items-center">
           <div className="bg-border h-px w-full shrink-0"></div>
         </div>
-        <span className="bg-bg relative px-3">{content.sign_in.or_continue.value}</span>
+        <span className="bg-bg relative px-3">{m.auth_sign_in_or_continue()}</span>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -167,7 +164,6 @@ function SignInForm({
 
 function SignInWithDiscord() {
   const [isPending, startTransition] = useTransition();
-  const content = useIntlayer("auth");
   return (
     <Button
       intent="outline"
@@ -182,14 +178,13 @@ function SignInWithDiscord() {
       }}
     >
       <DiscordLogoIcon size={18} weight="light" />
-      {content.sign_in.sign_in_discord.value}
+      {m.auth_sign_in_sign_in_discord()}
     </Button>
   );
 }
 
 function SignInWithTwitter() {
   const [isPending, startTransition] = useTransition();
-  const content = useIntlayer("auth");
   return (
     <Button
       intent="outline"
@@ -204,7 +199,7 @@ function SignInWithTwitter() {
       }}
     >
       <XLogoIcon size={18} weight="light" />
-      {content.sign_in.sign_in_twitter.value}
+      {m.auth_sign_in_sign_in_twitter()}
     </Button>
   );
 }
@@ -215,8 +210,6 @@ function SignUpForm({
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
   const router = useRouter();
-  const content = useIntlayer("auth");
-  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       name: "",
@@ -234,14 +227,14 @@ function SignUpForm({
       return result.data;
     },
     onSuccess: async (_, _v, _o, { client }) => {
-      toast.success(content.sign_up.success.value);
+      toast.success(m.auth_sign_up_success());
       void client.invalidateQueries({
         queryKey: orpc.user.session.key(),
       });
       void router.navigate({ to: "/" });
     },
     onError: (err) => {
-      toast.error(content.sign_up.error({ message: err.message }).value);
+      toast.error(m.auth_sign_up_error({ message: err.message }));
     },
   });
 
@@ -256,7 +249,7 @@ function SignUpForm({
           control={control}
           name="name"
           rules={{
-            required: commonContent.validation.required_name.value,
+            required: m.common_validation_required_name(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -272,8 +265,8 @@ function SignUpForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.sign_up.name_label.value}</Label>
-              <Input placeholder={content.sign_up.name_placeholder.value} />
+              <Label>{m.auth_sign_up_name_label()}</Label>
+              <Input placeholder={m.auth_sign_up_name_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -282,7 +275,7 @@ function SignUpForm({
           control={control}
           name="email"
           rules={{
-            required: commonContent.validation.required_email.value,
+            required: m.common_validation_required_email(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -298,8 +291,8 @@ function SignUpForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.sign_up.email_label.value}</Label>
-              <Input placeholder={content.sign_up.email_placeholder.value} />
+              <Label>{m.auth_sign_up_email_label()}</Label>
+              <Input placeholder={m.auth_sign_up_email_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -308,7 +301,7 @@ function SignUpForm({
           control={control}
           name="password"
           rules={{
-            required: commonContent.validation.required_password.value,
+            required: m.common_validation_required_password(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -324,17 +317,17 @@ function SignUpForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.sign_up.password_label.value}</Label>
+              <Label>{m.auth_sign_up_password_label()}</Label>
               <Input />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
         <Button type="submit" isPending={mutation.isPending}>
-          {content.sign_up.submit.value}
+          {m.auth_sign_up_submit()}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
-          {content.sign_up.back.value}
+          {m.auth_sign_up_back()}
         </Button>
       </div>
     </Form>
@@ -346,8 +339,6 @@ function ForgotPassword({
 }: {
   setState: (state: "sign-in" | "sign-up" | "forgot-password") => void;
 }) {
-  const content = useIntlayer("auth");
-  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email: "",
@@ -366,11 +357,11 @@ function ForgotPassword({
       return result.data;
     },
     onSuccess: () => {
-      toast.success(content.forgot_password.success.value);
+      toast.success(m.auth_forgot_password_success());
       setState("sign-in");
     },
     onError: (err) => {
-      toast.error(content.forgot_password.error({ message: err.message }).value);
+      toast.error(m.auth_forgot_password_error({ message: err.message }));
     },
   });
 
@@ -385,7 +376,7 @@ function ForgotPassword({
           control={control}
           name="email"
           rules={{
-            required: commonContent.validation.required_email.value,
+            required: m.common_validation_required_email(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -401,17 +392,17 @@ function ForgotPassword({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.forgot_password.email_label.value}</Label>
-              <Input placeholder={content.forgot_password.email_placeholder.value} />
+              <Label>{m.auth_forgot_password_email_label()}</Label>
+              <Input placeholder={m.auth_forgot_password_email_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
         />
         <Button type="submit" isPending={mutation.isPending}>
-          {content.forgot_password.submit.value}
+          {m.auth_forgot_password_submit()}
         </Button>
         <Button intent="outline" onPress={() => setState("sign-in")}>
-          {content.forgot_password.back.value}
+          {m.auth_forgot_password_back()}
         </Button>
       </div>
     </Form>

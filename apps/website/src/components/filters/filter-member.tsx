@@ -1,16 +1,15 @@
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSection } from "../intentui/menu";
 
 export default function MemberFilter() {
   const { selectedArtists } = useCosmoArtist();
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.member);
 
@@ -28,7 +27,7 @@ export default function MemberFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.member}>
-        {content.member.value}
+        {m.filter_member()}
       </Button>
       <MenuContent
         selectionMode="multiple"

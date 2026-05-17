@@ -1,12 +1,12 @@
 import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { useListTarget } from "@/hooks/use-list-target";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useListAuthed } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Avatar } from "../intentui/avatar-custom";
 import { Button } from "../intentui/button";
@@ -99,8 +99,6 @@ export default function ListHeader() {
 function EditList({ slug }: { slug: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const content = useIntlayer("list");
-
   const onSave = () => {
     void router.navigate({
       to: `/list/${slug}`,
@@ -118,7 +116,7 @@ function EditList({ slug }: { slug: string }) {
         onPress={() => setOpen(true)}
         className="w-full flex-none sm:w-auto"
       >
-        {content.card.edit_list.value}
+        {m.list_card_edit_list()}
       </Button>
     </>
   );

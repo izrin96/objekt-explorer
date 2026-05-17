@@ -1,9 +1,9 @@
 import { useController, type Control, type FieldValues, type Path } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { Input } from "@/components/intentui/input";
 import { TextField } from "@/components/intentui/text-field";
+import { m } from "@/paraglide/messages";
 
 type ProfileSelectorProps<T extends FieldValues> = {
   control: Control<T>;
@@ -11,7 +11,6 @@ type ProfileSelectorProps<T extends FieldValues> = {
 };
 
 export function ProfileSelector<T extends FieldValues>({ control, name }: ProfileSelectorProps<T>) {
-  const content = useIntlayer("compare");
   const {
     field: { value, onChange, onBlur },
     fieldState: { invalid, error },
@@ -19,7 +18,7 @@ export function ProfileSelector<T extends FieldValues>({ control, name }: Profil
     name,
     control,
     rules: {
-      required: content.profile_selector.required.value,
+      required: m.compare_profile_selector_required(),
     },
   });
 
@@ -34,9 +33,9 @@ export function ProfileSelector<T extends FieldValues>({ control, name }: Profil
         isInvalid={invalid}
         validationBehavior="aria"
       >
-        <Label>{content.profile_selector.label.value}</Label>
-        <Description>{content.profile_selector.description.value}</Description>
-        <Input placeholder={content.profile_selector.placeholder.value} />
+        <Label>{m.compare_profile_selector_label()}</Label>
+        <Description>{m.compare_profile_selector_description()}</Description>
+        <Input placeholder={m.compare_profile_selector_placeholder()} />
         <FieldError>{error?.message}</FieldError>
       </TextField>
     </div>

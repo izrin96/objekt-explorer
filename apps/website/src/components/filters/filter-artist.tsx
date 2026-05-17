@@ -1,17 +1,16 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function ArtistFilter() {
   const { selectedArtists } = useCosmoArtist();
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.artist ?? []);
 
@@ -29,7 +28,7 @@ export default function ArtistFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.artist}>
-        {content.artist.value}
+        {m.filter_artist()}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {selectedArtists.map((item) => (

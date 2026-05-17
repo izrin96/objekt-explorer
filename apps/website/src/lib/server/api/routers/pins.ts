@@ -5,7 +5,7 @@ import { pins } from "@repo/db/schema";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 
-import { authed, localeMiddleware, pub } from "../orpc";
+import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
 async function getValidPins(address: string) {
@@ -44,15 +44,14 @@ export const pinsRouter = {
   }),
 
   batchPin: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
-      await checkAddressOwned(address, session.user.id, locale);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
@@ -77,15 +76,14 @@ export const pinsRouter = {
     }),
 
   batchUnpin: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
         tokenIds: z.number().array(),
       }),
     )
-    .handler(async ({ input: { address, tokenIds }, context: { session, locale } }) => {
-      await checkAddressOwned(address, session.user.id, locale);
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
 
       if (tokenIds.length === 0) return;
 
@@ -93,7 +91,6 @@ export const pinsRouter = {
     }),
 
   movePin: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -101,8 +98,8 @@ export const pinsRouter = {
         direction: z.enum(["up", "down"]),
       }),
     )
-    .handler(async ({ input: { address, tokenId, direction }, context: { session, locale } }) => {
-      await checkAddressOwned(address, session.user.id, locale);
+    .handler(async ({ input: { address, tokenId, direction }, context: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
 
       const validPins = await getValidPins(address);
 

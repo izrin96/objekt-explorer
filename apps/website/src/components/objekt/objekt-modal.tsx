@@ -1,6 +1,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { createContext, type ReactNode, use, useState } from "react";
-import { useIntlayer } from "react-intlayer";
+
+import { m } from "@/paraglide/messages";
 
 import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from "../intentui/modal";
 import ObjektDetail from "./objekt-detail";
@@ -20,8 +21,6 @@ export const useObjektModal = () => use(ObjektModalContext);
 
 export default function ObjektModal({ children, showOwned, objekts, menu }: Props) {
   const [open, setOpen] = useState(false);
-  const content = useIntlayer("common");
-
   const handleClick = () => setOpen(true);
 
   return (
@@ -33,7 +32,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
           <ObjektDetail objekts={objekts} showOwned={showOwned} />
         </ModalBody>
         <ModalFooter className="sm:hidden">
-          <ModalClose>{content.modal.close}</ModalClose>
+          <ModalClose>{m.common_modal_close()}</ModalClose>
         </ModalFooter>
       </ModalContent>
       {children}

@@ -1,16 +1,15 @@
 import { type ValidEdition, validEdition } from "@repo/cosmo/types/common";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
 import { getEditionStr } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function EditionFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.edition);
 
@@ -27,7 +26,7 @@ export default function EditionFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.edition?.length}>
-        {content.edition.value}
+        {m.filter_edition()}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {validEdition.map((item) => (

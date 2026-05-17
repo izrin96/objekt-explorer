@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getIntlayer } from "react-intlayer";
 
 import MyListRender from "@/components/list/my-list";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
 import { sessionOptions } from "@/lib/query-options";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/")({
   beforeLoad: async ({ context: { queryClient } }) => {
@@ -17,8 +17,7 @@ export const Route = createFileRoute("/(container)/list/")({
     void queryClient.prefetchQuery(orpc.list.list.queryOptions());
   },
   head: () => {
-    const content = getIntlayer("page_titles");
-    return generateMetadata({ title: content.my_list.value });
+    return generateMetadata({ title: m.page_titles_my_list() });
   },
   component: ListPage,
 });

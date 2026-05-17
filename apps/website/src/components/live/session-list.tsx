@@ -3,9 +3,9 @@ import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { ofetch } from "ofetch";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
+import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../error-boundary";
 import { Avatar } from "../intentui/avatar-custom";
@@ -14,20 +14,19 @@ import { Loader } from "../intentui/loader";
 import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 
 export default function LiveSessionListRender() {
-  const content = useIntlayer("live");
   const { selectedArtists } = useCosmoArtist();
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">{content.title.value}</h2>
+          <h2 className="text-xl font-semibold">{m.live_title()}</h2>
         </div>
-        <span className="text-muted-fg text-sm">{content.description.value}</span>
+        <span className="text-muted-fg text-sm">{m.live_description()}</span>
       </div>
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Tabs aria-label={content.tabs_label.value} className="w-full">
+            <Tabs aria-label={m.live_tabs_label()} className="w-full">
               <TabList className="w-fit">
                 {selectedArtists.map((artist) => (
                   <Tab key={artist.id} id={artist.id} aria-label={artist.name}>
@@ -49,7 +48,6 @@ export default function LiveSessionListRender() {
 }
 
 function LiveSessionList({ artistId }: { artistId: string }) {
-  const content = useIntlayer("live");
   const query = useQuery({
     queryKey: ["live-session", artistId],
     queryFn: async () => {
@@ -80,13 +78,12 @@ function LiveSessionList({ artistId }: { artistId: string }) {
           <LiveSessionCard key={live.id} live={live} />
         ))}
       </div>
-      {lives.length === 0 && <div className="flex justify-center">{content.no_live.value}</div>}
+      {lives.length === 0 && <div className="flex justify-center">{m.live_no_live()}</div>}
     </>
   );
 }
 
 function LiveSessionCard({ live }: { live: LiveSession }) {
-  const content = useIntlayer("live");
   const searchParams = useSearch({ from: "/(container)/live/" });
   return (
     <Link to="/live/$id" params={{ id: `${live.id}` }} search={{ token: searchParams.token }}>
@@ -99,7 +96,7 @@ function LiveSessionCard({ live }: { live: LiveSession }) {
           />
           {live.status === "in_progress" && (
             <div className="absolute top-2 left-2 rounded-lg bg-rose-500 px-1.5 py-0.5 text-sm font-semibold text-white shadow">
-              {content.live_badge.value}
+              {m.live_live_badge()}
             </div>
           )}
         </div>

@@ -1,24 +1,23 @@
 import { type ValidGroupBy, validGroupBy } from "@repo/cosmo/types/common";
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
 
 export default function GroupByFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   const map = {
-    artist: content.group_by.artist.value,
-    class: content.group_by.class.value,
-    collectionNo: content.group_by.collection_no.value,
-    member: content.group_by.member.value,
-    season: content.group_by.season.value,
-    seasonCollectionNo: content.group_by.season_collection_no.value,
+    artist: m.filter_group_by_artist(),
+    class: m.filter_group_by_class(),
+    collectionNo: m.filter_group_by_collection_no(),
+    member: m.filter_group_by_member(),
+    season: m.filter_group_by_season(),
+    seasonCollectionNo: m.filter_group_by_season_collection_no(),
   };
 
   const selected = new Set(filters.group_by ? [filters.group_by] : []);
@@ -37,7 +36,7 @@ export default function GroupByFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.group_by}>
-        {content.group_by.label.value}
+        {m.filter_group_by_label()}
       </Button>
       <MenuContent
         selectionMode="single"

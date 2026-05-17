@@ -1,7 +1,6 @@
 import { GhostIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { useIntlayer } from "react-intlayer";
 
 import DynamicContainer from "@/components/dynamic-container";
 import { PrivateProfileGuard } from "@/components/profile-guard";
@@ -10,6 +9,7 @@ import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
 import { ProfileProvider } from "@/hooks/use-profile-target";
 import { profileQuery } from "@/lib/queries/profile";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -40,11 +40,10 @@ function ProfileLayout() {
 }
 
 function NotFoundComponent() {
-  const content = useIntlayer("profile");
   return (
     <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
       <GhostIcon size={72} weight="thin" />
-      {content.not_found.value}
+      {m.profile_not_found()}
     </div>
   );
 }

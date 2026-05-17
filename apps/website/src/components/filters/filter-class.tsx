@@ -1,9 +1,9 @@
 import { useCallback } from "react";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
@@ -14,7 +14,6 @@ type Props = {
 
 export default function ClassFilter({ hideEtc = false }: Props) {
   const { classes } = useFilterData();
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   const selected = new Set(filters.class);
 
@@ -35,7 +34,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
   return (
     <Menu>
       <Button intent="outline" data-selected={filters.class?.length}>
-        {content.class.value}
+        {m.filter_class()}
       </Button>
       <MenuContent selectionMode="multiple" selectedKeys={selected} onSelectionChange={update}>
         {availableClasses.map((item) => (

@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
@@ -12,6 +11,7 @@ import {
 } from "@/components/intentui/modal";
 import { orpc } from "@/lib/orpc/client";
 import type { PublicList } from "@/lib/universal/user";
+import { m } from "@/paraglide/messages";
 
 type Props = {
   open: boolean;
@@ -20,16 +20,15 @@ type Props = {
 };
 
 export function ExportListModal({ open, setOpen, list }: Props) {
-  const content = useIntlayer("common");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.export.title.value}</ModalTitle>
-        <ModalDescription>{content.export.description.value}</ModalDescription>
+        <ModalTitle>{m.common_export_title()}</ModalTitle>
+        <ModalDescription>{m.common_export_description()}</ModalDescription>
       </ModalHeader>
       <ModalFooter className="flex justify-end gap-2">
         <Button intent="outline" onPress={() => setOpen(false)}>
-          {content.modal.cancel.value}
+          {m.common_modal_cancel()}
         </Button>
         <ExportConfirmButton slug={list.slug} onSuccess={() => setOpen(false)} />
       </ModalFooter>
@@ -38,11 +37,10 @@ export function ExportListModal({ open, setOpen, list }: Props) {
 }
 
 function ExportConfirmButton({ slug, onSuccess }: { slug: string; onSuccess: () => void }) {
-  const content = useIntlayer("common");
   const exportMutation = useMutation(
     orpc.list.export.mutationOptions({
       onError: () => {
-        toast.error(content.export.error.value);
+        toast.error(m.common_export_error());
       },
     }),
   );
@@ -66,7 +64,7 @@ function ExportConfirmButton({ slug, onSuccess }: { slug: string; onSuccess: () 
 
   return (
     <Button intent="primary" onPress={handleExport} isPending={exportMutation.isPending}>
-      {content.actions.export.value}
+      {m.common_actions_export()}
     </Button>
   );
 }

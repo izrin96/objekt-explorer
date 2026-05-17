@@ -1,7 +1,6 @@
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
 import { linkOptions } from "@tanstack/react-router";
 import { Suspense } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
@@ -9,6 +8,7 @@ import { Link } from "@/components/intentui/link";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { m } from "@/paraglide/messages";
 
 import Changelog from "./changelog";
 import { Container } from "./intentui/container";
@@ -16,11 +16,10 @@ import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
 
 export function useNavMenuItems() {
-  const content = useIntlayer("nav");
   return linkOptions([
     {
       to: "/activity",
-      label: content.activity.value,
+      label: m.nav_activity(),
       icon: ChartLineIcon,
     },
   ]);

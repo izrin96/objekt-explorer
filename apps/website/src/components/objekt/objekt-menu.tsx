@@ -13,7 +13,6 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type PropsWithChildren } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useBatchLock } from "@/hooks/actions/batch-lock";
@@ -27,6 +26,7 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useUserLists } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Loader } from "../intentui/loader";
@@ -48,8 +48,6 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; address?: string }) {
   const { data: lists } = useUserLists();
   const addToList = useAddToList();
-  const content = useIntlayer("objekt_menu");
-
   const availableLists = lists?.filter((list) => {
     if (address) {
       return (
@@ -74,7 +72,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
     <MenuSubMenu>
       <MenuItem>
         <PlusIcon data-slot="icon" />
-        <MenuLabel>{content.add_to_list.value}</MenuLabel>
+        <MenuLabel>{m.objekt_menu_add_to_list()}</MenuLabel>
       </MenuItem>
       <MenuContent placement="bottom right" popover={{ offset: -2 }}>
         {!availableLists && (
@@ -87,7 +85,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
         {availableLists && availableLists.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
-              <span>{content.no_list_found.value}</span>
+              <span>{m.objekt_menu_no_list_found()}</span>
             </MenuLabel>
           </MenuItem>
         )}
@@ -111,7 +109,6 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
 export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
   const target = useListTarget()!;
   const removeObjektsFromList = useRemoveFromList();
-  const content = useIntlayer("objekt_menu");
 
   return (
     <MenuItem
@@ -124,7 +121,7 @@ export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
       intent="danger"
     >
       <TrashSimpleIcon data-slot="icon" />
-      <MenuLabel>{content.remove_from_list.value}</MenuLabel>
+      <MenuLabel>{m.objekt_menu_remove_from_list()}</MenuLabel>
     </MenuItem>
   );
 }
@@ -139,7 +136,6 @@ export function TogglePinMenuItem({
   const profile = useProfileTarget()!;
   const pin = useBatchPin();
   const unpin = useBatchUnpin();
-  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem
       onAction={() => {
@@ -157,7 +153,7 @@ export function TogglePinMenuItem({
       }}
     >
       {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
-      <MenuLabel>{isPin ? content.unpin.value : content.pin.value}</MenuLabel>
+      <MenuLabel>{isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}</MenuLabel>
     </MenuItem>
   );
 }
@@ -171,7 +167,6 @@ export function MovePinMenuItem({
 }) {
   const profile = useProfileTarget()!;
   const movePin = useMovePin();
-  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem
       onAction={() => {
@@ -183,7 +178,9 @@ export function MovePinMenuItem({
       }}
     >
       {direction === "up" ? <CaretUpIcon data-slot="icon" /> : <CaretDownIcon data-slot="icon" />}
-      <MenuLabel>{direction === "up" ? content.move_up.value : content.move_down.value}</MenuLabel>
+      <MenuLabel>
+        {direction === "up" ? m.objekt_menu_move_up() : m.objekt_menu_move_down()}
+      </MenuLabel>
     </MenuItem>
   );
 }
@@ -198,7 +195,6 @@ export function ToggleLockMenuItem({
   const profile = useProfileTarget()!;
   const lock = useBatchLock();
   const unlock = useBatchUnlock();
-  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem
       onAction={() => {
@@ -216,17 +212,16 @@ export function ToggleLockMenuItem({
       }}
     >
       {isLocked ? <LockSimpleOpenIcon data-slot="icon" /> : <LockSimpleIcon data-slot="icon" />}
-      <MenuLabel>{isLocked ? content.unlock.value : content.lock.value}</MenuLabel>
+      <MenuLabel>{isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}</MenuLabel>
     </MenuItem>
   );
 }
 
 export function SetPriceMenuItem({ onAction }: { onAction: () => void }) {
-  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem onAction={onAction}>
       <CurrencyDollarIcon data-slot="icon" />
-      <MenuLabel>{content.set_price.value}</MenuLabel>
+      <MenuLabel>{m.objekt_menu_set_price()}</MenuLabel>
     </MenuItem>
   );
 }
@@ -235,11 +230,10 @@ export function SelectMenuItem({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts as [ValidObjekt];
   const objektSelect = useObjektSelect((a) => a.select);
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
-  const content = useIntlayer("objekt_menu");
   return (
     <MenuItem onAction={() => objektSelect(objekts)}>
       <CheckIcon data-slot="icon" />
-      <MenuLabel>{isSelected ? content.unselect.value : content.select.value}</MenuLabel>
+      <MenuLabel>{isSelected ? m.objekt_menu_unselect() : m.objekt_menu_select()}</MenuLabel>
     </MenuItem>
   );
 }

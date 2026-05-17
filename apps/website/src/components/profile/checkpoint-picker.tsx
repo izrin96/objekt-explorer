@@ -12,10 +12,10 @@ import {
 } from "@internationalized/date";
 import { ClockCounterClockwiseIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRef, useState } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { useFilters } from "@/hooks/use-filters";
 import { getClientLocale } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Calendar } from "../intentui/calendar";
@@ -59,7 +59,6 @@ function formatCheckpointLabel(isoStr: string | null, defaultLabel: string) {
 }
 
 export default function CheckpointPicker() {
-  const content = useIntlayer("checkpoint");
   const [filters, setFilters] = useFilters();
   const currentValue = safeParse(filters.at);
   const triggerRef = useRef(null);
@@ -92,7 +91,7 @@ export default function CheckpointPicker() {
         onPress={() => setIsOpen(true)}
       >
         <ClockCounterClockwiseIcon data-slot="icon" />
-        {formatCheckpointLabel(filters.at, content.title.value)}
+        {formatCheckpointLabel(filters.at, m.checkpoint_title())}
       </Button>
       <PopoverContent
         placement="bottom left"
@@ -101,8 +100,8 @@ export default function CheckpointPicker() {
         onOpenChange={setIsOpen}
       >
         <PopoverHeader>
-          <PopoverTitle>{content.title.value}</PopoverTitle>
-          <PopoverDescription>{content.description.value}</PopoverDescription>
+          <PopoverTitle>{m.checkpoint_title()}</PopoverTitle>
+          <PopoverDescription>{m.checkpoint_description()}</PopoverDescription>
         </PopoverHeader>
         <PopoverBody className="space-y-4 select-none">
           <div className="flex flex-col items-center gap-3">
@@ -123,9 +122,9 @@ export default function CheckpointPicker() {
           </div>
         </PopoverBody>
         <PopoverFooter>
-          <PopoverClose onPress={() => setIsOpen(false)}>{content.close.value}</PopoverClose>
+          <PopoverClose onPress={() => setIsOpen(false)}>{m.checkpoint_close()}</PopoverClose>
           <Button onPress={handleApply} isDisabled={!selectedDate || !selectedTime}>
-            {content.apply.value}
+            {m.checkpoint_apply()}
           </Button>
         </PopoverFooter>
       </PopoverContent>
@@ -133,7 +132,7 @@ export default function CheckpointPicker() {
       {filters.at && (
         <Button intent="outline" onPress={() => setFilters({ at: null })}>
           <XIcon data-slot="icon" />
-          {content.reset.value}
+          {m.checkpoint_reset()}
         </Button>
       )}
     </div>

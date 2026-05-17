@@ -1,11 +1,9 @@
-import { useIntlayer } from "react-intlayer";
-
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 
 export default function LockedFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Button
@@ -19,10 +17,10 @@ export default function LockedFilter() {
       }
     >
       {filters.locked === true
-        ? content.only_locked.value
+        ? m.filter_only_locked()
         : filters.locked === false
-          ? content.only_unlocked.value
-          : content.lock_unlocked.value}
+          ? m.filter_only_unlocked()
+          : m.filter_lock_unlocked()}
     </Button>
   );
 }

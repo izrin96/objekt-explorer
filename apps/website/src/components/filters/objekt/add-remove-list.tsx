@@ -1,7 +1,6 @@
 import { CurrencyDollarIcon, PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { Focusable } from "react-aria-components/Focusable";
-import { useIntlayer } from "react-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/intentui/button";
@@ -10,9 +9,9 @@ import { Tooltip, TooltipContent } from "@/components/intentui/tooltip";
 import { AddToListModal, RemoveFromListModal } from "@/components/list/modal/manage-objekt";
 import { SetPriceModal } from "@/components/list/modal/set-price-modal";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
+import { m } from "@/paraglide/messages";
 
 export function AddToList({ size, address }: { size?: ButtonProps["size"]; address?: string }) {
-  const content = useIntlayer("filter");
   const [addOpen, setAddOpen] = useState(false);
   const handleAction = useObjektSelect((a) => a.handleAction);
   return (
@@ -20,14 +19,13 @@ export function AddToList({ size, address }: { size?: ButtonProps["size"]; addre
       <AddToListModal open={addOpen} setOpen={setAddOpen} address={address} />
       <Button size={size} intent="outline" onPress={() => handleAction(() => setAddOpen(true))}>
         <PlusIcon weight="regular" data-slot="icon" />
-        {content.add_to_list.value}
+        {m.filter_add_to_list()}
       </Button>
     </>
   );
 }
 
 export function RemoveFromList({ size }: { size?: ButtonProps["size"] }) {
-  const content = useIntlayer("filter");
   const [open, setOpen] = useState(false);
   const handleAction = useObjektSelect((a) => a.handleAction);
   return (
@@ -35,7 +33,7 @@ export function RemoveFromList({ size }: { size?: ButtonProps["size"] }) {
       <RemoveFromListModal open={open} setOpen={setOpen} />
       <Button size={size} intent="outline" onPress={() => handleAction(() => setOpen(true))}>
         <TrashSimpleIcon weight="regular" data-slot="icon" />
-        {content.remove_from_list.value}
+        {m.filter_remove_from_list()}
       </Button>
     </>
   );
@@ -48,7 +46,6 @@ export function SetPrice({
   size?: ButtonProps["size"];
   isDisabled?: boolean;
 }) {
-  const content = useIntlayer("filter");
   const [open, setOpen] = useState(false);
   const handleAction = useObjektSelect((a) => a.handleAction);
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
@@ -64,11 +61,11 @@ export function SetPrice({
             onPress={() => handleAction(() => setOpen(true))}
           >
             <CurrencyDollarIcon weight="regular" data-slot="icon" />
-            {content.set_price.value}
+            {m.filter_set_price()}
           </Button>
         </Focusable>
         <TooltipContent placement="bottom" inverse>
-          {content.set_price_no_currency.value}
+          {m.filter_set_price_no_currency()}
         </TooltipContent>
       </Tooltip>
     </>

@@ -1,13 +1,12 @@
 import { Addresses } from "@repo/lib";
 import { linkOptions, useLocation, useRouter } from "@tanstack/react-router";
-import { useIntlayer } from "react-intlayer";
 
 import type { PublicProfile } from "@/lib/universal/user";
+import { m } from "@/paraglide/messages";
 
 import { TabLink, TabList, Tabs } from "../intentui/tabs";
 
 export default function ProfileTabs({ user }: { user: PublicProfile }) {
-  const content = useIntlayer("profile");
   const router = useRouter();
   const pathname = useLocation({ select: (s) => s.pathname });
   const nickname = user.nickname || user.address;
@@ -18,28 +17,28 @@ export default function ProfileTabs({ user }: { user: PublicProfile }) {
     {
       to: `/@{$nickname}`,
       params: { nickname },
-      label: content.tabs.collection.value,
+      label: m.profile_tabs_collection(),
       disabled: false,
     },
     {
       to: `/@{$nickname}/trades`,
       params: { nickname },
-      label: content.tabs.trade_history.value,
+      label: m.profile_tabs_trade_history(),
       disabled: false,
     },
     {
       to: `/@{$nickname}/progress`,
       params: { nickname },
-      label: content.tabs.progress.value,
+      label: m.profile_tabs_progress(),
       disabled,
     },
     {
       to: `/@{$nickname}/stats`,
       params: { nickname },
-      label: content.tabs.statistics.value,
+      label: m.profile_tabs_statistics(),
       disabled,
     },
-    { to: `/@{$nickname}/list`, params: { nickname }, label: content.tabs.lists.value, disabled },
+    { to: `/@{$nickname}/list`, params: { nickname }, label: m.profile_tabs_lists(), disabled },
   ]);
 
   const filteredItems = items.filter((a) => !a.disabled);

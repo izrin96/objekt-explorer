@@ -4,7 +4,6 @@ import { groupBy } from "es-toolkit/array";
 import type React from "react";
 import { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -31,6 +30,7 @@ import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
 import type { OwnedBySchema } from "@/lib/universal/owned-by";
 import { getSeasonColor, tradeableFilter, cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import StatsFilter from "./stats-filter";
 
@@ -50,7 +50,6 @@ export default function ProfileStatsRender() {
 }
 
 function ProfileStats() {
-  const content = useIntlayer("stats");
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
@@ -79,7 +78,7 @@ function ProfileStats() {
     <div className="flex flex-col gap-4">
       {query.hasNextPage && (
         <div className="flex items-center gap-2 text-sm font-semibold">
-          {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
+          {m.stats_loading_objekts()} <Loader variant="ring" className="size-4" />
         </div>
       )}
 
@@ -93,7 +92,6 @@ function ProfileStats() {
 }
 
 function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
-  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
@@ -119,8 +117,8 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <CardHeader className="items-center pb-0">
-        <CardTitle>{content.breakdown_member.title.value}</CardTitle>
-        <CardDescription>{content.breakdown_member.description.value}</CardDescription>
+        <CardTitle>{m.stats_breakdown_member_title()}</CardTitle>
+        <CardDescription>{m.stats_breakdown_member_description()}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart
@@ -185,7 +183,6 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
 }
 
 function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
-  const content = useIntlayer("stats");
   const { seasons } = useFilterData();
 
   const chartData = useMemo(() => {
@@ -207,8 +204,8 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   return (
     <Card>
       <CardHeader className="items-center pb-0">
-        <CardTitle>{content.breakdown_season.title.value}</CardTitle>
-        <CardDescription>{content.breakdown_season.description.value}</CardDescription>
+        <CardTitle>{m.stats_breakdown_season_title()}</CardTitle>
+        <CardDescription>{m.stats_breakdown_season_description()}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart
@@ -279,7 +276,6 @@ function MemberProgressChart({
   objekts: ValidObjekt[];
   collections: ValidObjekt[];
 }) {
-  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
 
   const chartData = useMemo(() => {
@@ -312,7 +308,7 @@ function MemberProgressChart({
 
   const chartConfig = {
     percentage: {
-      label: content.member_progress.percentage_label.value,
+      label: m.stats_member_progress_percentage_label(),
       color: "var(--chart-1)",
     },
   } satisfies ChartConfig;
@@ -320,8 +316,8 @@ function MemberProgressChart({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{content.member_progress.title.value}</CardTitle>
-        <CardDescription>{content.member_progress.description.value}</CardDescription>
+        <CardTitle>{m.stats_member_progress_title()}</CardTitle>
+        <CardDescription>{m.stats_member_progress_description()}</CardDescription>
       </CardHeader>
       <CardContent>
         <Chart

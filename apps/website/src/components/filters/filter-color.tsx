@@ -1,10 +1,10 @@
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { type Color, parseColor } from "@react-stately/color";
 import { type CSSProperties, useState } from "react";
-import { useIntlayer } from "react-intlayer";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { ColorArea } from "../intentui/color-area";
@@ -18,7 +18,6 @@ import { Popover, PopoverBody, PopoverContent } from "../intentui/popover";
 import ColorSensitivityFilter from "./filter-color-sensitivity";
 
 export default function ColorFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
 
   return (
@@ -40,7 +39,7 @@ export default function ColorFilter() {
             }
           >
             <XIcon data-slot="icon" />
-            {content.clear_color.value}
+            {m.filter_clear_color()}
           </Button>
         </>
       )}
@@ -54,7 +53,6 @@ interface ColorPickerControlProps {
 }
 
 function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps) {
-  const content = useIntlayer("filter");
   const [localColor, setLocalColor] = useState(initialValue);
   const [color, setColor] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 60);
@@ -81,7 +79,7 @@ function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps)
             data-slot="control"
           >
             <ColorSwatch className="[--color-swatch-size:--spacing(5)]" />
-            {content.color.value}
+            {m.filter_color()}
           </Button>
           <PopoverContent>
             <PopoverBody className="space-y-2 py-3 [--gutter:--spacing(3)]">

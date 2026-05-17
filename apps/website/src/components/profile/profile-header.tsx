@@ -2,13 +2,13 @@ import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { useProfileAuthed } from "@/hooks/use-user";
 import type { PublicProfile } from "@/lib/universal/user";
 import { parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Avatar } from "../intentui/avatar-custom";
 import { Button, buttonStyles } from "../intentui/button";
@@ -22,7 +22,6 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
-  const content = useIntlayer("profile");
   const params = useParams({ from: "/@{$nickname}" });
 
   const onSave = () => {
@@ -58,7 +57,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             className="text-muted-fg cursor-pointer select-none"
             onClick={async () => {
               await copy(user.address);
-              toast.success(content.header.address_copied.value);
+              toast.success(m.profile_header_address_copied());
             }}
           />
         </div>
@@ -74,7 +73,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         rel="noopener noreferrer"
         target="_blank"
       >
-        {content.header.view_in_apollo.value}
+        {m.profile_header_view_in_apollo()}
       </ExternalLink>
 
       {isProfileAuthed && (
@@ -92,7 +91,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             onPress={() => setEditOpen(true)}
             className="w-full flex-none md:w-auto"
           >
-            {content.header.edit_profile.value}
+            {m.profile_header_edit_profile()}
           </Button>
         </>
       )}

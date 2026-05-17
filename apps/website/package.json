@@ -6,14 +6,13 @@
   "scripts": {
     "dev": "bun run --bun --env-file=../../.env vite dev",
     "build": "bun run --bun --env-file=../../.env vite build",
-    "build:intlayer": "intlayer build",
     "build:prod": "bun run --bun vite build",
     "preview": "bun run --bun --env-file=../../.env vite preview",
     "start": "bun run --bun server.ts",
     "start:preview": "bun run --bun --env-file=../../.env server.ts",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "bun run build:intlayer && tsgo --noEmit",
+    "typecheck": "tsgo --noEmit",
     "format": "oxfmt .",
     "scan": "bunx react-scan@latest localhost:3000"
   },
@@ -29,6 +28,7 @@
     "@fontsource-variable/noto-sans-kr": "^5.2.10",
     "@fontsource-variable/noto-sans-sc": "^5.2.10",
     "@heroicons/react": "^2.2.0",
+    "@inlang/paraglide-js-react": "^1.0.1",
     "@internationalized/date": "^3.12.1",
     "@internationalized/number": "^3.6.6",
     "@orpc/client": "^1.14.3",
@@ -57,7 +57,6 @@
     "drizzle-orm": "catalog:",
     "es-toolkit": "^1.46.1",
     "input-otp": "^1.4.2",
-    "intlayer": "^8.9.5",
     "jose": "^6.2.3",
     "motion": "^12.38.0",
     "nanoid": "^5.1.11",
@@ -70,7 +69,6 @@
     "react-error-boundary": "^6.1.1",
     "react-hook-form": "^7.75.0",
     "react-intersection-observer": "^10.0.3",
-    "react-intlayer": "^8.9.5",
     "recharts": "^3.8.1",
     "slugify": "^1.6.9",
     "sonner": "^2.0.7",
@@ -86,6 +84,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
+    "@inlang/paraglide-js": "^2.18.0",
     "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@rolldown/plugin-babel": "^0.2.3",
@@ -99,8 +98,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "tailwindcss": "^4.3.0",
     "typescript": "catalog:dev",
-    "vite": "^8.0.13",
-    "vite-intlayer": "^8.9.5"
+    "vite": "^8.0.13"
   },
   "peerDependencies": {
     "@tanstack/query-core": "^5.100.10"

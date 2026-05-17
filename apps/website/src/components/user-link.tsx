@@ -1,7 +1,7 @@
 import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
-import { useIntlayer } from "react-intlayer";
 
 import { parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Link } from "./intentui/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./intentui/tooltip";
@@ -13,7 +13,6 @@ export default function UserLink({
   address?: string | null;
   nickname?: string | null;
 }) {
-  const content = useIntlayer("user_link");
   return (
     <div className="inline-flex gap-2">
       {address ? (
@@ -28,15 +27,15 @@ export default function UserLink({
           </Link>
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
-              <TooltipTrigger aria-label={content.preview.value}>
+              <TooltipTrigger aria-label={m.user_link_preview()}>
                 <InfoIcon size={16} />
               </TooltipTrigger>
-              <TooltipContent inverse>{content.nickname_not_available.value}</TooltipContent>
+              <TooltipContent inverse>{m.user_link_nickname_not_available()}</TooltipContent>
             </Tooltip>
           )}
         </>
       ) : (
-        <span className="text-muted-fg font-mono">{content.deleted.value}</span>
+        <span className="text-muted-fg font-mono">{m.user_link_deleted()}</span>
       )}
     </div>
   );

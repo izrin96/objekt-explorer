@@ -1,16 +1,17 @@
+import { ParaglideMessage } from "@inlang/paraglide-js-react";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import type { CosmoPublicUser, CosmoSearchResult } from "@repo/cosmo/types/user";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { useState } from "react";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { useDebounceValue, useInterval } from "usehooks-ts";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 import { msToCountdown } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Button, buttonStyles } from "../intentui/button";
 import { Link } from "../intentui/link";
@@ -86,10 +87,9 @@ export default function LinkRender() {
 }
 
 function IntroStep({ onContinue }: { onContinue: () => void }) {
-  const content = useIntlayer("link");
   return (
     <div className="flex max-w-xl flex-col items-center justify-center gap-4">
-      <h2 className="text-lg font-semibold">{content.process.intro_title.value}</h2>
+      <h2 className="text-lg font-semibold">{m.link_process_intro_title()}</h2>
       <img
         src="/assets/icon-smartphone.png"
         alt="Smartphone"
@@ -98,17 +98,16 @@ function IntroStep({ onContinue }: { onContinue: () => void }) {
         className="fade-in zoom-in animate-in duration-200"
       />
       <div className="flex flex-col gap-2 text-center text-sm">
-        <span>{content.process.intro_description.value}</span>
+        <span>{m.link_process_intro_description()}</span>
       </div>
       <Button size="md" intent="outline" onPress={onContinue}>
-        {content.continue.value}
+        {m.link_continue()}
       </Button>
     </div>
   );
 }
 
 function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) {
-  const content = useIntlayer("link");
   const [inputValue, setInputValue] = useState("");
   const [debouncedQuery] = useDebounceValue(inputValue, 350);
 
@@ -157,14 +156,14 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
         height={220}
         className="fade-in zoom-in animate-in duration-200"
       />
-      <span className="text-center">{content.process.nickname_step_prompt.value}</span>
+      <span className="text-center">{m.link_process_nickname_step_prompt()}</span>
       <SearchField
         value={inputValue}
         onChange={setInputValue}
-        aria-label={content.enter_nickname.value}
+        aria-label={m.link_enter_nickname()}
         className="w-full"
       >
-        <SearchInput placeholder={content.nickname_placeholder.value} />
+        <SearchInput placeholder={m.link_nickname_placeholder()} />
       </SearchField>
       {(isPending && debouncedQuery.length > 0) || checkMutation.isPending ? (
         <div className="flex justify-center p-4">
@@ -175,7 +174,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
           items={data}
           selectionMode="single"
           onSelectionChange={handleSelection}
-          aria-label={content.enter_nickname.value}
+          aria-label={m.link_enter_nickname()}
           className="w-full"
         >
           {(item: CosmoPublicUser) => (
@@ -185,9 +184,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
           )}
         </ListBox>
       ) : debouncedQuery.length > 0 && data ? (
-        <span className="text-muted-fg text-center text-sm">
-          {content.nickname_not_found.value}
-        </span>
+        <span className="text-muted-fg text-center text-sm">{m.link_nickname_not_found()}</span>
       ) : null}
     </div>
   );
@@ -202,7 +199,6 @@ function ArtistStep({
   onSuccess: (artistId: ValidArtist, codeData: CodeData) => void;
   onBack: () => void;
 }) {
-  const content = useIntlayer("link");
   const { artists } = useCosmoArtist();
 
   const generateMutation = useMutation(
@@ -239,10 +235,10 @@ function ArtistStep({
         className="fade-in zoom-in animate-in duration-200"
       />
       <span>
-        {content.process.artist_step_cosmo_id.value}{" "}
+        {m.link_process_artist_step_cosmo_id()}{" "}
         <span className="font-bold">{searchData.nickname}</span>
       </span>
-      <span className="text-center text-sm">{content.process.artist_step_select.value}</span>
+      <span className="text-center text-sm">{m.link_process_artist_step_select()}</span>
       <div className="flex gap-2">
         {artists.map((artist) => (
           <Button
@@ -259,7 +255,7 @@ function ArtistStep({
         ))}
       </div>
       <Button intent="outline" onPress={onBack}>
-        {content.start_over.value}
+        {m.link_start_over()}
       </Button>
     </div>
   );
@@ -278,7 +274,6 @@ function VerifyStep({
   onSuccess: () => void;
   onStartOver: () => void;
 }) {
-  const content = useIntlayer("link");
   const { getArtist } = useCosmoArtist();
   const artistTitle = getArtist(artistId)?.title ?? artistId;
 
@@ -302,11 +297,11 @@ function VerifyStep({
   const verifyMutation = useMutation(
     orpc.cosmoLink.verifyStatusMessage.mutationOptions({
       onSuccess: () => {
-        toast.success(content.success({ nickname: searchData.nickname }).value);
+        toast.success(m.link_success({ nickname: searchData.nickname }));
         onSuccess();
       },
       onError: ({ message }) => {
-        toast.error(message || content.verification_failed.value);
+        toast.error(message || m.link_verification_failed());
       },
     }),
   );
@@ -321,9 +316,9 @@ function VerifyStep({
           height={220}
           className="fade-in zoom-in animate-in duration-200"
         />
-        <span>{content.code_expired.value}</span>
+        <span>{m.link_code_expired()}</span>
         <Button intent="outline" onPress={onStartOver}>
-          {content.start_over.value}
+          {m.link_start_over()}
         </Button>
       </div>
     );
@@ -342,10 +337,10 @@ function VerifyStep({
         <span>{verifyMutation.error.message}</span>
         <div className="flex gap-2">
           <Button intent="primary" onPress={() => verifyMutation.reset()}>
-            {content.try_again.value}
+            {m.link_try_again()}
           </Button>
           <Button intent="outline" onPress={onStartOver}>
-            {content.start_over.value}
+            {m.link_start_over()}
           </Button>
         </div>
       </div>
@@ -362,10 +357,14 @@ function VerifyStep({
         className="fade-in zoom-in animate-in duration-200"
       />
       <span>
-        {content.process.verify_step_verifying.use({
-          nickname: () => <span className="font-bold">{searchData.nickname}</span>,
-          artist: () => <span className="font-bold">{artistTitle}</span>,
-        })}
+        <ParaglideMessage
+          message={m.link_process_verify_step_verifying}
+          inputs={{}}
+          markup={{
+            nickname: () => <span className="font-bold">{searchData.nickname}</span>,
+            artist: () => <span className="font-bold">{artistTitle}</span>,
+          }}
+        />
       </span>
 
       <div className="bg-muted rounded-lg p-4 text-center font-mono text-2xl tracking-widest select-all">
@@ -373,7 +372,7 @@ function VerifyStep({
       </div>
 
       <span className="max-w-md text-center text-sm">
-        {content.code_instructions({ artist: artistTitle }).value}
+        {m.link_code_instructions({ artist: artistTitle })}
       </span>
 
       <Countdown deadline={deadline} onExpire={() => setExpired(true)} />
@@ -382,19 +381,17 @@ function VerifyStep({
         onPress={() => verifyMutation.mutate(searchData.address)}
         isPending={verifyMutation.isPending}
       >
-        {verifyMutation.isPending ? <Loader variant="ring" /> : content.verify.value}
+        {verifyMutation.isPending ? <Loader variant="ring" /> : m.link_verify()}
       </Button>
 
       <Button intent="outline" onPress={onStartOver}>
-        {content.start_over.value}
+        {m.link_start_over()}
       </Button>
     </div>
   );
 }
 
 function SuccessStep({ nickname }: { nickname: string }) {
-  const content = useIntlayer("link");
-
   return (
     <div className="flex flex-col items-center gap-2">
       <img
@@ -404,7 +401,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
         alt="Welcome"
         className="fade-in zoom-in animate-in duration-200"
       />
-      <span>{content.success({ nickname }).value}</span>
+      <span>{m.link_success({ nickname })}</span>
       <div>
         <Link
           className={buttonStyles({
@@ -415,7 +412,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
             nickname: nickname,
           }}
         >
-          {content.go_to_cosmo.value}
+          {m.link_go_to_cosmo()}
         </Link>
       </div>
     </div>
@@ -423,7 +420,6 @@ function SuccessStep({ nickname }: { nickname: string }) {
 }
 
 function Countdown({ deadline, onExpire }: { deadline: number; onExpire: () => void }) {
-  const content = useIntlayer("link");
   const [remaining, setRemaining] = useState(() => Math.max(deadline - Date.now(), 0));
 
   useInterval(
@@ -439,7 +435,7 @@ function Countdown({ deadline, onExpire }: { deadline: number; onExpire: () => v
 
   return (
     <span className="text-sm">
-      {content.process.countdown_remaining({ countdown: msToCountdown(remaining) }).value}
+      {m.link_process_countdown_remaining({ countdown: msToCountdown(remaining) })}
     </span>
   );
 }

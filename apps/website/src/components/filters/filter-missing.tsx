@@ -1,11 +1,9 @@
-import { useIntlayer } from "react-intlayer";
-
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Toggle } from "../intentui/toggle";
 
 export default function MissingFilter() {
-  const content = useIntlayer("filter");
   const [filters, setFilters] = useFilters();
   return (
     <Toggle
@@ -18,7 +16,7 @@ export default function MissingFilter() {
         })
       }
     >
-      {content.show_missing.value}
+      {m.filter_show_missing()}
     </Toggle>
   );
 }

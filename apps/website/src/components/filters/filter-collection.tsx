@@ -2,10 +2,10 @@ import { useCallback } from "react";
 import type { Key } from "react-aria-components";
 import { Autocomplete, useFilter } from "react-aria-components/Autocomplete";
 import { Popover } from "react-aria-components/Popover";
-import { useIntlayer } from "react-intlayer";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Dialog } from "../intentui/dialog";
 import { ListBox } from "../intentui/list-box";
@@ -13,7 +13,6 @@ import { SearchField, SearchInput } from "../intentui/search-field";
 import { Select, SelectItem, SelectTrigger } from "../intentui/select";
 
 export default function CollectionFilter() {
-  const content = useIntlayer("filter");
   const { contains } = useFilter({ sensitivity: "base" });
   const { collections } = useFilterData();
   const [filters, setFilters] = useFilters();
@@ -30,8 +29,8 @@ export default function CollectionFilter() {
       selectionMode="multiple"
       value={selected}
       onChange={update}
-      placeholder={content.collection_no.value}
-      aria-label={content.collection_no.value}
+      placeholder={m.filter_collection_no()}
+      aria-label={m.filter_collection_no()}
       className="max-w-52"
     >
       <SelectTrigger />

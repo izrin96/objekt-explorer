@@ -1,5 +1,7 @@
 import { InfoIcon, GithubLogoIcon, DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { useIntlayer, useLocale } from "react-intlayer";
+
+import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 import { buttonStyles } from "./intentui/button";
 import { ExternalLink } from "./intentui/link";
@@ -12,12 +14,11 @@ type Props = {
 };
 
 export function AboutModal({ open, setOpen }: Props) {
-  const content = useIntlayer("nav");
-  const { locale } = useLocale();
+  const locale = getLocale();
   return (
     <ModalContent size="xl" isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.about.value}</ModalTitle>
+        <ModalTitle>{m.nav_about()}</ModalTitle>
       </ModalHeader>
       <ModalBody className="flex flex-col gap-y-4">
         <div className="text-sm">
@@ -58,11 +59,10 @@ export function AboutModal({ open, setOpen }: Props) {
 }
 
 export function AboutMenu({ onAction }: { onAction?: () => void }) {
-  const content = useIntlayer("nav");
   return (
     <MenuItem onAction={onAction}>
       <InfoIcon data-slot="icon" />
-      <MenuLabel>{content.about.value}</MenuLabel>
+      <MenuLabel>{m.nav_about()}</MenuLabel>
     </MenuItem>
   );
 }

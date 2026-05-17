@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/components/intentui/button";
@@ -35,6 +34,7 @@ import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useSession, useUserLists } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../../error-boundary";
 import { CreateListModal } from "./manage-list";
@@ -48,12 +48,10 @@ export function AddToListModal({
   setOpen: (val: boolean) => void;
   address?: string;
 }) {
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.manage_objekt.add_title.value}</ModalTitle>
+        <ModalTitle>{m.list_manage_objekt_add_title()}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <QueryErrorResetBoundary>
@@ -65,7 +63,7 @@ export function AddToListModal({
         </QueryErrorResetBoundary>
       </ModalBody>
       <ModalFooter id="submit-form-add-to-list">
-        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
@@ -83,8 +81,6 @@ function AddToListForm({
   const [createListOpen, setCreateListOpen] = useState(false);
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
-  const content = useIntlayer("list");
-
   const { handleSubmit, control } = useForm({
     defaultValues: {
       slug: "",
@@ -93,7 +89,7 @@ function AddToListForm({
   });
 
   if (!session) {
-    return <div className="flex justify-center">{content.manage_objekt.sign_in_message.value}</div>;
+    return <div className="flex justify-center">{m.list_manage_objekt_sign_in_message()}</div>;
   }
 
   if (!lists) {
@@ -139,12 +135,12 @@ function AddToListForm({
       <>
         <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
         <Note intent="default">
-          {content.manage_objekt.no_list_message.value}{" "}
+          {m.list_manage_objekt_no_list_message()}{" "}
           <ExternalLink
             className="cursor-pointer underline"
             onPress={() => setCreateListOpen(true)}
           >
-            {content.manage_objekt.create_one_here.value}
+            {m.list_manage_objekt_create_one_here()}
           </ExternalLink>
           .
         </Note>
@@ -158,14 +154,14 @@ function AddToListForm({
           control={control}
           name="slug"
           rules={{
-            required: content.manage_objekt.list_required.value,
+            required: m.list_manage_objekt_list_required(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
             fieldState: { invalid, error },
           }) => (
             <Select
-              placeholder={content.manage_objekt.list_placeholder.value}
+              placeholder={m.list_manage_objekt_list_placeholder()}
               name={name}
               value={value}
               onChange={onChange}
@@ -174,7 +170,7 @@ function AddToListForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.manage_objekt.list_label.value}</Label>
+              <Label>{m.list_manage_objekt_list_label()}</Label>
               <SelectTrigger />
               <SelectContent>
                 {availableLists.map((item) => (
@@ -205,14 +201,14 @@ function AddToListForm({
               isSelected={value}
               validationBehavior="aria"
             >
-              <Label>{content.manage_objekt.skip_dups_label.value}</Label>
-              <Description>{content.manage_objekt.skip_dups_desc.value}</Description>
+              <Label>{m.list_manage_objekt_skip_dups_label()}</Label>
+              <Description>{m.list_manage_objekt_skip_dups_desc()}</Description>
             </Checkbox>
           )}
         />
         <Portal to="#submit-form-add-to-list">
           <Button isPending={addToList.isPending} onPress={() => onSubmit()}>
-            {content.manage_objekt.add_button.value}
+            {m.list_manage_objekt_add_button()}
           </Button>
         </Portal>
       </div>
@@ -230,16 +226,14 @@ export function RemoveFromListModal({
   const target = useListTarget()!;
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.manage_objekt.remove_title.value}</ModalTitle>
-        <ModalDescription>{content.manage_objekt.remove_description.value}</ModalDescription>
+        <ModalTitle>{m.list_manage_objekt_remove_title()}</ModalTitle>
+        <ModalDescription>{m.list_manage_objekt_remove_description()}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
 
         <Button
           intent="danger"
@@ -259,7 +253,7 @@ export function RemoveFromListModal({
             );
           }}
         >
-          {contentCommon.actions.continue.value}
+          {m.common_actions_continue()}
         </Button>
       </ModalFooter>
     </ModalContent>

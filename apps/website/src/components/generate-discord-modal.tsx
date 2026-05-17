@@ -2,7 +2,6 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 
 import { CopyButton } from "@/components/copy-button";
 import { Button } from "@/components/intentui/button";
@@ -22,6 +21,7 @@ import { Textarea } from "@/components/intentui/textarea";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
+import { m } from "@/paraglide/messages";
 
 type Props = {
   open: boolean;
@@ -30,8 +30,6 @@ type Props = {
 };
 
 export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: Props) {
-  const content = useIntlayer("generate_discord");
-  const modalContent = useIntlayer("discord_format_modal");
   const [formatText, setFormatText] = useState("");
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
@@ -65,8 +63,8 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{modalContent.title.value}</ModalTitle>
-        <ModalDescription>{modalContent.description.value}</ModalDescription>
+        <ModalTitle>{m.discord_format_modal_title()}</ModalTitle>
+        <ModalDescription>{m.discord_format_modal_description()}</ModalDescription>
       </ModalHeader>
       <ModalBody>
         <Form className="flex flex-col gap-2" onSubmit={onSubmit} validationBehavior="aria">
@@ -82,7 +80,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{content.show_count.value}</Label>
+                <Label>{m.generate_discord_show_count()}</Label>
               </Checkbox>
             )}
           />
@@ -98,7 +96,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{content.lower_case.value}</Label>
+                <Label>{m.generate_discord_lower_case()}</Label>
               </Checkbox>
             )}
           />
@@ -114,7 +112,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{content.bulleted_list.value}</Label>
+                <Label>{m.generate_discord_bulleted_list()}</Label>
               </Checkbox>
             )}
           />
@@ -130,7 +128,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{content.show_member_emoji.value}</Label>
+                <Label>{m.generate_discord_show_member_emoji()}</Label>
               </Checkbox>
             )}
           />
@@ -148,20 +146,20 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                   }
                 }}
                 onBlur={onBlur}
-                placeholder={content.group_by_placeholder.value}
+                placeholder={m.generate_discord_group_by_placeholder()}
                 validationBehavior="aria"
               >
-                <Label>{content.group_by_label.value}</Label>
+                <Label>{m.generate_discord_group_by_label()}</Label>
                 <SelectTrigger />
                 <SelectContent>
                   <SelectItem id="none" textValue="none">
-                    {content.group_by_none.value}
+                    {m.generate_discord_group_by_none()}
                   </SelectItem>
                   <SelectItem id="season" textValue="season">
-                    {content.group_by_season.value}
+                    {m.generate_discord_group_by_season()}
                   </SelectItem>
                   <SelectItem id="season-first" textValue="season-first">
-                    {content.group_by_season_first.value}
+                    {m.generate_discord_group_by_season_first()}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -176,25 +174,25 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
                 value={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                placeholder={content.style_placeholder.value}
+                placeholder={m.generate_discord_style_placeholder()}
                 validationBehavior="aria"
                 isDisabled={groupByValue === "none"}
               >
-                <Label>{content.style_label.value}</Label>
+                <Label>{m.generate_discord_style_label()}</Label>
                 <SelectTrigger />
                 <SelectContent>
                   <SelectItem id="default" textValue="default">
-                    {content.style_default.value}
+                    {m.generate_discord_style_default()}
                   </SelectItem>
                   <SelectItem id="compact" textValue="compact">
-                    {content.style_compact.value}
+                    {m.generate_discord_style_compact()}
                   </SelectItem>
                 </SelectContent>
               </Select>
             )}
           />
           <TextField>
-            <Label>{content.formatted_text_label.value}</Label>
+            <Label>{m.generate_discord_formatted_text_label()}</Label>
             <Textarea
               value={formatText}
               onChange={(e) => setFormatText(e.target.value)}
@@ -208,7 +206,7 @@ export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: P
       </ModalBody>
       <ModalFooter className="flex justify-end">
         <Button type="submit" onPress={() => onSubmit()}>
-          {modalContent.generate.value}
+          {m.discord_format_modal_generate()}
         </Button>
       </ModalFooter>
     </ModalContent>

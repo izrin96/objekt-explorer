@@ -1,9 +1,9 @@
 import { QuestionMarkIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useEffect, useRef, useState } from "react";
-import { useIntlayer } from "react-intlayer";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Input, InputGroup } from "../intentui/input";
@@ -28,7 +28,6 @@ interface SearchFilterFieldProps {
 function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
   const [localQuery, setLocalQuery] = useState(initialValue);
   const ref = useRef<HTMLInputElement>(null!);
-  const content = useIntlayer("filter");
   const [query, setQuery] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 80);
 
@@ -68,7 +67,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       aria-label="Search"
     >
       <InputGroup>
-        <Input ref={ref} placeholder={content.quick_search.value} />
+        <Input ref={ref} placeholder={m.filter_quick_search()} />
         {query.length > 0 ? (
           <Button intent="plain" size="sq-xs" onPress={() => handleChange("")}>
             <XIcon data-slot="icon" />
@@ -80,21 +79,21 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
             </Button>
             <PopoverContent className="max-w-sm">
               <div className="flex flex-col gap-2 p-6 text-sm">
-                <span>{content.search_help.intro.value}</span>
+                <span>{m.filter_search_help_intro()}</span>
                 <ul className="list-inside list-disc leading-6">
-                  <li>{content.search_help.or_operation.value}</li>
-                  <li>{content.search_help.and_operation.value}</li>
-                  <li>{content.search_help.not_operation.value}</li>
-                  <li>{content.search_help.artist_names.value}</li>
-                  <li>{content.search_help.member_short_names.value}</li>
-                  <li>{content.search_help.class.value}</li>
-                  <li>{content.search_help.season.value}</li>
-                  <li>{content.search_help.collection_numbers.value}</li>
-                  <li>{content.search_help.collection_ranges.value}</li>
-                  <li>{content.search_help.serial_numbers.value}</li>
-                  <li>{content.search_help.serial_ranges.value}</li>
+                  <li>{m.filter_search_help_or_operation()}</li>
+                  <li>{m.filter_search_help_and_operation()}</li>
+                  <li>{m.filter_search_help_not_operation()}</li>
+                  <li>{m.filter_search_help_artist_names()}</li>
+                  <li>{m.filter_search_help_member_short_names()}</li>
+                  <li>{m.filter_search_help_class()}</li>
+                  <li>{m.filter_search_help_season()}</li>
+                  <li>{m.filter_search_help_collection_numbers()}</li>
+                  <li>{m.filter_search_help_collection_ranges()}</li>
+                  <li>{m.filter_search_help_serial_numbers()}</li>
+                  <li>{m.filter_search_help_serial_ranges()}</li>
                 </ul>
-                <span>{content.search_help.example.value}</span>
+                <span>{m.filter_search_help_example()}</span>
               </div>
             </PopoverContent>
           </Popover>

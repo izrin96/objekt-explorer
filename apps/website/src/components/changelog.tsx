@@ -1,5 +1,6 @@
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
-import { useIntlayer } from "react-intlayer";
+
+import { m } from "@/paraglide/messages";
 
 import { Button } from "./intentui/button";
 import {
@@ -21,8 +22,6 @@ import {
 import { Note } from "./intentui/note";
 
 export default function Changelog() {
-  const content = useIntlayer("common");
-
   const changelog = [
     {
       date: "2026-04-20 - 2026-04-23",
@@ -51,7 +50,7 @@ export default function Changelog() {
       </Button>
       <ModalContent size="2xl">
         <ModalHeader>
-          <ModalTitle>{content.changelog.value}</ModalTitle>
+          <ModalTitle>{m.common_changelog()}</ModalTitle>
         </ModalHeader>
         <ModalBody className="flex flex-col gap-4">
           <ChangelogNotice />
@@ -73,7 +72,7 @@ export default function Changelog() {
           </DisclosureGroup>
         </ModalBody>
         <ModalFooter>
-          <ModalClose>{content.modal.close.value}</ModalClose>
+          <ModalClose>{m.common_modal_close()}</ModalClose>
         </ModalFooter>
       </ModalContent>
     </Modal>

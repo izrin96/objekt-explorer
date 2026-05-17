@@ -1,6 +1,7 @@
 import { GearIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { useIntlayer } from "react-intlayer";
+
+import { m } from "@/paraglide/messages";
 
 import { Button } from "./intentui/button";
 import { SettingsModal } from "./settings-modal";
@@ -9,7 +10,6 @@ export function SettingsButton({
   intent = "plain",
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const content = useIntlayer("common");
   const [open, setOpen] = useState(false);
 
   return (
@@ -18,7 +18,7 @@ export function SettingsButton({
         intent={intent}
         size="sm"
         className="px-2 [--btn-icon:var(--color-fg)] sm:px-2"
-        aria-label={content.settings.title.value}
+        aria-label={m.common_settings_title()}
         onPress={() => setOpen(true)}
         {...props}
       >

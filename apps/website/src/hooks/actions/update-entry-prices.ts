@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { useObjektSelect } from "../use-objekt-select";
 
 export function useUpdateEntryPrices() {
-  const content = useIntlayer("list");
   const reset = useObjektSelect((a) => a.reset);
 
   const batchUpdatePrices = useMutation(
@@ -35,7 +34,7 @@ export function useUpdateEntryPrices() {
         return { snapshot };
       },
       onSuccess: () => {
-        toast.success(content.manage_objekt.set_price_success.value);
+        toast.success(m.list_manage_objekt_set_price_success());
         reset();
       },
       onError: async (_err, { slug }, context, { client }) => {
@@ -47,7 +46,7 @@ export function useUpdateEntryPrices() {
           await client.invalidateQueries({ queryKey });
         }
 
-        toast.error(content.manage_objekt.set_price_error.value);
+        toast.error(m.list_manage_objekt_set_price_error());
       },
     }),
   );

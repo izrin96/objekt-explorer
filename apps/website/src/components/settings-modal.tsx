@@ -1,13 +1,12 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTransition } from "react";
-import { useLocale, useIntlayer } from "react-intlayer";
 
 import { useTheme } from "@/components/theme-provider";
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
 import type { Locale } from "@/lib/locale";
-import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
+import { getLocale, setLocale as setParaglideLocale } from "@/paraglide/runtime";
 
 import { Description, Label } from "./intentui/field";
 import {
@@ -28,50 +27,41 @@ export function SettingsModal({
   open: boolean;
   setOpen: (val: boolean) => void;
 }) {
-  const content = useIntlayer("common");
   const { theme, setTheme } = useTheme();
-  const { locale } = useLocale();
-  const queryClient = useQueryClient();
-  const [isPending, startTransition] = useTransition();
+  const locale = getLocale();
+  const [isPending] = useTransition();
   const isCompact = useMediaQuery("(max-width: 1560px)");
-
-  const setLocale = useMutation(orpc.config.setLocale.mutationOptions());
   const { wide, setWide } = useWide();
   const hideLabel = useConfigStore((s) => s.hideLabel);
   const setHideLabel = useConfigStore((s) => s.setHideLabel);
 
   const handleLocaleChange = (value: Locale) => {
-    startTransition(async () => {
-      await setLocale.mutateAsync(value);
-      void queryClient.invalidateQueries({
-        queryKey: orpc.config.getLocale.key(),
-      });
-    });
+    void setParaglideLocale(value);
   };
 
   return (
     <ModalContent size="md" isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.settings.title.value}</ModalTitle>
+        <ModalTitle>{m.common_settings_title()}</ModalTitle>
       </ModalHeader>
       <ModalBody className="space-y-4">
         <div className="flex space-y-2">
           <div className="grow">
-            <Label>{content.settings.theme.label.value}</Label>
-            <Description>{content.settings.theme.desc.value}</Description>
+            <Label>{m.common_settings_theme_label()}</Label>
+            <Description>{m.common_settings_theme_desc()}</Description>
           </div>
           <div className="flex self-center">
             <Select
               className="shrink"
               value={theme}
               onChange={(key) => setTheme(key as "dark" | "light" | "system")}
-              aria-label={content.settings.theme.label.value}
+              aria-label={m.common_settings_theme_label()}
             >
               <SelectTrigger />
               <SelectContent>
-                <SelectItem id="light">{content.settings.theme.light.value}</SelectItem>
-                <SelectItem id="dark">{content.settings.theme.dark.value}</SelectItem>
-                <SelectItem id="system">{content.settings.theme.system.value}</SelectItem>
+                <SelectItem id="light">{m.common_settings_theme_light()}</SelectItem>
+                <SelectItem id="dark">{m.common_settings_theme_dark()}</SelectItem>
+                <SelectItem id="system">{m.common_settings_theme_system()}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -79,51 +69,51 @@ export function SettingsModal({
 
         <div className="flex space-y-2">
           <div className="grow">
-            <Label>{content.settings.language.label.value}</Label>
-            <Description>{content.settings.language.desc.value}</Description>
+            <Label>{m.common_settings_language_label()}</Label>
+            <Description>{m.common_settings_language_desc()}</Description>
           </div>
           <div className="flex self-center">
             <Select
               value={locale}
               onChange={(key) => handleLocaleChange(key as Locale)}
               isDisabled={isPending}
-              aria-label={content.settings.language.label.value}
+              aria-label={m.common_settings_language_label()}
             >
               <SelectTrigger />
               <SelectContent>
-                <SelectItem id="en">{content.settings.language.en.value}</SelectItem>
-                <SelectItem id="ko">{content.settings.language.ko.value}</SelectItem>
+                <SelectItem id="en">{m.common_settings_language_en()}</SelectItem>
+                <SelectItem id="ko">{m.common_settings_language_ko()}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-sm font-medium">{content.settings.filters.label.value}</h3>
+          <h3 className="text-sm font-medium">{m.common_settings_filters_label()}</h3>
 
           {!isCompact && (
             <Switch
               isSelected={wide}
               onChange={setWide}
-              aria-label={content.settings.filters.wide.value}
+              aria-label={m.common_settings_filters_wide()}
             >
-              <Label>{content.settings.filters.wide.value}</Label>
-              <Description>{content.settings.filters.wide_desc.value}</Description>
+              <Label>{m.common_settings_filters_wide()}</Label>
+              <Description>{m.common_settings_filters_wide_desc()}</Description>
             </Switch>
           )}
 
           <Switch
             isSelected={hideLabel}
             onChange={setHideLabel}
-            aria-label={content.settings.filters.hide_label.value}
+            aria-label={m.common_settings_filters_hide_label()}
           >
-            <Label>{content.settings.filters.hide_label.value}</Label>
-            <Description>{content.settings.filters.hide_label_desc.value}</Description>
+            <Label>{m.common_settings_filters_hide_label()}</Label>
+            <Description>{m.common_settings_filters_hide_label_desc()}</Description>
           </Switch>
         </div>
       </ModalBody>
       <ModalFooter>
-        <ModalClose>{content.modal.close.value}</ModalClose>
+        <ModalClose>{m.common_modal_close()}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );

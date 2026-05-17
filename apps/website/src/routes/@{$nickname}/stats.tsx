@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getIntlayer } from "react-intlayer";
 
 import ProfileStatsRender from "@/components/profile/stats/stats-render";
 import { generateMetadata } from "@/lib/meta";
 import { profileQuery } from "@/lib/queries/profile";
 import { parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}/stats")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -12,12 +12,11 @@ export const Route = createFileRoute("/@{$nickname}/stats")({
     return { profile };
   },
   head: async ({ loaderData }) => {
-    const content = getIntlayer("page_titles");
     return loaderData
       ? generateMetadata({
-          title: content.profile_stats({
+          title: m.page_titles_profile_stats({
             nickname: parseNickname(loaderData.profile.address, loaderData.profile.nickname),
-          }).value,
+          }),
         })
       : {};
   },

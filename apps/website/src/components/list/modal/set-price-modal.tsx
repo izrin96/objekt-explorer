@@ -2,7 +2,6 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useEffect } from "react";
 import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 
 import { Button } from "@/components/intentui/button";
 import { Checkbox } from "@/components/intentui/checkbox";
@@ -21,6 +20,7 @@ import { NumberField, NumberInput } from "@/components/intentui/number-field";
 import { TextField } from "@/components/intentui/text-field";
 import { useUpdateEntryPrices } from "@/hooks/actions/update-entry-prices";
 import { useListTarget } from "@/hooks/use-list-target";
+import { m } from "@/paraglide/messages";
 
 type SetPriceModalProps = {
   open: boolean;
@@ -36,8 +36,6 @@ type FormValues = {
 
 export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
   const [objekt] = objekts;
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
   const list = useListTarget()!;
   const updateEntryPrices = useUpdateEntryPrices();
 
@@ -101,9 +99,9 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.manage_objekt.set_price_title.value}</ModalTitle>
+        <ModalTitle>{m.list_manage_objekt_set_price_title()}</ModalTitle>
         <ModalDescription>
-          {content.manage_objekt.set_price_desc.value} ({list.currency})
+          {m.list_manage_objekt_set_price_desc()} ({list.currency})
         </ModalDescription>
       </ModalHeader>
       <ModalBody>
@@ -114,7 +112,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
               name="isQyop"
               render={({ field: { value, onChange } }) => (
                 <Checkbox isSelected={value} onChange={onChange} validationBehavior="aria">
-                  {content.manage_objekt.set_price_qyop.value}
+                  {m.list_manage_objekt_set_price_qyop()}
                 </Checkbox>
               )}
             />
@@ -139,10 +137,10 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
                   isDisabled={isQyop}
                   validationBehavior="aria"
                 >
-                  <Label>{content.manage_objekt.set_price_label.value}</Label>
+                  <Label>{m.list_manage_objekt_set_price_label()}</Label>
                   <NumberInput />
                   <Description>
-                    {list.currency} ({content.manage_objekt.set_price_clear_hint.value})
+                    {list.currency} ({m.list_manage_objekt_set_price_clear_hint()})
                   </Description>
                   <FieldError>{error?.message}</FieldError>
                 </NumberField>
@@ -159,8 +157,8 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
                   onBlur={onBlur}
                   validationBehavior="aria"
                 >
-                  <Label>{content.manage_objekt.set_price_note.value}</Label>
-                  <Input placeholder={content.manage_objekt.set_price_note_placeholder.value} />
+                  <Label>{m.list_manage_objekt_set_price_note()}</Label>
+                  <Input placeholder={m.list_manage_objekt_set_price_note_placeholder()} />
                 </TextField>
               )}
             />
@@ -168,12 +166,12 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
         </Form>
       </ModalBody>
       <ModalFooter id="set-price-form">
-        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
         <Button className="hidden" intent="secondary" onPress={handleClearPrice}>
-          {content.manage_objekt.set_price_clear.value}
+          {m.list_manage_objekt_set_price_clear()}
         </Button>
         <Button isPending={updateEntryPrices.isPending} onPress={() => onSubmit()}>
-          {content.manage_objekt.set_price_title.value}
+          {m.list_manage_objekt_set_price_title()}
         </Button>
       </ModalFooter>
     </ModalContent>

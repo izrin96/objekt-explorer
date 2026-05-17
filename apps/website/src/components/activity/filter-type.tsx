@@ -1,8 +1,8 @@
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import type { Selection } from "react-aria-components";
-import { useIntlayer } from "react-intlayer";
 
 import { type ValidType, validType } from "@/lib/universal/activity";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";
@@ -12,15 +12,14 @@ export function useTypeFilter() {
 }
 
 export default function TypeFilter() {
-  const content = useIntlayer("filter");
   const [type, setType] = useTypeFilter();
   const selected = new Set(type ? [type] : ["all"]);
 
   const map = {
-    all: content.event.all.value,
-    mint: content.event.mint.value,
-    transfer: content.event.transfer.value,
-    spin: content.event.spin.value,
+    all: m.filter_event_all(),
+    mint: m.filter_event_mint(),
+    transfer: m.filter_event_transfer(),
+    spin: m.filter_event_spin(),
   };
 
   const update = (key: Selection) => {
@@ -31,7 +30,7 @@ export default function TypeFilter() {
   return (
     <Menu>
       <Button intent="outline" data-selected={type}>
-        {content.event.label.value}
+        {m.filter_event_label()}
       </Button>
       <MenuContent selectionMode="single" selectedKeys={selected} onSelectionChange={update}>
         {validType.map((item) => (

@@ -1,10 +1,10 @@
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import optimizeLocales from "@react-aria/optimize-locales-plugin";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { intlayer } from "vite-intlayer";
 
 export default defineConfig(({ command }) => {
   return {
@@ -45,13 +45,16 @@ export default defineConfig(({ command }) => {
       tsconfigPaths: true,
     },
     plugins: [
-      intlayer(),
+      paraglideVitePlugin({
+        project: "./project.inlang",
+        outdir: "./src/paraglide",
+        outputStructure: "message-modules",
+        cookieName: "PARAGLIDE_LOCALE",
+        strategy: ["cookie", "baseLocale"],
+      }),
       tailwindcss(),
       tanstackStart({
         srcDirectory: "src",
-        router: {
-          routeFileIgnorePattern: ".content.(ts|tsx|js|mjs|cjs|jsx|json|jsonc|json5)$",
-        },
       }),
       viteReact(),
       babel({ presets: [reactCompilerPreset()] }),

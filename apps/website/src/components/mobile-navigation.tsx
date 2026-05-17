@@ -10,7 +10,6 @@ import {
   MenuTrigger,
   Popover,
 } from "react-aria-components/Menu";
-import { useIntlayer } from "react-intlayer";
 import { twJoin, twMerge } from "tailwind-merge";
 
 import AppLogo from "@/components/app-logo";
@@ -20,6 +19,7 @@ import { Separator } from "@/components/intentui/separator";
 import UserNav from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
+import { m } from "@/paraglide/messages";
 
 import Changelog from "./changelog";
 import { Container } from "./intentui/container";
@@ -28,7 +28,6 @@ import { useNavMenuItems } from "./navbar";
 import { SettingsButton } from "./settings-button";
 
 export function MobileNavigation() {
-  const content = useIntlayer("nav");
   const navMenuItems = useNavMenuItems();
   const [open, setOpen] = useState(false);
   const pathname = useLocation({ select: (s) => s.pathname });
@@ -63,7 +62,7 @@ export function MobileNavigation() {
                     )}
                   />
                 </span>
-                <span className="sr-only">{content.toggle_menu.value}</span>
+                <span className="sr-only">{m.nav_toggle_menu()}</span>
               </span>
             </Button>
             <Popover
@@ -81,10 +80,10 @@ export function MobileNavigation() {
             >
               <Menu className="-mt-2 outline-hidden">
                 <MenuSection>
-                  <NavHeading>{content.navigation.value}</NavHeading>
+                  <NavHeading>{m.nav_navigation()}</NavHeading>
                   <NavLink href="/">
                     <CubeIcon className="size-5" weight="fill" />
-                    <MenuLabel>{content.home.value}</MenuLabel>
+                    <MenuLabel>{m.nav_home()}</MenuLabel>
                   </NavLink>
                   {navMenuItems.map((menu) => (
                     <NavLink key={menu.to} to={menu.to}>

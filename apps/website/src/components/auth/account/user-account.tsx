@@ -4,7 +4,6 @@ import { Suspense, useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -38,6 +37,7 @@ import { TextField } from "@/components/intentui/text-field";
 import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import type { User } from "@/lib/server/auth.server";
+import { m } from "@/paraglide/messages";
 
 import { ListAccounts } from "./link-account";
 
@@ -47,12 +47,11 @@ type Props = {
 };
 
 export default function UserAccountModal({ open, setOpen }: Props) {
-  const content = useIntlayer("auth");
   return (
     <SheetContent className="sm:max-w-md" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>{content.account.title.value}</SheetTitle>
-        <SheetDescription>{content.account.description.value}</SheetDescription>
+        <SheetTitle>{m.auth_account_title()}</SheetTitle>
+        <SheetDescription>{m.auth_account_description()}</SheetDescription>
       </SheetHeader>
       <SheetBody>
         <QueryErrorResetBoundary>
@@ -82,8 +81,6 @@ export default function UserAccountModal({ open, setOpen }: Props) {
 
 function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
   const { data: session } = useSession();
-  const content = useIntlayer("auth");
-
   if (!session) return null;
 
   return (
@@ -92,28 +89,28 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       className="[--disclosure-collapsed-bg:transparent] [--disclosure-collapsed-border:transparent] [--disclosure-gutter-x:--spacing(3)]"
     >
       <Disclosure id="1">
-        <DisclosureTrigger>{content.account.general.value}</DisclosureTrigger>
+        <DisclosureTrigger>{m.auth_account_general()}</DisclosureTrigger>
         <DisclosurePanel>
           <UserAccountForm user={session.user} setOpen={setOpen} />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
-        <DisclosureTrigger>{content.account.change_email.value}</DisclosureTrigger>
+        <DisclosureTrigger>{m.auth_account_change_email()}</DisclosureTrigger>
         <DisclosurePanel>
           <ChangeEmail email={session.user.email} />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
-        <DisclosureTrigger>{content.account.change_password.value}</DisclosureTrigger>
+        <DisclosureTrigger>{m.auth_account_change_password()}</DisclosureTrigger>
         <DisclosurePanel>
           <ChangePassword />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
-        <DisclosureTrigger>{content.account.social_link.value}</DisclosureTrigger>
+        <DisclosureTrigger>{m.auth_account_social_link()}</DisclosureTrigger>
         <DisclosurePanel>
           <ListAccounts />
         </DisclosurePanel>
@@ -123,9 +120,6 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
 }
 
 function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean) => void }) {
-  const content = useIntlayer("auth");
-  const commonContent = useIntlayer("common");
-
   const values = {
     name: user.name,
     showSocial: user.showSocial ?? false,
@@ -146,10 +140,10 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
     onSuccess: async (_, _v, _o, { client }) => {
       setOpen(false);
       void client.invalidateQueries();
-      toast.success(content.account.account_updated.value);
+      toast.success(m.auth_account_account_updated());
     },
     onError: ({ message }) => {
-      toast.error(`${content.account.account_update_error.value}. ${message}`);
+      toast.error(`${m.auth_account_account_update_error()}. ${message}`);
     },
   });
 
@@ -168,7 +162,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           control={control}
           name="name"
           rules={{
-            required: commonContent.validation.required_name.value,
+            required: m.common_validation_required_name(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -183,8 +177,8 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.account.name_label.value}</Label>
-              <Input placeholder={content.account.name_placeholder.value} />
+              <Label>{m.auth_account_name_label()}</Label>
+              <Input placeholder={m.auth_account_name_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -202,8 +196,8 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.account.show_social_label.value}</Label>
-              <Description>{content.account.show_social_desc.value}</Description>
+              <Label>{m.auth_account_show_social_label()}</Label>
+              <Description>{m.auth_account_show_social_desc()}</Description>
             </Checkbox>
           )}
         />
@@ -220,16 +214,16 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.account.remove_profile_picture.value}</Label>
+              <Label>{m.auth_account_remove_profile_picture()}</Label>
             </Checkbox>
           )}
         />
 
-        <span className="text-muted-fg text-xs">{content.account.profile_pic_help.value}</span>
+        <span className="text-muted-fg text-xs">{m.auth_account_profile_pic_help()}</span>
 
         <div className="flex">
           <Button size="md" intent="primary" type="submit" isPending={mutation.isPending}>
-            {content.account.save.value}
+            {m.auth_account_save()}
           </Button>
         </div>
       </div>
@@ -238,8 +232,6 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
 }
 
 function ChangePassword() {
-  const content = useIntlayer("auth");
-  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       currentPassword: "",
@@ -254,10 +246,10 @@ function ChangePassword() {
       return result.data;
     },
     onSuccess: () => {
-      toast.success(content.account.password_changed.value);
+      toast.success(m.auth_account_password_changed());
     },
     onError: ({ message }) => {
-      toast.error(`${content.account.password_change_error.value}. ${message}`);
+      toast.error(`${m.auth_account_password_change_error()}. ${message}`);
     },
   });
 
@@ -275,7 +267,7 @@ function ChangePassword() {
           control={control}
           name="currentPassword"
           rules={{
-            required: commonContent.validation.required_password.value,
+            required: m.common_validation_required_password(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -292,8 +284,8 @@ function ChangePassword() {
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.account.current_password_label.value}</Label>
-              <Input placeholder={content.account.current_password_placeholder.value} />
+              <Label>{m.auth_account_current_password_label()}</Label>
+              <Input placeholder={m.auth_account_current_password_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -303,7 +295,7 @@ function ChangePassword() {
           control={control}
           name="newPassword"
           rules={{
-            required: commonContent.validation.required_password.value,
+            required: m.common_validation_required_password(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -320,8 +312,8 @@ function ChangePassword() {
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.account.new_password_label.value}</Label>
-              <Input placeholder={content.account.new_password_placeholder.value} />
+              <Label>{m.auth_account_new_password_label()}</Label>
+              <Input placeholder={m.auth_account_new_password_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -335,7 +327,7 @@ function ChangePassword() {
             className="flex-none"
             type="submit"
           >
-            {content.account.save.value}
+            {m.auth_account_save()}
           </Button>
         </div>
       </div>
@@ -344,8 +336,6 @@ function ChangePassword() {
 }
 
 function ChangeEmail({ email }: { email: string }) {
-  const content = useIntlayer("auth");
-  const commonContent = useIntlayer("common");
   const { handleSubmit, control } = useForm({
     defaultValues: {
       email,
@@ -362,10 +352,10 @@ function ChangeEmail({ email }: { email: string }) {
       return result.data;
     },
     onSuccess: () => {
-      toast.success(content.account.email_verification_sent.value);
+      toast.success(m.auth_account_email_verification_sent());
     },
     onError: ({ message }) => {
-      toast.error(`${content.account.email_verification_error.value}. ${message}`);
+      toast.error(`${m.auth_account_email_verification_error()}. ${message}`);
     },
   });
 
@@ -382,7 +372,7 @@ function ChangeEmail({ email }: { email: string }) {
           control={control}
           name="email"
           rules={{
-            required: commonContent.validation.required_email.value,
+            required: m.common_validation_required_email(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -399,9 +389,9 @@ function ChangeEmail({ email }: { email: string }) {
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.account.email_label.value}</Label>
-              <Input placeholder={content.account.email_placeholder.value} />
-              <Description>{content.account.email_verification_desc.value}</Description>
+              <Label>{m.auth_account_email_label()}</Label>
+              <Input placeholder={m.auth_account_email_placeholder()} />
+              <Description>{m.auth_account_email_verification_desc()}</Description>
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -415,7 +405,7 @@ function ChangeEmail({ email }: { email: string }) {
             className="flex-none"
             type="submit"
           >
-            {content.account.save.value}
+            {m.auth_account_save()}
           </Button>
         </div>
       </div>
@@ -425,8 +415,6 @@ function ChangeEmail({ email }: { email: string }) {
 
 function DeleteAccount() {
   const [open, setOpen] = useState(false);
-  const content = useIntlayer("auth");
-  const contentCommon = useIntlayer("common");
   const mutation = useMutation({
     mutationFn: async () => {
       const result = await authClient.deleteUser();
@@ -437,10 +425,10 @@ function DeleteAccount() {
     },
     onSuccess: () => {
       setOpen(false);
-      toast.success(content.account.verification_email_sent.value);
+      toast.success(m.auth_account_verification_email_sent());
     },
     onError: ({ message }) => {
-      toast.error(`${content.account.delete_account_error.value}. ${message}`);
+      toast.error(`${m.auth_account_delete_account_error()}. ${message}`);
     },
   });
 
@@ -448,22 +436,22 @@ function DeleteAccount() {
     <>
       <Button intent="danger" size="sm" onPress={() => setOpen(true)}>
         <TrashSimpleIcon data-slot="icon" />
-        {content.account.delete_account.value}
+        {m.auth_account_delete_account()}
       </Button>
       <ModalContent isOpen={open} onOpenChange={setOpen}>
         <ModalHeader>
-          <ModalTitle>{content.account.delete_account.value}</ModalTitle>
-          <ModalDescription>{content.account.delete_account_description.value}</ModalDescription>
+          <ModalTitle>{m.auth_account_delete_account()}</ModalTitle>
+          <ModalDescription>{m.auth_account_delete_account_description()}</ModalDescription>
         </ModalHeader>
         <ModalFooter>
-          <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
+          <ModalClose>{m.common_modal_cancel()}</ModalClose>
           <Button
             intent="danger"
             type="submit"
             isPending={mutation.isPending}
             onPress={() => mutation.mutate()}
           >
-            {content.account.continue.value}
+            {m.auth_account_continue()}
           </Button>
         </ModalFooter>
       </ModalContent>

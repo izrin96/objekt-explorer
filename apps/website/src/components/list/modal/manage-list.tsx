@@ -1,3 +1,4 @@
+import { ParaglideMessage } from "@inlang/paraglide-js-react";
 import {
   QueryErrorResetBoundary,
   useMutation,
@@ -8,7 +9,6 @@ import { Suspense } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 
 import ErrorFallbackRender from "@/components/error-boundary";
@@ -44,6 +44,7 @@ import Portal from "@/components/portal";
 import { useUserProfiles } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 type CreateListModalProps = {
   open: boolean;
@@ -51,13 +52,10 @@ type CreateListModalProps = {
 };
 
 export function CreateListModal({ open, setOpen }: CreateListModalProps) {
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
-
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.create.title.value}</ModalTitle>
+        <ModalTitle>{m.list_create_title()}</ModalTitle>
       </ModalHeader>
       <ModalBody>
         <QueryErrorResetBoundary>
@@ -77,15 +75,13 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
         </QueryErrorResetBoundary>
       </ModalBody>
       <ModalFooter id="submit-form-create-list">
-        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
       </ModalFooter>
     </ModalContent>
   );
 }
 
 function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
   const { data: profiles } = useUserProfiles();
   const { data: currencies } = useSuspenseQuery(orpc.meta.supportedCurrencies.queryOptions());
   const { handleSubmit, control, watch } = useForm({
@@ -105,13 +101,13 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     orpc.list.create.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(content.create.success.value);
+        toast.success(m.list_create_success());
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error(content.create.error.value);
+        toast.error(m.list_create_error());
       },
     }),
   );
@@ -134,7 +130,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="name"
           rules={{
-            required: contentCommon.validation.required_name.value,
+            required: m.common_validation_required_name(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -150,8 +146,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{contentCommon.form.name.label.value}</Label>
-              <Input placeholder={contentCommon.form.name.placeholder.value} />
+              <Label>{m.common_form_name_label()}</Label>
+              <Input placeholder={m.common_form_name_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -167,8 +163,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{contentCommon.form.description.label.value}</Label>
-              <Textarea placeholder={content.create.description_placeholder.value} rows={3} />
+              <Label>{m.common_form_description_label()}</Label>
+              <Textarea placeholder={m.list_create_description_placeholder()} rows={3} />
             </TextField>
           )}
         />
@@ -180,8 +176,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={content.create.currency_label.value}
-              placeholder={contentCommon.form.none.value}
+              aria-label={m.list_create_currency_label()}
+              placeholder={m.common_form_none()}
               name={name}
               value={value}
               onChange={onChange}
@@ -189,8 +185,8 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.create.currency_label.value}</Label>
-              <Description>{content.create.currency_desc.value}</Description>
+              <Label>{m.list_create_currency_label()}</Label>
+              <Description>{m.list_create_currency_desc()}</Description>
               <SelectTrigger />
               <SelectContent>
                 <SelectItem id="" textValue="None">
@@ -211,15 +207,15 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           name="listType"
           render={({ field: { name, value, onChange } }) => (
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
-              <Label>{content.create.list_type_label.value}</Label>
-              <Description>{content.create.list_type_desc.value}</Description>
+              <Label>{m.list_create_list_type_label()}</Label>
+              <Description>{m.list_create_list_type_desc()}</Description>
               <Radio value="normal">
-                <Label>{content.create.normal_list_label.value}</Label>
-                <Description>{content.create.normal_list_desc.value}</Description>
+                <Label>{m.list_create_normal_list_label()}</Label>
+                <Description>{m.list_create_normal_list_desc()}</Description>
               </Radio>
               <Radio value="profile">
-                <Label>{content.create.profile_list_label.value}</Label>
-                <Description>{content.create.profile_list_desc.value}</Description>
+                <Label>{m.list_create_profile_list_label()}</Label>
+                <Description>{m.list_create_profile_list_desc()}</Description>
               </Radio>
             </RadioGroup>
           )}
@@ -229,16 +225,15 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             control={control}
             name="profileAddress"
             rules={{
-              required:
-                watchedListType === "profile" ? content.create.profile_required.value : false,
+              required: watchedListType === "profile" ? m.list_create_profile_required() : false,
             }}
             render={({
               field: { name, value, onChange, onBlur },
               fieldState: { invalid, error },
             }) => (
               <Select
-                aria-label={content.create.profile_label.value}
-                placeholder={content.create.profile_placeholder.value}
+                aria-label={m.list_create_profile_label()}
+                placeholder={m.list_create_profile_placeholder()}
                 name={name}
                 value={value}
                 onChange={onChange}
@@ -247,17 +242,17 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 validationBehavior="aria"
                 isRequired={watchedListType === "profile"}
               >
-                <Label>{content.create.profile_label.value}</Label>
+                <Label>{m.list_create_profile_label()}</Label>
                 <Description>
                   {watchedListType === "profile"
-                    ? content.create.profile_desc.value
-                    : content.create.display_profile_desc.value}
+                    ? m.list_create_profile_desc()
+                    : m.list_create_display_profile_desc()}
                 </Description>
                 <SelectTrigger />
                 <SelectContent>
                   {watchedListType === "normal" && (
-                    <SelectItem id="" textValue={contentCommon.form.none.value}>
-                      {contentCommon.form.none.value}
+                    <SelectItem id="" textValue={m.common_form_none()}>
+                      {m.common_form_none()}
                     </SelectItem>
                   )}
                   {profiles?.map((profile) => (
@@ -286,17 +281,15 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.create.hide_user_label.value}</Label>
-              <Description>
-                {content.create.hide_user_desc({ siteName: SITE_NAME }).value}
-              </Description>
+              <Label>{m.list_create_hide_user_label()}</Label>
+              <Description>{m.list_create_hide_user_desc({ siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}
         />
 
         <Portal to="#submit-form-create-list">
           <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>
-            {contentCommon.actions.create.value}
+            {m.common_actions_create()}
           </Button>
         </Portal>
       </div>
@@ -311,37 +304,35 @@ type DeleteListModalProps = {
 };
 
 export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
   const deleteList = useMutation(
     orpc.list.delete.mutationOptions({
       onSuccess: (_, _v, _o, { client }) => {
         setOpen(false);
-        toast.success(content.delete.success.value);
+        toast.success(m.list_delete_success());
         return client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
       },
       onError: () => {
-        toast.error(content.delete.error.value);
+        toast.error(m.list_delete_error());
       },
     }),
   );
   return (
     <ModalContent isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
-        <ModalTitle>{content.delete.title.value}</ModalTitle>
-        <ModalDescription>{content.delete.description.value}</ModalDescription>
+        <ModalTitle>{m.list_delete_title()}</ModalTitle>
+        <ModalDescription>{m.list_delete_description()}</ModalDescription>
       </ModalHeader>
       <ModalFooter>
-        <ModalClose>{contentCommon.modal.cancel.value}</ModalClose>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
         <Button
           intent="danger"
           type="submit"
           isPending={deleteList.isPending}
           onPress={() => deleteList.mutate({ slug })}
         >
-          {contentCommon.actions.continue.value}
+          {m.common_actions_continue()}
         </Button>
       </ModalFooter>
     </ModalContent>
@@ -356,13 +347,11 @@ type EditListModalProps = {
 };
 
 export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProps) {
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
   return (
     <SheetContent className="sm:max-w-sm" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
-        <SheetTitle>{content.edit.title.value}</SheetTitle>
-        <SheetDescription>{content.edit.description.value}</SheetDescription>
+        <SheetTitle>{m.list_edit_title()}</SheetTitle>
+        <SheetDescription>{m.list_edit_description()}</SheetDescription>
       </SheetHeader>
       <SheetBody>
         <QueryErrorResetBoundary>
@@ -382,7 +371,7 @@ export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProp
         </QueryErrorResetBoundary>
       </SheetBody>
       <SheetFooter id="submit-form-edit-list">
-        <SheetClose>{contentCommon.modal.cancel.value}</SheetClose>
+        <SheetClose>{m.common_modal_cancel()}</SheetClose>
       </SheetFooter>
     </SheetContent>
   );
@@ -397,8 +386,6 @@ function EditListForm({
   setOpen: (val: boolean) => void;
   onSave?: () => void;
 }) {
-  const content = useIntlayer("list");
-  const contentCommon = useIntlayer("common");
   const { data: profiles } = useUserProfiles();
   const [{ data: currencies }, { data }] = useSuspenseQueries({
     queries: [
@@ -413,14 +400,14 @@ function EditListForm({
     orpc.list.edit.mutationOptions({
       onSuccess: (_, _d, _o, { client }) => {
         setOpen(false);
-        toast.success(content.edit.success.value);
+        toast.success(m.list_edit_success());
         void client.invalidateQueries({
           queryKey: orpc.list.list.key(),
         });
         onSave?.();
       },
       onError: () => {
-        toast.error(content.edit.error.value);
+        toast.error(m.list_edit_error());
       },
     }),
   );
@@ -458,7 +445,7 @@ function EditListForm({
           control={control}
           name="name"
           rules={{
-            required: contentCommon.validation.required_name.value,
+            required: m.common_validation_required_name(),
           }}
           render={({
             field: { name, value, onChange, onBlur },
@@ -474,8 +461,8 @@ function EditListForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{contentCommon.form.name.label.value}</Label>
-              <Input placeholder={content.edit.name_placeholder.value} />
+              <Label>{m.common_form_name_label()}</Label>
+              <Input placeholder={m.list_edit_name_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -492,8 +479,8 @@ function EditListForm({
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{contentCommon.form.description.label.value}</Label>
-              <Textarea placeholder={content.edit.description_placeholder.value} rows={3} />
+              <Label>{m.common_form_description_label()}</Label>
+              <Textarea placeholder={m.list_edit_description_placeholder()} rows={3} />
             </TextField>
           )}
         />
@@ -506,8 +493,8 @@ function EditListForm({
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={content.edit.currency_label.value}
-              placeholder={contentCommon.form.none.value}
+              aria-label={m.list_edit_currency_label()}
+              placeholder={m.common_form_none()}
               name={name}
               value={value}
               onChange={onChange}
@@ -515,8 +502,8 @@ function EditListForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.edit.currency_label.value}</Label>
-              <Description>{content.edit.currency_desc.value}</Description>
+              <Label>{m.list_edit_currency_label()}</Label>
+              <Description>{m.list_edit_currency_desc()}</Description>
               <SelectTrigger />
               <SelectContent>
                 <SelectItem id="" textValue="None">
@@ -542,8 +529,8 @@ function EditListForm({
               fieldState: { invalid, error },
             }) => (
               <Select
-                aria-label={content.edit.display_profile_label.value}
-                placeholder={contentCommon.form.none.value}
+                aria-label={m.list_edit_display_profile_label()}
+                placeholder={m.common_form_none()}
                 name={name}
                 value={value}
                 onChange={onChange}
@@ -551,12 +538,12 @@ function EditListForm({
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{content.edit.display_profile_label.value}</Label>
-                <Description>{content.edit.display_profile_desc.value}</Description>
+                <Label>{m.list_edit_display_profile_label()}</Label>
+                <Description>{m.list_edit_display_profile_desc()}</Description>
                 <SelectTrigger />
                 <SelectContent>
-                  <SelectItem id="" textValue={contentCommon.form.none.value}>
-                    {contentCommon.form.none.value}
+                  <SelectItem id="" textValue={m.common_form_none()}>
+                    {m.common_form_none()}
                   </SelectItem>
                   {profiles?.map((profile) => (
                     <SelectItem
@@ -585,10 +572,8 @@ function EditListForm({
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{content.edit.hide_user_label.value}</Label>
-              <Description>
-                {content.edit.hide_user_desc({ siteName: SITE_NAME }).value}
-              </Description>
+              <Label>{m.list_edit_hide_user_label()}</Label>
+              <Description>{m.list_edit_hide_user_desc({ siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}
         />
@@ -601,8 +586,8 @@ function EditListForm({
             fieldState: { invalid, error },
           }) => (
             <Select
-              aria-label={content.edit.objekt_columns_label.value}
-              placeholder={content.edit.objekt_columns_label.value}
+              aria-label={m.list_edit_objekt_columns_label()}
+              placeholder={m.list_edit_objekt_columns_label()}
               name={name}
               value={`${value}`}
               onChange={(key) => onChange(Number(key))}
@@ -610,15 +595,15 @@ function EditListForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{content.edit.objekt_columns_label.value}</Label>
-              <Description>{content.edit.objekt_columns_desc.value}</Description>
+              <Label>{m.list_edit_objekt_columns_label()}</Label>
+              <Description>{m.list_edit_objekt_columns_desc()}</Description>
               <SelectTrigger className="w-[150px]" />
               <SelectContent>
                 {[
-                  { id: 0, name: content.edit.objekt_columns_not_set.value },
+                  { id: 0, name: m.list_edit_objekt_columns_not_set() },
                   ...validColumns.map((a) => ({
                     id: a,
-                    name: content.edit.objekt_columns_count({ count: a }).value,
+                    name: m.list_edit_objekt_columns_count({ count: a }),
                   })),
                 ].map((item) => (
                   <SelectItem key={item.id} id={`${item.id}`} textValue={item.name}>
@@ -632,18 +617,22 @@ function EditListForm({
         />
 
         <span className="text-muted-fg text-sm">
-          {content.edit.delete_note.use({
-            link: (props) => (
-              <Link to="/list" className="underline">
-                {props.children}
-              </Link>
-            ),
-          })}
+          <ParaglideMessage
+            message={m.list_edit_delete_note}
+            inputs={{}}
+            markup={{
+              link: (props) => (
+                <Link to="/list" className="underline">
+                  {props.children}
+                </Link>
+              ),
+            }}
+          />
         </span>
 
         <Portal to="#submit-form-edit-list">
           <Button isPending={editList.isPending} onPress={() => onSubmit()}>
-            {contentCommon.actions.save.value}
+            {m.common_actions_save()}
           </Button>
         </Portal>
       </div>

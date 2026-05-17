@@ -5,31 +5,28 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { isAddress } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { eq } from "drizzle-orm";
-import { getIntlayer } from "react-intlayer";
 
 import { compareInputSchema } from "@/lib/universal/compare";
+import { m } from "@/paraglide/messages";
 
 import { buildListEntries, fetchListWithEntries } from "../../list.server";
 import { getCollectionColumns } from "../../objekt.server";
-import { localeMiddleware, pub, selectedArtistsMiddleware } from "../orpc";
+import { pub, selectedArtistsMiddleware } from "../orpc";
 
 export const compareRouter = {
   compare: pub
-    .use(localeMiddleware)
     .use(selectedArtistsMiddleware)
     .input(compareInputSchema)
     .handler(
       async ({
-        context: { locale, artists },
+        context: { artists },
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
-        const content = getIntlayer("api_errors", locale);
-
         const sourceList = await fetchListWithEntries(sourceId);
 
         if (!sourceList)
           throw new ORPCError("NOT_FOUND", {
-            message: content.compare.source_list_not_found.value,
+            message: m.api_errors_compare_source_list_not_found(),
           });
 
         const sourceComparisonEntries = await buildListEntries(
@@ -55,12 +52,12 @@ export const compareRouter = {
 
           if (!targetProfile)
             throw new ORPCError("NOT_FOUND", {
-              message: content.compare.target_profile_not_found.value,
+              message: m.api_errors_compare_target_profile_not_found(),
             });
 
           if (targetProfile.privateProfile) {
             throw new ORPCError("FORBIDDEN", {
-              message: content.compare.target_profile_private.value,
+              message: m.api_errors_compare_target_profile_private(),
             });
           }
 
@@ -78,7 +75,7 @@ export const compareRouter = {
 
           if (!targetList)
             throw new ORPCError("NOT_FOUND", {
-              message: content.compare.target_list_not_found.value,
+              message: m.api_errors_compare_target_list_not_found(),
             });
 
           targetComparisonEntries = await buildListEntries(

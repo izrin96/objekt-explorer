@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
 import { useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIntlayer } from "react-intlayer";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
@@ -33,6 +32,7 @@ import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useSession } from "@/hooks/use-user";
 import { unobtainables } from "@/lib/unobtainables";
 import { tradeableFilter, cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { useShowCount } from "./filter-showcount";
 import ProgressFilter from "./progress-filter";
@@ -56,7 +56,6 @@ export default function ProgressRender() {
 }
 
 function Progress() {
-  const content = useIntlayer("progress");
   const { columns } = useObjektColumn();
   const {
     shaped,
@@ -81,7 +80,7 @@ function Progress() {
     <>
       {hasNextPage && (
         <div className="flex items-center gap-2 text-sm font-semibold">
-          {content.loading_objekts.value} <Loader variant="ring" className="size-4" />
+          {m.progress_loading_objekts()} <Loader variant="ring" className="size-4" />
         </div>
       )}
 
@@ -146,7 +145,6 @@ interface ProgressCollapseProps extends ProgressGroupProps {
 }
 
 function ProgressCollapse(props: ProgressCollapseProps) {
-  const content = useIntlayer("progress");
   const { data: session } = useSession();
   const { title, columns, grouped, percentage, ownedSlugs } = props;
   const hideLabel = useConfigStore((a) => a.hideLabel);
@@ -167,7 +165,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           {title}
         </div>
         <ProgressBar
-          aria-label={content.progress_bar_label.value}
+          aria-label={m.progress_progress_bar_label()}
           className="flex w-fit min-w-[240px] items-center gap-2"
           valueLabel={`${props.owned.length}/${props.filtered.length} (${percentage}%)`}
           value={percentage}
@@ -240,7 +238,6 @@ function MemberProgressChart({
   objekts: ValidObjekt[];
   collections: ValidObjekt[];
 }) {
-  const content = useIntlayer("stats");
   const { selectedArtists } = useCosmoArtist();
   const [_, setFilters] = useFilters();
 
@@ -274,7 +271,7 @@ function MemberProgressChart({
 
   const chartConfig = {
     percentage: {
-      label: content.member_progress.percentage_label.value,
+      label: m.stats_member_progress_percentage_label(),
       color: "var(--chart-1)",
     },
   } satisfies ChartConfig;

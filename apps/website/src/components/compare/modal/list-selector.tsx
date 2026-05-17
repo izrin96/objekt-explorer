@@ -1,9 +1,9 @@
 import { useController, type Control, type FieldValues, type Path } from "react-hook-form";
-import { useIntlayer } from "react-intlayer";
 
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { Input } from "@/components/intentui/input";
 import { TextField } from "@/components/intentui/text-field";
+import { m } from "@/paraglide/messages";
 
 type ListSelectorProps<T extends FieldValues> = {
   control: Control<T>;
@@ -11,7 +11,6 @@ type ListSelectorProps<T extends FieldValues> = {
 };
 
 export function ListSelector<T extends FieldValues>({ control, name }: ListSelectorProps<T>) {
-  const content = useIntlayer("compare");
   const {
     field: { value, onChange, onBlur },
     fieldState: { invalid, error },
@@ -19,7 +18,7 @@ export function ListSelector<T extends FieldValues>({ control, name }: ListSelec
     name,
     control,
     rules: {
-      required: content.list_selector.required.value,
+      required: m.compare_list_selector_required(),
     },
   });
 
@@ -32,11 +31,11 @@ export function ListSelector<T extends FieldValues>({ control, name }: ListSelec
       onBlur={onBlur}
       isInvalid={invalid}
       validationBehavior="aria"
-      aria-label={content.list_selector.label.value}
+      aria-label={m.compare_list_selector_label()}
     >
-      <Label>{content.list_selector.label.value}</Label>
-      <Description>{content.list_selector.description.value}</Description>
-      <Input placeholder={content.list_selector.placeholder.value} />
+      <Label>{m.compare_list_selector_label()}</Label>
+      <Description>{m.compare_list_selector_description()}</Description>
+      <Input placeholder={m.compare_list_selector_placeholder()} />
       <FieldError>{error?.message}</FieldError>
     </TextField>
   );

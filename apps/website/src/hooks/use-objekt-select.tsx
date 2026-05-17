@@ -1,8 +1,9 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { createContext, type PropsWithChildren, useContext, useRef } from "react";
-import { useIntlayer } from "react-intlayer";
 import { toast } from "sonner";
 import { createStore, type StoreApi, useStore } from "zustand";
+
+import { m } from "@/paraglide/messages";
 
 type ObjektSelectedState = {
   mode: boolean;
@@ -75,10 +76,9 @@ const createObjektSelectStore = (errorMessage: string) =>
 const ObjektSelectContext = createContext<StoreApi<ObjektSelectedState> | null>(null);
 
 export function ObjektSelectProvider({ children }: PropsWithChildren) {
-  const content = useIntlayer("objekt");
   const storeRef = useRef<StoreApi<ObjektSelectedState> | null>(null);
   if (!storeRef.current) {
-    storeRef.current = createObjektSelectStore(content.must_select_one.value);
+    storeRef.current = createObjektSelectStore(m.objekt_must_select_one());
   }
 
   return <ObjektSelectContext value={storeRef.current}>{children}</ObjektSelectContext>;

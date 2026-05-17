@@ -3,5 +3,12 @@ import { defineConfig } from "oxlint";
 
 export default defineConfig({
   extends: [baseConfig],
-  ignorePatterns: ["node_modules", ".turbo", "dist", "*.gen.ts", ".intlayer", ".tanstack"],
+  ignorePatterns: [
+    "node_modules",
+    ".turbo",
+    "dist",
+    "src/routeTree.gen.ts",
+    "src/paraglide",
+    ".tanstack",
+  ],
 });

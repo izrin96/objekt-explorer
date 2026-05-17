@@ -7,14 +7,13 @@ import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
-import { getIntlayer } from "react-intlayer";
 import * as z from "zod";
 
-import type { Locale } from "@/lib/locale";
+import { m } from "@/paraglide/messages";
 
 import { redis } from "../../redis.server";
 import { getAccessToken } from "../../token.server";
-import { authed, localeMiddleware } from "../orpc";
+import { authed } from "../orpc";
 
 type VerificationData = {
   code: string;
@@ -29,7 +28,7 @@ function generateCode() {
   return `verify-${hex}`;
 }
 
-async function assertAddressNotLinked(address: string, userId: string, locale: Locale) {
+async function assertAddressNotLinked(address: string, userId: string) {
   const [existing] = await db
     .select({ userId: userAddress.userId })
     .from(userAddress)
@@ -37,12 +36,11 @@ async function assertAddressNotLinked(address: string, userId: string, locale: L
     .limit(1);
 
   if (existing) {
-    const content = getIntlayer("api_errors", locale);
     throw new ORPCError("BAD_REQUEST", {
       message:
         existing.userId === userId
-          ? content.cosmo_link.already_linked_self.value
-          : content.cosmo_link.already_linked_other.value,
+          ? m.api_errors_cosmo_link_already_linked_self()
+          : m.api_errors_cosmo_link_already_linked_other(),
     });
   }
 }
@@ -50,10 +48,9 @@ async function assertAddressNotLinked(address: string, userId: string, locale: L
 export const cosmoLinkRouter = {
   // check if address is already linked
   checkAddress: authed
-    .use(localeMiddleware)
     .input(z.string())
-    .handler(async ({ input: address, context: { session, locale } }) => {
-      await assertAddressNotLinked(address, session.user.id, locale);
+    .handler(async ({ input: address, context: { session } }) => {
+      await assertAddressNotLinked(address, session.user.id);
     }),
 
   // remove link
@@ -68,7 +65,6 @@ export const cosmoLinkRouter = {
 
   // generate verification code for a specific artist profile
   generateCode: authed
-    .use(localeMiddleware)
     .input(
       z.object({
         address: z.string(),
@@ -77,20 +73,19 @@ export const cosmoLinkRouter = {
         artistId: z.enum(validArtists),
       }),
     )
-    .handler(async ({ input, context: { session, locale } }) => {
+    .handler(async ({ input, context: { session } }) => {
       // rate limit: 1 active code per user per address (Redis key is scoped)
       const rateLimitKey = `cosmo-verify-rate:${session.user.id}`;
       await redis.set(rateLimitKey, "0", "EX", "30", "NX");
       const attempts = await redis.incr(rateLimitKey);
       if (attempts > 5) {
-        const content = getIntlayer("api_errors", locale);
         throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: content.cosmo_link.rate_limit.value,
+          message: m.api_errors_cosmo_link_rate_limit(),
         });
       }
 
       // re-check link status server-side
-      await assertAddressNotLinked(input.address, session.user.id, locale);
+      await assertAddressNotLinked(input.address, session.user.id);
 
       const code = generateCode();
 
@@ -112,16 +107,13 @@ export const cosmoLinkRouter = {
 
   // verify bio contains the code and link the account
   verifyStatusMessage: authed
-    .use(localeMiddleware)
     .input(z.string())
-    .handler(async ({ input: address, context: { session, locale } }) => {
-      const content = getIntlayer("api_errors", locale);
-
+    .handler(async ({ input: address, context: { session } }) => {
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);
       if (!raw) {
         throw new ORPCError("BAD_REQUEST", {
-          message: content.cosmo_link.verification_expired.value,
+          message: m.api_errors_cosmo_link_verification_expired(),
         });
       }
 
@@ -134,13 +126,13 @@ export const cosmoLinkRouter = {
       // validate that the fetched profile matches claimed data
       if (profile.nickname.toLowerCase() !== data.nickname.toLowerCase()) {
         throw new ORPCError("BAD_REQUEST", {
-          message: content.cosmo_link.profile_mismatch.value,
+          message: m.api_errors_cosmo_link_profile_mismatch(),
         });
       }
 
       if (!profile.statusMessage?.toLowerCase().includes(data.code)) {
         throw new ORPCError("BAD_REQUEST", {
-          message: content.cosmo_link.code_not_found.value,
+          message: m.api_errors_cosmo_link_code_not_found(),
         });
       }
 
@@ -171,7 +163,7 @@ export const cosmoLinkRouter = {
 
       if (!linked || linked.linkedUserId !== session.user.id) {
         throw new ORPCError("BAD_REQUEST", {
-          message: content.cosmo_link.already_linked_other.value,
+          message: m.api_errors_cosmo_link_already_linked_other(),
         });
       }
 
