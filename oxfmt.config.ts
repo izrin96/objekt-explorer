@@ -19,5 +19,5 @@ export default defineConfig({
   sortImports: {
     type: "natural",
   },
-  ignorePatterns: ["**/src/routeTree.gen.ts"],
+  ignorePatterns: ["node_modules", "*.gen.ts"],
 });

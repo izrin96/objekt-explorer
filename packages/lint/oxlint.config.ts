@@ -6,6 +6,9 @@ export default defineConfig({
     typeAware: true,
   },
   rules: {
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "react/jsx-key": "warn",
     "eslint/no-unused-vars": "off",
     "typescript/consistent-type-imports": [
       "warn",

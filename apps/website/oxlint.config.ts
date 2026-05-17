@@ -3,5 +3,5 @@ import { defineConfig } from "oxlint";
 
 export default defineConfig({
   extends: [baseConfig],
-  ignorePatterns: ["src/routeTree.gen.ts"],
+  ignorePatterns: ["node_modules", ".turbo", "dist", "*.gen.ts", ".intlayer", ".tanstack"],
 });
