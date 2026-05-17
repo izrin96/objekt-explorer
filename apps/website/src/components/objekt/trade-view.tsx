@@ -274,7 +274,8 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
 
   useEffect(() => {
     list.reload();
-  }, [data, list]);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   return (
     <>
