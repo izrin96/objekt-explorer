@@ -12,7 +12,8 @@
     "start:preview": "bun run --bun --env-file=../../.env server.ts",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "tsgo --noEmit",
+    "paraglide:compile": "bun run --bun paraglide-js compile",
+    "typecheck": "bun run paraglide:compile && tsgo --noEmit",
     "format": "oxfmt .",
     "scan": "bunx react-scan@latest localhost:3000"
   },
