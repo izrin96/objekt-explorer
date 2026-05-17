@@ -134,25 +134,18 @@ export const listRouter = {
             });
           }
 
-          const ownedCount = await indexer
-            .select({ id: objekts.id })
+          const objektsData = await indexer
+            .select({ id: objekts.id, owner: objekts.owner })
             .from(objekts)
-            .where(
-              and(
-                inArray(objekts.id, inputObjekts),
-                eq(objekts.owner, list.profileAddress!.toLowerCase()),
-              ),
-            );
+            .where(inArray(objekts.id, inputObjekts));
 
-          if (ownedCount.length !== inputObjekts.length) {
-            const ownedSet = new Set(ownedCount.map((o) => o.id));
-            const notOwned = inputObjekts.filter((id) => !ownedSet.has(id));
-            throw new ORPCError("BAD_REQUEST", {
-              message: `Objekts not owned by profile: ${notOwned.join(", ")}`,
-            });
-          }
+          const validObjekts = objektsData
+            .filter((o) => o.owner === list.profileAddress!.toLowerCase())
+            .map((o) => o.id);
 
-          const values = inputObjekts.map((objektId) => ({
+          if (validObjekts.length === 0) return [];
+
+          const values = validObjekts.map((objektId) => ({
             listId: list.id,
             objektId,
           }));
@@ -284,12 +277,14 @@ export const listRouter = {
       }) => {
         const list = await findOwnedList(slug, user.id);
 
-        if (list.listType === "normal" && profileAddress) {
-          await checkProfileOwnership(profileAddress, user.id);
+        const normalizedProfile = profileAddress === "" ? null : (profileAddress ?? null);
+
+        if (list.listType === "normal" && normalizedProfile) {
+          await checkProfileOwnership(normalizedProfile, user.id);
         }
 
         const newProfileAddress =
-          list.listType === "profile" ? list.profileAddress : (profileAddress ?? null);
+          list.listType === "profile" ? list.profileAddress : normalizedProfile;
 
         const newProfileSlug = await resolveProfileSlugUpdate(list, name, newProfileAddress);
 
@@ -418,12 +413,14 @@ export const listRouter = {
 
         const list = await findOwnedList(slug, user.id);
 
-        for (const { entryId, price, isQyop, note } of updates) {
-          await db
-            .update(listEntries)
-            .set({ price, isQyop, note })
-            .where(and(eq(listEntries.id, entryId), eq(listEntries.listId, list.id)));
-        }
+        await db.transaction(async (tx) => {
+          for (const { entryId, price, isQyop, note } of updates) {
+            await tx
+              .update(listEntries)
+              .set({ price, isQyop, note })
+              .where(and(eq(listEntries.id, entryId), eq(listEntries.listId, list.id)));
+          }
+        });
       },
     ),
 
@@ -477,26 +474,29 @@ export const listRouter = {
         "note",
       ];
 
-      const rows = entries.map((e) => {
-        return [
-          e.slug,
-          e.collectionId,
-          e.season,
-          e.member,
-          e.artist,
-          e.class,
-          e.collectionNo,
-          e.onOffline,
-          "serial" in e ? e.serial : "",
-          "tokenId" in e ? e.tokenId : "",
-          "transferable" in e ? e.transferable : "",
-          e.price,
-          e.isQyop,
-          e.note ? escapeCSV(e.note) : "",
-        ].join(",");
-      });
-
-      const csv = [headers.join(","), ...rows].join("\n");
+      const csv = [
+        headers.join(","),
+        ...entries.map((e) =>
+          [
+            e.slug,
+            e.collectionId,
+            e.season,
+            e.member,
+            e.artist,
+            e.class,
+            e.collectionNo,
+            e.onOffline,
+            "serial" in e ? e.serial : "",
+            "tokenId" in e ? e.tokenId : "",
+            "transferable" in e ? e.transferable : "",
+            e.price,
+            e.isQyop,
+            e.note ?? "",
+          ]
+            .map((v) => escapeCSV(String(v ?? "")))
+            .join(","),
+        ),
+      ].join("\n");
 
       return new File([csv], `Export - ${slug}.csv`, { type: "text/csv" });
     }),
