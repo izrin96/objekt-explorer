@@ -11,7 +11,7 @@ export function useOwnedCollections(address: string, filters?: OwnedBySchema) {
     if (query.hasNextPage && !query.isFetchingNextPage) {
       void query.fetchNextPage();
     }
-  }, [query]);
+  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   const objekts = query.data?.pages.flatMap((page) => page.objekts) ?? [];
 

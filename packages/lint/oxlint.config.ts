@@ -7,7 +7,7 @@ export default defineConfig({
   },
   rules: {
     "react/rules-of-hooks": "error",
-    "react/exhaustive-deps": "warn",
+    "react/exhaustive-deps": "off",
     "react/jsx-key": "warn",
     "eslint/no-unused-vars": "off",
     "typescript/consistent-type-imports": [

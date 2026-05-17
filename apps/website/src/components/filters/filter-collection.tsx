@@ -19,14 +19,11 @@ export default function CollectionFilter() {
   const [filters, setFilters] = useFilters();
   const selected = filters.collection ?? [];
 
-  const update = useCallback(
-    (value: Key[]) => {
-      return setFilters({
-        collection: value.length > 0 ? (value as string[]) : null,
-      });
-    },
-    [setFilters],
-  );
+  const update = useCallback((value: Key[]) => {
+    return setFilters({
+      collection: value.length > 0 ? (value as string[]) : null,
+    });
+  }, []);
 
   return (
     <Select

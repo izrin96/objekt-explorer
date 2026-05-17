@@ -94,7 +94,7 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
     if (open) {
       reset();
     }
-  }, [reset, open]);
+  }, [open]);
 
   if (!list.currency) return null;
 
