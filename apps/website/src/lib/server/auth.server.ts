@@ -63,6 +63,7 @@ export const auth = betterAuth({
       clientId: serverEnv.DISCORD_CLIENT_ID,
       clientSecret: serverEnv.DISCORD_CLIENT_SECRET,
       mapProfileToUser: (profile) => ({
+        email: profile.email ?? `${profile.id}@discord.placeholder.local`,
         discord: profile.username,
       }),
     },
@@ -271,12 +272,12 @@ export async function fetchUserByIdentifier(
       const user = await safeFetchByNickname(cachedUser.nickname);
 
       if (user) {
+        await touchLastCheck(cachedUser.nickname);
+
         if (
           user.address.toLowerCase() !== cachedUser.address.toLowerCase() ||
           user.nickname.toLowerCase() !== cachedUser.nickname.toLowerCase()
         ) {
-          await touchLastCheck(cachedUser.nickname);
-
           await cacheUsers([
             {
               address: user.address,
@@ -286,11 +287,6 @@ export async function fetchUserByIdentifier(
 
           return await fetchUserByIdentifier(identifier);
         }
-
-        await db
-          .update(userAddress)
-          .set({ lastCosmoCheck: sql`'now'` })
-          .where(eq(userAddress.nickname, cachedUser.nickname));
 
         return toPublicProfile(cachedUser);
       }
