@@ -1,64 +1,40 @@
-import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
+import { S3Client, type S3Options } from "bun";
 
 import { serverEnv } from "@/lib/env/server";
 
-export const s3Client = new S3Client({
-  region: "us-east-1",
+const s3Config: S3Options = {
+  accessKeyId: serverEnv.S3_ACCESS_KEY,
+  secretAccessKey: serverEnv.S3_SECRET_KEY,
   endpoint: serverEnv.S3_ENDPOINT,
-  credentials: {
-    accessKeyId: serverEnv.S3_ACCESS_KEY,
-    secretAccessKey: serverEnv.S3_SECRET_KEY,
-  },
-  forcePathStyle: true,
-});
+};
 
-export async function deleteFileFromBucket({
-  bucketName,
-  fileName,
-}: {
-  bucketName: string;
-  fileName: string;
-}) {
+export async function deleteFileFromBucket(bucketName: string, fileName: string) {
   try {
-    await s3Client.send(
-      new DeleteObjectCommand({
-        Bucket: bucketName,
-        Key: fileName,
-      }),
-    );
+    await S3Client.delete(fileName, { ...s3Config, bucket: bucketName });
   } catch (error) {
     console.error("Failed to delete file from S3:", error);
     throw error;
   }
 }
 
-export async function createPresignedPostToUpload({
-  bucketName,
-  key,
-  mimeType,
-}: {
-  bucketName: string;
-  key: string;
-  mimeType: string;
-}) {
+export function getS3PublicUrl(bucketName: string, key: string) {
+  return `${serverEnv.S3_ENDPOINT}/${bucketName}/${key}`;
+}
+
+export function createPresignedUploadUrl(bucketName: string, key: string, mimeType: string) {
   try {
-    const { url, fields } = await createPresignedPost(s3Client, {
-      Bucket: bucketName,
-      Key: key,
-      Conditions: [
-        ["content-length-range", 0, 10 * 1024 * 1024],
-        ["eq", "$Content-Type", mimeType],
-      ],
-      Fields: {
-        acl: "public-read",
-      },
-      Expires: 3600,
+    const url = S3Client.presign(key, {
+      ...s3Config,
+      bucket: bucketName,
+      method: "PUT",
+      expiresIn: 3600,
+      type: mimeType,
+      acl: "public-read",
     });
 
-    return { url, fields, key };
+    return { url, key };
   } catch (error) {
-    console.error("Failed to create presigned post:", error);
+    console.error("Failed to create presigned upload URL:", error);
     throw error;
   }
 }

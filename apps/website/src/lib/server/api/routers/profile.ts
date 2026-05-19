@@ -5,9 +5,10 @@ import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, eq } from "drizzle-orm";
 import * as z from "zod";
 
+import { serverEnv } from "@/lib/env/server";
 import { m } from "@/paraglide/messages";
 
-import { createPresignedPostToUpload, deleteFileFromBucket } from "../../s3.server";
+import { createPresignedUploadUrl, deleteFileFromBucket, getS3PublicUrl } from "../../s3.server";
 import { authed } from "../orpc";
 
 export const profileRouter = {
@@ -25,7 +26,11 @@ export const profileRouter = {
       z.object({
         address: z.string(),
         hideUser: z.boolean().optional(),
-        bannerImgUrl: z.string().optional().nullable(),
+        bannerImgUrl: z
+          .url()
+          .refine((url) => url.startsWith(`${serverEnv.S3_ENDPOINT}/profile-banner/`))
+          .optional()
+          .nullable(),
         bannerImgType: z.string().optional().nullable(),
         privateSerial: z.boolean().optional(),
         privateProfile: z.boolean().optional(),
@@ -41,10 +46,7 @@ export const profileRouter = {
       if (profile.bannerImgUrl && rest.bannerImgUrl !== undefined) {
         const fileName = profile.bannerImgUrl.split("/").pop();
         if (fileName) {
-          await deleteFileFromBucket({
-            bucketName: "profile-banner",
-            fileName,
-          });
+          await deleteFileFromBucket("profile-banner", fileName);
         }
       }
 
@@ -68,13 +70,10 @@ export const profileRouter = {
       await checkAddressOwned(address, session.user.id);
 
       const ext = fileName.split(".").pop();
-      const data = await createPresignedPostToUpload({
-        bucketName: "profile-banner",
-        key: `${address}-${Date.now()}.${ext}`,
-        mimeType,
-      });
+      const key = `${address.toLowerCase()}-${Date.now()}.${ext}`;
+      const { url } = createPresignedUploadUrl("profile-banner", key, mimeType);
 
-      return data;
+      return { url, key, publicUrl: getS3PublicUrl("profile-banner", key) };
     }),
 };
 

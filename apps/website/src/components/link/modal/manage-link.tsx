@@ -249,18 +249,12 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
     }),
   );
 
-  const handleUpload = async (url: string, fields: Record<string, string>, file: File) => {
+  const handleUpload = async (url: string, file: File) => {
     try {
-      const formData = new FormData();
-      formData.append("Content-Type", file.type);
-      Object.entries(fields).forEach(([key, value]) => {
-        formData.append(key, value);
-      });
-      formData.append("file", file);
-
       const response = await ofetch.raw(url, {
-        method: "POST",
-        body: formData,
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
       });
 
       if (!response.ok) {
@@ -307,14 +301,14 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
   const onSubmit = handleSubmit(async (data) => {
     if (droppedImage && !data.removeBanner) {
       const croppedFile = await generateCroppedImage();
-      const { url, fields, key } = await getPresignedPost.mutateAsync({
+      const { url, publicUrl } = await getPresignedPost.mutateAsync({
         address,
         fileName: droppedImage.name,
         mimeType: droppedImage.type,
       });
 
       try {
-        await handleUpload(url, fields, croppedFile ?? droppedImage);
+        await handleUpload(url, croppedFile ?? droppedImage);
       } catch {
         toast.error(m.profile_edit_upload_error());
         return;
@@ -323,7 +317,7 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
       await edit.mutateAsync({
         address: address,
         hideUser: data.hideUser,
-        bannerImgUrl: `${url}/${key}`,
+        bannerImgUrl: publicUrl,
         bannerImgType: droppedImage.type,
         privateSerial: data.privateSerial,
         privateProfile: data.privateProfile,

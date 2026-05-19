@@ -18,9 +18,7 @@
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1047.0",
     "@aws-sdk/client-sesv2": "^3.1047.0",
-    "@aws-sdk/s3-presigned-post": "^3.1047.0",
     "@base-ui/react": "^1.4.1",
     "@better-auth/i18n": "^1.6.11",
     "@custom-react-hooks/use-websocket": "^1.0.0",
