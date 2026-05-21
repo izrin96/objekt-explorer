@@ -29,7 +29,7 @@ import { useProfileTarget } from "@/hooks/use-profile-target";
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
 import type { OwnedBySchema } from "@/lib/universal/owned-by";
-import { getSeasonColor, tradeableFilter, cn } from "@/lib/utils";
+import { tradeableFilter, cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import StatsFilter from "./stats-filter";
@@ -186,11 +186,14 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
   const { seasons } = useFilterData();
 
   const chartData = useMemo(() => {
-    const data = seasons.map((season) => ({
-      name: season,
-      fill: getSeasonColor(season),
-      count: objekts.filter((obj) => obj.season === season).length,
-    }));
+    const data = seasons.map((season) => {
+      const seasonBase = season.replace(/\d+$/, "").toLowerCase();
+      return {
+        name: season,
+        fill: `var(--season-${seasonBase})`,
+        count: objekts.filter((obj) => obj.season === season).length,
+      };
+    });
     const total = data.reduce((sum, d) => sum + d.count, 0);
     return data
       .map((d) =>

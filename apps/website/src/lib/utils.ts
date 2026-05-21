@@ -29,23 +29,6 @@ export const defaultSortDuplicateSerial: ValidCustomSort[] = [
   "rare",
 ];
 
-const baseSeasonColors: Record<string, string> = {
-  Atom: "#FFDD00",
-  Binary: "#75FB4C",
-  Cream: "#FF7477",
-  Divine: "#B400FF",
-  Ever: "#33ECFD",
-  Spring: "#FFE527",
-  Summer: "#619AFF",
-  Autumn: "#B5315A",
-  Winter: "#C6C6C6",
-};
-
-export function getSeasonColor(season: string): string {
-  const base = season.replace(/\d+$/, "");
-  return baseSeasonColors[base] ?? "#C6C6C6";
-}
-
 export const SITE_NAME = "Objekt Tracker";
 
 export const GRID_COLUMNS = 7;

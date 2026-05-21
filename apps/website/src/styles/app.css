@@ -171,6 +171,15 @@
 
   /* custom */
   --accent-solid: oklch(0.585 0.233 277.117);
+  --season-atom: #ffdd00;
+  --season-binary: #75fb4c;
+  --season-cream: #ff7477;
+  --season-divine: #b400ff;
+  --season-ever: #33ecfd;
+  --season-spring: #ffe527;
+  --season-summer: #619aff;
+  --season-autumn: #b5315a;
+  --season-winter: #c6c6c6;
 }
 
 .dark {
