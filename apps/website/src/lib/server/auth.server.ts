@@ -2,7 +2,7 @@ import { i18n } from "@better-auth/i18n";
 import { fetchByNickname } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
-import { userAddress } from "@repo/db/schema";
+import { type UserAddress, userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
 import { redirect } from "@tanstack/react-router";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
@@ -11,13 +11,12 @@ import { betterAuth } from "better-auth/minimal";
 import { username } from "better-auth/plugins/username";
 import { and, eq, inArray, notInArray, sql } from "drizzle-orm";
 import type { FetchError } from "ofetch";
-import * as z from "zod";
 
 import { betterAuthLocale } from "@/i18n/better-auth";
 import { serverEnv } from "@/lib/env/server";
 import { getLocale as getParaglideLocale } from "@/paraglide/runtime";
 
-import { publicUserSchema, type PublicProfile, type PublicUser } from "../universal/user";
+import type { PublicUser, PublicProfile, CurrentUser } from "../universal/user";
 import { SITE_NAME } from "../utils";
 import {
   sendDeleteAccountVerification,
@@ -129,10 +128,6 @@ export const auth = betterAuth({
   },
   session: {
     freshAge: 0,
-    // cookieCache: {
-    //   enabled: true,
-    //   maxAge: 5 * 60,
-    // },
   },
   databaseHooks: {
     account: {
@@ -162,6 +157,8 @@ export const auth = betterAuth({
   },
 });
 
+export type User = (typeof auth.$Infer.Session)["user"];
+
 export async function getSession() {
   const session = await auth.api.getSession({
     headers: getRequestHeaders(),
@@ -180,6 +177,14 @@ export async function getSession() {
   return session.response;
 }
 
+export async function getCurrentUser(): Promise<CurrentUser> {
+  const session = await getSession();
+  if (!session) return null;
+  return {
+    user: session.user,
+  };
+}
+
 async function safeFetchByNickname(identifier: string) {
   return fetchByNickname(identifier).catch((error: FetchError<{ error: { code: string } }>) => {
     if (error.data?.error.code === "USER_NOT_FOUND") {
@@ -189,19 +194,6 @@ async function safeFetchByNickname(identifier: string) {
   });
 }
 
-const cachedUserSchema = z.object({
-  address: z.string(),
-  nickname: z.string().nullable(),
-  bannerImgUrl: z.string().nullable(),
-  bannerImgType: z.string().nullable(),
-  privateProfile: z.boolean().nullable(),
-  gridColumns: z.number().nullable(),
-  userId: z.string().nullable(),
-  hideNickname: z.boolean().nullable(),
-  hideUser: z.boolean().nullable(),
-  user: publicUserSchema.nullable(),
-});
-
 async function touchLastCheck(nickname: string) {
   await db
     .update(userAddress)
@@ -209,49 +201,47 @@ async function touchLastCheck(nickname: string) {
     .where(eq(userAddress.nickname, nickname));
 }
 
-function toPublicProfile(data: z.infer<typeof cachedUserSchema>): PublicProfile {
+export function toPublicUser(user: User): PublicUser {
   return {
-    address: data.address,
-    nickname: data.hideNickname ? null : data.nickname,
-    bannerImgType: data.bannerImgType,
-    bannerImgUrl: data.bannerImgUrl,
-    privateProfile: data.privateProfile,
-    gridColumns: data.gridColumns,
-    user: data.hideUser ? null : data.user ? mapPublicUser(data.user) : null,
-    ownerId: data.userId,
+    name: user.name,
+    image: user.image ?? null,
+    discord: user.showSocial && user.discord ? user.discord : null,
+    twitter: user.showSocial && user.twitter ? user.twitter : null,
+  };
+}
+
+export function toPublicProfile(
+  profile: UserAddress,
+  user: User | null,
+  currentUser?: User,
+): PublicProfile {
+  if (profile.privateProfile && (!currentUser || currentUser.id !== profile.userId)) {
+    return {
+      isGuard: true,
+      address: profile.address,
+    };
+  }
+
+  return {
+    isGuard: false,
+    address: profile.address,
+    nickname: profile.hideNickname ? null : profile.nickname,
+    bannerImgType: profile.bannerImgType,
+    bannerImgUrl: profile.bannerImgUrl,
+    gridColumns: profile.gridColumns,
+    user: profile.hideUser || !user ? null : toPublicUser(user),
   };
 }
 
 export async function fetchUserByIdentifier(
   identifier: string,
+  currentUser?: User,
 ): Promise<PublicProfile | undefined> {
   const identifierIsAddress = isAddress(identifier);
 
   const cachedUser = await db.query.userAddress.findFirst({
-    columns: {
-      nickname: true,
-      address: true,
-      bannerImgUrl: true,
-      bannerImgType: true,
-      hideUser: true,
-      privateProfile: true,
-      hideNickname: true,
-      gridColumns: true,
-      userId: true,
-      lastCosmoCheck: true,
-    },
     with: {
-      user: {
-        columns: {
-          name: true,
-          username: true,
-          image: true,
-          discord: true,
-          twitter: true,
-          displayUsername: true,
-          showSocial: true,
-        },
-      },
+      user: true,
     },
     where: {
       [identifierIsAddress ? "address" : "nickname"]: decodeURIComponent(identifier),
@@ -285,10 +275,10 @@ export async function fetchUserByIdentifier(
             },
           ]);
 
-          return await fetchUserByIdentifier(identifier);
+          return await fetchUserByIdentifier(identifier, currentUser);
         }
 
-        return toPublicProfile(cachedUser);
+        return toPublicProfile(cachedUser, cachedUser.user, currentUser);
       }
 
       // nickname not found, unbind
@@ -308,13 +298,13 @@ export async function fetchUserByIdentifier(
       await touchLastCheck(cachedUser.nickname);
     }
 
-    return toPublicProfile(cachedUser);
+    return toPublicProfile(cachedUser, cachedUser.user, currentUser);
   }
 
   if (identifierIsAddress) {
     return {
+      isGuard: false,
       address: identifier,
-      nickname: null,
     };
   }
 
@@ -330,7 +320,7 @@ export async function fetchUserByIdentifier(
     },
   ]);
 
-  return await fetchUserByIdentifier(identifier);
+  return await fetchUserByIdentifier(identifier, currentUser);
 }
 
 export async function cacheUsers(
@@ -380,15 +370,4 @@ export async function cacheUsers(
   } catch (err) {
     console.error("Bulk user caching failed:", err);
   }
-}
-
-export type Session = typeof auth.$Infer.Session;
-export type User = Session["user"];
-
-export function mapPublicUser(user: PublicUser): PublicUser {
-  return {
-    ...user,
-    discord: user.showSocial ? user.discord : null,
-    twitter: user.showSocial ? user.twitter : null,
-  };
 }

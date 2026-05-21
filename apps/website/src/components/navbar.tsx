@@ -7,7 +7,7 @@ import { Link } from "@/components/intentui/link";
 import { LoginButton, UserMenu } from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { useSession } from "@/hooks/use-user";
+import { useCurrentUser } from "@/hooks/use-user";
 import { m } from "@/paraglide/messages";
 
 import { Container } from "./intentui/container";
@@ -27,7 +27,7 @@ export function useNavMenuItems() {
 export default function Navbar() {
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const navMenuItems = useNavMenuItems();
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
 
   return (
     <>
@@ -54,11 +54,11 @@ export default function Navbar() {
           <div className="flex-1" aria-hidden />
 
           <div className="flex items-center gap-x-0.5">
-            {!session && <LoginButton />}
+            {!user && <LoginButton />}
             <UserSearch />
-            {!session && <SettingsButton />}
+            {!user && <SettingsButton />}
             <SelectedArtistFilter />
-            {session && <UserMenu user={session.user} />}
+            {user && <UserMenu user={user.user} />}
           </div>
         </Container>
       </nav>

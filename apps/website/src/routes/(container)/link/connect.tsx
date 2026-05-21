@@ -2,13 +2,13 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import LinkRender from "@/components/link/link-process";
 import { generateMetadata } from "@/lib/meta";
-import { sessionOptions } from "@/lib/query-options";
+import { currentUserOptions } from "@/lib/query-options";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/link/connect")({
   beforeLoad: async ({ context: { queryClient } }) => {
-    const session = await queryClient.ensureQueryData(sessionOptions);
-    if (!session) {
+    const user = await queryClient.ensureQueryData(currentUserOptions);
+    if (!user) {
       throw redirect({ to: "/" });
     }
   },

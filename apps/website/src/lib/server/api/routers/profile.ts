@@ -9,10 +9,12 @@ import { serverEnv } from "@/lib/env/server";
 import { m } from "@/paraglide/messages";
 
 import { createPresignedUploadUrl, deleteFileFromBucket, getS3PublicUrl } from "../../s3.server";
-import { authed } from "../orpc";
+import { authed, optionalAuthed } from "../orpc";
 
 export const profileRouter = {
-  list: authed.handler(async ({ context: { session } }) => {
+  // todo: move to getCurrentUser
+  list: optionalAuthed.handler(async ({ context: { session } }) => {
+    if (!session) return [];
     return await fetchUserProfiles(session.user.id);
   }),
 

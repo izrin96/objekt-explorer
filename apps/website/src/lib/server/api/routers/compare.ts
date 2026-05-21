@@ -11,15 +11,15 @@ import { m } from "@/paraglide/messages";
 
 import { buildListEntries, fetchListWithEntries } from "../../list.server";
 import { getCollectionColumns } from "../../objekt.server";
-import { pub, selectedArtistsMiddleware } from "../orpc";
+import { optionalAuthed, selectedArtistsMiddleware } from "../orpc";
 
 export const compareRouter = {
-  compare: pub
+  compare: optionalAuthed
     .use(selectedArtistsMiddleware)
     .input(compareInputSchema)
     .handler(
       async ({
-        context: { artists },
+        context: { artists, session },
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
         const sourceList = await fetchListWithEntries(sourceId);
@@ -44,6 +44,7 @@ export const compareRouter = {
               address: true,
               nickname: true,
               privateProfile: true,
+              userId: true,
             },
             where: {
               [targetIsAddress ? "address" : "nickname"]: targetProfileId,
@@ -55,7 +56,10 @@ export const compareRouter = {
               message: m.api_errors_compare_target_profile_not_found(),
             });
 
-          if (targetProfile.privateProfile) {
+          if (
+            targetProfile.privateProfile &&
+            (!session?.user.id || session.user.id !== targetProfile.userId)
+          ) {
             throw new ORPCError("FORBIDDEN", {
               message: m.api_errors_compare_target_profile_private(),
             });

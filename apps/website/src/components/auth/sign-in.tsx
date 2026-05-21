@@ -59,7 +59,7 @@ function SignInForm({
     onSuccess: async (_, _v, _o, { client }) => {
       toast.success(m.auth_sign_in_success());
       void client.invalidateQueries({
-        queryKey: orpc.user.session.key(),
+        queryKey: orpc.user.currentUser.key(),
       });
       void router.navigate({ to: "/" });
     },
@@ -229,7 +229,7 @@ function SignUpForm({
     onSuccess: async (_, _v, _o, { client }) => {
       toast.success(m.auth_sign_up_success());
       void client.invalidateQueries({
-        queryKey: orpc.user.session.key(),
+        queryKey: orpc.user.currentUser.key(),
       });
       void router.navigate({ to: "/" });
     },

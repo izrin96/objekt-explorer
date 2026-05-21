@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
 
 import { useProfileTarget } from "@/hooks/use-profile-target";
+import { useProfileAuthed } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
 import { getListLinkOption } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -25,6 +26,7 @@ export default function ProfileLists() {
 
 function ProfileList() {
   const profile = useProfileTarget()!;
+  const isOwned = useProfileAuthed();
   const { data } = useSuspenseQuery(
     orpc.list.profileLists.queryOptions({
       input: { profileAddress: profile.address },
@@ -36,9 +38,7 @@ function ProfileList() {
       {data.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
           <span className="text-muted-fg text-sm">{m.list_no_lists_found()}</span>
-          {profile.isOwned && (
-            <span className="text-muted-fg text-sm">{m.list_no_lists_hint()}</span>
-          )}
+          {isOwned && <span className="text-muted-fg text-sm">{m.list_no_lists_hint()}</span>}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

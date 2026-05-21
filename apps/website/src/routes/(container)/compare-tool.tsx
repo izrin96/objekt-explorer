@@ -11,7 +11,11 @@ import { compareInputSchema } from "@/lib/universal/compare";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/compare-tool")({
-  validateSearch: compareInputSchema,
+  validateSearch: (search) => {
+    const result = compareInputSchema.safeParse(search);
+    if (!result.data) throw new Error("Invalid search parameters");
+    return result.data;
+  },
   loaderDeps: ({ search }) => ({
     sourceId: search.sourceId,
     targetType: search.targetType,

@@ -109,22 +109,20 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             <span className="inline-flex gap-1 truncate text-lg font-semibold">
               {user.user.name}
             </span>
-            {user.user.showSocial && (
-              <div className="flex gap-2">
-                {user.user.discord && (
-                  <div className="flex gap-1 truncate text-sm">
-                    <DiscordLogoIcon size={16} weight="regular" className="self-center" />
-                    <span className="text-muted-fg">{user.user.discord}</span>
-                  </div>
-                )}
-                {user.user.twitter && (
-                  <div className="flex gap-1 truncate text-sm">
-                    <XLogoIcon size={16} weight="regular" className="self-center" />
-                    <span className="text-muted-fg">{user.user.twitter}</span>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex gap-2">
+              {user.user.discord && (
+                <div className="flex gap-1 truncate text-sm">
+                  <DiscordLogoIcon size={16} weight="regular" className="self-center" />
+                  <span className="text-muted-fg">{user.user.discord}</span>
+                </div>
+              )}
+              {user.user.twitter && (
+                <div className="flex gap-1 truncate text-sm">
+                  <XLogoIcon size={16} weight="regular" className="self-center" />
+                  <span className="text-muted-fg">{user.user.twitter}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

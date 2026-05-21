@@ -10,7 +10,7 @@ import { FilterDataProvider } from "@/hooks/use-filter-data";
 import { clientEnv } from "@/lib/env/client";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
-import { sessionOptions } from "@/lib/query-options";
+import { currentUserOptions } from "@/lib/query-options";
 import { getLocale } from "@/paraglide/runtime";
 
 import appCss from "@/styles/app.css?url";
@@ -21,10 +21,15 @@ export interface RouterContext {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {
+    // common
     void queryClient.prefetchQuery(orpc.config.getArtists.queryOptions());
     void queryClient.prefetchQuery(orpc.config.getFilterData.queryOptions());
     void queryClient.prefetchQuery(orpc.config.getSelectedArtists.queryOptions());
-    void queryClient.prefetchQuery(sessionOptions);
+
+    // auth
+    void queryClient.prefetchQuery(currentUserOptions);
+    void queryClient.prefetchQuery(orpc.list.list.queryOptions());
+    void queryClient.prefetchQuery(orpc.profile.list.queryOptions());
   },
   head: () => {
     const { meta, links } = generateMetadata({

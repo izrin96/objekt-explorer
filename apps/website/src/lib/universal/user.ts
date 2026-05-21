@@ -1,28 +1,32 @@
 import * as z from "zod";
 
+import type { User } from "../server/auth.server";
+
 export const publicUserSchema = z.object({
   name: z.string().nullable(),
   image: z.string().nullable(),
-  username: z.string().nullable(),
   discord: z.string().nullable(),
   twitter: z.string().nullable(),
-  displayUsername: z.string().nullable(),
-  showSocial: z.boolean().nullable(),
 });
 export type PublicUser = z.infer<typeof publicUserSchema>;
 
 export const publicProfileSchema = z.object({
+  isGuard: z.boolean(),
   address: z.string(),
   nickname: z.string().nullish(),
   bannerImgUrl: z.string().nullish(),
   bannerImgType: z.string().nullish(),
-  privateProfile: z.boolean().nullish(),
   gridColumns: z.number().nullish(),
   user: publicUserSchema.nullish(),
-  ownerId: z.string().nullish(),
-  isOwned: z.boolean().optional(),
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
+
+export const currentUserSchema = z
+  .object({
+    user: z.custom<User>(),
+  })
+  .nullable();
+export type CurrentUser = z.infer<typeof currentUserSchema>;
 
 export const providerIdSchema = z.enum(["twitter", "discord"]);
 export type ProviderId = z.infer<typeof providerIdSchema>;
@@ -49,13 +53,11 @@ export const publicListSchema = z.object({
   profileSlug: z.string().nullish(),
   name: z.string(),
   gridColumns: z.number().nullish(),
-  user: publicUserSchema.nullish(),
   listType: z.enum(["normal", "profile"]),
   profileAddress: z.string().nullish(),
-  ownerId: z.string().nullish(),
-  isOwned: z.boolean().optional(),
   description: z.string().nullish(),
   currency: z.string().nullish(),
+  user: publicUserSchema.nullish(),
 });
 export type PublicList = z.infer<typeof publicListSchema>;
 

@@ -7,7 +7,7 @@ import * as z from "zod";
 import { providersMap } from "@/lib/universal/user";
 import { m } from "@/paraglide/messages";
 
-import { auth, getSession } from "../../auth.server";
+import { auth, getCurrentUser } from "../../auth.server";
 import { authed, pub } from "../orpc";
 
 export const userRouter = {
@@ -98,5 +98,5 @@ export const userRouter = {
       },
     ),
 
-  session: pub.handler(getSession),
+  currentUser: pub.handler(getCurrentUser),
 };

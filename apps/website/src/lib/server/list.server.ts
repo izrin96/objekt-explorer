@@ -12,7 +12,7 @@ import { and, eq, inArray, ne } from "drizzle-orm";
 import slugify from "slugify";
 
 import type { PublicList } from "../universal/user";
-import { mapPublicUser } from "./auth.server";
+import { toPublicUser } from "./auth.server";
 import { getCollectionColumns } from "./objekt.server";
 
 export interface ListEntryTransformConfig {
@@ -137,17 +137,6 @@ export async function buildListEntries(
   return buildNormalListEntries(entries, config);
 }
 
-export function sanitizePublicList(
-  list: PublicList,
-  currentUserId?: string,
-): Omit<PublicList, "ownerId"> {
-  const { ownerId, ...safeList } = list;
-  return {
-    ...safeList,
-    isOwned: ownerId && currentUserId ? ownerId === currentUserId : false,
-  };
-}
-
 export async function fetchListWithEntries(slug: string) {
   return db.query.lists.findFirst({
     columns: {
@@ -176,30 +165,8 @@ export async function fetchListWithEntries(slug: string) {
 
 export async function fetchList(slug: string, profileAddress?: string): Promise<PublicList | null> {
   const result = await db.query.lists.findFirst({
-    columns: {
-      slug: true,
-      name: true,
-      hideUser: true,
-      gridColumns: true,
-      userId: true,
-      listType: true,
-      profileAddress: true,
-      profileSlug: true,
-      description: true,
-      currency: true,
-    },
     with: {
-      user: {
-        columns: {
-          name: true,
-          username: true,
-          image: true,
-          discord: true,
-          twitter: true,
-          displayUsername: true,
-          showSocial: true,
-        },
-      },
+      user: true,
     },
     where: profileAddress
       ? { profileSlug: slug, profileAddress: profileAddress.toLowerCase() }
@@ -213,10 +180,9 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
     slug: result.slug,
     profileSlug: result.profileSlug,
     gridColumns: result.gridColumns,
-    user: result.hideUser || !result.user ? null : mapPublicUser(result.user),
+    user: result.hideUser || !result.user ? null : toPublicUser(result.user),
     listType: result.listType,
     profileAddress: result.profileAddress,
-    ownerId: result.userId,
     description: result.description,
     currency: result.currency,
   };

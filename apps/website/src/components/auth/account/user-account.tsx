@@ -34,7 +34,7 @@ import {
   SheetTitle,
 } from "@/components/intentui/sheet";
 import { TextField } from "@/components/intentui/text-field";
-import { useSession } from "@/hooks/use-user";
+import { useCurrentUser } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import type { User } from "@/lib/server/auth.server";
 import { m } from "@/paraglide/messages";
@@ -80,8 +80,8 @@ export default function UserAccountModal({ open, setOpen }: Props) {
 }
 
 function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const { data: session } = useSession();
-  if (!session) return null;
+  const { data: user } = useCurrentUser();
+  if (!user) return null;
 
   return (
     <DisclosureGroup
@@ -91,14 +91,14 @@ function UserAccount({ setOpen }: { setOpen: (val: boolean) => void }) {
       <Disclosure id="1">
         <DisclosureTrigger>{m.auth_account_general()}</DisclosureTrigger>
         <DisclosurePanel>
-          <UserAccountForm user={session.user} setOpen={setOpen} />
+          <UserAccountForm user={user.user} setOpen={setOpen} />
         </DisclosurePanel>
       </Disclosure>
 
       <Disclosure>
         <DisclosureTrigger>{m.auth_account_change_email()}</DisclosureTrigger>
         <DisclosurePanel>
-          <ChangeEmail email={session.user.email} />
+          <ChangeEmail email={user.user.email} />
         </DisclosurePanel>
       </Disclosure>
 

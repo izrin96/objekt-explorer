@@ -25,16 +25,20 @@ function ProfileLayout() {
 
   return (
     <ProfileProvider profile={profile}>
-      <PrivateProfileGuard profile={profile}>
-        <ProfileBanner profile={profile} />
-        <DynamicContainer>
-          <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
-            <ProfileHeader user={profile} />
-            <ProfileTabs user={profile} />
-            <Outlet />
-          </div>
-        </DynamicContainer>
-      </PrivateProfileGuard>
+      {profile.isGuard ? (
+        <PrivateProfileGuard />
+      ) : (
+        <>
+          <ProfileBanner profile={profile} />
+          <DynamicContainer>
+            <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
+              <ProfileHeader user={profile} />
+              <ProfileTabs user={profile} />
+              <Outlet />
+            </div>
+          </DynamicContainer>
+        </>
+      )}
     </ProfileProvider>
   );
 }

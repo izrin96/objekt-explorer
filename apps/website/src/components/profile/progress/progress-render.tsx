@@ -29,7 +29,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
-import { useSession } from "@/hooks/use-user";
+import { useCurrentUser } from "@/hooks/use-user";
 import { unobtainables } from "@/lib/unobtainables";
 import { tradeableFilter, cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -145,7 +145,7 @@ interface ProgressCollapseProps extends ProgressGroupProps {
 }
 
 function ProgressCollapse(props: ProgressCollapseProps) {
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
   const { title, columns, grouped, percentage, ownedSlugs } = props;
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const [showCount] = useShowCount();
@@ -201,16 +201,16 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                     return (
                       <ObjektGridItem
                         objekts={objekts}
-                        session={!!session}
+                        session={!!user}
                         showSelect={false}
                         staticMenu={
-                          session && (
+                          user && (
                             <ObjektStaticMenu>
                               <AddToListMenu objekts={[objekt]} />
                             </ObjektStaticMenu>
                           )
                         }
-                        hoverMenu={session && <AddToListMenu objekts={[objekt]} />}
+                        hoverMenu={user && <AddToListMenu objekts={[objekt]} />}
                         viewProps={{
                           hideLabel,
                           showCount,

@@ -6,7 +6,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 import { useCollectionObjekts } from "@/hooks/use-collection-objekt";
 import { useConfigStore } from "@/hooks/use-config";
-import { useSession } from "@/hooks/use-user";
+import { useCurrentUser } from "@/hooks/use-user";
 
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
@@ -51,7 +51,7 @@ function IndexFilter({ selectRef }: { selectRef: (el: HTMLDivElement | null) => 
 }
 
 function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, isPending } = useCollectionObjekts();
 
@@ -62,21 +62,21 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
       return (
         <ObjektGridItem
           objekts={item}
-          session={!!session}
+          session={!!user}
           staticMenu={
-            session && (
+            user && (
               <ObjektStaticMenu>
                 <SelectMenuItem objekts={item} />
                 <AddToListMenu objekts={[objekt]} />
               </ObjektStaticMenu>
             )
           }
-          hoverMenu={session && <AddToListMenu objekts={[objekt]} />}
+          hoverMenu={user && <AddToListMenu objekts={[objekt]} />}
           viewProps={{ hideLabel, isPriority: rowIndex < 3 }}
         />
       );
     },
-    [session, hideLabel],
+    [user, hideLabel],
   );
 
   if (isPending) {
@@ -89,11 +89,13 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
 
   return (
     <>
-      <FloatingSelectMode objekts={filtered}>
-        <AddToList size="sm" />
-      </FloatingSelectMode>
+      {user && (
+        <FloatingSelectMode objekts={filtered}>
+          <AddToList size="sm" />
+        </FloatingSelectMode>
+      )}
 
-      {session &&
+      {user &&
         selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>

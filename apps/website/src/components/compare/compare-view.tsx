@@ -31,7 +31,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useResetFilters } from "@/hooks/use-reset-filters";
-import { useSession } from "@/hooks/use-user";
+import { useCurrentUser } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/universal/compare";
 import type { PublicList } from "@/lib/universal/user";
 import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
@@ -136,7 +136,7 @@ function CompareFilter({ list }: { list: PublicList }) {
 }
 
 function CompareGrid({ input, list }: { input: CompareInput; list: PublicList }) {
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, filters } = useCompareObjekts(input);
   const isProfileList = list.listType === "profile";
@@ -149,7 +149,7 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
       return (
         <ObjektGridItem
           objekts={item}
-          session={!!session}
+          session={!!user}
           showSelect={false}
           viewProps={{
             hideLabel,
@@ -162,7 +162,7 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
         />
       );
     },
-    [session, hideLabel, list.currency, isProfileList, filters.grouped],
+    [user, hideLabel, list.currency, isProfileList, filters.grouped],
   );
 
   return (

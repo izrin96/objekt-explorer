@@ -7,7 +7,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useConfigStore } from "@/hooks/use-config";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useProfileTarget } from "@/hooks/use-profile-target";
-import { useProfileAuthed, useSession } from "@/hooks/use-user";
+import { useCurrentUser, useProfileAuthed } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { ObjektCount } from "../collection/objekt-count";
@@ -87,11 +87,11 @@ function ProfileObjekt({
   discordTarget: HTMLDivElement | null;
   address: string;
 }) {
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, grouped, filters, hasNextPage, isPending } = useProfileObjekts();
   const isProfileAuthed = useProfileAuthed();
-  const showSelectMode = session && !filters.at && selectTarget;
+  const showActions = user && !filters.at;
 
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
@@ -99,7 +99,6 @@ function ProfileObjekt({
       if (!objekt) return null;
 
       const isOwned = isObjektOwned(objekt);
-      const showActions = session && !filters.at;
 
       return (
         <ObjektGridItem
@@ -161,7 +160,7 @@ function ProfileObjekt({
         />
       );
     },
-    [session, hideLabel, isProfileAuthed, address, filters.grouped, filters.at],
+    [showActions, hideLabel, isProfileAuthed, address, filters.grouped],
   );
 
   if (isPending) {
@@ -174,19 +173,22 @@ function ProfileObjekt({
 
   return (
     <>
-      <FloatingSelectMode objekts={filtered}>
-        <AddToList size="sm" address={address} />
-        {isProfileAuthed && (
-          <>
-            <PinObjekt size="sm" />
-            <UnpinObjekt size="sm" />
-            <LockObjekt size="sm" />
-            <UnlockObjekt size="sm" />
-          </>
-        )}
-      </FloatingSelectMode>
+      {showActions && (
+        <FloatingSelectMode objekts={filtered}>
+          <AddToList size="sm" address={address} />
+          {isProfileAuthed && (
+            <>
+              <PinObjekt size="sm" />
+              <UnpinObjekt size="sm" />
+              <LockObjekt size="sm" />
+              <UnlockObjekt size="sm" />
+            </>
+          )}
+        </FloatingSelectMode>
+      )}
 
-      {showSelectMode &&
+      {showActions &&
+        selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>
             <AddToList address={address} />

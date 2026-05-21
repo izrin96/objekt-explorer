@@ -8,7 +8,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useConfigStore } from "@/hooks/use-config";
 import { useProfileObjektsServer } from "@/hooks/use-profile-objekt-server";
 import { useProfileTarget } from "@/hooks/use-profile-target";
-import { useSession } from "@/hooks/use-user";
+import { useCurrentUser } from "@/hooks/use-user";
 import { getLocale } from "@/paraglide/runtime";
 
 import { ObjektCount } from "../collection/objekt-count";
@@ -72,17 +72,15 @@ function ProfileObjektServer({
   selectTarget: HTMLDivElement | null;
   address: string;
 }) {
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, total, query, filters } = useProfileObjektsServer();
-  const showSelectMode = session && !filters.at && selectTarget;
+  const showActions = user && !filters.at;
 
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
-
-      const showActions = session;
 
       return (
         <ObjektGridItem
@@ -108,7 +106,7 @@ function ProfileObjektServer({
         />
       );
     },
-    [session, hideLabel, address],
+    [showActions, hideLabel, address],
   );
 
   if (query.isPending) {
@@ -121,11 +119,14 @@ function ProfileObjektServer({
 
   return (
     <>
-      <FloatingSelectMode objekts={filtered}>
-        <AddToList size="sm" address={address} />
-      </FloatingSelectMode>
+      {showActions && (
+        <FloatingSelectMode objekts={filtered}>
+          <AddToList size="sm" address={address} />
+        </FloatingSelectMode>
+      )}
 
-      {showSelectMode &&
+      {showActions &&
+        selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>
             <AddToList address={address} />

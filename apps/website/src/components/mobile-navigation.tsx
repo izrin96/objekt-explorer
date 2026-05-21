@@ -18,7 +18,7 @@ import { Button } from "@/components/intentui/button";
 import { Separator } from "@/components/intentui/separator";
 import { LoginButton, UserMenu } from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
-import { useSession } from "@/hooks/use-user";
+import { useCurrentUser } from "@/hooks/use-user";
 import { cx } from "@/lib/primitive";
 import { m } from "@/paraglide/messages";
 
@@ -29,7 +29,7 @@ import { SettingsButton } from "./settings-button";
 
 export function MobileNavigation() {
   const navMenuItems = useNavMenuItems();
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
   const [open, setOpen] = useState(false);
   const pathname = useLocation({ select: (s) => s.pathname });
 
@@ -104,11 +104,11 @@ export function MobileNavigation() {
         <div className="flex-1" aria-hidden />
 
         <div className="flex items-center gap-x-0.5">
-          {!session && <LoginButton />}
+          {!user && <LoginButton />}
           <UserSearch />
-          {!session && <SettingsButton />}
+          {!user && <SettingsButton />}
           <SelectedArtistFilter />
-          {session && <UserMenu user={session.user} />}
+          {user && <UserMenu user={user.user} />}
         </div>
       </Container>
     </nav>

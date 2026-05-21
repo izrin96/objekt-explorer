@@ -76,8 +76,8 @@ export function UserMenu({ user }: { user: User }) {
       <Menu>
         <MenuTrigger aria-label={m.nav_open_menu()}>
           <Avatar
-            alt={user.name}
-            initials={user.name.charAt(0)}
+            alt={user?.name ?? ""}
+            initials={(user?.name ?? "").charAt(0)}
             size="md"
             isSquare
             src={user.image}

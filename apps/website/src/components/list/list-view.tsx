@@ -8,7 +8,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { useListTarget } from "@/hooks/use-list-target";
-import { useListAuthed, useSession } from "@/hooks/use-user";
+import { useCurrentUser, useListAuthed } from "@/hooks/use-user";
 import type { PublicList } from "@/lib/universal/user";
 
 import { ObjektCount } from "../collection/objekt-count";
@@ -122,7 +122,7 @@ function ListView({
   discordTarget: HTMLDivElement | null;
   list: PublicList;
 }) {
-  const { data: session } = useSession();
+  const { data: user } = useCurrentUser();
   const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, grouped, filters, isPending } = useListObjekts();
@@ -138,10 +138,10 @@ function ListView({
       return (
         <ObjektGridItem
           objekts={item}
-          session={!!session}
+          session={!!user}
           showSelect
           staticMenu={
-            session && (
+            user && (
               <ObjektStaticMenu>
                 <SelectMenuItem objekts={item} />
                 {isOwned && <RemoveFromListMenu objekts={item} />}
@@ -153,7 +153,7 @@ function ListView({
             )
           }
           hoverMenu={
-            session && (
+            user && (
               <>
                 {isOwned && <RemoveFromListMenu objekts={item} />}
                 {isOwned && list.currency && (
@@ -175,7 +175,7 @@ function ListView({
         />
       );
     },
-    [session, hideLabel, isOwned, list.currency, isProfileList, filters.grouped, openSetPrice],
+    [user, hideLabel, isOwned, list.currency, isProfileList, filters.grouped, openSetPrice],
   );
 
   if (isPending) {
@@ -188,13 +188,15 @@ function ListView({
 
   return (
     <>
-      <FloatingSelectMode objekts={filtered}>
-        {isOwned && <RemoveFromList size="sm" />}
-        {isOwned && list.currency && <SetPrice size="sm" />}
-        <AddToList size="sm" />
-      </FloatingSelectMode>
+      {user && (
+        <FloatingSelectMode objekts={filtered}>
+          {isOwned && <RemoveFromList size="sm" />}
+          {isOwned && list.currency && <SetPrice size="sm" />}
+          <AddToList size="sm" />
+        </FloatingSelectMode>
+      )}
 
-      {session &&
+      {user &&
         selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>

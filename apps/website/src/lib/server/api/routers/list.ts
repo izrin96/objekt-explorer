@@ -25,7 +25,7 @@ import {
   resolveProfileSlugUpdate,
 } from "../../list.server";
 import { escapeCSV } from "../../utils.server";
-import { authed, pub, selectedArtistsMiddleware } from "../orpc";
+import { authed, optionalAuthed, pub, selectedArtistsMiddleware } from "../orpc";
 
 export const listRouter = {
   find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
@@ -62,10 +62,10 @@ export const listRouter = {
       return buildListEntries(result.entries, result.listType, { artists });
     }),
 
-  list: authed.handler(async ({ context: { session } }) => {
-    const { user } = session;
-    const result = await fetchOwnedLists(user.id);
-    return result;
+  // todo: move to getCurrentUser
+  list: optionalAuthed.handler(async ({ context: { session } }) => {
+    if (!session) return [];
+    return await fetchOwnedLists(session.user.id);
   }),
 
   profileLists: pub

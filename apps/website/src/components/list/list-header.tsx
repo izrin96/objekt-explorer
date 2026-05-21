@@ -66,21 +66,17 @@ export default function ListHeader() {
               {displayUser && (
                 <div className="flex items-center gap-2">
                   <span className="text-muted-fg text-sm">{displayUser.name}</span>
-                  {displayUser.showSocial && (
-                    <>
-                      {displayUser.discord && (
-                        <div className="flex gap-1">
-                          <span className="text-muted-fg text-sm">{displayUser.discord}</span>
-                          <DiscordLogoIcon className="self-center" size={16} weight="regular" />
-                        </div>
-                      )}
-                      {displayUser.twitter && (
-                        <div className="flex gap-1">
-                          <span className="text-muted-fg text-sm">{displayUser.twitter}</span>
-                          <XLogoIcon className="self-center" size={16} weight="regular" />
-                        </div>
-                      )}
-                    </>
+                  {displayUser.discord && (
+                    <div className="flex gap-1">
+                      <span className="text-muted-fg text-sm">{displayUser.discord}</span>
+                      <DiscordLogoIcon className="self-center" size={16} weight="regular" />
+                    </div>
+                  )}
+                  {displayUser.twitter && (
+                    <div className="flex gap-1">
+                      <span className="text-muted-fg text-sm">{displayUser.twitter}</span>
+                      <XLogoIcon className="self-center" size={16} weight="regular" />
+                    </div>
                   )}
                 </div>
               )}

@@ -42,7 +42,7 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema)
     throwOnError: true,
   });
 
-export const sessionOptions = orpc.user.session.queryOptions({
+export const currentUserOptions = orpc.user.currentUser.queryOptions({
   staleTime: 5 * 60 * 1000,
   refetchOnWindowFocus: false,
 });

@@ -32,7 +32,7 @@ import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { useSession, useUserLists } from "@/hooks/use-user";
+import { useUserLists } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -76,7 +76,6 @@ function AddToListForm({
   setOpen: (val: boolean) => void;
   address?: string;
 }) {
-  const { data: session } = useSession();
   const { data: lists } = useUserLists();
   const [createListOpen, setCreateListOpen] = useState(false);
   const addToList = useAddToList();
@@ -87,10 +86,6 @@ function AddToListForm({
       skipDups: true,
     },
   });
-
-  if (!session) {
-    return <div className="flex justify-center">{m.list_manage_objekt_sign_in_message()}</div>;
-  }
 
   if (!lists) {
     return (

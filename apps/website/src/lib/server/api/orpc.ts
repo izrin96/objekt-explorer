@@ -1,11 +1,11 @@
 import { ORPCError, os } from "@orpc/server";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 
-import { auth, type Session } from "../auth.server";
+import { auth } from "../auth.server";
 import { parseSelectedArtists } from "../cookie.server";
 
 const requiredAuthMiddleware = os
-  .$context<{ session?: Session; headers?: Headers }>()
+  .$context<{ headers?: Headers }>()
   .middleware(async ({ next, context }) => {
     const headers = context.headers ?? getRequestHeaders();
 
@@ -28,6 +28,26 @@ const requiredAuthMiddleware = os
     });
   });
 
+const optionalAuthMiddleware = os
+  .$context<{ headers?: Headers }>()
+  .middleware(async ({ next, context }) => {
+    const headers = context.headers ?? getRequestHeaders();
+
+    const session = await auth.api.getSession({
+      headers,
+      returnHeaders: true,
+    });
+
+    const cookies = session.headers.getSetCookie();
+    if (cookies.length) {
+      setResponseHeader("Set-Cookie", cookies);
+    }
+
+    return next({
+      context: { ...context, session: session.response },
+    });
+  });
+
 export const selectedArtistsMiddleware = os.middleware(async ({ next, context }) => {
   const artists = await parseSelectedArtists();
   return next({
@@ -38,3 +58,5 @@ export const selectedArtistsMiddleware = os.middleware(async ({ next, context })
 export const pub = os;
 
 export const authed = pub.use(requiredAuthMiddleware);
+
+export const optionalAuthed = pub.use(optionalAuthMiddleware);
