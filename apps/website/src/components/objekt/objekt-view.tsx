@@ -137,7 +137,7 @@ export default function ObjektView({
               {objekt.note && (
                 <Popover>
                   <Button isCircle intent="plain" size="sq-xs">
-                    <NoteIcon className="size-4 sm:size-5" />
+                    <NoteIcon />
                   </Button>
                   <PopoverContent arrow className="max-w-72">
                     <div className="p-3 text-sm">

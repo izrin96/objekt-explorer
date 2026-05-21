@@ -96,6 +96,8 @@ const CommandMenu = ({
           {...props}
           isDismissable={isDismissable}
           className={cx(
+            // custom w-screen to w-full
+            // duration-300 to duration-150
             "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-full overflow-hidden bg-black/15",
             "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
             "entering:fade-in entering:animate-in entering:duration-150 entering:ease-out",
@@ -152,7 +154,7 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
       )}
       <Input
         placeholder={placeholder ?? "Search..."}
-        className="text-fg placeholder-muted-fg w-full min-w-0 bg-transparent px-2 py-1.5 text-sm outline-hidden focus:outline-hidden [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
+        className="text-fg placeholder-muted-fg w-full min-w-0 bg-transparent px-2.5 py-2 text-base outline-hidden focus:outline-hidden sm:px-2 sm:py-1.5 sm:text-sm [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
       />
       {escapeButton && (
         <Button

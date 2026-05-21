@@ -1,4 +1,4 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { type CalendarDate, getLocalTimeZone, today } from "@internationalized/date";
 import { useDateFormatter } from "@react-aria/i18n";
 import { use } from "react";
@@ -43,7 +43,7 @@ const Calendar = <T extends DateValue>({ className, ...props }: CalendarProps<T>
               date={date}
               className={composeRenderProps(className, (className, { isSelected, isDisabled }) =>
                 twMerge(
-                  "text-fg hover:bg-secondary-fg/15 relative flex size-9 cursor-default items-center justify-center rounded-lg text-sm/6 tabular-nums outline-hidden forced-colors:text-[ButtonText] forced-colors:outline-0",
+                  "text-fg hover:bg-secondary-fg/15 relative flex size-11 cursor-default items-center justify-center rounded-lg tabular-nums outline-hidden sm:size-9 sm:text-sm/6 forced-colors:text-[ButtonText] forced-colors:outline-0",
                   isSelected &&
                     "bg-primary pressed:bg-primary text-primary-fg hover:bg-primary/90 data-invalid:bg-danger data-invalid:text-danger-fg forced-colors:bg-[Highlight] forced-colors:text-[Highlight] forced-colors:data-invalid:bg-[Mark]",
                   isDisabled && "text-muted-fg forced-colors:text-[GrayText]",
@@ -60,16 +60,15 @@ const Calendar = <T extends DateValue>({ className, ...props }: CalendarProps<T>
   );
 };
 
-const CalendarHeader = ({
-  isRange,
-  className,
-  ...props
-}: React.ComponentProps<"header"> & { isRange?: boolean }) => {
+const CalendarHeader = ({ className, ...props }: React.ComponentProps<"header">) => {
   const { direction } = useLocale();
   return (
     <header
       data-slot="calendar-header"
-      className={twMerge("flex w-full justify-between gap-1.5 ps-1.5 pe-1 pt-1 pb-4", className)}
+      className={twMerge(
+        "flex w-full justify-between gap-1.5 ps-1.5 pe-1 pt-1 pb-5 sm:pb-4",
+        className,
+      )}
       {...props}
     >
       <div className="flex items-center gap-1.5">
@@ -80,7 +79,7 @@ const CalendarHeader = ({
       <div className="flex items-center gap-1">
         <Button
           size="sq-sm"
-          className="**:data-[slot=icon]:text-fg size-7"
+          className="**:data-[slot=icon]:text-fg size-8 sm:size-7"
           isCircle
           intent="plain"
           slot="previous"
@@ -89,7 +88,7 @@ const CalendarHeader = ({
         </Button>
         <Button
           size="sq-sm"
-          className="**:data-[slot=icon]:text-fg size-7"
+          className="**:data-[slot=icon]:text-fg size-8 sm:size-7"
           isCircle
           intent="plain"
           slot="next"
@@ -139,10 +138,10 @@ const SelectMonth = () => {
         }
       }}
     >
-      <SelectTrigger className="w-22 px-2.5 py-1.5 text-sm/5 *:text-sm/5 **:data-[slot=select-value]:inline-block **:data-[slot=select-value]:truncate" />
+      <SelectTrigger className="w-22 text-sm/5 **:data-[slot=select-value]:inline-block **:data-[slot=select-value]:truncate sm:px-2.5 sm:py-1.5 sm:*:text-sm/5" />
       <SelectContent className="min-w-0" items={months}>
         {(item) => (
-          <SelectItem>
+          <SelectItem textValue={item.formatted}>
             <SelectLabel>{item.formatted}</SelectLabel>
           </SelectItem>
         )}
@@ -160,6 +159,7 @@ const SelectYear = () => {
     timeZone: state.timeZone,
   });
 
+  // custom
   // Determine year range from minValue/maxValue or default to ±20 years
   const currentYear = state.focusedDate.year;
   const minYear = state.minValue?.year ?? currentYear - 20;
@@ -175,6 +175,7 @@ const SelectYear = () => {
     });
   }
 
+  // custom
   // Find the index of the current focused year
   const selectedIndex = years.findIndex((y) => y.date.year === state.focusedDate.year);
 
@@ -188,10 +189,10 @@ const SelectYear = () => {
         }
       }}
     >
-      <SelectTrigger className="px-2.5 py-1.5 text-sm/5 *:text-sm/5" />
+      <SelectTrigger className="text-sm/5 sm:px-2.5 sm:py-1.5 sm:*:text-sm/5" />
       <SelectContent items={years}>
         {(item) => (
-          <SelectItem>
+          <SelectItem textValue={item.formatted}>
             <SelectLabel>{item.formatted}</SelectLabel>
           </SelectItem>
         )}
@@ -204,7 +205,7 @@ const CalendarGridHeader = () => {
   return (
     <CalendarGridHeaderPrimitive>
       {(day) => (
-        <CalendarHeaderCell className="text-muted-fg pb-2 text-center text-sm/6 font-semibold sm:py-0.5 lg:text-xs">
+        <CalendarHeaderCell className="text-muted-fg pb-2 text-center text-sm/6 font-semibold sm:px-0 sm:py-0.5 lg:text-xs">
           {day}
         </CalendarHeaderCell>
       )}

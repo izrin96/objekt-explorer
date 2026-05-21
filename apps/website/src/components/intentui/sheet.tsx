@@ -55,6 +55,7 @@ const SheetContent = ({
     <ModalOverlay
       isDismissable={isDismissable}
       className={cx(
+        // custom duration-500 to duration-300
         "entering:fade-in exiting:fade-out fixed start-0 top-0 z-50 size-full entering:animate-in exiting:animate-out overflow-hidden bg-black/15 entering:duration-300 exiting:duration-300",
         overlay?.className,
       )}
@@ -67,6 +68,7 @@ const SheetContent = ({
           "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
           "data-[float=true]:rounded-lg data-[float=true]:ring data-[float=true]:ring-fg/5 dark:data-[float=true]:ring-border",
           "border-fg/20 dark:border-border",
+          // custom duration-500 to duration-300
           "entering:fade-in entering:animate-in entering:duration-300",
           "exiting:fade-in exiting:animate-out exiting:duration-300",
           sideVariants[side],

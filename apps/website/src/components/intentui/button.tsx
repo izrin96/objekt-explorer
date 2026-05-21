@@ -15,7 +15,7 @@ export const buttonStyles = tv({
     "forced-colors:[--btn-icon:ButtonText] forced-colors:hover:[--btn-icon:ButtonText] *:[svg]:-mx-0.5 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-(--btn-icon) hover:*:[svg]:text-(--btn-icon-active)/90 focus-visible:*:[svg]:text-(--btn-icon-active)/80",
     "*:data-[slot=loader]:-mx-0.5 *:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-(--btn-icon)",
     "pending:opacity-50 disabled:opacity-50 disabled:forced-colors:text-[GrayText]",
-    "*:data-[slot=color-swatch]:-mx-0.5 *:data-[slot=color-swatch]:shrink-0 *:data-[slot=color-swatch]:self-center *:data-[slot=color-swatch]:[--color-swatch-size:--spacing(5)]",
+    "*:data-[slot=color-swatch]:-mx-0.5 *:data-[slot=color-swatch]:shrink-0 *:data-[slot=color-swatch]:self-center *:data-[slot=color-swatch]:[--size:--spacing(5)]",
     // custom
     "selected:border-accent-solid selected:shadow-accent-solid/20 selected:shadow-sm",
   ],
@@ -38,33 +38,45 @@ export const buttonStyles = tv({
     },
     size: {
       xs: [
-        "min-h-7 gap-x-1.5 px-2 py-[calc(--spacing(1.5)-1px)] text-xs/4",
-        "*:[svg]:-mx-px *:[svg]:size-3",
-        "*:data-[slot=loader]:-mx-px *:data-[slot=loader]:size-3",
+        "min-h-8 gap-x-1.5 px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] text-sm sm:min-h-7 sm:px-2 sm:py-[calc(--spacing(1.5)-1px)] sm:text-xs/4",
+        "*:[svg]:-mx-px *:[svg]:size-3.5 sm:*:[svg]:size-3",
+        "*:data-[slot=loader]:-mx-px *:data-[slot=loader]:size-3.5 sm:*:data-[slot=loader]:size-3",
       ],
       sm: [
-        "min-h-8 gap-x-1.5 px-[calc(--spacing(3)-1px)] py-[calc(--spacing(1.5)-1px)] text-sm/5",
-        "*:[svg]:size-4",
-        "*:data-[slot=loader]:size-4",
+        "min-h-9 gap-x-1.5 px-3 py-[calc(--spacing(2)-1px)] sm:min-h-8 sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/5",
+        "*:[svg]:size-4.5 sm:*:[svg]:size-4",
+        "*:data-[slot=loader]:size-4.5 sm:*:data-[slot=loader]:size-4",
       ],
       md: [
-        "min-h-9 gap-x-2 px-3 py-[calc(--spacing(1.5)-1px)] text-sm/6",
-        "*:[svg]:size-4",
-        "*:data-[slot=loader]:size-4",
+        "min-h-10 gap-x-2 px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:min-h-9 sm:px-3 sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/6",
+        "*:[svg]:size-5 sm:*:[svg]:size-4",
+        "*:data-[slot=loader]:size-5 sm:*:data-[slot=loader]:size-4",
       ],
       lg: [
-        "min-h-9 gap-x-2 px-3 py-[calc(--spacing(1.5)-1px)] text-sm/7",
-        "*:[svg]:size-4.5",
-        "*:data-[slot=loader]:size-4.5",
+        "min-h-10 gap-x-2 px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(3)-1px)] sm:min-h-9 sm:px-3 sm:py-[calc(--spacing(1.5)-1px)] sm:text-sm/7",
+        "*:[svg]:size-5 sm:*:[svg]:size-4.5",
+        "*:data-[slot=loader]:size-5 sm:*:data-[slot=loader]:size-4.5",
       ],
-      "sq-xs": ["touch-target size-7 shrink-0", "*:[svg]:size-3", "*:data-[slot=loader]:size-3"],
-      "sq-sm": ["touch-target size-8 shrink-0", "*:[svg]:size-4", "*:data-[slot=loader]:size-4"],
+      "sq-xs": [
+        "touch-target size-8 shrink-0 sm:size-7",
+        "*:[svg]:size-3.5 sm:*:[svg]:size-3",
+        "*:data-[slot=loader]:size-3.5 sm:*:data-[slot=loader]:size-3",
+      ],
+      "sq-sm": [
+        "touch-target size-10 shrink-0 sm:size-8",
+        "*:[svg]:size-4.5 sm:*:[svg]:size-4",
+        "*:data-[slot=loader]:size-4.5 sm:*:data-[slot=loader]:size-4",
+      ],
       "sq-md": [
-        "touch-target size-9 shrink-0",
-        "*:[svg]:size-4.5",
-        "*:data-[slot=loader]:size-4.5",
+        "touch-target size-11 shrink-0 sm:size-9",
+        "*:[svg]:size-5 sm:*:[svg]:size-4.5",
+        "*:data-[slot=loader]:size-5 sm:*:data-[slot=loader]:size-4.5",
       ],
-      "sq-lg": ["touch-target size-10 shrink-0", "*:[svg]:size-5", "*:data-[slot=loader]:size-5"],
+      "sq-lg": [
+        "touch-target size-12 shrink-0 sm:size-10",
+        "*:[svg]:size-6 sm:*:[svg]:size-5",
+        "*:data-[slot=loader]:size-6 sm:*:data-[slot=loader]:size-5",
+      ],
     },
 
     isCircle: {

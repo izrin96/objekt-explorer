@@ -37,7 +37,7 @@ const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="card-title"
-      className={twMerge("text-base/6 font-semibold text-balance", className)}
+      className={twMerge("font-display text-base/6 font-semibold text-balance", className)}
       {...props}
     />
   );

@@ -102,7 +102,7 @@ function LinkCard({ link }: LinkCardProps) {
           </div>
           <Menu>
             <Button intent="outline" size="sq-xs">
-              <EllipsisVerticalIcon className="size-5" />
+              <EllipsisVerticalIcon />
             </Button>
             <MenuContent placement="bottom right" popover={{ offset: -2 }}>
               <MenuItem onAction={() => setEditOpen(true)}>{m.link_card_edit()}</MenuItem>

@@ -50,7 +50,7 @@ const MenuTrigger = ({ className, ref, ...props }: MenuTriggerProps) => (
     data-slot="menu-trigger"
     className={cx(
       "relative inline text-start outline-hidden focus-visible:ring-1 focus-visible:ring-primary",
-      "*:data-[slot=chevron]:size-4",
+      "*:data-[slot=chevron]:size-5 sm:*:data-[slot=chevron]:size-4",
       className,
     )}
     {...props}
@@ -155,8 +155,8 @@ export interface MenuHeaderProps extends React.ComponentProps<typeof Header> {
 const MenuHeader = ({ className, separator = false, ...props }: MenuHeaderProps) => (
   <Header
     className={twMerge(
-      "col-span-full px-2.5 py-2 text-sm font-medium",
-      separator && "-mx-1 border-b px-3 pb-2.5",
+      "col-span-full px-2.5 py-2 text-base font-medium sm:text-sm",
+      separator && "-mx-1 border-b sm:px-3 sm:pb-2.5",
       className,
     )}
     {...props}
@@ -194,6 +194,7 @@ const MenuShortcut = DropdownKeyboard;
 const MenuLabel = DropdownLabel;
 const MenuDescription = DropdownDescription;
 
+// custom
 const MenuItemLinkWrapper = ({ ...props }: MenuItemProps) => {
   return <MenuItem {...props} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
 };

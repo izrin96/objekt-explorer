@@ -16,13 +16,13 @@ export function SettingsButton({
     <>
       <Button
         intent={intent}
-        size="sm"
-        className="px-2 [--btn-icon:var(--color-fg)] sm:px-2"
+        size="sq-sm"
+        className="[--btn-icon:var(--color-fg)]"
         aria-label={m.common_settings_title()}
         onPress={() => setOpen(true)}
         {...props}
       >
-        <GearIcon className="size-5 sm:size-4" />
+        <GearIcon />
       </Button>
       <SettingsModal open={open} setOpen={setOpen} />
     </>

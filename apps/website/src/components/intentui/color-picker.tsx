@@ -33,6 +33,7 @@ const EyeDropper = () => {
   const state = use(ColorPickerStateContext)!;
 
   if (!window.EyeDropper) {
+    // custom
     return null;
   }
 

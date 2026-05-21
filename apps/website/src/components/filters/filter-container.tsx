@@ -10,7 +10,7 @@ export function FilterContainer({ children }: React.PropsWithChildren) {
   return (
     <div className="group flex flex-col justify-center gap-6" data-show={open}>
       <Button intent="outline" className="flex sm:hidden" onPress={() => setOpen(!open)}>
-        <FunnelIcon className="size-5" />
+        <FunnelIcon />
         {m.filter_filters()}
       </Button>
       <div className="group-data-[show=false]:hidden sm:group-data-[show=false]:flex">

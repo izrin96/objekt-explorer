@@ -97,7 +97,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           rel="noopener noreferrer"
           target="_blank"
         >
-          <ArrowTopRightOnSquareIcon className="size-5" />
+          <ArrowTopRightOnSquareIcon />
           {m.objekt_view_in_apollo()}
         </Tab>
       </TabList>

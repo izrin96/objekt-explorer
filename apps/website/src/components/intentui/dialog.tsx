@@ -19,7 +19,8 @@ const Dialog = ({
       data-slot="dialog"
       role={role}
       className={twMerge(
-        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden outline-hidden [--gutter:--spacing(6)]",
+        // custom sm:[--gutter:--spacing(8)] to sm:[--gutter:--spacing(6)]
+        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden outline-hidden [--gutter:--spacing(6)] sm:[--gutter:--spacing(6)]",
         className,
       )}
       {...props}
@@ -63,7 +64,7 @@ const DialogTitle = ({ className, ref, ...props }: DialogTitleProps) => (
   <Heading
     slot="title"
     ref={ref}
-    className={twMerge("text-fg text-base/6 font-semibold text-balance", className)}
+    className={twMerge("text-fg text-lg/6 font-semibold text-balance sm:text-base/6", className)}
     {...props}
   />
 );
@@ -74,7 +75,10 @@ interface DialogDescriptionProps extends TextProps {
 const DialogDescription = ({ className, ref, ...props }: DialogDescriptionProps) => (
   <p
     data-slot="description"
-    className={twMerge("text-muted-fg text-sm/6 text-pretty group-disabled:opacity-50", className)}
+    className={twMerge(
+      "text-muted-fg text-base/6 text-pretty group-disabled:opacity-50 sm:text-sm/6",
+      className,
+    )}
     ref={ref}
     {...props}
   />
@@ -119,10 +123,9 @@ interface CloseButtonIndicatorProps extends Omit<ButtonProps, "children"> {
 const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => {
   return props.isDismissable ? (
     <PrimitiveButton
-      aria-label="Close"
       slot="close"
       className={cx(
-        "close absolute end-1 top-1 z-50 grid place-content-center hover:bg-secondary focus:bg-secondary focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary sm:end-2 sm:top-2 size-7 rounded-md",
+        "close absolute end-1 top-1 z-50 grid size-8 place-content-center rounded-xl hover:bg-secondary focus:bg-secondary focus:outline-hidden focus-visible:ring-1 focus-visible:ring-primary sm:end-2 sm:top-2 sm:size-7 sm:rounded-md",
         className,
       )}
     >

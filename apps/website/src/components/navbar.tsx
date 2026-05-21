@@ -10,7 +10,6 @@ import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { m } from "@/paraglide/messages";
 
-import Changelog from "./changelog";
 import { Container } from "./intentui/container";
 import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
@@ -48,7 +47,7 @@ export default function Navbar() {
                 </NavLink>
               ))}
             </div>
-            <Changelog />
+            {/* <Changelog /> */}
           </div>
 
           <div className="flex-1" aria-hidden />

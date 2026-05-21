@@ -153,7 +153,7 @@ interface BaseChartProps extends React.HTMLAttributes<HTMLDivElement> {
   layout?: ChartLayout;
   valueFormatter?: (value: number) => string;
 
-  tooltip?: TooltipContentType | boolean;
+  tooltip?: TooltipContentType<ValueType, NameType> | boolean;
   tooltipProps?: Omit<TooltipProps, "content"> & {
     hideLabel?: boolean;
     labelSeparator?: boolean;
@@ -207,6 +207,7 @@ const Chart = ({
     setSelectedLegend(legendItem);
   }, []);
 
+  const _data = data ?? [];
   const _dataKey = dataKey ?? "value";
 
   const value = useMemo(
@@ -214,11 +215,11 @@ const Chart = ({
       config,
       selectedLegend,
       onLegendSelect,
-      data: data ?? [],
+      data: _data,
       dataKey: _dataKey,
       layout,
     }),
-    [config, selectedLegend, onLegendSelect, data, _dataKey, layout],
+    [config, selectedLegend, onLegendSelect, _data, _dataKey, layout],
   );
 
   return (
@@ -325,7 +326,6 @@ const XAxis = ({
   className,
   intervalType = "preserveStartEnd",
   minTickGap = 5,
-  domain = ["auto", "auto"],
   ...props
 }: XAxisProps) => {
   const { dataKey, data, layout } = useChart();
@@ -595,7 +595,7 @@ const ChartLegendContent = ({
               "selected:bg-secondary/70 selected:text-secondary-fg",
               "hover:bg-secondary/70 hover:text-secondary-fg",
             )}
-            aria-label={"Legend Item"}
+            aria-label="Legend Item"
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />

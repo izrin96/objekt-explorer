@@ -88,7 +88,7 @@ const TabList = <T extends object>({
 export function TabScrollArea({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div className="relative">
-      <div className={twMerge("scrollbar-hidden overflow-x-auto sm:overflow-x-visible", className)}>
+      <div className={twMerge("scrollbar-none overflow-x-auto sm:overflow-x-visible", className)}>
         <div
           className="bg-border pointer-events-none absolute inset-x-0 bottom-0 h-px w-full"
           aria-hidden
@@ -117,9 +117,11 @@ const Tab = ({ className, ref, ...props }: TabProps) => {
           : "w-full justify-start [--tab-gutter-x:--spacing(4)] [--tab-gutter-y:--spacing(1.5)]",
         "relative flex cursor-default items-center whitespace-nowrap font-medium text-sm/6 outline-hidden transition [-webkit-tap-highlight-color:transparent]",
         "px-(--tab-gutter-x) py-(--tab-gutter-y)",
-        "*:[svg]:-ms-0.5 *:[svg]:me-2 *:[svg]:size-4 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-muted-fg selected:*:[svg]:text-primary-subtle-fg",
-        "selected:text-fg text-muted-fg hover:bg-secondary selected:hover:bg-primary-subtle hover:text-fg selected:hover:text-fg focus:ring-0",
+        "*:[svg]:-ms-0.5 *:[svg]:me-2 *:[svg]:size-4 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-muted-fg selected:*:[svg]:text-fg",
+        // custom replace primary-subtle to empty string
+        "selected:text-fg text-muted-fg hover:bg-secondary selected:hover:bg-secondary hover:text-fg selected:hover:text-fg focus:ring-0",
         "disabled:opacity-50",
+        // custom add "to" in props ||
         "to" in props || "href" in props ? "cursor-pointer" : "cursor-default",
         className,
       )}
@@ -163,6 +165,7 @@ const TabPanel = ({ className, ref, ...props }: TabPanelProps) => {
   );
 };
 
+// custom
 const TabLinkWrapper = ({ ref, ...props }: TabProps) => {
   return <Tab {...props} ref={ref} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
 };

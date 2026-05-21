@@ -66,6 +66,8 @@ const ModalContent = ({
       data-slot="modal-overlay"
       isDismissable={isDismissable}
       className={cx(
+        // custom duration-300 to duration-150
+        // sm:grid-rows-[1fr_auto_3fr] to sm:grid-rows-[1fr_auto_1fr]
         "fixed start-0 top-0 z-50 h-(--visual-viewport-height,100vh) w-screen",
         "bg-bg/15 backdrop-blur-[1px] motion-reduce:backdrop-blur-none",
         "grid grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_1fr]",

@@ -21,7 +21,6 @@ import UserSearch from "@/components/user-search";
 import { cx } from "@/lib/primitive";
 import { m } from "@/paraglide/messages";
 
-import Changelog from "./changelog";
 import { Container } from "./intentui/container";
 import { MenuLabel } from "./intentui/menu";
 import { useNavMenuItems } from "./navbar";
@@ -97,7 +96,7 @@ export function MobileNavigation() {
           </MenuTrigger>
           <Separator orientation="vertical" className="mr-1 h-4" />
           <AppLogo />
-          <Changelog />
+          {/* <Changelog /> */}
         </div>
 
         <div className="flex-1" aria-hidden />
