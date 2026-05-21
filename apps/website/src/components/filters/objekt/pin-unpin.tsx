@@ -31,7 +31,7 @@ export function PinObjekt({ size }: { size?: ButtonProps["size"] }) {
         })
       }
     >
-      <PushPinIcon data-slot="icon" />
+      <PushPinIcon />
       {m.objekt_menu_pin()}
     </Button>
   );
@@ -58,7 +58,7 @@ export function UnpinObjekt({ size }: { size?: ButtonProps["size"] }) {
         });
       }}
     >
-      <PushPinSlashIcon data-slot="icon" />
+      <PushPinSlashIcon />
       {m.objekt_menu_unpin()}
     </Button>
   );

@@ -38,7 +38,7 @@ export default function ColorFilter() {
               })
             }
           >
-            <XIcon data-slot="icon" />
+            <XIcon />
             {m.filter_clear_color()}
           </Button>
         </>

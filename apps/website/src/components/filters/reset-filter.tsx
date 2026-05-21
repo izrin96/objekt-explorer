@@ -13,7 +13,7 @@ export default function ResetFilter({
 }) {
   return (
     <Button intent="outline" onPress={onReset} isDisabled={isDisabled}>
-      <XIcon data-slot="icon" />
+      <XIcon />
       {m.filter_reset_filter()}
     </Button>
   );

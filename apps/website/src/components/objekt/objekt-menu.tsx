@@ -71,7 +71,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
   return (
     <MenuSubMenu>
       <MenuItem>
-        <PlusIcon data-slot="icon" />
+        <PlusIcon />
         <MenuLabel>{m.objekt_menu_add_to_list()}</MenuLabel>
       </MenuItem>
       <MenuContent placement="bottom right" popover={{ offset: -2 }}>
@@ -120,7 +120,7 @@ export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
       }
       intent="danger"
     >
-      <TrashSimpleIcon data-slot="icon" />
+      <TrashSimpleIcon />
       <MenuLabel>{m.objekt_menu_remove_from_list()}</MenuLabel>
     </MenuItem>
   );
@@ -152,7 +152,7 @@ export function TogglePinMenuItem({
         }
       }}
     >
-      {isPin ? <PushPinSlashIcon data-slot="icon" /> : <PushPinIcon data-slot="icon" />}
+      {isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
       <MenuLabel>{isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}</MenuLabel>
     </MenuItem>
   );
@@ -177,7 +177,7 @@ export function MovePinMenuItem({
         });
       }}
     >
-      {direction === "up" ? <CaretUpIcon data-slot="icon" /> : <CaretDownIcon data-slot="icon" />}
+      {direction === "up" ? <CaretUpIcon /> : <CaretDownIcon />}
       <MenuLabel>
         {direction === "up" ? m.objekt_menu_move_up() : m.objekt_menu_move_down()}
       </MenuLabel>
@@ -211,7 +211,7 @@ export function ToggleLockMenuItem({
         }
       }}
     >
-      {isLocked ? <LockSimpleOpenIcon data-slot="icon" /> : <LockSimpleIcon data-slot="icon" />}
+      {isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
       <MenuLabel>{isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}</MenuLabel>
     </MenuItem>
   );
@@ -220,7 +220,7 @@ export function ToggleLockMenuItem({
 export function SetPriceMenuItem({ onAction }: { onAction: () => void }) {
   return (
     <MenuItem onAction={onAction}>
-      <CurrencyDollarIcon data-slot="icon" />
+      <CurrencyDollarIcon />
       <MenuLabel>{m.objekt_menu_set_price()}</MenuLabel>
     </MenuItem>
   );
@@ -232,7 +232,7 @@ export function SelectMenuItem({ objekts }: { objekts: ValidObjekt[] }) {
   const isSelected = useObjektSelect((state) => state.isSelected(objekt));
   return (
     <MenuItem onAction={() => objektSelect(objekts)}>
-      <CheckIcon data-slot="icon" />
+      <CheckIcon />
       <MenuLabel>{isSelected ? m.objekt_menu_unselect() : m.objekt_menu_select()}</MenuLabel>
     </MenuItem>
   );

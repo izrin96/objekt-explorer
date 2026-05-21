@@ -435,7 +435,7 @@ function DeleteAccount() {
   return (
     <>
       <Button intent="danger" size="sm" onPress={() => setOpen(true)}>
-        <TrashSimpleIcon data-slot="icon" />
+        <TrashSimpleIcon />
         {m.auth_account_delete_account()}
       </Button>
       <ModalContent isOpen={open} onOpenChange={setOpen}>

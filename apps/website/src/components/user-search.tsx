@@ -51,8 +51,13 @@ export default function UserSearch() {
 
   return (
     <>
-      <Button onPress={() => setIsOpen(true)} size="sm" intent="primary">
-        <MagnifyingGlassIcon data-slot="icon" />
+      <Button
+        onPress={() => setIsOpen(true)}
+        size="sm"
+        intent="plain"
+        className="[--btn-icon:var(--color-fg)]"
+      >
+        <MagnifyingGlassIcon />
         <span className="hidden sm:block">{m.nav_search_user_label()}</span>
       </Button>
       <CommandMenu

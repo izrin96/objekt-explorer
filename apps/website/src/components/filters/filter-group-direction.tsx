@@ -20,11 +20,7 @@ export default function GroupDirectionFilter() {
         })
       }
     >
-      {filters.group_dir === "asc" ? (
-        <SortDescendingIcon data-slot="icon" />
-      ) : (
-        <SortAscendingIcon data-slot="icon" />
-      )}
+      {filters.group_dir === "asc" ? <SortDescendingIcon /> : <SortAscendingIcon />}
       {filters.group_dir === "asc" ? m.filter_asc() : m.filter_desc()}
     </Toggle>
   );

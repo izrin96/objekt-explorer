@@ -1,6 +1,6 @@
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 import { createLink, useLocation, useMatchRoute, Link as RouterLink } from "@tanstack/react-router";
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { MenuItemProps } from "react-aria-components/Menu";
 import {
   Header,
@@ -16,8 +16,9 @@ import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
 import { Button } from "@/components/intentui/button";
 import { Separator } from "@/components/intentui/separator";
-import UserNav from "@/components/user-nav";
+import { LoginButton, UserMenu } from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
+import { useSession } from "@/hooks/use-user";
 import { cx } from "@/lib/primitive";
 import { m } from "@/paraglide/messages";
 
@@ -28,6 +29,7 @@ import { SettingsButton } from "./settings-button";
 
 export function MobileNavigation() {
   const navMenuItems = useNavMenuItems();
+  const { data: session } = useSession();
   const [open, setOpen] = useState(false);
   const pathname = useLocation({ select: (s) => s.pathname });
 
@@ -101,17 +103,12 @@ export function MobileNavigation() {
 
         <div className="flex-1" aria-hidden />
 
-        <div className="flex items-center gap-x-1.5">
-          <Suspense>
-            <UserNav />
-          </Suspense>
-          <SettingsButton />
-          <Suspense>
-            <SelectedArtistFilter />
-          </Suspense>
-          <Suspense>
-            <UserSearch />
-          </Suspense>
+        <div className="flex items-center gap-x-0.5">
+          {!session && <LoginButton />}
+          <UserSearch />
+          {!session && <SettingsButton />}
+          <SelectedArtistFilter />
+          {session && <UserMenu user={session.user} />}
         </div>
       </Container>
     </nav>

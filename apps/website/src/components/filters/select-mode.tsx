@@ -22,16 +22,16 @@ export function SelectMode({ children, objekts }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Toggle isSelected={mode} intent="outline" onPress={toggleMode}>
-        <HandPointingIcon weight="regular" data-slot="icon" />
+        <HandPointingIcon weight="regular" />
         {m.filter_select_mode()}
       </Toggle>
       <Button intent="outline" onPress={() => batchSelect(objekts)}>
-        <ChecksIcon weight="regular" data-slot="icon" />
+        <ChecksIcon weight="regular" />
         {m.filter_select_all()}
       </Button>
       {children}
       <Button intent="outline" onPress={reset}>
-        <XIcon weight="regular" data-slot="icon" />
+        <XIcon weight="regular" />
         {m.filter_clear_select()}
       </Button>
     </div>
@@ -79,7 +79,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <Button size="sm" intent="outline" onPress={() => batchSelect(objekts)}>
-              <ChecksIcon weight="regular" data-slot="icon" />
+              <ChecksIcon weight="regular" />
               {m.filter_select_all()}
             </Button>
 

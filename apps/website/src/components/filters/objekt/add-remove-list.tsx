@@ -18,7 +18,7 @@ export function AddToList({ size, address }: { size?: ButtonProps["size"]; addre
     <>
       <AddToListModal open={addOpen} setOpen={setAddOpen} address={address} />
       <Button size={size} intent="outline" onPress={() => handleAction(() => setAddOpen(true))}>
-        <PlusIcon weight="regular" data-slot="icon" />
+        <PlusIcon weight="regular" />
         {m.filter_add_to_list()}
       </Button>
     </>
@@ -32,7 +32,7 @@ export function RemoveFromList({ size }: { size?: ButtonProps["size"] }) {
     <>
       <RemoveFromListModal open={open} setOpen={setOpen} />
       <Button size={size} intent="outline" onPress={() => handleAction(() => setOpen(true))}>
-        <TrashSimpleIcon weight="regular" data-slot="icon" />
+        <TrashSimpleIcon weight="regular" />
         {m.filter_remove_from_list()}
       </Button>
     </>
@@ -60,7 +60,7 @@ export function SetPrice({
             intent="outline"
             onPress={() => handleAction(() => setOpen(true))}
           >
-            <CurrencyDollarIcon weight="regular" data-slot="icon" />
+            <CurrencyDollarIcon weight="regular" />
             {m.filter_set_price()}
           </Button>
         </Focusable>

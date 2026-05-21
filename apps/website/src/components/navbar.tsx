@@ -1,13 +1,13 @@
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
 import { linkOptions } from "@tanstack/react-router";
-import { Suspense } from "react";
 
 import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
 import { Link } from "@/components/intentui/link";
-import UserNav from "@/components/user-nav";
+import { LoginButton, UserMenu } from "@/components/user-nav";
 import UserSearch from "@/components/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useSession } from "@/hooks/use-user";
 import { m } from "@/paraglide/messages";
 
 import { Container } from "./intentui/container";
@@ -27,6 +27,7 @@ export function useNavMenuItems() {
 export default function Navbar() {
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const navMenuItems = useNavMenuItems();
+  const { data: session } = useSession();
 
   return (
     <>
@@ -52,17 +53,12 @@ export default function Navbar() {
 
           <div className="flex-1" aria-hidden />
 
-          <div className="flex items-center gap-x-1">
-            <Suspense>
-              <UserNav />
-            </Suspense>
-            <SettingsButton />
-            <Suspense>
-              <SelectedArtistFilter />
-            </Suspense>
-            <Suspense>
-              <UserSearch />
-            </Suspense>
+          <div className="flex items-center gap-x-0.5">
+            {!session && <LoginButton />}
+            <UserSearch />
+            {!session && <SettingsButton />}
+            <SelectedArtistFilter />
+            {session && <UserMenu user={session.user} />}
           </div>
         </Container>
       </nav>

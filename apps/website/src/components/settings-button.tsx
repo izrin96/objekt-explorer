@@ -16,7 +16,7 @@ export function SettingsButton({
     <>
       <Button
         intent={intent}
-        size="sq-sm"
+        size="sm"
         className="[--btn-icon:var(--color-fg)]"
         aria-label={m.common_settings_title()}
         onPress={() => setOpen(true)}

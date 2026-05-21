@@ -111,7 +111,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={getLocale()} dir="ltr" suppressHydrationWarning className="overflow-y-scroll">
+    <html lang={getLocale()} dir="ltr" suppressHydrationWarning className="scrollbar-gutter-stable">
       <head>
         <HeadContent />
       </head>

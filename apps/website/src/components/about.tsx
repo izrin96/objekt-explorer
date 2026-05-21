@@ -39,7 +39,7 @@ export function AboutModal({ open, setOpen }: Props) {
           rel="noopener noreferrer"
           className={buttonStyles({ intent: "primary" })}
         >
-          <GithubLogoIcon data-slot="icon" />
+          <GithubLogoIcon />
           GitHub
         </ExternalLink>
         <ExternalLink
@@ -50,7 +50,7 @@ export function AboutModal({ open, setOpen }: Props) {
             intent: "primary",
           })}
         >
-          <DiscordLogoIcon data-slot="icon" />
+          <DiscordLogoIcon />
           Discord
         </ExternalLink>
       </ModalFooter>
@@ -61,7 +61,7 @@ export function AboutModal({ open, setOpen }: Props) {
 export function AboutMenu({ onAction }: { onAction?: () => void }) {
   return (
     <MenuItem onAction={onAction}>
-      <InfoIcon data-slot="icon" />
+      <InfoIcon />
       <MenuLabel>{m.nav_about()}</MenuLabel>
     </MenuItem>
   );

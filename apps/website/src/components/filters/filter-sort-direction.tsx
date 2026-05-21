@@ -19,11 +19,7 @@ export default function SortDirectionFilter() {
         })
       }
     >
-      {filters.sort_dir === "asc" ? (
-        <SortDescendingIcon data-slot="icon" />
-      ) : (
-        <SortAscendingIcon data-slot="icon" />
-      )}
+      {filters.sort_dir === "asc" ? <SortDescendingIcon /> : <SortAscendingIcon />}
       {filters.sort_dir === "asc" ? m.filter_asc() : m.filter_desc()}
     </Toggle>
   );

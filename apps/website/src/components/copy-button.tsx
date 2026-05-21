@@ -18,7 +18,7 @@ export function CopyButton({ text }: { text: string }) {
       size="xs"
       className="flex items-center gap-1.5"
     >
-      <CopyIcon data-slot="icon" />
+      <CopyIcon />
       {m.common_copy_button()}
     </Button>
   );

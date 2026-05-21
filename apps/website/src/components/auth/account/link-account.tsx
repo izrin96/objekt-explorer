@@ -86,7 +86,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
       <PullProfileModal provider={provider} open={pullOpen} setOpen={setPullOpen} />
       <div className="flex gap-2">
         <Button intent="outline" size="xs" onPress={() => setPullOpen(true)}>
-          <ArrowsClockwiseIcon data-slot="icon" />
+          <ArrowsClockwiseIcon />
           {m.auth_account_link_accounts_refresh()}
         </Button>
         <Button
@@ -99,7 +99,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
             })
           }
         >
-          <LinkBreakIcon data-slot="icon" />
+          <LinkBreakIcon />
           {m.auth_account_link_accounts_unlink()}
         </Button>
       </div>
@@ -128,7 +128,7 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
     <div className="flex flex-wrap items-center justify-between gap-2">
       <span className="text-sm">{provider.label}</span>
       <Button intent="outline" size="xs" onPress={() => linkAccount.mutate()}>
-        <LinkIcon data-slot="icon" />
+        <LinkIcon />
         {m.auth_account_link_accounts_link()}
       </Button>
     </div>

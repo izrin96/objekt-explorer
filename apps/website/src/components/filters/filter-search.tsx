@@ -70,12 +70,12 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
         <Input ref={ref} placeholder={m.filter_quick_search()} />
         {query.length > 0 ? (
           <Button intent="plain" size="sq-xs" onPress={() => handleChange("")}>
-            <XIcon data-slot="icon" />
+            <XIcon />
           </Button>
         ) : (
           <Popover>
             <Button aria-label="Info" intent="plain" size="sq-xs">
-              <QuestionMarkIcon data-slot="icon" />
+              <QuestionMarkIcon />
             </Button>
             <PopoverContent className="max-w-sm">
               <div className="flex flex-col gap-2 p-6 text-sm">

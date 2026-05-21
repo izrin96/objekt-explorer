@@ -1,9 +1,11 @@
 import {
   DeviceMobileIcon,
   DiscordLogoIcon,
+  GearIcon,
   GearSixIcon,
   HeartIcon,
   PlusIcon,
+  SignInIcon,
   SignOutIcon,
   UserIcon,
   XLogoIcon,
@@ -13,7 +15,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import UserAccountModal from "@/components/auth/account/user-account";
-import { useSession } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth.server";
@@ -39,27 +40,29 @@ import {
 } from "./intentui/menu";
 import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
 import { CreateListModal } from "./list/modal/manage-list";
+import { SettingsModal } from "./settings-modal";
 
-export default function UserNav() {
-  const { data } = useSession();
-
+export function LoginButton() {
   return (
-    <div className="inline-flex gap-2 text-sm">
-      {data ? (
-        <UserMenu user={data.user} />
-      ) : (
-        <Link to="/login" className={buttonStyles({ intent: "plain", size: "sm" })}>
-          {m.nav_sign_in()}
-        </Link>
-      )}
-    </div>
+    <Link
+      to="/login"
+      className={buttonStyles({
+        intent: "plain",
+        size: "sm",
+        className: "[--btn-icon:var(--color-fg)]",
+      })}
+    >
+      <SignInIcon />
+      <span className="hidden sm:block">{m.nav_sign_in()}</span>
+    </Link>
   );
 }
 
-function UserMenu({ user }: { user: User }) {
+export function UserMenu({ user }: { user: User }) {
   const queryClient = useQueryClient();
   const [genOpen, setGenOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [settingOpen, setSettingOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   return (
@@ -68,6 +71,7 @@ function UserMenu({ user }: { user: User }) {
       <UserAccountModal open={accountOpen} setOpen={setAccountOpen} />
       <CreateListModal open={createListOpen} setOpen={setCreateListOpen} />
       <AboutModal open={aboutOpen} setOpen={setAboutOpen} />
+      <SettingsModal open={settingOpen} setOpen={setSettingOpen} />
 
       <Menu>
         <MenuTrigger aria-label={m.nav_open_menu()}>
@@ -110,8 +114,13 @@ function UserMenu({ user }: { user: User }) {
           <MyCosmoProfileMenuItem />
 
           <MenuItem onAction={() => setAccountOpen(true)}>
-            <UserIcon data-slot="icon" />
+            <UserIcon />
             <MenuLabel>{m.nav_account()}</MenuLabel>
+          </MenuItem>
+
+          <MenuItem onAction={() => setSettingOpen(true)}>
+            <GearIcon />
+            <MenuLabel>{m.nav_setting()}</MenuLabel>
           </MenuItem>
 
           <MenuSeparator />
@@ -133,7 +142,7 @@ function UserMenu({ user }: { user: User }) {
               })
             }
           >
-            <SignOutIcon data-slot="icon" />
+            <SignOutIcon />
             <MenuLabel>{m.nav_sign_out()}</MenuLabel>
           </MenuItem>
         </MenuContent>
@@ -153,7 +162,7 @@ function MyListMenuItem({
   return (
     <MenuSubMenu>
       <MenuItem>
-        <HeartIcon data-slot="icon" />
+        <HeartIcon />
         <MenuLabel>{m.nav_my_list()}</MenuLabel>
       </MenuItem>
       <MenuContent placement="left top" popover={{ offset: -6 }}>
@@ -184,15 +193,15 @@ function MyListMenuItem({
           </MenuItemLink>
         ))}
         <MenuItem onAction={openCreateList}>
-          <PlusIcon data-slot="icon" />
+          <PlusIcon />
           <MenuLabel>{m.nav_create_list()}</MenuLabel>
         </MenuItem>
         <MenuItem onAction={openDiscordFormat}>
-          <DiscordLogoIcon data-slot="icon" />
+          <DiscordLogoIcon />
           <MenuLabel>{m.nav_discord_format()}</MenuLabel>
         </MenuItem>
         <MenuItemLink to="/list">
-          <GearSixIcon data-slot="icon" />
+          <GearSixIcon />
           <MenuLabel>{m.nav_manage_list()}</MenuLabel>
         </MenuItemLink>
       </MenuContent>
@@ -205,7 +214,7 @@ function MyCosmoProfileMenuItem() {
   return (
     <MenuSubMenu>
       <MenuItem>
-        <DeviceMobileIcon data-slot="icon" />
+        <DeviceMobileIcon />
         <MenuLabel>{m.nav_my_cosmo_link()}</MenuLabel>
       </MenuItem>
       <MenuContent placement="left top" popover={{ offset: -6 }}>
@@ -233,7 +242,7 @@ function MyCosmoProfileMenuItem() {
           </MenuItemLink>
         ))}
         <MenuItemLink to="/link">
-          <GearSixIcon data-slot="icon" />
+          <GearSixIcon />
           <MenuLabel>{m.nav_manage_cosmo_link()}</MenuLabel>
         </MenuItemLink>
       </MenuContent>

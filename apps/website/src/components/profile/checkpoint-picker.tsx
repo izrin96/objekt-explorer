@@ -90,7 +90,7 @@ export default function CheckpointPicker() {
         data-selected={filters.at}
         onPress={() => setIsOpen(true)}
       >
-        <ClockCounterClockwiseIcon data-slot="icon" />
+        <ClockCounterClockwiseIcon />
         {formatCheckpointLabel(filters.at, m.checkpoint_title())}
       </Button>
       <PopoverContent
@@ -131,7 +131,7 @@ export default function CheckpointPicker() {
 
       {filters.at && (
         <Button intent="outline" onPress={() => setFilters({ at: null })}>
-          <XIcon data-slot="icon" />
+          <XIcon />
           {m.checkpoint_reset()}
         </Button>
       )}

@@ -31,7 +31,7 @@ export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
         })
       }
     >
-      <LockSimpleIcon data-slot="icon" />
+      <LockSimpleIcon />
       {m.objekt_menu_lock()}
     </Button>
   );
@@ -58,7 +58,7 @@ export function UnlockObjekt({ size }: { size?: ButtonProps["size"] }) {
         });
       }}
     >
-      <LockSimpleOpenIcon data-slot="icon" />
+      <LockSimpleOpenIcon />
       {m.objekt_menu_unlock()}
     </Button>
   );
