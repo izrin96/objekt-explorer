@@ -76,7 +76,7 @@ const DialogDescription = ({ className, ref, ...props }: DialogDescriptionProps)
   <p
     data-slot="description"
     className={twMerge(
-      "text-muted-fg text-base/6 text-pretty group-disabled:opacity-50 sm:text-sm/6",
+      "text-muted-fg text-sm/6 text-pretty group-disabled:opacity-50 sm:text-sm/6",
       className,
     )}
     ref={ref}

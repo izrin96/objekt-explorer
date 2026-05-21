@@ -40,7 +40,7 @@ export function SliderOutput({
 }: React.ComponentProps<typeof PrimitiveSliderOutput>) {
   return (
     <PrimitiveSliderOutput
-      className={cx("font-medium text-base/6 sm:text-sm/6", className)}
+      className={cx("font-medium text-sm/6 sm:text-sm/6", className)}
       {...props}
     />
   );

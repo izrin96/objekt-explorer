@@ -10,7 +10,7 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p"
     <p
       data-slot="text"
       {...props}
-      className={twMerge("text-muted-fg text-base/6 sm:text-sm/6", className)}
+      className={twMerge("text-muted-fg text-sm/6 sm:text-sm/6", className)}
     />
   );
 }

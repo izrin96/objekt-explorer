@@ -45,7 +45,7 @@ const dropdownItemStyles = tv({
     "not-has-[[slot=description]]:items-center",
     "group relative cursor-default rounded-[calc(var(--radius-lg)-(--spacing(1)))] outline-0 select-none",
     // text
-    "text-fg text-base/6 sm:text-sm/6 forced-colors:text-[CanvasText]",
+    "text-fg text-sm/6 sm:text-sm/6 forced-colors:text-[CanvasText]",
     // avatar
     "*:data-[slot=avatar]:*:me-(--me-icon) *:data-[slot=avatar]:me-(--me-icon) *:data-[slot=avatar]:[--avatar-size:--spacing(5)] has-[[slot=description]]:*:data-[slot=avatar]:row-span-2 sm:*:data-[slot=avatar]:[--avatar-size:--spacing(4)]",
     // icon

@@ -11,7 +11,7 @@ import { cx } from "@/lib/primitive";
 
 export const labelStyles = tv({
   base: [
-    "text-fg text-base/6 select-none in-data-required:not-data-[slot='control-label']:after:ml-1.5 sm:text-sm/6",
+    "text-fg text-sm/6 select-none in-data-required:not-data-[slot='control-label']:after:ml-1.5 sm:text-sm/6",
     "in-data-required:not-data-[slot='control-label']:after:text-danger-subtle-fg in-data-required:not-data-[slot='control-label']:after:content-['*']",
     "group-disabled:opacity-50 in-disabled:pointer-events-none in-disabled:opacity-50",
   ],
@@ -69,7 +69,7 @@ export function Legend({ className, ...props }: React.ComponentProps<"legend">) 
     <legend
       data-slot="legend"
       {...props}
-      className={twMerge("text-base/6 font-semibold data-disabled:opacity-50", className)}
+      className={twMerge("text-sm/6 font-semibold data-disabled:opacity-50", className)}
     />
   );
 }

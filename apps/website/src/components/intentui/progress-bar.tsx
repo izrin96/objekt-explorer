@@ -54,7 +54,7 @@ export function ProgressBarValue({
   return (
     <span
       data-slot="progress-bar-value"
-      className={twMerge("text-base/6 sm:text-sm/6", className)}
+      className={twMerge("text-sm/6 sm:text-sm/6", className)}
       {...props}
     >
       {valueText}
