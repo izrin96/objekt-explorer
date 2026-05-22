@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
 
-import { CopyButton } from "@/components/copy-button";
 import { Button } from "@/components/intentui/button";
 import { Checkbox } from "@/components/intentui/checkbox";
 import { Label } from "@/components/intentui/field";
@@ -18,18 +17,33 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
+import { CopyButton } from "@/components/shared/copy-button";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 import { m } from "@/paraglide/messages";
 
-type Props = {
+export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
+  const [genOpen, setGenOpen] = useState(false);
+  return (
+    <>
+      <GenerateDiscordFormatModal objekts={objekts} open={genOpen} setOpen={setGenOpen} />
+      <Button intent="outline" onPress={() => setGenOpen(true)}>
+        {m.discord_format_modal_button()}
+      </Button>
+    </>
+  );
+}
+
+function GenerateDiscordFormatModal({
+  objekts,
+  open,
+  setOpen,
+}: {
+  objekts: ValidObjekt[];
   open: boolean;
   setOpen: (val: boolean) => void;
-  objekts: ValidObjekt[];
-};
-
-export default function GenerateDiscordFormatModal({ open, setOpen, objekts }: Props) {
+}) {
   const [formatText, setFormatText] = useState("");
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();

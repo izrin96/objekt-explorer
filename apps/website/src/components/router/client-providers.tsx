@@ -2,7 +2,7 @@ import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { type PropsWithChildren } from "react";
 import { I18nProvider } from "react-aria-components/I18nProvider";
 
-import { ThemeProvider } from "./theme-provider";
+import { ThemeProvider } from "../shared/theme-provider";
 
 export default function ClientProviders({ children }: PropsWithChildren) {
   return (

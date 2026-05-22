@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import IndexRender from "@/components/index/index-view";
+import IndexRender from "@/components/home/index-view";
 
 export const Route = createFileRoute("/(container)/")({
   component: Home,

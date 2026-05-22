@@ -6,17 +6,16 @@ import { ofetch } from "ofetch";
 import { useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 
-import { useUserSearchStore } from "@/hooks/use-user-search-store";
-import { m } from "@/paraglide/messages";
-
-import { Button } from "./intentui/button";
+import { Button } from "@/components/intentui/button";
 import {
   CommandMenu,
   CommandMenuItem,
   CommandMenuList,
   CommandMenuSearch,
   CommandMenuSection,
-} from "./intentui/command-menu";
+} from "@/components/intentui/command-menu";
+import { useUserSearchStore } from "@/hooks/use-user-search-store";
+import { m } from "@/paraglide/messages";
 
 export default function UserSearch() {
   const recentUsers = useUserSearchStore((a) => a.users);

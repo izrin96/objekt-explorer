@@ -7,11 +7,11 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { m } from "@/paraglide/messages";
 
-import ErrorFallbackRender from "../error-boundary";
 import { Avatar } from "../intentui/avatar-custom";
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
+import ErrorFallbackRender from "../router/error-boundary";
 
 export default function LiveSessionListRender() {
   const { selectedArtists } = useCosmoArtist();

@@ -1,11 +1,16 @@
 import { InfoIcon, GithubLogoIcon, DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 
+import { buttonStyles } from "@/components/intentui/button";
+import { ExternalLink } from "@/components/intentui/link";
+import { MenuItem, MenuLabel } from "@/components/intentui/menu";
+import {
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalTitle,
+} from "@/components/intentui/modal";
 import { m } from "@/paraglide/messages";
-
-import { buttonStyles } from "./intentui/button";
-import { ExternalLink } from "./intentui/link";
-import { MenuItem, MenuLabel } from "./intentui/menu";
-import { ModalBody, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "./intentui/modal";
 
 type Props = {
   open: boolean;

@@ -3,10 +3,9 @@ import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, type PropsWithChildren } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
+import { Button } from "@/components/intentui/button";
+import { Loader } from "@/components/intentui/loader";
 import { m } from "@/paraglide/messages";
-
-import { Button } from "./intentui/button";
-import { Loader } from "./intentui/loader";
 
 export function ErrorRender({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (

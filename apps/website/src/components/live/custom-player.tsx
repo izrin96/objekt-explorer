@@ -15,7 +15,7 @@ import { useLiveSession } from "@/hooks/use-live-session";
 import { Button } from "../intentui/button";
 import { Popover, PopoverContent } from "../intentui/popover";
 import { Slider, SliderFill, SliderThumb, SliderTrack } from "../intentui/slider";
-import Portal from "../portal";
+import Portal from "../shared/portal";
 import { useToggleFullScreen, useUpdateCallDuration } from "./hooks";
 import ParticipantCounter from "./live-counter";
 import LiveEnded from "./live-ended";

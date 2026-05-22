@@ -2,9 +2,9 @@ import { type QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import * as React from "react";
 
-import ClientProviders from "@/components/client-providers";
 import { Toast } from "@/components/intentui/toast-custom";
-import Navbar from "@/components/navbar";
+import Navbar from "@/components/layout/navbar";
+import ClientProviders from "@/components/router/client-providers";
 import { CosmoArtistProvider } from "@/hooks/use-cosmo-artist";
 import { FilterDataProvider } from "@/hooks/use-filter-data";
 import { clientEnv } from "@/lib/env/client";

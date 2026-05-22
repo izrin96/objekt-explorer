@@ -7,13 +7,13 @@ import { ofetch } from "ofetch";
 import { memo, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import ErrorFallbackRender from "@/components/error-boundary";
-import { InfiniteQueryNext } from "@/components/infinite-query-pending";
 import { Badge } from "@/components/intentui/badge";
 import { Card } from "@/components/intentui/card";
 import { Loader } from "@/components/intentui/loader";
 import ObjektModal, { useObjektModal } from "@/components/objekt/objekt-modal";
-import UserLink from "@/components/user-link";
+import ErrorFallbackRender from "@/components/router/error-boundary";
+import { InfiniteQueryNext } from "@/components/shared/infinite-query-pending";
+import UserLink from "@/components/shared/user-link";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";

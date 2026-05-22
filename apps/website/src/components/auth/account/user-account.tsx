@@ -6,7 +6,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import ErrorFallbackRender from "@/components/error-boundary";
 import { Button } from "@/components/intentui/button";
 import { Checkbox } from "@/components/intentui/checkbox";
 import {
@@ -34,6 +33,7 @@ import {
   SheetTitle,
 } from "@/components/intentui/sheet";
 import { TextField } from "@/components/intentui/text-field";
+import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useCurrentUser } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import type { User } from "@/lib/server/auth.server";

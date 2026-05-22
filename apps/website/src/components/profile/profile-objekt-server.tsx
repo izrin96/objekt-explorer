@@ -15,13 +15,15 @@ import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
-import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
-import { AddToList } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { Loader } from "../intentui/loader";
 import { Note } from "../intentui/note";
-import { AddToListMenu, ObjektStaticMenu, SelectMenuItem } from "../objekt/objekt-menu";
+import { AddToList } from "../objekt/actions/add-to-list";
+import { AddToListMenu } from "../objekt/actions/list-menu";
+import { ObjektStaticMenu } from "../objekt/actions/objekt-static-menu";
+import { SelectMenuItem } from "../objekt/actions/select-menu";
+import ErrorFallbackRender from "../router/error-boundary";
 import FilterServer from "./filter-server";
 
 export default function ProfileObjektServerRender() {

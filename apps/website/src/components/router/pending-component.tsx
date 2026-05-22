@@ -1,4 +1,4 @@
-import { Loader } from "./intentui/loader";
+import { Loader } from "@/components/intentui/loader";
 
 export function PendingComponent() {
   return (

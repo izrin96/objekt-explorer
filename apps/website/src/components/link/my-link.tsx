@@ -7,11 +7,11 @@ import { useUserProfiles } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import ErrorFallbackRender from "../error-boundary";
 import { Button, buttonStyles } from "../intentui/button";
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Menu, MenuContent, MenuItem } from "../intentui/menu";
+import ErrorFallbackRender from "../router/error-boundary";
 import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
 
 export default function MyLinkRender() {

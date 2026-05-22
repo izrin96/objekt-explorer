@@ -1,14 +1,6 @@
 import { useTransition } from "react";
 
-import { useTheme } from "@/components/theme-provider";
-import { useConfigStore } from "@/hooks/use-config";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { useWide } from "@/hooks/use-wide";
-import type { Locale } from "@/lib/locale";
-import { m } from "@/paraglide/messages";
-import { getLocale, setLocale as setParaglideLocale } from "@/paraglide/runtime";
-
-import { Description, Label } from "./intentui/field";
+import { Description, Label } from "@/components/intentui/field";
 import {
   ModalBody,
   ModalClose,
@@ -16,9 +8,16 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./intentui/modal";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "./intentui/select";
-import { Switch } from "./intentui/switch";
+} from "@/components/intentui/modal";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
+import { Switch } from "@/components/intentui/switch";
+import { useTheme } from "@/components/shared/theme-provider";
+import { useConfigStore } from "@/hooks/use-config";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useWide } from "@/hooks/use-wide";
+import type { Locale } from "@/lib/locale";
+import { m } from "@/paraglide/messages";
+import { getLocale, setLocale as setParaglideLocale } from "@/paraglide/runtime";
 
 export function SettingsModal({
   open,

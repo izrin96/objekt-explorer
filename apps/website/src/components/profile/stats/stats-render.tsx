@@ -6,7 +6,6 @@ import { useMemo } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Pie, PieChart, Rectangle, XAxis, YAxis } from "recharts";
 
-import ErrorFallbackRender from "@/components/error-boundary";
 import {
   Card,
   CardContent,
@@ -21,6 +20,7 @@ import {
   ChartTooltipContent,
 } from "@/components/intentui/chart";
 import { Loader } from "@/components/intentui/loader";
+import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";

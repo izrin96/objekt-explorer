@@ -2,9 +2,8 @@ import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
+import { Button } from "@/components/intentui/button";
 import { m } from "@/paraglide/messages";
-
-import { Button } from "./intentui/button";
 
 export function CopyButton({ text }: { text: string }) {
   const [, copy] = useCopyToClipboard();

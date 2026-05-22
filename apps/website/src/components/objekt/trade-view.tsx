@@ -23,7 +23,6 @@ import { useCopyToClipboard } from "usehooks-ts";
 import type { ObjektTransferResult } from "@/lib/types/objekt";
 import { m } from "@/paraglide/messages";
 
-import ErrorFallbackRender from "../error-boundary";
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
 import { Card, CardContent } from "../intentui/card";
@@ -32,7 +31,8 @@ import { ExternalLink } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Skeleton } from "../intentui/skeleton";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
-import UserLink from "../user-link";
+import ErrorFallbackRender from "../router/error-boundary";
+import UserLink from "../shared/user-link";
 
 type TradeViewProps = {
   objekt: ValidObjekt;

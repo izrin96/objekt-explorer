@@ -17,18 +17,18 @@ import {
 } from "react-aria-components/Menu";
 import { twJoin, twMerge } from "tailwind-merge";
 
-import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
 import { Button } from "@/components/intentui/button";
+import { Container } from "@/components/intentui/container";
+import { MenuLabel } from "@/components/intentui/menu";
 import { Separator } from "@/components/intentui/separator";
-import { LoginButton, UserMenu } from "@/components/user-nav";
-import UserSearch from "@/components/user-search";
+import AppLogo from "@/components/layout/app-logo";
+import { LoginButton, UserMenu } from "@/components/layout/user-nav";
+import UserSearch from "@/components/layout/user-search";
 import { useCurrentUser } from "@/hooks/use-user";
 import { cx } from "@/lib/primitive";
 import { m } from "@/paraglide/messages";
 
-import { Container } from "./intentui/container";
-import { MenuLabel } from "./intentui/menu";
 import { useNavMenuItems } from "./navbar";
 import { SettingsButton } from "./settings-button";
 

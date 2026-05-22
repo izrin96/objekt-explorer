@@ -6,8 +6,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { CopyButton } from "@/components/copy-button";
-import ErrorFallbackRender from "@/components/error-boundary";
 import { Button } from "@/components/intentui/button";
 import { Checkbox } from "@/components/intentui/checkbox";
 import { FieldError, Label } from "@/components/intentui/field";
@@ -28,7 +26,9 @@ import {
 } from "@/components/intentui/select";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
-import Portal from "@/components/portal";
+import ErrorFallbackRender from "@/components/router/error-boundary";
+import { CopyButton } from "@/components/shared/copy-button";
+import Portal from "@/components/shared/portal";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useUserLists } from "@/hooks/use-user";
@@ -59,7 +59,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
                   </div>
                 }
               >
-                <Content />
+                <GenerateDiscordFormatRender />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -70,7 +70,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
   );
 }
 
-function Content() {
+function GenerateDiscordFormatRender() {
   const data = useUserLists();
   const [formatText, setFormatText] = useState("");
   const { compareArtistMember } = useCosmoArtist();

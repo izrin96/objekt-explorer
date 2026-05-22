@@ -8,14 +8,16 @@ import type { PublicList } from "@/lib/universal/user";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import ErrorFallbackRender from "../error-boundary";
 import { Button } from "../intentui/button";
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Menu, MenuContent, MenuItem } from "../intentui/menu";
 import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
+import ErrorFallbackRender from "../router/error-boundary";
+import { CreateListModal } from "./modal/create-list-modal";
+import { DeleteListModal } from "./modal/delete-list-modal";
+import { EditListModal } from "./modal/edit-list-modal";
 import { GenerateDiscordFormatModal } from "./modal/generate-discord";
-import { CreateListModal, DeleteListModal, EditListModal } from "./modal/manage-list";
 
 export default function MyListRender() {
   return (

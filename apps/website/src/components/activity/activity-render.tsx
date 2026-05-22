@@ -23,13 +23,13 @@ import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import ErrorFallbackRender from "../error-boundary";
-import { InfiniteQueryNext } from "../infinite-query-pending";
 import { Badge } from "../intentui/badge";
 import { Card } from "../intentui/card";
 import { Loader } from "../intentui/loader";
 import ObjektModal, { useObjektModal } from "../objekt/objekt-modal";
-import UserLink from "../user-link";
+import ErrorFallbackRender from "../router/error-boundary";
+import { InfiniteQueryNext } from "../shared/infinite-query-pending";
+import UserLink from "../shared/user-link";
 import ActivityFilter from "./activity-filter";
 import { useTypeFilter } from "./filter-type";
 import { type EventType, filterData, getEventType } from "./utils";

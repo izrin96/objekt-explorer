@@ -15,16 +15,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import UserAccountModal from "@/components/auth/account/user-account";
-import { useUserLists, useUserProfiles } from "@/hooks/use-user";
-import { authClient } from "@/lib/auth-client";
-import type { User } from "@/lib/server/auth.server";
-import { getListLinkOption, parseNickname } from "@/lib/utils";
-import { m } from "@/paraglide/messages";
-
-import { AboutMenu, AboutModal } from "./about";
-import { Avatar } from "./intentui/avatar-custom";
-import { buttonStyles } from "./intentui/button";
-import { Link } from "./intentui/link";
+import { Avatar } from "@/components/intentui/avatar-custom";
+import { buttonStyles } from "@/components/intentui/button";
+import { Link } from "@/components/intentui/link";
 import {
   Menu,
   MenuContent,
@@ -36,9 +29,16 @@ import {
   MenuSeparator,
   MenuSubMenu,
   MenuTrigger,
-} from "./intentui/menu";
-import { GenerateDiscordFormatModal } from "./list/modal/generate-discord";
-import { CreateListModal } from "./list/modal/manage-list";
+} from "@/components/intentui/menu";
+import { CreateListModal } from "@/components/list/modal/create-list-modal";
+import { GenerateDiscordFormatModal } from "@/components/list/modal/generate-discord";
+import { useUserLists, useUserProfiles } from "@/hooks/use-user";
+import { authClient } from "@/lib/auth-client";
+import type { User } from "@/lib/server/auth.server";
+import { getListLinkOption, parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
+
+import { AboutMenu, AboutModal } from "./about";
 import { SettingsModal } from "./settings-modal";
 
 export function LoginButton() {

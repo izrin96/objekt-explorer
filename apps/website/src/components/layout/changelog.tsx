@@ -1,15 +1,13 @@
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 
-import { m } from "@/paraglide/messages";
-
-import { Button } from "./intentui/button";
+import { Button } from "@/components/intentui/button";
 import {
   Disclosure,
   DisclosureGroup,
   DisclosurePanel,
   DisclosureTrigger,
-} from "./intentui/disclosure-group";
-import { ExternalLink } from "./intentui/link";
+} from "@/components/intentui/disclosure-group";
+import { ExternalLink } from "@/components/intentui/link";
 import {
   Modal,
   ModalBody,
@@ -18,8 +16,9 @@ import {
   ModalFooter,
   ModalHeader,
   ModalTitle,
-} from "./intentui/modal";
-import { Note } from "./intentui/note";
+} from "@/components/intentui/modal";
+import { Note } from "@/components/intentui/note";
+import { m } from "@/paraglide/messages";
 
 export default function Changelog() {
   const changelog = [

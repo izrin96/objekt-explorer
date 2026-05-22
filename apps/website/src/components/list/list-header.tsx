@@ -11,7 +11,7 @@ import { m } from "@/paraglide/messages";
 import { Avatar } from "../intentui/avatar-custom";
 import { Button } from "../intentui/button";
 import { Link } from "../intentui/link";
-import { EditListModal } from "./modal/manage-list";
+import { EditListModal } from "./modal/edit-list-modal";
 
 export default function ListHeader() {
   const list = useListTarget()!;

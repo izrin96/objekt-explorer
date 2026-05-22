@@ -1,8 +1,7 @@
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
 
+import { Link } from "@/components/intentui/link";
 import { SITE_NAME } from "@/lib/utils";
-
-import { Link } from "./intentui/link";
 
 export default function AppLogo() {
   return (

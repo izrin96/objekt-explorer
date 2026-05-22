@@ -15,7 +15,7 @@ import {
   ModalTitle,
 } from "@/components/intentui/modal";
 import { Radio, RadioGroup } from "@/components/intentui/radio";
-import Portal from "@/components/portal";
+import Portal from "@/components/shared/portal";
 import { m } from "@/paraglide/messages";
 
 type SourceList = {

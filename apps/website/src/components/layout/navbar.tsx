@@ -1,16 +1,16 @@
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr";
 import { linkOptions } from "@tanstack/react-router";
 
-import AppLogo from "@/components/app-logo";
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
+import { Container } from "@/components/intentui/container";
 import { Link } from "@/components/intentui/link";
-import { LoginButton, UserMenu } from "@/components/user-nav";
-import UserSearch from "@/components/user-search";
+import AppLogo from "@/components/layout/app-logo";
+import { LoginButton, UserMenu } from "@/components/layout/user-nav";
+import UserSearch from "@/components/layout/user-search";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useCurrentUser } from "@/hooks/use-user";
 import { m } from "@/paraglide/messages";
 
-import { Container } from "./intentui/container";
 import { MobileNavigation } from "./mobile-navigation";
 import { SettingsButton } from "./settings-button";
 

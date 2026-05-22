@@ -10,7 +10,6 @@ import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
 import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
-import ErrorFallbackRender from "@/components/error-boundary";
 import {
   Chart,
   type ChartConfig,
@@ -23,7 +22,9 @@ import {
   ProgressBarTrack,
   ProgressBarValue,
 } from "@/components/intentui/progress-bar";
-import { AddToListMenu, ObjektStaticMenu } from "@/components/objekt/objekt-menu";
+import { AddToListMenu } from "@/components/objekt/actions/list-menu";
+import { ObjektStaticMenu } from "@/components/objekt/actions/objekt-static-menu";
+import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";

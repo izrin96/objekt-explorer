@@ -14,7 +14,6 @@ import {
   ModalBody,
   ModalClose,
   ModalContent,
-  ModalDescription,
   ModalFooter,
   ModalHeader,
   ModalTitle,
@@ -27,17 +26,15 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@/components/intentui/select";
-import Portal from "@/components/portal";
+import Portal from "@/components/shared/portal";
 import { useAddToList } from "@/hooks/actions/add-to-list";
-import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
-import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useUserLists } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import ErrorFallbackRender from "../../error-boundary";
-import { CreateListModal } from "./manage-list";
+import ErrorFallbackRender from "../../router/error-boundary";
+import { CreateListModal } from "./create-list-modal";
 
 export function AddToListModal({
   open,
@@ -208,49 +205,5 @@ function AddToListForm({
         </Portal>
       </div>
     </Form>
-  );
-}
-
-export function RemoveFromListModal({
-  open,
-  setOpen,
-}: {
-  open: boolean;
-  setOpen: (val: boolean) => void;
-}) {
-  const target = useListTarget()!;
-  const selected = useObjektSelect(useShallow((a) => a.getSelected()));
-  const removeObjektsFromList = useRemoveFromList();
-  return (
-    <ModalContent isOpen={open} onOpenChange={setOpen}>
-      <ModalHeader>
-        <ModalTitle>{m.list_manage_objekt_remove_title()}</ModalTitle>
-        <ModalDescription>{m.list_manage_objekt_remove_description()}</ModalDescription>
-      </ModalHeader>
-      <ModalFooter>
-        <ModalClose>{m.common_modal_cancel()}</ModalClose>
-
-        <Button
-          intent="danger"
-          type="submit"
-          isPending={removeObjektsFromList.isPending}
-          onPress={() => {
-            removeObjektsFromList.mutate(
-              {
-                slug: target.slug,
-                ids: selected.map((a) => Number(a.id)),
-              },
-              {
-                onSuccess: () => {
-                  setOpen(false);
-                },
-              },
-            );
-          }}
-        >
-          {m.common_actions_continue()}
-        </Button>
-      </ModalFooter>
-    </ModalContent>
   );
 }

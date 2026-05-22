@@ -6,7 +6,7 @@ import { WindowVirtualizer } from "virtua";
 
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 
-import { InfiniteQueryNext } from "../infinite-query-pending";
+import { InfiniteQueryNext } from "../shared/infinite-query-pending";
 import { makeObjektRows, ObjektsRenderRow } from "./collection-render";
 
 export type ShapedData<T = ValidObjekt[]> = [string, T[]][];

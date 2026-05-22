@@ -1,9 +1,9 @@
 import { GearIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 
+import { Button } from "@/components/intentui/button";
 import { m } from "@/paraglide/messages";
 
-import { Button } from "./intentui/button";
 import { SettingsModal } from "./settings-modal";
 
 export function SettingsButton({

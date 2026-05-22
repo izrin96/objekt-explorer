@@ -9,11 +9,10 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import ErrorFallbackRender from "@/components/error-boundary";
 import { Button } from "@/components/intentui/button";
+import { Checkbox } from "@/components/intentui/checkbox";
 
 import "react-advanced-cropper/dist/style.css";
-import { Checkbox } from "@/components/intentui/checkbox";
 import { Description, Label } from "@/components/intentui/field";
 import { FileTrigger } from "@/components/intentui/file-trigger";
 import { Link } from "@/components/intentui/link";
@@ -36,7 +35,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/intentui/sheet";
-import Portal from "@/components/portal";
+import ErrorFallbackRender from "@/components/router/error-boundary";
+import Portal from "@/components/shared/portal";
 import { orpc } from "@/lib/orpc/client";
 import { acceptedFileMimeTypes, SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";

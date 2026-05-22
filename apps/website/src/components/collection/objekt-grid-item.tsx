@@ -1,7 +1,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
-import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-action";
+import { ObjektHoverMenu, ObjektSelect } from "../objekt/objekt-card-ui";
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";

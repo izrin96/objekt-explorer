@@ -5,6 +5,7 @@ import { createContext, useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
+import { GenerateDiscordButton } from "@/components/shared/generate-discord-button";
 import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { useListTarget } from "@/hooks/use-list-target";
@@ -16,19 +17,17 @@ import { ObjektGridItem } from "../collection/objekt-grid-item";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { CompareButton } from "../compare/compare-button";
-import ErrorFallbackRender from "../error-boundary";
 import { FilterContainer } from "../filters/filter-container";
-import { AddToList, RemoveFromList, SetPrice } from "../filters/objekt/add-remove-list";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
-import { GenerateDiscordButton } from "../generate-discord-button";
 import { Loader } from "../intentui/loader";
-import {
-  AddToListMenu,
-  ObjektStaticMenu,
-  RemoveFromListMenu,
-  SelectMenuItem,
-  SetPriceMenuItem,
-} from "../objekt/objekt-menu";
+import { AddToList } from "../objekt/actions/add-to-list";
+import { AddToListMenu, RemoveFromListMenu } from "../objekt/actions/list-menu";
+import { ObjektStaticMenu } from "../objekt/actions/objekt-static-menu";
+import { SetPriceMenuItem } from "../objekt/actions/price-menu";
+import { RemoveFromList } from "../objekt/actions/remove-from-list";
+import { SelectMenuItem } from "../objekt/actions/select-menu";
+import { SetPrice } from "../objekt/actions/set-price";
+import ErrorFallbackRender from "../router/error-boundary";
 import { ExportButton } from "./export-button";
 import Filter from "./filter";
 import { SetPriceModal } from "./modal/set-price-modal";

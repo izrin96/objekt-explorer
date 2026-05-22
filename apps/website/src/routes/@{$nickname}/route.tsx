@@ -2,11 +2,11 @@ import { GhostIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import DynamicContainer from "@/components/dynamic-container";
-import { PrivateProfileGuard } from "@/components/profile-guard";
 import { ProfileBanner } from "@/components/profile/profile-banner";
+import { PrivateProfileGuard } from "@/components/profile/profile-guard";
 import ProfileHeader from "@/components/profile/profile-header";
 import ProfileTabs from "@/components/profile/profile-tabs";
+import DynamicContainer from "@/components/shared/dynamic-container";
 import { ProfileProvider } from "@/hooks/use-profile-target";
 import { profileQuery } from "@/lib/queries/profile";
 import { m } from "@/paraglide/messages";
