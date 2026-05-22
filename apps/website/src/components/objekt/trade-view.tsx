@@ -287,8 +287,6 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
             <ExternalLink
               href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${data.tokenId}`}
               className="inline-flex cursor-pointer items-center gap-2 font-mono"
-              rel="noopener noreferrer"
-              target="_blank"
             >
               {data.tokenId}
               <ArrowTopRightOnSquareIcon className="text-muted-fg size-4" />

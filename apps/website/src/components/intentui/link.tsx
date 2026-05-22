@@ -27,8 +27,20 @@ export function InternalLink({ className, ref, ...props }: LinkProps) {
   );
 }
 
-// custom
-const ExternalLink = InternalLink;
+// Internal navigation via TanStack Router (uses `to` prop)
 const Link = createLink(InternalLink);
+
+// External navigation via raw `href` (does NOT go through TanStack Router)
+// Defaults to opening in a new tab since external links should rarely navigate away
+export interface ExternalLinkProps extends LinkPrimitiveProps {
+  ref?: React.RefObject<HTMLAnchorElement>;
+}
+function ExternalLink({
+  target = "_blank",
+  rel = "noopener noreferrer",
+  ...props
+}: ExternalLinkProps) {
+  return <InternalLink target={target} rel={rel} {...props} />;
+}
 
 export { Link, ExternalLink };

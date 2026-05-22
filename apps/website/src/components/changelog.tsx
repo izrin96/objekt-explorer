@@ -83,12 +83,7 @@ function ChangelogNotice() {
   return (
     <Note intent="default">
       Join our support Discord server for bug reporting or suggestions.{" "}
-      <ExternalLink
-        className="underline"
-        href="https://discord.gg/SWEm6RbJD3"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
+      <ExternalLink className="underline" href="https://discord.gg/SWEm6RbJD3">
         discord.gg/SWEm6RbJD3
       </ExternalLink>
     </Note>

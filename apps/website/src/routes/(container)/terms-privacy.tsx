@@ -26,12 +26,7 @@ function TermsPrivacyPage() {
           <li>{m.terms_privacy_points_delete_anytime()}</li>
           <li>
             {m.terms_privacy_points_open_source_prefix({ siteName: SITE_NAME })}{" "}
-            <ExternalLink
-              href="https://github.com/izrin96/objekt-explorer"
-              className="underline"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <ExternalLink href="https://github.com/izrin96/objekt-explorer" className="underline">
               {m.terms_privacy_points_available_here()}
             </ExternalLink>
             .

@@ -1,5 +1,5 @@
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
-import { createLink, Link as RouterLink } from "@tanstack/react-router";
+import { Link as RouterLink, type LinkProps as RouterLinkProps } from "@tanstack/react-router";
 import { Button, type ButtonProps } from "react-aria-components/Button";
 import { Collection } from "react-aria-components/Collection";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
@@ -194,11 +194,54 @@ const MenuShortcut = DropdownKeyboard;
 const MenuLabel = DropdownLabel;
 const MenuDescription = DropdownDescription;
 
-// custom
-const MenuItemLinkWrapper = ({ ...props }: MenuItemProps) => {
-  return <MenuItem {...props} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
+// custom — MenuItem that navigates via TanStack Router
+// Uses React Aria's `render` prop pattern (not createLink) because MenuItem
+// uses render props for DOM delegation, which is incompatible with createLink's
+// ref-forwarding anchor assumption.
+type RouterLinkOptions = Pick<
+  RouterLinkProps,
+  "to" | "params" | "search" | "hash" | "resetScroll" | "replace" | "preload" | "preloadDelay"
+>;
+interface MenuItemLinkProps extends Omit<MenuItemProps, "href">, RouterLinkOptions {}
+const MenuItemLink = ({ ...props }: MenuItemLinkProps) => {
+  const {
+    to,
+    params,
+    search,
+    hash,
+    resetScroll,
+    replace,
+    preload,
+    preloadDelay,
+    ...menuItemProps
+  } = props;
+  return (
+    <MenuItem
+      {...menuItemProps}
+      href="#"
+      render={(domProps) => {
+        // React Aria's render prop type is a union of <a> and <div> props.
+        // When href is present, it's the <a> variant — spread all props except
+        // href (which would override RouterLink's `to`-based navigation).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { href: _href, ...linkProps } = domProps as any;
+        return (
+          <RouterLink
+            {...linkProps}
+            to={to}
+            params={params}
+            search={search}
+            hash={hash}
+            resetScroll={resetScroll}
+            replace={replace}
+            preload={preload}
+            preloadDelay={preloadDelay}
+          />
+        );
+      }}
+    />
+  );
 };
-const MenuItemLink = createLink(MenuItemLinkWrapper);
 
 export type { MenuContentProps, MenuItemProps, MenuSectionProps, MenuTriggerProps };
 export {

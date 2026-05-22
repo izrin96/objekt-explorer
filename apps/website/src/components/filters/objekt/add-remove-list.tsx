@@ -1,6 +1,5 @@
 import { CurrencyDollarIcon, PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { Focusable } from "react-aria-components/Focusable";
 import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/intentui/button";
@@ -53,17 +52,15 @@ export function SetPrice({
     <>
       <SetPriceModal open={open} setOpen={setOpen} objekts={selected} />
       <Tooltip delay={0} closeDelay={0} isDisabled={!isDisabled} shouldCloseOnPress={false}>
-        <Focusable>
-          <Button
-            isDisabled={isDisabled}
-            size={size}
-            intent="outline"
-            onPress={() => handleAction(() => setOpen(true))}
-          >
-            <CurrencyDollarIcon weight="regular" />
-            {m.filter_set_price()}
-          </Button>
-        </Focusable>
+        <Button
+          isDisabled={isDisabled}
+          size={size}
+          intent="outline"
+          onPress={() => handleAction(() => setOpen(true))}
+        >
+          <CurrencyDollarIcon weight="regular" />
+          {m.filter_set_price()}
+        </Button>
         <TooltipContent placement="bottom" inverse>
           {m.filter_set_price_no_currency()}
         </TooltipContent>

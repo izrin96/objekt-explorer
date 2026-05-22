@@ -35,8 +35,6 @@ export function AboutModal({ open, setOpen }: Props) {
       <ModalFooter className="">
         <ExternalLink
           href="https://github.com/izrin96/objekt-explorer"
-          target="_blank"
-          rel="noopener noreferrer"
           className={buttonStyles({ intent: "primary" })}
         >
           <GithubLogoIcon />
@@ -44,8 +42,6 @@ export function AboutModal({ open, setOpen }: Props) {
         </ExternalLink>
         <ExternalLink
           href="https://discord.gg/SWEm6RbJD3"
-          target="_blank"
-          rel="noopener noreferrer"
           className={buttonStyles({
             intent: "primary",
           })}

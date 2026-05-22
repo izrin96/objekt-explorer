@@ -1,5 +1,10 @@
 import { CubeIcon } from "@phosphor-icons/react/dist/ssr";
-import { createLink, useLocation, useMatchRoute, Link as RouterLink } from "@tanstack/react-router";
+import {
+  useLocation,
+  useMatchRoute,
+  Link as RouterLink,
+  type LinkProps as RouterLinkProps,
+} from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import type { MenuItemProps } from "react-aria-components/Menu";
 import {
@@ -82,7 +87,7 @@ export function MobileNavigation() {
               <Menu className="-mt-2 outline-hidden">
                 <MenuSection>
                   <NavHeading>{m.nav_navigation()}</NavHeading>
-                  <NavLink href="/">
+                  <NavLink to="/">
                     <CubeIcon className="size-5" weight="fill" />
                     <MenuLabel>{m.nav_home()}</MenuLabel>
                   </NavLink>
@@ -115,12 +120,52 @@ export function MobileNavigation() {
   );
 }
 
-const MenuItemLinkWrapper = ({ ...props }: MenuItemProps) => {
-  return <MenuItem {...props} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
+type RouterLinkOptions = Pick<
+  RouterLinkProps,
+  "to" | "params" | "search" | "hash" | "resetScroll" | "replace" | "preload" | "preloadDelay"
+>;
+interface MenuItemLinkProps extends Omit<MenuItemProps, "href">, RouterLinkOptions {}
+const MenuItemLink = ({ ...props }: MenuItemLinkProps) => {
+  const {
+    to,
+    params,
+    search,
+    hash,
+    resetScroll,
+    replace,
+    preload,
+    preloadDelay,
+    ...menuItemProps
+  } = props;
+  return (
+    <MenuItem
+      {...menuItemProps}
+      href="#"
+      render={(domProps) => {
+        // React Aria's render prop type is a union of <a> and <div> props.
+        // When href is present, it's the <a> variant — spread all props except
+        // href (which would override RouterLink's `to`-based navigation).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { href: _href, ...linkProps } = domProps as any;
+        return (
+          <RouterLink
+            {...linkProps}
+            to={to}
+            params={params}
+            search={search}
+            hash={hash}
+            resetScroll={resetScroll}
+            replace={replace}
+            preload={preload}
+            preloadDelay={preloadDelay}
+          />
+        );
+      }}
+    />
+  );
 };
-const MenuItemLink = createLink(MenuItemLinkWrapper);
 
-interface NavLinkProps extends React.ComponentProps<typeof MenuItemLink> {}
+interface NavLinkProps extends MenuItemLinkProps {}
 
 function NavLink(props: NavLinkProps) {
   const matchRoute = useMatchRoute();

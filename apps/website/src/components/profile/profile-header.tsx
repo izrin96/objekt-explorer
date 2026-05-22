@@ -70,8 +70,6 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
           intent: "outline",
         })}
         href={`https://apollo.cafe/@${user.nickname || user.address}`}
-        rel="noopener noreferrer"
-        target="_blank"
       >
         {m.profile_header_view_in_apollo()}
       </ExternalLink>

@@ -1,4 +1,4 @@
-import { createLink, Link as RouterLink } from "@tanstack/react-router";
+import { Link as RouterLink, type LinkProps as RouterLinkProps } from "@tanstack/react-router";
 import { createContext, use } from "react";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
 import { SelectionIndicator } from "react-aria-components/SelectionIndicator";
@@ -165,12 +165,48 @@ const TabPanel = ({ className, ref, ...props }: TabPanelProps) => {
   );
 };
 
-// custom
-const TabLinkWrapper = ({ ref, ...props }: TabProps) => {
-  return <Tab {...props} ref={ref} render={(domProps) => <RouterLink {...(domProps as any)} />} />;
+// custom — Tab that navigates via TanStack Router
+// Uses React Aria's `render` prop pattern (not createLink) because Tab uses
+// render props for DOM delegation, which is incompatible with createLink's
+// ref-forwarding anchor assumption.
+type RouterLinkOptions = Pick<
+  RouterLinkProps,
+  "to" | "params" | "search" | "hash" | "resetScroll" | "replace" | "preload" | "preloadDelay"
+>;
+interface TabLinkProps extends Omit<TabProps, "href">, RouterLinkOptions {
+  ref?: React.RefObject<HTMLDivElement>;
+}
+const TabLink = ({ ref, ...props }: TabLinkProps) => {
+  const { to, params, search, hash, resetScroll, replace, preload, preloadDelay, ...tabProps } =
+    props;
+  return (
+    <Tab
+      {...tabProps}
+      ref={ref}
+      href="#"
+      render={(domProps) => {
+        // React Aria's render prop type is a union of <a> and <div> props.
+        // When href is present, it's the <a> variant — spread all props except
+        // href (which would override RouterLink's `to`-based navigation).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { href: _href, ...linkProps } = domProps as any;
+        return (
+          <RouterLink
+            {...linkProps}
+            to={to}
+            params={params}
+            search={search}
+            hash={hash}
+            resetScroll={resetScroll}
+            replace={replace}
+            preload={preload}
+            preloadDelay={preloadDelay}
+          />
+        );
+      }}
+    />
+  );
 };
-
-const TabLink = createLink(TabLinkWrapper);
 
 export type { TabListProps, TabPanelProps, TabProps, TabsProps };
 export { Tab, TabLink, TabList, TabPanel, TabPanels, Tabs };
