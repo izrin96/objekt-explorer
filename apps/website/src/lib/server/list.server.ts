@@ -6,7 +6,6 @@ import { collections, objekts } from "@repo/db/indexer/schema";
 import { lists } from "@repo/db/schema";
 import type { List, ListEntry } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
-import { fetchKnownAddresses } from "@repo/lib/server/user";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import slugify from "slugify";
@@ -203,26 +202,30 @@ export async function fetchOwnedLists(
     where: {
       [column]: identifier,
     },
+    with: {
+      userAddress: {
+        columns: {
+          address: true,
+          nickname: true,
+          hideNickname: true,
+        },
+      },
+    },
     orderBy: { id: "desc" },
   });
-  const knownAddresses = await fetchKnownAddresses(
-    result.map((a) => a.profileAddress).filter((a) => a !== null),
-  );
-
-  const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
 
   return result.map((l) => {
-    const addr = addressMap.get(l.profileAddress?.toLowerCase() ?? "");
     return {
       name: l.name,
       slug: l.slug,
       profileSlug: l.profileSlug,
       listType: l.listType,
       profileAddress: l.profileAddress,
-      profile: l.profileAddress
+      profile: l.userAddress
         ? {
-            address: l.profileAddress,
-            nickname: addr?.hideNickname || !addr?.nickname ? null : addr.nickname,
+            address: l.userAddress.address,
+            nickname:
+              l.userAddress.hideNickname || !l.userAddress.nickname ? null : l.userAddress.nickname,
           }
         : null,
     };
