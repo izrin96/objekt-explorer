@@ -21,7 +21,7 @@ export const Route = createFileRoute("/(container)/list/$slug")({
       throw redirect({
         to: "/@{$nickname}/list/$slug",
         params: {
-          nickname: profile.nickname || profile.address,
+          nickname: profile.nickname || profile.address.toLowerCase(),
           slug: list.profileSlug,
         },
       });

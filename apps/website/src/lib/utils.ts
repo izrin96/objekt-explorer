@@ -49,7 +49,7 @@ export function parseNickname(address: string, nickname?: string | null) {
 
 export function getListLinkOption(list: PublicList) {
   const isProfileContext = list.listType === "profile" || !!list.profileAddress;
-  const identifier = list.profile?.nickname || list.profileAddress;
+  const identifier = list.profile?.nickname || list.profileAddress?.toLowerCase();
 
   if (isProfileContext && identifier && list.profileSlug) {
     return linkOptions({

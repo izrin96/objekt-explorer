@@ -298,7 +298,7 @@ export async function fetchUserByIdentifier(
 
         throw redirect({
           to: "/@{$nickname}",
-          params: { nickname: cachedUser.address },
+          params: { nickname: cachedUser.address.toLowerCase() },
         });
       }
 
