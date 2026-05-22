@@ -245,6 +245,8 @@ export async function fetchUserByIdentifier(
   identifier: string,
   currentUser?: User,
 ): Promise<PublicProfile | undefined> {
+  if (!identifier) return undefined;
+
   const identifierIsAddress = isAddress(identifier);
 
   const cachedUser = await db.query.userAddress.findFirst({
