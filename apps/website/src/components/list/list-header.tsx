@@ -38,7 +38,7 @@ export default function ListHeader() {
               <Link
                 to={`/@{$nickname}`}
                 params={{
-                  nickname: profile.nickname || profile.address,
+                  nickname: profile.nickname || profile.address.toLowerCase(),
                 }}
                 className="text-muted-fg hover:underline"
               >
