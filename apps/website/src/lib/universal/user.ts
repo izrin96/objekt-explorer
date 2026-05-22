@@ -10,23 +10,19 @@ export const publicUserSchema = z.object({
 });
 export type PublicUser = z.infer<typeof publicUserSchema>;
 
-export const publicProfileSchema = z.object({
-  isGuard: z.boolean(),
+export const baseProfileSchema = z.object({
   address: z.string(),
-  nickname: z.string().nullish(),
+  nickname: z.string().nullable(),
+});
+
+export const publicProfileSchema = baseProfileSchema.extend({
+  isGuard: z.boolean().nullish(),
   bannerImgUrl: z.string().nullish(),
   bannerImgType: z.string().nullish(),
   gridColumns: z.number().nullish(),
   user: publicUserSchema.nullish(),
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
-
-export const currentUserSchema = z
-  .object({
-    user: z.custom<User>(),
-  })
-  .nullable();
-export type CurrentUser = z.infer<typeof currentUserSchema>;
 
 export const providerIdSchema = z.enum(["twitter", "discord"]);
 export type ProviderId = z.infer<typeof providerIdSchema>;
@@ -48,24 +44,28 @@ export const providersMap: Record<ProviderId, Provider> = {
   },
 };
 
-export const publicListSchema = z.object({
+export const baseListSchema = z.object({
   slug: z.string(),
-  profileSlug: z.string().nullish(),
   name: z.string(),
-  gridColumns: z.number().nullish(),
   listType: z.enum(["normal", "profile"]),
-  profileAddress: z.string().nullish(),
+  profileSlug: z.string().nullable(),
+  profileAddress: z.string().nullable(),
+});
+
+export const publicListSchema = baseListSchema.extend({
+  gridColumns: z.number().nullish(),
   description: z.string().nullish(),
   currency: z.string().nullish(),
   user: publicUserSchema.nullish(),
+  profile: publicProfileSchema.nullish(),
 });
 export type PublicList = z.infer<typeof publicListSchema>;
 
-export const listInfoSchema = z.object({
-  listType: z.enum(["normal", "profile"]),
-  slug: z.string(),
-  profileSlug: z.string().nullish(),
-  nickname: z.string().nullish(),
-  profileAddress: z.string().nullish(),
-});
-export type ListInfo = z.infer<typeof listInfoSchema>;
+export const currentUserSchema = z
+  .object({
+    user: z.custom<User>(),
+    lists: publicListSchema.array(),
+    profiles: baseProfileSchema.array(),
+  })
+  .nullable();
+export type CurrentUser = z.infer<typeof currentUserSchema>;

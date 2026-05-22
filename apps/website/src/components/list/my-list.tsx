@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { orpc } from "@/lib/orpc/client";
+import type { PublicList } from "@/lib/universal/user";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -83,13 +84,7 @@ function MyList() {
 }
 
 type ListCardProps = {
-  list: {
-    name: string;
-    slug: string;
-    listType: "normal" | "profile";
-    nickname?: string | null;
-    profileAddress?: string | null;
-  };
+  list: PublicList;
 };
 
 function ListCard({ list }: ListCardProps) {
@@ -105,9 +100,9 @@ function ListCard({ list }: ListCardProps) {
             <h3 className="font-semibold">
               <Link {...getListLinkOption(list)}>{list.name}</Link>
             </h3>
-            {list.profileAddress && (
+            {list.profile && (
               <span className="text-muted-fg text-sm">
-                {parseNickname(list.profileAddress, list.nickname)}
+                {parseNickname(list.profile.address, list.profile.nickname)}
               </span>
             )}
           </div>

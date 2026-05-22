@@ -184,9 +184,9 @@ function MyListMenuItem({
           <MenuItemLink key={a.slug} {...getListLinkOption(a)}>
             <MenuLabel>
               {a.name}{" "}
-              {a.profileAddress && (
+              {a.profile && (
                 <span className="text-muted-fg text-xs">
-                  ({parseNickname(a.profileAddress, a.nickname)})
+                  ({parseNickname(a.profile.address, a.profile.nickname)})
                 </span>
               )}
             </MenuLabel>

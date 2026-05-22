@@ -188,7 +188,10 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
   };
 }
 
-export async function fetchOwnedLists(userId: string) {
+export async function fetchOwnedLists(
+  column: "userId" | "profileAddress",
+  identifier: string,
+): Promise<PublicList[]> {
   const result = await db.query.lists.findMany({
     columns: {
       name: true,
@@ -197,7 +200,9 @@ export async function fetchOwnedLists(userId: string) {
       listType: true,
       profileAddress: true,
     },
-    where: { userId },
+    where: {
+      [column]: identifier,
+    },
     orderBy: { id: "desc" },
   });
   const knownAddresses = await fetchKnownAddresses(
@@ -214,7 +219,12 @@ export async function fetchOwnedLists(userId: string) {
       profileSlug: l.profileSlug,
       listType: l.listType,
       profileAddress: l.profileAddress,
-      nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
+      profile: l.profileAddress
+        ? {
+            address: l.profileAddress,
+            nickname: addr?.hideNickname || !addr?.nickname ? null : addr.nickname,
+          }
+        : null,
     };
   });
 }

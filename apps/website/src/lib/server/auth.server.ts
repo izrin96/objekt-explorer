@@ -4,6 +4,7 @@ import { db } from "@repo/db";
 import * as authSchema from "@repo/db/auth-schema";
 import { type UserAddress, userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
+import { fetchUserProfiles } from "@repo/lib/server/user";
 import { redirect } from "@tanstack/react-router";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -18,6 +19,7 @@ import { getLocale as getParaglideLocale } from "@/paraglide/runtime";
 
 import type { PublicUser, PublicProfile, CurrentUser } from "../universal/user";
 import { SITE_NAME } from "../utils";
+import { fetchOwnedLists } from "./list.server";
 import {
   sendDeleteAccountVerification,
   sendResetPassword,
@@ -180,8 +182,14 @@ export async function getSession() {
 export async function getCurrentUser(): Promise<CurrentUser> {
   const session = await getSession();
   if (!session) return null;
+
+  const lists = await fetchOwnedLists("userId", session.user.id);
+  const profiles = await fetchUserProfiles(session.user.id);
+
   return {
     user: session.user,
+    lists,
+    profiles,
   };
 }
 
@@ -219,11 +227,11 @@ export function toPublicProfile(
     return {
       isGuard: true,
       address: profile.address,
+      nickname: null,
     };
   }
 
   return {
-    isGuard: false,
     address: profile.address,
     nickname: profile.hideNickname ? null : profile.nickname,
     bannerImgType: profile.bannerImgType,
@@ -303,8 +311,8 @@ export async function fetchUserByIdentifier(
 
   if (identifierIsAddress) {
     return {
-      isGuard: false,
       address: identifier,
+      nickname: null,
     };
   }
 

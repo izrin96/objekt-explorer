@@ -93,9 +93,9 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
           <MenuItem key={a.slug} onAction={() => handleAction(a.slug, a.listType)}>
             <MenuLabel>
               {a.name}{" "}
-              {a.profileAddress && (
+              {a.profile && (
                 <span className="text-muted-fg text-xs">
-                  ({parseNickname(a.profileAddress, a.nickname)})
+                  ({parseNickname(a.profile.address, a.profile.nickname)})
                 </span>
               )}
             </MenuLabel>

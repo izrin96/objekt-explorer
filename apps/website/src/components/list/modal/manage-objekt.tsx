@@ -172,9 +172,9 @@ function AddToListForm({
                   <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                     <SelectLabel>
                       {item.name}{" "}
-                      {item.profileAddress && (
+                      {item.profile && (
                         <span className="text-muted-fg text-xs">
-                          ({parseNickname(item.profileAddress, item.nickname)})
+                          ({parseNickname(item.profile.address, item.profile.nickname)})
                         </span>
                       )}
                     </SelectLabel>

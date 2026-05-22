@@ -9,7 +9,6 @@ import {
   invalidateProfileList,
   removeObjektIdsFromProfileList,
 } from "@repo/lib/server/redis-profile-lists";
-import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
@@ -65,7 +64,7 @@ export const listRouter = {
   // todo: move to getCurrentUser
   list: optionalAuthed.handler(async ({ context: { session } }) => {
     if (!session) return [];
-    return await fetchOwnedLists(session.user.id);
+    return await fetchOwnedLists("userId", session.user.id);
   }),
 
   profileLists: pub
@@ -75,36 +74,7 @@ export const listRouter = {
       }),
     )
     .handler(async ({ input: { profileAddress } }) => {
-      const result = await db.query.lists.findMany({
-        columns: {
-          name: true,
-          slug: true,
-          profileSlug: true,
-          listType: true,
-          profileAddress: true,
-        },
-        where: {
-          profileAddress: profileAddress.toLowerCase(),
-        },
-        orderBy: { id: "desc" },
-      });
-      const knownAddresses = await fetchKnownAddresses(
-        result.map((a) => a.profileAddress).filter((a) => a !== null),
-      );
-
-      const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
-
-      return result.map((l) => {
-        const addr = addressMap.get(l.profileAddress?.toLowerCase() ?? "");
-        return {
-          name: l.name,
-          slug: l.slug,
-          profileSlug: l.profileSlug,
-          listType: l.listType,
-          profileAddress: l.profileAddress,
-          nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
-        };
-      });
+      return await fetchOwnedLists("profileAddress", profileAddress);
     }),
 
   addObjektsToList: authed
@@ -439,11 +409,11 @@ export const listRouter = {
         },
       }) => {
         const [haveCollections, wantCollections] = await Promise.all([
-          haveListSlug ? fetchListCollectionsBySlug(haveListSlug, user.id) : [],
-          wantListSlug ? fetchListCollectionsBySlug(wantListSlug, user.id) : [],
+          haveListSlug ? fetchListCollectionsBySlug(haveListSlug, user.id) : null,
+          wantListSlug ? fetchListCollectionsBySlug(wantListSlug, user.id) : null,
         ]);
 
-        return { have: haveCollections, want: wantCollections };
+        return { have: haveCollections ?? [], want: wantCollections ?? [] };
       },
     ),
 

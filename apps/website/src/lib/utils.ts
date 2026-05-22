@@ -5,7 +5,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 import { clientEnv } from "./env/client";
-import type { ListInfo } from "./universal/user";
+import type { PublicList } from "./universal/user";
 import { unobtainables } from "./unobtainables";
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
@@ -47,9 +47,9 @@ export function parseNickname(address: string, nickname?: string | null) {
   return nickname || `${address.substring(0, 8)}...`;
 }
 
-export function getListLinkOption(list: ListInfo) {
+export function getListLinkOption(list: PublicList) {
   const isProfileContext = list.listType === "profile" || !!list.profileAddress;
-  const identifier = list.nickname || list.profileAddress;
+  const identifier = list.profile?.nickname || list.profileAddress;
 
   if (isProfileContext && identifier && list.profileSlug) {
     return linkOptions({
