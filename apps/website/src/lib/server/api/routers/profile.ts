@@ -1,7 +1,6 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
-import { fetchUserProfiles } from "@repo/lib/server/user";
 import { and, eq } from "drizzle-orm";
 import * as z from "zod";
 
@@ -9,15 +8,9 @@ import { serverEnv } from "@/lib/env/server";
 import { m } from "@/paraglide/messages";
 
 import { createPresignedUploadUrl, deleteFileFromBucket, getS3PublicUrl } from "../../s3.server";
-import { authed, optionalAuthed } from "../orpc";
+import { authed } from "../orpc";
 
 export const profileRouter = {
-  // todo: move to getCurrentUser
-  list: optionalAuthed.handler(async ({ context: { session } }) => {
-    if (!session) return [];
-    return await fetchUserProfiles(session.user.id);
-  }),
-
   find: authed.input(z.string()).handler(async ({ input: address, context: { session } }) => {
     const profile = await fetchOwnedProfile(address, session.user.id);
     return profile;

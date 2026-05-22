@@ -82,7 +82,7 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
 }
 
 function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
-  const { data: profiles } = useUserProfiles();
+  const profiles = useUserProfiles();
   const { data: currencies } = useSuspenseQuery(orpc.meta.supportedCurrencies.queryOptions());
   const { handleSubmit, control, watch } = useForm({
     defaultValues: {
@@ -103,7 +103,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
         setOpen(false);
         toast.success(m.list_create_success());
         return client.invalidateQueries({
-          queryKey: orpc.list.list.key(),
+          queryKey: orpc.user.currentUser.key(),
         });
       },
       onError: () => {
@@ -310,7 +310,7 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
         setOpen(false);
         toast.success(m.list_delete_success());
         return client.invalidateQueries({
-          queryKey: orpc.list.list.key(),
+          queryKey: orpc.user.currentUser.key(),
         });
       },
       onError: () => {
@@ -386,7 +386,7 @@ function EditListForm({
   setOpen: (val: boolean) => void;
   onSave?: () => void;
 }) {
-  const { data: profiles } = useUserProfiles();
+  const profiles = useUserProfiles();
   const [{ data: currencies }, { data }] = useSuspenseQueries({
     queries: [
       orpc.meta.supportedCurrencies.queryOptions(),
@@ -402,7 +402,7 @@ function EditListForm({
         setOpen(false);
         toast.success(m.list_edit_success());
         void client.invalidateQueries({
-          queryKey: orpc.list.list.key(),
+          queryKey: orpc.user.currentUser.key(),
         });
         onSave?.();
       },

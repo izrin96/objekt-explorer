@@ -56,7 +56,7 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
         setOpen(false);
         toast.success(m.link_unlink_success());
         void client.invalidateQueries({
-          queryKey: orpc.profile.list.key(),
+          queryKey: orpc.user.currentUser.key(),
         });
       },
       onError: () => {

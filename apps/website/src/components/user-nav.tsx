@@ -10,13 +10,13 @@ import {
   UserIcon,
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import UserAccountModal from "@/components/auth/account/user-account";
+import { useUserLists, useUserProfiles } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
-import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth.server";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -158,7 +158,7 @@ function MyListMenuItem({
   openCreateList: () => void;
   openDiscordFormat: () => void;
 }) {
-  const { data } = useQuery(orpc.list.list.queryOptions());
+  const data = useUserLists();
   return (
     <MenuSubMenu>
       <MenuItem>
@@ -210,7 +210,7 @@ function MyListMenuItem({
 }
 
 function MyCosmoProfileMenuItem() {
-  const { data } = useQuery(orpc.profile.list.queryOptions());
+  const data = useUserProfiles();
   return (
     <MenuSubMenu>
       <MenuItem>

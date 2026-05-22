@@ -1,9 +1,9 @@
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import { orpc } from "@/lib/orpc/client";
+import { useUserLists } from "@/hooks/use-user";
 import type { PublicList } from "@/lib/universal/user";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -40,7 +40,7 @@ export default function MyListRender() {
 function MyList() {
   const [addOpen, setAddOpen] = useState(false);
   const [genOpen, setGenOpen] = useState(false);
-  const { data: lists } = useSuspenseQuery(orpc.list.list.queryOptions());
+  const lists = useUserLists();
   return (
     <div className="flex flex-col gap-4">
       <div className="text-xl font-semibold">{m.list_title()}</div>

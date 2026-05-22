@@ -46,7 +46,7 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
 }
 
 export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; address?: string }) {
-  const { data: lists } = useUserLists();
+  const lists = useUserLists();
   const addToList = useAddToList();
   const availableLists = lists?.filter((list) => {
     if (address) {

@@ -28,8 +28,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
     // auth
     void queryClient.prefetchQuery(currentUserOptions);
-    void queryClient.prefetchQuery(orpc.list.list.queryOptions());
-    void queryClient.prefetchQuery(orpc.profile.list.queryOptions());
   },
   head: () => {
     const { meta, links } = generateMetadata({

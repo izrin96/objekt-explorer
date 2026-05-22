@@ -43,6 +43,6 @@ export const ownedCollectionOptions = (address: string, filters?: OwnedBySchema)
   });
 
 export const currentUserOptions = orpc.user.currentUser.queryOptions({
-  staleTime: 5 * 60 * 1000,
+  staleTime: Infinity,
   refetchOnWindowFocus: false,
 });

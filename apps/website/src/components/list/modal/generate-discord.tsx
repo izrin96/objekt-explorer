@@ -1,4 +1,4 @@
-import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components/Form";
@@ -31,6 +31,7 @@ import { Textarea } from "@/components/intentui/textarea";
 import Portal from "@/components/portal";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
+import { useUserLists } from "@/hooks/use-user";
 import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
@@ -70,7 +71,7 @@ export function GenerateDiscordFormatModal({ open, setOpen }: Props) {
 }
 
 function Content() {
-  const { data } = useSuspenseQuery(orpc.list.list.queryOptions());
+  const data = useUserLists();
   const [formatText, setFormatText] = useState("");
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();

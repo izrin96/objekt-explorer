@@ -1,6 +1,5 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
-import { orpc } from "@/lib/orpc/client";
 import { currentUserOptions } from "@/lib/query-options";
 
 import { useListTarget } from "./use-list-target";
@@ -11,23 +10,27 @@ export function useCurrentUser() {
 }
 
 export function useUserProfiles() {
-  return useQuery(orpc.profile.list.queryOptions());
+  const { data: user } = useCurrentUser();
+  if (!user) return [];
+  return user.profiles;
 }
 
 export function useUserLists() {
-  return useQuery(orpc.list.list.queryOptions());
+  const { data: user } = useCurrentUser();
+  if (!user) return [];
+  return user.lists;
 }
 
 export function useProfileAuthed() {
   const target = useProfileTarget();
-  const { data: profiles } = useUserProfiles();
+  const profiles = useUserProfiles();
   if (!target) return false;
-  return profiles?.some((u) => u.address.toLowerCase() === target.address.toLowerCase()) ?? false;
+  return profiles.some((u) => u.address.toLowerCase() === target.address.toLowerCase());
 }
 
 export function useListAuthed() {
   const target = useListTarget();
-  const { data: lists } = useUserLists();
+  const lists = useUserLists();
   if (!target) return false;
-  return lists?.some((l) => l.slug === target.slug) ?? false;
+  return lists.some((l) => l.slug === target.slug);
 }

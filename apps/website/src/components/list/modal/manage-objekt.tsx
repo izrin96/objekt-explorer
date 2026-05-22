@@ -76,7 +76,7 @@ function AddToListForm({
   setOpen: (val: boolean) => void;
   address?: string;
 }) {
-  const { data: lists } = useUserLists();
+  const lists = useUserLists();
   const [createListOpen, setCreateListOpen] = useState(false);
   const addToList = useAddToList();
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));

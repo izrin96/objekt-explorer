@@ -2,7 +2,6 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import MyLinkRender from "@/components/link/my-link";
 import { generateMetadata } from "@/lib/meta";
-import { orpc } from "@/lib/orpc/client";
 import { currentUserOptions } from "@/lib/query-options";
 import { m } from "@/paraglide/messages";
 
@@ -12,9 +11,6 @@ export const Route = createFileRoute("/(container)/link/")({
     if (!user) {
       throw redirect({ to: "/" });
     }
-  },
-  loader: ({ context: { queryClient } }) => {
-    void queryClient.prefetchQuery(orpc.profile.list.queryOptions());
   },
   head: () => {
     return generateMetadata({ title: m.page_titles_my_cosmo_link() });

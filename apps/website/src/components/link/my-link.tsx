@@ -1,9 +1,9 @@
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
-import { QueryErrorResetBoundary, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import { orpc } from "@/lib/orpc/client";
+import { useUserProfiles } from "@/hooks/use-user";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -35,7 +35,7 @@ export default function MyLinkRender() {
 }
 
 function MyLink() {
-  const { data: links } = useSuspenseQuery(orpc.profile.list.queryOptions());
+  const links = useUserProfiles();
 
   return (
     <div className="flex flex-col gap-4">

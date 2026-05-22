@@ -69,7 +69,7 @@ export default function LinkRender() {
           codeData={codeData}
           onSuccess={() => {
             void queryClient.invalidateQueries({
-              queryKey: orpc.profile.list.key(),
+              queryKey: orpc.user.currentUser.key(),
             });
             setStep(4);
           }}
