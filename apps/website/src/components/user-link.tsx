@@ -20,7 +20,7 @@ export default function UserLink({
           <Link
             to="/@{$nickname}"
             params={{
-              nickname: nickname || address,
+              nickname: nickname || address.toLowerCase(),
             }}
           >
             {parseNickname(address, nickname)}

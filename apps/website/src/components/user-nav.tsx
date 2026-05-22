@@ -25,7 +25,6 @@ import { AboutMenu, AboutModal } from "./about";
 import { Avatar } from "./intentui/avatar-custom";
 import { buttonStyles } from "./intentui/button";
 import { Link } from "./intentui/link";
-import { Loader } from "./intentui/loader";
 import {
   Menu,
   MenuContent,
@@ -166,21 +165,14 @@ function MyListMenuItem({
         <MenuLabel>{m.nav_my_list()}</MenuLabel>
       </MenuItem>
       <MenuContent placement="left top" popover={{ offset: -6 }}>
-        {!data && (
-          <MenuItem isDisabled>
-            <MenuLabel>
-              <Loader variant="ring" />
-            </MenuLabel>
-          </MenuItem>
-        )}
-        {data && data.length === 0 && (
+        {data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
               <span>{m.nav_no_list_found()}</span>
             </MenuLabel>
           </MenuItem>
         )}
-        {data?.map((a) => (
+        {data.map((a) => (
           <MenuItemLink key={a.slug} {...getListLinkOption(a)}>
             <MenuLabel>
               {a.name}{" "}
@@ -218,25 +210,18 @@ function MyCosmoProfileMenuItem() {
         <MenuLabel>{m.nav_my_cosmo_link()}</MenuLabel>
       </MenuItem>
       <MenuContent placement="left top" popover={{ offset: -6 }}>
-        {!data && (
-          <MenuItem isDisabled>
-            <MenuLabel>
-              <Loader variant="ring" />
-            </MenuLabel>
-          </MenuItem>
-        )}
-        {data && data.length === 0 && (
+        {data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
               <span>{m.nav_no_cosmo_found()}</span>
             </MenuLabel>
           </MenuItem>
         )}
-        {data?.map((a) => (
+        {data.map((a) => (
           <MenuItemLink
             key={a.address}
             to="/@{$nickname}"
-            params={{ nickname: a.nickname || a.address }}
+            params={{ nickname: a.nickname || a.address.toLowerCase() }}
           >
             <MenuLabel>{parseNickname(a.address, a.nickname)}</MenuLabel>
           </MenuItemLink>

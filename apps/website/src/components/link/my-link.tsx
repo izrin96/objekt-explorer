@@ -83,7 +83,7 @@ function LinkCard({ link }: LinkCardProps) {
               <Link
                 to="/@{$nickname}"
                 params={{
-                  nickname: link.nickname || link.address,
+                  nickname: link.nickname || link.address.toLowerCase(),
                 }}
               >
                 {nickname}
@@ -93,7 +93,7 @@ function LinkCard({ link }: LinkCardProps) {
               <Link
                 to="/@{$nickname}"
                 params={{
-                  nickname: link.nickname || link.address,
+                  nickname: link.nickname || link.address.toLowerCase(),
                 }}
               >
                 {link.address}

@@ -29,7 +29,6 @@ import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
-import { Loader } from "../intentui/loader";
 import { Menu, MenuContent, MenuItem, MenuLabel, MenuSubMenu } from "../intentui/menu";
 
 export function ObjektStaticMenu({ children }: PropsWithChildren) {
@@ -75,21 +74,14 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
         <MenuLabel>{m.objekt_menu_add_to_list()}</MenuLabel>
       </MenuItem>
       <MenuContent placement="bottom right" popover={{ offset: -2 }}>
-        {!availableLists && (
-          <MenuItem isDisabled>
-            <MenuLabel>
-              <Loader variant="ring" />
-            </MenuLabel>
-          </MenuItem>
-        )}
-        {availableLists && availableLists.length === 0 && (
+        {availableLists.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
               <span>{m.objekt_menu_no_list_found()}</span>
             </MenuLabel>
           </MenuItem>
         )}
-        {availableLists?.map((a) => (
+        {availableLists.map((a) => (
           <MenuItem key={a.slug} onAction={() => handleAction(a.slug, a.listType)}>
             <MenuLabel>
               {a.name}{" "}
