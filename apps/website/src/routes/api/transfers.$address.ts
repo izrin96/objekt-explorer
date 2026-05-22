@@ -171,22 +171,67 @@ async function fetchTransfers(query: TransferParams, addr: string) {
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
   const collectionFilters = getCollectionFilters(query);
 
-  // Fast existence check — avoids query planning when no collections match
+  // When collection filters are present, use a 2-step approach:
+  // 1. Get transfer IDs only (no JOINs — planner uses transfer indexes efficiently)
+  // 2. Fetch full data for those IDs (small result set, JOINs are cheap)
   if (collectionFilters.length > 0) {
-    const exists = await indexer
-      .select({ id: collections.id })
+    const matchingCollections = await indexer
+      .select(getCollectionColumns())
       .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters))
-      .limit(1);
-    if (exists.length === 0) return [];
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+
+    if (matchingCollections.length === 0) return [];
+
+    const collectionMap = new Map(matchingCollections.map((c) => [c.id, c]));
+    const collectionIds = [...collectionMap.keys()];
+
+    const getIds = (...addressFilters: (SQL | undefined)[]) =>
+      indexer
+        .select({ id: transfers.id })
+        .from(transfers)
+        .where(
+          and(
+            ...addressFilters,
+            ...cursorFilter,
+            ...tsFilter,
+            inArray(transfers.collectionId, collectionIds),
+          ),
+        )
+        .orderBy(desc(transfers.timestamp), desc(transfers.id))
+        .limit(PER_PAGE + 1);
+
+    let ids: { id: string }[];
+
+    if (query.type === "all") {
+      const [fromIds, toIds] = await Promise.all([
+        getIds(eq(transfers.from, addr)),
+        getIds(eq(transfers.to, addr)),
+      ]);
+      ids = mergeSortedIds(fromIds, toIds, PER_PAGE + 1);
+    } else {
+      ids = await getIds(...typeFilters);
+    }
+
+    if (ids.length === 0) return [];
+
+    const results = await indexer
+      .select(transferSelect)
+      .from(transfers)
+      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+      .innerJoin(collections, eq(transfers.collectionId, collections.id))
+      .where(
+        inArray(
+          transfers.id,
+          ids.map((t) => t.id),
+        ),
+      )
+      .orderBy(desc(transfers.timestamp), desc(transfers.id));
+
+    return results;
   }
 
-  const baseWhere = and(
-    ...cursorFilter,
-    ...tsFilter,
-    ne(collections.slug, "empty-collection"),
-    ...collectionFilters,
-  );
+  // No collection filters — planner can use partial indexes directly
+  const baseWhere = and(...cursorFilter, ...tsFilter, ne(collections.slug, "empty-collection"));
 
   const queryFn = (...addressFilters: (SQL | undefined)[]) =>
     indexer
@@ -199,7 +244,6 @@ async function fetchTransfers(query: TransferParams, addr: string) {
       .limit(PER_PAGE + 1);
 
   if (query.type === "all") {
-    // Split OR into two parallel queries for index efficiency
     const [fromResults, toResults] = await Promise.all([
       queryFn(eq(transfers.from, addr)),
       queryFn(eq(transfers.to, addr)),
@@ -208,6 +252,25 @@ async function fetchTransfers(query: TransferParams, addr: string) {
   }
 
   return queryFn(...typeFilters);
+}
+
+/** Merge two ID arrays sorted by (timestamp DESC, id DESC), deduplicate, return top `limit` */
+function mergeSortedIds(a: { id: string }[], b: { id: string }[], limit: number): { id: string }[] {
+  // IDs come pre-sorted from the DB — just dedup and take top N
+  const seen = new Set<string>();
+  const result: { id: string }[] = [];
+  let i = 0;
+  let j = 0;
+
+  while (result.length < limit && (i < a.length || j < b.length)) {
+    const next = j >= b.length || (i < a.length && a[i]!.id >= b[j]!.id) ? a[i++]! : b[j++]!;
+    if (!seen.has(next.id)) {
+      seen.add(next.id);
+      result.push(next);
+    }
+  }
+
+  return result;
 }
 
 /** Merge two arrays sorted by (timestamp DESC, id DESC), deduplicate, return top `limit` */

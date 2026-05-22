@@ -153,32 +153,52 @@ async function fetchTransfers(query: ActivityParams) {
 
   const collectionFilters = getCollectionFilters(query);
 
-  // Fast existence check — avoids even query planning when no collections match
+  // When collection filters are present, use a 2-step approach:
+  // 1. Get transfer IDs only (no JOINs — planner uses transfer indexes efficiently)
+  // 2. Fetch full data for those IDs (small result set, JOINs are cheap)
   if (collectionFilters.length > 0) {
-    const exists = await indexer
-      .select({ id: collections.id })
+    const matchingCollections = await indexer
+      .select(getCollectionColumns())
       .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters))
-      .limit(1);
-    if (exists.length === 0) return [];
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+
+    if (matchingCollections.length === 0) return [];
+
+    const collectionMap = new Map(matchingCollections.map((c) => [c.id, c]));
+    const collectionIds = [...collectionMap.keys()];
+
+    // Step 1: IDs only — no JOINs, planner focuses on transfer indexes
+    const ids = await indexer
+      .select({ id: transfers.id })
+      .from(transfers)
+      .where(and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, collectionIds)))
+      .orderBy(desc(transfers.timestamp), desc(transfers.id))
+      .limit(PAGE_SIZE + 1);
+
+    if (ids.length === 0) return [];
+
+    // Step 2: Full data for the small result set — JOINs are cheap here
+    return indexer
+      .select(transferSelect)
+      .from(transfers)
+      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+      .innerJoin(collections, eq(transfers.collectionId, collections.id))
+      .where(
+        inArray(
+          transfers.id,
+          ids.map((t) => t.id),
+        ),
+      )
+      .orderBy(desc(transfers.timestamp), desc(transfers.id));
   }
 
-  // Single query — PostgreSQL's planner picks the optimal join strategy using
-  // idx_transfer_ts_id (unfiltered), idx_transfer_collection_ts_id (collection
-  // filters), or the partial indexes for mint/spin/transfer types.
+  // No collection filters — planner can use partial indexes directly
   return indexer
     .select(transferSelect)
     .from(transfers)
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
-    .where(
-      and(
-        ...cursorFilter,
-        ...typeFilters,
-        ne(collections.slug, "empty-collection"),
-        ...collectionFilters,
-      ),
-    )
+    .where(and(...cursorFilter, ...typeFilters, ne(collections.slug, "empty-collection")))
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PAGE_SIZE + 1);
 }
