@@ -5,6 +5,23 @@
  */
 export const unobtainables = [
   // error in minting
+  "binary01-xinyu-120a",
+  "binary01-kotone-117a",
+  "binary01-yooyeon-118a",
+  "binary01-mayu-119a",
+  "binary01-nien-118a",
+  "binary01-hyerin-120a",
+  "binary01-sohyun-103a",
+  "binary01-nien-120a",
+  "binary01-kaede-120a",
+  "binary01-nakyoung-118a",
+  "binary01-yubin-118a",
+  "binary01-chaeyeon-120a",
+  "binary01-dahyun-117a",
+  "binary01-seoyeon-119a",
+  "atom01-heejin-111a",
+  "binary01-hyerin-118a",
+  // error in minting
   "binary01-jiwoo-120a",
   // test
   "atom01-artmstest-100u",
