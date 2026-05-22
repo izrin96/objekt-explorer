@@ -171,19 +171,13 @@ async function fetchTransfers(query: TransferParams, addr: string) {
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
   const collectionFilters = getCollectionFilters(query);
 
-  // When collection filters are present, use a 2-step approach:
-  // 1. Get transfer IDs only (no JOINs — planner uses transfer indexes efficiently)
-  // 2. Fetch full data for those IDs (small result set, JOINs are cheap)
+  // When collection filters are present, use a subquery to let PostgreSQL
+  // optimize the join instead of materializing hundreds of UUIDs client-side.
   if (collectionFilters.length > 0) {
-    const matchingCollections = await indexer
-      .select(getCollectionColumns())
+    const collectionSubquery = indexer
+      .select({ id: collections.id })
       .from(collections)
       .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-
-    if (matchingCollections.length === 0) return [];
-
-    const collectionMap = new Map(matchingCollections.map((c) => [c.id, c]));
-    const collectionIds = [...collectionMap.keys()];
 
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
@@ -194,7 +188,7 @@ async function fetchTransfers(query: TransferParams, addr: string) {
             ...addressFilters,
             ...cursorFilter,
             ...tsFilter,
-            inArray(transfers.collectionId, collectionIds),
+            inArray(transfers.collectionId, collectionSubquery),
           ),
         )
         .orderBy(desc(transfers.timestamp), desc(transfers.id))
@@ -214,7 +208,7 @@ async function fetchTransfers(query: TransferParams, addr: string) {
 
     if (ids.length === 0) return [];
 
-    const results = await indexer
+    return indexer
       .select(transferSelect)
       .from(transfers)
       .innerJoin(objekts, eq(transfers.objektId, objekts.id))
@@ -226,8 +220,6 @@ async function fetchTransfers(query: TransferParams, addr: string) {
         ),
       )
       .orderBy(desc(transfers.timestamp), desc(transfers.id));
-
-    return results;
   }
 
   // No collection filters — planner can use partial indexes directly

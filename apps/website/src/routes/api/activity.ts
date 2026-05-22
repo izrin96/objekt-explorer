@@ -153,30 +153,23 @@ async function fetchTransfers(query: ActivityParams) {
 
   const collectionFilters = getCollectionFilters(query);
 
-  // When collection filters are present, use a 2-step approach:
-  // 1. Get transfer IDs only (no JOINs — planner uses transfer indexes efficiently)
-  // 2. Fetch full data for those IDs (small result set, JOINs are cheap)
+  // When collection filters are present, use a subquery to let PostgreSQL
+  // optimize the join instead of materializing hundreds of UUIDs client-side.
   if (collectionFilters.length > 0) {
-    const t0 = performance.now();
-    const matchingCollections = await indexer
-      .select(getCollectionColumns())
+    const collectionSubquery = indexer
+      .select({ id: collections.id })
       .from(collections)
       .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-    console.log(
-      `[activity] step0 collections: ${(performance.now() - t0).toFixed(1)}ms (${matchingCollections.length} rows)`,
-    );
 
-    if (matchingCollections.length === 0) return [];
-
-    const collectionMap = new Map(matchingCollections.map((c) => [c.id, c]));
-    const collectionIds = [...collectionMap.keys()];
-
-    // Step 1: IDs only — no JOINs, planner focuses on transfer indexes
+    // Step 1: IDs only — subquery lets planner use collection index first,
+    // then nested-loop into transfer indexes
     const t1 = performance.now();
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
-      .where(and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, collectionIds)))
+      .where(
+        and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, collectionSubquery)),
+      )
       .orderBy(desc(transfers.timestamp), desc(transfers.id))
       .limit(PAGE_SIZE + 1);
     console.log(
