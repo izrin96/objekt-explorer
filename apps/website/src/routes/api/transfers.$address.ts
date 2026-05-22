@@ -6,7 +6,7 @@ import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
-import { type SQL, and, desc, eq, inArray, lt, lte, ne } from "drizzle-orm";
+import { type SQL, and, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth.server";
@@ -23,10 +23,10 @@ const transfersSchema = z.object({
   class: z.string().array(),
   on_offline: z.enum(validOnlineTypes).array(),
   collection: z.string().array(),
-  at: z.string().optional(),
+  at: z.iso.datetime({ offset: true }).optional(),
   cursor: z
     .object({
-      timestamp: z.string().nullish(),
+      timestamp: z.string(),
       id: z.string(),
     })
     .optional(),
@@ -145,22 +145,27 @@ const transferSelect = {
   collection: getCollectionColumns(),
 };
 
-function getTypeFilters(type: TransferParams["type"], addr: string) {
-  return {
-    all: null as SQL[] | null,
+function getTypeFilters(type: TransferParams["type"], addr: string): SQL[] {
+  const filters: Record<TransferParams["type"], SQL[] | null> = {
+    all: null,
     mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
     received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
     sent: [eq(transfers.from, addr), ne(transfers.to, Addresses.SPIN)],
     spin: [eq(transfers.from, addr), eq(transfers.to, Addresses.SPIN)],
-  }[type];
+  };
+  const result = filters[type];
+  if (result === undefined) throw new Error(`Unknown transfer type: ${type}`);
+  return result ?? [];
 }
 
 async function fetchTransfers(query: TransferParams, addr: string) {
   const typeFilters = getTypeFilters(query.type, addr);
   const cursorFilter = query.cursor
     ? [
-        ...(query.cursor.timestamp ? [lt(transfers.timestamp, query.cursor.timestamp)] : []),
-        lt(transfers.id, query.cursor.id),
+        or(
+          lt(transfers.timestamp, query.cursor.timestamp),
+          and(eq(transfers.timestamp, query.cursor.timestamp), lt(transfers.id, query.cursor.id)),
+        ),
       ]
     : [];
   const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
@@ -202,7 +207,7 @@ async function fetchTransfers(query: TransferParams, addr: string) {
     return mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1);
   }
 
-  return queryFn(...typeFilters!);
+  return queryFn(...typeFilters);
 }
 
 /** Merge two arrays sorted by (timestamp DESC, id DESC), deduplicate, return top `limit` */

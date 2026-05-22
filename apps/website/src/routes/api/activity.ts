@@ -5,7 +5,7 @@ import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
-import { type SQL, and, desc, eq, inArray, lt, ne } from "drizzle-orm";
+import { type SQL, and, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getCollectionColumns } from "@/lib/server/objekt.server";
@@ -23,7 +23,7 @@ const activitySchema = z.object({
   collection: z.string().array(),
   cursor: z
     .object({
-      timestamp: z.string().nullish(),
+      timestamp: z.string(),
       id: z.string(),
     })
     .optional(),
@@ -124,8 +124,10 @@ async function fetchTransfers(query: ActivityParams) {
   const typeFilters = getTypeFilters(query.type);
   const cursorFilter = query.cursor
     ? [
-        ...(query.cursor.timestamp ? [lt(transfers.timestamp, query.cursor.timestamp)] : []),
-        lt(transfers.id, query.cursor.id),
+        or(
+          lt(transfers.timestamp, query.cursor.timestamp),
+          and(eq(transfers.timestamp, query.cursor.timestamp), lt(transfers.id, query.cursor.id)),
+        ),
       ]
     : [];
 
