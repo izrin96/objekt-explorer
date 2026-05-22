@@ -4,7 +4,6 @@ import { useShallow } from "zustand/react/shallow";
 
 import type { ButtonProps } from "@/components/intentui/button";
 import { Button } from "@/components/intentui/button";
-import { Tooltip, TooltipContent } from "@/components/intentui/tooltip";
 import { AddToListModal, RemoveFromListModal } from "@/components/list/modal/manage-objekt";
 import { SetPriceModal } from "@/components/list/modal/set-price-modal";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
@@ -38,33 +37,17 @@ export function RemoveFromList({ size }: { size?: ButtonProps["size"] }) {
   );
 }
 
-export function SetPrice({
-  size,
-  isDisabled = false,
-}: {
-  size?: ButtonProps["size"];
-  isDisabled?: boolean;
-}) {
+export function SetPrice({ size }: { size?: ButtonProps["size"] }) {
   const [open, setOpen] = useState(false);
   const handleAction = useObjektSelect((a) => a.handleAction);
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   return (
     <>
       <SetPriceModal open={open} setOpen={setOpen} objekts={selected} />
-      <Tooltip delay={0} closeDelay={0} isDisabled={!isDisabled} shouldCloseOnPress={false}>
-        <Button
-          isDisabled={isDisabled}
-          size={size}
-          intent="outline"
-          onPress={() => handleAction(() => setOpen(true))}
-        >
-          <CurrencyDollarIcon weight="regular" />
-          {m.filter_set_price()}
-        </Button>
-        <TooltipContent placement="bottom" inverse>
-          {m.filter_set_price_no_currency()}
-        </TooltipContent>
-      </Tooltip>
+      <Button size={size} intent="outline" onPress={() => handleAction(() => setOpen(true))}>
+        <CurrencyDollarIcon weight="regular" />
+        {m.filter_set_price()}
+      </Button>
     </>
   );
 }
