@@ -54,7 +54,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
         <ObjektCard urls={urls} objekts={objekts} />
       </div>
       <div className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:-me-2 sm:min-h-full sm:scrollbar-gutter-stable">
-        <div className="font-semibold">{objekt.collectionId}</div>
+        <div className="text-sm font-semibold">{objekt.collectionId}</div>
         <Suspense>
           <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
         </Suspense>

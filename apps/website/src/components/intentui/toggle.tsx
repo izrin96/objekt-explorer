@@ -5,10 +5,12 @@ import { tv, type VariantProps } from "tailwind-variants";
 
 export const toggleStyles = tv({
   base: [
-    "[--toggle-icon-active:var(--secondary-fg)] [--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))]",
+    // custom text-sm
+    // remove *:[svg]:my-0.5 sm:*:[svg]:my-1
+    "text-sm [--toggle-icon-active:var(--secondary-fg)] [--toggle-icon:color-mix(in_oklab,var(--secondary-fg)_50%,var(--secondary))]",
     "relative isolate inline-flex items-center justify-center border font-medium",
     "focus-visible:ring-offset-bg focus-visible:ring-2 focus-visible:ring-offset-3 focus-visible:outline focus-visible:outline-offset-2",
-    "*:[svg]:-mx-0.5 *:[svg]:my-0.5 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-(--toggle-icon) sm:*:[svg]:my-1",
+    "*:[svg]:-mx-0.5 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-(--toggle-icon)",
     "focus-visible:*:[svg]:text-(--toggle-icon-active)",
     "selected:*:[svg]:text-(--toggle-icon-active)",
     "hover:*:[svg]:text-(--toggle-icon-active)",

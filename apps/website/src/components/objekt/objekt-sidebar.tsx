@@ -41,7 +41,7 @@ export default function ObjektSidebar(props: Props) {
   };
 
   return (
-    <div className="pointer-events-none grid h-full w-full items-center text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
+    <div className="pointer-events-none grid h-full w-full items-center text-base text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
       {/* custom band image */}
       {objekt.bandImageUrl && (
         <img
