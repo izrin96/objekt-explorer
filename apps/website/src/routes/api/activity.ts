@@ -55,7 +55,29 @@ export const Route = createFileRoute("/api/activity")({
         const url = new URL(request.url);
         const query = parseParams(url.searchParams);
 
+        const hasFilters =
+          query.type !== "all" ||
+          query.artist.length > 0 ||
+          query.member.length > 0 ||
+          query.season.length > 0 ||
+          query.class.length > 0 ||
+          query.on_offline.length > 0 ||
+          query.collection.length > 0 ||
+          query.cursor !== undefined;
+
+        if (hasFilters) {
+          console.log(
+            `[activity] query: type=${query.type} cursor=${query.cursor ? "yes" : "no"} artists=${query.artist.length} members=${query.member.length} seasons=${query.season.length} classes=${query.class.length} on_offline=${query.on_offline.length} collections=${query.collection.length}`,
+          );
+        }
+
+        const start = performance.now();
         const transferResults = await fetchTransfers(query);
+        if (hasFilters) {
+          console.log(
+            `[activity] fetchTransfers: ${(performance.now() - start).toFixed(1)}ms (${transferResults.length} rows)`,
+          );
+        }
 
         const slicedResults = transferResults.slice(0, PAGE_SIZE);
 
