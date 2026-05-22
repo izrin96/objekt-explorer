@@ -66,9 +66,7 @@ export const Route = createFileRoute("/api/activity")({
           query.cursor !== undefined;
 
         if (hasFilters) {
-          console.log(
-            `[activity] query: type=${query.type} cursor=${query.cursor ? "yes" : "no"} artists=${query.artist.length} members=${query.member.length} seasons=${query.season.length} classes=${query.class.length} on_offline=${query.on_offline.length} collections=${query.collection.length}`,
-          );
+          console.log(`[activity] query: ${JSON.stringify(query)}`);
         }
 
         const start = performance.now();

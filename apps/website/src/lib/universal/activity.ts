@@ -13,15 +13,20 @@ export const activityDataSchema = z.object({
   transfer: partialTransferSchema,
   objekt: z.custom<OwnedObjekt>(),
   nickname: z.object({
-    from: z.string().nullish(),
-    to: z.string().nullish(),
+    from: z.string().optional(),
+    to: z.string().optional(),
   }),
 });
 export type ActivityData = z.infer<typeof activityDataSchema>;
 
 export const activityResponseSchema = z.object({
   items: z.array(activityDataSchema),
-  nextCursor: z.object({ id: z.string() }).optional(),
+  nextCursor: z
+    .object({
+      timestamp: z.string(),
+      id: z.string(),
+    })
+    .optional(),
 });
 export type ActivityResponse = z.infer<typeof activityResponseSchema>;
 

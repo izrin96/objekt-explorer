@@ -12,8 +12,8 @@ export const aggregatedTransferSchema = z.object({
   transfer: partialTransferSchema,
   objekt: z.custom<OwnedObjekt>(),
   nickname: z.object({
-    from: z.string().nullish(),
-    to: z.string().nullish(),
+    from: z.string().optional(),
+    to: z.string().optional(),
   }),
 });
 export type AggregatedTransfer = z.infer<typeof aggregatedTransferSchema>;
@@ -21,7 +21,12 @@ export type AggregatedTransfer = z.infer<typeof aggregatedTransferSchema>;
 export const transferResultSchema = z.object({
   hide: z.boolean().optional(),
   results: z.array(aggregatedTransferSchema),
-  nextCursor: z.object({ id: z.string() }).optional(),
+  nextCursor: z
+    .object({
+      timestamp: z.string(),
+      id: z.string(),
+    })
+    .optional(),
 });
 export type TransferResult = z.infer<typeof transferResultSchema>;
 
