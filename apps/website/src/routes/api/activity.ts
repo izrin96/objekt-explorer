@@ -157,10 +157,14 @@ async function fetchTransfers(query: ActivityParams) {
   // 1. Get transfer IDs only (no JOINs — planner uses transfer indexes efficiently)
   // 2. Fetch full data for those IDs (small result set, JOINs are cheap)
   if (collectionFilters.length > 0) {
+    const t0 = performance.now();
     const matchingCollections = await indexer
       .select(getCollectionColumns())
       .from(collections)
       .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
+    console.log(
+      `[activity] step0 collections: ${(performance.now() - t0).toFixed(1)}ms (${matchingCollections.length} rows)`,
+    );
 
     if (matchingCollections.length === 0) return [];
 
@@ -168,17 +172,22 @@ async function fetchTransfers(query: ActivityParams) {
     const collectionIds = [...collectionMap.keys()];
 
     // Step 1: IDs only — no JOINs, planner focuses on transfer indexes
+    const t1 = performance.now();
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
       .where(and(...cursorFilter, ...typeFilters, inArray(transfers.collectionId, collectionIds)))
       .orderBy(desc(transfers.timestamp), desc(transfers.id))
       .limit(PAGE_SIZE + 1);
+    console.log(
+      `[activity] step1 ids: ${(performance.now() - t1).toFixed(1)}ms (${ids.length} rows)`,
+    );
 
     if (ids.length === 0) return [];
 
     // Step 2: Full data for the small result set — JOINs are cheap here
-    return indexer
+    const t2 = performance.now();
+    const results = await indexer
       .select(transferSelect)
       .from(transfers)
       .innerJoin(objekts, eq(transfers.objektId, objekts.id))
@@ -190,6 +199,8 @@ async function fetchTransfers(query: ActivityParams) {
         ),
       )
       .orderBy(desc(transfers.timestamp), desc(transfers.id));
+    console.log(`[activity] step2 data: ${(performance.now() - t2).toFixed(1)}ms`);
+    return results;
   }
 
   // No collection filters — planner can use partial indexes directly
