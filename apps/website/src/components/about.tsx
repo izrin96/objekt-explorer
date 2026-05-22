@@ -1,7 +1,6 @@
 import { InfoIcon, GithubLogoIcon, DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { buttonStyles } from "./intentui/button";
 import { ExternalLink } from "./intentui/link";
@@ -14,23 +13,14 @@ type Props = {
 };
 
 export function AboutModal({ open, setOpen }: Props) {
-  const locale = getLocale();
   return (
     <ModalContent size="xl" isOpen={open} onOpenChange={setOpen}>
       <ModalHeader>
         <ModalTitle>{m.nav_about()}</ModalTitle>
       </ModalHeader>
       <ModalBody className="flex flex-col gap-y-4">
-        <div className="text-sm">
-          {locale === "ko"
-            ? "오브젝트 트래커(Objekt Tracker)는 오브젝트 탐색을 위해 특별히 제작된 간편한 클라이언트 사이드 익스플로러입니다."
-            : "Objekt Tracker is a simple, client-side explorer built specifically for exploring objekts."}
-        </div>
-        <div className="text-sm">
-          {locale === "ko"
-            ? "버그 제보나 건의 사항이 있으시면 지원 디스코드 서버에 참여해 주세요."
-            : "Join our support Discord server for bug reporting or suggestions."}
-        </div>
+        <div className="text-sm">{m.about_description()}</div>
+        <div className="text-sm">{m.about_discord_invite()}</div>
       </ModalBody>
       <ModalFooter className="">
         <ExternalLink

@@ -9,7 +9,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useProfileObjektsServer } from "@/hooks/use-profile-objekt-server";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useCurrentUser } from "@/hooks/use-user";
-import { getLocale } from "@/paraglide/runtime";
+import { m } from "@/paraglide/messages";
 
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
@@ -27,16 +27,13 @@ import FilterServer from "./filter-server";
 export default function ProfileObjektServerRender() {
   const profile = useProfileTarget()!;
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
-  const locale = getLocale();
 
   return (
     <ObjektViewProvider initialColumn={profile.gridColumns ?? undefined} modalTab="owned">
       <div className="flex flex-col gap-4">
         {profile.address.toLowerCase() === Addresses.SPIN && (
           <Note intent="default" className="max-w-xl">
-            {locale === "ko"
-              ? "COSMO 스핀에서는 일부 필터를 사용할 수 없습니다. 폴리곤 체인에서 스핀된 오브젝트는 아직 병합되지 않았습니다."
-              : "Some filters are unavailable for COSMO Spin. Objekts spun on the Polygon chain have not been merged yet."}
+            {m.profile_spin_notice()}
           </Note>
         )}
 
