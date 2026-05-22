@@ -14,7 +14,6 @@ import { getCollectionColumns } from "@/lib/server/objekt.server";
 import { validType } from "@/lib/universal/transfers";
 
 const PER_PAGE = 150;
-const ENABLE_INARRAY = true;
 
 const transfersSchema = z.object({
   type: z.enum(validType).default("all"),
@@ -95,174 +94,7 @@ export const Route = createFileRoute("/api/transfers/$address")({
 
         const addr = params.address.toLowerCase();
 
-        const transferSelect = {
-          transfer: {
-            id: transfers.id,
-            from: transfers.from,
-            to: transfers.to,
-            timestamp: transfers.timestamp,
-          },
-          objekt: objekts,
-          collection: getCollectionColumns(),
-        };
-
-        const collectionFilters = getCollectionFilters(query);
-        const cursorFilter = query.cursor
-          ? [
-              ...(query.cursor.timestamp ? [lt(transfers.timestamp, query.cursor.timestamp)] : []),
-              lt(transfers.id, query.cursor.id),
-            ]
-          : [];
-        const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
-
-        const typeFilters = {
-          all: null,
-          mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
-          received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
-          sent: [eq(transfers.from, addr), ne(transfers.to, Addresses.SPIN)],
-          spin: [eq(transfers.from, addr), eq(transfers.to, Addresses.SPIN)],
-        };
-
-        const runQuery = (...addressFilters: (SQL | undefined)[]) =>
-          indexer
-            .select(transferSelect)
-            .from(transfers)
-            .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-            .innerJoin(collections, eq(transfers.collectionId, collections.id))
-            .where(
-              and(
-                ...addressFilters,
-                ...cursorFilter,
-                ...tsFilter,
-                ne(collections.slug, "empty-collection"),
-              ),
-            )
-            .orderBy(desc(transfers.timestamp), desc(transfers.id))
-            .limit(PER_PAGE + 1);
-
-        let results: Awaited<ReturnType<typeof runQuery>>;
-
-        if (collectionFilters.length > 0) {
-          const matchingCollections = await indexer
-            .select({ id: collections.id })
-            .from(collections)
-            .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-
-          if (matchingCollections.length === 0) {
-            return Response.json({ nextCursor: undefined, results: [] });
-          }
-
-          if (ENABLE_INARRAY) {
-            const collectionIds = matchingCollections.map((c) => c.id);
-
-            const getIds = (...addressFilters: (SQL | undefined)[]) =>
-              indexer
-                .select({ id: transfers.id })
-                .from(transfers)
-                .where(
-                  and(
-                    inArray(transfers.collectionId, collectionIds),
-                    ...addressFilters,
-                    ...cursorFilter,
-                    ...tsFilter,
-                  ),
-                )
-                .orderBy(desc(transfers.timestamp), desc(transfers.id))
-                .limit(PER_PAGE + 1);
-
-            let ids: { id: string }[];
-
-            if (query.type === "all") {
-              const [fromIds, toIds] = await Promise.all([
-                getIds(eq(transfers.from, addr)),
-                getIds(eq(transfers.to, addr)),
-              ]);
-              ids = mergeSortedTransfers(
-                fromIds.map((r) => ({ transfer: r })),
-                toIds.map((r) => ({ transfer: r })),
-                PER_PAGE + 1,
-              ).map((r) => r.transfer);
-            } else {
-              ids = await getIds(...typeFilters[query.type]);
-            }
-
-            if (ids.length === 0) {
-              return Response.json({ nextCursor: undefined, results: [] });
-            }
-
-            results = await indexer
-              .select(transferSelect)
-              .from(transfers)
-              .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-              .innerJoin(collections, eq(transfers.collectionId, collections.id))
-              .where(
-                inArray(
-                  transfers.id,
-                  ids.map((r) => r.id),
-                ),
-              )
-              .orderBy(desc(transfers.timestamp), desc(transfers.id));
-          } else {
-            const getIds = (...addressFilters: (SQL | undefined)[]) =>
-              indexer
-                .select({ id: transfers.id })
-                .from(transfers)
-                .innerJoin(collections, eq(transfers.collectionId, collections.id))
-                .where(
-                  and(
-                    ...addressFilters,
-                    ...cursorFilter,
-                    ...tsFilter,
-                    ...collectionFilters,
-                    ne(collections.slug, "empty-collection"),
-                  ),
-                )
-                .orderBy(desc(transfers.timestamp), desc(transfers.id))
-                .limit(PER_PAGE + 1);
-
-            let ids: { id: string }[];
-
-            if (query.type === "all") {
-              const [fromIds, toIds] = await Promise.all([
-                getIds(eq(transfers.from, addr)),
-                getIds(eq(transfers.to, addr)),
-              ]);
-              ids = mergeSortedTransfers(
-                fromIds.map((r) => ({ transfer: r })),
-                toIds.map((r) => ({ transfer: r })),
-                PER_PAGE + 1,
-              ).map((r) => r.transfer);
-            } else {
-              ids = await getIds(...typeFilters[query.type]);
-            }
-
-            if (ids.length === 0) {
-              return Response.json({ nextCursor: undefined, results: [] });
-            }
-
-            results = await indexer
-              .select(transferSelect)
-              .from(transfers)
-              .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-              .innerJoin(collections, eq(transfers.collectionId, collections.id))
-              .where(
-                inArray(
-                  transfers.id,
-                  ids.map((r) => r.id),
-                ),
-              )
-              .orderBy(desc(transfers.timestamp), desc(transfers.id));
-          }
-        } else if (query.type === "all") {
-          // No collection filters — split OR into two parallel queries
-          const [fromResults, toResults] = await Promise.all([
-            runQuery(eq(transfers.from, addr)),
-            runQuery(eq(transfers.to, addr)),
-          ]);
-          results = mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1);
-        } else {
-          results = await runQuery(...typeFilters[query.type]);
-        }
+        const results = await fetchTransfers(query, addr);
 
         const hasNext = results.length > PER_PAGE;
         const nextCursor = hasNext
@@ -302,8 +134,79 @@ export const Route = createFileRoute("/api/transfers/$address")({
   },
 });
 
-/** Merge two arrays sorted by transfer.id DESC, deduplicate, return top `limit` */
-function mergeSortedTransfers<T extends { transfer: { id: string } }>(
+const transferSelect = {
+  transfer: {
+    id: transfers.id,
+    from: transfers.from,
+    to: transfers.to,
+    timestamp: transfers.timestamp,
+  },
+  objekt: objekts,
+  collection: getCollectionColumns(),
+};
+
+function getTypeFilters(type: TransferParams["type"], addr: string) {
+  return {
+    all: null as SQL[] | null,
+    mint: [eq(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
+    received: [ne(transfers.from, Addresses.NULL), eq(transfers.to, addr)],
+    sent: [eq(transfers.from, addr), ne(transfers.to, Addresses.SPIN)],
+    spin: [eq(transfers.from, addr), eq(transfers.to, Addresses.SPIN)],
+  }[type];
+}
+
+async function fetchTransfers(query: TransferParams, addr: string) {
+  const typeFilters = getTypeFilters(query.type, addr);
+  const cursorFilter = query.cursor
+    ? [
+        ...(query.cursor.timestamp ? [lt(transfers.timestamp, query.cursor.timestamp)] : []),
+        lt(transfers.id, query.cursor.id),
+      ]
+    : [];
+  const tsFilter = query.at ? [lte(transfers.timestamp, query.at)] : [];
+  const collectionFilters = getCollectionFilters(query);
+
+  // Fast existence check — avoids query planning when no collections match
+  if (collectionFilters.length > 0) {
+    const exists = await indexer
+      .select({ id: collections.id })
+      .from(collections)
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters))
+      .limit(1);
+    if (exists.length === 0) return [];
+  }
+
+  const baseWhere = and(
+    ...cursorFilter,
+    ...tsFilter,
+    ne(collections.slug, "empty-collection"),
+    ...collectionFilters,
+  );
+
+  const queryFn = (...addressFilters: (SQL | undefined)[]) =>
+    indexer
+      .select(transferSelect)
+      .from(transfers)
+      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+      .innerJoin(collections, eq(transfers.collectionId, collections.id))
+      .where(and(...addressFilters, baseWhere))
+      .orderBy(desc(transfers.timestamp), desc(transfers.id))
+      .limit(PER_PAGE + 1);
+
+  if (query.type === "all") {
+    // Split OR into two parallel queries for index efficiency
+    const [fromResults, toResults] = await Promise.all([
+      queryFn(eq(transfers.from, addr)),
+      queryFn(eq(transfers.to, addr)),
+    ]);
+    return mergeSortedTransfers(fromResults, toResults, PER_PAGE + 1);
+  }
+
+  return queryFn(...typeFilters!);
+}
+
+/** Merge two arrays sorted by (timestamp DESC, id DESC), deduplicate, return top `limit` */
+function mergeSortedTransfers<T extends { transfer: { id: string; timestamp: string } }>(
   a: T[],
   b: T[],
   limit: number,
@@ -313,8 +216,23 @@ function mergeSortedTransfers<T extends { transfer: { id: string } }>(
   let j = 0;
 
   while (result.length < limit && (i < a.length || j < b.length)) {
-    const next =
-      j >= b.length || (i < a.length && a[i]!.transfer.id >= b[j]!.transfer.id) ? a[i++]! : b[j++]!;
+    const aVal = a[i];
+    const bVal = b[j];
+
+    let next: T;
+    if (j >= b.length) {
+      next = a[i++]!;
+    } else if (i >= a.length) {
+      next = b[j++]!;
+    } else if (
+      aVal!.transfer.timestamp > bVal!.transfer.timestamp ||
+      (aVal!.transfer.timestamp === bVal!.transfer.timestamp &&
+        aVal!.transfer.id >= bVal!.transfer.id)
+    ) {
+      next = a[i++]!;
+    } else {
+      next = b[j++]!;
+    }
 
     if (result.at(-1)?.transfer.id !== next.transfer.id) {
       result.push(next);

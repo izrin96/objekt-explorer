@@ -12,7 +12,6 @@ import { getCollectionColumns } from "@/lib/server/objekt.server";
 import { validType } from "@/lib/universal/activity";
 
 const PAGE_SIZE = 300;
-const ENABLE_INARRAY = true;
 
 const activitySchema = z.object({
   type: z.enum(validType).default("all"),
@@ -132,78 +131,32 @@ async function fetchTransfers(query: ActivityParams) {
 
   const collectionFilters = getCollectionFilters(query);
 
+  // Fast existence check — avoids even query planning when no collections match
   if (collectionFilters.length > 0) {
-    const matchingCollections = await indexer
+    const exists = await indexer
       .select({ id: collections.id })
       .from(collections)
-      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
-
-    if (matchingCollections.length === 0) return [];
-
-    if (ENABLE_INARRAY) {
-      const collectionIds = matchingCollections.map((c) => c.id);
-
-      const ids = await indexer
-        .select({ id: transfers.id })
-        .from(transfers)
-        .where(and(inArray(transfers.collectionId, collectionIds), ...cursorFilter, ...typeFilters))
-        .orderBy(desc(transfers.timestamp), desc(transfers.id))
-        .limit(PAGE_SIZE + 1);
-
-      if (ids.length === 0) return [];
-
-      return indexer
-        .select(transferSelect)
-        .from(transfers)
-        .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-        .innerJoin(collections, eq(transfers.collectionId, collections.id))
-        .where(
-          inArray(
-            transfers.id,
-            ids.map((t) => t.id),
-          ),
-        )
-        .orderBy(desc(transfers.timestamp), desc(transfers.id));
-    }
-
-    const ids = await indexer
-      .select({ id: transfers.id })
-      .from(transfers)
-      .innerJoin(collections, eq(transfers.collectionId, collections.id))
-      .where(
-        and(
-          ...cursorFilter,
-          ...typeFilters,
-          ...collectionFilters,
-          ne(collections.slug, "empty-collection"),
-        ),
-      )
-      .orderBy(desc(transfers.timestamp), desc(transfers.id))
-      .limit(PAGE_SIZE + 1);
-
-    if (ids.length === 0) return [];
-
-    return indexer
-      .select(transferSelect)
-      .from(transfers)
-      .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-      .innerJoin(collections, eq(transfers.collectionId, collections.id))
-      .where(
-        inArray(
-          transfers.id,
-          ids.map((t) => t.id),
-        ),
-      )
-      .orderBy(desc(transfers.timestamp), desc(transfers.id));
+      .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters))
+      .limit(1);
+    if (exists.length === 0) return [];
   }
 
-  // No collection filters — scan transfer index directly
+  // Single query — PostgreSQL's planner picks the optimal join strategy using
+  // idx_transfer_ts_id (unfiltered), idx_transfer_collection_ts_id (collection
+  // filters), or the partial indexes for mint/spin/transfer types.
   return indexer
     .select(transferSelect)
     .from(transfers)
     .innerJoin(objekts, eq(transfers.objektId, objekts.id))
     .innerJoin(collections, eq(transfers.collectionId, collections.id))
-    .where(and(...cursorFilter, ...typeFilters, ne(collections.slug, "empty-collection")))
+    .where(
+      and(
+        ...cursorFilter,
+        ...typeFilters,
+        ne(collections.slug, "empty-collection"),
+        ...collectionFilters,
+      ),
+    )
     .orderBy(desc(transfers.timestamp), desc(transfers.id))
     .limit(PAGE_SIZE + 1);
 }
