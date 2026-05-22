@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
-import { createContext, useContext } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
 
 import { orpc } from "@/lib/orpc/client";
 
@@ -24,48 +24,72 @@ export function FilterDataProvider({ children }: Props) {
   const { data } = useSuspenseQuery(orpc.config.getFilterData.queryOptions());
   const { selectedArtistIds } = useCosmoArtist();
 
-  const selectedSeasonMap =
-    selectedArtistIds.length > 0
-      ? data.seasonsMap.filter((a) => selectedArtistIds.includes(a.artistId))
-      : data.seasonsMap;
+  const selectedSeasonMap = useMemo(
+    () =>
+      selectedArtistIds.length > 0
+        ? data.seasonsMap.filter((a) => selectedArtistIds.includes(a.artistId))
+        : data.seasonsMap,
+    [data.seasonsMap, selectedArtistIds],
+  );
 
-  const selectedClassMap =
-    selectedArtistIds.length > 0
-      ? data.classesMap.filter((a) => selectedArtistIds.includes(a.artistId))
-      : data.classesMap;
+  const selectedClassMap = useMemo(
+    () =>
+      selectedArtistIds.length > 0
+        ? data.classesMap.filter((a) => selectedArtistIds.includes(a.artistId))
+        : data.classesMap,
+    [data.classesMap, selectedArtistIds],
+  );
 
-  const seasons = Array.from(new Set(selectedSeasonMap.flatMap((a) => a.seasons)));
-  const seasonMap = new Map(seasons.map((season, index) => [season, index]));
-  const classes = Array.from(new Set(selectedClassMap.flatMap((a) => a.classes)));
-  const classMap = new Map(classes.map((cls, index) => [cls, index]));
+  const seasons = useMemo(
+    () => Array.from(new Set(selectedSeasonMap.flatMap((a) => a.seasons))),
+    [selectedSeasonMap],
+  );
+  const seasonMap = useMemo(
+    () => new Map(seasons.map((season, index) => [season, index])),
+    [seasons],
+  );
+  const classes = useMemo(
+    () => Array.from(new Set(selectedClassMap.flatMap((a) => a.classes))),
+    [selectedClassMap],
+  );
+  const classMap = useMemo(() => new Map(classes.map((cls, index) => [cls, index])), [classes]);
 
-  const compareSeason = (a: string, b: string) => {
-    const posA = seasonMap.get(a) ?? -1;
-    const posB = seasonMap.get(b) ?? -1;
-    if (posA === -1 && posB === -1) return 0;
-    if (posA === -1) return 1;
-    if (posB === -1) return -1;
-    return posA - posB;
-  };
+  const compareSeason = useCallback(
+    (a: string, b: string) => {
+      const posA = seasonMap.get(a) ?? -1;
+      const posB = seasonMap.get(b) ?? -1;
+      if (posA === -1 && posB === -1) return 0;
+      if (posA === -1) return 1;
+      if (posB === -1) return -1;
+      return posA - posB;
+    },
+    [seasonMap],
+  );
 
-  const compareClass = (a: string, b: string) => {
-    const posA = classMap.get(a) ?? -1;
-    const posB = classMap.get(b) ?? -1;
-    if (posA === -1 && posB === -1) return 0;
-    if (posA === -1) return 1;
-    if (posB === -1) return -1;
-    return posA - posB;
-  };
+  const compareClass = useCallback(
+    (a: string, b: string) => {
+      const posA = classMap.get(a) ?? -1;
+      const posB = classMap.get(b) ?? -1;
+      if (posA === -1 && posB === -1) return 0;
+      if (posA === -1) return 1;
+      if (posB === -1) return -1;
+      return posA - posB;
+    },
+    [classMap],
+  );
 
-  const value = {
-    collections: data.collections,
-    seasons,
-    seasonMap,
-    classes,
-    classMap,
-    compareSeason,
-    compareClass,
-  };
+  const value = useMemo(
+    () => ({
+      collections: data.collections,
+      seasons,
+      seasonMap,
+      classes,
+      classMap,
+      compareSeason,
+      compareClass,
+    }),
+    [data.collections, seasons, seasonMap, classes, classMap, compareSeason, compareClass],
+  );
 
   return <FilterDataContext value={value}>{children}</FilterDataContext>;
 }

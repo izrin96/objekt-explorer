@@ -1,7 +1,7 @@
 import type { CosmoArtistWithMembersBFF, CosmoMemberBFF } from "@repo/cosmo/types/artists";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createContext, type PropsWithChildren, useCallback, useContext } from "react";
+import { createContext, type PropsWithChildren, useCallback, useContext, useMemo } from "react";
 
 import { orpc } from "@/lib/orpc/client";
 
@@ -21,35 +21,45 @@ export type CosmoArtistProviderProps = PropsWithChildren;
 
 export function CosmoArtistProvider({ children }: CosmoArtistProviderProps) {
   const { data: artists } = useSuspenseQuery(orpc.config.getArtists.queryOptions());
-  const artistMap = new Map(artists.map((artist) => [artist.id.toLowerCase(), artist]));
-  const memberMap = new Map(
-    artists.flatMap((artist) =>
-      artist.artistMembers.map((member) => [member.name.toLowerCase(), member]),
-    ),
+
+  const artistMap = useMemo(
+    () => new Map(artists.map((artist) => [artist.id.toLowerCase(), artist])),
+    [artists],
+  );
+  const memberMap = useMemo(
+    () =>
+      new Map(
+        artists.flatMap((artist) =>
+          artist.artistMembers.map((member) => [member.name.toLowerCase(), member]),
+        ),
+      ),
+    [artists],
   );
 
-  const artistOrderMap = new Map(artists.map((artist, index) => [artist.id, index]));
-
-  const sortedMembers = artists
-    .flatMap((artist) => artist.artistMembers.map((member) => ({ member, artistId: artist.id })))
-    .toSorted((a, b) => {
-      const artistOrderA = artistOrderMap.get(a.artistId) ?? Infinity;
-      const artistOrderB = artistOrderMap.get(b.artistId) ?? Infinity;
-      if (artistOrderA !== artistOrderB) return artistOrderA - artistOrderB;
-      return a.member.order - b.member.order;
-    });
-
-  const artistMemberOrderMap = new Map(
-    sortedMembers.map(({ member }, index) => [member.name.toLowerCase(), index]),
+  const artistOrderMap = useMemo(
+    () => new Map(artists.map((artist, index) => [artist.id, index])),
+    [artists],
   );
 
-  return (
-    <CosmoArtistContext
-      value={{ artists, artistMap, memberMap, artistMemberOrderMap, artistOrderMap }}
-    >
-      {children}
-    </CosmoArtistContext>
+  const artistMemberOrderMap = useMemo(() => {
+    const sortedMembers = artists
+      .flatMap((artist) => artist.artistMembers.map((member) => ({ member, artistId: artist.id })))
+      .toSorted((a, b) => {
+        const artistOrderA = artistOrderMap.get(a.artistId) ?? Infinity;
+        const artistOrderB = artistOrderMap.get(b.artistId) ?? Infinity;
+        if (artistOrderA !== artistOrderB) return artistOrderA - artistOrderB;
+        return a.member.order - b.member.order;
+      });
+
+    return new Map(sortedMembers.map(({ member }, index) => [member.name.toLowerCase(), index]));
+  }, [artists, artistOrderMap]);
+
+  const value = useMemo(
+    () => ({ artists, artistMap, memberMap, artistMemberOrderMap, artistOrderMap }),
+    [artists, artistMap, memberMap, artistMemberOrderMap, artistOrderMap],
   );
+
+  return <CosmoArtistContext value={value}>{children}</CosmoArtistContext>;
 }
 
 export function useCosmoArtist() {
@@ -78,10 +88,13 @@ export function useCosmoArtist() {
     [selectedArtistIds],
   );
 
-  const selectedArtists =
-    selectedArtistIds.length > 0
-      ? ctx.artists.filter((a) => selectedArtistIds.includes(a.id))
-      : ctx.artists;
+  const selectedArtists = useMemo(
+    () =>
+      selectedArtistIds.length > 0
+        ? ctx.artists.filter((a) => selectedArtistIds.includes(a.id))
+        : ctx.artists,
+    [ctx.artists, selectedArtistIds],
+  );
 
   const compareMember = useCallback(
     (memberA: string, memberB: string) => {
@@ -106,14 +119,26 @@ export function useCosmoArtist() {
     [ctx.artistMemberOrderMap],
   );
 
-  return {
-    artists: ctx.artists,
-    getArtist,
-    getMember,
-    selectedArtistIds,
-    selectedArtists,
-    getSelectedArtistIds,
-    compareMember,
-    compareArtistMember,
-  };
+  return useMemo(
+    () => ({
+      artists: ctx.artists,
+      getArtist,
+      getMember,
+      selectedArtistIds,
+      selectedArtists,
+      getSelectedArtistIds,
+      compareMember,
+      compareArtistMember,
+    }),
+    [
+      ctx.artists,
+      getArtist,
+      getMember,
+      selectedArtistIds,
+      selectedArtists,
+      getSelectedArtistIds,
+      compareMember,
+      compareArtistMember,
+    ],
+  );
 }

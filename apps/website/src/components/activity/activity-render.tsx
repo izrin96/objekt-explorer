@@ -106,7 +106,10 @@ function Activity() {
   const isHoveringRef = useRef(false);
   const [currentObjekt, setCurrentObjekt] = useState<ValidObjekt[]>([]);
 
-  const parsedSelectedArtistIds = getSelectedArtistIds(filters.artist);
+  const parsedSelectedArtistIds = useMemo(
+    () => getSelectedArtistIds(filters.artist),
+    [getSelectedArtistIds, filters.artist],
+  );
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending, isRefetching } =
     useInfiniteQuery<ActivityResponse>({
