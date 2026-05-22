@@ -149,11 +149,6 @@ export const transfers = pgTable(
       table.from.asc().nullsLast(),
       table.id.desc().nullsFirst(),
     ),
-    index("idx_transfer_collection_id").using(
-      "btree",
-      table.collectionId.asc().nullsLast(),
-      table.id.desc().nullsFirst(),
-    ),
     index("idx_transfer_collection_to_id").using(
       "btree",
       table.collectionId.asc().nullsLast(),
@@ -178,9 +173,6 @@ export const transfers = pgTable(
       table.timestamp.desc().nullsFirst(),
       table.id.desc().nullsFirst(),
     ),
-    index("idx_transfer_mint_collection_id")
-      .using("btree", table.collectionId.asc().nullsLast(), table.id.desc().nullsFirst())
-      .where(sql`("from" = '0x0000000000000000000000000000000000000000'::text)`),
     index("idx_transfer_mint_collection_ts_id")
       .using(
         "btree",
@@ -194,14 +186,6 @@ export const transfers = pgTable(
       .where(
         sql`(("from" = '0x0000000000000000000000000000000000000000'::text) AND ("to" = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text))`,
       ),
-    index("idx_transfer_mint_to_id_collection")
-      .using(
-        "btree",
-        table.to.asc().nullsLast(),
-        table.id.desc().nullsFirst(),
-        table.collectionId.asc().nullsLast(),
-      )
-      .where(sql`("from" = '0x0000000000000000000000000000000000000000'::text)`),
     index("idx_transfer_mint_to_ts_id")
       .using(
         "btree",
