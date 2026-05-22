@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import type { PublicProfile } from "@/lib/universal/user";
 
@@ -12,7 +12,8 @@ const ProfileContext = createContext<ContextProps | null>(null);
 type ProviderProps = PropsWithChildren<ContextProps>;
 
 export function ProfileProvider({ children, profile }: ProviderProps) {
-  return <ProfileContext value={{ profile }}>{children}</ProfileContext>;
+  const value = useMemo(() => ({ profile }), [profile]);
+  return <ProfileContext value={value}>{children}</ProfileContext>;
 }
 
 export function useProfileTarget() {

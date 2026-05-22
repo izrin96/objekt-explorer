@@ -1,7 +1,7 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { type PropsWithChildren, use } from "react";
-import { createContext, useCallback, useState } from "react";
+import { createContext, useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -70,15 +70,15 @@ function SetPriceProvider({ children }: PropsWithChildren) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<ValidObjekt[]>([]);
 
+  const openSetPrice = useCallback((val: ValidObjekt[]) => {
+    setSelected(val);
+    setOpen(true);
+  }, []);
+
+  const value = useMemo(() => ({ openSetPrice }), [openSetPrice]);
+
   return (
-    <SetPriceContext
-      value={{
-        openSetPrice: (val) => {
-          setSelected(val);
-          setOpen(true);
-        },
-      }}
-    >
+    <SetPriceContext value={value}>
       <SetPriceModal open={open} setOpen={setOpen} objekts={selected} />
       {children}
     </SetPriceContext>

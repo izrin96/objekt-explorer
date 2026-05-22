@@ -2,8 +2,10 @@ import { parseAsNumberLiteral, useQueryState } from "nuqs";
 import {
   createContext,
   type PropsWithChildren,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -47,10 +49,13 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
 
   const columns = overrideColumn ?? columnStore;
 
-  const setColumns = (column: number) => {
-    setOverrideColumn(null);
-    setColumnStore(column);
-  };
+  const setColumns = useCallback(
+    (column: number) => {
+      setOverrideColumn(null);
+      setColumnStore(column);
+    },
+    [setColumnStore],
+  );
 
   useEffect(() => {
     if (!hasHydrated) return;
@@ -97,17 +102,12 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
     }
   }, [hasHydrated, initial, responsiveColumn, setColumnStore, breakpointReady]);
 
-  return (
-    <ObjektColumnContext
-      value={{
-        initialColumn,
-        columns,
-        setColumns,
-      }}
-    >
-      {children}
-    </ObjektColumnContext>
+  const contextValue = useMemo(
+    () => ({ initialColumn, columns, setColumns }),
+    [initialColumn, columns, setColumns],
   );
+
+  return <ObjektColumnContext value={contextValue}>{children}</ObjektColumnContext>;
 }
 
 export function useObjektColumn() {

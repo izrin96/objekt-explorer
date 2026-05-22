@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import type { PublicList } from "@/lib/universal/user";
 
@@ -12,7 +12,8 @@ const ListContext = createContext<ContextProps | null>(null);
 type ProviderProps = PropsWithChildren<ContextProps>;
 
 export function ListProvider({ children, list }: ProviderProps) {
-  return <ListContext value={{ list }}>{children}</ListContext>;
+  const value = useMemo(() => ({ list }), [list]);
+  return <ListContext value={value}>{children}</ListContext>;
 }
 
 export function useListTarget() {

@@ -1,5 +1,5 @@
 import type { LiveSession } from "@repo/cosmo/server/live";
-import { createContext, type PropsWithChildren, useContext } from "react";
+import { createContext, type PropsWithChildren, useContext, useMemo } from "react";
 
 type ContextProps = {
   live: LiveSession;
@@ -12,7 +12,8 @@ type ProviderProps = PropsWithChildren<{
 }>;
 
 export function LiveSessionProvider({ children, live }: ProviderProps) {
-  return <LiveSessionContext value={{ live }}>{children}</LiveSessionContext>;
+  const value = useMemo(() => ({ live }), [live]);
+  return <LiveSessionContext value={value}>{children}</LiveSessionContext>;
 }
 
 export function useLiveSession() {
