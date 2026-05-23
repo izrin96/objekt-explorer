@@ -34,8 +34,8 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
             transferable: objekts.transferable,
           })
           .from(transfers)
-          .leftJoin(objekts, eq(transfers.objektId, objekts.id))
-          .leftJoin(collections, eq(objekts.collectionId, collections.id))
+          .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+          .innerJoin(collections, eq(objekts.collectionId, collections.id))
           .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
           .orderBy(desc(transfers.timestamp), desc(transfers.id));
 
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
           });
 
         const owner = await db.query.userAddress.findFirst({
-          where: { address: result.owner! },
+          where: { address: result.owner },
           columns: {
             privateSerial: true,
           },
@@ -67,7 +67,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
           const profiles = await fetchUserProfiles(session.user.id);
 
           const isProfileAuthed = profiles.some(
-            (a) => a.address.toLowerCase() === result.owner!.toLowerCase(),
+            (a) => a.address.toLowerCase() === result.owner.toLowerCase(),
           );
 
           if (!isProfileAuthed)
@@ -83,15 +83,12 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
 
         const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
 
+        const isSpin = result.owner.toLowerCase() === Addresses.SPIN;
+
         return Response.json({
-          tokenId: result.tokenId ?? undefined,
-          owner: result.owner ?? undefined,
-          transferable:
-            result.transferable !== null
-              ? result.owner?.toLowerCase() === Addresses.SPIN
-                ? false
-                : result.transferable
-              : undefined,
+          tokenId: result.tokenId,
+          owner: result.owner,
+          transferable: isSpin ? false : result.transferable,
           transfers: results.map((result) => {
             const addr = addressMap.get(result.to.toLowerCase());
             return {

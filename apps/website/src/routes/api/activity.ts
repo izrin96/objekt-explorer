@@ -55,27 +55,7 @@ export const Route = createFileRoute("/api/activity")({
         const url = new URL(request.url);
         const query = parseParams(url.searchParams);
 
-        const hasFilters =
-          query.type !== "all" ||
-          query.artist.length > 0 ||
-          query.member.length > 0 ||
-          query.season.length > 0 ||
-          query.class.length > 0 ||
-          query.on_offline.length > 0 ||
-          query.collection.length > 0 ||
-          query.cursor !== undefined;
-
-        if (hasFilters) {
-          console.log(`[activity] query: ${JSON.stringify(query)}`);
-        }
-
-        const start = performance.now();
         const transferResults = await fetchTransfers(query);
-        if (hasFilters) {
-          console.log(
-            `[activity] fetchTransfers: ${(performance.now() - start).toFixed(1)}ms (${transferResults.length} rows)`,
-          );
-        }
 
         const slicedResults = transferResults.slice(0, PAGE_SIZE);
 
@@ -163,7 +143,6 @@ async function fetchTransfers(query: ActivityParams) {
 
     // Step 1: IDs only — subquery lets planner use collection index first,
     // then nested-loop into transfer indexes
-    const t1 = performance.now();
     const ids = await indexer
       .select({ id: transfers.id })
       .from(transfers)
@@ -172,14 +151,10 @@ async function fetchTransfers(query: ActivityParams) {
       )
       .orderBy(desc(transfers.timestamp), desc(transfers.id))
       .limit(PAGE_SIZE + 1);
-    console.log(
-      `[activity] step1 ids: ${(performance.now() - t1).toFixed(1)}ms (${ids.length} rows)`,
-    );
 
     if (ids.length === 0) return [];
 
     // Step 2: Full data for the small result set — JOINs are cheap here
-    const t2 = performance.now();
     const results = await indexer
       .select(transferSelect)
       .from(transfers)
@@ -192,7 +167,6 @@ async function fetchTransfers(query: ActivityParams) {
         ),
       )
       .orderBy(desc(transfers.timestamp), desc(transfers.id));
-    console.log(`[activity] step2 data: ${(performance.now() - t2).toFixed(1)}ms`);
     return results;
   }
 

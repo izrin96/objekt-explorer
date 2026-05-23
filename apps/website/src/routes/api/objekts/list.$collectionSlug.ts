@@ -12,7 +12,7 @@ export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
             serial: objekts.serial,
           })
           .from(objekts)
-          .leftJoin(collections, eq(objekts.collectionId, collections.id))
+          .innerJoin(collections, eq(objekts.collectionId, collections.id))
           .where(and(eq(collections.slug, params.collectionSlug), ne(objekts.serial, 0)))
           .orderBy(asc(objekts.serial));
 

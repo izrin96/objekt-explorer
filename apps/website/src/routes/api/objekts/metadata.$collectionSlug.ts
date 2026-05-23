@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/objekts/metadata/$collectionSlug")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        const results = await indexer
+        const [result] = await indexer
           .select({
             total: count(),
             spin: sql`count(case when ${objekts.owner}=${Addresses.SPIN} then 1 end)`.mapWith(
@@ -20,18 +20,10 @@ export const Route = createFileRoute("/api/objekts/metadata/$collectionSlug")({
               ),
           })
           .from(collections)
-          .leftJoin(objekts, eq(collections.id, objekts.collectionId))
-          .where(eq(collections.slug, params.collectionSlug))
-          .groupBy(collections.id);
+          .innerJoin(objekts, eq(collections.id, objekts.collectionId))
+          .where(eq(collections.slug, params.collectionSlug));
 
-        if (!results.length)
-          return Response.json({
-            total: 0,
-            spin: 0,
-            transferable: 0,
-          });
-
-        return Response.json(results[0]);
+        return Response.json(result ?? { total: 0, spin: 0, transferable: 0 });
       },
     },
   },
