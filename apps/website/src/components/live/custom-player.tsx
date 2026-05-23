@@ -1,6 +1,8 @@
 import { CornersOutIcon, SpeakerHighIcon } from "@phosphor-icons/react/dist/ssr";
 import {
+  Audio,
   type Call,
+  hasAudio,
   ParticipantView,
   StreamCall,
   useCallStateHooks,
@@ -173,6 +175,9 @@ const CustomLivestreamLayout = () => {
   return (
     <>
       <div className="relative">
+        {!currentSpeaker.isLocalParticipant && open && hasAudio(currentSpeaker) && (
+          <Audio participant={currentSpeaker} trackType="audioTrack" />
+        )}
         <ParticipantView
           PictureInPicturePlaceholder={null}
           className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
@@ -181,12 +186,11 @@ const CustomLivestreamLayout = () => {
           // render after video element
           ParticipantViewUI={<CustomParticipantViewUI />}
           participant={currentSpeaker}
-          muteAudio={!open}
-          key={`${open}`}
+          muteAudio
         />
         {!open && (
           <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
-            <Button intent="primary" onPress={() => setOpen((prev) => !prev)}>
+            <Button intent="primary" onPress={() => setOpen(true)}>
               Unmute
             </Button>
           </div>
