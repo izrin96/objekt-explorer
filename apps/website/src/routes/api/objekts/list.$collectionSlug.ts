@@ -7,18 +7,13 @@ export const Route = createFileRoute("/api/objekts/list/$collectionSlug")({
   server: {
     handlers: {
       GET: async ({ params }) => {
-        const [collection] = await indexer
-          .select({ id: collections.id })
-          .from(collections)
-          .where(eq(collections.slug, params.collectionSlug))
-          .limit(1);
-
-        if (!collection) return Response.json({ serials: [] });
-
         const results = await indexer
-          .select({ serial: objekts.serial })
+          .select({
+            serial: objekts.serial,
+          })
           .from(objekts)
-          .where(and(eq(objekts.collectionId, collection.id), ne(objekts.serial, 0)))
+          .innerJoin(collections, eq(objekts.collectionId, collections.id))
+          .where(and(eq(collections.slug, params.collectionSlug), ne(objekts.serial, 0)))
           .orderBy(asc(objekts.serial));
 
         return Response.json({
