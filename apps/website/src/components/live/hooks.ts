@@ -1,13 +1,18 @@
 import { useCallStateHooks, useParticipantViewContext } from "@stream-io/video-react-sdk";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 
 export const useToggleFullScreen = () => {
   const { participantViewElement, videoElement } = useParticipantViewContext();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Track whether iOS native player is active
+  const iosFullscreenActive = useRef(false);
+
+  console.log(isFullscreen);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      // Check standard, webkit, and moz fullscreen
       const isInFullscreen = !!(
         document.fullscreenElement ||
         (document as any).webkitFullscreenElement ||
@@ -17,7 +22,6 @@ export const useToggleFullScreen = () => {
       setIsFullscreen(isInFullscreen);
     };
 
-    // Listen for all fullscreen changes
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     document.addEventListener("mozfullscreenchange", handleFullscreenChange);
@@ -31,54 +35,77 @@ export const useToggleFullScreen = () => {
     };
   }, []);
 
+  // Listen for iOS native player exit — fires when user taps "Done"
+  useEffect(() => {
+    const vid = videoElement as any;
+    if (!vid || !isIOS()) return;
+
+    const handleWebkitEndFullscreen = () => {
+      iosFullscreenActive.current = false;
+      setIsFullscreen(false);
+
+      // Re-attach the video stream after iOS tears it down
+      // Small delay lets the iOS player fully dismiss first
+      setTimeout(() => {
+        if (vid.paused) {
+          vid.play().catch(() => {
+            // Stream SDK will handle reconnect if play() fails
+          });
+        }
+      }, 300);
+    };
+
+    vid.addEventListener("webkitendfullscreen", handleWebkitEndFullscreen);
+    return () => {
+      vid.removeEventListener("webkitendfullscreen", handleWebkitEndFullscreen);
+    };
+  }, [videoElement]);
+
   return useCallback(async () => {
-    if (isFullscreen) {
-      // Handle iOS Safari exit
+    // --- EXIT ---
+    if (isFullscreen || iosFullscreenActive.current) {
+      // iOS: video element owns fullscreen, not document
+      const vid = videoElement as any;
+      if (isIOS() && vid?.webkitExitFullscreen) {
+        vid.webkitExitFullscreen();
+        // Don't set state here — let webkitendfullscreen handle it
+        return;
+      }
       if ((document as any).webkitExitFullscreen) {
         (document as any).webkitExitFullscreen();
-        setIsFullscreen(false);
-        return;
-      }
-      // Handle Firefox exit
-      if ((document as any).mozCancelFullScreen) {
+      } else if ((document as any).mozCancelFullScreen) {
         (document as any).mozCancelFullScreen();
-        setIsFullscreen(false);
-        return;
-      }
-      // Handle Microsoft exit
-      if ((document as any).msExitFullscreen) {
+      } else if ((document as any).msExitFullscreen) {
         (document as any).msExitFullscreen();
-        setIsFullscreen(false);
-        return;
+      } else {
+        await document.exitFullscreen();
       }
-      // Handle other browsers exit
-      await document.exitFullscreen().then(() => {
-        setIsFullscreen(false);
-      });
-    } else {
-      // Handle iOS Safari enter
-      if ((videoElement as any)?.webkitEnterFullscreen) {
-        (videoElement as any).webkitEnterFullscreen();
-        setIsFullscreen(true);
-        return;
-      }
-      // Handle Firefox enter
-      if ((participantViewElement as any)?.mozRequestFullScreen) {
-        (participantViewElement as any).mozRequestFullScreen();
-        setIsFullscreen(true);
-        return;
-      }
-      // Handle Microsoft enter
-      if ((participantViewElement as any)?.msRequestFullscreen) {
-        (participantViewElement as any).msRequestFullscreen();
-        setIsFullscreen(true);
-        return;
-      }
-      // Handle other browsers enter
-      await participantViewElement?.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-      });
+      setIsFullscreen(false);
+      return;
     }
+
+    // --- ENTER ---
+    const vid = videoElement as any;
+    if (isIOS() && vid?.webkitEnterFullscreen) {
+      // Ensure video is playing before entering — iOS requires it
+      if (vid.paused) {
+        await vid.play().catch(() => {});
+      }
+      vid.webkitEnterFullscreen();
+      iosFullscreenActive.current = true;
+      setIsFullscreen(true);
+      return;
+    }
+
+    const el = participantViewElement as any;
+    if (el?.mozRequestFullScreen) {
+      el.mozRequestFullScreen();
+    } else if (el?.msRequestFullscreen) {
+      el.msRequestFullscreen();
+    } else {
+      await participantViewElement?.requestFullscreen();
+    }
+    setIsFullscreen(true);
   }, [isFullscreen, participantViewElement, videoElement]);
 };
 
