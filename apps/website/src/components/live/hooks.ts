@@ -9,8 +9,6 @@ export const useToggleFullScreen = () => {
   // Track whether iOS native player is active
   const iosFullscreenActive = useRef(false);
 
-  console.log(isFullscreen);
-
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isInFullscreen = !!(
@@ -40,23 +38,52 @@ export const useToggleFullScreen = () => {
     const vid = videoElement as any;
     if (!vid || !isIOS()) return;
 
+    const handlePresentationModeChange = () => {
+      const mode = vid.webkitPresentationMode as
+        | "inline"
+        | "fullscreen"
+        | "picture-in-picture"
+        | undefined;
+
+      if (mode === "inline") {
+        // Returned to normal — covers both exit fullscreen AND exit PiP
+        iosFullscreenActive.current = false;
+        setIsFullscreen(false);
+
+        setTimeout(() => {
+          if (vid.paused) {
+            vid.play().catch(() => {});
+          }
+        }, 300);
+      } else if (mode === "fullscreen") {
+        iosFullscreenActive.current = true;
+        setIsFullscreen(true);
+      } else if (mode === "picture-in-picture") {
+        // PiP is active — fullscreen is no longer active
+        // but video is still playing, don't treat as broken
+        iosFullscreenActive.current = false;
+        setIsFullscreen(false);
+      }
+    };
+
+    // This single event replaces both webkitendfullscreen and
+    // webkitbeginfullscreen for iOS — covers all mode transitions
+    vid.addEventListener("webkitpresentationmodechanged", handlePresentationModeChange);
+
+    // Keep webkitendfullscreen as fallback for older iOS
     const handleWebkitEndFullscreen = () => {
+      if (vid.webkitPresentationMode === "picture-in-picture") return; // let the above handle it
       iosFullscreenActive.current = false;
       setIsFullscreen(false);
-
-      // Re-attach the video stream after iOS tears it down
-      // Small delay lets the iOS player fully dismiss first
       setTimeout(() => {
-        if (vid.paused) {
-          vid.play().catch(() => {
-            // Stream SDK will handle reconnect if play() fails
-          });
-        }
+        if (vid.paused) vid.play().catch(() => {});
       }, 300);
     };
 
     vid.addEventListener("webkitendfullscreen", handleWebkitEndFullscreen);
+
     return () => {
+      vid.removeEventListener("webkitpresentationmodechanged", handlePresentationModeChange);
       vid.removeEventListener("webkitendfullscreen", handleWebkitEndFullscreen);
     };
   }, [videoElement]);
@@ -87,10 +114,13 @@ export const useToggleFullScreen = () => {
     // --- ENTER ---
     const vid = videoElement as any;
     if (isIOS() && vid?.webkitEnterFullscreen) {
-      // Ensure video is playing before entering — iOS requires it
-      if (vid.paused) {
-        await vid.play().catch(() => {});
+      // Don't enter fullscreen if already in PiP — exit PiP first
+      if (vid.webkitPresentationMode === "picture-in-picture") {
+        vid.webkitSetPresentationMode?.("inline");
+        await new Promise((r) => setTimeout(r, 300)); // let PiP dismiss
       }
+
+      if (vid.paused) await vid.play().catch(() => {});
       vid.webkitEnterFullscreen();
       iosFullscreenActive.current = true;
       setIsFullscreen(true);
