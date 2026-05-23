@@ -5,7 +5,7 @@ export interface LiveSession {
   id: number;
   thumbnailImage: string;
   startedAt: string;
-  endedAt: string;
+  endedAt: string | null;
   videoCallId: string;
   chatChannelId: string;
   slowModeSecond: number;

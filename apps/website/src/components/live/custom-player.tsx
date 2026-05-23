@@ -13,6 +13,7 @@ import { type CSSProperties, useEffect, useState } from "react";
 import { useLiveSession } from "@/hooks/use-live-session";
 
 import { Button } from "../intentui/button";
+import { Loader } from "../intentui/loader";
 import { Popover, PopoverContent } from "../intentui/popover";
 import { Slider, SliderFill, SliderThumb, SliderTrack } from "../intentui/slider";
 import Portal from "../shared/portal";
@@ -55,7 +56,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   const liveSession = useLiveSession();
   const { participant } = useParticipantViewContext();
   return (
-    <div className="flex h-full w-full items-center justify-center" style={style}>
+    <div className="-z-10 flex h-full w-full items-center justify-center" style={style}>
       <div
         className="relative h-24 w-24 rounded-full outline-4 outline-(--color)"
         style={
@@ -152,41 +153,48 @@ function LiveDuration() {
 }
 
 const CustomLivestreamLayout = () => {
-  const { useParticipants } = useCallStateHooks();
+  const { useParticipants, useCallEndedAt } = useCallStateHooks();
+  const endedAt = useCallEndedAt();
   const [currentSpeaker] = useParticipants();
   const [open, setOpen] = useState(false);
 
+  if (endedAt) {
+    return <LiveEndedLayout />;
+  }
+
+  if (!currentSpeaker) {
+    return (
+      <div className="relative flex w-full flex-col items-center justify-center">
+        <Loader variant="ring" />
+      </div>
+    );
+  }
+
   return (
     <>
-      {currentSpeaker ? (
-        <>
-          <div className="relative">
-            <ParticipantView
-              PictureInPicturePlaceholder={null}
-              className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
-              // render when video is disabled
-              VideoPlaceholder={CustomVideoPlaceholder}
-              // render after video element
-              ParticipantViewUI={<CustomParticipantViewUI />}
-              participant={currentSpeaker}
-              muteAudio={!open}
-              key={`${open}`}
-            />
-            {!open && (
-              <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
-                <Button intent="primary" onPress={() => setOpen((prev) => !prev)}>
-                  Unmute
-                </Button>
-              </div>
-            )}
+      <div className="relative">
+        <ParticipantView
+          PictureInPicturePlaceholder={null}
+          className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
+          // render when video is disabled
+          VideoPlaceholder={CustomVideoPlaceholder}
+          // render after video element
+          ParticipantViewUI={<CustomParticipantViewUI />}
+          participant={currentSpeaker}
+          muteAudio={!open}
+          key={`${open}`}
+        />
+        {!open && (
+          <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
+            <Button intent="primary" onPress={() => setOpen((prev) => !prev)}>
+              Unmute
+            </Button>
           </div>
-          <LiveFooter>
-            <div className="contents" id="fullscreen-control-content"></div>
-          </LiveFooter>
-        </>
-      ) : (
-        <LiveEndedLayout />
-      )}
+        )}
+      </div>
+      <LiveFooter>
+        <div className="contents" id="fullscreen-control-content"></div>
+      </LiveFooter>
     </>
   );
 };
