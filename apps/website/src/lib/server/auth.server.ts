@@ -228,7 +228,7 @@ export function toPublicProfile(
     return {
       isGuard: true,
       address: profile.address,
-      nickname: null,
+      nickname: profile.hideNickname ? null : profile.nickname,
     };
   }
 
@@ -273,12 +273,12 @@ export async function fetchUserByIdentifier(
       const user = await safeFetchByNickname(cachedUser.nickname);
 
       if (user) {
-        await touchLastCheck(cachedUser.nickname);
-
         if (
           user.address.toLowerCase() !== cachedUser.address.toLowerCase() ||
           user.nickname.toLowerCase() !== cachedUser.nickname.toLowerCase()
         ) {
+          await touchLastCheck(cachedUser.nickname);
+
           await cacheUsers([
             {
               address: user.address,
@@ -288,6 +288,8 @@ export async function fetchUserByIdentifier(
 
           return await fetchUserByIdentifier(identifier, currentUser);
         }
+
+        await touchLastCheck(cachedUser.nickname);
 
         return toPublicProfile(cachedUser, cachedUser.user, currentUser);
       }
