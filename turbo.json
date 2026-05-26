@@ -1,7 +1,7 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
-  "globalDependencies": ["packages/lint/oxlint.config.ts", ".oxfmtrc.json"],
+  "globalDependencies": ["packages/lint/oxlint.config.ts", "oxfmt.config.ts"],
   "tasks": {
     "dev": {
       "cache": false,
@@ -33,7 +33,7 @@
       "cache": true
     },
     "format": {
-      "inputs": ["$TURBO_DEFAULT$", ".oxfmtrc.json"],
+      "inputs": ["$TURBO_DEFAULT$", "oxfmt.config.ts"],
       "outputs": ["**/*.{ts,tsx,js,jsx,json,css,md}"],
       "cache": false
     }
