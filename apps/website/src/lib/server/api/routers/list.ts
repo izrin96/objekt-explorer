@@ -396,7 +396,7 @@ export const listRouter = {
             description: input.description,
             currency: input.listTypeNew === "sale" ? input.currency : null,
           })
-          .returning({ insertedId: lists.id, linkedListId: lists.linkedListId });
+          .returning({ insertedId: lists.id });
 
         // Bidirectional link: clear any existing reverse link on target, then set new one
         if (linkedListId !== null && result) {
