@@ -1,3 +1,4 @@
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { Form } from "react-aria-components/Form";
@@ -18,6 +19,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/intentui/modal";
+import { Note } from "@/components/intentui/note";
 import { Radio, RadioGroup } from "@/components/intentui/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
 import { TextField } from "@/components/intentui/text-field";
@@ -203,6 +205,15 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             </RadioGroup>
           )}
         />
+
+        {(watchedListTypeNew === "have" || watchedListTypeNew === "want") && (
+          <Note className="bg-info-subtle text-info-subtle-fg py-2">
+            <div className="flex items-center gap-x-2">
+              <InfoIcon />
+              {m.list_create_trade_matches_coming_soon()}
+            </div>
+          </Note>
+        )}
 
         {watchedListTypeNew === "sale" && (
           <Controller
