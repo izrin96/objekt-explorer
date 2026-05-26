@@ -2,13 +2,8 @@ import { type CronJob, cron } from "bun";
 
 import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
-import { cleanupUnownedObjekts } from "./job/pins-cleanup";
+import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
-import {
-  cleanupProfileLists,
-  syncProfileListsToCache,
-  subscribeToTransfers,
-} from "./job/profile-list-cleanup";
 
 const crons: CronJob[] = [];
 
@@ -41,16 +36,13 @@ crons.push(
 await updateTransferableCosmoSpin();
 crons.push(cron("0 * * * *", updateTransferableCosmoSpin));
 
-// profile list
-await syncProfileListsToCache();
-await cleanupProfileLists();
-await subscribeToTransfers();
-crons.push(cron("0 * * * *", syncProfileListsToCache));
-crons.push(cron("*/10 * * * *", cleanupProfileLists));
+// drain outbox events from indexer (handles pins, locked objekts, and list entries)
+await drainOutbox();
+crons.push(cron("*/5 * * * *", drainOutbox));
 
-// pinned/locked objekt clean up
-await cleanupUnownedObjekts();
-crons.push(cron("0 * * * *", cleanupUnownedObjekts));
+// periodic safety-net full scan for stale entries
+await cleanupStaleEntries();
+crons.push(cron("0 * * * *", cleanupStaleEntries));
 
 // cache collection rarity list
 await populateRarity();

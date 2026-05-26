@@ -11,6 +11,7 @@ import {
   index,
   uniqueIndex,
   unique,
+  bigserial,
 } from "drizzle-orm/pg-core";
 
 export const collections = pgTable(
@@ -122,6 +123,29 @@ export const objekts = pgTable(
       .using("btree", table.serial.asc().nullsLast(), table.id.asc().nullsLast())
       .where(sql`(owner = '0xd3d5f29881ad87bb10c1100e2c709c9596de345f'::text)`),
   ],
+);
+
+export const listEventOutbox = pgTable(
+  "list_event_outbox",
+  {
+    id: bigserial("id", { mode: "bigint" }).primaryKey(),
+    transferId: varchar("transfer_id", { length: 36 }).notNull(),
+    fromAddress: text("from_address").notNull(),
+    toAddress: text("to_address").notNull(),
+    collectionId: varchar("collection_id", { length: 36 }).notNull(),
+    tokenId: text("token_id").notNull(),
+    timestamp: timestamp("timestamp", {
+      mode: "string",
+      withTimezone: true,
+    }).notNull(),
+    createdAt: timestamp("created_at", {
+      mode: "string",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("idx_list_event_outbox_created_at").on(t.createdAt)],
 );
 
 export const transfers = pgTable(
@@ -276,3 +300,4 @@ export type Objekt = typeof objekts.$inferSelect;
 export type Collection = typeof collections.$inferSelect;
 export type ComoBalance = typeof comoBalances.$inferSelect;
 export type Vote = typeof votes.$inferSelect;
+export type ListEventOutbox = typeof listEventOutbox.$inferSelect;

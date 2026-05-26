@@ -3,12 +3,6 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
-import {
-  addObjektIdsToProfileList,
-  addProfileListToCache,
-  invalidateProfileList,
-  removeObjektIdsFromProfileList,
-} from "@repo/lib/server/redis-profile-lists";
 import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
@@ -118,12 +112,6 @@ export const listRouter = {
 
           if (result.length === 0) return [];
 
-          await addObjektIdsToProfileList(
-            list.profileAddress,
-            list.id,
-            result.map((v) => v.objektId).filter((a) => a !== null),
-          );
-
           return buildListEntries(result, list.isProfileBind, {
             artists,
             hideSerial: list.hideSerial,
@@ -202,18 +190,9 @@ export const listRouter = {
 
         if (entryIds.length === 0) return;
 
-        const result = await db
+        await db
           .delete(listEntries)
-          .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
-          .returning({
-            objektId: listEntries.objektId,
-          });
-
-        if (list.isProfileBind && list.profileAddress) {
-          if (result.length === 0) return;
-          const objektIdsToRemove = result.map((e) => e.objektId).filter((a) => a !== null);
-          await removeObjektIdsFromProfileList(list.profileAddress, list.id, objektIdsToRemove);
-        }
+          .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)));
       },
     ),
 
@@ -327,10 +306,6 @@ export const listRouter = {
         const list = await findOwnedList(slug, user.id);
 
         await db.delete(lists).where(eq(lists.id, list.id));
-
-        if (list.isProfileBind && list.profileAddress) {
-          await invalidateProfileList(list.profileAddress);
-        }
       },
     ),
 
@@ -424,14 +399,6 @@ export const listRouter = {
 
             // Set the target's reverse link to the new list
             await tx.update(lists).set({ linkedListId: newId }).where(eq(lists.id, linkedId));
-          });
-        }
-
-        if (input.isProfileBind && input.profileAddress && result) {
-          await addProfileListToCache({
-            listId: result.insertedId,
-            profileAddress: input.profileAddress.toLowerCase(),
-            objektIds: [],
           });
         }
       },
