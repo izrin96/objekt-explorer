@@ -12,7 +12,6 @@ import { format } from "date-fns";
 import { Suspense, useCallback, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 
-import { useElementSize } from "@/hooks/use-element-size";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
@@ -131,19 +130,12 @@ export function ObjektCard({
   const [flipped, setFlipped] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [backLoaded, setBackLoaded] = useState(false);
-  const [ref, { width }] = useElementSize();
 
   if (!objekt) return null;
 
-  const css = {
-    "--width": `${width}px`,
-  } as Record<string, string>;
-
   return (
     <div
-      ref={ref}
-      style={css}
-      className="relative h-full w-full cursor-pointer"
+      className="@container relative h-full w-full cursor-pointer"
       tabIndex={0}
       role="button"
       onClick={() => setFlipped((prev) => !prev)}
@@ -154,7 +146,7 @@ export function ObjektCard({
         className="aspect-photocard relative h-full w-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
       >
         {/* Front side */}
-        <div className="absolute inset-0 grid rotate-y-0 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
+        <div className="absolute inset-0 grid rotate-y-0 overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {/* Progressive loading: show resized first, then original when loaded */}
           <img
             className="h-full w-full object-cover"
@@ -178,7 +170,7 @@ export function ObjektCard({
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
         {/* Back side */}
-        <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
+        <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {urls.backUrl && (
             <img
               className="h-full w-full object-cover"

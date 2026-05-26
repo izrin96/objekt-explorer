@@ -3,7 +3,6 @@ import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
-import { useElementSize } from "@/hooks/use-element-size";
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
 import { replaceUrlSize, cn, getClientLocale } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -51,7 +50,6 @@ export default function ObjektView({
   children,
   onSetPrice,
 }: Props) {
-  const [ref, { width }] = useElementSize();
   const [loaded, setLoaded] = useState(false);
   const [objekt] = objekts;
   const ctx = useObjektModal();
@@ -61,7 +59,6 @@ export default function ObjektView({
   const css = {
     "--objekt-bg-color": objekt.backgroundColor,
     "--objekt-text-color": objekt.textColor,
-    "--width": `${width}px`,
   } as CSSProperties;
 
   const resizedUrl = replaceUrlSize(objekt.frontImage);
@@ -72,13 +69,12 @@ export default function ObjektView({
   const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
-    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")} style={css}>
+    <div className={cn("flex flex-col gap-2 @container", isFade && "opacity-35")} style={css}>
       <div
-        ref={ref}
         className={cn(
-          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(var(--width)*0.054)] shadow-md transition-opacity",
+          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md transition-opacity",
           "contain-layout contain-paint",
-          isSelected && "bg-fg outline-[calc(var(--width)*0.034)]",
+          isSelected && "bg-fg outline-[calc(100cqi*0.034)]",
           !loaded && "opacity-0",
         )}
       >
