@@ -91,8 +91,12 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   // Reset isProfileBind and hideSerial when switching away from sale/have
   useEffect(() => {
     if (watchedListTypeNew !== "sale" && watchedListTypeNew !== "have") {
+      // general and want
       setValue("isProfileBind", false);
       setValue("hideSerial", false);
+    } else {
+      // sale and have
+      setValue("isProfileBind", true);
     }
   }, [watchedListTypeNew, setValue]);
 
