@@ -10,7 +10,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useCurrentUser, useListAuthed } from "@/hooks/use-user";
-import type { PublicList } from "@/lib/universal/user";
+import type { PublicList } from "@/lib/universal/list";
 
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridItem } from "../collection/objekt-grid-item";
@@ -37,12 +37,10 @@ export default function ListRender() {
   const [selectTarget, setSelectTarget] = useState<HTMLDivElement | null>(null);
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 
-  const isProfileList = list.listType === "profile";
-
   return (
     <ObjektViewProvider
       initialColumn={list.gridColumns ?? undefined}
-      modalTab={isProfileList ? "owned" : "trades"}
+      modalTab={list.isProfileBind && !list.hideSerial ? "owned" : "trades"}
     >
       <SetPriceProvider>
         <div className="flex flex-col gap-4">
@@ -127,8 +125,6 @@ function ListView({
   const { shaped, filtered, grouped, filters, isPending } = useListObjekts();
   const { openSetPrice } = use(SetPriceContext);
 
-  const isProfileList = list.listType === "profile";
-
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
@@ -165,8 +161,8 @@ function ListView({
           viewProps={{
             hideLabel,
             showCount: true,
-            showSerial: !filters.grouped && isProfileList,
-            showOwned: isProfileList,
+            showSerial: !filters.grouped && list.isProfileBind && !list.hideSerial,
+            showOwned: list.isProfileBind && !list.hideSerial,
             listCurrency: list.currency,
             onSetPrice: isOwned ? () => openSetPrice(item) : undefined,
             isPriority: rowIndex < 3,
@@ -174,7 +170,16 @@ function ListView({
         />
       );
     },
-    [user, hideLabel, isOwned, list.currency, isProfileList, filters.grouped, openSetPrice],
+    [
+      user,
+      hideLabel,
+      isOwned,
+      list.currency,
+      list.isProfileBind,
+      list.hideSerial,
+      filters.grouped,
+      openSetPrice,
+    ],
   );
 
   if (isPending) {

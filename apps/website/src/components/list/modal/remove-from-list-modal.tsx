@@ -41,7 +41,7 @@ export function RemoveFromListModal({
             removeObjektsFromList.mutate(
               {
                 slug: target.slug,
-                ids: selected.map((a) => Number(a.id)),
+                entryIds: selected.map((a) => Number(a.id)),
               },
               {
                 onSuccess: () => {

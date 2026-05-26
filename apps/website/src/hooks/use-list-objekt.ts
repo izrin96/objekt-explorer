@@ -20,7 +20,7 @@ export function useListObjekts() {
         slug: list.slug,
       },
       select: (data) => data.map(mapObjektWithTag),
-      staleTime: 1000 * 60 * 5,
+      staleTime: 0,
       throwOnError: true,
     }),
   );

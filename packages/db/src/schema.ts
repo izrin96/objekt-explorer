@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
+  pgEnum,
   pgTable,
   real,
   serial,
@@ -16,6 +18,8 @@ import { account, session, user, verification } from "./auth-schema";
 import { citext } from "./custom-type";
 
 export { user, session, account, verification };
+
+export const listTypeEnum = pgEnum("list_type_new", ["general", "sale", "have", "want"]);
 
 export const accessToken = pgTable("access_token", {
   id: serial("id").primaryKey(),
@@ -38,7 +42,6 @@ export const userAddress = pgTable(
     hideUser: boolean("hide_user").default(true),
     privateProfile: boolean("private_profile").default(false),
     privateSerial: boolean("private_serial").default(false),
-    hideActivity: boolean("hide_activity").default(false),
     hideTransfer: boolean("hide_transfer").default(false),
     hideNickname: boolean("hide_nickname").default(false),
     isAbstract: boolean("is_abstract").default(false),
@@ -74,6 +77,12 @@ export const lists = pgTable(
       .notNull()
       .default("normal")
       .$type<"normal" | "profile">(),
+    listTypeNew: listTypeEnum("list_type_new").notNull().default("general"),
+    isProfileBind: boolean("is_profile_bind").notNull().default(false),
+    hideSerial: boolean("hide_serial").notNull().default(false),
+    linkedListId: integer("linked_list_id").references((): AnyPgColumn => lists.id, {
+      onDelete: "set null",
+    }),
     profileAddress: citext("profile_address", { length: 42 }),
     profileSlug: varchar("profile_slug", { length: 100 }),
     description: text("description"),
@@ -85,6 +94,9 @@ export const lists = pgTable(
       .on(t.profileAddress, t.profileSlug)
       .where(sql`profile_address IS NOT NULL AND profile_slug IS NOT NULL`),
     index("lists_profile_address_idx").on(t.profileAddress),
+    index("lists_linked_list_id_idx")
+      .on(t.linkedListId)
+      .where(sql`linked_list_id IS NOT NULL`),
   ],
 );
 

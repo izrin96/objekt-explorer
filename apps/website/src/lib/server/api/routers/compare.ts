@@ -31,8 +31,8 @@ export const compareRouter = {
 
         const sourceComparisonEntries = await buildListEntries(
           sourceList.entries,
-          sourceList.listType,
-          { artists },
+          sourceList.isProfileBind,
+          { artists, hideSerial: sourceList.hideSerial },
         );
 
         let targetComparisonEntries: ValidObjekt[] = [];
@@ -84,8 +84,8 @@ export const compareRouter = {
 
           targetComparisonEntries = await buildListEntries(
             targetList.entries,
-            targetList.listType,
-            { artists },
+            targetList.isProfileBind,
+            { artists, hideSerial: targetList.hideSerial },
           );
         }
 

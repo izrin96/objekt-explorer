@@ -17,7 +17,8 @@ import { betterAuthLocale } from "@/i18n/better-auth";
 import { serverEnv } from "@/lib/env/server";
 import { getLocale as getParaglideLocale } from "@/paraglide/runtime";
 
-import type { PublicUser, PublicProfile, CurrentUser } from "../universal/user";
+import type { CurrentUser } from "../universal/current-user";
+import type { PublicUser, PublicProfile } from "../universal/user";
 import { SITE_NAME } from "../utils";
 import { fetchOwnedLists } from "./list.server";
 import {

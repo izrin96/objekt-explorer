@@ -1,7 +1,5 @@
 import * as z from "zod";
 
-import type { User } from "../server/auth.server";
-
 export const publicUserSchema = z.object({
   name: z.string().nullable(),
   image: z.string().nullable(),
@@ -43,29 +41,3 @@ export const providersMap: Record<ProviderId, Provider> = {
     label: "Discord",
   },
 };
-
-export const baseListSchema = z.object({
-  slug: z.string(),
-  name: z.string(),
-  listType: z.enum(["normal", "profile"]),
-  profileSlug: z.string().nullable(),
-  profileAddress: z.string().nullable(),
-});
-
-export const publicListSchema = baseListSchema.extend({
-  gridColumns: z.number().nullish(),
-  description: z.string().nullish(),
-  currency: z.string().nullish(),
-  user: publicUserSchema.nullish(),
-  profile: publicProfileSchema.nullish(),
-});
-export type PublicList = z.infer<typeof publicListSchema>;
-
-export const currentUserSchema = z
-  .object({
-    user: z.custom<User>(),
-    lists: publicListSchema.array(),
-    profiles: baseProfileSchema.array(),
-  })
-  .nullable();
-export type CurrentUser = z.infer<typeof currentUserSchema>;

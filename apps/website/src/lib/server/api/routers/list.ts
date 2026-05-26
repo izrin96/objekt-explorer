@@ -16,35 +16,28 @@ import * as z from "zod";
 import {
   buildListEntries,
   checkProfileOwnership,
-  fetchListCollectionsBySlug,
   fetchOwnedLists,
   fetchListWithEntries,
   findOwnedList,
   generateProfileSlug,
-  resolveProfileSlugUpdate,
+  fetchListCollections,
+  checkLinkedList,
 } from "../../list.server";
 import { escapeCSV } from "../../utils.server";
 import { authed, pub, selectedArtistsMiddleware } from "../orpc";
 
 export const listRouter = {
-  find: authed.input(z.string()).handler(async ({ input: slug, context: { session } }) => {
-    const result = await db.query.lists.findFirst({
-      columns: {
-        name: true,
-        hideUser: true,
-        gridColumns: true,
-        listType: true,
-        profileAddress: true,
-        description: true,
-        currency: true,
-      },
-      where: { slug, userId: session.user.id },
-    });
+  find: authed
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ input: { slug }, context: { session } }) => {
+      const result = await db.query.lists.findFirst({
+        where: { slug, userId: session.user.id },
+      });
 
-    if (!result) throw new ORPCError("NOT_FOUND");
+      if (!result) throw new ORPCError("NOT_FOUND");
 
-    return result;
-  }),
+      return result;
+    }),
 
   listEntries: pub
     .use(selectedArtistsMiddleware)
@@ -58,7 +51,10 @@ export const listRouter = {
 
       if (!result) throw new ORPCError("NOT_FOUND");
 
-      return buildListEntries(result.entries, result.listType, { artists });
+      return buildListEntries(result.entries, result.isProfileBind, {
+        artists,
+        hideSerial: result.hideSerial,
+      });
     }),
 
   profileLists: pub
@@ -91,10 +87,10 @@ export const listRouter = {
       }) => {
         const list = await findOwnedList(slug, user.id);
 
-        if (list.listType === "profile") {
+        if (list.isProfileBind && list.profileAddress) {
           if (!inputObjekts || inputObjekts.length === 0) {
             throw new ORPCError("BAD_REQUEST", {
-              message: "Objekts required for profile lists",
+              message: "Objekts required for profile-bound lists",
             });
           }
 
@@ -114,34 +110,29 @@ export const listRouter = {
             objektId,
           }));
 
-          const existing = await db
-            .select({ objektId: listEntries.objektId })
-            .from(listEntries)
-            .where(eq(listEntries.listId, list.id));
-
-          const existingSet = new Set(existing.map((e) => e.objektId).filter((a) => a !== null));
-          const filtered = values.filter((v) => !existingSet.has(v.objektId));
-
-          if (filtered.length === 0) return [];
-
           const result = await db
             .insert(listEntries)
-            .values(filtered)
+            .values(values)
             .onConflictDoNothing()
             .returning();
 
+          if (result.length === 0) return [];
+
           await addObjektIdsToProfileList(
-            list.profileAddress!,
+            list.profileAddress,
             list.id,
-            filtered.map((v) => v.objektId),
+            result.map((v) => v.objektId).filter((a) => a !== null),
           );
 
-          return buildListEntries(result, list.listType, { artists });
+          return buildListEntries(result, list.isProfileBind, {
+            artists,
+            hideSerial: list.hideSerial,
+          });
         }
 
         if (!collectionSlugs || collectionSlugs.length === 0) {
           throw new ORPCError("BAD_REQUEST", {
-            message: "Collections required for normal lists",
+            message: "Collections required for non-profile-bound lists",
           });
         }
 
@@ -165,12 +156,15 @@ export const listRouter = {
             .values(
               filteredSlugs.map((collectionSlug) => ({
                 listId: list.id,
-                collectionSlug: collectionSlug,
+                collectionSlug,
               })),
             )
             .returning();
 
-          return buildListEntries(result, list.listType, { artists });
+          return buildListEntries(result, list.isProfileBind, {
+            artists,
+            hideSerial: list.hideSerial,
+          });
         }
 
         const result = await db
@@ -178,12 +172,15 @@ export const listRouter = {
           .values(
             collectionSlugs.map((collectionSlug) => ({
               listId: list.id,
-              collectionSlug: collectionSlug,
+              collectionSlug,
             })),
           )
           .returning();
 
-        return buildListEntries(result, list.listType, { artists });
+        return buildListEntries(result, list.isProfileBind, {
+          artists,
+          hideSerial: list.hideSerial,
+        });
       },
     ),
 
@@ -191,28 +188,28 @@ export const listRouter = {
     .input(
       z.object({
         slug: z.string(),
-        ids: z.number().array(),
+        entryIds: z.number().array(),
       }),
     )
     .handler(
       async ({
-        input: { slug, ids },
+        input: { slug, entryIds },
         context: {
           session: { user },
         },
       }) => {
         const list = await findOwnedList(slug, user.id);
 
-        if (ids.length === 0) return;
+        if (entryIds.length === 0) return;
 
         const result = await db
           .delete(listEntries)
-          .where(and(inArray(listEntries.id, ids), eq(listEntries.listId, list.id)))
+          .where(and(inArray(listEntries.id, entryIds), eq(listEntries.listId, list.id)))
           .returning({
             objektId: listEntries.objektId,
           });
 
-        if (list.listType === "profile" && list.profileAddress) {
+        if (list.isProfileBind && list.profileAddress) {
           if (result.length === 0) return;
           const objektIdsToRemove = result.map((e) => e.objektId).filter((a) => a !== null);
           await removeObjektIdsFromProfileList(list.profileAddress, list.id, objektIdsToRemove);
@@ -224,43 +221,93 @@ export const listRouter = {
     .input(
       z.object({
         slug: z.string(),
-        name: z.string().min(1).optional(),
-        hideUser: z.boolean().optional(),
-        gridColumns: z.number().min(2).max(18).optional().nullable(),
-        profileAddress: z.string().optional().nullable(),
-        description: z.string().optional().nullable(),
-        currency: z.string().max(10).optional().nullable(),
+        name: z.string().min(1),
+        hideUser: z.boolean(),
+        gridColumns: z.number().min(2).max(18).nullable(),
+        profileAddress: z.string().min(1).nullable(),
+        description: z.string().nullable(),
+        currency: z.string().max(10).nullable(),
+        hideSerial: z.boolean(),
+        linkedListId: z.number().nullable(),
       }),
     )
     .handler(
       async ({
-        input: { slug, name, profileAddress, ...rest },
+        input,
         context: {
           session: { user },
         },
       }) => {
-        const list = await findOwnedList(slug, user.id);
+        const list = await findOwnedList(input.slug, user.id);
 
-        const normalizedProfile = profileAddress === "" ? null : (profileAddress ?? null);
-
-        if (list.listType === "normal" && normalizedProfile) {
-          await checkProfileOwnership(normalizedProfile, user.id);
+        // Validate currency for sale lists
+        if (list.listTypeNew === "sale" && !input.currency) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Currency is required for sale lists",
+          });
         }
 
-        const newProfileAddress =
-          list.listType === "profile" ? list.profileAddress : normalizedProfile;
+        // Validate profile ownership (skip when isProfileBind — address changes are ignored)
+        if (input.profileAddress && !list.isProfileBind) {
+          await checkProfileOwnership(input.profileAddress, user.id);
+        }
 
-        const newProfileSlug = await resolveProfileSlugUpdate(list, name, newProfileAddress);
+        // Validate linkedListId ownership and type compatibility
+        if (input.linkedListId) {
+          await checkLinkedList(list.listTypeNew, input.linkedListId, user.id);
+        }
+
+        let profileSlug: string | null = null;
+        if (input.profileAddress) {
+          profileSlug = await generateProfileSlug(
+            input.name,
+            input.profileAddress.toLowerCase(),
+            list.id,
+          );
+        }
 
         await db
           .update(lists)
           .set({
-            ...rest,
-            name: name ?? list.name,
-            profileAddress: newProfileAddress?.toLowerCase() ?? null,
-            profileSlug: newProfileSlug,
+            name: input.name,
+            hideUser: input.hideUser,
+            gridColumns: input.gridColumns,
+            profileAddress: list.isProfileBind
+              ? undefined
+              : input.profileAddress
+                ? input.profileAddress.toLowerCase()
+                : null,
+            description: input.description,
+            currency: list.listTypeNew === "sale" ? input.currency : null,
+            profileSlug,
+            hideSerial:
+              ["sale", "have"].includes(list.listTypeNew) && list.isProfileBind
+                ? input.hideSerial
+                : false,
+            linkedListId: ["have", "want"].includes(list.listTypeNew) ? input.linkedListId : null,
           })
           .where(eq(lists.id, list.id));
+
+        // Bidirectional link: update reverse links
+        if (input.linkedListId !== list.linkedListId) {
+          await db.transaction(async (tx) => {
+            // Clear old reverse link if there was one
+            if (list.linkedListId) {
+              await tx
+                .update(lists)
+                .set({ linkedListId: null })
+                .where(eq(lists.id, list.linkedListId));
+            }
+
+            // Set new reverse link
+            if (input.linkedListId) {
+              await tx
+                .update(lists)
+                .set({ linkedListId: list.id })
+                .where(eq(lists.id, input.linkedListId));
+            }
+          });
+        }
       },
     ),
 
@@ -281,7 +328,7 @@ export const listRouter = {
 
         await db.delete(lists).where(eq(lists.id, list.id));
 
-        if (list.listType === "profile" && list.profileAddress) {
+        if (list.isProfileBind && list.profileAddress) {
           await invalidateProfileList(list.profileAddress);
         }
       },
@@ -292,62 +339,101 @@ export const listRouter = {
       z.object({
         name: z.string().min(1),
         hideUser: z.boolean(),
-        listType: z.enum(["normal", "profile"]).default("normal"),
-        profileAddress: z.string().optional(),
-        description: z.string().optional().nullable(),
-        currency: z.string().max(10).optional().nullable(),
+        listTypeNew: z.enum(["general", "sale", "have", "want"]).default("general"),
+        isProfileBind: z.boolean().default(false),
+        hideSerial: z.boolean().default(false),
+        linkedListId: z.number().nullable(),
+        profileAddress: z.string().min(1).nullable(),
+        description: z.string().nullable(),
+        currency: z.string().max(10).nullable(),
       }),
     )
     .handler(
       async ({
-        input: { name, hideUser, listType, profileAddress, description, currency },
+        input,
         context: {
           session: { user },
         },
       }) => {
-        if (listType === "profile") {
-          if (!profileAddress) {
-            throw new ORPCError("BAD_REQUEST", {
-              message: "Profile address required for profile lists",
-            });
-          }
-
-          await checkProfileOwnership(profileAddress, user.id);
+        // Validate: sale lists require currency
+        if (input.listTypeNew === "sale" && !input.currency) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Currency is required for sale lists",
+          });
         }
 
-        if (listType === "normal" && profileAddress) {
-          await checkProfileOwnership(profileAddress, user.id);
+        // Validate: profile binding requires profile address
+        if (input.isProfileBind && !input.profileAddress) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Profile address is required for profile-bound lists",
+          });
+        }
+
+        // Validate: profile ownership
+        if (input.profileAddress) {
+          await checkProfileOwnership(input.profileAddress, user.id);
+        }
+
+        // Validate: linked list ownership and type compatibility
+        if (input.linkedListId) {
+          await checkLinkedList(input.listTypeNew, input.linkedListId, user.id);
         }
 
         const slug = nanoid(9);
         let profileSlug: string | null = null;
-        if ((listType === "profile" || profileAddress) && profileAddress) {
-          profileSlug = await generateProfileSlug(name, profileAddress.toLowerCase());
+        if (input.profileAddress) {
+          profileSlug = await generateProfileSlug(input.name, input.profileAddress.toLowerCase());
         }
+
+        const isProfileBind = ["have", "sale"].includes(input.listTypeNew)
+          ? input.isProfileBind
+          : false;
 
         const [result] = await db
           .insert(lists)
           .values({
-            name,
+            name: input.name,
             userId: user.id,
             slug,
             profileSlug,
-            hideUser,
-            listType,
-            profileAddress: profileAddress?.toLowerCase(),
-            description,
-            currency,
+            hideUser: input.hideUser,
+            listType: input.isProfileBind ? "profile" : "normal",
+            listTypeNew: input.listTypeNew,
+            isProfileBind,
+            hideSerial:
+              ["sale", "have"].includes(input.listTypeNew) && input.isProfileBind
+                ? input.hideSerial
+                : false,
+            linkedListId: ["have", "want"].includes(input.listTypeNew) ? input.linkedListId : null,
+            profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
+            description: input.description,
+            currency: input.listTypeNew === "sale" ? input.currency : null,
           })
           .returning({ insertedId: lists.id });
 
-        if (listType === "profile" && profileAddress) {
-          if (result) {
-            await addProfileListToCache({
-              listId: result.insertedId,
-              profileAddress: profileAddress.toLowerCase(),
-              objektIds: [],
-            });
-          }
+        // Bidirectional link: clear any existing reverse link on target, then set new one
+        if (input.linkedListId && result) {
+          const linkedId = input.linkedListId;
+          const newId = result.insertedId;
+
+          await db.transaction(async (tx) => {
+            // Clear any list currently pointing at the target (stale reverse link)
+            await tx
+              .update(lists)
+              .set({ linkedListId: null })
+              .where(eq(lists.linkedListId, linkedId));
+
+            // Set the target's reverse link to the new list
+            await tx.update(lists).set({ linkedListId: newId }).where(eq(lists.id, linkedId));
+          });
+        }
+
+        if (input.isProfileBind && input.profileAddress && result) {
+          await addProfileListToCache({
+            listId: result.insertedId,
+            profileAddress: input.profileAddress.toLowerCase(),
+            objektIds: [],
+          });
         }
       },
     ),
@@ -377,6 +463,13 @@ export const listRouter = {
 
         const list = await findOwnedList(slug, user.id);
 
+        // Only sale lists can set prices
+        if (list.listTypeNew !== "sale") {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Only sale lists can set prices",
+          });
+        }
+
         await db.transaction(async (tx) => {
           for (const { entryId, price, isQyop, note } of updates) {
             await tx
@@ -403,8 +496,8 @@ export const listRouter = {
         },
       }) => {
         const [haveCollections, wantCollections] = await Promise.all([
-          haveListSlug ? fetchListCollectionsBySlug(haveListSlug, user.id) : null,
-          wantListSlug ? fetchListCollectionsBySlug(wantListSlug, user.id) : null,
+          haveListSlug ? fetchListCollections(haveListSlug, user.id) : null,
+          wantListSlug ? fetchListCollections(wantListSlug, user.id) : null,
         ]);
 
         return { have: haveCollections ?? [], want: wantCollections ?? [] };
@@ -419,7 +512,10 @@ export const listRouter = {
 
       if (!result) throw new ORPCError("NOT_FOUND");
 
-      const entries = await buildListEntries(result.entries, result.listType, { artists });
+      const entries = await buildListEntries(result.entries, result.isProfileBind, {
+        artists,
+        hideSerial: result.hideSerial,
+      });
 
       const headers = [
         "collection_slug",
@@ -462,6 +558,6 @@ export const listRouter = {
         ),
       ].join("\n");
 
-      return new File([csv], `Export - ${slug}.csv`, { type: "text/csv" });
+      return new File([csv], `Export - ${result.slug}.csv`, { type: "text/csv" });
     }),
 };

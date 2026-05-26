@@ -130,7 +130,7 @@ export const cosmoLinkRouter = {
         });
       }
 
-      if (!profile.statusMessage?.toLowerCase().includes(data.code)) {
+      if (!profile.statusMessage || !profile.statusMessage.toLowerCase().includes(data.code)) {
         throw new ORPCError("BAD_REQUEST", {
           message: m.api_errors_cosmo_link_code_not_found(),
         });

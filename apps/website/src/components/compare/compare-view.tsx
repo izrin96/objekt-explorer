@@ -33,7 +33,7 @@ import { useListTarget } from "@/hooks/use-list-target";
 import { useResetFilters } from "@/hooks/use-reset-filters";
 import { useCurrentUser } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/universal/compare";
-import type { PublicList } from "@/lib/universal/user";
+import type { PublicList } from "@/lib/universal/list";
 import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -44,10 +44,8 @@ interface CompareViewProps {
 export default function CompareView({ input }: CompareViewProps) {
   const list = useListTarget()!;
 
-  const isProfileList = list.listType === "profile";
-
   return (
-    <ObjektViewProvider modalTab={isProfileList ? "owned" : "trades"}>
+    <ObjektViewProvider modalTab={list.isProfileBind && !list.hideSerial ? "owned" : "trades"}>
       <ListCompareHeader input={input} />
 
       <div className="flex flex-col gap-4">
@@ -100,7 +98,7 @@ function CompareFilter({ list }: { list: PublicList }) {
   const isFiltering = useIsFiltering();
 
   const sortOptions: ValidCustomSort[] =
-    list.listType === "profile" ? defaultSortDuplicateSerial : defaultSortDuplicate;
+    list.isProfileBind && !list.hideSerial ? defaultSortDuplicateSerial : defaultSortDuplicate;
 
   return (
     <FilterContainer>
@@ -139,7 +137,6 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
   const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, filters } = useCompareObjekts(input);
-  const isProfileList = list.listType === "profile";
 
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
@@ -154,15 +151,15 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
           viewProps={{
             hideLabel,
             showCount: true,
-            showSerial: !filters.grouped && isProfileList,
-            showOwned: isProfileList,
+            showSerial: !filters.grouped && list.isProfileBind && !list.hideSerial,
+            showOwned: list.isProfileBind && !list.hideSerial,
             listCurrency: list.currency,
             isPriority: rowIndex < 3,
           }}
         />
       );
     },
-    [user, hideLabel, list.currency, isProfileList, filters.grouped],
+    [user, hideLabel, list.currency, list.isProfileBind, filters.grouped],
   );
 
   return (

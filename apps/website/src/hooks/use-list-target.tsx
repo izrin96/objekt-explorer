@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from "react";
 import { createContext, useContext, useMemo } from "react";
 
-import type { PublicList } from "@/lib/universal/user";
+import type { PublicList } from "@/lib/universal/list";
 
 type ContextProps = {
   list: PublicList;

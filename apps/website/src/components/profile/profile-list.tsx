@@ -9,6 +9,7 @@ import { m } from "@/paraglide/messages";
 
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
+import { ListTypeBadge } from "../shared/list-type-badge";
 
 export default function ProfileLists() {
   return (
@@ -51,6 +52,7 @@ function ProfileList() {
               >
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">{list.name}</h3>
+                  {list.listTypeNew !== "general" && <ListTypeBadge type={list.listTypeNew} />}
                 </div>
               </Link>
             );

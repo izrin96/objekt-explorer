@@ -8,4 +8,5 @@ export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
   queryOptions({
     queryKey: ["list", data],
     queryFn: () => getListBySlug({ data }),
+    staleTime: 0,
   });

@@ -1,16 +1,17 @@
-import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { DiscordLogoIcon, XLogoIcon, CodeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useListTarget } from "@/hooks/use-list-target";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useListAuthed } from "@/hooks/use-user";
-import { parseNickname } from "@/lib/utils";
+import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Avatar } from "../intentui/avatar-custom";
-import { Button } from "../intentui/button";
+import { Button, buttonStyles } from "../intentui/button";
 import { Link } from "../intentui/link";
+import { ListTypeBadge } from "../shared/list-type-badge";
 import { EditListModal } from "./modal/edit-list-modal";
 
 export default function ListHeader() {
@@ -18,21 +19,18 @@ export default function ListHeader() {
   const profile = useProfileTarget();
   const isListAuthed = useListAuthed();
 
-  const isProfileList = list.listType === "profile";
-  const isProfileContext = isProfileList || (list.listType === "normal" && list.profileAddress);
-
-  // Use profile info when in profile context
-  const displayUser = isProfileContext && profile ? profile.user : list.user;
-
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
         {/* Profile context: show nickname/address without avatar */}
-        {isProfileContext && profile ? (
+        {list.profileAddress && profile ? (
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold">{list.name}</h2>
-              {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
+              {list.listTypeNew !== "general" && <ListTypeBadge type={list.listTypeNew} />}
+              {list.listTypeNew === "sale" && list.currency && (
+                <span className="text-muted-fg text-xs">({list.currency})</span>
+              )}
             </div>
             <div className="text-muted-fg text-sm">
               <Link
@@ -49,32 +47,35 @@ export default function ListHeader() {
         ) : (
           /* Account context: show avatar + user info (existing) */
           <div className="flex items-center gap-3">
-            {displayUser && (
+            {list.user && (
               <Avatar
                 size="xl"
                 className="self-center"
-                src={displayUser.image}
-                alt={displayUser.name ?? undefined}
-                initials={(displayUser.name ?? "").charAt(0)}
+                src={list.user.image}
+                alt={list.user.name ?? undefined}
+                initials={(list.user.name ?? "").charAt(0)}
               />
             )}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-lg font-semibold">{list.name}</span>
-                {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
+                {list.listTypeNew !== "general" && <ListTypeBadge type={list.listTypeNew} />}
+                {list.listTypeNew === "sale" && list.currency && (
+                  <span className="text-muted-fg text-xs">({list.currency})</span>
+                )}
               </div>
-              {displayUser && (
+              {list.user && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-fg text-sm">{displayUser.name}</span>
-                  {displayUser.discord && (
+                  <span className="text-muted-fg text-sm">{list.user.name}</span>
+                  {list.user.discord && (
                     <div className="flex gap-1">
-                      <span className="text-muted-fg text-sm">{displayUser.discord}</span>
+                      <span className="text-muted-fg text-sm">{list.user.discord}</span>
                       <DiscordLogoIcon className="self-center" size={16} weight="regular" />
                     </div>
                   )}
-                  {displayUser.twitter && (
+                  {list.user.twitter && (
                     <div className="flex gap-1">
-                      <span className="text-muted-fg text-sm">{displayUser.twitter}</span>
+                      <span className="text-muted-fg text-sm">{list.user.twitter}</span>
                       <XLogoIcon className="self-center" size={16} weight="regular" />
                     </div>
                   )}
@@ -83,7 +84,18 @@ export default function ListHeader() {
             </div>
           </div>
         )}
-        {isListAuthed && <EditList slug={list.slug} />}
+        <div className="flex items-center gap-2">
+          {["have", "want"].includes(list.listTypeNew) && list.linkedList && (
+            <Link
+              className={buttonStyles({ intent: "outline", size: "sm" })}
+              {...getListLinkOption(list.linkedList)}
+            >
+              <CodeSimpleIcon />
+              {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
+            </Link>
+          )}
+          {isListAuthed && <EditList slug={list.slug} />}
+        </div>
       </div>
       {list.description && (
         <span className="text-fg text-sm whitespace-pre-wrap">{list.description}</span>

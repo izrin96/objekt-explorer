@@ -25,6 +25,10 @@ export const relations = defineRelations(schema, (r) => ({
       from: r.lists.profileAddress,
       to: r.userAddress.address,
     }),
+    linkedList: r.one.lists({
+      from: r.lists.linkedListId,
+      to: r.lists.id,
+    }),
   },
   listEntries: {
     list: r.one.lists({

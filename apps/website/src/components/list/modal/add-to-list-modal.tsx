@@ -26,11 +26,11 @@ import {
   SelectLabel,
   SelectTrigger,
 } from "@/components/intentui/select";
+import { ListLabel } from "@/components/shared/list-label";
 import Portal from "@/components/shared/portal";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useUserLists } from "@/hooks/use-user";
-import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../../router/error-boundary";
@@ -95,24 +95,24 @@ function AddToListForm({
   const availableLists = lists.filter((list) => {
     if (address) {
       return (
-        list.listType === "normal" ||
-        (list.listType === "profile" && list.profileAddress === address.toLowerCase())
+        !list.isProfileBind || (list.isProfileBind && list.profileAddress === address.toLowerCase())
       );
     } else {
-      return list.listType === "normal";
+      return !list.isProfileBind;
     }
   });
 
   const onSubmit = handleSubmit((data) => {
     const selectedList = lists.find((l) => l.slug === data.slug);
 
+    if (!selectedList) return;
+
     addToList.mutate(
       {
         slug: data.slug,
         skipDups: data.skipDups,
-        objekts: selectedList?.listType === "profile" ? selected.map((a) => a.id) : undefined,
-        collectionSlugs:
-          selectedList?.listType === "normal" ? selected.map((a) => a.slug) : undefined,
+        objekts: selectedList.isProfileBind ? selected.map((a) => a.id) : undefined,
+        collectionSlugs: !selectedList.isProfileBind ? selected.map((a) => a.slug) : undefined,
       },
       {
         onSuccess: () => {
@@ -168,12 +168,7 @@ function AddToListForm({
                 {availableLists.map((item) => (
                   <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                     <SelectLabel>
-                      {item.name}{" "}
-                      {item.profile && (
-                        <span className="text-muted-fg text-xs">
-                          ({parseNickname(item.profile.address, item.profile.nickname)})
-                        </span>
-                      )}
+                      <ListLabel list={item} />
                     </SelectLabel>
                   </SelectItem>
                 ))}

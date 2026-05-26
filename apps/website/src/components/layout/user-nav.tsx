@@ -38,6 +38,7 @@ import type { User } from "@/lib/server/auth.server";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { ListLabel } from "../shared/list-label";
 import { AboutMenu, AboutModal } from "./about";
 import { SettingsModal } from "./settings-modal";
 
@@ -82,7 +83,7 @@ export function UserMenu({ user }: { user: User }) {
             src={user.image}
           />
         </MenuTrigger>
-        <MenuContent placement="bottom left" popover={{ offset: -2 }}>
+        <MenuContent placement="bottom right" popover={{ offset: -2 }}>
           <MenuSection>
             <MenuHeader separator>
               <div className="flex flex-col">
@@ -172,15 +173,10 @@ function MyListMenuItem({
             </MenuLabel>
           </MenuItem>
         )}
-        {data.map((a) => (
-          <MenuItemLink key={a.slug} {...getListLinkOption(a)}>
+        {data.map((list) => (
+          <MenuItemLink key={list.slug} {...getListLinkOption(list)}>
             <MenuLabel>
-              {a.name}{" "}
-              {a.profile && (
-                <span className="text-muted-fg text-xs">
-                  ({parseNickname(a.profile.address, a.profile.nickname)})
-                </span>
-              )}
+              <ListLabel list={list} />
             </MenuLabel>
           </MenuItemLink>
         ))}

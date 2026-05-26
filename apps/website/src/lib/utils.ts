@@ -5,7 +5,7 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 import { clientEnv } from "./env/client";
-import type { PublicList } from "./universal/user";
+import type { PublicList } from "./universal/list";
 import { unobtainables } from "./unobtainables";
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
@@ -48,10 +48,8 @@ export function parseNickname(address: string, nickname?: string | null) {
 }
 
 export function getListLinkOption(list: PublicList) {
-  const isProfileContext = list.listType === "profile" || !!list.profileAddress;
-  const identifier = list.profile?.nickname || list.profileAddress?.toLowerCase();
-
-  if (isProfileContext && identifier && list.profileSlug) {
+  if (list.profile && list.profileSlug) {
+    const identifier = list.profile.nickname || list.profile.address.toLowerCase();
     return linkOptions({
       to: "/@{$nickname}/list/$slug",
       params: {
@@ -61,10 +59,14 @@ export function getListLinkOption(list: PublicList) {
     });
   }
 
+  return getListSlugLinkOption(list.slug);
+}
+
+export function getListSlugLinkOption(slug: string) {
   return linkOptions({
     to: "/list/$slug",
     params: {
-      slug: list.slug,
+      slug,
     },
   });
 }

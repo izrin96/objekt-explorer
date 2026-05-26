@@ -96,6 +96,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* custom */
+  --text-xxs: 0.6rem;
   --aspect-photocard: 1083 / 1673;
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);

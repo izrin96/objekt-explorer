@@ -10,7 +10,7 @@ import {
   ModalTitle,
 } from "@/components/intentui/modal";
 import { orpc } from "@/lib/orpc/client";
-import type { PublicList } from "@/lib/universal/user";
+import type { PublicList } from "@/lib/universal/list";
 import { m } from "@/paraglide/messages";
 
 type Props = {

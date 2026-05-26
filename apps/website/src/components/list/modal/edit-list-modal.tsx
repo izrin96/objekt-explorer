@@ -26,7 +26,7 @@ import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import Portal from "@/components/shared/portal";
-import { useUserProfiles } from "@/hooks/use-user";
+import { useUserProfiles, useUserLists } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
 import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -40,7 +40,7 @@ type EditListModalProps = {
 
 export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProps) {
   return (
-    <SheetContent className="sm:max-w-sm" isOpen={open} onOpenChange={setOpen}>
+    <SheetContent className="sm:max-w-md" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
         <SheetTitle>{m.list_edit_title()}</SheetTitle>
         <SheetDescription>{m.list_edit_description()}</SheetDescription>
@@ -79,11 +79,14 @@ function EditListForm({
   onSave?: () => void;
 }) {
   const profiles = useUserProfiles();
+  const userLists = useUserLists();
   const [{ data: currencies }, { data }] = useSuspenseQueries({
     queries: [
       orpc.meta.supportedCurrencies.queryOptions(),
       orpc.list.find.queryOptions({
-        input: slug,
+        input: {
+          slug,
+        },
         staleTime: 0,
       }),
     ],
@@ -111,11 +114,21 @@ function EditListForm({
     hideUser: data.hideUser ?? false,
     gridColumns: data.gridColumns ?? 0,
     profileAddress: data.profileAddress ?? "",
+    isProfileBind: data.isProfileBind,
+    hideSerial: data.hideSerial,
+    linkedListId: data.linkedListId ? String(data.linkedListId) : "",
   };
 
   const { handleSubmit, control } = useForm({
     defaultValues: values,
     values: values,
+  });
+
+  // Filter linked list options based on opposite type
+  const linkedListOptions = userLists.filter((l) => {
+    if (data.listTypeNew === "have") return l.listTypeNew === "want";
+    if (data.listTypeNew === "want") return l.listTypeNew === "have";
+    return false;
   });
 
   const onSubmit = handleSubmit((data) => {
@@ -126,7 +139,9 @@ function EditListForm({
       currency: data.currency || null,
       hideUser: data.hideUser,
       gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
-      profileAddress: data.profileAddress === "" ? null : data.profileAddress,
+      profileAddress: data.profileAddress || null,
+      hideSerial: data.hideSerial,
+      linkedListId: data.linkedListId ? Number(data.linkedListId) : null,
     });
   });
 
@@ -153,8 +168,8 @@ function EditListForm({
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <Label>{m.common_form_name_label()}</Label>
-              <Input placeholder={m.list_edit_name_placeholder()} />
+              <Label>{m.list_create_name_label()}</Label>
+              <Input placeholder={m.list_create_name_placeholder()} />
               <FieldError>{error?.message}</FieldError>
             </TextField>
           )}
@@ -171,57 +186,60 @@ function EditListForm({
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.common_form_description_label()}</Label>
-              <Textarea placeholder={m.list_edit_description_placeholder()} rows={3} />
+              <Label>{m.list_create_description_label()}</Label>
+              <Textarea placeholder={m.list_create_description_placeholder()} rows={3} />
             </TextField>
           )}
         />
 
-        <Controller
-          control={control}
-          name="currency"
-          render={({
-            field: { name, value, onChange, onBlur },
-            fieldState: { invalid, error },
-          }) => (
-            <Select
-              aria-label={m.list_edit_currency_label()}
-              placeholder={m.common_form_none()}
-              name={name}
-              value={value}
-              onChange={onChange}
-              onBlur={onBlur}
-              isInvalid={invalid}
-              validationBehavior="aria"
-            >
-              <Label>{m.list_edit_currency_label()}</Label>
-              <Description>{m.list_edit_currency_desc()}</Description>
-              <SelectTrigger />
-              <SelectContent>
-                <SelectItem id="" textValue="None">
-                  None
-                </SelectItem>
-                {currencies.map((currency) => (
-                  <SelectItem key={currency} id={currency} textValue={currency}>
-                    {currency}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-              <FieldError>{error?.message}</FieldError>
-            </Select>
-          )}
-        />
-
-        {data.listType === "normal" && (
+        {data.listTypeNew === "sale" && (
           <Controller
             control={control}
-            name="profileAddress"
+            name="currency"
+            rules={{
+              required: m.common_validation_required(),
+            }}
             render={({
               field: { name, value, onChange, onBlur },
               fieldState: { invalid, error },
             }) => (
               <Select
-                aria-label={m.list_edit_display_profile_label()}
+                aria-label={m.list_create_currency_label()}
+                placeholder={m.common_form_none()}
+                name={name}
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+                validationBehavior="aria"
+                isRequired
+              >
+                <Label>{m.list_create_currency_label()}</Label>
+                <Description>{m.list_create_currency_desc()}</Description>
+                <SelectTrigger />
+                <SelectContent>
+                  {currencies.map((currency) => (
+                    <SelectItem key={currency} id={currency} textValue={currency}>
+                      {currency}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+                <FieldError>{error?.message}</FieldError>
+              </Select>
+            )}
+          />
+        )}
+
+        {(data.listTypeNew === "have" || data.listTypeNew === "want") && (
+          <Controller
+            control={control}
+            name="linkedListId"
+            render={({
+              field: { name, value, onChange, onBlur },
+              fieldState: { invalid, error },
+            }) => (
+              <Select
+                aria-label={m.list_create_link_list_label()}
                 placeholder={m.common_form_none()}
                 name={name}
                 value={value}
@@ -230,25 +248,110 @@ function EditListForm({
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{m.list_edit_display_profile_label()}</Label>
-                <Description>{m.list_edit_display_profile_desc()}</Description>
+                <Label>{m.list_create_link_list_label()}</Label>
+                <Description>{m.list_create_link_list_desc()}</Description>
                 <SelectTrigger />
                 <SelectContent>
                   <SelectItem id="" textValue={m.common_form_none()}>
                     {m.common_form_none()}
                   </SelectItem>
-                  {profiles?.map((profile) => (
-                    <SelectItem
-                      key={profile.address.toLowerCase()}
-                      id={profile.address.toLowerCase()}
-                      textValue={parseNickname(profile.address, profile.nickname)}
-                    >
-                      {parseNickname(profile.address, profile.nickname)}
+                  {linkedListOptions.map((list) => (
+                    <SelectItem key={list.id} id={`${list.id}`} textValue={list.name}>
+                      {list.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
                 <FieldError>{error?.message}</FieldError>
               </Select>
+            )}
+          />
+        )}
+
+        <Controller
+          control={control}
+          name="profileAddress"
+          rules={{
+            required: data.isProfileBind ? m.list_create_profile_required() : false,
+          }}
+          render={({
+            field: { name, value, onChange, onBlur },
+            fieldState: { invalid, error },
+          }) => (
+            <Select
+              aria-label={m.list_create_profile_label()}
+              placeholder={m.list_create_profile_placeholder()}
+              name={name}
+              value={value}
+              onChange={onChange}
+              onBlur={onBlur}
+              isInvalid={invalid}
+              validationBehavior="aria"
+              isRequired={data.isProfileBind}
+              isDisabled={data.isProfileBind}
+            >
+              <Label>{m.list_create_profile_label()}</Label>
+              <Description>
+                {data.isProfileBind
+                  ? m.list_create_profile_desc()
+                  : m.list_create_display_profile_desc()}
+              </Description>
+              <SelectTrigger />
+              <SelectContent>
+                {!data.isProfileBind && (
+                  <SelectItem id="" textValue={m.common_form_none()}>
+                    {m.common_form_none()}
+                  </SelectItem>
+                )}
+                {profiles?.map((profile) => (
+                  <SelectItem
+                    key={profile.address.toLowerCase()}
+                    id={profile.address.toLowerCase()}
+                    textValue={parseNickname(profile.address, profile.nickname)}
+                  >
+                    {parseNickname(profile.address, profile.nickname)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+              <FieldError>{error?.message}</FieldError>
+            </Select>
+          )}
+        />
+
+        {(data.listTypeNew === "sale" || data.listTypeNew === "have") && (
+          <Controller
+            control={control}
+            name="isProfileBind"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Checkbox
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                validationBehavior="aria"
+                isDisabled
+              >
+                <Label>{m.list_create_profile_bind_label()}</Label>
+                <Description>{m.list_create_profile_bind_desc()}</Description>
+              </Checkbox>
+            )}
+          />
+        )}
+
+        {(data.listTypeNew === "sale" || data.listTypeNew === "have") && data.isProfileBind && (
+          <Controller
+            control={control}
+            name="hideSerial"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Checkbox
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                validationBehavior="aria"
+              >
+                <Label>{m.list_create_hide_serial_label()}</Label>
+                <Description>{m.list_create_hide_serial_desc()}</Description>
+              </Checkbox>
             )}
           />
         )}
@@ -264,8 +367,8 @@ function EditListForm({
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.list_edit_hide_user_label()}</Label>
-              <Description>{m.list_edit_hide_user_desc({ siteName: SITE_NAME })}</Description>
+              <Label>{m.list_create_hide_user_label()}</Label>
+              <Description>{m.list_create_hide_user_desc({ siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}
         />

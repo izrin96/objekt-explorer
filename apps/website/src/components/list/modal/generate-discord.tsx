@@ -28,13 +28,14 @@ import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import { CopyButton } from "@/components/shared/copy-button";
+import { ListLabel } from "@/components/shared/list-label";
 import Portal from "@/components/shared/portal";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useUserLists } from "@/hooks/use-user";
 import { type FormatStyle, format, type GroupByMode } from "@/lib/discord-format-utils";
 import { orpc } from "@/lib/orpc/client";
-import { getListLinkOption, parseNickname } from "@/lib/utils";
+import { getListLinkOption } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 type Props = {
@@ -197,12 +198,7 @@ function GenerateDiscordFormatRender() {
               {data.map((item) => (
                 <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                   <SelectLabel>
-                    {item.name}{" "}
-                    {item.profile && (
-                      <span className="text-muted-fg text-xs">
-                        ({parseNickname(item.profile.address, item.profile.nickname)})
-                      </span>
-                    )}
+                    <ListLabel list={item} />
                   </SelectLabel>
                 </SelectItem>
               ))}
@@ -230,12 +226,7 @@ function GenerateDiscordFormatRender() {
               {data.map((item) => (
                 <SelectItem key={item.slug} id={item.slug} textValue={item.slug}>
                   <SelectLabel>
-                    {item.name}{" "}
-                    {item.profile && (
-                      <span className="text-muted-fg text-xs">
-                        ({parseNickname(item.profile.address, item.profile.nickname)})
-                      </span>
-                    )}
+                    <ListLabel list={item} />
                   </SelectLabel>
                 </SelectItem>
               ))}

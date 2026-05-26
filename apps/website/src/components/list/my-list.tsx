@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useUserLists } from "@/hooks/use-user";
-import type { PublicList } from "@/lib/universal/user";
+import type { PublicList } from "@/lib/universal/list";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -12,8 +12,8 @@ import { Button } from "../intentui/button";
 import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Menu, MenuContent, MenuItem } from "../intentui/menu";
-import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import ErrorFallbackRender from "../router/error-boundary";
+import { ListTypeBadge } from "../shared/list-type-badge";
 import { CreateListModal } from "./modal/create-list-modal";
 import { DeleteListModal } from "./modal/delete-list-modal";
 import { EditListModal } from "./modal/edit-list-modal";
@@ -57,30 +57,11 @@ function MyList() {
         </Button>
       </div>
 
-      <Tabs aria-label="Navbar" className="w-full">
-        <TabList className="w-fit">
-          <Tab id="a">{m.list_tabs_normal()}</Tab>
-          <Tab id="b">{m.list_tabs_profile()}</Tab>
-        </TabList>
-        <TabPanel id="a" className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {lists
-              .filter((list) => list.listType === "normal")
-              .map((list) => (
-                <ListCard list={list} key={list.slug} />
-              ))}
-          </div>
-        </TabPanel>
-        <TabPanel id="b" className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {lists
-              .filter((list) => list.listType === "profile")
-              .map((list) => (
-                <ListCard list={list} key={list.slug} />
-              ))}
-          </div>
-        </TabPanel>
-      </Tabs>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {lists.map((list) => (
+          <ListCard list={list} key={list.slug} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -99,9 +80,13 @@ function ListCard({ list }: ListCardProps) {
       <div className="hover:bg-muted flex flex-col gap-3 rounded-lg border p-4 transition-colors">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h3 className="font-semibold">
-              <Link {...getListLinkOption(list)}>{list.name}</Link>
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold">
+                <Link {...getListLinkOption(list)}>{list.name}</Link>
+              </h3>
+              <ListTypeBadge type={list.listTypeNew} />
+              {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
+            </div>
             {list.profile && (
               <span className="text-muted-fg text-sm">
                 {parseNickname(list.profile.address, list.profile.nickname)}

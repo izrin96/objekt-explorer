@@ -62,7 +62,8 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
                   "inset-ring-input text-bg group-hover:inset-ring-muted-fg/30 relative isolate flex shrink-0 items-center justify-center rounded bg-(--control-bg,transparent) inset-ring transition",
                   "sm:size-4 sm:*:data-[slot=check-indicator]:size-3.5",
                   "size-4.5 *:data-[slot=check-indicator]:size-4",
-                  "in-disabled:bg-muted",
+                  // custom: remove in-disabled:bg-muted
+                  // "in-disabled:bg-muted",
                   (isSelected || isIndeterminate) && [
                     "bg-(--checkbox-bg,var(--color-primary)) text-(--checkbox-fg,var(--color-primary-fg)) inset-ring-(--checkbox-ring,var(--color-ring))",
                     "group-invalid:inset-ring/70 group-invalid:bg-danger group-invalid:text-danger-fg dark:group-invalid:inset-ring-danger-subtle-fg/70",

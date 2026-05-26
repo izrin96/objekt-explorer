@@ -1,0 +1,1 @@
+ALTER TABLE "user_address" DROP COLUMN "hide_activity";

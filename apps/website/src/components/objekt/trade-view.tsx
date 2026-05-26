@@ -262,7 +262,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
   });
 
   const ownerNickname = data.transfers.find(
-    (a) => a.to.toLowerCase() === data.owner?.toLowerCase(),
+    (a) => data.owner && a.to.toLowerCase() === data.owner.toLowerCase(),
   )?.nickname;
 
   const handleCopy = async (tokenId: string | undefined) => {

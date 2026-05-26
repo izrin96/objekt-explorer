@@ -85,12 +85,12 @@ async function cleanupProfileListOnTransfer(address: string, objektIds: string[]
   await removeObjektFromProfileLists(address, objektIdsToCleanup);
 
   // Also delete from DB to ensure consistency
-  // Only cleanup profile lists (listType = "profile")
+  // Only cleanup profile-bound lists (is_profile_bind = true)
   const entriesToRemove = await db
     .select({ id: listEntries.id })
     .from(listEntries)
     .innerJoin(lists, eq(lists.id, listEntries.listId))
-    .where(and(inArray(listEntries.objektId, objektIdsToCleanup), eq(lists.listType, "profile")));
+    .where(and(inArray(listEntries.objektId, objektIdsToCleanup), eq(lists.isProfileBind, true)));
 
   if (entriesToRemove.length > 0) {
     await db.delete(listEntries).where(
@@ -111,7 +111,7 @@ export async function cleanupProfileLists() {
 
   const profileLists = await db.query.lists.findMany({
     where: {
-      listType: "profile",
+      isProfileBind: true,
     },
     columns: { id: true, profileAddress: true },
     with: {
@@ -188,7 +188,7 @@ export async function syncProfileListsToCache() {
 
   const profileLists = await db.query.lists.findMany({
     where: {
-      listType: "profile",
+      isProfileBind: true,
     },
     columns: { id: true, profileAddress: true },
     with: {

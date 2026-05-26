@@ -2,11 +2,11 @@ import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { MenuItem, MenuLabel, MenuSubMenu, MenuContent } from "@/components/intentui/menu";
+import { ListLabel } from "@/components/shared/list-label";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useUserLists } from "@/hooks/use-user";
-import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; address?: string }) {
@@ -15,20 +15,19 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
   const availableLists = lists?.filter((list) => {
     if (address) {
       return (
-        list.listType === "normal" ||
-        (list.listType === "profile" && list.profileAddress === address.toLowerCase())
+        !list.isProfileBind || (list.isProfileBind && list.profileAddress === address.toLowerCase())
       );
     } else {
-      return list.listType === "normal";
+      return !list.isProfileBind;
     }
   });
 
-  const handleAction = (slug: string, listType: "normal" | "profile") => {
+  const handleAction = (slug: string, isProfileBind: boolean) => {
     addToList.mutate({
       slug: slug,
       skipDups: false,
-      objekts: listType === "profile" ? objekts.map((a) => a.id) : undefined,
-      collectionSlugs: listType === "normal" ? objekts.map((a) => a.slug) : undefined,
+      objekts: isProfileBind ? objekts.map((a) => a.id) : undefined,
+      collectionSlugs: !isProfileBind ? objekts.map((a) => a.slug) : undefined,
     });
   };
 
@@ -46,15 +45,10 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
             </MenuLabel>
           </MenuItem>
         )}
-        {availableLists.map((a) => (
-          <MenuItem key={a.slug} onAction={() => handleAction(a.slug, a.listType)}>
+        {availableLists.map((list) => (
+          <MenuItem key={list.slug} onAction={() => handleAction(list.slug, list.isProfileBind)}>
             <MenuLabel>
-              {a.name}{" "}
-              {a.profile && (
-                <span className="text-muted-fg text-xs">
-                  ({parseNickname(a.profile.address, a.profile.nickname)})
-                </span>
-              )}
+              <ListLabel list={list} />
             </MenuLabel>
           </MenuItem>
         ))}
@@ -72,7 +66,7 @@ export function RemoveFromListMenu({ objekts }: { objekts: ValidObjekt[] }) {
       onAction={() =>
         removeObjektsFromList.mutate({
           slug: target.slug,
-          ids: objekts.map((a) => Number(a.id)),
+          entryIds: objekts.map((a) => Number(a.id)),
         })
       }
       intent="danger"

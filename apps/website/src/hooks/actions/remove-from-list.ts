@@ -11,23 +11,25 @@ export function useRemoveFromList() {
 
   const removeObjektsFromList = useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
-      onMutate: async ({ slug, ids }, { client }) => {
+      onMutate: async ({ slug, entryIds }, { client }) => {
         await client.cancelQueries(orpc.list.listEntries.queryOptions({ input: { slug } }));
 
         const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });
         const snapshot = client.getQueryData(queryKey);
 
         client.setQueryData(queryKey, (old = []) => {
-          const idSet = new Set(ids.map(String));
+          const idSet = new Set(entryIds.map(String));
           return old.filter((item) => !idSet.has(item.id));
         });
 
         return { snapshot };
       },
-      onSuccess: (_, { ids }) => {
+      onSuccess: (_, { entryIds }) => {
         const message =
-          ids.length > 1
-            ? m.actions_remove_from_list_success_multiple({ count: ids.length.toLocaleString() })
+          entryIds.length > 1
+            ? m.actions_remove_from_list_success_multiple({
+                count: entryIds.length.toLocaleString(),
+              })
             : m.actions_remove_from_list_success_single();
         toast.success(message);
         reset();

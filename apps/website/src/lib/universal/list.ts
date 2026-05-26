@@ -1,0 +1,28 @@
+import * as z from "zod";
+
+import { publicProfileSchema, publicUserSchema } from "./user";
+
+export const listTypeNewSchema = z.enum(["general", "sale", "have", "want"]);
+export type ListTypeNew = z.infer<typeof listTypeNewSchema>;
+
+export const baseListSchema = z.object({
+  id: z.number(),
+  slug: z.string(),
+  name: z.string(),
+  listTypeNew: listTypeNewSchema,
+  isProfileBind: z.boolean(),
+  profileSlug: z.string().nullable(),
+  profileAddress: z.string().nullable(),
+  currency: z.string().nullable(),
+  // extras
+  hideSerial: z.boolean().nullish(),
+  gridColumns: z.number().nullish(),
+  description: z.string().nullish(),
+  user: publicUserSchema.nullish(),
+  profile: publicProfileSchema.nullish(),
+});
+
+export const publicListSchema = baseListSchema.extend({
+  linkedList: baseListSchema.nullish(),
+});
+export type PublicList = z.infer<typeof publicListSchema>;

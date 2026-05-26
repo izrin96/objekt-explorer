@@ -32,7 +32,7 @@ export default function Filter({
   const list = useListTarget()!;
 
   const sortOptions: ValidCustomSort[] =
-    list.listType === "profile" ? defaultSortDuplicateSerial : defaultSortDuplicate;
+    list.isProfileBind && !list.hideSerial ? defaultSortDuplicateSerial : defaultSortDuplicate;
 
   return (
     <div className="flex flex-col gap-4">

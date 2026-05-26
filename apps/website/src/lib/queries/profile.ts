@@ -8,4 +8,5 @@ export const profileQuery = (data: z.infer<typeof profileInputSchema>) =>
   queryOptions({
     queryKey: ["profile", data.nickname],
     queryFn: () => getProfile({ data }),
+    staleTime: 0,
   });

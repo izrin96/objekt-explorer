@@ -20,18 +20,17 @@ export const profileRouter = {
     .input(
       z.object({
         address: z.string(),
-        hideUser: z.boolean().optional(),
+        hideUser: z.boolean(),
         bannerImgUrl: z
           .url()
           .refine((url) => url.startsWith(`${serverEnv.S3_ENDPOINT}/profile-banner/`))
-          .optional()
-          .nullable(),
-        bannerImgType: z.string().optional().nullable(),
-        privateSerial: z.boolean().optional(),
-        privateProfile: z.boolean().optional(),
-        hideNickname: z.boolean().optional(),
-        hideTransfer: z.boolean().optional(),
-        gridColumns: z.number().min(2).max(18).optional().nullable(),
+          .nullish(),
+        bannerImgType: z.string().nullish(),
+        privateSerial: z.boolean(),
+        privateProfile: z.boolean(),
+        hideNickname: z.boolean(),
+        hideTransfer: z.boolean(),
+        gridColumns: z.number().min(2).max(18).nullable(),
       }),
     )
     .handler(async ({ input: { address, ...rest }, context: { session } }) => {

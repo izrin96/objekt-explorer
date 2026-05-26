@@ -1,0 +1,1 @@
+ALTER TABLE "lists" RENAME COLUMN "show_serial" TO "hide_serial";
