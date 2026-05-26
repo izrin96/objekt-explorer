@@ -1,4 +1,3 @@
-import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useCallback } from "react";
@@ -8,33 +7,16 @@ import { ObjektCount } from "@/components/collection/objekt-count";
 import { ObjektGrid } from "@/components/collection/objekt-grid";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "@/components/collection/objekt-virtual-grid";
-import ArtistFilter from "@/components/filters/filter-artist";
-import ClassFilter from "@/components/filters/filter-class";
-import ColorFilter from "@/components/filters/filter-color";
-import ColumnFilter from "@/components/filters/filter-column";
-import CombineDuplicateFilter from "@/components/filters/filter-combine-duplicate";
-import { FilterContainer } from "@/components/filters/filter-container";
-import EditionFilter from "@/components/filters/filter-edition";
-import GroupDirectionFilter from "@/components/filters/filter-group-direction";
-import GroupByFilter from "@/components/filters/filter-groupby";
-import MemberFilter from "@/components/filters/filter-member";
-import OnlineFilter from "@/components/filters/filter-online";
-import SearchFilter from "@/components/filters/filter-search";
-import SeasonFilter from "@/components/filters/filter-season";
-import SortFilter from "@/components/filters/filter-sort";
-import SortDirectionFilter from "@/components/filters/filter-sort-direction";
-import ResetFilter from "@/components/filters/reset-filter";
 import { Loader } from "@/components/intentui/loader";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useCompareObjekts } from "@/hooks/use-compare-objekt";
 import { useConfigStore } from "@/hooks/use-config";
-import { useIsFiltering } from "@/hooks/use-filters";
 import { useListTarget } from "@/hooks/use-list-target";
-import { useResetFilters } from "@/hooks/use-reset-filters";
 import type { CompareInput } from "@/lib/universal/compare";
 import type { PublicList } from "@/lib/universal/list";
-import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+import CompareFilter from "./compare-filter";
 
 interface CompareViewProps {
   input: CompareInput;
@@ -89,46 +71,6 @@ function ListCompareHeader({ input }: { input: CompareInput }) {
         {` (${input.targetType === "list" ? m.compare_view_type_list() : m.compare_view_type_profile()})`}
       </div>
     </div>
-  );
-}
-
-function CompareFilter({ list }: { list: PublicList }) {
-  const reset = useResetFilters();
-  const isFiltering = useIsFiltering();
-
-  const sortOptions: ValidCustomSort[] =
-    list.isProfileBind && !list.hideSerial ? defaultSortDuplicateSerial : defaultSortDuplicate;
-
-  return (
-    <FilterContainer>
-      <div className="flex w-full flex-col gap-4">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-2">
-            <Suspense>
-              <ArtistFilter />
-            </Suspense>
-            <Suspense>
-              <MemberFilter />
-            </Suspense>
-            <SeasonFilter />
-            <ClassFilter />
-            <EditionFilter />
-            <OnlineFilter />
-            <ColorFilter />
-            <SortFilter enabled={sortOptions} />
-            <SortDirectionFilter />
-            <CombineDuplicateFilter />
-            <GroupByFilter />
-            <GroupDirectionFilter />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <ColumnFilter />
-            <SearchFilter />
-            <ResetFilter onReset={() => reset()} isDisabled={!isFiltering} />
-          </div>
-        </div>
-      </div>
-    </FilterContainer>
   );
 }
 
