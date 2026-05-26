@@ -1,4 +1,3 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import {
   CaretLeftIcon,
   CaretLineLeftIcon,
@@ -9,7 +8,6 @@ import {
   QuestionMarkIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
-import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -27,7 +25,6 @@ import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
 import { Card, CardContent } from "../intentui/card";
 import { Input, InputGroup } from "../intentui/input";
-import { ExternalLink } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Skeleton } from "../intentui/skeleton";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
@@ -284,18 +281,10 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold">{m.objekt_token_id()}</span>
           <div className="flex items-center gap-2">
-            <ExternalLink
-              href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${data.tokenId}`}
-              className="inline-flex cursor-pointer items-center gap-2 font-mono"
-            >
-              {data.tokenId}
-              <ArrowTopRightOnSquareIcon className="text-muted-fg size-4" />
-            </ExternalLink>
-            <CopyIcon
-              size={16}
-              className="text-muted-fg cursor-pointer select-none"
-              onClick={() => handleCopy(data.tokenId)}
-            />
+            <span className="font-mono font-medium">{data.tokenId}</span>
+            <Button size="sq-xs" intent="outline" onPress={() => handleCopy(data.tokenId)}>
+              <CopyIcon />
+            </Button>
           </div>
         </div>
         <div className="flex items-center gap-3">

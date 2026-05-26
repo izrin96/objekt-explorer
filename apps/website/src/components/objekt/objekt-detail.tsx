@@ -6,7 +6,6 @@ import {
   PushPinIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
-import { Addresses } from "@repo/lib";
 import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
 import { Suspense, useCallback, useState } from "react";
@@ -21,7 +20,6 @@ import { m } from "@/paraglide/messages";
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
 import { Card, CardContent } from "../intentui/card";
-import { ExternalLink } from "../intentui/link";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
 import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import { AttributePanel } from "./objekt-attribute";
@@ -286,15 +284,7 @@ function OwnedListPanel({
                       {item.isLocked && <LockSimpleIcon weight="regular" className="size-3" />}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <ExternalLink
-                      href={`https://opensea.io/item/abstract/${Addresses.OBJEKT}/${item.tokenId}`}
-                      className="inline-flex cursor-pointer items-center gap-2"
-                    >
-                      {item.tokenId}
-                      <ArrowTopRightOnSquareIcon className="text-muted-fg size-4" />
-                    </ExternalLink>
-                  </TableCell>
+                  <TableCell>{item.tokenId}</TableCell>
                   <TableCell>{format(item.receivedAt, "yyyy/MM/dd hh:mm:ss a")}</TableCell>
                   <TableCell>
                     <Badge intent={item.transferable ? "info" : "danger"}>

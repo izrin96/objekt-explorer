@@ -84,10 +84,14 @@ export default function ListHeader() {
             </div>
           </div>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           {["have", "want"].includes(list.listTypeNew) && list.linkedList && (
             <Link
-              className={buttonStyles({ intent: "outline", size: "sm" })}
+              className={buttonStyles({
+                intent: "outline",
+                size: "sm",
+                className: "w-full sm:w-auto",
+              })}
               {...getListLinkOption(list.linkedList)}
             >
               <CodeSimpleIcon />
@@ -118,12 +122,7 @@ function EditList({ slug }: { slug: string }) {
   return (
     <>
       <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
-      <Button
-        size="sm"
-        intent="outline"
-        onPress={() => setOpen(true)}
-        className="w-full flex-none sm:w-auto"
-      >
+      <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-full sm:w-auto">
         {m.list_card_edit_list()}
       </Button>
     </>
