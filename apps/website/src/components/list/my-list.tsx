@@ -1,4 +1,10 @@
-import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
+import {
+  EllipsisVerticalIcon,
+  PencilSquareIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -52,8 +58,12 @@ function MyList() {
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />
 
       <div className="flex w-full gap-2">
-        <Button onPress={() => setAddOpen(true)}>{m.list_create_button()}</Button>
+        <Button onPress={() => setAddOpen(true)}>
+          <PlusIcon />
+          {m.list_create_button()}
+        </Button>
         <Button intent="outline" onPress={() => setGenOpen(true)}>
+          <DiscordLogoIcon />
           {m.list_generate_discord_button()}
         </Button>
       </div>
@@ -106,8 +116,12 @@ function ListCard({ list }: ListCardProps) {
               <EllipsisVerticalIcon />
             </Button>
             <MenuContent placement="bottom right" popover={{ offset: -2 }}>
-              <MenuItem onAction={() => setEditOpen(true)}>{m.list_card_edit()}</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>
+                <PencilSquareIcon />
+                {m.list_card_edit()}
+              </MenuItem>
               <MenuItem intent="danger" onAction={() => setDeleteOpen(true)}>
+                <TrashIcon />
                 {m.list_card_delete()}
               </MenuItem>
             </MenuContent>

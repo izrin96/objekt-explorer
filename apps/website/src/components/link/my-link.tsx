@@ -1,4 +1,9 @@
-import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
+import {
+  EllipsisVerticalIcon,
+  LinkIcon,
+  PencilSquareIcon,
+  LinkSlashIcon,
+} from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -41,6 +46,7 @@ function MyLink() {
     <div className="flex flex-col gap-4">
       <div className="w-full">
         <Link to="/link/connect" className={buttonStyles()}>
+          <LinkIcon />
           {m.link_link_cosmo()}
         </Link>
       </div>
@@ -105,8 +111,12 @@ function LinkCard({ link }: LinkCardProps) {
               <EllipsisVerticalIcon />
             </Button>
             <MenuContent placement="bottom right" popover={{ offset: -2 }}>
-              <MenuItem onAction={() => setEditOpen(true)}>{m.link_card_edit()}</MenuItem>
+              <MenuItem onAction={() => setEditOpen(true)}>
+                <PencilSquareIcon />
+                {m.link_card_edit()}
+              </MenuItem>
               <MenuItem intent="danger" onAction={() => setRemoveOpen(true)}>
+                <LinkSlashIcon />
                 {m.link_card_unlink()}
               </MenuItem>
             </MenuContent>

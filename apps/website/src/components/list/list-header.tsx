@@ -1,3 +1,4 @@
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { DiscordLogoIcon, XLogoIcon, CodeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
@@ -123,6 +124,7 @@ function EditList({ slug }: { slug: string }) {
     <>
       <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
       <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-full sm:w-auto">
+        <PencilSquareIcon />
         {m.list_card_edit_list()}
       </Button>
     </>

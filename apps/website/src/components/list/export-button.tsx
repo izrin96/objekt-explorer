@@ -1,3 +1,4 @@
+import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 
 import { Button } from "@/components/intentui/button";
@@ -12,6 +13,7 @@ export function ExportButton({ list }: { list: PublicList }) {
     <>
       <ExportListModal open={open} setOpen={setOpen} list={list} />
       <Button intent="outline" onPress={() => setOpen(true)}>
+        <ArrowUpTrayIcon />
         {m.common_actions_export()}
       </Button>
     </>

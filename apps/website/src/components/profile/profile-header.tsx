@@ -1,3 +1,4 @@
+import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
@@ -89,6 +90,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             onPress={() => setEditOpen(true)}
             className="w-full flex-none md:w-auto"
           >
+            <PencilSquareIcon />
             {m.profile_header_edit_profile()}
           </Button>
         </>

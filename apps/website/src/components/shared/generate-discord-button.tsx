@@ -1,3 +1,4 @@
+import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useState } from "react";
 import { Form } from "react-aria-components/Form";
@@ -29,6 +30,7 @@ export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
     <>
       <GenerateDiscordFormatModal objekts={objekts} open={genOpen} setOpen={setGenOpen} />
       <Button intent="outline" onPress={() => setGenOpen(true)}>
+        <DiscordLogoIcon />
         {m.discord_format_modal_button()}
       </Button>
     </>

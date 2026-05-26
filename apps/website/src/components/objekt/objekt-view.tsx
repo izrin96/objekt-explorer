@@ -92,7 +92,7 @@ export default function ObjektView({
         />
         <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
         {showCount && objekts.length > 1 && (
-          <div className="bg-bg text-fg text-xxs pointer-events-none m-1 flex self-end justify-self-start overflow-hidden rounded-full px-1.5 py-0.5 font-semibold sm:px-2 sm:py-1 sm:text-xs">
+          <div className="bg-bg text-fg text-xxs pointer-events-none m-1 flex self-end justify-self-start overflow-hidden rounded-full px-1.5 py-0.5 font-medium sm:px-2 sm:py-1 sm:text-xs">
             {objekts.length.toLocaleString()}
           </div>
         )}
@@ -106,7 +106,7 @@ export default function ObjektView({
               {objekt.isQyop ? (
                 <Badge
                   intent="secondary"
-                  className={cn("font-semibold", onSetPrice && "cursor-pointer")}
+                  className={cn("text-xxs sm:text-xs", onSetPrice && "cursor-pointer")}
                   onClick={onSetPrice}
                 >
                   {m.objekt_qyop()}
@@ -114,7 +114,10 @@ export default function ObjektView({
               ) : hasPrice ? (
                 <Badge
                   intent="secondary"
-                  className={cn("font-semibold bg-fg text-bg", onSetPrice && "cursor-pointer")}
+                  className={cn(
+                    "text-xxs sm:text-xs bg-fg text-bg",
+                    onSetPrice && "cursor-pointer",
+                  )}
                   onClick={onSetPrice}
                 >
                   {formatPrice(objekt.price!, listCurrency)}
@@ -123,7 +126,7 @@ export default function ObjektView({
                 onSetPrice && (
                   <Badge
                     intent="secondary"
-                    className="cursor-pointer font-semibold"
+                    className="text-xxs cursor-pointer sm:text-xs"
                     onClick={onSetPrice}
                   >
                     {m.objekt_set_price()}
@@ -132,7 +135,7 @@ export default function ObjektView({
               )}
               {objekt.note && (
                 <Popover>
-                  <Button isCircle intent="plain" size="sq-xs">
+                  <Button isCircle intent="plain" size="sq-sm">
                     <NoteIcon />
                   </Button>
                   <PopoverContent arrow className="max-w-72">
@@ -158,7 +161,11 @@ export default function ObjektView({
             </Badge>
           )}
 
-          {unobtainable && <Badge intent="danger">{m.objekt_unobtainable()}</Badge>}
+          {unobtainable && (
+            <Badge intent="danger" className="text-xxs sm:text-xs">
+              {m.objekt_unobtainable()}
+            </Badge>
+          )}
         </div>
       )}
     </div>
