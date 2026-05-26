@@ -73,10 +73,6 @@ export const lists = pgTable(
       .notNull()
       .defaultNow(),
     gridColumns: integer("grid_columns"),
-    listType: varchar("list_type", { length: 20 })
-      .notNull()
-      .default("normal")
-      .$type<"normal" | "profile">(),
     listTypeNew: listTypeEnum("list_type_new").notNull().default("general"),
     isProfileBind: boolean("is_profile_bind").notNull().default(false),
     hideSerial: boolean("hide_serial").notNull().default(false),

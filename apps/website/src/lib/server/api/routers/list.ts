@@ -397,7 +397,6 @@ export const listRouter = {
             slug,
             profileSlug,
             hideUser: input.hideUser,
-            listType: input.isProfileBind ? "profile" : "normal",
             listTypeNew: input.listTypeNew,
             isProfileBind,
             hideSerial:
