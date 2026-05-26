@@ -3,7 +3,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists } from "@repo/db/schema";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
 
@@ -287,7 +287,7 @@ export const listRouter = {
               await tx
                 .update(lists)
                 .set({ linkedListId: null })
-                .where(eq(lists.linkedListId, linkedListId));
+                .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, list.id)));
 
               await tx
                 .update(lists)
@@ -404,7 +404,7 @@ export const listRouter = {
             await tx
               .update(lists)
               .set({ linkedListId: null })
-              .where(eq(lists.linkedListId, linkedListId));
+              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, result.insertedId)));
 
             await tx
               .update(lists)
