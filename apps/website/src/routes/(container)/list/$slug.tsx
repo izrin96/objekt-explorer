@@ -3,6 +3,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
+import ListNotFoundComponent from "@/components/router/list-notfound";
 import { ListProvider } from "@/hooks/use-list-target";
 import { generateMetadata } from "@/lib/meta";
 import { listBySlugQuery } from "@/lib/queries/list";
@@ -38,6 +39,7 @@ export const Route = createFileRoute("/(container)/list/$slug")({
       : {};
   },
   component: ListDetailPage,
+  notFoundComponent: ListNotFoundComponent,
 });
 
 function ListDetailPage() {

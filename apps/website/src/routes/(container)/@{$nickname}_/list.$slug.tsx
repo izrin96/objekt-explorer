@@ -1,9 +1,9 @@
-import { ImageBrokenIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
+import ListNotFoundComponent from "@/components/router/list-notfound";
 import { ListProvider } from "@/hooks/use-list-target";
 import { ProfileProvider } from "@/hooks/use-profile-target";
 import { generateMetadata } from "@/lib/meta";
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
       : {};
   },
   component: ProfileListDetailPage,
-  notFoundComponent: NotFoundComponent,
+  notFoundComponent: ListNotFoundComponent,
 });
 
 function ProfileListDetailPage() {
@@ -46,14 +46,5 @@ function ProfileListDetailPage() {
         </div>
       </ListProvider>
     </ProfileProvider>
-  );
-}
-
-function NotFoundComponent() {
-  return (
-    <div className="flex w-full flex-col items-center justify-center gap-2 py-12 font-semibold">
-      <ImageBrokenIcon size={72} weight="thin" />
-      {m.not_found_list()}
-    </div>
   );
 }
