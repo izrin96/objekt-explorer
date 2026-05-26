@@ -248,10 +248,10 @@ export async function fetchOwnedLists(
     orderBy: { id: "desc" },
   });
 
-  return result.map((a) => {
+  return result.map(({ userAddress, ...rest }) => {
     return {
-      ...a,
-      profile: a.userAddress ? toPartialProfile(a.userAddress) : null,
+      ...rest,
+      profile: userAddress ? toPartialProfile(userAddress) : null,
     };
   });
 }

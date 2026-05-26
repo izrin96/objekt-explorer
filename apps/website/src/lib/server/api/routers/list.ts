@@ -219,6 +219,10 @@ export const listRouter = {
       }) => {
         const list = await findOwnedList(input.slug, user.id);
 
+        const linkedListId = ["have", "want"].includes(list.listTypeNew)
+          ? input.linkedListId
+          : null;
+
         // Validate currency for sale lists
         if (list.listTypeNew === "sale" && !input.currency) {
           throw new ORPCError("BAD_REQUEST", {
@@ -232,8 +236,8 @@ export const listRouter = {
         }
 
         // Validate linkedListId ownership and type compatibility
-        if (input.linkedListId) {
-          await checkLinkedList(list.listTypeNew, input.linkedListId, user.id);
+        if (linkedListId !== null) {
+          await checkLinkedList(list.listTypeNew, linkedListId, user.id);
         }
 
         let profileSlug: string | null = null;
@@ -245,31 +249,31 @@ export const listRouter = {
           );
         }
 
-        await db
-          .update(lists)
-          .set({
-            name: input.name,
-            hideUser: input.hideUser,
-            gridColumns: input.gridColumns,
-            profileAddress: list.isProfileBind
-              ? undefined
-              : input.profileAddress
-                ? input.profileAddress.toLowerCase()
-                : null,
-            description: input.description,
-            currency: list.listTypeNew === "sale" ? input.currency : null,
-            profileSlug,
-            hideSerial:
-              ["sale", "have"].includes(list.listTypeNew) && list.isProfileBind
-                ? input.hideSerial
-                : false,
-            linkedListId: ["have", "want"].includes(list.listTypeNew) ? input.linkedListId : null,
-          })
-          .where(eq(lists.id, list.id));
+        await db.transaction(async (tx) => {
+          await tx
+            .update(lists)
+            .set({
+              name: input.name,
+              hideUser: input.hideUser,
+              gridColumns: input.gridColumns,
+              profileAddress: list.isProfileBind
+                ? undefined
+                : input.profileAddress
+                  ? input.profileAddress.toLowerCase()
+                  : null,
+              description: input.description,
+              currency: list.listTypeNew === "sale" ? input.currency : null,
+              profileSlug,
+              hideSerial:
+                ["sale", "have"].includes(list.listTypeNew) && list.isProfileBind
+                  ? input.hideSerial
+                  : false,
+              linkedListId,
+            })
+            .where(eq(lists.id, list.id));
 
-        // Bidirectional link: update reverse links
-        if (input.linkedListId !== list.linkedListId) {
-          await db.transaction(async (tx) => {
+          // Bidirectional link: update reverse links
+          if (linkedListId !== list.linkedListId) {
             // Clear old reverse link if there was one
             if (list.linkedListId) {
               await tx
@@ -278,15 +282,20 @@ export const listRouter = {
                 .where(eq(lists.id, list.linkedListId));
             }
 
-            // Set new reverse link
-            if (input.linkedListId) {
+            // Set new reverse link, clearing any existing partner on the target
+            if (linkedListId !== null) {
+              await tx
+                .update(lists)
+                .set({ linkedListId: null })
+                .where(eq(lists.linkedListId, linkedListId));
+
               await tx
                 .update(lists)
                 .set({ linkedListId: list.id })
-                .where(eq(lists.id, input.linkedListId));
+                .where(eq(lists.id, linkedListId));
             }
-          });
-        }
+          }
+        });
       },
     ),
 
@@ -330,6 +339,14 @@ export const listRouter = {
           session: { user },
         },
       }) => {
+        const isProfileBind = ["have", "sale"].includes(input.listTypeNew)
+          ? input.isProfileBind
+          : false;
+
+        const linkedListId = ["have", "want"].includes(input.listTypeNew)
+          ? input.linkedListId
+          : null;
+
         // Validate: sale lists require currency
         if (input.listTypeNew === "sale" && !input.currency) {
           throw new ORPCError("BAD_REQUEST", {
@@ -338,7 +355,7 @@ export const listRouter = {
         }
 
         // Validate: profile binding requires profile address
-        if (input.isProfileBind && !input.profileAddress) {
+        if (isProfileBind && !input.profileAddress) {
           throw new ORPCError("BAD_REQUEST", {
             message: "Profile address is required for profile-bound lists",
           });
@@ -350,8 +367,8 @@ export const listRouter = {
         }
 
         // Validate: linked list ownership and type compatibility
-        if (input.linkedListId) {
-          await checkLinkedList(input.listTypeNew, input.linkedListId, user.id);
+        if (linkedListId !== null) {
+          await checkLinkedList(input.listTypeNew, linkedListId, user.id);
         }
 
         const slug = nanoid(9);
@@ -359,10 +376,6 @@ export const listRouter = {
         if (input.profileAddress) {
           profileSlug = await generateProfileSlug(input.name, input.profileAddress.toLowerCase());
         }
-
-        const isProfileBind = ["have", "sale"].includes(input.listTypeNew)
-          ? input.isProfileBind
-          : false;
 
         const [result] = await db
           .insert(lists)
@@ -375,30 +388,28 @@ export const listRouter = {
             listTypeNew: input.listTypeNew,
             isProfileBind,
             hideSerial:
-              ["sale", "have"].includes(input.listTypeNew) && input.isProfileBind
+              ["sale", "have"].includes(input.listTypeNew) && isProfileBind
                 ? input.hideSerial
                 : false,
-            linkedListId: ["have", "want"].includes(input.listTypeNew) ? input.linkedListId : null,
+            linkedListId,
             profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
             description: input.description,
             currency: input.listTypeNew === "sale" ? input.currency : null,
           })
-          .returning({ insertedId: lists.id });
+          .returning({ insertedId: lists.id, linkedListId: lists.linkedListId });
 
         // Bidirectional link: clear any existing reverse link on target, then set new one
-        if (input.linkedListId && result) {
-          const linkedId = input.linkedListId;
-          const newId = result.insertedId;
-
+        if (linkedListId !== null && result) {
           await db.transaction(async (tx) => {
-            // Clear any list currently pointing at the target (stale reverse link)
             await tx
               .update(lists)
               .set({ linkedListId: null })
-              .where(eq(lists.linkedListId, linkedId));
+              .where(eq(lists.linkedListId, linkedListId));
 
-            // Set the target's reverse link to the new list
-            await tx.update(lists).set({ linkedListId: newId }).where(eq(lists.id, linkedId));
+            await tx
+              .update(lists)
+              .set({ linkedListId: result.insertedId })
+              .where(eq(lists.id, linkedListId));
           });
         }
       },
