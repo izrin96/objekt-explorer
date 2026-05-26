@@ -9,7 +9,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useCurrentUser } from "@/hooks/use-user";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGridItem } from "../collection/objekt-grid-item";
+import { ObjektGrid } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
@@ -62,9 +62,10 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
       const objekt = item[0];
       if (!objekt) return null;
       return (
-        <ObjektGridItem
+        <ObjektGrid.View
           objekts={item}
-          session={!!user}
+          hideLabel={hideLabel}
+          isPriority={rowIndex < 3}
           staticMenu={
             user && (
               <ObjektStaticMenu>
@@ -73,9 +74,13 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
               </ObjektStaticMenu>
             )
           }
-          hoverMenu={user && <AddToListMenu objekts={[objekt]} />}
-          viewProps={{ hideLabel, isPriority: rowIndex < 3 }}
-        />
+        >
+          {user && (
+            <ObjektGrid.Actions objekts={item}>
+              <AddToListMenu objekts={[objekt]} />
+            </ObjektGrid.Actions>
+          )}
+        </ObjektGrid.View>
       );
     },
     [user, hideLabel],

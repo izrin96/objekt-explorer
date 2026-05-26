@@ -11,7 +11,7 @@ import { useCurrentUser, useProfileAuthed } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGridItem } from "../collection/objekt-grid-item";
+import { ObjektGrid } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
@@ -25,7 +25,6 @@ import { ObjektStaticMenu } from "../objekt/actions/objekt-static-menu";
 import { MovePinMenuItem, TogglePinMenuItem } from "../objekt/actions/pin-menu";
 import { PinObjekt, UnpinObjekt } from "../objekt/actions/pin-unpin";
 import { SelectMenuItem } from "../objekt/actions/select-menu";
-import { ObjektOverlay } from "../objekt/objekt-card-ui";
 import ErrorFallbackRender from "../router/error-boundary";
 import { GenerateDiscordButton } from "../shared/generate-discord-button";
 import CheckpointPicker from "./checkpoint-picker";
@@ -98,10 +97,13 @@ function ProfileObjekt({
       const isOwned = isObjektOwned(objekt);
 
       return (
-        <ObjektGridItem
+        <ObjektGrid.View
           objekts={item}
-          session={!!showActions}
-          showSelect
+          hideLabel={hideLabel}
+          showCount
+          showSerial={!filters.grouped}
+          isFade={!isOwned}
+          isPriority={rowIndex < 3}
           staticMenu={
             showActions && (
               <ObjektStaticMenu>
@@ -122,39 +124,28 @@ function ProfileObjekt({
               </ObjektStaticMenu>
             )
           }
-          hoverMenu={
-            showActions && (
-              <>
-                {isProfileAuthed && isOwned && (
-                  <>
-                    <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
-                    {objekt.isPin && (
-                      <>
-                        <MovePinMenuItem tokenId={objekt.id} direction="up" />
-                        <MovePinMenuItem tokenId={objekt.id} direction="down" />
-                      </>
-                    )}
-                    <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
-                  </>
-                )}
-                <AddToListMenu objekts={[objekt]} address={address} />
-              </>
-            )
-          }
-          overlay={
-            isOwned && (
-              <ObjektOverlay isPin={objekt.isPin ?? false} isLocked={objekt.isLocked ?? false} />
-            )
-          }
-          viewProps={{
-            hideLabel,
-            showCount: true,
-            showSerial: !filters.grouped,
-            showOwned: true,
-            isFade: !isOwned,
-            isPriority: rowIndex < 3,
-          }}
-        />
+        >
+          {showActions && (
+            <ObjektGrid.Actions objekts={item}>
+              {isProfileAuthed && isOwned && (
+                <>
+                  <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
+                  {objekt.isPin && (
+                    <>
+                      <MovePinMenuItem tokenId={objekt.id} direction="up" />
+                      <MovePinMenuItem tokenId={objekt.id} direction="down" />
+                    </>
+                  )}
+                  <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
+                </>
+              )}
+              <AddToListMenu objekts={[objekt]} address={address} />
+            </ObjektGrid.Actions>
+          )}
+          {isOwned && (
+            <ObjektGrid.Overlay isPin={objekt.isPin ?? false} isLocked={objekt.isLocked ?? false} />
+          )}
+        </ObjektGrid.View>
       );
     },
     [showActions, hideLabel, isProfileAuthed, address, filters.grouped],

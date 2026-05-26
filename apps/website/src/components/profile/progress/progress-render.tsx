@@ -8,7 +8,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
-import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
+import { ObjektGrid } from "@/components/collection/objekt-grid";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
 import {
   Chart,
@@ -200,10 +200,12 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                     const objekt = objekts[0];
                     if (!objekt) return null;
                     return (
-                      <ObjektGridItem
+                      <ObjektGrid.View
                         objekts={objekts}
-                        session={!!user}
-                        showSelect={false}
+                        hideLabel={hideLabel}
+                        showCount={showCount}
+                        isFade={!ownedSlugs.has(objekt.slug)}
+                        unobtainable={unobtainables.includes(objekt.slug)}
                         staticMenu={
                           user && (
                             <ObjektStaticMenu>
@@ -211,15 +213,13 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                             </ObjektStaticMenu>
                           )
                         }
-                        hoverMenu={user && <AddToListMenu objekts={[objekt]} />}
-                        viewProps={{
-                          hideLabel,
-                          showCount,
-                          showOwned: true,
-                          isFade: !ownedSlugs.has(objekt.slug),
-                          unobtainable: unobtainables.includes(objekt.slug),
-                        }}
-                      />
+                      >
+                        {user && (
+                          <ObjektGrid.HoverMenu>
+                            <AddToListMenu objekts={[objekt]} />
+                          </ObjektGrid.HoverMenu>
+                        )}
+                      </ObjektGrid.View>
                     );
                   }}
                 </ObjektsRenderRow>

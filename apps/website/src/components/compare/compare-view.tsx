@@ -5,7 +5,7 @@ import { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { ObjektCount } from "@/components/collection/objekt-count";
-import { ObjektGridItem } from "@/components/collection/objekt-grid-item";
+import { ObjektGrid } from "@/components/collection/objekt-grid";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "@/components/collection/objekt-virtual-grid";
 import ArtistFilter from "@/components/filters/filter-artist";
@@ -31,7 +31,6 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useIsFiltering } from "@/hooks/use-filters";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useResetFilters } from "@/hooks/use-reset-filters";
-import { useCurrentUser } from "@/hooks/use-user";
 import type { CompareInput } from "@/lib/universal/compare";
 import type { PublicList } from "@/lib/universal/list";
 import { defaultSortDuplicate, defaultSortDuplicateSerial } from "@/lib/utils";
@@ -134,7 +133,6 @@ function CompareFilter({ list }: { list: PublicList }) {
 }
 
 function CompareGrid({ input, list }: { input: CompareInput; list: PublicList }) {
-  const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { shaped, filtered, filters } = useCompareObjekts(input);
 
@@ -144,22 +142,17 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
       if (!objekt) return null;
 
       return (
-        <ObjektGridItem
+        <ObjektGrid.View
           objekts={item}
-          session={!!user}
-          showSelect={false}
-          viewProps={{
-            hideLabel,
-            showCount: true,
-            showSerial: !filters.grouped && list.isProfileBind && !list.hideSerial,
-            showOwned: list.isProfileBind && !list.hideSerial,
-            listCurrency: list.currency,
-            isPriority: rowIndex < 3,
-          }}
+          hideLabel={hideLabel}
+          showCount
+          showSerial={!filters.grouped && list.isProfileBind && !list.hideSerial}
+          listCurrency={list.currency}
+          isPriority={rowIndex < 3}
         />
       );
     },
-    [user, hideLabel, list.currency, list.isProfileBind, filters.grouped],
+    [hideLabel, list.currency, list.isProfileBind, filters.grouped],
   );
 
   return (

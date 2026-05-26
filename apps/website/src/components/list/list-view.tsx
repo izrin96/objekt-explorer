@@ -13,7 +13,7 @@ import { useCurrentUser, useListAuthed } from "@/hooks/use-user";
 import type { PublicList } from "@/lib/universal/list";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGridItem } from "../collection/objekt-grid-item";
+import { ObjektGrid } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { CompareButton } from "../compare/compare-button";
@@ -131,10 +131,14 @@ function ListView({
       if (!objekt) return null;
 
       return (
-        <ObjektGridItem
+        <ObjektGrid.View
           objekts={item}
-          session={!!user}
-          showSelect
+          hideLabel={hideLabel}
+          showCount
+          showSerial={!filters.grouped && list.isProfileBind && !list.hideSerial}
+          listCurrency={list.currency}
+          onSetPrice={isOwned ? () => openSetPrice(item) : undefined}
+          isPriority={rowIndex < 3}
           staticMenu={
             user && (
               <ObjektStaticMenu>
@@ -147,27 +151,15 @@ function ListView({
               </ObjektStaticMenu>
             )
           }
-          hoverMenu={
-            user && (
-              <>
-                {isOwned && <RemoveFromListMenu objekts={item} />}
-                {isOwned && list.currency && (
-                  <SetPriceMenuItem onAction={() => openSetPrice(item)} />
-                )}
-                <AddToListMenu objekts={[objekt]} />
-              </>
-            )
-          }
-          viewProps={{
-            hideLabel,
-            showCount: true,
-            showSerial: !filters.grouped && list.isProfileBind && !list.hideSerial,
-            showOwned: list.isProfileBind && !list.hideSerial,
-            listCurrency: list.currency,
-            onSetPrice: isOwned ? () => openSetPrice(item) : undefined,
-            isPriority: rowIndex < 3,
-          }}
-        />
+        >
+          {user && (
+            <ObjektGrid.Actions objekts={item}>
+              {isOwned && <RemoveFromListMenu objekts={item} />}
+              {isOwned && list.currency && <SetPriceMenuItem onAction={() => openSetPrice(item)} />}
+              <AddToListMenu objekts={[objekt]} />
+            </ObjektGrid.Actions>
+          )}
+        </ObjektGrid.View>
       );
     },
     [

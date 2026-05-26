@@ -94,6 +94,7 @@ export default function ListHeader() {
                 className: "w-full sm:w-auto",
               })}
               {...getListLinkOption(list.linkedList)}
+              replace
             >
               <CodeSimpleIcon />
               {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}

@@ -12,7 +12,7 @@ import { useCurrentUser } from "@/hooks/use-user";
 import { m } from "@/paraglide/messages";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGridItem } from "../collection/objekt-grid-item";
+import { ObjektGrid } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
@@ -82,10 +82,12 @@ function ProfileObjektServer({
       if (!objekt) return null;
 
       return (
-        <ObjektGridItem
+        <ObjektGrid.View
           objekts={item}
-          session={!!showActions}
-          showSelect
+          hideLabel={hideLabel}
+          showCount
+          showSerial
+          isPriority={rowIndex < 3}
           staticMenu={
             showActions && (
               <ObjektStaticMenu>
@@ -94,15 +96,13 @@ function ProfileObjektServer({
               </ObjektStaticMenu>
             )
           }
-          hoverMenu={showActions && <AddToListMenu objekts={[objekt]} address={address} />}
-          viewProps={{
-            hideLabel,
-            showCount: true,
-            showSerial: true,
-            showOwned: true,
-            isPriority: rowIndex < 3,
-          }}
-        />
+        >
+          {showActions && (
+            <ObjektGrid.Actions objekts={item}>
+              <AddToListMenu objekts={[objekt]} address={address} />
+            </ObjektGrid.Actions>
+          )}
+        </ObjektGrid.View>
       );
     },
     [showActions, hideLabel, address],
@@ -134,7 +134,14 @@ function ProfileObjektServer({
         )}
 
       <ObjektCount filtered={filtered} total={total} />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} infiniteQueryProp={query} />
+      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt}>
+        <ObjektVirtualGrid.LoadMore
+          status={query.status}
+          hasNextPage={query.hasNextPage}
+          isFetchingNextPage={query.isFetchingNextPage}
+          fetchNextPage={query.fetchNextPage}
+        />
+      </ObjektVirtualGrid>
     </>
   );
 }
