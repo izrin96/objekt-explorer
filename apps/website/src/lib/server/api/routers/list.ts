@@ -14,8 +14,8 @@ import {
   fetchListWithEntries,
   findOwnedList,
   generateProfileSlug,
-  fetchListCollections,
   checkLinkedList,
+  fetchPartialOwnedListCollections,
 } from "../../list.server";
 import { escapeCSV } from "../../utils.server";
 import { authed, pub, selectedArtistsMiddleware } from "../orpc";
@@ -473,8 +473,8 @@ export const listRouter = {
         },
       }) => {
         const [haveCollections, wantCollections] = await Promise.all([
-          haveListSlug ? fetchListCollections(haveListSlug, user.id) : null,
-          wantListSlug ? fetchListCollections(wantListSlug, user.id) : null,
+          haveListSlug ? fetchPartialOwnedListCollections(haveListSlug, user.id) : null,
+          wantListSlug ? fetchPartialOwnedListCollections(wantListSlug, user.id) : null,
         ]);
 
         return { have: haveCollections ?? [], want: wantCollections ?? [] };

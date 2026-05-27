@@ -77,8 +77,8 @@ function ProfileStats() {
   return (
     <div className="flex flex-col gap-4">
       {query.hasNextPage && (
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          {m.stats_loading_objekts()} <Loader variant="ring" className="size-4" />
+        <div className="flex items-center gap-2 text-sm">
+          {m.stats_loading_objekts()} <Loader variant="ring" />
         </div>
       )}
 

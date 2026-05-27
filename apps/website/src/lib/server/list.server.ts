@@ -3,7 +3,7 @@ import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { lists } from "@repo/db/schema";
+import { lists, userAddress } from "@repo/db/schema";
 import type { ListEntry, UserAddress } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
@@ -12,7 +12,7 @@ import slugify from "slugify";
 
 import type { ListTypeNew, PublicList } from "../universal/list";
 import { toPublicUser } from "./auth.server";
-import { getCollectionColumns } from "./objekt.server";
+import { getCollectionColumns, getPartialCollectionColumns } from "./objekt.server";
 
 export interface ListEntryTransformConfig {
   artists?: ValidArtist[];
@@ -81,7 +81,7 @@ async function buildProfileListEntries(
     .filter((e) => e.objektId !== null)
     .map((entry) => {
       const data = objektMap.get(entry.objektId!);
-      if (!data || !data.collection) return null;
+      if (!data) return null;
       const objekt = config?.hideSerial
         ? data.collection
         : mapOwnedObjekt(data.objekt, data.collection);
@@ -287,14 +287,12 @@ export async function checkLinkedList(type: ListTypeNew, linkedListId: number, u
 }
 
 export async function checkProfileOwnership(address: string, userId: string): Promise<void> {
-  const owned = await db.query.userAddress.findFirst({
-    where: {
-      address: address.toLowerCase(),
-      userId,
-    },
-  });
+  const count = await db.$count(
+    userAddress,
+    and(eq(userAddress.address, address.toLowerCase()), eq(userAddress.userId, userId)),
+  );
 
-  if (!owned) {
+  if (count < 1) {
     throw new ORPCError("FORBIDDEN", {
       message: "Profile not owned by user",
     });
@@ -345,7 +343,11 @@ export async function findOwnedList(slug: string, userId: string) {
   return list;
 }
 
-export async function fetchListCollections(slug: string, userId?: string) {
+/**
+ * Return only partial collection of list entry
+ * Only used by Generate Discord Format for now
+ */
+export async function fetchPartialOwnedListCollections(slug: string, userId: string) {
   const list = await db.query.lists.findFirst({
     where: { slug, ...(userId ? { userId } : {}) },
     with: {
@@ -369,13 +371,7 @@ export async function fetchListCollections(slug: string, userId?: string) {
       .select({
         id: objekts.id,
         collection: {
-          slug: collections.slug,
-          season: collections.season,
-          collectionNo: collections.collectionNo,
-          member: collections.member,
-          artist: collections.artist,
-          collectionId: collections.collectionId,
-          class: collections.class,
+          ...getPartialCollectionColumns(),
         },
       })
       .from(objekts)
@@ -399,13 +395,7 @@ export async function fetchListCollections(slug: string, userId?: string) {
 
   const foundCollections = await indexer
     .select({
-      slug: collections.slug,
-      season: collections.season,
-      collectionNo: collections.collectionNo,
-      member: collections.member,
-      artist: collections.artist,
-      collectionId: collections.collectionId,
-      class: collections.class,
+      ...getPartialCollectionColumns(),
     })
     .from(collections)
     .where(inArray(collections.slug, slugs));

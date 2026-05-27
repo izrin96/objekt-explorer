@@ -66,7 +66,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       value={query}
       aria-label="Search"
     >
-      <InputGroup>
+      <InputGroup className="[--input-gutter-end:--spacing(10)] sm:[--input-gutter-end:--spacing(8)]">
         <Input ref={ref} placeholder={m.filter_quick_search()} />
         {query.length > 0 ? (
           <Button intent="plain" size="sq-xs" onPress={() => handleChange("")}>

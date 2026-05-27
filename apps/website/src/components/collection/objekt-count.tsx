@@ -14,14 +14,12 @@ export function ObjektCount({ filtered, grouped, hasNextPage, total }: ObjektCou
   const isLoading = hasNextPage && total === undefined;
 
   return (
-    <span className={isLoading ? "flex items-center gap-2 font-semibold" : "font-semibold"}>
-      <span>
-        {m.common_count_total({ count: displayCount.toLocaleString() })}
-        {grouped
-          ? ` (${m.common_count_types({ count: grouped?.length.toLocaleString() ?? "0" })})`
-          : ""}
-      </span>
-      {isLoading && <Loader variant="ring" className="size-4" />}
+    <span className="flex items-center gap-2 font-medium">
+      {m.common_count_total({ count: displayCount.toLocaleString() })}
+      {grouped
+        ? ` (${m.common_count_types({ count: grouped?.length.toLocaleString() ?? "0" })})`
+        : ""}
+      {isLoading && <Loader variant="ring" />}
     </span>
   );
 }

@@ -127,3 +127,15 @@ export function getCollectionColumns() {
   } = getColumns(collections);
   return rest;
 }
+
+export function getPartialCollectionColumns() {
+  return {
+    slug: collections.slug,
+    season: collections.season,
+    collectionNo: collections.collectionNo,
+    member: collections.member,
+    artist: collections.artist,
+    collectionId: collections.collectionId,
+    class: collections.class,
+  };
+}
