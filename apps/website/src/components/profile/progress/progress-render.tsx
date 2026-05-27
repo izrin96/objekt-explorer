@@ -8,7 +8,11 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 
 import { makeObjektRows, ObjektsRenderRow } from "@/components/collection/collection-render";
-import { ObjektGrid } from "@/components/collection/objekt-grid";
+import {
+  ObjektGridView,
+  ObjektGridActionBar,
+  ObjektGridHoverMenu,
+} from "@/components/collection/objekt-grid";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
 import {
   Chart,
@@ -200,7 +204,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                     const objekt = objekts[0];
                     if (!objekt) return null;
                     return (
-                      <ObjektGrid.View
+                      <ObjektGridView
                         objekts={objekts}
                         hideLabel={hideLabel}
                         showCount={showCount}
@@ -215,11 +219,13 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                         }
                       >
                         {user && (
-                          <ObjektGrid.HoverMenu>
-                            <AddToListMenu objekts={[objekt]} />
-                          </ObjektGrid.HoverMenu>
+                          <ObjektGridActionBar>
+                            <ObjektGridHoverMenu>
+                              <AddToListMenu objekts={[objekt]} />
+                            </ObjektGridHoverMenu>
+                          </ObjektGridActionBar>
                         )}
-                      </ObjektGrid.View>
+                      </ObjektGridView>
                     );
                   }}
                 </ObjektsRenderRow>

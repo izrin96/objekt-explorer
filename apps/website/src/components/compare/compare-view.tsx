@@ -4,7 +4,7 @@ import { Suspense, useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { ObjektCount } from "@/components/collection/objekt-count";
-import { ObjektGrid } from "@/components/collection/objekt-grid";
+import { ObjektGridView } from "@/components/collection/objekt-grid";
 import { ObjektViewProvider } from "@/components/collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "@/components/collection/objekt-virtual-grid";
 import { Loader } from "@/components/intentui/loader";
@@ -84,7 +84,7 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
       if (!objekt) return null;
 
       return (
-        <ObjektGrid.View
+        <ObjektGridView
           objekts={item}
           hideLabel={hideLabel}
           showCount

@@ -13,7 +13,7 @@ import { useCurrentUser, useListAuthed } from "@/hooks/use-user";
 import type { PublicList } from "@/lib/universal/list";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGrid } from "../collection/objekt-grid";
+import { ObjektGridView, ObjektGridActions } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { CompareButton } from "../compare/compare-button";
@@ -131,7 +131,7 @@ function ListView({
       if (!objekt) return null;
 
       return (
-        <ObjektGrid.View
+        <ObjektGridView
           objekts={item}
           hideLabel={hideLabel}
           showCount
@@ -153,13 +153,13 @@ function ListView({
           }
         >
           {user && (
-            <ObjektGrid.Actions objekts={item}>
+            <ObjektGridActions objekts={item}>
               {isOwned && <RemoveFromListMenu objekts={item} />}
               {isOwned && list.currency && <SetPriceMenuItem onAction={() => openSetPrice(item)} />}
               <AddToListMenu objekts={[objekt]} />
-            </ObjektGrid.Actions>
+            </ObjektGridActions>
           )}
-        </ObjektGrid.View>
+        </ObjektGridView>
       );
     },
     [

@@ -9,7 +9,7 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useCurrentUser } from "@/hooks/use-user";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGrid } from "../collection/objekt-grid";
+import { ObjektGridView, ObjektGridActions } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
@@ -62,7 +62,7 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
       const objekt = item[0];
       if (!objekt) return null;
       return (
-        <ObjektGrid.View
+        <ObjektGridView
           objekts={item}
           hideLabel={hideLabel}
           isPriority={rowIndex < 3}
@@ -76,11 +76,11 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
           }
         >
           {user && (
-            <ObjektGrid.Actions objekts={item}>
+            <ObjektGridActions objekts={item}>
               <AddToListMenu objekts={[objekt]} />
-            </ObjektGrid.Actions>
+            </ObjektGridActions>
           )}
-        </ObjektGrid.View>
+        </ObjektGridView>
       );
     },
     [user, hideLabel],

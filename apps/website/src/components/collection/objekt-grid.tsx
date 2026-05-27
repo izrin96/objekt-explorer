@@ -83,6 +83,12 @@ function ObjektGridHoverMenu({ children }: ObjektGridHoverMenuProps) {
   return <ObjektHoverMenu>{children}</ObjektHoverMenu>;
 }
 
+function ObjektGridActionBar({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-start self-start justify-self-end overflow-hidden">{children}</div>
+  );
+}
+
 interface ObjektGridActionsProps {
   objekts: ValidObjekt[];
   children: ReactNode;
@@ -90,10 +96,10 @@ interface ObjektGridActionsProps {
 
 function ObjektGridActions({ objekts, children }: ObjektGridActionsProps) {
   return (
-    <div className="flex items-start self-start justify-self-end overflow-hidden">
+    <ObjektGridActionBar>
       <ObjektSelect objekts={objekts} />
       <ObjektHoverMenu>{children}</ObjektHoverMenu>
-    </div>
+    </ObjektGridActionBar>
   );
 }
 
@@ -106,10 +112,11 @@ function ObjektGridOverlay({ isPin, isLocked }: ObjektGridOverlayProps) {
   return <ObjektOverlayBase isPin={isPin} isLocked={isLocked} />;
 }
 
-export const ObjektGrid = {
-  View: ObjektGridView,
-  Select: ObjektGridSelect,
-  HoverMenu: ObjektGridHoverMenu,
-  Actions: ObjektGridActions,
-  Overlay: ObjektGridOverlay,
+export {
+  ObjektGridView,
+  ObjektGridActionBar,
+  ObjektGridActions,
+  ObjektGridHoverMenu,
+  ObjektGridOverlay,
+  ObjektGridSelect,
 };

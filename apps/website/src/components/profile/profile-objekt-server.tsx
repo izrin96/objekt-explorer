@@ -12,9 +12,9 @@ import { useCurrentUser } from "@/hooks/use-user";
 import { m } from "@/paraglide/messages";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGrid } from "../collection/objekt-grid";
+import { ObjektGridActions, ObjektGridView } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
-import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
+import { ObjektVirtualGrid, ObjektVirtualGridLoadMore } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { Loader } from "../intentui/loader";
@@ -82,7 +82,7 @@ function ProfileObjektServer({
       if (!objekt) return null;
 
       return (
-        <ObjektGrid.View
+        <ObjektGridView
           objekts={item}
           hideLabel={hideLabel}
           showCount
@@ -98,11 +98,11 @@ function ProfileObjektServer({
           }
         >
           {showActions && (
-            <ObjektGrid.Actions objekts={item}>
+            <ObjektGridActions objekts={item}>
               <AddToListMenu objekts={[objekt]} address={address} />
-            </ObjektGrid.Actions>
+            </ObjektGridActions>
           )}
-        </ObjektGrid.View>
+        </ObjektGridView>
       );
     },
     [showActions, hideLabel, address],
@@ -135,7 +135,7 @@ function ProfileObjektServer({
 
       <ObjektCount filtered={filtered} total={total} />
       <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt}>
-        <ObjektVirtualGrid.LoadMore
+        <ObjektVirtualGridLoadMore
           status={query.status}
           hasNextPage={query.hasNextPage}
           isFetchingNextPage={query.isFetchingNextPage}

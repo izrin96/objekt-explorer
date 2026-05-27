@@ -11,7 +11,7 @@ import { useCurrentUser, useProfileAuthed } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
 
 import { ObjektCount } from "../collection/objekt-count";
-import { ObjektGrid } from "../collection/objekt-grid";
+import { ObjektGridActions, ObjektGridOverlay, ObjektGridView } from "../collection/objekt-grid";
 import { ObjektViewProvider } from "../collection/objekt-view-provider";
 import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
@@ -97,7 +97,7 @@ function ProfileObjekt({
       const isOwned = isObjektOwned(objekt);
 
       return (
-        <ObjektGrid.View
+        <ObjektGridView
           objekts={item}
           hideLabel={hideLabel}
           showCount
@@ -126,7 +126,7 @@ function ProfileObjekt({
           }
         >
           {showActions && (
-            <ObjektGrid.Actions objekts={item}>
+            <ObjektGridActions objekts={item}>
               {isProfileAuthed && isOwned && (
                 <>
                   <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
@@ -140,12 +140,12 @@ function ProfileObjekt({
                 </>
               )}
               <AddToListMenu objekts={[objekt]} address={address} />
-            </ObjektGrid.Actions>
+            </ObjektGridActions>
           )}
           {isOwned && (
-            <ObjektGrid.Overlay isPin={objekt.isPin ?? false} isLocked={objekt.isLocked ?? false} />
+            <ObjektGridOverlay isPin={objekt.isPin ?? false} isLocked={objekt.isLocked ?? false} />
           )}
-        </ObjektGrid.View>
+        </ObjektGridView>
       );
     },
     [showActions, hideLabel, isProfileAuthed, address, filters.grouped],
