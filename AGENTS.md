@@ -1,151 +1,93 @@
 # AGENTS.md
 
-## Project Overview
+## Project
 
-Objekt Tracker - A web application for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc.
+**Objekt Explorer** — web app for exploring digital collectibles (Objekts) from Cosmo, a K-pop blockchain app by Modhaus Inc.
 
-## Architecture
+## Monorepo Structure
 
-**Monorepo Structure** (Bun workspaces + Turbo):
+| Path                | Name             | Purpose                                     |
+| ------------------- | ---------------- | ------------------------------------------- |
+| `apps/website`      | `website`        | Main frontend (TanStack React Start + Vite) |
+| `apps/server`       | `server`         | WebSocket activity server                   |
+| `apps/worker`       | `worker`         | Background job worker (Croner)              |
+| `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)             |
+| `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)  |
+| `packages/lib`      | `@repo/lib`      | Shared utilities                            |
+| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                   |
+| `packages/lint`     | `@repo/lint`     | Shared oxlint config                        |
+| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                   |
 
-- `apps/website` - Main frontend (TanStack React Start + Vite)
-- `apps/server` - WebSocket activity server
-- `apps/worker` - Background job worker (Croner)
-- `apps/indexer` - NFT metadata indexer
-- `packages/db` - Database schema (Drizzle ORM + PostgreSQL)
-- `packages/lib` - Shared utilities
-- `packages/cosmo` - Cosmo SDK (from teamreflex/cosmo-web)
-- `packages/lint` - Shared oxlint configuration
-- `packages/tsconfig` - Shared TypeScript configurations
+**Workspace manager:** Bun workspaces + Turbo. Package names match directory names (e.g. filter with `--filter=website`).
 
-**Key Technologies**:
+## Tech Stack
 
-- Runtime: Bun
-- Frontend: TanStack React Start + Vite, React 19, Tailwind CSS 4
-- API: ORPC (type-safe RPC) with Zod validation
-- Database: PostgreSQL 18 with Drizzle ORM
-- State: React Query (server), Zustand (client)
-- Real-time: Redis pub-sub, WebSockets
+| Category    | Technology                                           |
+| ----------- | ---------------------------------------------------- |
+| Runtime     | Bun 1.3                                              |
+| Frontend    | TanStack React Start, Vite, React 19, Tailwind CSS 4 |
+| API         | ORPC (type-safe RPC) with Zod                        |
+| Database    | PostgreSQL 18, Drizzle ORM                           |
+| Auth        | Better Auth                                          |
+| State       | React Query (server), Zustand (client)               |
+| Real-time   | WebSockets, Valkey pub-sub                           |
+| i18n        | Inlang (Paraglide)                                   |
+| Lint/Format | oxlint, oxfmt                                        |
+| Jobs        | Croner                                               |
+| Indexer     | Subsquid (EVM processor)                             |
 
-**Database Schema** (`packages/db/src/schema/`):
+Schema lives in `packages/db/src/schema/`. Uses `citext` for case-insensitive fields. Relations defined via Drizzle relations.
 
-- Uses `citext` for case-insensitive fields
-- Relations defined with Drizzle relations
-- Key tables: user, user_address, lists, profile_list, pins, locked_objekts
+## Commands
 
-## Development Commands
-
-All commands should be run from the monorepo root using Turbo:
+All run from monorepo root via Turbo. Filters use package name:
 
 ```bash
-# Development
-bun run dev                    # Start all dev servers
-bun run dev --filter=web       # Start specific app
-
-# Build
-bun run build                  # Build all packages and apps
-bun run build --filter=web     # Build specific app
-
-# Linting
-bun run lint                   # Lint all packages (oxlint)
-bun run lint --filter=web      # Lint specific app
-bun run lint:fix               # Lint and auto-fix
-
-# Type Checking
-bun run typecheck              # Type check all packages
-bun run typecheck --filter=web # Type check specific app
-
-# Formatting
-bun run format                 # Format all code (oxfmt)
+bun run dev                        # Start all dev servers
+bun run dev --filter=website       # Start specific app
+bun run build                      # Build all
+bun run build --filter=website     # Build specific app
+bun run lint                       # Lint all (oxlint)
+bun run lint:fix                   # Lint and auto-fix
+bun run typecheck                  # Type-check all
+bun run format                     # Format all (oxfmt)
 ```
-
-## Linting (Oxlint)
-
-- Base config: `packages/lint/oxlint.config.ts`
-- Each app/package has its own `oxlint.config.ts` extending the base
-- Config uses `extends: [baseConfig]` pattern (not spread)
-
-## TypeScript Configuration
-
-- Base configs: `packages/tsconfig/`
-  - `tsconfig.base.json` - Default for packages (bundler resolution)
-  - `tsconfig.bun.json` - For Bun-based apps (includes JSX, Bun types)
-  - `tsconfig.node.json` - For strict Node.js ESM projects (NodeNext resolution)
-- All tsconfigs have explicit `include` and `exclude` fields
-- Module resolution: `bundler` (not `NodeNext`) — no `.js` extensions needed on imports
 
 ## Code Style
 
-Enforced by oxlint, oxfmt, and TypeScript config. Follow strictly.
+Enforced by oxlint (`packages/lint/oxlint.config.ts`) and oxfmt (`oxfmt.config.ts`). TS strict mode is on. Module resolution: `bundler` (no `.js` extensions on imports).
 
-- Formatter: oxfmt (configured in `.oxfmtrc.json`)
-- Linter: oxlint (configured in `packages/lint/oxlint.config.ts`)
-- TypeScript strict mode enabled
-- Path alias: `@/*` maps to `src/`
-- `import * as z from "zod"`, never `import { z } from "zod"`
-- All promises must be awaited or explicitly voided
-- Avoid classes (use functions/objects) and enums (use `as const` or unions)
-- 2-space indent, oxfmt handles formatting — do not add Prettier or Biome
-- while using tailwing, prefer sizes in tw units like `-5` rather than in pixels via `-[20px]`
-- while using Zod, prefer not duplicate types, just infer them from schemas
+- Path alias: `@/*` → `src/`
+- `import * as z from "zod"` — never `import { z }`
+- Prefer TS type inference from Zod schemas over manual type declarations
+- Await all promises or explicitly void them
+- Avoid `class` and `enum` — use functions/objects and `as const`/unions
+- In Tailwind, prefer theme-based spacing (e.g. `p-2`) over arbitrary values (`p-[8px]`)
+- oxfmt handles all formatting — do not add Prettier or Biome
+
+## Environment
+
+Set up by copying `.env.example` → `.env`. Key variables:
+
+- `DATABASE_URL` — main PostgreSQL connection
+- `INDEXER_DATABASE_URL` — indexer PostgreSQL connection
+- `REDIS_URL` — Valkey (Redis-compatible) connection
+- `BETTER_AUTH_SECRET` — auth encryption key
+- `VITE_SITE_URL` — public site URL
+- `COSMO_KEY` — encrypted API key for Cosmo SDK
+
+Full list in `.env.example`.
+
+## Docker
+
+`docker-compose.yml` provides the full stack: website, server, worker, processor, PostgreSQL, Valkey, S3-compatible storage (rustfs), and connection pooling (pgbouncer).
+
+## CI/CD
+
+`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs lint+typecheck, builds Docker images for affected services.
 
 ## Behavior
 
-- Never `git commit`, `git push`, or run database migrations without explicit approval or being asked
-- never edit past migrations, only way is generating new one
-
-## Skill Loading
-
-Before substantial work:
-
-- Skill check: run `npx @tanstack/intent@latest list`, or use skills already listed in context.
-- Skill guidance: if one local skill clearly matches the task, run `npx @tanstack/intent@latest load <package>#<skill>` and follow the returned `SKILL.md`.
-- Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
-- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
-
-# Skill mappings - load `use` with `npx @tanstack/intent@latest load <use>`.
-
-skills:
-
-- when: "React bindings for TanStack Start: createStart, StartClient, StartServer, React-specific imports, re-exports from @tanstack/react-router, full project setup with React, useServerFn hook."
-  use: "@tanstack/react-start#react-start"
-- when: "Implement, review, debug, and refactor TanStack Start React Server Components in React 19 apps. Use when tasks mention @tanstack/react-start/rsc, renderServerComponent, createCompositeComponent, CompositeComponent, renderToReadableStream, createFromReadableStream, createFromFetch, Composite Components, React Flight streams, loader or query owned RSC caching, router.invalidate, structuralSharing: false, selective SSR, stale names like renderRsc or .validator, or migration from Next App Router RSC patterns. Do not use for generic SSR or non-TanStack RSC frameworks except brief comparison."
-  use: "@tanstack/react-start#react-start/server-components"
-- when: "Framework-agnostic core concepts for TanStack Router: route trees, createRouter, createRoute, createRootRoute, createRootRouteWithContext, addChildren, Register type declaration, route matching, route sorting, file naming conventions. Entry point for all router skills."
-  use: "@tanstack/router-core#router-core"
-- when: "Route protection with beforeLoad, redirect()/throw redirect(), isRedirect helper, authenticated layout routes (\_authenticated), non-redirect auth (inline login), RBAC with roles and permissions, auth provider integration (Auth0, Clerk, Supabase), router context for auth state."
-  use: "@tanstack/router-core#router-core/auth-and-guards"
-- when: "Automatic code splitting (autoCodeSplitting), .lazy.tsx convention, createLazyFileRoute, createLazyRoute, lazyRouteComponent, getRouteApi for typed hooks in split files, codeSplitGroupings per-route override, splitBehavior programmatic config, critical vs non-critical properties."
-  use: "@tanstack/router-core#router-core/code-splitting"
-- when: "Route loader option, loaderDeps for cache keys, staleTime/gcTime/ defaultPreloadStaleTime SWR caching, pendingComponent/pendingMs/ pendingMinMs, errorComponent/onError/onCatch, beforeLoad, router context and createRootRouteWithContext DI pattern, router.invalidate, Await component, deferred data loading with unawaited promises."
-  use: "@tanstack/router-core#router-core/data-loading"
-- when: "Link component, useNavigate, Navigate component, router.navigate, ToOptions/NavigateOptions/LinkOptions, from/to relative navigation, activeOptions/activeProps, preloading (intent/viewport/render), preloadDelay, navigation blocking (useBlocker, Block), createLink, linkOptions helper, scroll restoration, MatchRoute."
-  use: "@tanstack/router-core#router-core/navigation"
-- when: "notFound() function, notFoundComponent, defaultNotFoundComponent, notFoundMode (fuzzy/root), errorComponent, CatchBoundary, CatchNotFound, isNotFound, NotFoundRoute (deprecated), route masking (mask option, createRouteMask, unmaskOnReload)."
-  use: "@tanstack/router-core#router-core/not-found-and-errors"
-- when: "Dynamic path segments ($paramName), splat routes ($ / \_splat), optional params ({-$paramName}), prefix/suffix patterns ({$param}.ext), useParams, params.parse/stringify, pathParamsAllowedCharacters, i18n locale patterns."
-  use: "@tanstack/router-core#router-core/path-params"
-- when: "validateSearch, search param validation with Zod/Valibot/ArkType adapters, fallback(), search middlewares (retainSearchParams, stripSearchParams), custom serialization (parseSearch, stringifySearch), search param inheritance, loaderDeps for cache keys, reading and writing search params."
-  use: "@tanstack/router-core#router-core/search-params"
-- when: "Non-streaming and streaming SSR, RouterClient/RouterServer, renderRouterToString/renderRouterToStream, createRequestHandler, defaultRenderHandler/defaultStreamHandler, HeadContent/Scripts components, head route option (meta/links/styles/scripts), ScriptOnce, automatic loader dehydration/hydration, memory history on server, data serialization, document head management."
-  use: "@tanstack/router-core#router-core/ssr"
-- when: "Full type inference philosophy (never cast, never annotate inferred values), Register module declaration, from narrowing on hooks and Link, strict:false for shared components, getRouteApi for code-split typed access, addChildren with object syntax for TS perf, LinkProps and ValidateLinkOptions type utilities, as const satisfies pattern."
-  use: "@tanstack/router-core#router-core/type-safety"
-- when: "TanStack Router bundler plugin for route generation and automatic code splitting. Supports Vite, Webpack, Rspack, and esbuild. Configures autoCodeSplitting, routesDirectory, target framework, and code split groupings."
-  use: "@tanstack/router-plugin#router-plugin"
-- when: "Core overview for TanStack Start: tanstackStart() Vite plugin, getRouter() factory, root route document shell (HeadContent, Scripts, Outlet), client/server entry points, routeTree.gen.ts, tsconfig configuration. Entry point for all Start skills."
-  use: "@tanstack/start-client-core#start-core"
-- when: "Deploy to Cloudflare Workers, Netlify, Vercel, Node.js/Docker, Bun, Railway. Selective SSR (ssr option per route), SPA mode, static prerendering, ISR with Cache-Control headers, SEO and head management."
-  use: "@tanstack/start-client-core#start-core/deployment"
-- when: "Isomorphic-by-default principle, environment boundary functions (createServerFn, createServerOnlyFn, createClientOnlyFn, createIsomorphicFn), ClientOnly component, useHydrated hook, import protection, dead code elimination, environment variable safety (VITE\_ prefix, process.env)."
-  use: "@tanstack/start-client-core#start-core/execution-model"
-- when: "createMiddleware, request middleware (.server only), server function middleware (.client + .server), context passing via next({ context }), sendContext for client-server transfer, global middleware via createStart in src/start.ts, middleware factories, method order enforcement, fetch override precedence."
-  use: "@tanstack/start-client-core#start-core/middleware"
-- when: "createServerFn (GET/POST), inputValidator (Zod or function), useServerFn hook, server context utilities (getRequest, getRequestHeader, setResponseHeader, setResponseStatus), error handling (throw errors, redirect, notFound), streaming, FormData handling, file organization (.functions.ts, .server.ts)."
-  use: "@tanstack/start-client-core#start-core/server-functions"
-- when: "Server-side API endpoints using the server property on createFileRoute, HTTP method handlers (GET, POST, PUT, DELETE), createHandlers for per-handler middleware, handler context (request, params, context), request body parsing, response helpers, file naming for API routes."
-  use: "@tanstack/start-client-core#start-core/server-routes"
-- when: "Server-side runtime for TanStack Start: createStartHandler, request/response utilities (getRequest, setResponseHeader, setCookie, getCookie, useSession), three-phase request handling, AsyncLocalStorage context."
-  use: "@tanstack/start-server-core#start-server-core"
-- when: "Programmatic route tree building as an alternative to filesystem conventions: rootRoute, index, route, layout, physical, defineVirtualSubtreeConfig. Use with TanStack Router plugin's virtualRouteConfig option."
-  use: "@tanstack/virtual-file-routes#virtual-file-routes"
+- Never `git commit`, `git push`, or run DB migrations without explicit approval
+- Never edit past migrations — always create new ones
+- Only change what you're asked to change
