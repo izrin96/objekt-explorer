@@ -5,14 +5,33 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { router } from "@/lib/server/api/routers";
 
+function serializeError(err: unknown): Record<string, unknown> {
+  if (err instanceof ORPCError) {
+    return {
+      code: err.code,
+      status: err.status,
+      message: err.message,
+      defined: err.defined,
+      data: err.data,
+      cause: err.cause ? serializeError(err.cause) : undefined,
+      stack: err.stack,
+    };
+  }
+  if (err instanceof Error) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+    };
+  }
+  return { value: err };
+}
+
 const handler = new RPCHandler(router, {
   interceptors: [
     onError((error) => {
-      // Log the full error and stack trace
-      console.error("ORPC Internal Error:", error);
-      if (error instanceof ORPCError && error.cause) {
-        console.error("Underlying cause:", error.cause);
-      }
+      const serialized = serializeError(error);
+      console.error("[ORPC Error]", JSON.stringify(serialized, null, 2));
     }),
   ],
   plugins: [new BatchHandlerPlugin()],

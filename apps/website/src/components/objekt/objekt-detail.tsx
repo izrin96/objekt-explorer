@@ -39,7 +39,7 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
 
   return (
     <div
-      className="flex h-full w-full flex-col gap-2 p-2 sm:grid sm:h-134 sm:min-h-134 sm:grid-cols-3 sm:p-3"
+      className="flex size-full flex-col gap-2 p-2 sm:grid sm:h-134 sm:min-h-134 sm:grid-cols-3 sm:p-3"
       style={
         {
           "--objekt-bg-color": objekt.backgroundColor,
@@ -133,7 +133,7 @@ export function ObjektCard({
 
   return (
     <div
-      className="@container relative h-full w-full cursor-pointer"
+      className="aspect-photocard @container relative size-full cursor-pointer"
       tabIndex={0}
       role="button"
       onClick={() => setFlipped((prev) => !prev)}
@@ -141,13 +141,13 @@ export function ObjektCard({
     >
       <div
         data-flipped={flipped}
-        className="aspect-photocard relative h-full w-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
+        className="aspect-photocard relative size-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
       >
         {/* Front side */}
         <div className="absolute inset-0 grid rotate-y-0 overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {/* Progressive loading: show resized first, then original when loaded */}
           <img
-            className="h-full w-full object-cover"
+            className="size-full object-cover"
             width={OBJEKT_SIZE.width}
             height={OBJEKT_SIZE.height}
             loading="eager"
@@ -157,7 +157,7 @@ export function ObjektCard({
           />
           {!loaded && (
             <img
-              className="h-full w-full object-cover"
+              className="size-full object-cover"
               width={582}
               height={900}
               loading="eager"
@@ -171,7 +171,7 @@ export function ObjektCard({
         <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {urls.backUrl && (
             <img
-              className="h-full w-full object-cover"
+              className="size-full object-cover"
               width={OBJEKT_SIZE.width}
               height={OBJEKT_SIZE.height}
               loading="eager"

@@ -58,7 +58,7 @@ const CustomVideoPlaceholder = ({ style }: VideoPlaceholderProps) => {
   const liveSession = useLiveSession();
   const { participant } = useParticipantViewContext();
   return (
-    <div className="-z-10 flex h-full w-full items-center justify-center" style={style}>
+    <div className="-z-10 flex size-full items-center justify-center" style={style}>
       <div
         className="relative h-24 w-24 rounded-full outline-4 outline-(--color)"
         style={
@@ -180,7 +180,7 @@ const CustomLivestreamLayout = () => {
         )}
         <ParticipantView
           PictureInPicturePlaceholder={null}
-          className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:h-full [&>video]:w-full [&>video]:object-contain"
+          className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:size-full [&>video]:object-contain"
           // render when video is disabled
           VideoPlaceholder={CustomVideoPlaceholder}
           // render after video element
@@ -189,7 +189,7 @@ const CustomLivestreamLayout = () => {
           muteAudio
         />
         {!open && (
-          <div className="bg-bg/50 absolute top-0 left-0 flex h-full w-full items-center justify-center">
+          <div className="bg-bg/50 absolute top-0 left-0 flex size-full items-center justify-center">
             <Button intent="primary" onPress={() => setOpen(true)}>
               Unmute
             </Button>

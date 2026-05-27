@@ -69,35 +69,37 @@ export default function ObjektView({
   const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
-    <div className={cn("flex flex-col gap-2 @container", isFade && "opacity-35")} style={css}>
-      <div
-        className={cn(
-          "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md transition-opacity",
-          "contain-layout contain-paint",
-          isSelected && "bg-fg outline-[calc(100cqi*0.034)]",
-          !loaded && "opacity-0",
-        )}
-      >
-        <img
-          draggable={false}
-          onClick={ctx.handleClick}
-          className="h-full w-full object-cover"
-          src={resizedUrl}
-          width={582}
-          height={900}
-          alt={objekt.collectionId}
-          onLoad={() => setLoaded(true)}
-          fetchPriority={isPriority ? "high" : "auto"}
-          decoding="async"
-        />
-        <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
-        {showCount && objekts.length > 1 && (
-          <div className="bg-bg text-fg text-xxs pointer-events-none m-1 flex self-end justify-self-start overflow-hidden rounded-full px-1.5 py-0.5 font-medium sm:px-2 sm:py-1 sm:text-xs">
-            {objekts.length.toLocaleString()}
-          </div>
-        )}
+    <div className={cn("flex flex-col gap-2", isFade && "opacity-35")} style={css}>
+      <div className="@container">
+        <div
+          className={cn(
+            "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md transition-opacity",
+            "contain-layout contain-paint",
+            isSelected && "bg-fg outline-[calc(100cqi*0.034)]",
+            !loaded && "opacity-0",
+          )}
+        >
+          <img
+            draggable={false}
+            onClick={ctx.handleClick}
+            className="size-full object-cover"
+            src={resizedUrl}
+            width={582}
+            height={900}
+            alt={objekt.collectionId}
+            onLoad={() => setLoaded(true)}
+            fetchPriority={isPriority ? "high" : "auto"}
+            decoding="async"
+          />
+          <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
+          {showCount && objekts.length > 1 && (
+            <div className="bg-bg text-fg text-xxs pointer-events-none m-1 flex self-end justify-self-start overflow-hidden rounded-full px-1.5 py-0.5 font-medium sm:px-2 sm:py-1 sm:text-xs">
+              {objekts.length.toLocaleString()}
+            </div>
+          )}
 
-        {children}
+          {children}
+        </div>
       </div>
       {showBottomContent && (
         <div className="flex flex-col items-center justify-center gap-1 text-center">

@@ -127,7 +127,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
           dataKey="count"
           config={{} satisfies ChartConfig}
           containerHeight={450}
-          className="h-full w-full"
+          className="size-full"
         >
           <PieChart>
             <ChartTooltip
@@ -217,7 +217,7 @@ function BreakdownBySeasonChart({ objekts }: { objekts: ValidObjekt[] }) {
           dataKey="count"
           config={{} satisfies ChartConfig}
           containerHeight={450}
-          className="h-full w-full"
+          className="size-full"
         >
           <PieChart>
             <ChartTooltip

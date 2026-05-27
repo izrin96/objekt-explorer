@@ -41,13 +41,13 @@ export default function ObjektSidebar(props: Props) {
   };
 
   return (
-    <div className="pointer-events-none grid h-full w-full items-center text-base text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
+    <div className="pointer-events-none grid size-full items-center text-base text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
       {/* custom band image */}
       {objekt.bandImageUrl && (
         <img
           ref={ref}
           onLoad={handleImageLoad}
-          className="h-full w-full object-cover"
+          className="size-full object-cover"
           style={offsetPx > 0 ? { marginLeft: `${offsetPx}px` } : undefined}
           alt="band image"
           src={objekt.bandImageUrl}
@@ -69,7 +69,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
       height={CANVAS_H}
       viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
       xmlns="http://www.w3.org/2000/svg"
-      className="h-full w-full"
+      className="size-full"
     >
       {/* band background */}
       {isIdntt && !objekt.bandImageUrl && (
