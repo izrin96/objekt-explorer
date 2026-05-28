@@ -391,9 +391,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           )}
         />
 
-        {(watchedListTypeNew === "have" ||
-          watchedListTypeNew === "want" ||
-          watchedListTypeNew === "sale") && (
+        {(watchedListTypeNew === "have" || watchedListTypeNew === "want") && (
           <Controller
             control={control}
             name="discoverable"

@@ -38,7 +38,7 @@ export default function TradeMatches() {
         {m.list_trade_matches_title()}
       </Button>
 
-      <ModalContent isOpen={open} onOpenChange={setOpen} size="2xl">
+      <ModalContent isOpen={open} onOpenChange={setOpen} size="3xl">
         <ModalHeader>
           <ModalTitle>{m.list_trade_matches_title()}</ModalTitle>
           <ModalDescription>{m.list_trade_matches_description()}</ModalDescription>

@@ -376,9 +376,7 @@ function EditListForm({
           )}
         />
 
-        {(data.listTypeNew === "have" ||
-          data.listTypeNew === "want" ||
-          data.listTypeNew === "sale") && (
+        {(data.listTypeNew === "have" || data.listTypeNew === "want") && (
           <Controller
             control={control}
             name="discoverable"

@@ -92,21 +92,33 @@ function PartnerDisclosure({
       </DisclosureTrigger>
       <DisclosurePanel>
         <div className="flex flex-col gap-4">
-          {(partner.user.discord || partner.user.twitter) && (
+          {(partner.nicknames.length > 0 || partner.user.discord || partner.user.twitter) && (
             <div className="text-muted-fg border-border flex flex-wrap items-center gap-x-4 gap-y-1 border-b pb-3 text-xs">
+              {partner.nicknames.length > 0 && (
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 pt-px">Cosmo ID:</span>
+                  <span className="text-fg font-medium select-all">
+                    {partner.nicknames.join(", ")}
+                  </span>
+                </div>
+              )}
               {partner.user.discord && (
-                <span className="inline-flex items-center gap-1.5">
-                  <DiscordLogoIcon />
-                  <span>Discord:</span>
-                  <span className="text-fg font-mono font-medium">{partner.user.discord}</span>
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <DiscordLogoIcon />
+                    <span>Discord:</span>
+                  </span>
+                  <span className="text-fg font-medium select-all">{partner.user.discord}</span>
+                </div>
               )}
               {partner.user.twitter && (
-                <span className="inline-flex items-center gap-1.5">
-                  <XLogoIcon />
-                  <span>Twitter:</span>
-                  <span className="text-fg font-mono font-medium">@{partner.user.twitter}</span>
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5">
+                    <XLogoIcon />
+                    <span>Twitter:</span>
+                  </span>
+                  <span className="text-fg font-medium select-all">{partner.user.twitter}</span>
+                </div>
               )}
             </div>
           )}
