@@ -100,6 +100,13 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
     }
   }, [watchedListTypeNew, setValue]);
 
+  // Reset discoverable when profile bind is disabled (have/sale only)
+  useEffect(() => {
+    if (!watchedIsProfileBind && (watchedListTypeNew === "have" || watchedListTypeNew === "sale")) {
+      setValue("discoverable", false);
+    }
+  }, [watchedIsProfileBind, watchedListTypeNew, setValue]);
+
   // Filter linked list options based on opposite type
   const linkedListOptions = userLists.filter((l) => {
     if (watchedListTypeNew === "have") return l.listTypeNew === "want";
@@ -354,25 +361,45 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           />
         )}
 
-        {(watchedListTypeNew === "sale" || watchedListTypeNew === "have") &&
-          watchedIsProfileBind && (
-            <Controller
-              control={control}
-              name="hideSerial"
-              render={({ field: { name, value, onChange, onBlur } }) => (
-                <Checkbox
-                  name={name}
-                  isSelected={value}
-                  onChange={onChange}
-                  onBlur={onBlur}
-                  validationBehavior="aria"
-                >
-                  <Label>{m.list_create_hide_serial_label()}</Label>
-                  <Description>{m.list_create_hide_serial_desc()}</Description>
-                </Checkbox>
-              )}
-            />
-          )}
+        {/* sale type will enable later */}
+        {watchedListTypeNew === "have" && (
+          <Controller
+            control={control}
+            name="discoverable"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Switch
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isDisabled={!watchedIsProfileBind}
+              >
+                <Label>{m.list_create_discoverable_label()}</Label>
+                <Description>{m.list_create_discoverable_desc()}</Description>
+              </Switch>
+            )}
+          />
+        )}
+
+        {(watchedListTypeNew === "sale" || watchedListTypeNew === "have") && (
+          <Controller
+            control={control}
+            name="hideSerial"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Checkbox
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                validationBehavior="aria"
+                isDisabled={!watchedIsProfileBind}
+              >
+                <Label>{m.list_create_hide_serial_label()}</Label>
+                <Description>{m.list_create_hide_serial_desc()}</Description>
+              </Checkbox>
+            )}
+          />
+        )}
 
         <Controller
           control={control}
@@ -390,19 +417,6 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             </Checkbox>
           )}
         />
-
-        {(watchedListTypeNew === "have" || watchedListTypeNew === "want") && (
-          <Controller
-            control={control}
-            name="discoverable"
-            render={({ field: { name, value, onChange, onBlur } }) => (
-              <Switch name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-                <Label>{m.list_create_discoverable_label()}</Label>
-                <Description>{m.list_create_discoverable_desc()}</Description>
-              </Switch>
-            )}
-          />
-        )}
 
         <Portal to="#submit-form-create-list">
           <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>

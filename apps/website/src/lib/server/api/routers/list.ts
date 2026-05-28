@@ -274,7 +274,9 @@ export const listRouter = {
                   ? input.hideSerial
                   : false,
               linkedListId,
-              discoverable: input.discoverable,
+              discoverable: ["have", "sale"].includes(list.listTypeNew)
+                ? list.isProfileBind && input.discoverable
+                : false,
             })
             .where(eq(lists.id, list.id));
 
@@ -300,14 +302,6 @@ export const listRouter = {
                 .set({ linkedListId: list.id })
                 .where(eq(lists.id, linkedListId));
             }
-          }
-
-          // Propagate discoverable to the linked list
-          if (linkedListId) {
-            await tx
-              .update(lists)
-              .set({ discoverable: input.discoverable })
-              .where(eq(lists.id, linkedListId));
           }
         });
       },
@@ -411,7 +405,9 @@ export const listRouter = {
               profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
               description: input.description,
               currency: input.listTypeNew === "sale" ? input.currency : null,
-              discoverable: input.discoverable,
+              discoverable: ["have", "sale"].includes(input.listTypeNew)
+                ? isProfileBind && input.discoverable
+                : false,
             })
             .returning({ insertedId: lists.id });
 
@@ -426,31 +422,6 @@ export const listRouter = {
               .update(lists)
               .set({ linkedListId: inserted.insertedId })
               .where(eq(lists.id, linkedListId));
-
-            // Propagate discoverable bidirectionally:
-            // if either the new list or the linked list wants discoverable, both get it
-            const [linked] = await tx
-              .select({ discoverable: lists.discoverable })
-              .from(lists)
-              .where(eq(lists.id, linkedListId));
-
-            const linkedIsDiscoverable = linked?.discoverable ?? false;
-            const shouldBeDiscoverable = input.discoverable || linkedIsDiscoverable;
-
-            if (shouldBeDiscoverable) {
-              if (!linkedIsDiscoverable) {
-                await tx
-                  .update(lists)
-                  .set({ discoverable: true })
-                  .where(eq(lists.id, linkedListId));
-              }
-              if (!input.discoverable) {
-                await tx
-                  .update(lists)
-                  .set({ discoverable: true })
-                  .where(eq(lists.id, inserted.insertedId));
-              }
-            }
           }
         });
       },
@@ -617,6 +588,7 @@ export const listRouter = {
               eq(lists.listTypeNew, "have"),
               isNotNull(lists.linkedListId),
               eq(lists.discoverable, true),
+              eq(lists.isProfileBind, true),
             ),
           ),
       );
@@ -634,7 +606,7 @@ export const listRouter = {
           })
           .from(w)
           .innerJoin(h, eq(h.linkedListId, w.id))
-          .where(and(eq(w.listTypeNew, "want"), eq(w.discoverable, true))),
+          .where(and(eq(w.listTypeNew, "want"))),
       );
 
       // CTEs for my entries — used as JOIN filters below

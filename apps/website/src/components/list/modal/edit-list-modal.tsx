@@ -340,7 +340,27 @@ function EditListForm({
           />
         )}
 
-        {(data.listTypeNew === "sale" || data.listTypeNew === "have") && data.isProfileBind && (
+        {/* sale type will enable later */}
+        {data.listTypeNew === "have" && (
+          <Controller
+            control={control}
+            name="discoverable"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Switch
+                name={name}
+                isSelected={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isDisabled={!data.isProfileBind}
+              >
+                <Label>{m.list_create_discoverable_label()}</Label>
+                <Description>{m.list_create_discoverable_desc()}</Description>
+              </Switch>
+            )}
+          />
+        )}
+
+        {(data.listTypeNew === "sale" || data.listTypeNew === "have") && (
           <Controller
             control={control}
             name="hideSerial"
@@ -351,6 +371,7 @@ function EditListForm({
                 onChange={onChange}
                 onBlur={onBlur}
                 validationBehavior="aria"
+                isDisabled={!data.isProfileBind}
               >
                 <Label>{m.list_create_hide_serial_label()}</Label>
                 <Description>{m.list_create_hide_serial_desc()}</Description>
@@ -375,19 +396,6 @@ function EditListForm({
             </Checkbox>
           )}
         />
-
-        {(data.listTypeNew === "have" || data.listTypeNew === "want") && (
-          <Controller
-            control={control}
-            name="discoverable"
-            render={({ field: { name, value, onChange, onBlur } }) => (
-              <Switch name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
-                <Label>{m.list_create_discoverable_label()}</Label>
-                <Description>{m.list_create_discoverable_desc()}</Description>
-              </Switch>
-            )}
-          />
-        )}
 
         <Controller
           control={control}
