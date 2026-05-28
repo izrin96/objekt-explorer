@@ -15,6 +15,7 @@ import { Avatar } from "../intentui/avatar-custom";
 import { Button, buttonStyles } from "../intentui/button";
 import { ExternalLink } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
+import { ApolloIcon } from "../shared/apollo-icon";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -72,6 +73,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         })}
         href={`https://apollo.cafe/@${user.nickname || user.address}`}
       >
+        <ApolloIcon />
         {m.profile_header_view_in_apollo()}
       </ExternalLink>
 

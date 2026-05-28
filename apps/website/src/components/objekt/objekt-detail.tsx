@@ -1,4 +1,4 @@
-import { ArrowTopRightOnSquareIcon, ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
+import { ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
 import {
   CaretLeftIcon,
   CaretRightIcon,
@@ -22,6 +22,7 @@ import { Button } from "../intentui/button";
 import { Card, CardContent } from "../intentui/card";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
 import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
+import { ApolloIcon } from "../shared/apollo-icon";
 import { AttributePanel } from "./objekt-attribute";
 import ObjektSidebar from "./objekt-sidebar";
 import TradeView from "./trade-view";
@@ -94,7 +95,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           rel="noopener noreferrer"
           target="_blank"
         >
-          <ArrowTopRightOnSquareIcon />
+          <ApolloIcon />
           {m.objekt_view_in_apollo()}
         </Tab>
       </TabList>

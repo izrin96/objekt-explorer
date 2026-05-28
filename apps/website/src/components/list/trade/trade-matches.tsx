@@ -34,7 +34,7 @@ export default function TradeMatches() {
   return (
     <>
       <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-full sm:w-auto">
-        <UsersIcon className="size-4" />
+        <UsersIcon />
         {m.list_trade_matches_title()}
       </Button>
 
