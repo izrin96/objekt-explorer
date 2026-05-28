@@ -11,7 +11,8 @@ import {
   toTime,
 } from "@internationalized/date";
 import { ClockCounterClockwiseIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
-import { useRef, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 
 import { useFilters } from "@/hooks/use-filters";
 import { getClientLocale } from "@/lib/utils";
@@ -30,12 +31,10 @@ import {
 } from "../intentui/popover";
 import { TimeField, TimeInput } from "../intentui/time-field";
 
-const TIME_ZONE = getLocalTimeZone();
-
 function safeParse(isoStr: string | null) {
   if (!isoStr) return null;
   try {
-    return parseAbsolute(isoStr, TIME_ZONE);
+    return parseAbsolute(isoStr, getLocalTimeZone());
   } catch {
     return null;
   }
@@ -60,24 +59,29 @@ function formatCheckpointLabel(isoStr: string | null, defaultLabel: string) {
 
 export default function CheckpointPicker() {
   const [filters, setFilters] = useFilters();
-  const currentValue = safeParse(filters.at);
   const triggerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
 
-  const [selectedDate, setSelectedDate] = useState(
-    currentValue ? toCalendarDate(currentValue) : null,
-  );
-  const [selectedTime, setSelectedTime] = useState<Time | null>(
-    currentValue ? toTime(currentValue) : toTime(now(TIME_ZONE)),
-  );
+  const [selectedDate, setSelectedDate] = useState<CalendarDate | null>(null);
+  const [selectedTime, setSelectedTime] = useState<Time | null>(null);
+  const [maxDate, setMaxDate] = useState<CalendarDate | null>(null);
+
+  // Sync client-only values from filters on mount.
+  useEffect(() => {
+    setMaxDate(toCalendarDate(now(getLocalTimeZone())));
+    const parsed = safeParse(filters.at);
+    if (parsed) {
+      setSelectedDate(toCalendarDate(parsed));
+      setSelectedTime(toTime(parsed));
+    }
+  }, []);
 
   const handleApply = () => {
     if (!selectedDate || !selectedTime) return;
 
-    // Combine date and time into CalendarDateTime
     const dateTime = toCalendarDateTime(selectedDate, selectedTime);
-    const isoString = dateTime.toDate(TIME_ZONE).toISOString();
+    const isoString = dateTime.toDate(getLocalTimeZone()).toISOString();
     setIsOpen(false);
     void setFilters({ at: isoString });
   };
@@ -91,7 +95,11 @@ export default function CheckpointPicker() {
         onPress={() => setIsOpen(true)}
       >
         <ClockCounterClockwiseIcon />
-        {formatCheckpointLabel(filters.at, m.checkpoint_title())}
+        <ClientOnly fallback={m.checkpoint_title()}>
+          {filters.at
+            ? formatCheckpointLabel(filters.at, m.checkpoint_title())
+            : m.checkpoint_title()}
+        </ClientOnly>
       </Button>
       <PopoverContent
         placement="bottom left"
@@ -108,7 +116,7 @@ export default function CheckpointPicker() {
             <Calendar
               value={selectedDate}
               onChange={setSelectedDate}
-              maxValue={toCalendarDate(now(TIME_ZONE))}
+              maxValue={maxDate}
               minValue={new CalendarDate(new GregorianCalendar(), 2022, 8, 1)}
             />
             <TimeField
