@@ -42,7 +42,7 @@ crons.push(cron("*/5 * * * *", drainOutbox));
 
 // periodic safety-net full scan for stale entries
 await cleanupStaleEntries();
-crons.push(cron("0 * * * *", cleanupStaleEntries));
+crons.push(cron("2 * * * *", cleanupStaleEntries));
 
 // cache collection rarity list
 await populateRarity();
