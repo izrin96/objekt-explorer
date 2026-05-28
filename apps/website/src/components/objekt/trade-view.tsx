@@ -191,7 +191,8 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold">{m.objekt_token_id()}</span>
             <div className="flex items-center gap-2">
-              <Skeleton className="h-[24px] w-30" soft />
+              <Skeleton className="h-[24px] w-17" soft />
+              <Skeleton className="h-[28px] w-[28px]" soft />
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -199,7 +200,7 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
             <Skeleton className="h-[20px] w-8" soft />
           </div>
         </div>
-        <Skeleton className="h-20 w-full rounded-lg" soft />
+        <Skeleton className="h-[84px] w-full rounded-lg" soft />
       </div>
     );
 
