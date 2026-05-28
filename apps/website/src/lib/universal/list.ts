@@ -18,6 +18,7 @@ export const baseListSchema = z.object({
   hideSerial: z.boolean().nullish(),
   gridColumns: z.number().nullish(),
   description: z.string().nullish(),
+  discoverable: z.boolean().nullish(),
   user: publicUserSchema.nullish(),
   profile: publicProfileSchema.nullish(),
 });
@@ -26,3 +27,27 @@ export const publicListSchema = baseListSchema.extend({
   linkedList: baseListSchema.nullish(),
 });
 export type PublicList = z.infer<typeof publicListSchema>;
+
+// Trade match schemas
+export const partnerListMatchSchema = z.object({
+  listId: z.number(),
+  listSlug: z.string(),
+  listName: z.string(),
+  theyHaveIWant: z.string().array(),
+  iHaveTheyWant: z.string().array(),
+});
+export type PartnerListMatch = z.infer<typeof partnerListMatchSchema>;
+
+export const tradePartnerSchema = z.object({
+  username: z.string(),
+  user: publicUserSchema,
+  nicknames: z.string().array(),
+  matches: partnerListMatchSchema.array(),
+});
+export type TradePartner = z.infer<typeof tradePartnerSchema>;
+
+export const tradePartnersResponseSchema = z.object({
+  partners: tradePartnerSchema.array(),
+  collections: z.record(z.string(), z.unknown()),
+});
+export type TradePartnersResponse = z.infer<typeof tradePartnersResponseSchema>;

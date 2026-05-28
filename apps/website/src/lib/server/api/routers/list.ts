@@ -1,12 +1,14 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
-import { objekts } from "@repo/db/indexer/schema";
-import { listEntries, lists } from "@repo/db/schema";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { collections, objekts } from "@repo/db/indexer/schema";
+import { listEntries, lists, user, userAddress } from "@repo/db/schema";
+import { and, countDistinct, desc, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
 import * as z from "zod";
 
+import { toPublicUser } from "../../auth.server";
 import {
   buildListEntries,
   checkProfileOwnership,
@@ -89,19 +91,21 @@ export const listRouter = {
           }
 
           const objektsData = await indexer
-            .select({ id: objekts.id, owner: objekts.owner })
+            .select({ id: objekts.id, owner: objekts.owner, slug: collections.slug })
             .from(objekts)
+            .innerJoin(collections, eq(collections.id, objekts.collectionId))
             .where(inArray(objekts.id, inputObjekts));
 
-          const validObjekts = objektsData
-            .filter((o) => o.owner === list.profileAddress!.toLowerCase())
-            .map((o) => o.id);
+          const validObjekts = objektsData.filter(
+            (o) => o.owner === list.profileAddress!.toLowerCase(),
+          );
 
           if (validObjekts.length === 0) return [];
 
-          const values = validObjekts.map((objektId) => ({
+          const values = validObjekts.map((objekt) => ({
             listId: list.id,
-            objektId,
+            objektId: objekt.id,
+            collectionSlug: objekt.slug,
           }));
 
           const result = await db
@@ -208,6 +212,7 @@ export const listRouter = {
         currency: z.string().max(10).nullable(),
         hideSerial: z.boolean(),
         linkedListId: z.number().nullable(),
+        discoverable: z.boolean(),
       }),
     )
     .handler(
@@ -269,6 +274,7 @@ export const listRouter = {
                   ? input.hideSerial
                   : false,
               linkedListId,
+              discoverable: input.discoverable,
             })
             .where(eq(lists.id, list.id));
 
@@ -294,6 +300,14 @@ export const listRouter = {
                 .set({ linkedListId: list.id })
                 .where(eq(lists.id, linkedListId));
             }
+          }
+
+          // Propagate discoverable to the linked list
+          if (linkedListId) {
+            await tx
+              .update(lists)
+              .set({ discoverable: input.discoverable })
+              .where(eq(lists.id, linkedListId));
           }
         });
       },
@@ -330,6 +344,7 @@ export const listRouter = {
         profileAddress: z.string().min(1).nullable(),
         description: z.string().nullable(),
         currency: z.string().max(10).nullable(),
+        discoverable: z.boolean().default(false),
       }),
     )
     .handler(
@@ -395,6 +410,7 @@ export const listRouter = {
             profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
             description: input.description,
             currency: input.listTypeNew === "sale" ? input.currency : null,
+            discoverable: input.discoverable,
           })
           .returning({ insertedId: lists.id });
 
@@ -410,6 +426,31 @@ export const listRouter = {
               .update(lists)
               .set({ linkedListId: result.insertedId })
               .where(eq(lists.id, linkedListId));
+
+            // Propagate discoverable bidirectionally:
+            // if either the new list or the linked list wants discoverable, both get it
+            const [linked] = await tx
+              .select({ discoverable: lists.discoverable })
+              .from(lists)
+              .where(eq(lists.id, linkedListId));
+
+            const linkedIsDiscoverable = linked?.discoverable ?? false;
+            const shouldBeDiscoverable = input.discoverable || linkedIsDiscoverable;
+
+            if (shouldBeDiscoverable) {
+              if (!linkedIsDiscoverable) {
+                await tx
+                  .update(lists)
+                  .set({ discoverable: true })
+                  .where(eq(lists.id, linkedListId));
+              }
+              if (!input.discoverable) {
+                await tx
+                  .update(lists)
+                  .set({ discoverable: true })
+                  .where(eq(lists.id, result.insertedId));
+              }
+            }
           });
         }
       },
@@ -536,5 +577,330 @@ export const listRouter = {
       ].join("\n");
 
       return new File([csv], `Export - ${result.slug}.csv`, { type: "text/csv" });
+    }),
+
+  findTradePartners: authed
+    .input(
+      z.object({
+        slug: z.string(),
+      }),
+    )
+    .handler(async ({ input: { slug }, context: { session } }) => {
+      const list = await findOwnedList(slug, session.user.id);
+
+      if (!["have", "want"].includes(list.listTypeNew)) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "List must be a have or want list",
+        });
+      }
+
+      const linkedListId = list.linkedListId;
+      if (!linkedListId) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "List is not linked to a paired list",
+        });
+      }
+
+      // Base CTEs
+      const tradeActiveHaves = db.$with("trade_active_haves").as(
+        db
+          .select({
+            listId: lists.id,
+            listSlug: lists.slug,
+            listName: lists.name,
+            userId: lists.userId,
+            wantListId: lists.linkedListId,
+          })
+          .from(lists)
+          .where(
+            and(
+              eq(lists.listTypeNew, "have"),
+              isNotNull(lists.linkedListId),
+              eq(lists.discoverable, true),
+            ),
+          ),
+      );
+
+      const w = alias(lists, "w");
+      const h = alias(lists, "h");
+
+      const tradeActiveWants = db.$with("trade_active_wants").as(
+        db
+          .select({
+            listId: w.id,
+            listSlug: w.slug,
+            listName: w.name,
+            userId: w.userId,
+          })
+          .from(w)
+          .innerJoin(h, eq(h.linkedListId, w.id))
+          .where(and(eq(w.listTypeNew, "want"), eq(w.discoverable, true))),
+      );
+
+      // CTEs for my entries — used as JOIN filters below
+      const myAnchorCollections = db.$with("my_anchor_collections").as(
+        db
+          .select({ collectionSlug: listEntries.collectionSlug })
+          .from(listEntries)
+          .where(and(eq(listEntries.listId, list.id), isNotNull(listEntries.collectionSlug))),
+      );
+
+      const myPairedCollections = db.$with("my_paired_collections").as(
+        db
+          .select({ collectionSlug: listEntries.collectionSlug })
+          .from(listEntries)
+          .where(and(eq(listEntries.listId, linkedListId), isNotNull(listEntries.collectionSlug))),
+      );
+
+      let partners: Array<{
+        userId: string;
+        listId: number;
+        listSlug: string;
+        listName: string;
+        theyHaveIWant: string[];
+        iHaveTheyWant: string[];
+      }> = [];
+
+      switch (list.listTypeNew) {
+        case "want": {
+          // Anchor = want list, paired = have list
+          // theirHaves: what they HAVE that matches my WANT (anchor)
+          // theirWants: what they WANT that matches my HAVE (paired)
+          const theirHaves = db.$with("their_haves").as(
+            db
+              .select({
+                userId: tradeActiveHaves.userId,
+                listId: tradeActiveHaves.listId,
+                listSlug: tradeActiveHaves.listSlug,
+                listName: tradeActiveHaves.listName,
+                wantListId: tradeActiveHaves.wantListId,
+                collectionSlug: listEntries.collectionSlug,
+              })
+              .from(listEntries)
+              .innerJoin(tradeActiveHaves, eq(tradeActiveHaves.listId, listEntries.listId))
+              .innerJoin(
+                myAnchorCollections,
+                eq(myAnchorCollections.collectionSlug, listEntries.collectionSlug),
+              )
+              .where(ne(tradeActiveHaves.userId, session.user.id)),
+          );
+
+          const theirWants = db.$with("their_wants").as(
+            db
+              .select({
+                userId: tradeActiveWants.userId,
+                listId: tradeActiveWants.listId,
+                collectionSlug: listEntries.collectionSlug,
+              })
+              .from(listEntries)
+              .innerJoin(tradeActiveWants, eq(tradeActiveWants.listId, listEntries.listId))
+              .innerJoin(
+                myPairedCollections,
+                eq(myPairedCollections.collectionSlug, listEntries.collectionSlug),
+              )
+              .where(ne(tradeActiveWants.userId, session.user.id)),
+          );
+
+          const rows = await db
+            .with(
+              tradeActiveHaves,
+              tradeActiveWants,
+              myAnchorCollections,
+              myPairedCollections,
+              theirHaves,
+              theirWants,
+            )
+            .select({
+              userId: theirHaves.userId,
+              listId: theirHaves.listId,
+              listSlug: theirHaves.listSlug,
+              listName: theirHaves.listName,
+              theyHaveIWant: sql<string[]>`array_agg(DISTINCT ${theirHaves.collectionSlug})`.as(
+                "they_have_i_want",
+              ),
+              iHaveTheyWant: sql<string[]>`array_agg(DISTINCT ${theirWants.collectionSlug})`.as(
+                "i_have_they_want",
+              ),
+            })
+            .from(theirHaves)
+            .innerJoin(
+              theirWants,
+              and(
+                eq(theirWants.userId, theirHaves.userId),
+                eq(theirWants.listId, theirHaves.wantListId),
+              ),
+            )
+            .groupBy(theirHaves.userId, theirHaves.listId, theirHaves.listSlug, theirHaves.listName)
+            .orderBy(desc(countDistinct(theirHaves.collectionSlug)))
+            .limit(50);
+
+          partners = rows.map((r) => ({
+            userId: r.userId,
+            listId: r.listId,
+            listSlug: r.listSlug,
+            listName: r.listName,
+            theyHaveIWant: r.theyHaveIWant,
+            iHaveTheyWant: r.iHaveTheyWant,
+          }));
+          break;
+        }
+
+        case "have": {
+          // Anchor = have list, paired = want list
+          // theirWants: what they WANT that matches my HAVE (anchor)
+          // theirHaves: what they HAVE that matches my WANT (paired)
+          const theirWants = db.$with("their_wants").as(
+            db
+              .select({
+                userId: tradeActiveWants.userId,
+                listId: tradeActiveWants.listId,
+                listSlug: tradeActiveWants.listSlug,
+                listName: tradeActiveWants.listName,
+                collectionSlug: listEntries.collectionSlug,
+              })
+              .from(listEntries)
+              .innerJoin(tradeActiveWants, eq(tradeActiveWants.listId, listEntries.listId))
+              .innerJoin(
+                myAnchorCollections,
+                eq(myAnchorCollections.collectionSlug, listEntries.collectionSlug),
+              )
+              .where(ne(tradeActiveWants.userId, session.user.id)),
+          );
+
+          const theirHaves = db.$with("their_haves").as(
+            db
+              .select({
+                userId: tradeActiveHaves.userId,
+                listId: tradeActiveHaves.listId,
+                listSlug: tradeActiveHaves.listSlug,
+                listName: tradeActiveHaves.listName,
+                wantListId: tradeActiveHaves.wantListId,
+                collectionSlug: listEntries.collectionSlug,
+              })
+              .from(listEntries)
+              .innerJoin(tradeActiveHaves, eq(tradeActiveHaves.listId, listEntries.listId))
+              .innerJoin(
+                myPairedCollections,
+                eq(myPairedCollections.collectionSlug, listEntries.collectionSlug),
+              )
+              .where(ne(tradeActiveHaves.userId, session.user.id)),
+          );
+
+          const rows = await db
+            .with(
+              tradeActiveHaves,
+              tradeActiveWants,
+              myAnchorCollections,
+              myPairedCollections,
+              theirWants,
+              theirHaves,
+            )
+            .select({
+              userId: theirWants.userId,
+              listId: theirWants.listId,
+              listSlug: theirWants.listSlug,
+              listName: theirWants.listName,
+              theyHaveIWant: sql<string[]>`array_agg(DISTINCT ${theirHaves.collectionSlug})`.as(
+                "they_have_i_want",
+              ),
+              iHaveTheyWant: sql<string[]>`array_agg(DISTINCT ${theirWants.collectionSlug})`.as(
+                "i_have_they_want",
+              ),
+            })
+            .from(theirWants)
+            .innerJoin(
+              theirHaves,
+              and(
+                eq(theirHaves.userId, theirWants.userId),
+                eq(theirHaves.wantListId, theirWants.listId),
+              ),
+            )
+            .groupBy(theirWants.userId, theirWants.listId, theirWants.listSlug, theirWants.listName)
+            .orderBy(desc(countDistinct(theirWants.collectionSlug)))
+            .limit(50);
+
+          partners = rows.map((r) => ({
+            userId: r.userId,
+            listId: r.listId,
+            listSlug: r.listSlug,
+            listName: r.listName,
+            theyHaveIWant: r.theyHaveIWant,
+            iHaveTheyWant: r.iHaveTheyWant,
+          }));
+          break;
+        }
+      }
+
+      if (partners.length === 0) {
+        return { partners: [], collections: {} };
+      }
+
+      // Group multiple list matches per partner, ranked by total distinct overlap
+      const userIds = [...new Set(partners.map((r) => r.userId))];
+      const allSlugs = [
+        ...new Set(partners.flatMap((r) => [...r.theyHaveIWant, ...r.iHaveTheyWant])),
+      ];
+
+      const [users, userAddrs, collectionRows] = await Promise.all([
+        db.select().from(user).where(inArray(user.id, userIds)),
+        db.select().from(userAddress).where(inArray(userAddress.userId, userIds)),
+        allSlugs.length > 0
+          ? indexer.select().from(collections).where(inArray(collections.slug, allSlugs))
+          : Promise.resolve([]),
+      ]);
+
+      const userMap = new Map(users.map((u) => [u.id, u]));
+      const collectionsData = Object.fromEntries(collectionRows.map((c) => [c.slug, c]));
+
+      // Group nicknames per user (deduplicated)
+      const nicknamesByUser = new Map<string, Set<string>>();
+      for (const addr of userAddrs) {
+        if (addr.nickname && addr.userId) {
+          const set = nicknamesByUser.get(addr.userId) ?? new Set();
+          set.add(addr.nickname);
+          nicknamesByUser.set(addr.userId, set);
+        }
+      }
+
+      // Aggregate matches per partner
+      const order: string[] = [];
+      const matchesByUser = new Map<string, Array<(typeof partners)[number]>>();
+      for (const row of partners) {
+        if (matchesByUser.has(row.userId)) {
+          matchesByUser.get(row.userId)!.push(row);
+        } else {
+          order.push(row.userId);
+          matchesByUser.set(row.userId, [row]);
+        }
+      }
+
+      const tradePartners = order
+        .map((userId) => {
+          const user = userMap.get(userId);
+          if (!user) return null;
+          const matches = matchesByUser.get(userId) ?? [];
+          return {
+            username: user.name ?? "unknown",
+            user: toPublicUser(user),
+            nicknames: [...(nicknamesByUser.get(userId) ?? [])],
+            matches: matches.map((m) => ({
+              listId: m.listId,
+              listSlug: m.listSlug,
+              listName: m.listName,
+              theyHaveIWant: m.theyHaveIWant,
+              iHaveTheyWant: m.iHaveTheyWant,
+            })),
+          };
+        })
+        .filter((p): p is NonNullable<typeof p> => p != null);
+
+      // Rank partners by total distinct collections they hold that I want
+      tradePartners.sort((a, b) => {
+        const aTotal = new Set(a.matches.flatMap((m) => m.theyHaveIWant)).size;
+        const bTotal = new Set(b.matches.flatMap((m) => m.theyHaveIWant)).size;
+        return bTotal - aTotal;
+      });
+
+      return { partners: tradePartners, collections: collectionsData };
     }),
 };

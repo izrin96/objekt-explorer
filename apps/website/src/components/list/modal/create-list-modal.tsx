@@ -1,4 +1,3 @@
-import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { Form } from "react-aria-components/Form";
@@ -19,9 +18,9 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/intentui/modal";
-import { Note } from "@/components/intentui/note";
 import { Radio, RadioGroup } from "@/components/intentui/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
+import { Switch } from "@/components/intentui/switch";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
@@ -80,6 +79,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
       listTypeNew: "general" as ListTypeNew,
       isProfileBind: false,
       hideSerial: false,
+      discoverable: false,
       linkedListId: "",
       profileAddress: "",
     },
@@ -131,6 +131,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
       listTypeNew: data.listTypeNew,
       isProfileBind: data.isProfileBind,
       hideSerial: data.hideSerial,
+      discoverable: data.discoverable,
       linkedListId: data.linkedListId ? Number(data.linkedListId) : null,
       profileAddress: data.profileAddress || null,
     });
@@ -209,15 +210,6 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             </RadioGroup>
           )}
         />
-
-        {(watchedListTypeNew === "have" || watchedListTypeNew === "want") && (
-          <Note className="bg-info-subtle text-info-subtle-fg py-2">
-            <div className="flex items-center gap-x-2">
-              <InfoIcon />
-              {m.list_create_trade_matches_coming_soon()}
-            </div>
-          </Note>
-        )}
 
         {watchedListTypeNew === "sale" && (
           <Controller
@@ -398,6 +390,21 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             </Checkbox>
           )}
         />
+
+        {(watchedListTypeNew === "have" ||
+          watchedListTypeNew === "want" ||
+          watchedListTypeNew === "sale") && (
+          <Controller
+            control={control}
+            name="discoverable"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Switch name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+                <Label>{m.list_create_discoverable_label()}</Label>
+                <Description>{m.list_create_discoverable_desc()}</Description>
+              </Switch>
+            )}
+          />
+        )}
 
         <Portal to="#submit-form-create-list">
           <Button type="submit" isPending={createList.isPending} onPress={() => onSubmit()}>

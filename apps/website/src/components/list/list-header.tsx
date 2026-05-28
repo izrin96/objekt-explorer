@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useListAuthed } from "@/hooks/use-user";
+import type { PublicList } from "@/lib/universal/list";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -14,6 +15,7 @@ import { Button, buttonStyles } from "../intentui/button";
 import { Link } from "../intentui/link";
 import { ListTypeBadge } from "../shared/list-type-badge";
 import { EditListModal } from "./modal/edit-list-modal";
+import TradeMatches from "./trade/trade-matches";
 
 export default function ListHeader() {
   const list = useListTarget()!;
@@ -86,20 +88,8 @@ export default function ListHeader() {
           </div>
         )}
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          {["have", "want"].includes(list.listTypeNew) && list.linkedList && (
-            <Link
-              className={buttonStyles({
-                intent: "outline",
-                size: "sm",
-                className: "w-full sm:w-auto",
-              })}
-              {...getListLinkOption(list.linkedList)}
-              replace
-            >
-              <CodeSimpleIcon />
-              {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
-            </Link>
-          )}
+          <SwapHaveWantList list={list} />
+          <TradeMatches />
           {isListAuthed && <EditList slug={list.slug} />}
         </div>
       </div>
@@ -107,6 +97,25 @@ export default function ListHeader() {
         <span className="text-fg text-sm whitespace-pre-wrap">{list.description}</span>
       )}
     </div>
+  );
+}
+
+function SwapHaveWantList({ list }: { list: PublicList }) {
+  if (!["have", "want"].includes(list.listTypeNew) || !list.linkedList) return null;
+
+  return (
+    <Link
+      className={buttonStyles({
+        intent: "outline",
+        size: "sm",
+        className: "w-full sm:w-auto",
+      })}
+      {...getListLinkOption(list.linkedList)}
+      replace
+    >
+      <CodeSimpleIcon />
+      {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
+    </Link>
   );
 }
 

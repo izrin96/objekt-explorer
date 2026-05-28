@@ -83,16 +83,24 @@ export const lists = pgTable(
     profileSlug: varchar("profile_slug", { length: 100 }),
     description: text("description"),
     currency: varchar("currency", { length: 10 }),
+    discoverable: boolean("discoverable").notNull().default(false),
   },
   (t) => [
     uniqueIndex("lists_slug_idx").on(t.slug),
     uniqueIndex("lists_profile_slug_idx")
       .on(t.profileAddress, t.profileSlug)
       .where(sql`profile_address IS NOT NULL AND profile_slug IS NOT NULL`),
-    index("lists_profile_address_idx").on(t.profileAddress),
+    index("lists_profile_address_idx")
+      .on(t.profileAddress)
+      .where(sql`profile_address IS NOT NULL`),
     index("lists_linked_list_id_idx")
       .on(t.linkedListId)
       .where(sql`linked_list_id IS NOT NULL`),
+    index("lists_trade_active_idx")
+      .on(t.userId, t.listTypeNew)
+      .where(
+        sql`list_type_new IN ('have', 'want') AND discoverable = true AND linked_list_id IS NOT NULL`,
+      ),
   ],
 );
 

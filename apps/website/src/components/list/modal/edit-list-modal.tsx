@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/intentui/sheet";
+import { Switch } from "@/components/intentui/switch";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
@@ -116,6 +117,7 @@ function EditListForm({
     profileAddress: data.profileAddress ?? "",
     isProfileBind: data.isProfileBind,
     hideSerial: data.hideSerial,
+    discoverable: data.discoverable ?? false,
     linkedListId: data.linkedListId ? String(data.linkedListId) : "",
   };
 
@@ -141,6 +143,7 @@ function EditListForm({
       gridColumns: data.gridColumns === 0 ? null : data.gridColumns,
       profileAddress: data.profileAddress || null,
       hideSerial: data.hideSerial,
+      discoverable: data.discoverable,
       linkedListId: data.linkedListId ? Number(data.linkedListId) : null,
     });
   });
@@ -372,6 +375,21 @@ function EditListForm({
             </Checkbox>
           )}
         />
+
+        {(data.listTypeNew === "have" ||
+          data.listTypeNew === "want" ||
+          data.listTypeNew === "sale") && (
+          <Controller
+            control={control}
+            name="discoverable"
+            render={({ field: { name, value, onChange, onBlur } }) => (
+              <Switch name={name} isSelected={value} onChange={onChange} onBlur={onBlur}>
+                <Label>{m.list_create_discoverable_label()}</Label>
+                <Description>{m.list_create_discoverable_desc()}</Description>
+              </Switch>
+            )}
+          />
+        )}
 
         <Controller
           control={control}

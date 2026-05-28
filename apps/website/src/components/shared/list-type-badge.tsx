@@ -17,8 +17,8 @@ const listTypeBadgeConfig: Record<ListTypeNew, { label: string; subtle: string; 
   },
   have: {
     label: m.list_type_have(),
-    subtle: "border-emerald-500/30 bg-emerald-500/10 !text-emerald-500",
-    solid: "bg-emerald-200 !text-emerald-800 dark:bg-emerald-200 dark:!text-emerald-800",
+    subtle: "border-lime-500/30 bg-lime-500/10 !text-lime-500",
+    solid: "bg-lime-200 !text-lime-800 dark:bg-lime-200 dark:!text-lime-800",
   },
   want: {
     label: m.list_type_want(),

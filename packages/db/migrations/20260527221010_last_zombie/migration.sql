@@ -1,0 +1,2 @@
+ALTER TABLE "lists" ADD COLUMN "discoverable" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+CREATE INDEX "lists_trade_active_idx" ON "lists" ("user_id","list_type_new") WHERE list_type_new IN ('have', 'want') AND discoverable = true AND linked_list_id IS NOT NULL;
