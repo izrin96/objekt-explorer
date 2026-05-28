@@ -117,7 +117,8 @@ const Tab = ({ className, ref, ...props }: TabProps) => {
           : "w-full justify-start [--tab-gutter-x:--spacing(4)] [--tab-gutter-y:--spacing(1.5)]",
         "relative flex cursor-default items-center whitespace-nowrap font-medium text-sm/6 outline-hidden transition [-webkit-tap-highlight-color:transparent]",
         "px-(--tab-gutter-x) py-(--tab-gutter-y)",
-        "*:[svg]:-ms-0.5 *:[svg]:me-2 *:[svg]:size-4 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-muted-fg selected:*:[svg]:text-fg",
+        // custom add hover:*:[svg]:text-fg
+        "*:[svg]:-ms-0.5 *:[svg]:me-2 *:[svg]:size-4 *:[svg]:shrink-0 *:[svg]:self-center *:[svg]:text-muted-fg hover:*:[svg]:text-fg selected:*:[svg]:text-fg",
         // custom replace primary-subtle to empty string
         "selected:text-fg text-muted-fg hover:bg-secondary selected:hover:bg-secondary hover:text-fg selected:hover:text-fg focus:ring-0",
         "disabled:opacity-50",
