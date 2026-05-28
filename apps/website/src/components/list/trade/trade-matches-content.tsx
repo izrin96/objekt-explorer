@@ -1,3 +1,4 @@
+import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { twJoin } from "tailwind-merge";
 
@@ -31,7 +32,7 @@ export default function TradeMatchesContent({ slug }: { slug: string }) {
       <DisclosureGroup allowsMultipleExpanded>
         {data.partners.map((partner, index) => (
           <PartnerDisclosure
-            key={index}
+            key={partner.userId}
             partner={partner}
             rank={index + 1}
             collections={data.collections}
@@ -55,7 +56,7 @@ function PartnerDisclosure({
   const overlapWant = new Set(partner.matches.flatMap((m) => m.iHaveTheyWant)).size;
 
   return (
-    <Disclosure id={rank}>
+    <Disclosure id={partner.userId}>
       <DisclosureTrigger triggerIndicator={false} className="px-3 py-3">
         <div className="flex w-full items-center gap-3">
           <span className="text-muted-fg w-5 shrink-0 text-center font-mono text-xs tabular-nums">
@@ -73,8 +74,8 @@ function PartnerDisclosure({
           <div className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold">{partner.username}</span>
             {partner.nicknames.length > 0 && (
-              <span className="text-muted-fg block truncate font-mono text-[10px]">
-                {partner.nicknames.map((n) => `@${n}`).join(", ")}
+              <span className="text-muted-fg block truncate text-xs">
+                Cosmo ID: {partner.nicknames.join(", ")}
               </span>
             )}
           </div>
@@ -95,12 +96,14 @@ function PartnerDisclosure({
             <div className="text-muted-fg border-border flex flex-wrap items-center gap-x-4 gap-y-1 border-b pb-3 text-xs">
               {partner.user.discord && (
                 <span className="inline-flex items-center gap-1.5">
+                  <DiscordLogoIcon />
                   <span>Discord:</span>
                   <span className="text-fg font-mono font-medium">{partner.user.discord}</span>
                 </span>
               )}
               {partner.user.twitter && (
                 <span className="inline-flex items-center gap-1.5">
+                  <XLogoIcon />
                   <span>Twitter:</span>
                   <span className="text-fg font-mono font-medium">@{partner.user.twitter}</span>
                 </span>
@@ -158,7 +161,7 @@ function DirectionColumn({
 
   return (
     <div className={twJoin("flex flex-col gap-1.5 border-l-2 pl-3", borderColor)}>
-      <div className="text-muted-fg flex items-center gap-1.5 font-mono text-[10px] font-semibold">
+      <div className="text-muted-fg flex items-center gap-1.5 font-mono text-xs font-semibold">
         <span className="tabular-nums">{slugs.length}</span>
         <span className="flex-1 truncate">{title}</span>
       </div>

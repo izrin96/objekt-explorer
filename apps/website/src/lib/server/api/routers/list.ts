@@ -392,39 +392,39 @@ export const listRouter = {
           profileSlug = await generateProfileSlug(input.name, input.profileAddress.toLowerCase());
         }
 
-        const [result] = await db
-          .insert(lists)
-          .values({
-            name: input.name,
-            userId: user.id,
-            slug,
-            profileSlug,
-            hideUser: input.hideUser,
-            listTypeNew: input.listTypeNew,
-            isProfileBind,
-            hideSerial:
-              ["sale", "have"].includes(input.listTypeNew) && isProfileBind
-                ? input.hideSerial
-                : false,
-            linkedListId,
-            profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
-            description: input.description,
-            currency: input.listTypeNew === "sale" ? input.currency : null,
-            discoverable: input.discoverable,
-          })
-          .returning({ insertedId: lists.id });
+        await db.transaction(async (tx) => {
+          const [inserted] = await tx
+            .insert(lists)
+            .values({
+              name: input.name,
+              userId: user.id,
+              slug,
+              profileSlug,
+              hideUser: input.hideUser,
+              listTypeNew: input.listTypeNew,
+              isProfileBind,
+              hideSerial:
+                ["sale", "have"].includes(input.listTypeNew) && isProfileBind
+                  ? input.hideSerial
+                  : false,
+              linkedListId,
+              profileAddress: input.profileAddress ? input.profileAddress.toLowerCase() : null,
+              description: input.description,
+              currency: input.listTypeNew === "sale" ? input.currency : null,
+              discoverable: input.discoverable,
+            })
+            .returning({ insertedId: lists.id });
 
-        // Bidirectional link: clear any existing reverse link on target, then set new one
-        if (linkedListId !== null && result) {
-          await db.transaction(async (tx) => {
+          // Bidirectional link: clear any existing reverse link on target, then set new one
+          if (linkedListId !== null && inserted) {
             await tx
               .update(lists)
               .set({ linkedListId: null })
-              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, result.insertedId)));
+              .where(and(eq(lists.linkedListId, linkedListId), ne(lists.id, inserted.insertedId)));
 
             await tx
               .update(lists)
-              .set({ linkedListId: result.insertedId })
+              .set({ linkedListId: inserted.insertedId })
               .where(eq(lists.id, linkedListId));
 
             // Propagate discoverable bidirectionally:
@@ -448,11 +448,11 @@ export const listRouter = {
                 await tx
                   .update(lists)
                   .set({ discoverable: true })
-                  .where(eq(lists.id, result.insertedId));
+                  .where(eq(lists.id, inserted.insertedId));
               }
             }
-          });
-        }
+          }
+        });
       },
     ),
 
@@ -841,12 +841,25 @@ export const listRouter = {
         ...new Set(partners.flatMap((r) => [...r.theyHaveIWant, ...r.iHaveTheyWant])),
       ];
 
-      const [users, userAddrs, collectionRows] = await Promise.all([
+      const [users, userAddrs, collectionRows, haveListProfiles] = await Promise.all([
         db.select().from(user).where(inArray(user.id, userIds)),
         db.select().from(userAddress).where(inArray(userAddress.userId, userIds)),
         allSlugs.length > 0
           ? indexer.select().from(collections).where(inArray(collections.slug, allSlugs))
           : Promise.resolve([]),
+        db
+          .select({
+            userId: lists.userId,
+            profileAddress: lists.profileAddress,
+          })
+          .from(lists)
+          .where(
+            and(
+              inArray(lists.userId, userIds),
+              eq(lists.listTypeNew, "have"),
+              isNotNull(lists.profileAddress),
+            ),
+          ),
       ]);
 
       const userMap = new Map(users.map((u) => [u.id, u]));
@@ -859,6 +872,26 @@ export const listRouter = {
           const set = nicknamesByUser.get(addr.userId) ?? new Set();
           set.add(addr.nickname);
           nicknamesByUser.set(addr.userId, set);
+        }
+      }
+
+      // userId → Set of profile addresses from their have lists
+      const profileAddrsByUser = new Map<string, Set<string>>();
+      for (const list of haveListProfiles) {
+        if (list.userId && list.profileAddress) {
+          const set = profileAddrsByUser.get(list.userId) ?? new Set();
+          set.add(list.profileAddress);
+          profileAddrsByUser.set(list.userId, set);
+        }
+      }
+
+      // address → nickname index per user (only for users with profile-linked have lists)
+      const addrNickMapByUser = new Map<string, Map<string, string>>();
+      for (const addr of userAddrs) {
+        if (addr.nickname && addr.userId && profileAddrsByUser.has(addr.userId)) {
+          const map = addrNickMapByUser.get(addr.userId) ?? new Map();
+          map.set(addr.address, addr.nickname);
+          addrNickMapByUser.set(addr.userId, map);
         }
       }
 
@@ -879,10 +912,29 @@ export const listRouter = {
           const user = userMap.get(userId);
           if (!user) return null;
           const matches = matchesByUser.get(userId) ?? [];
+          const profileAddrs = profileAddrsByUser.get(userId);
+          const addrMap = addrNickMapByUser.get(userId);
+
+          const nicknames: string[] = (() => {
+            if (profileAddrs && profileAddrs.size > 0 && addrMap) {
+              // Only nicknames from userAddresses matching the have list's profile
+              return [
+                ...new Set(
+                  [...profileAddrs]
+                    .map((a) => addrMap.get(a))
+                    .filter((n): n is string => n != null),
+                ),
+              ];
+            }
+            // No profile-linked have list — include all nicknames
+            return [...(nicknamesByUser.get(userId) ?? [])];
+          })();
+
           return {
+            userId,
             username: user.name ?? "unknown",
             user: toPublicUser(user),
-            nicknames: [...(nicknamesByUser.get(userId) ?? [])],
+            nicknames,
             matches: matches.map((m) => ({
               listId: m.listId,
               listSlug: m.listSlug,

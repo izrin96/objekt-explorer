@@ -39,6 +39,7 @@ export const partnerListMatchSchema = z.object({
 export type PartnerListMatch = z.infer<typeof partnerListMatchSchema>;
 
 export const tradePartnerSchema = z.object({
+  userId: z.string(),
   username: z.string(),
   user: publicUserSchema,
   nicknames: z.string().array(),
