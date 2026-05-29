@@ -7,7 +7,7 @@ export default function AppLogo() {
   return (
     <Link to="/">
       <div className="flex h-12 items-center gap-2.5">
-        <div className="bg-secondary/80 text-fg flex size-7 items-center justify-center rounded-lg">
+        <div className="bg-primary text-primary-fg flex size-6 items-center justify-center rounded-lg">
           <CubeIcon size={18} weight="fill" />
         </div>
         <span className="font-display hidden text-lg font-bold tracking-tight select-none sm:block">
