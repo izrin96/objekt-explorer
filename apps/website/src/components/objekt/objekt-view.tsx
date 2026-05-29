@@ -89,6 +89,7 @@ export default function ObjektView({
             alt={objekt.collectionId}
             onLoad={() => setLoaded(true)}
             fetchPriority={isPriority ? "high" : "auto"}
+            loading={isPriority ? "eager" : "lazy"}
             decoding="async"
           />
           <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />

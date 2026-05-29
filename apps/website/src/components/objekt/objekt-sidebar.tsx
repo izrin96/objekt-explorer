@@ -48,6 +48,7 @@ export default function ObjektSidebar(props: Props) {
           ref={ref}
           onLoad={handleImageLoad}
           className="size-full object-cover"
+          loading="eager"
           style={offsetPx > 0 ? { marginLeft: `${offsetPx}px` } : undefined}
           alt="band image"
           src={objekt.bandImageUrl}
