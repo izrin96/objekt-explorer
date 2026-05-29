@@ -1,4 +1,5 @@
 import {
+  CheckBadgeIcon,
   EllipsisVerticalIcon,
   PencilSquareIcon,
   PlusIcon,
@@ -19,7 +20,6 @@ import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Menu, MenuContent, MenuItem } from "../intentui/menu";
 import ErrorFallbackRender from "../router/error-boundary";
-import { Badge } from "../shared/badge";
 import { ListTypeBadge } from "../shared/list-type-badge";
 import { CreateListModal } from "./modal/create-list-modal";
 import { DeleteListModal } from "./modal/delete-list-modal";
@@ -98,16 +98,16 @@ function ListCard({ list }: ListCardProps) {
               <ListTypeBadge type={list.listTypeNew} />
               {list.currency && <span className="text-muted-fg text-xs">({list.currency})</span>}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {list.profile && (
                 <span className="text-muted-fg text-sm">
                   {parseNickname(list.profile.address, list.profile.nickname)}
                 </span>
               )}
               {list.isProfileBind && (
-                <Badge className="text-xxs/3 border-border/50 bg-muted/50 !text-muted-fg">
-                  {m.list_card_profile_bound()}
-                </Badge>
+                <div className="text-muted-fg size-4">
+                  <CheckBadgeIcon />
+                </div>
               )}
             </div>
           </div>

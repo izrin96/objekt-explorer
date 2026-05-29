@@ -1,3 +1,5 @@
+import type { PropsWithChildren } from "react";
+
 import type { ListTypeNew } from "@/lib/universal/list";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -8,7 +10,7 @@ const listTypeBadgeConfig: Record<ListTypeNew, { label: string; subtle: string; 
   general: {
     label: m.list_type_general(),
     subtle: "border-border/50 bg-muted/50 !text-muted-fg",
-    solid: "bg-muted !text-fg",
+    solid: "bg-secondary !text-fg",
   },
   sale: {
     label: m.list_type_sale(),
@@ -31,11 +33,12 @@ export function ListTypeBadge({
   className,
   type,
   variant = "subtle",
-}: {
+  children,
+}: PropsWithChildren<{
   className?: string;
   type: ListTypeNew;
   variant?: "subtle" | "solid";
-}) {
+}>) {
   const config = listTypeBadgeConfig[type];
-  return <Badge className={cn(config[variant], className)}>{config.label}</Badge>;
+  return <Badge className={cn(config[variant], className)}>{children ?? config.label}</Badge>;
 }

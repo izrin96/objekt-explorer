@@ -24,10 +24,10 @@ export default function ListHeader() {
   const isListAuthed = useListAuthed();
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2.5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
         {/* Left: list identity */}
-        <div className="flex min-w-0 flex-col">
+        <div className="flex min-w-0 flex-col justify-center">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-display text-xl font-semibold">{list.name}</h2>
             {list.listTypeNew !== "general" && <ListTypeBadge type={list.listTypeNew} />}
