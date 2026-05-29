@@ -211,7 +211,6 @@
   "list_create_hide_user_desc": "이 목록에서 {siteName} 계정을 숨깁니다",
   "list_create_success": "목록이 생성되었습니다",
   "list_create_error": "목록 생성 오류",
-  "list_create_trade_matches_coming_soon": "이 목록을 검색 허용으로 설정하여 거래 파트너를 찾으세요.",
   "list_edit_title": "목록 편집",
   "list_edit_description": "목록을 관리하세요",
   "list_edit_objekt_columns_label": "오브젝트 열",

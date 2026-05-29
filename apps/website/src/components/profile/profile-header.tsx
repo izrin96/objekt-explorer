@@ -1,5 +1,5 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
-import { CopyIcon, DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +16,7 @@ import { Button, buttonStyles } from "../intentui/button";
 import { ExternalLink } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
 import { ApolloIcon } from "../shared/apollo-icon";
+import { SocialBadge } from "../shared/social-badge";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -47,7 +48,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
 
   return (
     <div
-      className="grid grid-cols-1 gap-4 pb-2 md:grid-cols-[1fr_auto] md:items-start md:pb-0"
+      className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_auto] sm:items-center sm:pb-0"
       ref={ref}
     >
       {/* Identity: nickname + address */}
@@ -70,10 +71,10 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       </div>
 
       {/* Right column: buttons + user info */}
-      <div className="order-2 flex flex-col gap-4 md:flex-row md:items-center">
+      <div className="order-2 flex flex-col gap-4 sm:flex-row sm:items-center">
         {/* User info - top on mobile, left on desktop */}
         {user.user && (
-          <div className="order-1 flex min-w-0 items-center gap-2 text-sm md:order-1">
+          <div className="flex min-w-0 items-center gap-2 text-sm">
             <Avatar
               size="xl"
               className="shrink-0 self-center"
@@ -85,18 +86,12 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
               <span className="inline-flex gap-1 truncate text-lg font-semibold">
                 {user.user.name}
               </span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 {user.user.discord && (
-                  <div className="flex gap-1 truncate text-sm">
-                    <DiscordLogoIcon size={16} weight="regular" className="shrink-0 self-center" />
-                    <span className="text-muted-fg truncate select-all">{user.user.discord}</span>
-                  </div>
+                  <SocialBadge platform="discord" username={user.user.discord} />
                 )}
                 {user.user.twitter && (
-                  <div className="flex gap-1 truncate text-sm">
-                    <XLogoIcon size={16} weight="regular" className="shrink-0 self-center" />
-                    <span className="text-muted-fg truncate select-all">{user.user.twitter}</span>
-                  </div>
+                  <SocialBadge platform="twitter" username={user.user.twitter} />
                 )}
               </div>
             </div>
@@ -104,7 +99,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         )}
 
         {/* Buttons - bottom on mobile, right on desktop */}
-        <div className="order-2 flex flex-wrap items-center gap-2 md:order-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ExternalLink
             className={buttonStyles({
               size: "sm",
@@ -114,7 +109,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             href={`https://apollo.cafe/@${user.nickname || user.address}`}
           >
             <ApolloIcon />
-            <span className="hidden md:inline">{m.profile_header_view_in_apollo()}</span>
+            <span className="hidden sm:inline">{m.profile_header_view_in_apollo()}</span>
           </ExternalLink>
 
           {isProfileAuthed && (
@@ -133,7 +128,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
                 className="w-auto"
               >
                 <PencilSquareIcon />
-                <span className="hidden md:inline">{m.profile_header_edit_profile()}</span>
+                <span className="hidden sm:inline">{m.profile_header_edit_profile()}</span>
               </Button>
             </>
           )}

@@ -1,4 +1,3 @@
-import { DiscordLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { twJoin } from "tailwind-merge";
 
@@ -11,6 +10,7 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
 } from "@/components/intentui/disclosure-group";
+import { SocialBadge } from "@/components/shared/social-badge";
 import { tradePartnersQuery } from "@/lib/queries/list";
 import type { TradePartner } from "@/lib/universal/list";
 import { m } from "@/paraglide/messages";
@@ -59,7 +59,7 @@ function PartnerDisclosure({
     <Disclosure id={partner.userId}>
       <DisclosureTrigger triggerIndicator={false} className="px-3 py-3">
         <div className="flex w-full items-center gap-3">
-          <span className="text-muted-fg w-5 shrink-0 text-center font-mono text-xs tabular-nums">
+          <span className="text-muted-fg w-5 shrink-0 self-center text-center font-mono text-xs tabular-nums">
             {String(rank).padStart(2, "0")}
           </span>
           {partner.user?.image && (
@@ -73,11 +73,6 @@ function PartnerDisclosure({
           )}
           <div className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold">{partner.username}</span>
-            {partner.nicknames.length > 0 && (
-              <span className="text-muted-fg block truncate text-xs">
-                Cosmo ID: {partner.nicknames.join(", ")}
-              </span>
-            )}
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <Badge intent="success" isCircle={false} className="font-mono tabular-nums">
@@ -96,42 +91,22 @@ function PartnerDisclosure({
             <div className="text-muted-fg border-border flex flex-wrap items-center gap-x-4 gap-y-1 border-b pb-3 text-xs">
               {partner.nicknames.length > 0 && (
                 <div className="flex items-start gap-2">
-                  <span className="shrink-0 pt-px">Cosmo ID:</span>
+                  <span className="shrink-0 self-center">Cosmo ID:</span>
                   <span className="text-fg font-medium select-all">
                     {partner.nicknames.join(", ")}
                   </span>
                 </div>
               )}
               {partner.user.discord && (
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5">
-                    <DiscordLogoIcon />
-                    <span>Discord:</span>
-                  </span>
-                  <span className="text-fg font-medium select-all">{partner.user.discord}</span>
-                </div>
+                <SocialBadge platform="discord" username={partner.user.discord} />
               )}
               {partner.user.twitter && (
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1.5">
-                    <XLogoIcon />
-                    <span>Twitter:</span>
-                  </span>
-                  <span className="text-fg font-medium select-all">{partner.user.twitter}</span>
-                </div>
+                <SocialBadge platform="twitter" username={partner.user.twitter} />
               )}
             </div>
           )}
           {partner.matches.map((match) => (
-            <div key={match.listId} className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-fg">
-                  {m.list_trade_matches_you_have_they_want()}: {match.iHaveTheyWant.length}
-                </span>
-                <span className="text-muted-fg">
-                  {m.list_trade_matches_they_have_you_want()}: {match.theyHaveIWant.length}
-                </span>
-              </div>
+            <div key={match.listId} className="flex flex-col gap-2 first:mt-1">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <DirectionColumn
                   title={m.list_trade_matches_you_have_they_want()}

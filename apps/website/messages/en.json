@@ -211,7 +211,6 @@
   "list_create_hide_user_desc": "Hide {siteName} account from this list",
   "list_create_success": "List created",
   "list_create_error": "Error creating list",
-  "list_create_trade_matches_coming_soon": "Make this list discoverable to find trade partners.",
   "list_edit_title": "Edit list",
   "list_edit_description": "Manage your list",
   "list_edit_objekt_columns_label": "Objekt Columns",

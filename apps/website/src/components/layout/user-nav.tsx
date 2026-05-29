@@ -88,17 +88,17 @@ export function UserMenu({ user }: { user: User }) {
             <MenuHeader separator>
               <div className="flex flex-col">
                 <span>{user.name}</span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {user.discord && (
-                    <span className="text-muted-fg inline-flex gap-1 font-normal">
-                      {user.discord}
-                      <DiscordLogoIcon size={16} weight="regular" className="self-center" />
+                    <span className="text-muted-fg inline-flex items-center gap-1 truncate select-all">
+                      <DiscordLogoIcon size={16} weight="regular" className="shrink-0" />
+                      <span className="truncate">{user.discord}</span>
                     </span>
                   )}
                   {user.twitter && (
-                    <span className="text-muted-fg inline-flex gap-1 font-normal">
-                      {user.twitter}
-                      <XLogoIcon size={16} weight="regular" className="self-center" />
+                    <span className="text-muted-fg inline-flex items-center gap-1 truncate select-all">
+                      <XLogoIcon size={16} weight="regular" className="shrink-0" />
+                      <span className="truncate">{user.twitter}</span>
                     </span>
                   )}
                 </div>

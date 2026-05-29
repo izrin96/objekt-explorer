@@ -1,5 +1,5 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
-import { DiscordLogoIcon, XLogoIcon, CodeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { CodeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ import { Avatar } from "../intentui/avatar-custom";
 import { Button, buttonStyles } from "../intentui/button";
 import { Link } from "../intentui/link";
 import { ListTypeBadge } from "../shared/list-type-badge";
+import { SocialBadge } from "../shared/social-badge";
 import { EditListModal } from "./modal/edit-list-modal";
 import TradeMatches from "./trade/trade-matches";
 
@@ -24,7 +25,7 @@ export default function ListHeader() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto] md:items-center">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
         {/* Profile context: show nickname/address without avatar */}
         {list.profileAddress && profile ? (
           <div className="flex min-w-0 flex-col">
@@ -72,27 +73,13 @@ export default function ListHeader() {
                 )}
               </div>
               {list.user && (
-                <div className="flex min-w-0 items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-muted-fg truncate text-sm">{list.user.name}</span>
                   {list.user.discord && (
-                    <div className="flex gap-1">
-                      <span className="text-muted-fg truncate text-sm select-all">
-                        {list.user.discord}
-                      </span>
-                      <DiscordLogoIcon
-                        className="shrink-0 self-center"
-                        size={16}
-                        weight="regular"
-                      />
-                    </div>
+                    <SocialBadge platform="discord" username={list.user.discord} />
                   )}
                   {list.user.twitter && (
-                    <div className="flex gap-1">
-                      <span className="text-muted-fg truncate text-sm select-all">
-                        {list.user.twitter}
-                      </span>
-                      <XLogoIcon className="shrink-0 self-center" size={16} weight="regular" />
-                    </div>
+                    <SocialBadge platform="twitter" username={list.user.twitter} />
                   )}
                 </div>
               )}
@@ -126,7 +113,7 @@ function SwapHaveWantList({ list }: { list: PublicList }) {
       replace
     >
       <CodeSimpleIcon />
-      <span className="hidden md:inline">
+      <span className="hidden sm:inline">
         {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
       </span>
     </Link>
@@ -149,7 +136,7 @@ function EditList({ slug }: { slug: string }) {
       <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
       <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-auto">
         <PencilSquareIcon />
-        <span className="hidden md:inline">{m.list_card_edit_list()}</span>
+        <span className="hidden sm:inline">{m.list_card_edit_list()}</span>
       </Button>
     </>
   );
