@@ -48,7 +48,7 @@ function ObjektVirtualGridBase<T = ValidObjekt[]>({
 
   return (
     <div className="[&>*>*]:will-change-transform">
-      <WindowVirtualizer key={columns}>
+      <WindowVirtualizer key={columns} ssrCount={3}>
         {virtualList}
         {children}
       </WindowVirtualizer>
