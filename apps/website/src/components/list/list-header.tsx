@@ -113,7 +113,7 @@ function SwapHaveWantList({ list }: { list: PublicList }) {
       replace
     >
       <CodeSimpleIcon />
-      <span className="hidden sm:inline">
+      <span className="hidden md:inline">
         {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
       </span>
     </Link>
@@ -136,7 +136,7 @@ function EditList({ slug }: { slug: string }) {
       <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
       <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-auto">
         <PencilSquareIcon />
-        <span className="hidden sm:inline">{m.list_card_edit_list()}</span>
+        <span className="hidden md:inline">{m.list_card_edit_list()}</span>
       </Button>
     </>
   );

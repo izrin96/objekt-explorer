@@ -109,7 +109,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
             href={`https://apollo.cafe/@${user.nickname || user.address}`}
           >
             <ApolloIcon />
-            <span className="hidden sm:inline">{m.profile_header_view_in_apollo()}</span>
+            <span className="hidden lg:inline">{m.profile_header_view_in_apollo()}</span>
           </ExternalLink>
 
           {isProfileAuthed && (
@@ -128,7 +128,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
                 className="w-auto"
               >
                 <PencilSquareIcon />
-                <span className="hidden sm:inline">{m.profile_header_edit_profile()}</span>
+                <span className="hidden lg:inline">{m.profile_header_edit_profile()}</span>
               </Button>
             </>
           )}
