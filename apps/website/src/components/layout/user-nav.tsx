@@ -83,7 +83,7 @@ export function UserMenu({ user }: { user: User }) {
             src={user.image}
           />
         </MenuTrigger>
-        <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+        <MenuContent placement="bottom right">
           <MenuSection>
             <MenuHeader separator>
               <div className="flex flex-col">
@@ -165,7 +165,7 @@ function MyListMenuItem({
         <HeartIcon />
         <MenuLabel>{m.nav_my_list()}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="left top" popover={{ offset: -6 }}>
+      <MenuContent placement="left top" popover={{ offset: -4 }}>
         {data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>
@@ -205,7 +205,7 @@ function MyCosmoProfileMenuItem() {
         <DeviceMobileIcon />
         <MenuLabel>{m.nav_my_cosmo_link()}</MenuLabel>
       </MenuItem>
-      <MenuContent placement="left top" popover={{ offset: -6 }}>
+      <MenuContent placement="left top" popover={{ offset: -4 }}>
         {data.length === 0 && (
           <MenuItem isDisabled>
             <MenuLabel>

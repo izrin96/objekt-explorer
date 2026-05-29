@@ -19,7 +19,7 @@ export default function LiveSessionListRender() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold">{m.live_title()}</h2>
+          <h2 className="font-display text-xl font-semibold">{m.live_title()}</h2>
         </div>
         <span className="text-muted-fg text-sm">{m.live_description()}</span>
       </div>

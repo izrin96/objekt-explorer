@@ -52,7 +52,7 @@ function MyList() {
   const lists = useUserLists();
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-xl font-semibold">{m.list_title()}</div>
+      <div className="font-display text-xl font-semibold">{m.list_title()}</div>
 
       <CreateListModal open={addOpen} setOpen={setAddOpen} />
       <GenerateDiscordFormatModal open={genOpen} setOpen={setGenOpen} />

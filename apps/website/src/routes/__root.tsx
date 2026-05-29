@@ -101,7 +101,7 @@ function RootComponent() {
         <FilterDataProvider>
           <div className="relative flex min-h-svh flex-col">
             <Navbar />
-            <main>
+            <main className="pt-4 pb-36">
               <Outlet />
             </main>
           </div>

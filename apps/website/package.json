@@ -26,6 +26,7 @@
     "@fontsource-variable/google-sans-flex": "^5.2.3",
     "@fontsource-variable/noto-sans-kr": "^5.2.10",
     "@fontsource-variable/noto-sans-sc": "^5.2.10",
+    "@fontsource-variable/space-grotesk": "^5.2.10",
     "@heroicons/react": "^2.2.0",
     "@inlang/paraglide-js-react": "^1.0.1",
     "@internationalized/date": "^3.12.1",

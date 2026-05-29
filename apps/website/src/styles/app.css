@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/google-sans-flex/wght.css";
+@import "@fontsource-variable/space-grotesk/wght.css";
 @import "@fontsource-variable/fira-code/wght.css";
 @import "@fontsource-variable/noto-sans-kr/wght.css";
 @import "@fontsource-variable/noto-sans-sc/wght.css";
@@ -15,8 +16,8 @@
     system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
     "Noto Color Emoji";
   --font-display:
-    "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
-    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    "Space Grotesk Variable", "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono:
     "Fira Code Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;

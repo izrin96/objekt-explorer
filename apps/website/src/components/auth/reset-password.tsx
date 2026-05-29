@@ -45,43 +45,41 @@ export default function ResetPassword({ token }: { token: string }) {
   });
 
   return (
-    <div className="flex flex-col pt-2 pb-36">
-      <div className="flex w-full max-w-xl flex-col gap-4 self-center">
-        <div className="text-xl font-semibold">{m.auth_reset_password_title()}</div>
-        <Form onSubmit={onSubmit} validationBehavior="aria">
-          <div className="flex flex-col gap-4">
-            <Controller
-              control={control}
-              name="password"
-              rules={{
-                required: m.auth_reset_password_password_required(),
-              }}
-              render={({
-                field: { name, value, onChange, onBlur },
-                fieldState: { invalid, error },
-              }) => (
-                <TextField
-                  isRequired
-                  type="password"
-                  name={name}
-                  value={value}
-                  onChange={onChange}
-                  onBlur={onBlur}
-                  isInvalid={invalid}
-                  validationBehavior="aria"
-                >
-                  <Label>{m.auth_reset_password_password_label()}</Label>
-                  <Input placeholder={m.auth_reset_password_password_placeholder()} />
-                  <FieldError>{error?.message}</FieldError>
-                </TextField>
-              )}
-            />
-            <Button type="submit" isPending={mutation.isPending}>
-              {m.auth_reset_password_submit()}
-            </Button>
-          </div>
-        </Form>
-      </div>
+    <div className="mx-auto flex w-full max-w-md flex-col gap-4">
+      <div className="font-display text-xl font-semibold">{m.auth_reset_password_title()}</div>
+      <Form onSubmit={onSubmit} validationBehavior="aria">
+        <div className="flex flex-col gap-4">
+          <Controller
+            control={control}
+            name="password"
+            rules={{
+              required: m.auth_reset_password_password_required(),
+            }}
+            render={({
+              field: { name, value, onChange, onBlur },
+              fieldState: { invalid, error },
+            }) => (
+              <TextField
+                isRequired
+                type="password"
+                name={name}
+                value={value}
+                onChange={onChange}
+                onBlur={onBlur}
+                isInvalid={invalid}
+                validationBehavior="aria"
+              >
+                <Label>{m.auth_reset_password_password_label()}</Label>
+                <Input placeholder={m.auth_reset_password_password_placeholder()} />
+                <FieldError>{error?.message}</FieldError>
+              </TextField>
+            )}
+          />
+          <Button type="submit" isPending={mutation.isPending}>
+            {m.auth_reset_password_submit()}
+          </Button>
+        </div>
+      </Form>
     </div>
   );
 }

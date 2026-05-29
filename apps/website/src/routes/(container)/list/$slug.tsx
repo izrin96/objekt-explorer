@@ -48,7 +48,7 @@ function ListDetailPage() {
 
   return (
     <ListProvider list={list}>
-      <div className="flex flex-col gap-4 pt-2 pb-36">
+      <div className="flex flex-col gap-4">
         <ListHeader />
         <ListRender />
       </div>

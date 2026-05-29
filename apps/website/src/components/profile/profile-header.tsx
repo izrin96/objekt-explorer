@@ -47,13 +47,10 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   }, [user.bannerImgType, user.bannerImgUrl]);
 
   return (
-    <div
-      className="grid grid-cols-1 gap-4 pb-2 sm:grid-cols-[1fr_auto] sm:items-center sm:pb-0"
-      ref={ref}
-    >
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]" ref={ref}>
       {/* Identity: nickname + address */}
       <div className="order-1 flex min-w-0 flex-col">
-        <h2 className="truncate text-xl font-semibold">{nickname}</h2>
+        <h2 className="font-display truncate text-xl font-semibold">{nickname}</h2>
         <div className="text-muted-fg inline-flex min-w-0 items-center gap-1 font-mono text-xs">
           <span className="truncate">{user.address}</span>
           <Button
@@ -71,19 +68,19 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       </div>
 
       {/* Right column: buttons + user info */}
-      <div className="order-2 flex flex-col gap-4 sm:flex-row sm:items-center">
+      <div className="order-2 flex flex-col gap-4 sm:flex-row sm:items-end">
         {/* User info - top on mobile, left on desktop */}
         {user.user && (
           <div className="flex min-w-0 items-center gap-2 text-sm">
             <Avatar
               size="xl"
-              className="shrink-0 self-center"
+              className="shrink-0"
               src={user.user.image}
               alt={user.user.name ?? undefined}
               initials={user.user.name?.charAt(0) ?? ""}
             />
             <div className="flex min-w-0 flex-col">
-              <span className="inline-flex gap-1 truncate text-lg font-semibold">
+              <span className="font-display inline-flex truncate text-base font-semibold">
                 {user.user.name}
               </span>
               <div className="flex flex-wrap items-center gap-1.5">

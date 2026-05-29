@@ -7,6 +7,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { useCollectionObjekts } from "@/hooks/use-collection-objekt";
 import { useConfigStore } from "@/hooks/use-config";
 import { useCurrentUser } from "@/hooks/use-user";
+import { m } from "@/paraglide/messages";
 
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridView, ObjektGridActions } from "../collection/objekt-grid";
@@ -27,6 +28,7 @@ export default function IndexRender() {
   return (
     <ObjektViewProvider modalTab="trades">
       <div className="flex flex-col gap-4">
+        <h1 className="font-display text-xl font-semibold">{m.home_title()}</h1>
         <IndexFilter selectRef={setSelectTarget} />
 
         <QueryErrorResetBoundary>

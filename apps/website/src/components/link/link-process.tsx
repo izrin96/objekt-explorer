@@ -89,7 +89,7 @@ export default function LinkRender() {
 function IntroStep({ onContinue }: { onContinue: () => void }) {
   return (
     <div className="flex max-w-xl flex-col items-center justify-center gap-4">
-      <h2 className="text-lg font-semibold">{m.link_process_intro_title()}</h2>
+      <h2 className="font-display text-xl font-semibold">{m.link_process_intro_title()}</h2>
       <img
         src="/assets/icon-smartphone.png"
         alt="Smartphone"

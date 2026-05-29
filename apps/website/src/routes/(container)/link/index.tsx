@@ -20,9 +20,9 @@ export const Route = createFileRoute("/(container)/link/")({
 
 function LinkPage() {
   return (
-    <div className="flex flex-col pt-2 pb-36">
+    <div className="flex flex-col">
       <div className="flex flex-col gap-4">
-        <div className="text-xl font-semibold">{m.link_my_cosmo()}</div>
+        <div className="font-display text-xl font-semibold">{m.link_my_cosmo()}</div>
         <MyLinkRender />
       </div>
     </div>

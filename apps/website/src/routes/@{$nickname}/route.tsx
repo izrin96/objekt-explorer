@@ -31,7 +31,7 @@ function ProfileLayout() {
         <>
           <ProfileBanner profile={profile} />
           <DynamicContainer>
-            <div className="flex min-h-screen flex-col gap-4 pt-2 pb-36">
+            <div className="flex min-h-screen flex-col gap-2">
               <ProfileHeader user={profile} />
               <ProfileTabs user={profile} />
               <Outlet />

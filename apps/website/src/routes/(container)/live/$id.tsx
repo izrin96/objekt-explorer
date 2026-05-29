@@ -57,11 +57,7 @@ export const Route = createFileRoute("/(container)/live/$id")({
 function LiveDetailPage() {
   const { live } = Route.useLoaderData();
 
-  return (
-    <div className="flex flex-col pt-2">
-      <LiveStreamingRender live={live} />
-    </div>
-  );
+  return <LiveStreamingRender live={live} />;
 }
 
 function NotFoundComponent() {

@@ -75,7 +75,7 @@ function SignInForm({
   return (
     <>
       <div className="flex flex-col">
-        <h2 className="text-lg/8 font-semibold">{m.auth_sign_in_title()}</h2>
+        <h2 className="font-display text-xl font-semibold">{m.auth_sign_in_title()}</h2>
         <span className="text-muted-fg text-sm">{m.auth_sign_in_description()}</span>
       </div>
       <Form onSubmit={onSubmit} className="flex flex-col gap-4" validationBehavior="aria">

@@ -28,7 +28,7 @@ function LivePage() {
   const { isAllowed } = Route.useLoaderData();
 
   return (
-    <div className="flex flex-col gap-3 pt-2 pb-36">
+    <div className="flex flex-col gap-3">
       <Note>
         As this feature violates Cosmo&apos;s Terms of Service, we will no longer continue offering
         it. Please watch the live stream on the Cosmo app instead.

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/(container)/link/connect")({
 
 function LinkConnectPage() {
   return (
-    <div className="flex flex-col pt-2 pb-36">
+    <div className="flex flex-col">
       <LinkRender />
     </div>
   );
