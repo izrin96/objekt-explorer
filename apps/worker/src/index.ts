@@ -4,6 +4,7 @@ import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
+import { updateCurrencyRates } from "./job/update-currency-rates";
 
 const crons: CronJob[] = [];
 
@@ -47,6 +48,10 @@ crons.push(cron("2 * * * *", cleanupStaleEntries));
 // cache collection rarity list
 await populateRarity();
 crons.push(cron("0 * * * *", populateRarity));
+
+// update currency exchange rates daily at 1 AM
+await updateCurrencyRates();
+crons.push(cron("0 1 * * *", updateCurrencyRates));
 
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);

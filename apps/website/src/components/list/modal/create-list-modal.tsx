@@ -361,8 +361,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           />
         )}
 
-        {/* sale type will enable later */}
-        {watchedListTypeNew === "have" && (
+        {(watchedListTypeNew === "have" || watchedListTypeNew === "sale") && (
           <Controller
             control={control}
             name="discoverable"
@@ -375,7 +374,11 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 isDisabled={!watchedIsProfileBind}
               >
                 <Label>{m.list_create_discoverable_label()}</Label>
-                <Description>{m.list_create_discoverable_desc()}</Description>
+                <Description>
+                  {watchedListTypeNew === "sale"
+                    ? m.list_create_discoverable_sale_desc()
+                    : m.list_create_discoverable_desc()}
+                </Description>
               </Switch>
             )}
           />

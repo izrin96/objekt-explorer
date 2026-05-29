@@ -4,6 +4,7 @@ import { configRouter } from "./config";
 import { cosmoLinkRouter } from "./cosmo-link";
 import { listRouter } from "./list";
 import { lockedObjektsRouter } from "./locked-objekts";
+import { marketRouter } from "./market";
 import { metaRouter } from "./meta";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
@@ -20,4 +21,5 @@ export const router = {
   meta: metaRouter,
   compare: compareRouter,
   collections: collectionsRouter,
+  market: marketRouter,
 };

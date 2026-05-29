@@ -1,7 +1,7 @@
 import { createContext, type PropsWithChildren, useContext, useRef } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 
-export type ValidTab = "owned" | "trades";
+export type ValidTab = "owned" | "trades" | "market";
 
 type ObjektModalProps = {
   initialTab: ValidTab;

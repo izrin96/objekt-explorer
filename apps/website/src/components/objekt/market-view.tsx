@@ -1,0 +1,184 @@
+import { StorefrontIcon, CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react/dist/ssr";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { useState } from "react";
+
+import { Badge } from "@/components/intentui/badge";
+import { Button } from "@/components/intentui/button";
+import { Link } from "@/components/intentui/link";
+import { Skeleton } from "@/components/intentui/skeleton";
+import { orpc } from "@/lib/orpc/client";
+import type { PublicList } from "@/lib/universal/list";
+import type { MarketListing, SortBy, SortDir } from "@/lib/universal/market";
+import { getListLinkOption, parseNickname } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
+
+import { InfiniteQueryNext } from "../shared/infinite-query-pending";
+
+type Props = {
+  collectionSlug: string;
+};
+
+export default function MarketView({ collectionSlug }: Props) {
+  const [sortBy, setSortBy] = useState<SortBy>("createdAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const toggleSort = (field: SortBy) => {
+    if (sortBy === field) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortDir(field === "price" ? "asc" : "desc");
+    }
+  };
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, isPending } =
+    useInfiniteQuery(
+      orpc.market.marketListings.infiniteOptions({
+        input: (pageParam: number) => ({
+          collectionSlug,
+          sortBy,
+          sortDir,
+          offset: pageParam,
+          limit: 20,
+        }),
+        initialPageParam: 0,
+        getNextPageParam: (lastPage) => lastPage.nextOffset,
+        staleTime: 1000 * 60,
+      }),
+    );
+
+  const items = data?.pages.flatMap((page) => page.items) ?? [];
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <SortButton active={sortBy === "price"} dir={sortDir} onClick={() => toggleSort("price")}>
+          {m.list_manage_objekt_set_price_label()}
+        </SortButton>
+        <SortButton
+          active={sortBy === "createdAt"}
+          dir={sortDir}
+          onClick={() => toggleSort("createdAt")}
+        >
+          {m.objekt_date()}
+        </SortButton>
+      </div>
+
+      {isPending ? (
+        <MarketSkeleton />
+      ) : items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-6">
+          <StorefrontIcon size={64} weight="light" />
+          <span>{m.objekt_market_empty()}</span>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-2">
+            {items.map((item) => (
+              <MarketRow key={item.id} item={item} />
+            ))}
+          </div>
+          <InfiniteQueryNext
+            status={status}
+            hasNextPage={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            fetchNextPage={fetchNextPage}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function SortButton({
+  active,
+  dir,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  dir: SortDir;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button size="xs" intent={active ? "primary" : "outline"} onPress={onClick} className="gap-1">
+      {children}
+      {active && (dir === "asc" ? <CaretUpIcon size={12} /> : <CaretDownIcon size={12} />)}
+    </Button>
+  );
+}
+
+function MarketRow({ item }: { item: MarketListing }) {
+  return (
+    <Link
+      {...getListLinkOption(item.list as PublicList)}
+      className="hover:bg-secondary bg-muted flex flex-col overflow-hidden rounded-lg border transition-colors sm:flex-row sm:items-stretch"
+    >
+      <div className="flex flex-1 flex-wrap items-stretch gap-x-4 gap-y-2 p-3 text-sm">
+        <div className="flex min-w-[60px] flex-col justify-center">
+          <span className="text-muted-fg text-xxs">{m.objekt_serial()}</span>
+          <div className="font-mono font-medium tabular-nums">#{item.serial ?? "-"}</div>
+        </div>
+
+        <div className="flex min-w-[70px] flex-col justify-center">
+          <span className="text-muted-fg text-xxs">{m.objekt_transferable()}</span>
+          <div>
+            {item.transferable === null ? (
+              "-"
+            ) : (
+              <Badge intent={item.transferable ? "info" : "danger"}>
+                {item.transferable ? m.objekt_yes() : m.objekt_no()}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        <div className="flex w-[120px] max-w-[120px] flex-col justify-center">
+          <span className="text-muted-fg text-xxs">{m.objekt_owner()}</span>
+          <div className="truncate">
+            {item.list.profile
+              ? parseNickname(item.list.profile.address, item.list.profile.nickname)
+              : "-"}
+          </div>
+        </div>
+
+        <div className="flex min-w-[110px] flex-col justify-center">
+          <span className="text-muted-fg text-xxs">{m.list_manage_objekt_set_price_label()}</span>
+          <div className="truncate font-medium">
+            {item.isQyop ? (
+              m.objekt_qyop()
+            ) : item.usdPrice !== null ? (
+              <>
+                ${item.usdPrice.toFixed(2)}
+                {item.currency && item.currency !== "USD" && (
+                  <span className="text-muted-fg text-xxs ml-1">
+                    ({item.price?.toLocaleString()} {item.currency})
+                  </span>
+                )}
+              </>
+            ) : (
+              "-"
+            )}
+          </div>
+        </div>
+
+        <div className="flex min-w-[120px] flex-col justify-center">
+          <span className="text-muted-fg text-xxs">{m.objekt_date()}</span>
+          <div className="truncate text-xs">{format(item.createdAt, "yyyy/MM/dd HH:mm:ss")}</div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+function MarketSkeleton() {
+  return (
+    <div className="flex flex-col gap-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Skeleton key={i} className="h-[64px] rounded-lg" soft />
+      ))}
+    </div>
+  );
+}

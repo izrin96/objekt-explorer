@@ -23,6 +23,7 @@ import { Card, CardContent } from "../intentui/card";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
 import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import { ApolloIcon } from "../shared/apollo-icon";
+import MarketView from "./market-view";
 import { AttributePanel } from "./objekt-attribute";
 import ObjektSidebar from "./objekt-sidebar";
 import TradeView from "./trade-view";
@@ -90,6 +91,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
           </Tab>
         )}
         <Tab id="trades">{m.objekt_trades()}</Tab>
+        <Tab id="market">{m.objekt_market()}</Tab>
         <Tab
           href={`https://apollo.cafe/?id=${objekt.slug}`}
           rel="noopener noreferrer"
@@ -113,6 +115,9 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
       )}
       <TabPanel id="trades">
         <TradeView objekt={objekt} serial={serial} />
+      </TabPanel>
+      <TabPanel id="market">
+        <MarketView collectionSlug={objekt.slug} />
       </TabPanel>
     </Tabs>
   );

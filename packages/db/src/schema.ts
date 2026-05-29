@@ -125,6 +125,7 @@ export const listEntries = pgTable(
   (t) => [
     index("list_entries_list_idx").on(t.listId),
     index("list_entries_objekt_idx").on(t.objektId),
+    index("list_entries_collection_slug_idx").on(t.collectionSlug),
     uniqueIndex("list_entries_list_objekt_uniq")
       .on(t.listId, t.objektId)
       .where(sql`objekt_id IS NOT NULL`),
@@ -162,6 +163,12 @@ export const lockedObjekts = pgTable(
     uniqueIndex("locked_objekts_address_token_id_idx").on(t.address, t.tokenId),
   ],
 );
+
+export const currencyRates = pgTable("currency_rates", {
+  code: varchar("code", { length: 10 }).primaryKey(),
+  rate: real("rate").notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string", withTimezone: true }).notNull().defaultNow(),
+});
 
 export type AccessToken = typeof accessToken.$inferSelect;
 export type UserAddress = typeof userAddress.$inferSelect;

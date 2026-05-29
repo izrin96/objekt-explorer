@@ -340,8 +340,7 @@ function EditListForm({
           />
         )}
 
-        {/* sale type will enable later */}
-        {data.listTypeNew === "have" && (
+        {(data.listTypeNew === "have" || data.listTypeNew === "sale") && (
           <Controller
             control={control}
             name="discoverable"
@@ -354,7 +353,11 @@ function EditListForm({
                 isDisabled={!data.isProfileBind}
               >
                 <Label>{m.list_create_discoverable_label()}</Label>
-                <Description>{m.list_create_discoverable_desc()}</Description>
+                <Description>
+                  {data.listTypeNew === "sale"
+                    ? m.list_create_discoverable_sale_desc()
+                    : m.list_create_discoverable_desc()}
+                </Description>
               </Switch>
             )}
           />
