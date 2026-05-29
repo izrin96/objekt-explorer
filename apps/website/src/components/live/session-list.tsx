@@ -73,7 +73,7 @@ function LiveSessionList({ artistId }: { artistId: string }) {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-2">
         {lives.map((live) => (
           <LiveSessionCard key={live.id} live={live} />
         ))}

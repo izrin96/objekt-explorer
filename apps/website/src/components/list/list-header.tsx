@@ -24,13 +24,15 @@ export default function ListHeader() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col flex-wrap items-start gap-4 sm:flex-row sm:items-center">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto] md:items-center">
         {/* Profile context: show nickname/address without avatar */}
         {list.profileAddress && profile ? (
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">{list.name}</h2>
-              {list.listTypeNew !== "general" && <ListTypeBadge type={list.listTypeNew} />}
+              <h2 className="truncate text-lg font-semibold">{list.name}</h2>
+              {list.listTypeNew !== "general" && (
+                <ListTypeBadge type={list.listTypeNew} className="shrink-0" />
+              )}
               {list.listTypeNew === "sale" && list.currency && (
                 <span className="text-muted-fg text-xs">({list.currency})</span>
               )}
@@ -41,7 +43,7 @@ export default function ListHeader() {
                 params={{
                   nickname: profile.nickname || profile.address.toLowerCase(),
                 }}
-                className="text-muted-fg hover:underline"
+                className="text-muted-fg truncate hover:underline"
               >
                 {parseNickname(profile.address, profile.nickname)}
               </Link>
@@ -49,37 +51,47 @@ export default function ListHeader() {
           </div>
         ) : (
           /* Account context: show avatar + user info (existing) */
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             {list.user && (
               <Avatar
                 size="xl"
-                className="self-center"
+                className="shrink-0 self-center"
                 src={list.user.image}
                 alt={list.user.name ?? undefined}
                 initials={(list.user.name ?? "").charAt(0)}
               />
             )}
-            <div className="flex flex-col">
+            <div className="flex min-w-0 flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">{list.name}</span>
-                {list.listTypeNew !== "general" && <ListTypeBadge type={list.listTypeNew} />}
+                <span className="truncate text-lg font-semibold">{list.name}</span>
+                {list.listTypeNew !== "general" && (
+                  <ListTypeBadge type={list.listTypeNew} className="shrink-0" />
+                )}
                 {list.listTypeNew === "sale" && list.currency && (
                   <span className="text-muted-fg text-xs">({list.currency})</span>
                 )}
               </div>
               {list.user && (
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-fg text-sm">{list.user.name}</span>
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="text-muted-fg truncate text-sm">{list.user.name}</span>
                   {list.user.discord && (
                     <div className="flex gap-1">
-                      <span className="text-muted-fg text-sm">{list.user.discord}</span>
-                      <DiscordLogoIcon className="self-center" size={16} weight="regular" />
+                      <span className="text-muted-fg truncate text-sm select-all">
+                        {list.user.discord}
+                      </span>
+                      <DiscordLogoIcon
+                        className="shrink-0 self-center"
+                        size={16}
+                        weight="regular"
+                      />
                     </div>
                   )}
                   {list.user.twitter && (
                     <div className="flex gap-1">
-                      <span className="text-muted-fg text-sm">{list.user.twitter}</span>
-                      <XLogoIcon className="self-center" size={16} weight="regular" />
+                      <span className="text-muted-fg truncate text-sm select-all">
+                        {list.user.twitter}
+                      </span>
+                      <XLogoIcon className="shrink-0 self-center" size={16} weight="regular" />
                     </div>
                   )}
                 </div>
@@ -87,7 +99,7 @@ export default function ListHeader() {
             </div>
           </div>
         )}
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2">
           <SwapHaveWantList list={list} />
           <TradeMatches />
           {isListAuthed && <EditList slug={list.slug} />}
@@ -108,13 +120,15 @@ function SwapHaveWantList({ list }: { list: PublicList }) {
       className={buttonStyles({
         intent: "outline",
         size: "sm",
-        className: "w-full sm:w-auto",
+        className: "w-auto",
       })}
       {...getListLinkOption(list.linkedList)}
       replace
     >
       <CodeSimpleIcon />
-      {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
+      <span className="hidden md:inline">
+        {list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
+      </span>
     </Link>
   );
 }
@@ -133,9 +147,9 @@ function EditList({ slug }: { slug: string }) {
   return (
     <>
       <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
-      <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-full sm:w-auto">
+      <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-auto">
         <PencilSquareIcon />
-        {m.list_card_edit_list()}
+        <span className="hidden md:inline">{m.list_card_edit_list()}</span>
       </Button>
     </>
   );

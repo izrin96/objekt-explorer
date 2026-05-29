@@ -114,15 +114,15 @@ function MarketRow({ item }: { item: MarketListing }) {
   return (
     <Link
       {...getListLinkOption(item.list as PublicList)}
-      className="hover:bg-secondary bg-muted flex flex-col overflow-hidden rounded-lg border transition-colors sm:flex-row sm:items-stretch"
+      className="hover:bg-secondary bg-muted block overflow-hidden rounded-lg border transition-colors"
     >
-      <div className="flex flex-1 flex-wrap items-stretch gap-x-4 gap-y-2 p-3 text-sm">
-        <div className="flex min-w-[60px] flex-col justify-center">
+      <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[5rem_5rem_1fr_8rem_8rem]">
+        <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_serial()}</span>
           <div className="font-mono font-medium tabular-nums">#{item.serial ?? "-"}</div>
         </div>
 
-        <div className="flex min-w-[70px] flex-col justify-center">
+        <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_transferable()}</span>
           <div>
             {item.transferable === null ? (
@@ -135,7 +135,7 @@ function MarketRow({ item }: { item: MarketListing }) {
           </div>
         </div>
 
-        <div className="flex w-[120px] max-w-[120px] flex-col justify-center">
+        <div className="col-span-2 flex flex-col justify-center lg:col-span-1">
           <span className="text-muted-fg text-xxs">{m.objekt_owner()}</span>
           <div className="truncate">
             {item.list.profile
@@ -144,7 +144,7 @@ function MarketRow({ item }: { item: MarketListing }) {
           </div>
         </div>
 
-        <div className="flex min-w-[110px] flex-col justify-center">
+        <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.list_manage_objekt_set_price_label()}</span>
           <div className="truncate font-medium">
             {item.isQyop ? (
@@ -164,7 +164,7 @@ function MarketRow({ item }: { item: MarketListing }) {
           </div>
         </div>
 
-        <div className="flex min-w-[120px] flex-col justify-center">
+        <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_date()}</span>
           <div className="truncate text-xs">{format(item.createdAt, "yyyy/MM/dd HH:mm:ss")}</div>
         </div>
@@ -176,7 +176,7 @@ function MarketRow({ item }: { item: MarketListing }) {
 function MarketSkeleton() {
   return (
     <div className="flex flex-col gap-2">
-      {Array.from({ length: 3 }).map((_, i) => (
+      {Array.from({ length: 2 }).map((_, i) => (
         <Skeleton key={i} className="h-[64px] rounded-lg" soft />
       ))}
     </div>

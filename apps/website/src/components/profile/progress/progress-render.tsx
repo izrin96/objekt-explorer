@@ -161,17 +161,17 @@ function ProgressCollapse(props: ProgressCollapseProps) {
       <div
         role="none"
         className={cn(
-          "flex cursor-pointer select-none flex-wrap items-center gap-4 rounded-lg bg-muted/20 p-4 border transition hover:bg-muted",
+          "grid cursor-pointer select-none grid-cols-1 gap-4 rounded-lg bg-muted/20 p-4 border transition hover:bg-muted md:grid-cols-[220px_1fr] md:items-center",
           percentage >= 100 && "border-accent-solid shadow-sm shadow-accent-solid/20",
         )}
         onClick={() => setShow(!show)}
       >
-        <div className="inline-flex min-w-72 items-center gap-2 text-base font-semibold">
+        <div className="inline-flex items-center gap-2 truncate text-base font-semibold">
           {title}
         </div>
         <ProgressBar
           aria-label={m.progress_progress_bar_label()}
-          className="flex w-fit min-w-[240px] items-center gap-2"
+          className="flex w-full items-center gap-2"
           valueLabel={`${props.owned.length}/${props.filtered.length} (${percentage}%)`}
           value={percentage}
         >

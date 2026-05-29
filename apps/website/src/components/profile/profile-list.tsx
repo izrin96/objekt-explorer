@@ -42,7 +42,7 @@ function ProfileList() {
           {isOwned && <span className="text-muted-fg text-sm">{m.list_no_lists_hint()}</span>}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-2">
           {data.map((list) => {
             return (
               <Link

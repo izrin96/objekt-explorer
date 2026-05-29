@@ -33,9 +33,9 @@ export default function TradeMatches() {
 
   return (
     <>
-      <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-full sm:w-auto">
+      <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-auto">
         <UsersIcon />
-        {m.list_trade_matches_title()}
+        <span className="hidden md:inline">{m.list_trade_matches_title()}</span>
       </Button>
 
       <ModalContent isOpen={open} onOpenChange={setOpen} size="3xl">

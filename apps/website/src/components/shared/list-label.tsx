@@ -13,7 +13,7 @@ export function ListLabel({ list }: { list: PublicList }) {
           <ListTypeBadge className="text-xxs/3" variant="solid" type={list.listTypeNew} />
         )}
         {list.listTypeNew === "sale" && (
-          <Badge className="bg-muted !text-fg text-xxs/3">{list.currency}</Badge>
+          <Badge className="bg-secondary !text-fg text-xxs/3">{list.currency}</Badge>
         )}
       </div>
       <div className="flex items-center gap-x-1">

@@ -82,7 +82,7 @@ function ProfileStats() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,540px),1fr))] gap-4">
         <BreakdownByMemberChart objekts={filteredObjekts} />
         <BreakdownBySeasonChart objekts={filteredObjekts} />
         <MemberProgressChart objekts={filteredObjekts} collections={filteredCollections} />
