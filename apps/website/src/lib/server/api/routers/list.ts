@@ -249,6 +249,7 @@ export const listRouter = {
         if (input.profileAddress) {
           profileSlug = await generateProfileSlug(
             input.name,
+            list.slug,
             input.profileAddress.toLowerCase(),
             list.id,
           );
@@ -383,7 +384,11 @@ export const listRouter = {
         const slug = nanoid(9);
         let profileSlug: string | null = null;
         if (input.profileAddress) {
-          profileSlug = await generateProfileSlug(input.name, input.profileAddress.toLowerCase());
+          profileSlug = await generateProfileSlug(
+            input.name,
+            slug,
+            input.profileAddress.toLowerCase(),
+          );
         }
 
         await db.transaction(async (tx) => {

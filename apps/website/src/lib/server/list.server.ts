@@ -300,17 +300,14 @@ export async function checkProfileOwnership(address: string, userId: string): Pr
   }
 }
 
-export function slugifyName(name: string): string {
-  return slugify(name, { lower: true, strict: true });
-}
-
 export async function generateProfileSlug(
   name: string,
+  listSlug: string,
   profileAddress: string,
   excludeListId?: number,
 ): Promise<string> {
-  const baseSlug = slugifyName(name);
-  let slug = baseSlug;
+  const baseSlug = slugify(name, { lower: true, strict: true });
+  let slug = baseSlug || listSlug;
   let counter = 2;
 
   while (true) {
