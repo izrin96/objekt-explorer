@@ -898,7 +898,7 @@ export const listRouter = {
                 ...new Set(
                   [...profileAddrs]
                     .map((a) => addrMap.get(a))
-                    .filter((n): n is string => n != null),
+                    .filter((n): n is string => n !== null),
                 ),
               ];
             }
@@ -920,7 +920,7 @@ export const listRouter = {
             })),
           };
         })
-        .filter((p): p is NonNullable<typeof p> => p != null);
+        .filter((p): p is NonNullable<typeof p> => p !== null);
 
       // Rank partners by total distinct collections they hold that I want
       tradePartners.sort((a, b) => {

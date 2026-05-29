@@ -1,10 +1,12 @@
-import type { ValidCustomSort } from "@repo/cosmo/types/common";
+import type {
+  ValidArtist,
+  ValidEdition,
+  ValidGroupBy,
+  ValidOnlineType,
+  ValidCustomSort,
+  ValidSortDirection,
+} from "@repo/cosmo/types/common";
 import {
-  type ValidArtist,
-  type ValidEdition,
-  type ValidGroupBy,
-  type ValidOnlineType,
-  type ValidSortDirection,
   validArtists,
   validCustomSorts,
   validEdition,

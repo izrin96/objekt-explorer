@@ -18,5 +18,6 @@ export default defineConfig({
     ],
     "typescript/unbound-method": "off",
     "typescript/restrict-template-expressions": "off",
+    "import/no-duplicates": "error",
   },
 });

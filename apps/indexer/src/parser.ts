@@ -1,5 +1,4 @@
-import { Addresses } from "@repo/lib";
-import { addr } from "@repo/lib";
+import { addr, Addresses } from "@repo/lib";
 import type { BlockData } from "@subsquid/evm-processor";
 import { v7 as randomUUID } from "uuid";
 

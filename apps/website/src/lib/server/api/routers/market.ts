@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, userAddress } from "@repo/db/schema";
-import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import {
@@ -65,7 +65,6 @@ export const marketRouter = {
         eq(listEntries.collectionSlug, input.collectionSlug),
         eq(lists.listTypeNew, "sale"),
         eq(lists.discoverable, true),
-        isNotNull(listEntries.price),
       );
 
       const baseQuery = () =>
@@ -117,7 +116,7 @@ export const marketRouter = {
         const objekt = row.objektId ? objektMap.get(row.objektId) : null;
         const nickname = row.ownerHideNickname || !row.ownerNickname ? null : row.ownerNickname;
         const rate = row.currency ? (rates[row.currency] ?? 1) : 1;
-        const usdPrice = row.price != null ? row.price * rate : null;
+        const usdPrice = row.price !== null ? row.price * rate : null;
 
         return {
           id: row.id,

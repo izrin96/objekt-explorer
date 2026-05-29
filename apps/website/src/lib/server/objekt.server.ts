@@ -1,5 +1,5 @@
-import type { ValidArtist } from "@repo/cosmo/types/common";
-import { type ValidFourSeason, validArtists, validFourSeason } from "@repo/cosmo/types/common";
+import type { ValidArtist, ValidFourSeason } from "@repo/cosmo/types/common";
+import { validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { asc, getColumns, ne } from "drizzle-orm";

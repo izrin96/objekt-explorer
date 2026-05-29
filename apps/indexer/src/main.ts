@@ -1,6 +1,5 @@
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
-import { addr, chunk, slugifyObjekt } from "@repo/lib";
-import { Addresses } from "@repo/lib";
+import { addr, chunk, slugifyObjekt, Addresses } from "@repo/lib";
 import { TypeormDatabase, type Store } from "@subsquid/typeorm-store";
 import { v7 as randomUUID } from "uuid";
 
