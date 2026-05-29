@@ -593,7 +593,6 @@ export const listRouter = {
               eq(lists.listTypeNew, "have"),
               isNotNull(lists.linkedListId),
               eq(lists.discoverable, true),
-              eq(lists.isProfileBind, true),
             ),
           ),
       );
