@@ -18,7 +18,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         <div className="mx-auto w-full max-w-(--breakpoint-2xl)">
           <div
             ref={bannerRef}
-            className="relative aspect-[2.4/1] mask-x-from-100% lg:mask-x-from-90%"
+            className="relative aspect-[2.4/1] mask-x-from-100% 2xl:mask-x-from-90%"
           >
             {isVideo ? (
               <video
