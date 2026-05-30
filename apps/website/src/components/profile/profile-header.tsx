@@ -1,6 +1,4 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
-import { useQueryClient } from "@tanstack/react-query";
-import { useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { useProfileAuthed } from "@/hooks/use-user";
@@ -19,17 +17,9 @@ import { SocialBadge } from "../shared/social-badge";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const ref = useRef<HTMLDivElement>(null);
-  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
-  const params = useParams({ from: "/@{$nickname}" });
-
-  const onSave = () => {
-    void queryClient.invalidateQueries({
-      queryKey: ["profile", params.nickname],
-    });
-  };
 
   useEffect(() => {
     if (user.bannerImgType && user.bannerImgUrl && ref.current) {
@@ -116,7 +106,6 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
                 nickname={nickname}
                 open={editOpen}
                 setOpen={setEditOpen}
-                onSave={onSave}
               />
               <Button
                 size="sm"

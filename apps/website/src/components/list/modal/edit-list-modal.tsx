@@ -1,5 +1,6 @@
 import { ParaglideMessage } from "@inlang/paraglide-js-react";
 import { QueryErrorResetBoundary, useMutation, useSuspenseQueries } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
@@ -36,10 +37,10 @@ type EditListModalProps = {
   slug: string;
   open: boolean;
   setOpen: (val: boolean) => void;
-  onSave?: () => void;
+  redirectOnSave?: boolean;
 };
 
-export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProps) {
+export function EditListModal({ slug, open, setOpen, redirectOnSave }: EditListModalProps) {
   return (
     <SheetContent className="sm:max-w-md" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
@@ -57,7 +58,7 @@ export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProp
                   </div>
                 }
               >
-                <EditListForm slug={slug} setOpen={setOpen} onSave={onSave} />
+                <EditListForm slug={slug} setOpen={setOpen} redirectOnSave={redirectOnSave} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -73,12 +74,13 @@ export function EditListModal({ slug, open, setOpen, onSave }: EditListModalProp
 function EditListForm({
   slug,
   setOpen,
-  onSave,
+  redirectOnSave,
 }: {
   slug: string;
   setOpen: (val: boolean) => void;
-  onSave?: () => void;
+  redirectOnSave?: boolean;
 }) {
+  const router = useRouter();
   const profiles = useUserProfiles();
   const userLists = useUserLists();
   const [{ data: currencies }, { data }] = useSuspenseQueries({
@@ -94,13 +96,23 @@ function EditListForm({
   });
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
-      onSuccess: (_, _d, _o, { client }) => {
+      onSuccess: (result, _d, _o, { client }) => {
         setOpen(false);
         toast.success(m.list_edit_success());
         void client.invalidateQueries({
           queryKey: orpc.user.currentUser.key(),
         });
-        onSave?.();
+        void client.invalidateQueries({
+          queryKey: ["list"],
+        });
+
+        if (redirectOnSave && result) {
+          void router.navigate({
+            to: result.to,
+            params: result.params,
+            replace: true,
+          });
+        }
       },
       onError: () => {
         toast.error(m.list_edit_error());

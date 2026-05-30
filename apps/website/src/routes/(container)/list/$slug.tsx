@@ -12,12 +12,10 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/$slug")({
   beforeLoad: async ({ params, context: { queryClient } }) => {
-    const list = await queryClient.ensureQueryData(listBySlugQuery({ slug: params.slug }));
+    const list = await queryClient.fetchQuery(listBySlugQuery({ slug: params.slug }));
 
     if (list.profileAddress && list.profileSlug) {
-      const profile = await queryClient.ensureQueryData(
-        profileQuery({ nickname: list.profileAddress }),
-      );
+      const profile = await queryClient.fetchQuery(profileQuery({ nickname: list.profileAddress }));
       if (!profile) throw notFound();
       throw redirect({
         to: "/@{$nickname}/list/$slug",

@@ -1,6 +1,5 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { CodeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { useListTarget } from "@/hooks/use-list-target";
@@ -115,19 +114,11 @@ function SwapHaveWantList({ list }: { list: PublicList }) {
 }
 
 function EditList({ slug }: { slug: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const onSave = () => {
-    void router.navigate({
-      to: `/list/${slug}`,
-      replace: true,
-      reloadDocument: true,
-    });
-  };
 
   return (
     <>
-      <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
+      <EditListModal slug={slug} open={open} setOpen={setOpen} redirectOnSave />
       <Button
         size="sm"
         intent="outline"

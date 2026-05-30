@@ -305,6 +305,29 @@ export const listRouter = {
             }
           }
         });
+
+        // return redirect options
+        const effectiveProfile = list.isProfileBind
+          ? list.profileAddress
+          : input.profileAddress?.toLowerCase();
+
+        if (effectiveProfile && profileSlug) {
+          const addr = await db.query.userAddress.findFirst({
+            columns: { address: true, nickname: true, hideNickname: true },
+            where: { address: effectiveProfile },
+          });
+          const nickname = addr?.nickname && !addr.hideNickname ? addr.nickname : effectiveProfile;
+
+          return {
+            to: "/@{$nickname}/list/$slug",
+            params: { nickname, slug: profileSlug },
+          };
+        }
+
+        return {
+          to: "/list/$slug",
+          params: { slug: input.slug },
+        };
       },
     ),
 

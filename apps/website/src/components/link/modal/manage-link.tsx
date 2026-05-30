@@ -90,16 +90,9 @@ type EditProfileModalProps = {
   address: string;
   open: boolean;
   setOpen: (val: boolean) => void;
-  onSave?: () => void;
 };
 
-export function EditProfileModal({
-  nickname,
-  address,
-  open,
-  setOpen,
-  onSave,
-}: EditProfileModalProps) {
+export function EditProfileModal({ nickname, address, open, setOpen }: EditProfileModalProps) {
   return (
     <SheetContent className="sm:max-w-md" isOpen={open} onOpenChange={setOpen}>
       <SheetHeader>
@@ -125,7 +118,7 @@ export function EditProfileModal({
                   </div>
                 }
               >
-                <EditProfileForm address={address} setOpen={setOpen} onSave={onSave} />
+                <EditProfileForm address={address} setOpen={setOpen} />
               </Suspense>
             </ErrorBoundary>
           )}
@@ -141,7 +134,6 @@ export function EditProfileModal({
 type EditProfileProps = {
   address: string;
   setOpen: (val: boolean) => void;
-  onSave?: () => void;
 };
 
 type BannerImageProps = {
@@ -193,7 +185,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
   );
 }
 
-function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
+function EditProfileForm({ address, setOpen }: EditProfileProps) {
   const cropperRef = useRef<CropperRef>(null);
   const [droppedImage, setDroppedImage] = useState<File | null>(null);
   const { data } = useSuspenseQuery(
@@ -224,11 +216,13 @@ function EditProfileForm({ address, setOpen, onSave }: EditProfileProps) {
 
   const edit = useMutation(
     orpc.profile.edit.mutationOptions({
-      onSuccess: () => {
+      onSuccess: (_data, _variables, _context, { client }) => {
         setOpen(false);
         setDroppedImage(null);
         toast.success(m.profile_edit_success());
-        onSave?.();
+        void client.invalidateQueries({
+          queryKey: ["profile"],
+        });
       },
       onError: () => {
         toast.error(m.profile_edit_error());
