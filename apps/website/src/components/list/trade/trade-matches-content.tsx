@@ -1,5 +1,4 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { twJoin } from "tailwind-merge";
 
 import { Avatar } from "@/components/intentui/avatar-custom";
 import { Badge } from "@/components/intentui/badge";
@@ -13,6 +12,7 @@ import {
 import { SocialBadge } from "@/components/shared/social-badge";
 import { tradePartnersQuery } from "@/lib/queries/list";
 import type { TradePartner } from "@/lib/universal/list";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektCollectionThumbnail } from "./trade-objekt-thumbnail";
@@ -147,7 +147,7 @@ function DirectionColumn({
   const borderColor = tone === "have" ? "border-l-lime-500/60" : "border-l-yellow-500/60";
 
   return (
-    <div className={twJoin("flex flex-col gap-1.5 border-l-2 pl-3", borderColor)}>
+    <div className={cn("flex flex-col gap-1.5 border-l-2 pl-3", borderColor)}>
       <div className="text-muted-fg flex items-center gap-1.5 font-mono text-xs font-semibold">
         <span className="tabular-nums">{slugs.length}</span>
         <span className="flex-1 truncate">{title}</span>

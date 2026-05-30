@@ -1,4 +1,4 @@
-import { ChartLineIcon, CubeIcon } from "@phosphor-icons/react/dist/ssr";
+import { PaperPlaneTiltIcon, CubeIcon, ListIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
   linkOptions,
   useLocation,
@@ -16,14 +16,13 @@ import {
   MenuTrigger,
   Popover,
 } from "react-aria-components/Menu";
-import { twJoin, twMerge } from "tailwind-merge";
+import { twMerge } from "tailwind-merge";
 
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
 import { Button } from "@/components/intentui/button";
 import { Container } from "@/components/intentui/container";
 import { Link } from "@/components/intentui/link";
 import { MenuLabel } from "@/components/intentui/menu";
-import { Separator } from "@/components/intentui/separator";
 import AppLogo from "@/components/layout/app-logo";
 import Changelog from "@/components/layout/changelog";
 import { LoginButton, UserMenu } from "@/components/layout/user-nav";
@@ -39,7 +38,7 @@ export function useNavMenuItems() {
     {
       to: "/activity",
       label: m.nav_activity(),
-      icon: ChartLineIcon,
+      icon: PaperPlaneTiltIcon,
     },
   ]);
 }
@@ -47,16 +46,30 @@ export function useNavMenuItems() {
 export default function Navbar() {
   const navMenuItems = useNavMenuItems();
   const { data: user } = useCurrentUser();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = useLocation({ select: (s) => s.pathname });
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <>
-      {/* Desktop Navbar */}
-      <nav className="border-border/40 bg-bg/70 sticky top-0 z-40 hidden h-12 items-center border-b backdrop-blur-2xl md:flex">
+      <nav className="border-border/40 dark:bg-bg/70 sticky top-0 z-40 flex h-12 items-center border-b bg-white/70 backdrop-blur-2xl">
         <Container className="flex items-center [--container-breakpoint:var(--breakpoint-2xl)]">
-          <div className="flex items-center gap-x-3">
+          {/* Left: hamburger (mobile) + logo + nav links */}
+          <div className="flex items-center gap-x-1.5 md:gap-x-3">
+            {/* Mobile hamburger */}
+            <div className="md:hidden">
+              <MenuTrigger>
+                <MobileMenuTrigger open={mobileOpen} setOpen={setMobileOpen} />
+                <MobileMenu open={mobileOpen} setOpen={setMobileOpen} />
+              </MenuTrigger>
+            </div>
             <AppLogo />
             <Changelog />
-            <div className="flex items-center gap-x-0.5">
+            {/* Desktop nav links */}
+            <div className="hidden items-center gap-x-0.5 md:flex">
               {navMenuItems.map((menu) => (
                 <NavLink key={menu.to} to={menu.to}>
                   {menu.icon && <menu.icon className="size-4" weight="regular" />}
@@ -68,7 +81,8 @@ export default function Navbar() {
 
           <div className="flex-1" aria-hidden />
 
-          <div className="flex items-center gap-x-1">
+          {/* Right: user actions */}
+          <div className="flex items-center gap-x-0.5 md:gap-x-1">
             {!user && <LoginButton />}
             <UserSearch />
             {!user && <SettingsButton />}
@@ -77,9 +91,6 @@ export default function Navbar() {
           </div>
         </Container>
       </nav>
-
-      {/* Mobile Navbar */}
-      <MobileNavbar />
     </>
   );
 }
@@ -100,91 +111,73 @@ function NavLink({ to, ...props }: React.ComponentProps<typeof Link>) {
   );
 }
 
-function MobileNavbar() {
-  const navMenuItems = useNavMenuItems();
-  const { data: user } = useCurrentUser();
-  const [open, setOpen] = useState(false);
-  const pathname = useLocation({ select: (s) => s.pathname });
+function MobileMenuTrigger({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  return (
+    <Button
+      size="sq-sm"
+      onPress={() => setOpen((p) => !p)}
+      intent="plain"
+      className="pressed:bg-transparent outline-hidden"
+      aria-expanded={open}
+    >
+      <div className="t-icon-swap" data-state={open ? "b" : "a"}>
+        <span className="t-icon" data-icon="a">
+          <ListIcon size={20} />
+        </span>
+        <span className="t-icon" data-icon="b">
+          <XIcon size={20} />
+        </span>
+      </div>
+      <span className="sr-only">{m.nav_toggle_menu()}</span>
+    </Button>
+  );
+}
 
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
+function MobileMenu({
+  open,
+  setOpen,
+}: {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  const navMenuItems = useNavMenuItems();
 
   return (
-    <nav className="border-border/40 bg-bg sticky top-0 z-40 flex h-12 items-center border-b md:hidden">
-      <Container className="flex items-center [--container-breakpoint:var(--breakpoint-2xl)]">
-        <div className="flex items-center gap-x-1.5">
-          <MenuTrigger>
-            <Button
-              size="sq-sm"
-              onPress={() => setOpen((p) => !p)}
-              intent="plain"
-              className="pressed:bg-transparent outline-hidden"
-            >
-              <span className="relative flex h-8 w-(--width) items-center justify-center [--width:--spacing(4)]">
-                <span className="relative size-(--width)">
-                  <span
-                    className={twJoin(
-                      "bg-fg absolute left-0 block h-0.5 w-(--width) transition-all duration-100",
-                      open ? "top-[0.4rem] -rotate-45" : "top-1",
-                    )}
-                  />
-                  <span
-                    className={twJoin(
-                      "bg-fg absolute left-0 block h-0.5 w-(--width) transition-all duration-100",
-                      open ? "top-[0.4rem] rotate-45" : "top-[--spacing(2.6)]",
-                    )}
-                  />
-                </span>
-                <span className="sr-only">{m.nav_toggle_menu()}</span>
-              </span>
-            </Button>
-            <Popover
-              placement="bottom"
-              offset={10}
-              onOpenChange={setOpen}
-              isOpen={open}
-              className={cx(
-                "min-h-screen placement-bottom:entering:slide-in-from-top-1 -mt-1.5 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
-                "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
-                "slide-out-to-top-1 slide-in-from-top-1",
-                pathname === "/" ? "from-blue-50 dark:from-[#151518]" : "",
-              )}
-              containerPadding={0}
-            >
-              <Menu className="-mt-2 outline-hidden">
-                <MenuSection>
-                  <MobileNavHeading>{m.nav_navigation()}</MobileNavHeading>
-                  <MobileNavLink to="/">
-                    <CubeIcon className="size-5" weight="fill" />
-                    <MenuLabel>{m.nav_home()}</MenuLabel>
-                  </MobileNavLink>
-                  {navMenuItems.map((menu) => (
-                    <MobileNavLink key={menu.to} to={menu.to}>
-                      {menu.icon && <menu.icon className="size-5" weight="regular" />}
-                      <MenuLabel>{menu.label}</MenuLabel>
-                    </MobileNavLink>
-                  ))}
-                </MenuSection>
-              </Menu>
-            </Popover>
-          </MenuTrigger>
-          <Separator orientation="vertical" className="mr-1 h-4" />
-          <AppLogo />
-          <Changelog />
-        </div>
-
-        <div className="flex-1" aria-hidden />
-
-        <div className="flex items-center gap-x-0.5">
-          {!user && <LoginButton />}
-          <UserSearch />
-          {!user && <SettingsButton />}
-          <SelectedArtistFilter />
-          {user && <UserMenu user={user.user} />}
-        </div>
-      </Container>
-    </nav>
+    <Popover
+      placement="bottom"
+      offset={10}
+      onOpenChange={setOpen}
+      isOpen={open}
+      className={cx(
+        "md:hidden",
+        "min-h-screen placement-bottom:entering:slide-in-from-top-1 -mt-1.5 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
+        "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
+        "slide-out-to-top-1 slide-in-from-top-1",
+      )}
+      containerPadding={0}
+    >
+      <Menu className="-mt-2 outline-hidden">
+        <MenuSection>
+          <MobileNavHeading>{m.nav_navigation()}</MobileNavHeading>
+          <MobileNavLink to="/">
+            <CubeIcon className="size-5" weight="fill" />
+            <MenuLabel>{m.nav_home()}</MenuLabel>
+          </MobileNavLink>
+          {navMenuItems.map((menu) => (
+            <MobileNavLink key={menu.to} to={menu.to}>
+              {menu.icon && <menu.icon className="size-5" weight="regular" />}
+              <MenuLabel>{menu.label}</MenuLabel>
+            </MobileNavLink>
+          ))}
+        </MenuSection>
+      </Menu>
+    </Popover>
   );
 }
 
