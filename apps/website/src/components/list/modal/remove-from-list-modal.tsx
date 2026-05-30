@@ -25,7 +25,7 @@ export function RemoveFromListModal({
   const selected = useObjektSelect(useShallow((a) => a.getSelected()));
   const removeObjektsFromList = useRemoveFromList();
   return (
-    <ModalContent isOpen={open} onOpenChange={setOpen}>
+    <ModalContent isOpen={open} onOpenChange={setOpen} role="alertdialog">
       <ModalHeader>
         <ModalTitle>{m.list_manage_objekt_remove_title()}</ModalTitle>
         <ModalDescription>{m.list_manage_objekt_remove_description()}</ModalDescription>

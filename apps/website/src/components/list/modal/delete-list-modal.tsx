@@ -35,7 +35,7 @@ export function DeleteListModal({ slug, open, setOpen }: DeleteListModalProps) {
     }),
   );
   return (
-    <ModalContent isOpen={open} onOpenChange={setOpen}>
+    <ModalContent isOpen={open} onOpenChange={setOpen} role="alertdialog">
       <ModalHeader>
         <ModalTitle>{m.list_delete_title()}</ModalTitle>
         <ModalDescription>{m.list_delete_description()}</ModalDescription>

@@ -65,7 +65,7 @@ export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps
     }),
   );
   return (
-    <ModalContent isOpen={open} onOpenChange={setOpen}>
+    <ModalContent isOpen={open} onOpenChange={setOpen} role="alertdialog">
       <ModalHeader>
         <ModalTitle>{m.link_unlink_title()}</ModalTitle>
         <ModalDescription>{m.link_unlink_description()}</ModalDescription>

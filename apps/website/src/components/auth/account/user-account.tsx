@@ -1,4 +1,4 @@
-import { TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowCounterClockwiseIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components/Form";
@@ -6,6 +6,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import { Avatar } from "@/components/intentui/avatar-custom";
 import { Button } from "@/components/intentui/button";
 import { Checkbox } from "@/components/intentui/checkbox";
 import {
@@ -202,24 +203,38 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           )}
         />
 
-        <Controller
-          control={control}
-          name="removePic"
-          render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
-            <Checkbox
-              name={name}
-              onChange={onChange}
-              onBlur={onBlur}
-              isSelected={value}
-              isInvalid={invalid}
-              validationBehavior="aria"
-            >
-              <Label>{m.auth_account_remove_profile_picture()}</Label>
-            </Checkbox>
-          )}
-        />
-
-        <span className="text-muted-fg text-xs">{m.auth_account_profile_pic_help()}</span>
+        <div className="flex flex-col gap-2">
+          <Label className="text-sm font-medium">{m.auth_account_remove_profile_picture()}</Label>
+          <Controller
+            control={control}
+            name="removePic"
+            render={({ field: { value, onChange } }) => (
+              <div className="flex items-center gap-3">
+                <Avatar
+                  size="xl"
+                  src={value ? null : user.image}
+                  alt={user.name ?? undefined}
+                  initials={(user.name ?? "").charAt(0)}
+                  className={value ? "opacity-40" : undefined}
+                />
+                <div className="flex flex-col gap-1">
+                  {value ? (
+                    <Button size="sm" intent="outline" onPress={() => onChange(false)}>
+                      <ArrowCounterClockwiseIcon />
+                      {m.common_actions_undo()}
+                    </Button>
+                  ) : (
+                    <Button size="sm" intent="outline" onPress={() => onChange(true)}>
+                      <TrashSimpleIcon />
+                      {m.common_actions_remove()}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          />
+          <span className="text-muted-fg text-xs">{m.auth_account_profile_pic_help()}</span>
+        </div>
 
         <div className="flex">
           <Button size="md" intent="primary" type="submit" isPending={mutation.isPending}>
@@ -438,7 +453,7 @@ function DeleteAccount() {
         <TrashSimpleIcon />
         {m.auth_account_delete_account()}
       </Button>
-      <ModalContent isOpen={open} onOpenChange={setOpen}>
+      <ModalContent isOpen={open} onOpenChange={setOpen} role="alertdialog">
         <ModalHeader>
           <ModalTitle>{m.auth_account_delete_account()}</ModalTitle>
           <ModalDescription>{m.auth_account_delete_account_description()}</ModalDescription>

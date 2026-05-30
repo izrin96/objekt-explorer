@@ -17,21 +17,29 @@ export function useRemoveFromList() {
         const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });
         const snapshot = client.getQueryData(queryKey);
 
+        const idSet = new Set(entryIds.map(String));
+        const removed = snapshot?.filter((item) => idSet.has(item.id)) ?? [];
+
         client.setQueryData(queryKey, (old = []) => {
-          const idSet = new Set(entryIds.map(String));
           return old.filter((item) => !idSet.has(item.id));
         });
 
-        return { snapshot };
+        return { snapshot, removed };
       },
-      onSuccess: (_, { entryIds }) => {
+      onSuccess: (_, { entryIds }, context) => {
         const message =
-          entryIds.length > 1
-            ? m.actions_remove_from_list_success_multiple({
-                count: entryIds.length.toLocaleString(),
+          entryIds.length === 1 && context?.removed?.[0]
+            ? m.actions_remove_from_list_success_single({
+                collectionId: context.removed[0].collectionId,
               })
-            : m.actions_remove_from_list_success_single();
-        toast.success(message);
+            : entryIds.length > 1
+              ? m.actions_remove_from_list_success_multiple({
+                  count: entryIds.length.toLocaleString(),
+                })
+              : null;
+        if (message) {
+          toast.success(message);
+        }
         reset();
       },
       onError: async (_err, { slug }, context, { client }) => {

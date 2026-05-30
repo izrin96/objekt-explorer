@@ -60,9 +60,11 @@ type LinkedAccountProps = {
 
 function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
   const [pullOpen, setPullOpen] = useState(false);
+  const [unlinkOpen, setUnlinkOpen] = useState(false);
   const unlinkAccount = useMutation(
     orpc.user.unlinkAccount.mutationOptions({
       onSuccess: async (_, _v, _o, { client }) => {
+        setUnlinkOpen(false);
         void client.invalidateQueries({
           queryKey: orpc.user.currentUser.key(),
         });
@@ -84,21 +86,24 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
         <span className="text-muted-fg text-xs">{accountId}</span>
       </div>
       <PullProfileModal provider={provider} open={pullOpen} setOpen={setPullOpen} />
+      <UnlinkAccountModal
+        provider={provider}
+        open={unlinkOpen}
+        setOpen={setUnlinkOpen}
+        onConfirm={() =>
+          unlinkAccount.mutate({
+            providerId: provider.id,
+            accountId: accountId,
+          })
+        }
+        isPending={unlinkAccount.isPending}
+      />
       <div className="flex gap-2">
         <Button intent="outline" size="xs" onPress={() => setPullOpen(true)}>
           <ArrowsClockwiseIcon />
           {m.auth_account_link_accounts_refresh()}
         </Button>
-        <Button
-          intent="danger"
-          size="xs"
-          onPress={() =>
-            unlinkAccount.mutate({
-              providerId: provider.id,
-              accountId: accountId,
-            })
-          }
-        >
+        <Button intent="danger" size="xs" onPress={() => setUnlinkOpen(true)}>
           <LinkBreakIcon />
           {m.auth_account_link_accounts_unlink()}
         </Button>
@@ -132,6 +137,41 @@ function UnlinkedAccount({ provider }: UnlinkedAccountProps) {
         {m.auth_account_link_accounts_link()}
       </Button>
     </div>
+  );
+}
+
+type UnlinkAccountModalProps = {
+  provider: Provider;
+  open: boolean;
+  setOpen: (val: boolean) => void;
+  onConfirm: () => void;
+  isPending: boolean;
+};
+
+function UnlinkAccountModal({
+  provider,
+  open,
+  setOpen,
+  onConfirm,
+  isPending,
+}: UnlinkAccountModalProps) {
+  return (
+    <ModalContent isOpen={open} onOpenChange={setOpen} role="alertdialog">
+      <ModalHeader>
+        <ModalTitle>
+          {m.auth_account_link_accounts_unlink_title({ provider: provider.label })}
+        </ModalTitle>
+        <ModalDescription>
+          {m.auth_account_link_accounts_unlink_description({ provider: provider.label })}
+        </ModalDescription>
+      </ModalHeader>
+      <ModalFooter>
+        <ModalClose>{m.common_modal_cancel()}</ModalClose>
+        <Button intent="danger" type="submit" isPending={isPending} onPress={onConfirm}>
+          {m.auth_account_link_accounts_unlink()}
+        </Button>
+      </ModalFooter>
+    </ModalContent>
   );
 }
 

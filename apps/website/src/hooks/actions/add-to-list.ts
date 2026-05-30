@@ -24,10 +24,14 @@ export function useAddToList() {
         }
 
         const message =
-          rows.length > 1
-            ? m.actions_add_to_list_success_multiple({ count: rows.length.toLocaleString() })
-            : m.actions_add_to_list_success_single();
-        toast.success(message);
+          rows.length === 1
+            ? m.actions_add_to_list_success_single({ collectionId: rows[0]!.collectionId })
+            : rows.length > 1
+              ? m.actions_add_to_list_success_multiple({ count: rows.length.toLocaleString() })
+              : null;
+        if (message) {
+          toast.success(message);
+        }
         reset();
       },
       onError: () => {
