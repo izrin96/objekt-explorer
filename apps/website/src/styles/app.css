@@ -97,6 +97,7 @@
   /* custom */
   --text-xxs: 0.6rem;
   --aspect-photocard: 1083 / 1673;
+  --aspect-banner: 2.4;
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);

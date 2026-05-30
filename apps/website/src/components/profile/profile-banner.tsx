@@ -1,5 +1,6 @@
 import { useElementSize } from "@/hooks/use-element-size";
 import type { PublicProfile } from "@/lib/universal/user";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Container } from "../intentui/container";
@@ -18,11 +19,11 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         <div className="mx-auto w-full max-w-(--breakpoint-2xl)">
           <div
             ref={bannerRef}
-            className="relative aspect-[2.4/1] mask-x-from-100% 2xl:mask-x-from-90%"
+            className="aspect-banner relative mask-x-from-100% 2xl:mask-x-from-90%"
           >
             {isVideo ? (
               <video
-                className="size-full object-cover object-center"
+                className="absolute size-full object-cover object-top"
                 src={profile.bannerImgUrl}
                 autoPlay
                 loop
@@ -32,11 +33,11 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             ) : (
               <img
                 src={profile.bannerImgUrl}
-                className="absolute size-full object-cover object-center"
+                className="absolute size-full object-cover object-top"
                 alt={m.profile_banner_alt()}
               />
             )}
-            <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-70% to-100%"></div>
+            <GradientBanner />
           </div>
         </div>
       </div>
@@ -44,7 +45,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
       <div className="absolute inset-0 top-12 -z-10 lg:top-0" style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
-            className="size-full object-cover object-center"
+            className="absolute size-full object-cover object-top"
             src={profile.bannerImgUrl}
             autoPlay
             loop
@@ -54,16 +55,27 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         ) : (
           <img
             src={profile.bannerImgUrl}
-            className="absolute size-full object-cover object-center"
+            className="absolute size-full object-cover object-top"
             alt={m.profile_banner_alt()}
           />
         )}
-        <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-70% to-100% backdrop-blur-xl"></div>
+        <GradientBanner className="backdrop-blur-xl" />
       </div>
       {/* clearance */}
       <Container>
-        <div className="-mt-4 aspect-[2.4/1] lg:-mt-16"></div>
+        <div className="aspect-banner -mt-4 lg:-mt-16"></div>
       </Container>
     </>
+  );
+}
+
+function GradientBanner({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "to-bg absolute inset-0 bg-linear-to-b from-transparent from-70% to-100%",
+        className,
+      )}
+    />
   );
 }

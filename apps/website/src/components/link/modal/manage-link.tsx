@@ -167,7 +167,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
     <>
       {droppedImage.type.startsWith("video") ? (
         <video
-          className="aspect-[2.4/1] rounded-lg object-cover"
+          className="aspect-banner rounded-lg object-cover object-top"
           src={imageUrl}
           autoPlay
           loop
@@ -175,10 +175,10 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
           playsInline
         />
       ) : ["image/gif"].includes(droppedImage.type) ? (
-        <img src={imageUrl} alt="" className="aspect-[2.4/1] rounded-lg object-cover" />
+        <img src={imageUrl} alt="" className="aspect-banner rounded-lg object-cover object-top" />
       ) : (
         <div className="h-52">
-          <Cropper ref={cropperRef} src={imageUrl} aspectRatio={() => 2.3} />
+          <Cropper ref={cropperRef} src={imageUrl} />
         </div>
       )}
       <div className="flex items-center justify-between">
