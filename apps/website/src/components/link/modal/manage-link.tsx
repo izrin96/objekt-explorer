@@ -175,11 +175,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
           playsInline
         />
       ) : ["image/gif"].includes(droppedImage.type) ? (
-        <img
-          src={imageUrl}
-          alt="Selected banner preview"
-          className="aspect-[2.3/1] rounded-lg object-cover"
-        />
+        <img src={imageUrl} alt="" className="aspect-[2.3/1] rounded-lg object-cover" />
       ) : (
         <div className="h-52">
           <Cropper ref={cropperRef} src={imageUrl} aspectRatio={() => 2.3} />

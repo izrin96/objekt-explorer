@@ -91,7 +91,7 @@ function PartnerDisclosure({
             <div className="text-muted-fg border-border flex flex-wrap items-center gap-x-4 gap-y-1 border-b pb-3 text-xs">
               {partner.nicknames.length > 0 && (
                 <div className="flex items-start gap-2">
-                  <span className="shrink-0 self-center">Cosmo ID:</span>
+                  <span className="shrink-0 self-center">{m.list_cosmo_id_label()}</span>
                   <span className="text-fg font-medium select-all">
                     {partner.nicknames.join(", ")}
                   </span>

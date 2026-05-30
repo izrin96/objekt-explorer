@@ -12,6 +12,7 @@ import { clientEnv } from "@/lib/env/client";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
 import { currentUserOptions } from "@/lib/query-options";
+import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import appCss from "@/styles/app.css?url";
@@ -38,7 +39,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         initialScale: 1,
         maximumScale: 1,
       },
-      description: "Cosmo objekt explorer",
+      description: m.home_description(),
       keywords: [
         "lunar",
         "kpop",

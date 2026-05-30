@@ -119,7 +119,7 @@ function Trades({
       <div className="flex items-center gap-2">
         <NumberFieldPrimitive
           minValue={0}
-          aria-label="Serial no."
+          aria-label={m.objekt_serial_aria()}
           value={serial}
           onChange={setSerial}
           isWheelDisabled
@@ -296,7 +296,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
           <Table
             className="[--gutter:--spacing(3)]"
             bleed
-            aria-label="Trades"
+            aria-label={m.objekt_trades_table_aria()}
             sortDescriptor={list.sortDescriptor}
             onSortChange={(desc) => list.sort(desc)}
           >

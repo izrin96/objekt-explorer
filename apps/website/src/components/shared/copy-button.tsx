@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useCopyToClipboard } from "usehooks-ts";
 
 import { Button } from "@/components/intentui/button";
+import { m } from "@/paraglide/messages";
 
 interface CopyButtonProps {
   text: string;
@@ -54,7 +55,7 @@ export function CopyButton({
           <CheckIcon size={variant === "icon" ? 14 : 16} />
         </span>
       </div>
-      {variant === "button" && "Copy"}
+      {variant === "button" && m.common_copy_button()}
     </Button>
   );
 }

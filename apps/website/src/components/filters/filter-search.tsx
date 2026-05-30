@@ -64,7 +64,7 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       onChange={handleChange}
       className="w-full max-w-72 min-w-50"
       value={query}
-      aria-label="Search"
+      aria-label={m.common_search_aria()}
     >
       <InputGroup className="[--input-gutter-end:--spacing(10)] sm:[--input-gutter-end:--spacing(8)]">
         <Input ref={ref} placeholder={m.filter_quick_search()} />

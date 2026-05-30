@@ -13,6 +13,7 @@ import {
 import { type CSSProperties, useEffect, useState } from "react";
 
 import { useLiveSession } from "@/hooks/use-live-session";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Loader } from "../intentui/loader";
@@ -119,7 +120,7 @@ function LiveVolumeControl() {
           minValue={0}
           maxValue={1}
           step={0.01}
-          aria-label="Volume"
+          aria-label={m.live_volume_aria()}
           orientation="vertical"
           onChange={(value) => {
             speaker.setParticipantVolume(currentSpeaker.sessionId, value as number);
@@ -191,7 +192,7 @@ const CustomLivestreamLayout = () => {
         {!open && (
           <div className="bg-bg/50 absolute top-0 left-0 flex size-full items-center justify-center">
             <Button intent="primary" onPress={() => setOpen(true)}>
-              Unmute
+              {m.live_unmute()}
             </Button>
           </div>
         )}

@@ -78,7 +78,7 @@ function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned
 
   return (
     <Tabs
-      aria-label="Objekt tab"
+      aria-label={m.objekt_tab_aria()}
       selectedKey={currentTab}
       onSelectionChange={(key) => setCurrentTab(key.toString() as ValidTab)}
       className="w-full pb-2"
@@ -266,7 +266,7 @@ function OwnedListPanel({
           <Table
             className="[--gutter:--spacing(3)]"
             bleed
-            aria-label="Trades"
+            aria-label={m.objekt_owned_table_aria()}
             sortDescriptor={list.sortDescriptor}
             onSortChange={list.sort}
           >

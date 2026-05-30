@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 
 import { isObjektOwned } from "@/lib/objekt-utils";
 import { OBJEKT_SIZE } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 const { width: CANVAS_W, height: CANVAS_H } = OBJEKT_SIZE;
 
@@ -50,7 +51,7 @@ export default function ObjektSidebar(props: Props) {
           className="size-full object-cover"
           loading="eager"
           style={offsetPx > 0 ? { marginLeft: `${offsetPx}px` } : undefined}
-          alt="band image"
+          alt={m.objekt_band_image_alt()}
           src={objekt.bandImageUrl}
           width={CANVAS_W}
           height={CANVAS_H}

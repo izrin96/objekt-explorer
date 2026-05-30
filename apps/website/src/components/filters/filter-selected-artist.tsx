@@ -5,6 +5,7 @@ import type { Selection } from "react-aria-components";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
+import { m } from "@/paraglide/messages";
 
 import { Avatar } from "../intentui/avatar-custom";
 import { Button } from "../intentui/button";
@@ -28,7 +29,12 @@ export default function SelectedArtistFilter() {
 
   return (
     <Menu>
-      <Button aria-label="Selected artist" intent="plain" size="sm" className="px-1.5 sm:px-1.5">
+      <Button
+        aria-label={m.filter_selected_artist_aria()}
+        intent="plain"
+        size="sm"
+        className="px-1.5 sm:px-1.5"
+      >
         {isPending ? (
           <Loader variant="ring" />
         ) : (

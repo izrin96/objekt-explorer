@@ -92,7 +92,7 @@ function IntroStep({ onContinue }: { onContinue: () => void }) {
       <h2 className="font-display text-xl font-semibold">{m.link_process_intro_title()}</h2>
       <img
         src="/assets/icon-smartphone.png"
-        alt="Smartphone"
+        alt=""
         width={220}
         height={220}
         className="fade-in zoom-in animate-in duration-200"
@@ -151,7 +151,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
     <div className="flex max-w-md flex-col items-center gap-4">
       <img
         src="/assets/icon-search.png"
-        alt="Search"
+        alt=""
         width={220}
         height={220}
         className="fade-in zoom-in animate-in duration-200"
@@ -229,7 +229,7 @@ function ArtistStep({
     <div className="flex max-w-md flex-col items-center gap-4">
       <img
         src="/assets/icon-lanyard.png"
-        alt="Verify"
+        alt=""
         width={220}
         height={220}
         className="fade-in zoom-in animate-in duration-200"
@@ -279,14 +279,14 @@ function VerifyStep({
 
   const [randomIcon] = useState(() => {
     const icons = [
-      { src: "/assets/icon-axolotl.png", alt: "Axolotl" },
-      { src: "/assets/icon-deer.png", alt: "Deer" },
-      { src: "/assets/icon-panda.png", alt: "Panda" },
-      { src: "/assets/icon-squirrel.png", alt: "Squirrel" },
-      { src: "/assets/icon-bear.png", alt: "Bear" },
-      { src: "/assets/icon-cat.png", alt: "Cat" },
-      { src: "/assets/icon-giraffe.png", alt: "Giraffe" },
-      { src: "/assets/icon-white-fox.png", alt: "White Fox" },
+      { src: "/assets/icon-axolotl.png", alt: "" },
+      { src: "/assets/icon-deer.png", alt: "" },
+      { src: "/assets/icon-panda.png", alt: "" },
+      { src: "/assets/icon-squirrel.png", alt: "" },
+      { src: "/assets/icon-bear.png", alt: "" },
+      { src: "/assets/icon-cat.png", alt: "" },
+      { src: "/assets/icon-giraffe.png", alt: "" },
+      { src: "/assets/icon-white-fox.png", alt: "" },
     ];
     return icons[Math.floor(Math.random() * icons.length)]!;
   });
@@ -311,7 +311,7 @@ function VerifyStep({
       <div className="flex flex-col items-center gap-2">
         <img
           src="/assets/icon-trash.png"
-          alt="Expired"
+          alt=""
           width={220}
           height={220}
           className="fade-in zoom-in animate-in duration-200"
@@ -329,7 +329,7 @@ function VerifyStep({
       <div className="flex flex-col items-center gap-2">
         <img
           src="/assets/icon-error.png"
-          alt="Error"
+          alt=""
           width={220}
           height={220}
           className="fade-in zoom-in animate-in duration-200"
@@ -398,7 +398,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
         src="/assets/icon-welcome.png"
         width={220}
         height={220}
-        alt="Welcome"
+        alt=""
         className="fade-in zoom-in animate-in duration-200"
       />
       <span>{m.link_success({ nickname })}</span>

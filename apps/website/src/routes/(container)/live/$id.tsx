@@ -33,7 +33,10 @@ export const Route = createFileRoute("/(container)/live/$id")({
     return generateMetadata({
       title,
       openGraph: {
-        description: `${live.title} · Watch ${live.channel.name} live`,
+        description: m.page_titles_live_og_description({
+          title: live.title,
+          channel: live.channel.name,
+        }),
         images: live.thumbnailImage
           ? [
               {
@@ -45,7 +48,10 @@ export const Route = createFileRoute("/(container)/live/$id")({
       twitter: {
         card: "summary_large_image",
         title,
-        description: `${live.title} · Watch ${live.channel.name} live`,
+        description: m.page_titles_live_og_description({
+          title: live.title,
+          channel: live.channel.name,
+        }),
         images: live.thumbnailImage ? [live.thumbnailImage] : undefined,
       },
     });

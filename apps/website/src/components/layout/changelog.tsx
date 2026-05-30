@@ -90,7 +90,7 @@ export default function Changelog() {
 function ChangelogNotice() {
   return (
     <Note intent="default" className="shrink-0">
-      Join our support Discord server for bug reporting or suggestions.{" "}
+      {m.about_discord_invite()}{" "}
       <ExternalLink className="underline" href="https://discord.gg/SWEm6RbJD3">
         discord.gg/SWEm6RbJD3
       </ExternalLink>

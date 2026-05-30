@@ -1,5 +1,6 @@
 import { useElementSize } from "@/hooks/use-element-size";
 import type { PublicProfile } from "@/lib/universal/user";
+import { m } from "@/paraglide/messages";
 
 import { Container } from "../intentui/container";
 
@@ -32,7 +33,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
               <img
                 src={profile.bannerImgUrl}
                 className="absolute size-full object-cover object-center"
-                alt="Banner"
+                alt={m.profile_banner_alt()}
               />
             )}
             <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100%"></div>
@@ -54,7 +55,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
           <img
             src={profile.bannerImgUrl}
             className="absolute size-full object-cover object-center"
-            alt="Banner"
+            alt={m.profile_banner_alt()}
           />
         )}
         <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100% backdrop-blur-xl"></div>

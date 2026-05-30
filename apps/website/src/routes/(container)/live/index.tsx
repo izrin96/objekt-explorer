@@ -29,10 +29,7 @@ function LivePage() {
 
   return (
     <div className="flex flex-col gap-3">
-      <Note>
-        As this feature violates Cosmo&apos;s Terms of Service, we will no longer continue offering
-        it. Please watch the live stream on the Cosmo app instead.
-      </Note>
+      <Note>{m.live_tos_notice()}</Note>
       {isAllowed && <LiveSessionListRender />}
     </div>
   );
