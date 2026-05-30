@@ -172,7 +172,6 @@
   "list_create_button": "목록 만들기",
   "list_generate_discord_button": "Discord 형식 생성",
   "list_no_lists_found": "이 프로필에서 목록을 찾을 수 없습니다",
-  "list_no_lists_hint": "프로필 목록을 만들거나 일반 목록을 이 프로필에 표시하도록 설정하세요",
   "list_type_general": "일반",
   "list_type_sale": "판매",
   "list_type_have": "보유",

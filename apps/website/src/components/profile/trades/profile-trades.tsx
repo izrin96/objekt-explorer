@@ -27,15 +27,17 @@ import TradesFilter from "./trades-filter";
 export default function ProfileTradesRender() {
   return (
     <ObjektModalProvider initialTab="trades">
-      <TradesFilter />
+      <div className="flex flex-col gap-4">
+        <TradesFilter />
 
-      <QueryErrorResetBoundary>
-        {({ reset }) => (
-          <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <ProfileTrades />
-          </ErrorBoundary>
-        )}
-      </QueryErrorResetBoundary>
+        <QueryErrorResetBoundary>
+          {({ reset }) => (
+            <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
+              <ProfileTrades />
+            </ErrorBoundary>
+          )}
+        </QueryErrorResetBoundary>
+      </div>
     </ObjektModalProvider>
   );
 }

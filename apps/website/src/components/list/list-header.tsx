@@ -24,7 +24,7 @@ export default function ListHeader() {
   const isListAuthed = useListAuthed();
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-3.5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
         {/* Left: list identity */}
         <div className="flex min-w-0 flex-col justify-center">
@@ -36,7 +36,7 @@ export default function ListHeader() {
             )}
           </div>
           {list.profileAddress && profile && (
-            <div className="text-muted-fg mt-0.5 text-sm">
+            <div className="text-muted-fg text-sm">
               <Link
                 to={`/@{$nickname}`}
                 params={{

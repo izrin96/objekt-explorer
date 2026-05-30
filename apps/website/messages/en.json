@@ -172,7 +172,6 @@
   "list_create_button": "Create list",
   "list_generate_discord_button": "Generate Discord format",
   "list_no_lists_found": "No lists found for this profile",
-  "list_no_lists_hint": "Create a profile list or set a normal list to display in this profile",
   "list_type_general": "General",
   "list_type_sale": "Sale",
   "list_type_have": "Have",

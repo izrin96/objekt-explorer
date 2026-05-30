@@ -1,8 +1,8 @@
+import { RectangleDashedIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Suspense } from "react";
 
 import { useProfileTarget } from "@/hooks/use-profile-target";
-import { useProfileAuthed } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
 import { getListLinkOption } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -27,7 +27,6 @@ export default function ProfileLists() {
 
 function ProfileList() {
   const profile = useProfileTarget()!;
-  const isOwned = useProfileAuthed();
   const { data } = useSuspenseQuery(
     orpc.list.profileLists.queryOptions({
       input: { profileAddress: profile.address },
@@ -37,9 +36,9 @@ function ProfileList() {
   return (
     <div className="flex flex-col gap-6">
       {data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-          <span className="text-muted-fg text-sm">{m.list_no_lists_found()}</span>
-          {isOwned && <span className="text-muted-fg text-sm">{m.list_no_lists_hint()}</span>}
+        <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+          <RectangleDashedIcon size={64} weight="light" />
+          <span className="text-sm">{m.list_no_lists_found()}</span>
         </div>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,380px),1fr))] gap-2">
