@@ -1,3 +1,4 @@
+import spaceGroteskLatin from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
 import { type QueryClient } from "@tanstack/react-query";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import * as React from "react";
@@ -70,14 +71,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     return {
       meta,
       links: [
+        { rel: "preconnect", href: "https://imagedelivery.net" },
+        { rel: "preconnect", href: "https://resources.cosmo.fans" },
+        { rel: "preconnect", href: "https://static.cosmo.fans" },
+        {
+          rel: "preload",
+          href: spaceGroteskLatin,
+          as: "font",
+          type: "font/woff2",
+          crossOrigin: "anonymous",
+        },
         {
           rel: "stylesheet",
           href: appCss,
         },
-        { rel: "preconnect", href: "https://imagedelivery.net" },
-        { rel: "preconnect", href: "https://resources.cosmo.fans" },
-        { rel: "preconnect", href: "https://static.cosmo.fans" },
         ...links,
+        // todo: metadata
       ],
       scripts: import.meta.env.DEV
         ? []
