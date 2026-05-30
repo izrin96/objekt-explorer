@@ -56,7 +56,7 @@ export default function Navbar() {
   return (
     <>
       <nav className="border-border/40 dark:bg-bg/70 sticky top-0 z-40 flex h-12 items-center border-b bg-white/70 backdrop-blur-2xl">
-        <Container className="flex items-center [--container-breakpoint:var(--breakpoint-2xl)]">
+        <Container className="flex items-center">
           {/* Left: hamburger (mobile) + logo + nav links */}
           <div className="flex items-center gap-x-1.5 md:gap-x-3">
             {/* Mobile hamburger */}

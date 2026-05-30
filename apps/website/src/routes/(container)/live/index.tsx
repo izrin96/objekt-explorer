@@ -28,7 +28,7 @@ function LivePage() {
   const { isAllowed } = Route.useLoaderData();
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 pt-4 pb-36">
       <Note>{m.live_tos_notice()}</Note>
       {isAllowed && <LiveSessionListRender />}
     </div>

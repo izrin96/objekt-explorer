@@ -186,7 +186,7 @@ const CustomLivestreamLayout = () => {
         )}
         <ParticipantView
           PictureInPicturePlaceholder={null}
-          className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2 [&>video]:size-full [&>video]:object-contain"
+          className="relative flex h-[calc(100svh-7rem)] w-full flex-col items-center justify-center gap-2 [&>video]:size-full [&>video]:object-contain"
           // render when video is disabled
           VideoPlaceholder={CustomVideoPlaceholder}
           // render after video element

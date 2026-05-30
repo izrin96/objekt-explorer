@@ -4,7 +4,7 @@ import { m } from "@/paraglide/messages";
 export default function LiveEnded() {
   const liveSession = useLiveSession();
   return (
-    <div className="relative flex h-[calc(100svh-7.5rem)] w-full flex-col items-center justify-center gap-2">
+    <div className="relative flex h-[calc(100svh-7rem)] w-full flex-col items-center justify-center gap-2">
       <div className="relative aspect-square size-full overflow-hidden rounded">
         {liveSession.thumbnailImage && (
           <img

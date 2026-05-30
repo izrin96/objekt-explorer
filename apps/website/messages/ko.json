@@ -114,7 +114,7 @@
   "profile_edit_banner_label": "배너 이미지",
   "profile_edit_banner_selected": "선택된 파일: {name}",
   "profile_edit_banner_clear": "지우기",
-  "profile_edit_banner_recommendation": "권장 비율은 2.3:1입니다",
+  "profile_edit_banner_recommendation": "권장 비율은 2.4:1입니다",
   "profile_banner_alt": "배너",
   "profile_edit_remove_banner_label": "배너 제거",
   "profile_edit_unlink_note": "이 Cosmo 프로필과 계정의 연결을 해제하려면 {#link}Cosmo 링크 관리{/link} 페이지를 방문하세요.",

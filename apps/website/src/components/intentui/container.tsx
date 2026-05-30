@@ -8,7 +8,8 @@ export function Container({ className, constrained = false, ref, ...props }: Con
   return (
     <div
       className={twMerge(
-        "mx-auto w-full max-w-(--container-breakpoint) [--container-breakpoint:var(--breakpoint-xl)] [--container-padding:--spacing(4)]",
+        // custom change to 2xl
+        "mx-auto w-full max-w-(--container-breakpoint) [--container-breakpoint:var(--breakpoint-2xl)] [--container-padding:--spacing(4)]",
         constrained ? "sm:px-(--container-padding)" : "px-(--container-padding)",
         className,
       )}

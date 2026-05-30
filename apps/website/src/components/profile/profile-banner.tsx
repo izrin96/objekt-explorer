@@ -14,11 +14,11 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   return (
     <>
       {/* banner */}
-      <div className="absolute inset-0 top-12 -z-5 xl:top-0">
-        <div className="mx-auto w-full max-w-(--container-breakpoint) [--container-breakpoint:var(--breakpoint-2xl)]">
+      <div className="absolute inset-0 top-12 -z-5 lg:top-0">
+        <div className="mx-auto w-full max-w-(--breakpoint-2xl)">
           <div
             ref={bannerRef}
-            className="relative aspect-[2.3/1] mask-x-from-100% xl:mask-x-from-97%"
+            className="relative aspect-[2.4/1] mask-x-from-100% lg:mask-x-from-90%"
           >
             {isVideo ? (
               <video
@@ -36,12 +36,12 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
                 alt={m.profile_banner_alt()}
               />
             )}
-            <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100%"></div>
+            <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-70% to-100%"></div>
           </div>
         </div>
       </div>
       {/* background */}
-      <div className="absolute inset-0 top-12 -z-10 xl:top-0" style={{ height: `${height}px` }}>
+      <div className="absolute inset-0 top-12 -z-10 lg:top-0" style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
             className="size-full object-cover object-center"
@@ -58,15 +58,12 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             alt={m.profile_banner_alt()}
           />
         )}
-        <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-90% to-100% backdrop-blur-xl"></div>
+        <div className="to-bg absolute inset-0 bg-linear-to-b from-transparent from-70% to-100% backdrop-blur-xl"></div>
       </div>
-      <Container className="[--container-breakpoint:var(--breakpoint-2xl)]">
-        <ProfileBannerClearance />
+      {/* clearance */}
+      <Container>
+        <div className="-mt-4 aspect-[2.4/1] lg:-mt-16"></div>
       </Container>
     </>
   );
-}
-
-function ProfileBannerClearance() {
-  return <div className="-mt-2 aspect-[2.3/1] xl:-mt-14"></div>;
 }
