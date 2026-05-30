@@ -46,7 +46,7 @@ export default function ResetPassword({ token }: { token: string }) {
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4">
-      <div className="font-display text-xl font-semibold">{m.auth_reset_password_title()}</div>
+      <h2 className="font-display text-xl font-semibold">{m.auth_reset_password_title()}</h2>
       <Form onSubmit={onSubmit} validationBehavior="aria">
         <div className="flex flex-col gap-4">
           <Controller

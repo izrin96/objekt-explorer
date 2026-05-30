@@ -28,7 +28,7 @@ export default function IndexRender() {
   return (
     <ObjektViewProvider modalTab="trades">
       <div className="flex flex-col gap-4">
-        <h1 className="font-display text-xl font-semibold">{m.home_title()}</h1>
+        <h2 className="font-display text-xl font-semibold">{m.home_title()}</h2>
         <IndexFilter selectRef={setSelectTarget} />
 
         <QueryErrorResetBoundary>

@@ -48,7 +48,7 @@ function CompareToolPage() {
 
   return (
     <ListProvider list={list}>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 pt-4 pb-36">
         <CompareView input={input} />
       </div>
     </ListProvider>

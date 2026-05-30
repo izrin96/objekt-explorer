@@ -12,5 +12,9 @@ export const Route = createFileRoute("/(container)/login")({
 });
 
 function LoginPage() {
-  return <SignIn />;
+  return (
+    <div className="pt-4 pb-36">
+      <SignIn />
+    </div>
+  );
 }

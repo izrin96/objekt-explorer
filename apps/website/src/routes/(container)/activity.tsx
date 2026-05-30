@@ -12,5 +12,9 @@ export const Route = createFileRoute("/(container)/activity")({
 });
 
 function ActivityPage() {
-  return <ActivityRender />;
+  return (
+    <div className="pt-4 pb-36">
+      <ActivityRender />
+    </div>
+  );
 }

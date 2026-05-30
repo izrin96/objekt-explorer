@@ -341,7 +341,6 @@
   "auth_reset_password_submit": "Reset Password",
   "auth_reset_password_success": "Password reset successfully",
   "auth_reset_password_error": "Password reset error. {message}",
-  "auth_reset_password_invalid_token": "Invalid token",
   "auth_verified_email_verified": "Email has been verified",
   "auth_account_title": "Account",
   "auth_account_description": "Manage your account",

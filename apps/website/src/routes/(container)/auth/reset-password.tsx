@@ -2,10 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 
 import ResetPassword from "@/components/auth/reset-password";
-import { m } from "@/paraglide/messages";
 
 const resetPasswordSearchSchema = z.object({
-  token: z.string().optional().default(""),
+  token: z.string().min(1),
 });
 
 export const Route = createFileRoute("/(container)/auth/reset-password")({
@@ -16,9 +15,9 @@ export const Route = createFileRoute("/(container)/auth/reset-password")({
 function ResetPasswordPage() {
   const { token } = Route.useSearch();
 
-  if (!token) {
-    return <div>{m.auth_reset_password_invalid_token()}</div>;
-  }
-
-  return <ResetPassword token={token as string} />;
+  return (
+    <div className="pt-4 pb-36">
+      <ResetPassword token={token} />
+    </div>
+  );
 }

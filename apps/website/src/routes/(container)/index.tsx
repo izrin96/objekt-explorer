@@ -8,7 +8,7 @@ export const Route = createFileRoute("/(container)/")({
 
 function Home() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pt-4 pb-36">
       <IndexRender />
     </div>
   );

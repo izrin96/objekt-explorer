@@ -20,7 +20,7 @@ export const Route = createFileRoute("/(container)/list/")({
 
 function ListPage() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col pt-4 pb-36">
       <MyListRender />
     </div>
   );
