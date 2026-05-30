@@ -12,6 +12,7 @@ import { clientEnv } from "@/lib/env/client";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
 import { currentUserOptions } from "@/lib/query-options";
+import { SITE_NAME, THEME_COLORS } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -34,11 +35,22 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   head: () => {
     const { meta, links } = generateMetadata({
       charSet: "utf-8",
+      applicationName: SITE_NAME,
+      manifest: "/site.webmanifest",
+      appleWebApp: {
+        title: SITE_NAME,
+        capable: true,
+        statusBarStyle: "default",
+      },
       viewport: {
         width: "device-width",
         initialScale: 1,
         maximumScale: 1,
+        colorScheme: "dark",
+        themeColor: THEME_COLORS.dark,
       },
+      referrer: "origin-when-cross-origin",
+      formatDetection: { telephone: false },
       description: m.home_description(),
       keywords: [
         "lunar",
@@ -87,7 +99,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           href: appCss,
         },
         ...links,
-        // todo: metadata
       ],
       scripts: import.meta.env.DEV
         ? []

@@ -30,6 +30,11 @@ export const defaultSortDuplicateSerial: ValidCustomSort[] = [
   "rare",
 ];
 
+export const THEME_COLORS = {
+  light: "#FBFBFB",
+  dark: "#09090B",
+};
+
 export const SITE_NAME = "Objekt Tracker";
 
 export const GRID_COLUMNS = 7;
