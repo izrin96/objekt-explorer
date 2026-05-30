@@ -1,10 +1,7 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { useCopyToClipboard } from "usehooks-ts";
 
 import { useProfileAuthed } from "@/hooks/use-user";
 import type { PublicProfile } from "@/lib/universal/user";
@@ -17,11 +14,11 @@ import { ExternalLink } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
 import { ApolloIcon } from "../shared/apollo-icon";
 import { Badge } from "../shared/badge";
+import { CopyButton } from "../shared/copy-button";
 import { SocialBadge } from "../shared/social-badge";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [, copy] = useCopyToClipboard();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const isProfileAuthed = useProfileAuthed();
@@ -61,17 +58,11 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         </div>
         <div className="text-muted-fg inline-flex min-w-0 items-center gap-1 font-mono text-xs">
           <span className="truncate">{user.address}</span>
-          <Button
-            size="sq-xs"
-            intent="plain"
-            onPress={async () => {
-              await copy(user.address);
-              toast.success(m.profile_header_address_copied());
-            }}
-            aria-label={m.profile_header_address_copied()}
-          >
-            <CopyIcon size={14} />
-          </Button>
+          <CopyButton
+            text={user.address}
+            ariaLabel={m.profile_header_address_copied()}
+            toastMessage={m.profile_header_address_copied()}
+          />
         </div>
       </div>
 

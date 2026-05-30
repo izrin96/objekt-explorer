@@ -3,7 +3,6 @@ import {
   CaretLineLeftIcon,
   CaretLineRightIcon,
   CaretRightIcon,
-  CopyIcon,
   LockIcon,
   QuestionMarkIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -15,8 +14,6 @@ import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components/NumberField";
 import { ErrorBoundary } from "react-error-boundary";
-import { toast } from "sonner";
-import { useCopyToClipboard } from "usehooks-ts";
 
 import type { ObjektTransferResult } from "@/lib/types/objekt";
 import { m } from "@/paraglide/messages";
@@ -29,6 +26,7 @@ import { Loader } from "../intentui/loader";
 import { Skeleton } from "../intentui/skeleton";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
 import ErrorFallbackRender from "../router/error-boundary";
+import { CopyButton } from "../shared/copy-button";
 import UserLink from "../shared/user-link";
 
 type TradeViewProps = {
@@ -228,8 +226,6 @@ function TradeTable({ slug, serial }: { slug: string; serial: number }) {
 }
 
 function TradeTableContent({ data }: { data: ObjektTransferResult }) {
-  const [, copy] = useCopyToClipboard();
-
   const list = useAsyncList({
     load() {
       return {
@@ -263,11 +259,6 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
     (a) => data.owner && a.to.toLowerCase() === data.owner.toLowerCase(),
   )?.nickname;
 
-  const handleCopy = async (tokenId: string | undefined) => {
-    await copy(tokenId ?? "");
-    toast.success(m.objekt_token_id_copied());
-  };
-
   useEffect(() => {
     list.reload();
   }, [data]);
@@ -283,9 +274,13 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
           <span className="text-sm font-semibold">{m.objekt_token_id()}</span>
           <div className="flex items-center gap-2">
             <span className="font-mono font-medium">{data.tokenId}</span>
-            <Button size="sq-xs" intent="outline" onPress={() => handleCopy(data.tokenId)}>
-              <CopyIcon />
-            </Button>
+            {data.tokenId && (
+              <CopyButton
+                text={data.tokenId}
+                intent="outline"
+                toastMessage={m.objekt_token_id_copied()}
+              />
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">

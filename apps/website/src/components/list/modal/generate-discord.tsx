@@ -380,7 +380,7 @@ function GenerateDiscordFormatRender() {
         />
       </TextField>
       <div className="flex">
-        <CopyButton text={formatText} />
+        <CopyButton text={formatText} variant="button" toastMessage={m.common_copy_copied()} />
       </div>
 
       <Portal to="#submit-form-discord">

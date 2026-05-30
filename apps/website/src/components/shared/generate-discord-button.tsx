@@ -216,7 +216,7 @@ function GenerateDiscordFormatModal({
             />
           </TextField>
           <div className="flex">
-            <CopyButton text={formatText} />
+            <CopyButton text={formatText} variant="button" toastMessage={m.common_copy_copied()} />
           </div>
         </Form>
       </ModalBody>
