@@ -15,9 +15,7 @@
     "Google Sans Flex Variable", "Noto Sans KR Variable", "Noto Sans SC Variable", ui-sans-serif,
     system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
     "Noto Color Emoji";
-  --font-display:
-    "Space Grotesk Variable", "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Space Grotesk Variable", var(--font-sans);
   --font-mono:
     "Fira Code Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;
