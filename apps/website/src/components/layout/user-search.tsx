@@ -54,6 +54,7 @@ export default function UserSearch() {
         onPress={() => setIsOpen(true)}
         size="sm"
         intent="plain"
+        aria-label={m.nav_search_user_label()}
         className="[--btn-icon:var(--color-fg)]"
       >
         <MagnifyingGlassIcon />

@@ -133,6 +133,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
+          aria-label={m.trade_view_serial_first_aria()}
           onPress={() => updateSerial("first")}
         >
           <CaretLineLeftIcon />
@@ -141,6 +142,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
+          aria-label={m.trade_view_serial_previous_aria()}
           onPress={() => updateSerial("prev")}
         >
           <CaretLeftIcon />
@@ -149,6 +151,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
+          aria-label={m.trade_view_serial_next_aria()}
           onPress={() => updateSerial("next")}
         >
           <CaretRightIcon />
@@ -157,6 +160,7 @@ function Trades({
           size="sq-md"
           intent="outline"
           className="flex-none"
+          aria-label={m.trade_view_serial_last_aria()}
           onPress={() => updateSerial("last")}
         >
           <CaretLineRightIcon />
@@ -278,6 +282,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
               <CopyButton
                 text={data.tokenId}
                 intent="outline"
+                ariaLabel={m.copy_token_id_aria()}
                 toastMessage={m.objekt_token_id_copied()}
               />
             )}

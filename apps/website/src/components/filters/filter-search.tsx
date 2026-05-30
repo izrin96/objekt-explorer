@@ -69,12 +69,17 @@ function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
       <InputGroup className="[--input-gutter-end:--spacing(10)] sm:[--input-gutter-end:--spacing(8)]">
         <Input ref={ref} placeholder={m.filter_quick_search()} />
         {query.length > 0 ? (
-          <Button intent="plain" size="sq-xs" onPress={() => handleChange("")}>
+          <Button
+            intent="plain"
+            size="sq-xs"
+            aria-label={m.filter_search_clear_aria()}
+            onPress={() => handleChange("")}
+          >
             <XIcon />
           </Button>
         ) : (
           <Popover>
-            <Button aria-label="Info" intent="plain" size="sq-xs">
+            <Button aria-label={m.filter_search_info_aria()} intent="plain" size="sq-xs">
               <QuestionMarkIcon />
             </Button>
             <PopoverContent className="max-w-sm">

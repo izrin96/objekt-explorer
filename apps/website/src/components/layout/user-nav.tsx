@@ -46,6 +46,7 @@ export function LoginButton() {
   return (
     <Link
       to="/login"
+      aria-label={m.nav_sign_in()}
       className={buttonStyles({
         intent: "plain",
         size: "sm",

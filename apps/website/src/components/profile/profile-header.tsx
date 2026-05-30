@@ -97,6 +97,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         {/* Buttons - bottom on mobile, right on desktop */}
         <div className="flex flex-wrap items-center gap-2">
           <ExternalLink
+            aria-label={m.profile_header_view_in_apollo()}
             className={buttonStyles({
               size: "sm",
               className: "w-auto",
@@ -121,6 +122,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
                 size="sm"
                 intent="outline"
                 onPress={() => setEditOpen(true)}
+                aria-label={m.profile_header_edit_profile()}
                 className="w-auto"
               >
                 <PencilSquareIcon />

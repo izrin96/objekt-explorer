@@ -142,6 +142,7 @@ export function ObjektCard({
       className="aspect-photocard @container relative size-full cursor-pointer"
       tabIndex={0}
       role="button"
+      aria-label={m.objekt_flip_card_aria()}
       onClick={() => setFlipped((prev) => !prev)}
       onKeyDown={() => setFlipped((prev) => !prev)}
     >
@@ -309,6 +310,7 @@ function OwnedListPanel({
             size="sq-md"
             intent="outline"
             isDisabled={currentPage <= 1}
+            aria-label={m.objekt_pagination_previous_aria()}
             onPress={() => setCurrentPage(currentPage - 1)}
           >
             <CaretLeftIcon />
@@ -320,6 +322,7 @@ function OwnedListPanel({
             size="sq-md"
             intent="outline"
             isDisabled={currentPage >= totalPages}
+            aria-label={m.objekt_pagination_next_aria()}
             onPress={() => setCurrentPage(currentPage + 1)}
           >
             <CaretRightIcon />

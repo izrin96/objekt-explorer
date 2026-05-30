@@ -84,7 +84,12 @@ function CustomParticipantViewUI() {
   return (
     <Portal to="#fullscreen-control-content">
       <LiveControl />
-      <Button intent="outline" size="sq-sm" onPress={toggleFullscreen}>
+      <Button
+        intent="outline"
+        size="sq-sm"
+        aria-label={m.live_fullscreen_aria()}
+        onPress={toggleFullscreen}
+      >
         <CornersOutIcon />
       </Button>
     </Portal>
@@ -110,7 +115,7 @@ function LiveVolumeControl() {
 
   return (
     <Popover>
-      <Button size="sq-sm" intent="outline">
+      <Button size="sq-sm" intent="outline" aria-label={m.live_volume_button_aria()}>
         <SpeakerHighIcon />
       </Button>
       <PopoverContent>

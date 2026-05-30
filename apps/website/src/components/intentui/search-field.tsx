@@ -29,6 +29,7 @@ export function SearchInput(props: InputProps) {
       <MagnifyingGlassIcon className="in-disabled:opacity-50" />
       <Input {...props} />
       <Button
+        aria-label="Clear"
         className={twJoin(
           "touch-target pressed:text-fg text-muted-fg hover:text-fg grid place-content-center group-empty/search-field:invisible",
           "px-3 py-2 sm:px-2.5 sm:py-1.5 sm:text-sm/5",

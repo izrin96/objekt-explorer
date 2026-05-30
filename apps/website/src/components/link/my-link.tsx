@@ -107,7 +107,7 @@ function LinkCard({ link }: LinkCardProps) {
             </span>
           </div>
           <Menu>
-            <Button intent="outline" size="sq-xs">
+            <Button intent="outline" size="sq-xs" aria-label={m.link_card_menu_aria()}>
               <EllipsisVerticalIcon />
             </Button>
             <MenuContent placement="bottom right" popover={{ offset: -2 }}>

@@ -9,6 +9,7 @@ import type { PropsWithChildren } from "react";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { cn } from "@/lib/utils";
+import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
 import { Menu, MenuContent } from "../intentui/menu";
@@ -21,6 +22,7 @@ export function ObjektSelect({ objekts }: { objekts: ValidObjekt[] }) {
     <Button
       size="sq-xs"
       intent="plain"
+      aria-label={m.objekt_select_aria()}
       className={cn(
         "hidden bg-bg/80 px-2 text-fg hover:bg-bg group-hover:block",
         isSelected && "block bg-fg text-bg hover:bg-fg [--btn-icon:var(--bg)]",
@@ -54,6 +56,7 @@ export function ObjektHoverMenu({ children }: PropsWithChildren) {
       <Button
         size="sq-xs"
         intent="plain"
+        aria-label={m.objekt_menu_aria()}
         className="pressed:block bg-bg/80 text-fg hover:bg-bg pressed:bg-bg hidden px-2 group-hover:block"
       >
         <DotsThreeVerticalIcon weight="bold" />

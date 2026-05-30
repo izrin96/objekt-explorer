@@ -33,7 +33,13 @@ export default function TradeMatches() {
 
   return (
     <>
-      <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-auto">
+      <Button
+        size="sm"
+        intent="outline"
+        onPress={() => setOpen(true)}
+        aria-label={m.list_trade_matches_title()}
+        className="w-auto"
+      >
         <UsersIcon />
         <span className="hidden lg:inline">{m.list_trade_matches_title()}</span>
       </Button>

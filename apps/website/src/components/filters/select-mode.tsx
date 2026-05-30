@@ -60,7 +60,7 @@ export function FloatingSelectMode({ children, objekts }: Props) {
                 return (
                   <img
                     src={resizedUrl}
-                    aria-label="objekt"
+                    alt=""
                     key={item.id}
                     className="outline-bg aspect-square h-8 w-8 overflow-hidden rounded-lg object-cover outline-3"
                   />

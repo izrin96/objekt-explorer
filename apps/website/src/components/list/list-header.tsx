@@ -97,6 +97,7 @@ function SwapHaveWantList({ list }: { list: PublicList }) {
 
   return (
     <Link
+      aria-label={list.listTypeNew === "have" ? m.list_swap_to_want() : m.list_swap_to_have()}
       className={buttonStyles({
         intent: "outline",
         size: "sm",
@@ -127,7 +128,13 @@ function EditList({ slug }: { slug: string }) {
   return (
     <>
       <EditListModal slug={slug} open={open} setOpen={setOpen} onSave={onSave} />
-      <Button size="sm" intent="outline" onPress={() => setOpen(true)} className="w-auto">
+      <Button
+        size="sm"
+        intent="outline"
+        onPress={() => setOpen(true)}
+        aria-label={m.list_card_edit_list()}
+        className="w-auto"
+      >
         <PencilSquareIcon />
         <span className="hidden lg:inline">{m.list_card_edit_list()}</span>
       </Button>
