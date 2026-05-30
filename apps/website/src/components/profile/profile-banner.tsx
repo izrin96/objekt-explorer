@@ -23,7 +23,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
           >
             {isVideo ? (
               <video
-                className="absolute size-full object-cover object-top"
+                className="absolute size-full object-cover object-center"
                 src={profile.bannerImgUrl}
                 autoPlay
                 loop
@@ -33,7 +33,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
             ) : (
               <img
                 src={profile.bannerImgUrl}
-                className="absolute size-full object-cover object-top"
+                className="absolute size-full object-cover object-center"
                 alt={m.profile_banner_alt()}
               />
             )}
@@ -45,7 +45,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
       <div className="absolute inset-0 top-12 -z-10 lg:top-0" style={{ height: `${height}px` }}>
         {isVideo ? (
           <video
-            className="absolute size-full object-cover object-top"
+            className="absolute size-full object-cover object-center"
             src={profile.bannerImgUrl}
             autoPlay
             loop
@@ -55,7 +55,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         ) : (
           <img
             src={profile.bannerImgUrl}
-            className="absolute size-full object-cover object-top"
+            className="absolute size-full object-cover object-center"
             alt={m.profile_banner_alt()}
           />
         )}
