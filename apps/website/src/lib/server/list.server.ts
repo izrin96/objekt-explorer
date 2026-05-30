@@ -162,6 +162,13 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
     // load full
     with: {
       user: true,
+      userAddress: {
+        columns: {
+          address: true,
+          nickname: true,
+          hideNickname: true,
+        },
+      },
       linkedList: {
         columns: {
           // partial
@@ -206,6 +213,7 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
     gridColumns: result.gridColumns,
     discoverable: result.discoverable,
     user: result.hideUser || !result.user ? null : toPublicUser(result.user),
+    profile: result.userAddress ? toPartialProfile(result.userAddress) : null,
     description: result.description,
     linkedList: result.linkedList
       ? {

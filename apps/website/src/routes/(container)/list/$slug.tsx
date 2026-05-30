@@ -7,7 +7,6 @@ import ListNotFoundComponent from "@/components/router/list-notfound";
 import { ListProvider } from "@/hooks/use-list-target";
 import { generateMetadata } from "@/lib/meta";
 import { listBySlugQuery } from "@/lib/queries/list";
-import { profileQuery } from "@/lib/queries/profile";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/$slug")({
@@ -15,12 +14,11 @@ export const Route = createFileRoute("/(container)/list/$slug")({
     const list = await queryClient.fetchQuery(listBySlugQuery({ slug: params.slug }));
 
     if (list.profileAddress && list.profileSlug) {
-      const profile = await queryClient.fetchQuery(profileQuery({ nickname: list.profileAddress }));
-      if (!profile) throw notFound();
+      if (!list.profile) throw notFound();
       throw redirect({
         to: "/@{$nickname}/list/$slug",
         params: {
-          nickname: profile.nickname || profile.address.toLowerCase(),
+          nickname: list.profile.nickname || list.profile.address.toLowerCase(),
           slug: list.profileSlug,
         },
       });
