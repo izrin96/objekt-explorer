@@ -23,6 +23,15 @@ import { m } from "@/paraglide/messages";
 export default function Changelog() {
   const changelog = [
     {
+      date: "2026-05-30",
+      items: [
+        "Refactored list types for better user-friendliness: General, Sale, Have, and Want.",
+        'Added a Trade Matches feature: This is enabled after linking a paired Have/Want list. Objekts added to your Have/Want list will only match with users who have enabled the "Discoverable" option. (Note: Discoverable mode requires Cosmo profile binding).',
+        "Profile-bound Sale and Have lists can now hide serial numbers.",
+        'Added a Market tab to the Objekt view. Objekts must be added to a Sale list with the "Discoverable" option enabled. Prices in the Market are automatically converted to USD for now.',
+      ],
+    },
+    {
       date: "2026-04-20 - 2026-04-23",
       items: [
         "Added move pin order. You can now move your objekt pin.",
@@ -44,8 +53,8 @@ export default function Changelog() {
 
   return (
     <Modal>
-      <Button size="xs" intent="plain" className="px-1.5 sm:px-1.5">
-        <NoteIcon size={16} weight="duotone" />
+      <Button size="sq-sm" intent="plain" aria-label={m.common_changelog()}>
+        <NoteIcon size={18} weight="duotone" />
       </Button>
       <ModalContent size="2xl">
         <ModalHeader>
@@ -59,7 +68,7 @@ export default function Changelog() {
                 <DisclosureTrigger>{entry.date}</DisclosureTrigger>
                 <DisclosurePanel>
                   <div className="text-fg text-sm">
-                    <ul className="list-inside list-disc leading-6">
+                    <ul className="list-outside list-disc pl-4 leading-6">
                       {entry.items.map((item) => (
                         <li key={item}>{item}</li>
                       ))}

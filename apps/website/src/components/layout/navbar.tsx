@@ -25,6 +25,7 @@ import { Link } from "@/components/intentui/link";
 import { MenuLabel } from "@/components/intentui/menu";
 import { Separator } from "@/components/intentui/separator";
 import AppLogo from "@/components/layout/app-logo";
+import Changelog from "@/components/layout/changelog";
 import { LoginButton, UserMenu } from "@/components/layout/user-nav";
 import UserSearch from "@/components/layout/user-search";
 import { useCurrentUser } from "@/hooks/use-user";
@@ -54,6 +55,7 @@ export default function Navbar() {
         <Container className="flex items-center [--container-breakpoint:var(--breakpoint-2xl)]">
           <div className="flex items-center gap-x-3">
             <AppLogo />
+            <Changelog />
             <div className="flex items-center gap-x-0.5">
               {navMenuItems.map((menu) => (
                 <NavLink key={menu.to} to={menu.to}>
@@ -169,6 +171,7 @@ function MobileNavbar() {
           </MenuTrigger>
           <Separator orientation="vertical" className="mr-1 h-4" />
           <AppLogo />
+          <Changelog />
         </div>
 
         <div className="flex-1" aria-hidden />
