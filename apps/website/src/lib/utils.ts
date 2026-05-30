@@ -2,7 +2,8 @@ import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { linkOptions } from "@tanstack/react-router";
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+
+import { twMerge } from "@/lib/tw-merge";
 
 import { clientEnv } from "./env/client";
 import type { PublicList } from "./universal/list";

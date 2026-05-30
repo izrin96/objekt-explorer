@@ -1,5 +1,7 @@
 import { tv } from "tailwind-variants";
 
+import { twMerge } from "@/lib/tw-merge";
+
 export const badgeStyles = tv({
   base: [
     // custom text-xs/5 to text-xs/4
@@ -41,5 +43,5 @@ export interface BadgeProps extends React.ComponentProps<"span"> {
 }
 
 export function Badge({ intent, isCircle, className, ...props }: BadgeProps) {
-  return <span {...props} className={badgeStyles({ intent, isCircle, className })} />;
+  return <span {...props} className={twMerge(badgeStyles({ intent, isCircle }), className)} />;
 }
