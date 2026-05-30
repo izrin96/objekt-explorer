@@ -26,7 +26,7 @@ export default function LiveSessionListRender() {
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-            <Tabs aria-label={m.live_tabs_label()} className="w-full">
+            <Tabs className="w-full">
               <TabList className="w-fit">
                 {selectedArtists.map((artist) => (
                   <Tab key={artist.id} id={artist.id} aria-label={artist.name}>
