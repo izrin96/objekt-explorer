@@ -1,6 +1,6 @@
 import {
-  CheckBadgeIcon,
   EllipsisVerticalIcon,
+  LinkIcon,
   PencilSquareIcon,
   PlusIcon,
   TrashIcon,
@@ -104,11 +104,7 @@ function ListCard({ list }: ListCardProps) {
                   {parseNickname(list.profile.address, list.profile.nickname)}
                 </span>
               )}
-              {list.isProfileBind && (
-                <div className="text-muted-fg size-4">
-                  <CheckBadgeIcon />
-                </div>
-              )}
+              {list.isProfileBind && <LinkIcon className="text-muted-fg size-4" />}
             </div>
           </div>
           <Menu>

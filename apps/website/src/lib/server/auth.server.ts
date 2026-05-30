@@ -233,6 +233,7 @@ export function toPublicProfile(
   }
 
   return {
+    verified: user !== null,
     address: profile.address,
     nickname: profile.hideNickname ? null : profile.nickname,
     bannerImgType: profile.bannerImgType,

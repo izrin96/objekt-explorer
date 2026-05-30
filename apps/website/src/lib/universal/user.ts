@@ -19,6 +19,7 @@ export const publicProfileSchema = baseProfileSchema.extend({
   bannerImgType: z.string().nullish(),
   gridColumns: z.number().nullish(),
   user: publicUserSchema.nullish(),
+  verified: z.boolean().nullish(),
 });
 export type PublicProfile = z.infer<typeof publicProfileSchema>;
 

@@ -1,4 +1,4 @@
-import { CheckBadgeIcon } from "@heroicons/react/24/outline";
+import { LinkIcon } from "@heroicons/react/24/outline";
 
 import type { PublicList } from "@/lib/universal/list";
 import { parseNickname } from "@/lib/utils";
@@ -25,11 +25,7 @@ export function ListLabel({ list }: { list: PublicList }) {
             <span className="text-muted-fg text-xs">
               {parseNickname(list.profile.address, list.profile.nickname)}
             </span>
-            {list.isProfileBind && (
-              <div className="size-4">
-                <CheckBadgeIcon />
-              </div>
-            )}
+            {list.isProfileBind && <LinkIcon className="size-3" />}
           </>
         )}
       </div>

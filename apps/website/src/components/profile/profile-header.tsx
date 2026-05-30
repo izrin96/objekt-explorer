@@ -16,6 +16,7 @@ import { Button, buttonStyles } from "../intentui/button";
 import { ExternalLink } from "../intentui/link";
 import { EditProfileModal } from "../link/modal/manage-link";
 import { ApolloIcon } from "../shared/apollo-icon";
+import { Badge } from "../shared/badge";
 import { SocialBadge } from "../shared/social-badge";
 
 export default function ProfileHeader({ user }: { user: PublicProfile }) {
@@ -50,7 +51,14 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]" ref={ref}>
       {/* Identity: nickname + address */}
       <div className="order-1 flex min-w-0 flex-col">
-        <h2 className="font-display truncate text-xl font-semibold">{nickname}</h2>
+        <div className="flex min-w-0 items-center gap-2">
+          <h2 className="font-display truncate text-xl font-semibold">{nickname}</h2>
+          {user.verified && (
+            <Badge className="border-border bg-muted text-muted-fg">
+              {m.profile_header_verified()}
+            </Badge>
+          )}
+        </div>
         <div className="text-muted-fg inline-flex min-w-0 items-center gap-1 font-mono text-xs">
           <span className="truncate">{user.address}</span>
           <Button
