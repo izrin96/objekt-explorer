@@ -29,7 +29,7 @@ function ProfileLayout() {
         <PrivateProfileGuard />
       ) : (
         <>
-          <ProfileBanner profile={profile} />
+          <ProfileBanner key={profile.address} profile={profile} />
           <DynamicContainer>
             <div className="flex min-h-screen flex-col gap-2">
               <ProfileHeader user={profile} />
