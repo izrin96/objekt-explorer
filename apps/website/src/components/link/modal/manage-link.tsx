@@ -174,7 +174,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         />
       ) : (
         <div className="h-52">
-          <Cropper ref={cropperRef} src={imageUrl} aspectRatio={() => 2.4} />
+          <Cropper ref={cropperRef} src={imageUrl} />
         </div>
       )}
       <div className="flex items-center justify-between">

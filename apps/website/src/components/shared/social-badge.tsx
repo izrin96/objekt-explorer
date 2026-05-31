@@ -16,10 +16,7 @@ export function SocialBadge({
   if (platform === "discord") {
     return (
       <Badge
-        className={cn(
-          "bg-[#5865F2]/10 border-[#5865F2]/20 text-[#5865F2] select-all truncate",
-          className,
-        )}
+        className={cn("bg-[#5865F2]/10 border-[#5865F2]/20 text-[#5865F2] truncate", className)}
       >
         <DiscordLogoIcon size={12} weight="fill" className="shrink-0" />
         <span className="truncate">{username}</span>
@@ -28,7 +25,7 @@ export function SocialBadge({
   }
 
   return (
-    <Badge className={cn("bg-muted border-border/50 text-muted-fg select-all truncate", className)}>
+    <Badge className={cn("bg-muted border-border/50 text-muted-fg truncate", className)}>
       <XLogoIcon size={12} weight="fill" className="shrink-0" />
       <span className="truncate">{username}</span>
     </Badge>

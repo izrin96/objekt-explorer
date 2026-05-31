@@ -23,7 +23,13 @@ import { m } from "@/paraglide/messages";
 export default function Changelog() {
   const changelog = [
     {
-      date: "2026-05-30",
+      date: "2026-05-31",
+      items: [
+        "Profile banner now extends slightly outside the container. If your banner looks off, try reuploading it.",
+      ],
+    },
+    {
+      date: "2026-05-29",
       items: [
         "Refactored list types for better user-friendliness: General, Sale, Have, and Want.",
         'Added a Trade Matches feature: This is enabled after linking a paired Have/Want list. Objekts added to your Have/Want list will only match with users who have enabled the "Discoverable" option. (Note: Discoverable mode requires Cosmo profile binding).',

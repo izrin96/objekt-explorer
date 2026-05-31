@@ -91,13 +91,13 @@ export function UserMenu({ user }: { user: User }) {
                 <span>{user.name}</span>
                 <div className="flex flex-wrap items-center gap-2">
                   {user.discord && (
-                    <span className="text-muted-fg inline-flex items-center gap-1 truncate select-all">
+                    <span className="text-muted-fg inline-flex items-center gap-1 truncate">
                       <DiscordLogoIcon size={16} weight="regular" className="shrink-0" />
                       <span className="truncate">{user.discord}</span>
                     </span>
                   )}
                   {user.twitter && (
-                    <span className="text-muted-fg inline-flex items-center gap-1 truncate select-all">
+                    <span className="text-muted-fg inline-flex items-center gap-1 truncate">
                       <XLogoIcon size={16} weight="regular" className="shrink-0" />
                       <span className="truncate">{user.twitter}</span>
                     </span>
