@@ -24,7 +24,7 @@ export default function SignIn() {
   const [state, setState] = useState<"sign-in" | "sign-up" | "forgot-password">("sign-in");
 
   return (
-    <div className="flex flex-col gap-6 py-6">
+    <div className="flex flex-col gap-6">
       <div className="flex w-full max-w-md flex-col gap-6 self-center">
         {state === "sign-in" && <SignInForm setState={setState} />}
         {state === "sign-up" && <SignUpForm setState={setState} />}

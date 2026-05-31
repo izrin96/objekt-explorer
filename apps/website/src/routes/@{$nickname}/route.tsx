@@ -23,22 +23,20 @@ function ProfileLayout() {
   const params = Route.useParams();
   const { data: profile } = useSuspenseQuery(profileQuery({ nickname: params.nickname }));
 
+  if (profile.isGuard) {
+    return <PrivateProfileGuard />;
+  }
+
   return (
     <ProfileProvider profile={profile}>
-      {profile.isGuard ? (
-        <PrivateProfileGuard />
-      ) : (
-        <>
-          <ProfileBanner key={profile.address} profile={profile} />
-          <DynamicContainer>
-            <div className="flex min-h-screen flex-col gap-2 pt-4 pb-36">
-              <ProfileHeader user={profile} />
-              <ProfileTabs user={profile} />
-              <Outlet />
-            </div>
-          </DynamicContainer>
-        </>
-      )}
+      <ProfileBanner key={profile.address} profile={profile} />
+      <DynamicContainer>
+        <div className="flex min-h-screen flex-col gap-2 pt-4 pb-36">
+          <ProfileHeader user={profile} />
+          <ProfileTabs user={profile} />
+          <Outlet />
+        </div>
+      </DynamicContainer>
     </ProfileProvider>
   );
 }

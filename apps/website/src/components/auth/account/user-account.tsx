@@ -37,6 +37,7 @@ import { TextField } from "@/components/intentui/text-field";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useCurrentUser } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
+import { orpc } from "@/lib/orpc/client";
 import type { User } from "@/lib/server/auth.server";
 import { m } from "@/paraglide/messages";
 
@@ -132,27 +133,24 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
     values: values,
   });
 
-  const mutation = useMutation({
-    mutationFn: async (data: { showSocial: boolean; name: string; image: undefined | null }) => {
-      const result = await authClient.updateUser(data);
-      if (result.error) throw new Error(result.error.message);
-      return result.data;
-    },
-    onSuccess: async (_, _v, _o, { client }) => {
-      setOpen(false);
-      void client.invalidateQueries();
-      toast.success(m.auth_account_account_updated());
-    },
-    onError: ({ message }) => {
-      toast.error(`${m.auth_account_account_update_error()}. ${message}`);
-    },
-  });
+  const mutation = useMutation(
+    orpc.user.updateAccount.mutationOptions({
+      onSuccess: async (_, _v, _o, { client }) => {
+        setOpen(false);
+        void client.invalidateQueries();
+        toast.success(m.auth_account_account_updated());
+      },
+      onError: ({ message }) => {
+        toast.error(`${m.auth_account_account_update_error()}. ${message}`);
+      },
+    }),
+  );
 
   const onSubmit = handleSubmit((data) => {
     mutation.mutate({
       name: data.name,
       showSocial: data.showSocial,
-      image: data.removePic ? null : undefined,
+      removePic: data.removePic,
     });
   });
 

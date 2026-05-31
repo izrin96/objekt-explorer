@@ -35,7 +35,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   }, [user.bannerImgType, user.bannerImgUrl]);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]" ref={ref}>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]" ref={ref}>
       {/* Identity: nickname + address */}
       <div className="order-1 flex min-w-0 flex-col">
         <div className="flex min-w-0 items-center gap-2">

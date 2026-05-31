@@ -3,7 +3,6 @@ import { CodeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 
 import { useListTarget } from "@/hooks/use-list-target";
-import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useListAuthed } from "@/hooks/use-user";
 import type { PublicList } from "@/lib/universal/list";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
@@ -19,12 +18,11 @@ import TradeMatches from "./trade/trade-matches";
 
 export default function ListHeader() {
   const list = useListTarget()!;
-  const profile = useProfileTarget();
   const isListAuthed = useListAuthed();
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto]">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]">
         {/* Left: list identity */}
         <div className="flex min-w-0 flex-col justify-center gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -34,16 +32,16 @@ export default function ListHeader() {
               <span className="text-muted-fg text-xs">({list.currency})</span>
             )}
           </div>
-          {list.profileAddress && profile && (
+          {list.profile && (
             <div className="text-muted-fg text-sm">
               <Link
                 to={`/@{$nickname}`}
                 params={{
-                  nickname: profile.nickname || profile.address.toLowerCase(),
+                  nickname: list.profile.nickname || list.profile.address.toLowerCase(),
                 }}
                 className="text-muted-fg truncate hover:underline"
               >
-                {parseNickname(profile.address, profile.nickname)}
+                {parseNickname(list.profile.address, list.profile.nickname)}
               </Link>
             </div>
           )}

@@ -5,7 +5,6 @@ import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import ListNotFoundComponent from "@/components/router/list-notfound";
 import { ListProvider } from "@/hooks/use-list-target";
-import { ProfileProvider } from "@/hooks/use-profile-target";
 import { generateMetadata } from "@/lib/meta";
 import { listBySlugQuery } from "@/lib/queries/list";
 import { profileQuery } from "@/lib/queries/profile";
@@ -38,13 +37,11 @@ function ProfileListDetailPage() {
   );
 
   return (
-    <ProfileProvider profile={profile}>
-      <ListProvider list={list}>
-        <div className="flex flex-col gap-4 pt-4 pb-36">
-          <ListHeader />
-          <ListRender />
-        </div>
-      </ListProvider>
-    </ProfileProvider>
+    <ListProvider list={list}>
+      <div className="flex flex-col gap-4 pt-4 pb-36">
+        <ListHeader />
+        <ListRender />
+      </div>
+    </ListProvider>
   );
 }

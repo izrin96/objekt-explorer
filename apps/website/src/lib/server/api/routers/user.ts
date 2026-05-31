@@ -99,4 +99,24 @@ export const userRouter = {
     ),
 
   currentUser: pub.handler(getCurrentUser),
+
+  updateAccount: authed
+    .input(
+      z.object({
+        name: z.string(),
+        showSocial: z.boolean(),
+        removePic: z.boolean(),
+      }),
+    )
+    .handler(async ({ input, context: { session } }) => {
+      await db
+        .update(userSchema)
+        .set({
+          name: input.name,
+          showSocial: input.showSocial,
+          image: input.removePic ? null : undefined,
+          removeImage: input.removePic,
+        })
+        .where(eq(userSchema.id, session.user.id));
+    }),
 };
