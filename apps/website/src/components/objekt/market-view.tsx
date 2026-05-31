@@ -3,7 +3,6 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useState } from "react";
 
-import { Badge } from "@/components/intentui/badge";
 import { Button } from "@/components/intentui/button";
 import { Link } from "@/components/intentui/link";
 import { Skeleton } from "@/components/intentui/skeleton";
@@ -116,13 +115,13 @@ function MarketRow({ item }: { item: MarketListing }) {
       {...getListLinkOption(item.list as PublicList)}
       className="hover:bg-secondary bg-muted block overflow-hidden rounded-lg border transition-colors"
     >
-      <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[5rem_5rem_1fr_8rem_8rem]">
+      <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[5rem_8rem_8rem_1fr]">
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_serial()}</span>
           <div className="font-mono font-medium tabular-nums">#{item.serial ?? "-"}</div>
         </div>
 
-        <div className="flex flex-col justify-center">
+        {/* <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_transferable()}</span>
           <div>
             {item.transferable === null ? (
@@ -133,9 +132,9 @@ function MarketRow({ item }: { item: MarketListing }) {
               </Badge>
             )}
           </div>
-        </div>
+        </div> */}
 
-        <div className="col-span-2 flex flex-col justify-center lg:col-span-1">
+        <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_owner()}</span>
           <div className="truncate">
             {item.list.profile
@@ -166,7 +165,7 @@ function MarketRow({ item }: { item: MarketListing }) {
 
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_date()}</span>
-          <div className="truncate text-xs">{format(item.createdAt, "yyyy/MM/dd HH:mm:ss")}</div>
+          <div className="truncate text-xs">{format(item.createdAt, "yyyy/MM/dd hh:mm:ss a")}</div>
         </div>
       </div>
     </Link>
