@@ -15,7 +15,7 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
   return (
     <>
       {/* banner */}
-      <div className="absolute inset-0 top-12 -z-5 lg:top-0">
+      <div className="absolute inset-0 top-12 -z-5 overflow-x-hidden lg:top-0">
         <div className="aspect-banner mx-auto w-full max-w-(--breakpoint-2xl)">
           <div ref={bannerRef} className="relative -mx-12 h-full 2xl:mask-x-from-[calc(100%-96px)]">
             {isVideo ? (
