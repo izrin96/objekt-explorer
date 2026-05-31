@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "remove_image" boolean DEFAULT false NOT NULL;

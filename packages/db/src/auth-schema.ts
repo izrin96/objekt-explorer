@@ -16,6 +16,7 @@ export const user = pgTable("user", {
   discord: text("discord"),
   twitter: text("twitter"),
   showSocial: boolean("show_social").default(false),
+  removeImage: boolean("remove_image").notNull().default(false),
 });
 
 export const session = pgTable("session", {

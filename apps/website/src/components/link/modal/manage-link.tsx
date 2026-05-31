@@ -1,4 +1,5 @@
 import { ParaglideMessage } from "@inlang/paraglide-js-react";
+import { ArrowCounterClockwiseIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
@@ -174,7 +175,7 @@ function BannerImage({ droppedImage, cropperRef, onClear }: BannerImageProps) {
         />
       ) : (
         <div className="h-52">
-          <Cropper ref={cropperRef} src={imageUrl} />
+          <Cropper ref={cropperRef} src={imageUrl} aspectRatio={() => 2.4} />
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -463,21 +464,43 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           />
           <span className="text-muted-fg text-sm">{m.profile_edit_banner_recommendation()}</span>
         </div>
-        <Controller
-          control={control}
-          name="removeBanner"
-          render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
-              name={name}
-              isSelected={value}
-              onChange={onChange}
-              onBlur={onBlur}
-              validationBehavior="aria"
-            >
-              <Label>{m.profile_edit_remove_banner_label()}</Label>
-            </Checkbox>
-          )}
-        />
+
+        {data.bannerImgUrl ? (
+          <div className="flex flex-col gap-2">
+            <Label className="text-sm font-medium">{m.profile_edit_remove_banner_label()}</Label>
+            <Controller
+              control={control}
+              name="removeBanner"
+              render={({ field: { value, onChange } }) => (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={data.bannerImgUrl ?? undefined}
+                    alt=""
+                    className={
+                      value
+                        ? "aspect-banner w-32 rounded-lg object-cover opacity-40"
+                        : "aspect-banner w-32 rounded-lg object-cover"
+                    }
+                  />
+                  <div className="flex flex-col gap-1">
+                    {value ? (
+                      <Button size="sm" intent="outline" onPress={() => onChange(false)}>
+                        <ArrowCounterClockwiseIcon />
+                        {m.common_actions_undo()}
+                      </Button>
+                    ) : (
+                      <Button size="sm" intent="outline" onPress={() => onChange(true)}>
+                        <TrashSimpleIcon />
+                        {m.common_actions_remove()}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+        ) : null}
+
         <span className="text-muted-fg text-sm">
           <ParaglideMessage
             message={m.profile_edit_unlink_note}
