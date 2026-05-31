@@ -7,14 +7,12 @@ import ListNotFoundComponent from "@/components/router/list-notfound";
 import { ListProvider } from "@/hooks/use-list-target";
 import { generateMetadata } from "@/lib/meta";
 import { listBySlugQuery } from "@/lib/queries/list";
-import { profileQuery } from "@/lib/queries/profile";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   loader: async ({ params, context: { queryClient } }) => {
-    const profile = await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
     const list = await queryClient.ensureQueryData(
-      listBySlugQuery({ slug: params.slug, profileAddress: profile.address }),
+      listBySlugQuery({ slug: params.slug, nickname: params.nickname }),
     );
     return { list };
   },
@@ -31,9 +29,8 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
 
 function ProfileListDetailPage() {
   const params = Route.useParams();
-  const { data: profile } = useSuspenseQuery(profileQuery({ nickname: params.nickname }));
   const { data: list } = useSuspenseQuery(
-    listBySlugQuery({ slug: params.slug, profileAddress: profile.address }),
+    listBySlugQuery({ slug: params.slug, nickname: params.nickname }),
   );
 
   return (

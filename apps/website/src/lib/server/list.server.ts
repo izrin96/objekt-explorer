@@ -157,7 +157,9 @@ function toPartialProfile(profile: Pick<UserAddress, "address" | "nickname" | "h
   };
 }
 
-export async function fetchList(slug: string, profileAddress?: string): Promise<PublicList | null> {
+export async function fetchList(
+  lookup: { slug: string } | { profileSlug: string; profileAddress: string },
+): Promise<PublicList | null> {
   const result = await db.query.lists.findFirst({
     // load full
     with: {
@@ -192,9 +194,10 @@ export async function fetchList(slug: string, profileAddress?: string): Promise<
         },
       },
     },
-    where: profileAddress
-      ? { profileSlug: slug, profileAddress: profileAddress.toLowerCase() }
-      : { slug },
+    where:
+      "profileAddress" in lookup
+        ? { profileSlug: lookup.profileSlug, profileAddress: lookup.profileAddress.toLowerCase() }
+        : { slug: lookup.slug },
   });
 
   if (!result) return null;
