@@ -2,7 +2,7 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
-import { and, eq, asc, gt } from "drizzle-orm";
+import { and, eq, asc, gt, ne } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 export async function populateSerial() {
@@ -10,7 +10,13 @@ export async function populateSerial() {
     .selectDistinctOn([collections.id], { id: collections.id })
     .from(collections)
     .innerJoin(objekts, eq(objekts.collectionId, collections.id))
-    .where(and(eq(objekts.serial, 0), eq(collections.onOffline, "online")));
+    .where(
+      and(
+        eq(objekts.serial, 0),
+        eq(collections.onOffline, "online"),
+        ne(collections.slug, "empty-collection"),
+      ),
+    );
 
   if (collectionDiscover.length === 0) {
     console.log("[populateSerial] No collections with zero serials found");
@@ -121,7 +127,13 @@ export async function populateSerialOffline() {
     .selectDistinctOn([collections.id], { id: collections.id })
     .from(collections)
     .innerJoin(objekts, eq(objekts.collectionId, collections.id))
-    .where(and(eq(objekts.serial, 0), eq(collections.onOffline, "offline")));
+    .where(
+      and(
+        eq(objekts.serial, 0),
+        eq(collections.onOffline, "offline"),
+        ne(collections.slug, "empty-collection"),
+      ),
+    );
 
   if (affectedCollections.length === 0) {
     console.log("[populateSerialOffline] No collections with zero serials found");

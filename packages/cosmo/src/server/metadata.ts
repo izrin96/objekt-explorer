@@ -1,6 +1,10 @@
 import { ofetch } from "ofetch";
 
-import type { CosmoObjektMetadataV1, CosmoObjektMetadataV3 } from "../types/metadata";
+import type {
+  CosmoObjektMetadataV1,
+  CosmoObjektMetadataV3,
+  MetadataVersion,
+} from "../types/metadata";
 
 /**
  * Fetch objekt metadata from the v1 API.
@@ -125,7 +129,10 @@ export function normalizeV3(
 /**
  * Partial data for db update
  */
-export function enrichUpdateMetadata(metadata: CosmoObjektMetadataV1, includeV1 = true) {
+export function enrichUpdateMetadata(
+  metadata: CosmoObjektMetadataV1,
+  { version }: { version: MetadataVersion },
+) {
   return {
     season: metadata.objekt.season,
     member: metadata.objekt.member,
@@ -139,7 +146,7 @@ export function enrichUpdateMetadata(metadata: CosmoObjektMetadataV1, includeV1 
     thumbnailImage: metadata.objekt.thumbnailImage,
     frontImage: metadata.objekt.frontImage,
     backgroundColor: metadata.objekt.backgroundColor,
-    ...(includeV1
+    ...(version === 1
       ? {
           // not possible to get from v3
           backImage: metadata.objekt.backImage,

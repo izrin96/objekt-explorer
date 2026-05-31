@@ -12,7 +12,7 @@ export async function fixTransferable() {
       id: objekts.id,
     })
     .from(objekts)
-    .leftJoin(collections, eq(objekts.collectionId, collections.id))
+    .innerJoin(collections, eq(objekts.collectionId, collections.id))
     .where(and(inArray(collections.class, ["Basic", "First"]), eq(objekts.transferable, true)));
 
   let batchNumber = 0;

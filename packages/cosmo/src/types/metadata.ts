@@ -34,3 +34,5 @@ export type CosmoObjektMetadataV3 = {
     value: string;
   }[];
 };
+
+export type MetadataVersion = 1 | 3;

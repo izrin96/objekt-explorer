@@ -70,7 +70,11 @@ async function processBatch(collectionIds: string[], batchNumber: number, totalB
     for (const { collectionId, metadata } of validMetadata) {
       await tx
         .update(collections)
-        .set(enrichUpdateMetadata(metadata))
+        .set(
+          enrichUpdateMetadata(metadata, {
+            version: 1,
+          }),
+        )
         .where(eq(collections.id, collectionId));
     }
   });
