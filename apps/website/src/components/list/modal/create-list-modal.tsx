@@ -361,7 +361,9 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           />
         )}
 
-        {(watchedListTypeNew === "have" || watchedListTypeNew === "sale") && (
+        {(watchedListTypeNew === "have" ||
+          watchedListTypeNew === "sale" ||
+          watchedListTypeNew === "want") && (
           <Controller
             control={control}
             name="discoverable"
@@ -371,13 +373,15 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                isDisabled={!watchedIsProfileBind}
+                isDisabled={watchedListTypeNew !== "want" && !watchedIsProfileBind}
               >
                 <Label>{m.list_create_discoverable_label()}</Label>
                 <Description>
-                  {watchedListTypeNew === "sale"
-                    ? m.list_create_discoverable_sale_desc()
-                    : m.list_create_discoverable_desc()}
+                  {watchedListTypeNew === "want"
+                    ? m.list_create_discoverable_want_desc()
+                    : watchedListTypeNew === "sale"
+                      ? m.list_create_discoverable_sale_desc()
+                      : m.list_create_discoverable_have_desc()}
                 </Description>
               </Switch>
             )}

@@ -352,7 +352,9 @@ function EditListForm({
           />
         )}
 
-        {(data.listTypeNew === "have" || data.listTypeNew === "sale") && (
+        {(data.listTypeNew === "have" ||
+          data.listTypeNew === "sale" ||
+          data.listTypeNew === "want") && (
           <Controller
             control={control}
             name="discoverable"
@@ -362,13 +364,15 @@ function EditListForm({
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
-                isDisabled={!data.isProfileBind}
+                isDisabled={data.listTypeNew !== "want" && !data.isProfileBind}
               >
                 <Label>{m.list_create_discoverable_label()}</Label>
                 <Description>
-                  {data.listTypeNew === "sale"
-                    ? m.list_create_discoverable_sale_desc()
-                    : m.list_create_discoverable_desc()}
+                  {data.listTypeNew === "want"
+                    ? m.list_create_discoverable_want_desc()
+                    : data.listTypeNew === "sale"
+                      ? m.list_create_discoverable_sale_desc()
+                      : m.list_create_discoverable_have_desc()}
                 </Description>
               </Switch>
             )}

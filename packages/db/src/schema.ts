@@ -96,11 +96,9 @@ export const lists = pgTable(
     index("lists_linked_list_id_idx")
       .on(t.linkedListId)
       .where(sql`linked_list_id IS NOT NULL`),
-    index("lists_trade_active_idx")
-      .on(t.userId, t.listTypeNew)
-      .where(
-        sql`list_type_new IN ('have', 'want') AND discoverable = true AND linked_list_id IS NOT NULL`,
-      ),
+    index("lists_trade_discoverable_idx")
+      .on(t.listTypeNew)
+      .where(sql`list_type_new IN ('have', 'want') AND discoverable = true`),
   ],
 );
 

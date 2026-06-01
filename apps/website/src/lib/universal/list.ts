@@ -38,11 +38,17 @@ export const partnerListMatchSchema = z.object({
 });
 export type PartnerListMatch = z.infer<typeof partnerListMatchSchema>;
 
+export const tradePartnerProfileSchema = z.object({
+  nickname: z.string().nullable(),
+  address: z.string(),
+});
+export type TradePartnerProfile = z.infer<typeof tradePartnerProfileSchema>;
+
 export const tradePartnerSchema = z.object({
   userId: z.string(),
   username: z.string(),
   user: publicUserSchema,
-  nicknames: z.string().array(),
+  profiles: tradePartnerProfileSchema.array(),
   matches: partnerListMatchSchema.array(),
 });
 export type TradePartner = z.infer<typeof tradePartnerSchema>;

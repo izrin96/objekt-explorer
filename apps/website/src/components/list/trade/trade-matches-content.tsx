@@ -17,8 +17,14 @@ import { m } from "@/paraglide/messages";
 
 import { ObjektCollectionThumbnail } from "./trade-objekt-thumbnail";
 
-export default function TradeMatchesContent({ slug }: { slug: string }) {
-  const { data } = useSuspenseQuery(tradePartnersQuery(slug));
+export default function TradeMatchesContent({
+  slug,
+  mode,
+}: {
+  slug: string;
+  mode?: "have-to-want" | "want-to-have" | "both";
+}) {
+  const { data } = useSuspenseQuery(tradePartnersQuery(slug, mode));
 
   if (data.partners.length === 0) {
     return <p className="text-muted-fg py-4 text-center text-sm">{m.list_trade_matches_empty()}</p>;
@@ -75,24 +81,30 @@ function PartnerDisclosure({
             <span className="block truncate text-sm font-semibold">{partner.username}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            <Badge intent="success" isCircle={false} className="font-mono tabular-nums">
-              {overlapHave} {m.list_trade_matches_have_label()}
-            </Badge>
-            <Badge intent="warning" isCircle={false} className="font-mono tabular-nums">
-              {overlapWant} {m.list_trade_matches_want_label()}
-            </Badge>
+            {overlapHave > 0 && (
+              <Badge intent="success" isCircle={false} className="font-mono tabular-nums">
+                {overlapHave} {m.list_trade_matches_have_label()}
+              </Badge>
+            )}
+            {overlapWant > 0 && (
+              <Badge intent="warning" isCircle={false} className="font-mono tabular-nums">
+                {overlapWant} {m.list_trade_matches_want_label()}
+              </Badge>
+            )}
           </div>
           <DisclosureIndicator />
         </div>
       </DisclosureTrigger>
       <DisclosurePanel>
         <div className="flex flex-col gap-4">
-          {(partner.nicknames.length > 0 || partner.user.discord || partner.user.twitter) && (
+          {(partner.profiles.length > 0 || partner.user.discord || partner.user.twitter) && (
             <div className="text-muted-fg border-border flex flex-wrap items-center gap-x-4 gap-y-1 border-b pb-3 text-xs">
-              {partner.nicknames.length > 0 && (
+              {partner.profiles.length > 0 && (
                 <div className="flex items-start gap-2">
                   <span className="shrink-0 self-center">{m.list_cosmo_id_label()}</span>
-                  <span className="text-fg font-medium">{partner.nicknames.join(", ")}</span>
+                  <span className="text-fg font-medium">
+                    {partner.profiles.map((p) => p.nickname ?? p.address).join(", ")}
+                  </span>
                 </div>
               )}
               {partner.user.discord && (
@@ -106,18 +118,22 @@ function PartnerDisclosure({
           {partner.matches.map((match) => (
             <div key={match.listId} className="flex flex-col gap-2 first:mt-1">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <DirectionColumn
-                  title={m.list_trade_matches_you_have_they_want()}
-                  slugs={match.iHaveTheyWant}
-                  collections={collections}
-                  tone="have"
-                />
-                <DirectionColumn
-                  title={m.list_trade_matches_they_have_you_want()}
-                  slugs={match.theyHaveIWant}
-                  collections={collections}
-                  tone="want"
-                />
+                {match.iHaveTheyWant.length > 0 && (
+                  <DirectionColumn
+                    title={m.list_trade_matches_you_have_they_want()}
+                    slugs={match.iHaveTheyWant}
+                    collections={collections}
+                    tone="have"
+                  />
+                )}
+                {match.theyHaveIWant.length > 0 && (
+                  <DirectionColumn
+                    title={m.list_trade_matches_they_have_you_want()}
+                    slugs={match.theyHaveIWant}
+                    collections={collections}
+                    tone="want"
+                  />
+                )}
               </div>
             </div>
           ))}

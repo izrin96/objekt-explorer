@@ -12,8 +12,8 @@ export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
     staleTime: 0,
   });
 
-export const tradePartnersQuery = (slug: string) =>
+export const tradePartnersQuery = (slug: string, mode?: "have-to-want" | "want-to-have" | "both") =>
   orpc.list.findTradePartners.queryOptions({
-    input: { slug },
+    input: { slug, mode },
     staleTime: 1000 * 60, // 1 minute
   });

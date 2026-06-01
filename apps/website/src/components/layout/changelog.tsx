@@ -23,6 +23,14 @@ import { m } from "@/paraglide/messages";
 export default function Changelog() {
   const changelog = [
     {
+      date: "2026-06-02",
+      items: [
+        "Trade Matches now works with standalone Have or Want lists — no pairing required. Each list can independently find matches in one direction (Have→Want or Want→Have).",
+        "Paired Have+Want lists get a new mode selector in the Trade Matches modal: Have only, Both, or Want only.",
+        "Want lists can now be marked as Discoverable (no profile binding needed). Both directions of trade matching require the partner's list to be discoverable.",
+      ],
+    },
+    {
       date: "2026-05-31",
       items: [
         "Profile banner now extends slightly outside the container. If your banner looks off, try reuploading it.",
