@@ -1,4 +1,4 @@
-import { UsersIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -14,6 +14,14 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/intentui/modal";
+import {
+  Popover,
+  PopoverBody,
+  PopoverContent,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+} from "@/components/intentui/popover";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useListAuthed } from "@/hooks/use-user";
@@ -85,6 +93,53 @@ export default function TradeMatches() {
         <UsersIcon />
         <span className="hidden lg:inline">{m.list_trade_matches_title()}</span>
       </Button>
+
+      <Popover>
+        <Button size="sq-sm" intent="plain" aria-label={m.list_trade_info_title()}>
+          <InformationCircleIcon className="size-[18px]" />
+        </Button>
+        <PopoverContent>
+          <PopoverHeader>
+            <PopoverTitle>{m.list_trade_info_title()}</PopoverTitle>
+          </PopoverHeader>
+          <PopoverBody className="text-sm">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="text-muted-fg border-border border-b">
+                  <th className="pr-3 pb-1.5 font-medium">{m.list_trade_info_mode_header()}</th>
+                  <th className="pr-3 pb-1.5 font-medium">
+                    {m.list_trade_info_your_list_header()}
+                  </th>
+                  <th className="pb-1.5 font-medium">{m.list_trade_info_matches_header()}</th>
+                </tr>
+              </thead>
+              <tbody className="*:border-border *:border-b">
+                <tr>
+                  <td className="py-1.5 pr-3 font-medium">{m.list_trade_mode_have_to_want()}</td>
+                  <td className="text-muted-fg py-1.5 pr-3">{m.list_trade_info_have_entries()}</td>
+                  <td className="text-muted-fg py-1.5">{m.list_trade_mode_want_to_have()}</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 pr-3 font-medium">{m.list_trade_mode_want_to_have()}</td>
+                  <td className="text-muted-fg py-1.5 pr-3">{m.list_trade_info_want_entries()}</td>
+                  <td className="text-muted-fg py-1.5">{m.list_trade_mode_have_to_want()}</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 pr-3 font-medium">{m.list_trade_mode_both()}</td>
+                  <td className="text-muted-fg py-1.5 pr-3">
+                    {m.list_trade_info_have_want_paired()}
+                  </td>
+                  <td className="text-muted-fg py-1.5">{m.list_trade_info_have_want_paired()}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p className="text-muted-fg mt-3 text-xs leading-relaxed">
+              {m.list_trade_info_footer()}
+            </p>
+          </PopoverBody>
+          <PopoverFooter />
+        </PopoverContent>
+      </Popover>
 
       <ModalContent isOpen={open} onOpenChange={setOpen} size="3xl">
         <ModalHeader>

@@ -9,6 +9,7 @@ import {
   DisclosurePanel,
   DisclosureTrigger,
 } from "@/components/intentui/disclosure-group";
+import { Link } from "@/components/intentui/link";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { tradePartnersQuery } from "@/lib/queries/list";
 import type { TradePartner } from "@/lib/universal/list";
@@ -117,6 +118,15 @@ function PartnerDisclosure({
           )}
           {partner.matches.map((match) => (
             <div key={match.listId} className="flex flex-col gap-2 first:mt-1">
+              <div className="flex">
+                <Link
+                  to="/list/$slug"
+                  params={{ slug: match.listSlug }}
+                  className="text-xs font-medium underline"
+                >
+                  {match.listName}
+                </Link>
+              </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {match.iHaveTheyWant.length > 0 && (
                   <DirectionColumn

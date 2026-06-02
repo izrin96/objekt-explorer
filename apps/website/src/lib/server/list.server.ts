@@ -469,7 +469,7 @@ export async function buildTradePartnersResponse(
     if (!addr.userId) continue;
     const arr = userAddrsByUser.get(addr.userId) ?? [];
     arr.push({
-      address: addr.address,
+      address: addr.address.toLowerCase(),
       nickname: addr.nickname && !addr.hideNickname ? addr.nickname : null,
     });
     userAddrsByUser.set(addr.userId, arr);
@@ -479,7 +479,7 @@ export async function buildTradePartnersResponse(
   for (const hlp of haveListProfiles) {
     if (hlp.userId && hlp.profileAddress) {
       const set = profileAddrsByUser.get(hlp.userId) ?? new Set();
-      set.add(hlp.profileAddress);
+      set.add(hlp.profileAddress.toLowerCase());
       profileAddrsByUser.set(hlp.userId, set);
     }
   }
@@ -488,7 +488,7 @@ export async function buildTradePartnersResponse(
   for (const addr of userAddrs) {
     if (addr.nickname && addr.userId && !addr.hideNickname && profileAddrsByUser.has(addr.userId)) {
       const map = addrNickMapByUser.get(addr.userId) ?? new Map();
-      map.set(addr.address, addr.nickname);
+      map.set(addr.address.toLowerCase(), addr.nickname);
       addrNickMapByUser.set(addr.userId, map);
     }
   }
