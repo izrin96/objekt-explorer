@@ -16,8 +16,8 @@
     "@repo/cosmo": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/lib": "workspace:*",
-    "@tanstack/ai": "^0.17.0",
-    "@tanstack/ai-ollama": "^0.6.14",
+    "@tanstack/ai": "^0.26.0",
+    "@tanstack/ai-ollama": "^0.7.1",
     "drizzle-orm": "catalog:",
     "ofetch": "catalog:",
     "sharp": "^0.34.5"
