@@ -18,7 +18,6 @@ import {
   Popover,
   PopoverBody,
   PopoverContent,
-  PopoverFooter,
   PopoverHeader,
   PopoverTitle,
 } from "@/components/intentui/popover";
@@ -94,52 +93,7 @@ export default function TradeMatches() {
         <span className="hidden lg:inline">{m.list_trade_matches_title()}</span>
       </Button>
 
-      <Popover>
-        <Button size="sq-sm" intent="plain" aria-label={m.list_trade_info_title()}>
-          <InformationCircleIcon className="size-[18px]" />
-        </Button>
-        <PopoverContent>
-          <PopoverHeader>
-            <PopoverTitle>{m.list_trade_info_title()}</PopoverTitle>
-          </PopoverHeader>
-          <PopoverBody className="text-sm">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="text-muted-fg border-border border-b">
-                  <th className="pr-3 pb-1.5 font-medium">{m.list_trade_info_mode_header()}</th>
-                  <th className="pr-3 pb-1.5 font-medium">
-                    {m.list_trade_info_your_list_header()}
-                  </th>
-                  <th className="pb-1.5 font-medium">{m.list_trade_info_matches_header()}</th>
-                </tr>
-              </thead>
-              <tbody className="*:border-border *:border-b">
-                <tr>
-                  <td className="py-1.5 pr-3 font-medium">{m.list_trade_mode_have_to_want()}</td>
-                  <td className="text-muted-fg py-1.5 pr-3">{m.list_trade_info_have_entries()}</td>
-                  <td className="text-muted-fg py-1.5">{m.list_trade_mode_want_to_have()}</td>
-                </tr>
-                <tr>
-                  <td className="py-1.5 pr-3 font-medium">{m.list_trade_mode_want_to_have()}</td>
-                  <td className="text-muted-fg py-1.5 pr-3">{m.list_trade_info_want_entries()}</td>
-                  <td className="text-muted-fg py-1.5">{m.list_trade_mode_have_to_want()}</td>
-                </tr>
-                <tr>
-                  <td className="py-1.5 pr-3 font-medium">{m.list_trade_mode_both()}</td>
-                  <td className="text-muted-fg py-1.5 pr-3">
-                    {m.list_trade_info_have_want_paired()}
-                  </td>
-                  <td className="text-muted-fg py-1.5">{m.list_trade_info_have_want_paired()}</td>
-                </tr>
-              </tbody>
-            </table>
-            <p className="text-muted-fg mt-3 text-xs leading-relaxed">
-              {m.list_trade_info_footer()}
-            </p>
-          </PopoverBody>
-          <PopoverFooter />
-        </PopoverContent>
-      </Popover>
+      <TradeMatchesInfo />
 
       <ModalContent isOpen={open} onOpenChange={setOpen} size="3xl">
         <ModalHeader>
@@ -183,5 +137,69 @@ export default function TradeMatches() {
         </ModalFooter>
       </ModalContent>
     </>
+  );
+}
+
+function TradeMatchesInfo() {
+  return (
+    <Popover>
+      <Button size="sm" intent="outline" aria-label={m.list_trade_info_title()}>
+        <InformationCircleIcon />
+      </Button>
+      <PopoverContent className="max-w-sm pb-6">
+        <PopoverHeader>
+          <PopoverTitle>{m.list_trade_info_title()}</PopoverTitle>
+        </PopoverHeader>
+        <PopoverBody className="text-sm">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="text-muted-fg border-border border-b">
+                <th className="pr-2 pb-1.5 font-medium">{m.list_trade_info_mode_header()}</th>
+                <th className="pr-2 pb-1.5 font-medium">{m.list_trade_info_your_list_header()}</th>
+                <th className="pr-2 pb-1.5 font-medium">{m.list_trade_info_matches_header()}</th>
+                <th className="pr-2 pb-1.5 font-medium">
+                  {m.list_trade_info_discoverable_header()}
+                </th>
+                <th className="pb-1.5 font-medium">{m.list_trade_info_pairing_header()}</th>
+              </tr>
+            </thead>
+            <tbody className="*:border-border *:border-b">
+              <tr>
+                <td className="py-1.5 pr-2 font-medium">{m.list_trade_mode_have_to_want()}</td>
+                <td className="text-muted-fg py-1.5 pr-2">{m.list_trade_info_have_entries()}</td>
+                <td className="text-muted-fg py-1.5 pr-2">{m.list_trade_mode_want_to_have()}</td>
+                <td className="text-muted-fg py-1.5 pr-2">
+                  {m.list_trade_info_discoverable_partner()}
+                </td>
+                <td className="text-muted-fg py-1.5">{m.list_trade_info_pairing_not_required()}</td>
+              </tr>
+              <tr>
+                <td className="py-1.5 pr-2 font-medium">{m.list_trade_mode_want_to_have()}</td>
+                <td className="text-muted-fg py-1.5 pr-2">{m.list_trade_info_want_entries()}</td>
+                <td className="text-muted-fg py-1.5 pr-2">{m.list_trade_mode_have_to_want()}</td>
+                <td className="text-muted-fg py-1.5 pr-2">
+                  {m.list_trade_info_discoverable_partner()}
+                </td>
+                <td className="text-muted-fg py-1.5">{m.list_trade_info_pairing_not_required()}</td>
+              </tr>
+              <tr>
+                <td className="py-1.5 pr-2 font-medium">{m.list_trade_mode_both()}</td>
+                <td className="text-muted-fg py-1.5 pr-2">
+                  {m.list_trade_info_have_want_paired()}
+                </td>
+                <td className="text-muted-fg py-1.5 pr-2">
+                  {m.list_trade_info_have_want_paired()}
+                </td>
+                <td className="text-muted-fg py-1.5 pr-2">
+                  {m.list_trade_info_discoverable_partner()}
+                </td>
+                <td className="text-muted-fg py-1.5">{m.list_trade_info_pairing_required()}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p className="text-muted-fg mt-3 text-xs leading-relaxed">{m.list_trade_info_footer()}</p>
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
   );
 }

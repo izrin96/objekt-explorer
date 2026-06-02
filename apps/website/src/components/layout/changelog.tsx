@@ -25,9 +25,9 @@ export default function Changelog() {
     {
       date: "2026-06-02",
       items: [
-        "Trade Matches now works with standalone Have or Want lists — no pairing required. Each list can independently find matches in one direction (Have→Want or Want→Have).",
-        "Paired Have+Want lists get a new mode selector in the Trade Matches modal: Have only, Both, or Want only. Both mode strictly matches your paired Have+Want against other users' paired Have+Want — both sides must have linked, discoverable lists.",
-        "Want lists can now be marked as Discoverable (no profile binding needed). Both directions of trade matching require the partner's list to be discoverable.",
+        "Trade Matches now works with standalone Have or Want lists. No pairing required. Each list can independently find matches in one direction (Have→Want or Want→Have).",
+        "Paired Have+Want lists get a new mode selector in the Trade Matches modal: Have only, Both, or Want only. Both mode matches your paired Have+Want against other users' paired Have+Want. Their lists need to be discoverable.",
+        "Want lists can now be marked as Discoverable (no profile binding needed). Both directions (Have→Want or Want→Have) of trade matching require the partner's list to be discoverable.",
       ],
     },
     {
