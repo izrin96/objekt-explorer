@@ -13,7 +13,7 @@ import { Link } from "@/components/intentui/link";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { tradePartnersQuery } from "@/lib/queries/list";
 import type { TradePartner } from "@/lib/universal/list";
-import { cn } from "@/lib/utils";
+import { cn, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektCollectionThumbnail } from "./trade-objekt-thumbnail";
@@ -69,15 +69,13 @@ function PartnerDisclosure({
           <span className="text-muted-fg w-5 shrink-0 self-center text-center font-mono text-xs tabular-nums">
             {String(rank).padStart(2, "0")}
           </span>
-          {partner.user?.image && (
-            <Avatar
-              size="md"
-              className="shrink-0"
-              src={partner.user.image}
-              alt={partner.user.name ?? undefined}
-              initials={(partner.user.name ?? "").charAt(0)}
-            />
-          )}
+          <Avatar
+            size="md"
+            className="shrink-0"
+            src={partner.user.image}
+            alt={partner.user.name ?? undefined}
+            initials={(partner.user.name ?? "").charAt(0)}
+          />
           <div className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold">{partner.username}</span>
           </div>
@@ -103,9 +101,16 @@ function PartnerDisclosure({
               {partner.profiles.length > 0 && (
                 <div className="flex items-start gap-2">
                   <span className="shrink-0 self-center">{m.list_cosmo_id_label()}</span>
-                  <span className="text-fg font-medium">
-                    {partner.profiles.map((p) => p.nickname ?? p.address).join(", ")}
-                  </span>
+                  {partner.profiles.map((p) => (
+                    <Link
+                      key={p.address}
+                      to="/@{$nickname}"
+                      params={{ nickname: p.nickname || p.address }}
+                      className="text-fg font-medium"
+                    >
+                      {parseNickname(p.address, p.nickname)}
+                    </Link>
+                  ))}
                 </div>
               )}
               {partner.user.discord && (
@@ -122,7 +127,7 @@ function PartnerDisclosure({
                 <Link
                   to="/list/$slug"
                   params={{ slug: match.listSlug }}
-                  className="text-xs font-medium underline"
+                  className="text-fg text-sm font-medium"
                 >
                   {match.listName}
                 </Link>
