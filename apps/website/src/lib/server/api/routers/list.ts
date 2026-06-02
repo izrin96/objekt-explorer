@@ -643,6 +643,8 @@ export const listRouter = {
               listName: lists.name,
               userId: lists.userId,
               wantListId: lists.linkedListId,
+              profileAddress: lists.profileAddress,
+              profileSlug: lists.profileSlug,
             })
             .from(lists)
             .where(
@@ -664,6 +666,8 @@ export const listRouter = {
               listSlug: w.slug,
               listName: w.name,
               userId: w.userId,
+              profileAddress: w.profileAddress,
+              profileSlug: w.profileSlug,
             })
             .from(w)
             .innerJoin(h, eq(h.linkedListId, w.id))
@@ -694,6 +698,8 @@ export const listRouter = {
           listId: number;
           listSlug: string;
           listName: string;
+          profileAddress: string | null;
+          profileSlug: string | null;
           theyHaveIWant: string[];
           iHaveTheyWant: string[];
         }> = [];
@@ -708,6 +714,8 @@ export const listRouter = {
                 listSlug: tradeActiveHaves.listSlug,
                 listName: tradeActiveHaves.listName,
                 wantListId: tradeActiveHaves.wantListId,
+                profileAddress: tradeActiveHaves.profileAddress,
+                profileSlug: tradeActiveHaves.profileSlug,
                 collectionSlug: listEntries.collectionSlug,
               })
               .from(listEntries)
@@ -749,6 +757,10 @@ export const listRouter = {
               listId: theirHaves.listId,
               listSlug: theirHaves.listSlug,
               listName: theirHaves.listName,
+              profileAddress: sql<string | null>`MAX(${theirHaves.profileAddress})`.as(
+                "profile_address",
+              ),
+              profileSlug: sql<string | null>`MAX(${theirHaves.profileSlug})`.as("profile_slug"),
               theyHaveIWant: sql<string[]>`array_agg(DISTINCT ${theirHaves.collectionSlug})`.as(
                 "they_have_i_want",
               ),
@@ -773,6 +785,8 @@ export const listRouter = {
             listId: r.listId,
             listSlug: r.listSlug,
             listName: r.listName,
+            profileAddress: r.profileAddress,
+            profileSlug: r.profileSlug,
             theyHaveIWant: r.theyHaveIWant,
             iHaveTheyWant: r.iHaveTheyWant,
           }));
@@ -804,6 +818,8 @@ export const listRouter = {
                 listSlug: tradeActiveHaves.listSlug,
                 listName: tradeActiveHaves.listName,
                 wantListId: tradeActiveHaves.wantListId,
+                profileAddress: tradeActiveHaves.profileAddress,
+                profileSlug: tradeActiveHaves.profileSlug,
                 collectionSlug: listEntries.collectionSlug,
               })
               .from(listEntries)
@@ -829,6 +845,10 @@ export const listRouter = {
               listId: theirWants.listId,
               listSlug: theirWants.listSlug,
               listName: theirWants.listName,
+              profileAddress: sql<string | null>`MAX(${theirHaves.profileAddress})`.as(
+                "profile_address",
+              ),
+              profileSlug: sql<string | null>`MAX(${theirHaves.profileSlug})`.as("profile_slug"),
               theyHaveIWant: sql<string[]>`array_agg(DISTINCT ${theirHaves.collectionSlug})`.as(
                 "they_have_i_want",
               ),
@@ -853,6 +873,8 @@ export const listRouter = {
             listId: r.listId,
             listSlug: r.listSlug,
             listName: r.listName,
+            profileAddress: r.profileAddress,
+            profileSlug: r.profileSlug,
             theyHaveIWant: r.theyHaveIWant,
             iHaveTheyWant: r.iHaveTheyWant,
           }));
@@ -879,6 +901,8 @@ export const listRouter = {
         listId: number;
         listSlug: string;
         listName: string;
+        profileAddress: string | null;
+        profileSlug: string | null;
         theyHaveIWant: string[];
         iHaveTheyWant: string[];
       }> = [];
@@ -892,6 +916,8 @@ export const listRouter = {
               listSlug: lists.slug,
               listName: lists.name,
               userId: lists.userId,
+              profileAddress: lists.profileAddress,
+              profileSlug: lists.profileSlug,
             })
             .from(lists)
             .where(and(eq(lists.listTypeNew, "have"), eq(lists.discoverable, true))),
@@ -904,6 +930,8 @@ export const listRouter = {
             listId: activeHaves.listId,
             listSlug: activeHaves.listSlug,
             listName: activeHaves.listName,
+            profileAddress: activeHaves.profileAddress,
+            profileSlug: activeHaves.profileSlug,
             theyHaveIWant: sql<string[]>`array_agg(DISTINCT ${listEntries.collectionSlug})`,
           })
           .from(listEntries)
@@ -915,6 +943,8 @@ export const listRouter = {
             activeHaves.listId,
             activeHaves.listSlug,
             activeHaves.listName,
+            activeHaves.profileAddress,
+            activeHaves.profileSlug,
           )
           .orderBy(desc(countDistinct(listEntries.collectionSlug)))
           .limit(50);
@@ -924,6 +954,8 @@ export const listRouter = {
           listId: r.listId,
           listSlug: r.listSlug,
           listName: r.listName,
+          profileAddress: r.profileAddress,
+          profileSlug: r.profileSlug,
           theyHaveIWant: r.theyHaveIWant,
           iHaveTheyWant: [],
         }));
@@ -937,6 +969,8 @@ export const listRouter = {
               listSlug: lists.slug,
               listName: lists.name,
               userId: lists.userId,
+              profileAddress: lists.profileAddress,
+              profileSlug: lists.profileSlug,
             })
             .from(lists)
             .where(and(eq(lists.listTypeNew, "want"), eq(lists.discoverable, true))),
@@ -949,6 +983,8 @@ export const listRouter = {
             listId: activeWants.listId,
             listSlug: activeWants.listSlug,
             listName: activeWants.listName,
+            profileAddress: activeWants.profileAddress,
+            profileSlug: activeWants.profileSlug,
             iHaveTheyWant: sql<string[]>`array_agg(DISTINCT ${listEntries.collectionSlug})`,
           })
           .from(listEntries)
@@ -960,6 +996,8 @@ export const listRouter = {
             activeWants.listId,
             activeWants.listSlug,
             activeWants.listName,
+            activeWants.profileAddress,
+            activeWants.profileSlug,
           )
           .orderBy(desc(countDistinct(listEntries.collectionSlug)))
           .limit(50);
@@ -969,6 +1007,8 @@ export const listRouter = {
           listId: r.listId,
           listSlug: r.listSlug,
           listName: r.listName,
+          profileAddress: r.profileAddress,
+          profileSlug: r.profileSlug,
           theyHaveIWant: [],
           iHaveTheyWant: r.iHaveTheyWant,
         }));

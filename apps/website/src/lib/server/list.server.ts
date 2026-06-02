@@ -7,7 +7,7 @@ import { lists, user, userAddress } from "@repo/db/schema";
 import type { ListEntry, UserAddress } from "@repo/db/schema";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { and, eq, inArray, isNotNull, ne } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import slugify from "slugify";
 
 import type { ListTypeNew, PublicList } from "../universal/list";
@@ -425,6 +425,8 @@ export type PartnerRow = {
   listId: number;
   listSlug: string;
   listName: string;
+  profileAddress: string | null;
+  profileSlug: string | null;
   theyHaveIWant: string[];
   iHaveTheyWant: string[];
 };
@@ -440,56 +442,22 @@ export async function buildTradePartnersResponse(
   const userIds = [...new Set(partners.map((r) => r.userId))];
   const allSlugs = [...new Set(partners.flatMap((r) => [...r.theyHaveIWant, ...r.iHaveTheyWant]))];
 
-  const [users, userAddrs, collectionRows, haveListProfiles] = await Promise.all([
+  const [users, userAddrs, collectionRows] = await Promise.all([
     db.select().from(user).where(inArray(user.id, userIds)),
     db.select().from(userAddress).where(inArray(userAddress.userId, userIds)),
     allSlugs.length > 0
       ? indexer.select().from(collections).where(inArray(collections.slug, allSlugs))
       : Promise.resolve([]),
-    db
-      .select({
-        userId: lists.userId,
-        profileAddress: lists.profileAddress,
-      })
-      .from(lists)
-      .where(
-        and(
-          inArray(lists.userId, userIds),
-          eq(lists.listTypeNew, "have"),
-          isNotNull(lists.profileAddress),
-        ),
-      ),
   ]);
 
   const userMap = new Map(users.map((u) => [u.id, u]));
   const collectionsData = Object.fromEntries(collectionRows.map((c) => [c.slug, c]));
 
-  const userAddrsByUser = new Map<string, Array<{ address: string; nickname: string | null }>>();
+  // address → nickname map (hiding respected, addresses normalized to lowercase)
+  const addrNickMap = new Map<string, string>();
   for (const addr of userAddrs) {
-    if (!addr.userId) continue;
-    const arr = userAddrsByUser.get(addr.userId) ?? [];
-    arr.push({
-      address: addr.address.toLowerCase(),
-      nickname: addr.nickname && !addr.hideNickname ? addr.nickname : null,
-    });
-    userAddrsByUser.set(addr.userId, arr);
-  }
-
-  const profileAddrsByUser = new Map<string, Set<string>>();
-  for (const hlp of haveListProfiles) {
-    if (hlp.userId && hlp.profileAddress) {
-      const set = profileAddrsByUser.get(hlp.userId) ?? new Set();
-      set.add(hlp.profileAddress.toLowerCase());
-      profileAddrsByUser.set(hlp.userId, set);
-    }
-  }
-
-  const addrNickMapByUser = new Map<string, Map<string, string>>();
-  for (const addr of userAddrs) {
-    if (addr.nickname && addr.userId && !addr.hideNickname && profileAddrsByUser.has(addr.userId)) {
-      const map = addrNickMapByUser.get(addr.userId) ?? new Map();
-      map.set(addr.address.toLowerCase(), addr.nickname);
-      addrNickMapByUser.set(addr.userId, map);
+    if (addr.nickname && !addr.hideNickname) {
+      addrNickMap.set(addr.address.toLowerCase(), addr.nickname);
     }
   }
 
@@ -509,26 +477,20 @@ export async function buildTradePartnersResponse(
       const usr = userMap.get(userId);
       if (!usr) return null;
       const matches = matchesByUser.get(userId) ?? [];
-      const profileAddrs = profileAddrsByUser.get(userId);
-      const addrMap = addrNickMapByUser.get(userId);
-
-      const profiles: Array<{ nickname: string | null; address: string }> =
-        profileAddrs && profileAddrs.size > 0
-          ? [...profileAddrs].map((address) => ({
-              address,
-              nickname: addrMap?.get(address) ?? null,
-            }))
-          : (userAddrsByUser.get(userId) ?? []);
 
       return {
         userId,
         username: usr.name ?? "unknown",
         user: toPublicUser(usr),
-        profiles,
         matches: matches.map((m) => ({
           listId: m.listId,
           listSlug: m.listSlug,
           listName: m.listName,
+          profileAddress: m.profileAddress,
+          profileSlug: m.profileSlug,
+          profileNickname: m.profileAddress
+            ? (addrNickMap.get(m.profileAddress.toLowerCase()) ?? null)
+            : null,
           theyHaveIWant: m.theyHaveIWant,
           iHaveTheyWant: m.iHaveTheyWant,
         })),

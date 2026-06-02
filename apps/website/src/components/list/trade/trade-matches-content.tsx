@@ -1,3 +1,4 @@
+import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { Avatar } from "@/components/intentui/avatar-custom";
@@ -96,23 +97,8 @@ function PartnerDisclosure({
       </DisclosureTrigger>
       <DisclosurePanel>
         <div className="flex flex-col gap-4">
-          {(partner.profiles.length > 0 || partner.user.discord || partner.user.twitter) && (
+          {(partner.user.discord || partner.user.twitter) && (
             <div className="text-muted-fg border-border flex flex-wrap items-center gap-x-4 gap-y-1 border-b pb-3 text-xs">
-              {partner.profiles.length > 0 && (
-                <div className="flex items-start gap-2">
-                  <span className="shrink-0 self-center">{m.list_cosmo_id_label()}</span>
-                  {partner.profiles.map((p) => (
-                    <Link
-                      key={p.address}
-                      to="/@{$nickname}"
-                      params={{ nickname: p.nickname || p.address }}
-                      className="text-fg font-medium"
-                    >
-                      {parseNickname(p.address, p.nickname)}
-                    </Link>
-                  ))}
-                </div>
-              )}
               {partner.user.discord && (
                 <SocialBadge platform="discord" username={partner.user.discord} />
               )}
@@ -121,37 +107,60 @@ function PartnerDisclosure({
               )}
             </div>
           )}
-          {partner.matches.map((match) => (
-            <div key={match.listId} className="flex flex-col gap-2 first:mt-1">
-              <div className="flex">
+          {partner.matches.map((match) => {
+            const isProfileLink = match.profileSlug && match.profileAddress;
+            return (
+              <div key={match.listId} className="flex flex-col gap-2 first:mt-1">
                 <Link
-                  to="/list/$slug"
-                  params={{ slug: match.listSlug }}
+                  to={isProfileLink ? "/@{$nickname}/list/$slug" : "/list/$slug"}
+                  params={
+                    isProfileLink
+                      ? {
+                          nickname: match.profileNickname ?? match.profileAddress!,
+                          slug: match.profileSlug!,
+                        }
+                      : { slug: match.listSlug }
+                  }
                   className="text-fg text-sm font-medium"
                 >
                   {match.listName}
+                  <ArrowUpRightIcon className="text-muted-fg ml-0.5 inline size-3.5" />
                 </Link>
-              </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {match.iHaveTheyWant.length > 0 && (
-                  <DirectionColumn
-                    title={m.list_trade_matches_you_have_they_want()}
-                    slugs={match.iHaveTheyWant}
-                    collections={collections}
-                    tone="have"
-                  />
+                {(match.profileAddress || match.profileNickname) && (
+                  <div className="text-muted-fg flex items-center gap-1.5 text-xs">
+                    <span>{m.list_cosmo_id_label()}</span>
+                    <Link
+                      to="/@{$nickname}"
+                      params={{
+                        nickname: match.profileNickname ?? match.profileAddress ?? "",
+                      }}
+                      className="text-fg font-medium"
+                    >
+                      {parseNickname(match.profileAddress ?? "", match.profileNickname)}
+                    </Link>
+                  </div>
                 )}
-                {match.theyHaveIWant.length > 0 && (
-                  <DirectionColumn
-                    title={m.list_trade_matches_they_have_you_want()}
-                    slugs={match.theyHaveIWant}
-                    collections={collections}
-                    tone="want"
-                  />
-                )}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {match.iHaveTheyWant.length > 0 && (
+                    <DirectionColumn
+                      title={m.list_trade_matches_you_have_they_want()}
+                      slugs={match.iHaveTheyWant}
+                      collections={collections}
+                      tone="have"
+                    />
+                  )}
+                  {match.theyHaveIWant.length > 0 && (
+                    <DirectionColumn
+                      title={m.list_trade_matches_they_have_you_want()}
+                      slugs={match.theyHaveIWant}
+                      collections={collections}
+                      tone="want"
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </DisclosurePanel>
     </Disclosure>
