@@ -95,23 +95,17 @@ function Trades({
           return serials[serials.length - 1] ?? prevSerial;
         }
         if (mode === "prev") {
-          if (objekt.onOffline === "online") {
-            return prevSerial - 1 > 0 ? prevSerial - 1 : 1;
-          }
-          const newSerial = serials.findLast((serial) => serial < prevSerial);
-          return newSerial ?? prevSerial;
+          const newSerial = serials.findLast((s) => s < prevSerial);
+          return newSerial ?? (prevSerial > 1 ? prevSerial - 1 : 1);
         }
         if (mode === "next") {
-          if (objekt.onOffline === "online") {
-            return prevSerial + 1;
-          }
-          const newSerial = serials.find((serial) => serial > prevSerial);
-          return newSerial ?? prevSerial;
+          const newSerial = serials.find((s) => s > prevSerial);
+          return newSerial ?? prevSerial + 1;
         }
         return prevSerial;
       });
     },
-    [serials, objekt],
+    [serials],
   );
 
   return (
