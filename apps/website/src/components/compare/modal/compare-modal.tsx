@@ -14,7 +14,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/intentui/modal";
-import { Radio, RadioGroup } from "@/components/intentui/radio";
+import { Radio, RadioGroup, RadioLabel } from "@/components/intentui/radio";
 import Portal from "@/components/shared/portal";
 import { m } from "@/paraglide/messages";
 
@@ -94,11 +94,11 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
               <Label>{m.compare_modal_target_type_label()}</Label>
               <Description>{m.compare_modal_target_type_description()}</Description>
               <Radio value="profile">
-                <Label>{m.compare_modal_target_type_profile_label()}</Label>
+                <RadioLabel>{m.compare_modal_target_type_profile_label()}</RadioLabel>
                 <Description>{m.compare_modal_target_type_profile_description()}</Description>
               </Radio>
               <Radio value="list">
-                <Label>{m.compare_modal_target_type_list_label()}</Label>
+                <RadioLabel>{m.compare_modal_target_type_list_label()}</RadioLabel>
                 <Description>{m.compare_modal_target_type_list_description()}</Description>
               </Radio>
             </RadioGroup>
@@ -119,11 +119,11 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
               <Label>{m.compare_modal_comparison_type_label()}</Label>
               <Description>{m.compare_modal_comparison_type_description()}</Description>
               <Radio value="missing">
-                <Label>{m.compare_modal_comparison_type_missing_label()}</Label>
+                <RadioLabel>{m.compare_modal_comparison_type_missing_label()}</RadioLabel>
                 <Description>{m.compare_modal_comparison_type_missing_description()}</Description>
               </Radio>
               <Radio value="matches">
-                <Label>{m.compare_modal_comparison_type_matches_label()}</Label>
+                <RadioLabel>{m.compare_modal_comparison_type_matches_label()}</RadioLabel>
                 <Description>{m.compare_modal_comparison_type_matches_description()}</Description>
               </Radio>
             </RadioGroup>

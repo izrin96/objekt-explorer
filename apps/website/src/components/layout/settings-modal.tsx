@@ -10,7 +10,7 @@ import {
   ModalTitle,
 } from "@/components/intentui/modal";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
-import { Switch } from "@/components/intentui/switch";
+import { Switch, SwitchLabel } from "@/components/intentui/switch";
 import { useTheme } from "@/components/shared/theme-provider";
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -96,7 +96,7 @@ export function SettingsModal({
               onChange={setWide}
               aria-label={m.common_settings_filters_wide()}
             >
-              <Label>{m.common_settings_filters_wide()}</Label>
+              <SwitchLabel>{m.common_settings_filters_wide()}</SwitchLabel>
               <Description>{m.common_settings_filters_wide_desc()}</Description>
             </Switch>
           )}
@@ -106,7 +106,7 @@ export function SettingsModal({
             onChange={setHideLabel}
             aria-label={m.common_settings_filters_hide_label()}
           >
-            <Label>{m.common_settings_filters_hide_label()}</Label>
+            <SwitchLabel>{m.common_settings_filters_hide_label()}</SwitchLabel>
             <Description>{m.common_settings_filters_hide_label_desc()}</Description>
           </Switch>
         </div>

@@ -7,7 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
 import { FieldError, Label } from "@/components/intentui/field";
 import { Loader } from "@/components/intentui/loader";
 import {
@@ -246,7 +246,7 @@ function GenerateDiscordFormatRender() {
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <Label>{m.generate_discord_show_count()}</Label>
+            <CheckboxLabel>{m.generate_discord_show_count()}</CheckboxLabel>
           </Checkbox>
         )}
       />
@@ -261,7 +261,7 @@ function GenerateDiscordFormatRender() {
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <Label>{m.generate_discord_include_link()}</Label>
+            <CheckboxLabel>{m.generate_discord_include_link()}</CheckboxLabel>
           </Checkbox>
         )}
       />
@@ -276,7 +276,7 @@ function GenerateDiscordFormatRender() {
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <Label>{m.generate_discord_lower_case()}</Label>
+            <CheckboxLabel>{m.generate_discord_lower_case()}</CheckboxLabel>
           </Checkbox>
         )}
       />
@@ -292,7 +292,7 @@ function GenerateDiscordFormatRender() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <Label>{m.generate_discord_bulleted_list()}</Label>
+            <CheckboxLabel>{m.generate_discord_bulleted_list()}</CheckboxLabel>
           </Checkbox>
         )}
       />
@@ -308,7 +308,7 @@ function GenerateDiscordFormatRender() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <Label>{m.generate_discord_show_member_emoji()}</Label>
+            <CheckboxLabel>{m.generate_discord_show_member_emoji()}</CheckboxLabel>
           </Checkbox>
         )}
       />

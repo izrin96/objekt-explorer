@@ -8,7 +8,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { Input } from "@/components/intentui/input";
 import { Link } from "@/components/intentui/link";
@@ -23,7 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/intentui/sheet";
-import { Switch } from "@/components/intentui/switch";
+import { Switch, SwitchLabel } from "@/components/intentui/switch";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
@@ -345,7 +345,7 @@ function EditListForm({
                 validationBehavior="aria"
                 isDisabled
               >
-                <Label>{m.list_create_profile_bind_label()}</Label>
+                <CheckboxLabel>{m.list_create_profile_bind_label()}</CheckboxLabel>
                 <Description>{m.list_create_profile_bind_desc()}</Description>
               </Checkbox>
             )}
@@ -366,7 +366,7 @@ function EditListForm({
                 onBlur={onBlur}
                 isDisabled={data.listTypeNew !== "want" && !data.isProfileBind}
               >
-                <Label>{m.list_create_discoverable_label()}</Label>
+                <SwitchLabel>{m.list_create_discoverable_label()}</SwitchLabel>
                 <Description>
                   {data.listTypeNew === "want"
                     ? m.list_create_discoverable_want_desc()
@@ -392,7 +392,7 @@ function EditListForm({
                 validationBehavior="aria"
                 isDisabled={!data.isProfileBind}
               >
-                <Label>{m.list_create_hide_serial_label()}</Label>
+                <CheckboxLabel>{m.list_create_hide_serial_label()}</CheckboxLabel>
                 <Description>{m.list_create_hide_serial_desc()}</Description>
               </Checkbox>
             )}
@@ -410,7 +410,7 @@ function EditListForm({
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.list_create_hide_user_label()}</Label>
+              <CheckboxLabel>{m.list_create_hide_user_label()}</CheckboxLabel>
               <Description>{m.list_create_hide_user_desc({ siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}

@@ -11,7 +11,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
 
 import "react-advanced-cropper/dist/style.css";
 import { Description, Label } from "@/components/intentui/field";
@@ -351,7 +351,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.profile_edit_hide_user_label()}</Label>
+              <CheckboxLabel>{m.profile_edit_hide_user_label()}</CheckboxLabel>
               <Description>{m.profile_edit_hide_user_desc({ siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}
@@ -367,7 +367,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.profile_edit_hide_nickname_label()}</Label>
+              <CheckboxLabel>{m.profile_edit_hide_nickname_label()}</CheckboxLabel>
               <Description>{m.profile_edit_hide_nickname_desc()}</Description>
             </Checkbox>
           )}
@@ -383,7 +383,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.profile_edit_private_serial_label()}</Label>
+              <CheckboxLabel>{m.profile_edit_private_serial_label()}</CheckboxLabel>
               <Description>{m.profile_edit_private_serial_desc()}</Description>
             </Checkbox>
           )}
@@ -399,7 +399,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.profile_edit_hide_transfer_label()}</Label>
+              <CheckboxLabel>{m.profile_edit_hide_transfer_label()}</CheckboxLabel>
               <Description>{m.profile_edit_hide_transfer_desc()}</Description>
             </Checkbox>
           )}
@@ -415,7 +415,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.profile_edit_private_profile_label()}</Label>
+              <CheckboxLabel>{m.profile_edit_private_profile_label()}</CheckboxLabel>
               <Description>{m.profile_edit_private_profile_desc()}</Description>
             </Checkbox>
           )}

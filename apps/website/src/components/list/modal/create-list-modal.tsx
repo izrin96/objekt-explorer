@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { Input } from "@/components/intentui/input";
 import { Loader } from "@/components/intentui/loader";
@@ -18,9 +18,9 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/intentui/modal";
-import { Radio, RadioGroup } from "@/components/intentui/radio";
+import { Radio, RadioGroup, RadioLabel } from "@/components/intentui/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
-import { Switch } from "@/components/intentui/switch";
+import { Switch, SwitchLabel } from "@/components/intentui/switch";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
@@ -199,19 +199,19 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               <Label>{m.list_create_list_type_label()}</Label>
               <Description>{m.list_create_list_type_desc()}</Description>
               <Radio value="general">
-                <Label>{m.list_create_general_list_label()}</Label>
+                <RadioLabel>{m.list_create_general_list_label()}</RadioLabel>
                 <Description>{m.list_create_general_list_desc()}</Description>
               </Radio>
               <Radio value="sale">
-                <Label>{m.list_create_sale_list_label()}</Label>
+                <RadioLabel>{m.list_create_sale_list_label()}</RadioLabel>
                 <Description>{m.list_create_sale_list_desc()}</Description>
               </Radio>
               <Radio value="have">
-                <Label>{m.list_create_have_list_label()}</Label>
+                <RadioLabel>{m.list_create_have_list_label()}</RadioLabel>
                 <Description>{m.list_create_have_list_desc()}</Description>
               </Radio>
               <Radio value="want">
-                <Label>{m.list_create_want_list_label()}</Label>
+                <RadioLabel>{m.list_create_want_list_label()}</RadioLabel>
                 <Description>{m.list_create_want_list_desc()}</Description>
               </Radio>
             </RadioGroup>
@@ -354,7 +354,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 onBlur={onBlur}
                 validationBehavior="aria"
               >
-                <Label>{m.list_create_profile_bind_label()}</Label>
+                <CheckboxLabel>{m.list_create_profile_bind_label()}</CheckboxLabel>
                 <Description>{m.list_create_profile_bind_desc()}</Description>
               </Checkbox>
             )}
@@ -375,7 +375,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 onBlur={onBlur}
                 isDisabled={watchedListTypeNew !== "want" && !watchedIsProfileBind}
               >
-                <Label>{m.list_create_discoverable_label()}</Label>
+                <SwitchLabel>{m.list_create_discoverable_label()}</SwitchLabel>
                 <Description>
                   {watchedListTypeNew === "want"
                     ? m.list_create_discoverable_want_desc()
@@ -401,7 +401,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 validationBehavior="aria"
                 isDisabled={!watchedIsProfileBind}
               >
-                <Label>{m.list_create_hide_serial_label()}</Label>
+                <CheckboxLabel>{m.list_create_hide_serial_label()}</CheckboxLabel>
                 <Description>{m.list_create_hide_serial_desc()}</Description>
               </Checkbox>
             )}
@@ -419,7 +419,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <Label>{m.list_create_hide_user_label()}</Label>
+              <CheckboxLabel>{m.list_create_hide_user_label()}</CheckboxLabel>
               <Description>{m.list_create_hide_user_desc({ siteName: SITE_NAME })}</Description>
             </Checkbox>
           )}

@@ -5,7 +5,7 @@ import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
 import { Label } from "@/components/intentui/field";
 import {
   ModalBody,
@@ -96,7 +96,7 @@ function GenerateDiscordFormatModal({
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{m.generate_discord_show_count()}</Label>
+                <CheckboxLabel>{m.generate_discord_show_count()}</CheckboxLabel>
               </Checkbox>
             )}
           />
@@ -112,7 +112,7 @@ function GenerateDiscordFormatModal({
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{m.generate_discord_lower_case()}</Label>
+                <CheckboxLabel>{m.generate_discord_lower_case()}</CheckboxLabel>
               </Checkbox>
             )}
           />
@@ -128,7 +128,7 @@ function GenerateDiscordFormatModal({
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{m.generate_discord_bulleted_list()}</Label>
+                <CheckboxLabel>{m.generate_discord_bulleted_list()}</CheckboxLabel>
               </Checkbox>
             )}
           />
@@ -144,7 +144,7 @@ function GenerateDiscordFormatModal({
                 isInvalid={invalid}
                 validationBehavior="aria"
               >
-                <Label>{m.generate_discord_show_member_emoji()}</Label>
+                <CheckboxLabel>{m.generate_discord_show_member_emoji()}</CheckboxLabel>
               </Checkbox>
             )}
           />

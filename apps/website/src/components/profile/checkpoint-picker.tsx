@@ -1,10 +1,9 @@
 import {
-  type Time,
+  Time,
   CalendarDate,
   DateFormatter,
   GregorianCalendar,
   getLocalTimeZone,
-  now,
   parseAbsolute,
   toCalendarDate,
   toCalendarDateTime,
@@ -69,11 +68,14 @@ export default function CheckpointPicker() {
 
   // Sync client-only values from filters on mount.
   useEffect(() => {
-    setMaxDate(toCalendarDate(now(getLocalTimeZone())));
+    // setMaxDate(toCalendarDate(now(getLocalTimeZone())));
+    setMaxDate(new CalendarDate(new GregorianCalendar(), new Date().getFullYear(), 12, 31));
     const parsed = safeParse(filters.at);
     if (parsed) {
       setSelectedDate(toCalendarDate(parsed));
       setSelectedTime(toTime(parsed));
+    } else {
+      setSelectedTime(new Time());
     }
   }, []);
 

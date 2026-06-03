@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { ExternalLink } from "@/components/intentui/link";
 import { Loader } from "@/components/intentui/loader";
@@ -188,7 +188,7 @@ function AddToListForm({
               isSelected={value}
               validationBehavior="aria"
             >
-              <Label>{m.list_manage_objekt_skip_dups_label()}</Label>
+              <CheckboxLabel>{m.list_manage_objekt_skip_dups_label()}</CheckboxLabel>
               <Description>{m.list_manage_objekt_skip_dups_desc()}</Description>
             </Checkbox>
           )}
