@@ -3,12 +3,12 @@ import crypto from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { fetchUserProfile } from "@repo/cosmo/server/user";
 import type { ValidArtist } from "@repo/cosmo/types/common";
-import { validArtists } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
+import { artistSchema } from "@/lib/universal/artist";
 import { m } from "@/paraglide/messages";
 
 import { redis } from "../../redis.server";
@@ -70,7 +70,7 @@ export const cosmoLinkRouter = {
         address: z.string(),
         cosmoId: z.number().int().positive(),
         nickname: z.string().min(1).max(24),
-        artistId: z.enum(validArtists),
+        artistId: artistSchema,
       }),
     )
     .handler(async ({ input, context: { session } }) => {

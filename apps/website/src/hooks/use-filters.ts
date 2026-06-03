@@ -15,6 +15,7 @@ import {
   validSortDirection,
 } from "@repo/cosmo/types/common";
 import {
+  createParser,
   parseAsArrayOf,
   parseAsBoolean,
   parseAsFloat,
@@ -24,10 +25,25 @@ import {
   useQueryStates,
 } from "nuqs";
 
+import { toCanonicalArtist } from "@/lib/universal/artist";
+
+const parseAsArtist = parseAsArrayOf(
+  createParser({
+    parse(value) {
+      const canonical = toCanonicalArtist(value);
+      if (!(Object.values(validArtists) as readonly string[]).includes(canonical)) return null;
+      return canonical as ValidArtist;
+    },
+    serialize(value) {
+      return value;
+    },
+  }),
+);
+
 export function useFilters() {
   return useQueryStates({
     member: parseAsArrayOf(parseAsString),
-    artist: parseAsArrayOf(parseAsStringEnum<ValidArtist>(Object.values(validArtists))),
+    artist: parseAsArtist,
     sort: parseAsStringEnum<ValidCustomSort>(Object.values(validCustomSorts)),
     class: parseAsArrayOf(parseAsString),
     season: parseAsArrayOf(parseAsString),

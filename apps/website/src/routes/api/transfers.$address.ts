@@ -1,4 +1,4 @@
-import { validArtists, validOnlineTypes } from "@repo/cosmo/types/common";
+import { validOnlineTypes } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
@@ -11,13 +11,14 @@ import * as z from "zod";
 
 import { getSession } from "@/lib/server/auth.server";
 import { getCollectionColumns } from "@/lib/server/objekt.server";
+import { artistsArraySchema } from "@/lib/universal/artist";
 import { validType } from "@/lib/universal/transfers";
 
 const PER_PAGE = 150;
 
 const transfersSchema = z.object({
   type: z.enum(validType).default("all"),
-  artist: z.enum(validArtists).array(),
+  artist: artistsArraySchema,
   member: z.string().array(),
   season: z.string().array(),
   class: z.string().array(),

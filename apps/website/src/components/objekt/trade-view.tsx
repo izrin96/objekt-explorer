@@ -15,7 +15,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components/NumberField";
 import { ErrorBoundary } from "react-error-boundary";
 
-import type { ObjektTransferResult } from "@/lib/types/objekt";
+import type { ObjektTransferResult } from "@/lib/universal/objekt";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";

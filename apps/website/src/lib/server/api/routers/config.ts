@@ -1,8 +1,7 @@
-import { validArtists } from "@repo/cosmo/types/common";
 import { setCookie } from "@tanstack/react-start/server";
-import * as z from "zod";
 
 import type { Outputs } from "@/lib/orpc/server";
+import { artistsArraySchema } from "@/lib/universal/artist";
 
 import { getArtists } from "../../artist.server";
 import { parseSelectedArtists } from "../../cookie.server";
@@ -14,7 +13,7 @@ export const configRouter = {
 
   getFilterData: pub.handler(fetchFilterData),
 
-  setArtists: pub.input(z.enum(validArtists).array()).handler(async ({ input: artists }) => {
+  setArtists: pub.input(artistsArraySchema).handler(async ({ input: artists }) => {
     setCookie("artists", JSON.stringify(artists), {
       maxAge: 12 * 60 * 60 * 24 * 30,
       sameSite: "lax",

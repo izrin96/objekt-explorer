@@ -1,7 +1,7 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
-import type { CollectionResult, OwnedObjektsCursor } from "@/lib/types/objekt";
+import type { CollectionResult, OwnedObjektsCursor } from "@/lib/universal/objekt";
 
 import { fetchOwnedObjektsByCursor } from "./fetching-util";
 import { mapObjektWithTag } from "./objekt-utils";

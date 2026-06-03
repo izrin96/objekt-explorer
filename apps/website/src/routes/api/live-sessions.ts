@@ -1,12 +1,12 @@
 import { fetchLiveSessions } from "@repo/cosmo/server/live";
-import { validArtists } from "@repo/cosmo/types/common";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
 
 import { getAccessToken } from "@/lib/server/token.server";
+import { artistSchema } from "@/lib/universal/artist";
 
 const querySchema = z.object({
-  artistId: z.enum(validArtists),
+  artistId: artistSchema,
 });
 
 export const Route = createFileRoute("/api/live-sessions")({

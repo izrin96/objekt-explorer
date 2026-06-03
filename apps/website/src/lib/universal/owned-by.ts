@@ -1,10 +1,7 @@
-import {
-  validArtists,
-  validCustomSorts,
-  validOnlineTypes,
-  validSortDirection,
-} from "@repo/cosmo/types/common";
+import { validCustomSorts, validOnlineTypes, validSortDirection } from "@repo/cosmo/types/common";
 import * as z from "zod";
+
+import { artistsArraySchema } from "./artist";
 
 const cursorSchema = z.object({
   receivedAt: z.string().optional(),
@@ -16,7 +13,7 @@ const cursorSchema = z.object({
 export const ownedBySchema = z.object({
   at: z.string().optional(),
   cursor: cursorSchema.optional(),
-  artist: z.enum(validArtists).array().optional(),
+  artist: artistsArraySchema.optional(),
   member: z.array(z.string()).optional(),
   class: z.array(z.string()).optional(),
   season: z.array(z.string()).optional(),

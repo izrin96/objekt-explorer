@@ -46,10 +46,10 @@ function makeCollectionTags(objekt: ValidObjekt) {
   if (objekt.member.toLowerCase().includes(" x ")) {
     const parts = objekt.member.split(" X ");
     tags.push(...parts);
-    tags.push(parts.join(""));
+    tags.push(parts.join("x"));
   }
 
-  return [...new Set(tags.map((t) => t.toLowerCase()))];
+  return tags.map((t) => t.toLowerCase());
 }
 
 export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {

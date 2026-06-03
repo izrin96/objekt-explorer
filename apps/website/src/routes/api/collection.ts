@@ -1,4 +1,3 @@
-import { validArtists } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
@@ -8,9 +7,10 @@ import * as z from "zod";
 
 import { getCollectionColumns } from "@/lib/server/objekt.server";
 import { redis } from "@/lib/server/redis.server";
+import { artistsArraySchema } from "@/lib/universal/artist";
 
 const collectionSchema = z.object({
-  artist: z.enum(validArtists).array(),
+  artist: artistsArraySchema.default([]),
   at: z.string().optional(),
 });
 

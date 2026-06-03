@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { ofetch } from "ofetch";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import type { CollectionMetadata } from "@/lib/types/objekt";
+import type { CollectionMetadata } from "@/lib/universal/objekt";
 import { getEditionStr } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
