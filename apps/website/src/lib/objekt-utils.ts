@@ -22,7 +22,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
   const seasonCodeRepeated = seasonCode.repeat(Number(seasonNumber));
   const collectionNoSliced = objekt.collectionNo.slice(0, -1);
 
-  return [
+  const tags = [
     ...getMemberShortKeys(objekt.member),
     objekt.artist,
     objekt.collectionNo, // 201z
@@ -40,7 +40,16 @@ function makeCollectionTags(objekt: ValidObjekt) {
     objekt.season.slice(0, -2), // atom
     seasonCode + seasonNumber, // a01
     seasonCode + Number(seasonNumber), // a1
-  ].map((a) => a.toLowerCase());
+  ];
+
+  // For combined members ("S8 X S12"), also index individual names
+  if (objekt.member.toLowerCase().includes(" x ")) {
+    const parts = objekt.member.split(" X ");
+    tags.push(...parts);
+    tags.push(parts.join(""));
+  }
+
+  return [...new Set(tags.map((t) => t.toLowerCase()))];
 }
 
 export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {

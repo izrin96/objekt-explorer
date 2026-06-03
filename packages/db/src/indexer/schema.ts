@@ -38,6 +38,8 @@ export const collections = pgTable(
     bandImageUrl: varchar("band_image_url", { length: 255 }),
     frontMedia: varchar("front_media", { length: 255 }),
     hasAudio: boolean("has_audio").notNull().default(false),
+    // todo: add migration in indexer
+    // reservedTokenCount: integer("reserved_token_count"),
   },
   (table) => [
     index("IDX_429351eac26f87942861266e48").using("btree", table.onOffline.asc().nullsLast()),

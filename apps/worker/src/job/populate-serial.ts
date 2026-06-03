@@ -80,17 +80,28 @@ async function processCollection(collectionId: string) {
 
 const BATCH_SIZE = 20;
 
-async function findBaseTokenId(
+export async function findBoundaryTokenId(
   targetCollectionId: string,
-  minTokenId: number,
+  startTokenId: number,
+  direction: -1,
+): Promise<number | null>;
+export async function findBoundaryTokenId(
+  targetCollectionId: string,
+  startTokenId: number,
+  direction: 1,
+): Promise<number>;
+export async function findBoundaryTokenId(
+  targetCollectionId: string,
+  startTokenId: number,
+  direction: -1 | 1,
 ): Promise<number | null> {
   const targetSlug = slugifyObjekt(targetCollectionId);
 
   for (let offset = 0; ; offset += BATCH_SIZE) {
     const batch: number[] = [];
     for (let i = 0; i < BATCH_SIZE; i++) {
-      const tokenId = minTokenId - offset - i;
-      if (tokenId < 1) break;
+      const tokenId = startTokenId + direction * (offset + i + 1);
+      if (direction === -1 && tokenId < 1) break;
       batch.push(tokenId);
     }
 
@@ -114,7 +125,7 @@ async function findBaseTokenId(
     for (const result of results) {
       if (result.slug === null) continue;
       if (result.slug !== targetSlug) {
-        return result.tokenId + 1;
+        return result.tokenId - direction;
       }
     }
   }
@@ -184,7 +195,7 @@ async function processCollectionOffline(collectionId: string) {
     const minTokenId = Math.min(...zeroObjekts.map((o) => parseInt(o.id)));
 
     try {
-      const baseTokenId = await findBaseTokenId(collection.collectionId, minTokenId);
+      const baseTokenId = await findBoundaryTokenId(collection.collectionId, minTokenId, -1);
 
       if (baseTokenId === null) {
         console.log(
