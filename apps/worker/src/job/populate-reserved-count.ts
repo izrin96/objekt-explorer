@@ -1,6 +1,6 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { and, desc, eq, inArray, ne, or } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
 
 import { findBoundaryTokenId } from "./populate-serial";
 
@@ -13,14 +13,20 @@ const extraCollectionSlugs = [
   "cream02-yeonji-315z",
 ];
 
+/**
+ * to count how many reserved token they assigned for offline objekts
+ * probably not going to use as its not so accurate
+ * especially on atom01 era
+ */
 export async function populateReservedCount() {
   const offlineCollections = await indexer
     .select({ id: collections.id, slug: collections.slug })
     .from(collections)
     .where(
-      or(
-        and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
-        inArray(collections.slug, extraCollectionSlugs),
+      and(
+        ne(collections.slug, "empty-collection"),
+        isNull(collections.reservedTokenCount),
+        or(eq(collections.onOffline, "offline"), inArray(collections.slug, extraCollectionSlugs)),
       ),
     )
     .orderBy(desc(collections.createdAt));
@@ -96,10 +102,10 @@ async function processCollection(slug: string, collectionId: string) {
     `[populateReservedCount] ${slug}: base=${baseTokenId} end=${endTokenId} count=${reservedCount}`,
   );
 
-  // await indexer
-  //   .update(collections)
-  //   .set({ reservedTokenCount: reservedCount })
-  //   .where(eq(collections.id, collectionId));
+  await indexer
+    .update(collections)
+    .set({ reservedTokenCount: reservedCount })
+    .where(eq(collections.id, collectionId));
 
   console.log(`[populateReservedCount] ${slug}: Set reserved token count to ${reservedCount}`);
 }
