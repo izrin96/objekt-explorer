@@ -1,4 +1,4 @@
-import type { LiveSession } from "@repo/cosmo/server/live";
+import type { LiveSession } from "@repo/cosmo/types/live";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { ofetch } from "ofetch";

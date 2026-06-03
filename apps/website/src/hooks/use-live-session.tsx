@@ -1,4 +1,4 @@
-import type { LiveSession } from "@repo/cosmo/server/live";
+import type { LiveSession } from "@repo/cosmo/types/live";
 import { createContext, type PropsWithChildren, useContext, useMemo } from "react";
 
 type ContextProps = {

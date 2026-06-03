@@ -1,4 +1,4 @@
-import type { LiveSession } from "@repo/cosmo/server/live";
+import type { LiveSession } from "@repo/cosmo/types/live";
 import { StreamVideo, StreamVideoClient } from "@stream-io/video-react-sdk";
 
 import { LiveSessionProvider } from "@/hooks/use-live-session";
