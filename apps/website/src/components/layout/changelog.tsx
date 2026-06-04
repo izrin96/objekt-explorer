@@ -1,6 +1,3 @@
-import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
-
-import { Button } from "@/components/intentui/button";
 import {
   Disclosure,
   DisclosureGroup,
@@ -9,7 +6,6 @@ import {
 } from "@/components/intentui/disclosure-group";
 import { ExternalLink } from "@/components/intentui/link";
 import {
-  Modal,
   ModalBody,
   ModalClose,
   ModalContent,
@@ -20,7 +16,7 @@ import {
 import { Note } from "@/components/intentui/note";
 import { m } from "@/paraglide/messages";
 
-export default function Changelog() {
+export function ChangelogContent() {
   const changelog = [
     {
       date: "2026-06-02",
@@ -65,38 +61,33 @@ export default function Changelog() {
   ] as const;
 
   return (
-    <Modal>
-      <Button size="sq-sm" intent="plain" aria-label={m.common_changelog()}>
-        <NoteIcon size={18} weight="duotone" />
-      </Button>
-      <ModalContent size="2xl">
-        <ModalHeader>
-          <ModalTitle>{m.common_changelog()}</ModalTitle>
-        </ModalHeader>
-        <ModalBody className="flex flex-col gap-4">
-          <ChangelogNotice />
-          <DisclosureGroup defaultExpandedKeys="1">
-            {changelog.map((entry, index) => (
-              <Disclosure key={entry.date} id={String(index + 1)}>
-                <DisclosureTrigger>{entry.date}</DisclosureTrigger>
-                <DisclosurePanel>
-                  <div className="text-fg text-sm">
-                    <ul className="list-outside list-disc pl-4 leading-6">
-                      {entry.items.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </DisclosurePanel>
-              </Disclosure>
-            ))}
-          </DisclosureGroup>
-        </ModalBody>
-        <ModalFooter>
-          <ModalClose>{m.common_modal_close()}</ModalClose>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <ModalContent size="2xl">
+      <ModalHeader>
+        <ModalTitle>{m.common_changelog()}</ModalTitle>
+      </ModalHeader>
+      <ModalBody className="flex flex-col gap-4">
+        <ChangelogNotice />
+        <DisclosureGroup defaultExpandedKeys="1">
+          {changelog.map((entry, index) => (
+            <Disclosure key={entry.date} id={String(index + 1)}>
+              <DisclosureTrigger>{entry.date}</DisclosureTrigger>
+              <DisclosurePanel>
+                <div className="text-fg text-sm">
+                  <ul className="list-outside list-disc pl-4 leading-6">
+                    {entry.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </DisclosurePanel>
+            </Disclosure>
+          ))}
+        </DisclosureGroup>
+      </ModalBody>
+      <ModalFooter>
+        <ModalClose>{m.common_modal_close()}</ModalClose>
+      </ModalFooter>
+    </ModalContent>
   );
 }
 

@@ -58,7 +58,7 @@ export default function UserSearch() {
         className="[--btn-icon:var(--color-fg)]"
       >
         <MagnifyingGlassIcon />
-        <span className="hidden sm:block">{m.nav_search_user_label()}</span>
+        <span className="hidden md:block">{m.nav_search_user_label()}</span>
       </Button>
       <CommandMenu
         shortcut="k"

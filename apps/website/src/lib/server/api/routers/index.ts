@@ -8,6 +8,7 @@ import { marketRouter } from "./market";
 import { metaRouter } from "./meta";
 import { pinsRouter } from "./pins";
 import { profileRouter } from "./profile";
+import { statusRouter } from "./status";
 import { userRouter } from "./user";
 
 export const router = {
@@ -22,4 +23,5 @@ export const router = {
   compare: compareRouter,
   collections: collectionsRouter,
   market: marketRouter,
+  status: statusRouter,
 };

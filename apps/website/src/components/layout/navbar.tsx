@@ -1,4 +1,11 @@
-import { PaperPlaneTiltIcon, CubeIcon, ListIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  PaperPlaneTiltIcon,
+  CubeIcon,
+  ListIcon,
+  XIcon,
+  PulseIcon,
+  NoteIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import {
   linkOptions,
   useLocation,
@@ -20,11 +27,15 @@ import { twMerge } from "tailwind-merge";
 
 import SelectedArtistFilter from "@/components/filters/filter-selected-artist";
 import { Button } from "@/components/intentui/button";
+import { ButtonGroup } from "@/components/intentui/button-group";
 import { Container } from "@/components/intentui/container";
 import { Link } from "@/components/intentui/link";
 import { MenuLabel } from "@/components/intentui/menu";
+import { Modal } from "@/components/intentui/modal";
+import { Popover as UiPopover } from "@/components/intentui/popover";
 import AppLogo from "@/components/layout/app-logo";
-import Changelog from "@/components/layout/changelog";
+import { ChangelogContent } from "@/components/layout/changelog";
+import { StatusPopoverContent, useStatusClasses } from "@/components/layout/status-popover";
 import { LoginButton, UserMenu } from "@/components/layout/user-nav";
 import UserSearch from "@/components/layout/user-search";
 import { useCurrentUser } from "@/hooks/use-user";
@@ -58,7 +69,7 @@ export default function Navbar() {
       <nav className="border-border/40 dark:bg-bg/70 sticky top-0 z-40 flex h-12 items-center border-b bg-white/70 backdrop-blur-2xl">
         <Container className="flex items-center">
           {/* Left: hamburger (mobile) + logo + nav links */}
-          <div className="flex items-center gap-x-1.5 md:gap-x-3">
+          <div className="flex items-center gap-x-1.5 sm:gap-x-3">
             {/* Mobile hamburger */}
             <div className="md:hidden">
               <MenuTrigger>
@@ -67,7 +78,7 @@ export default function Navbar() {
               </MenuTrigger>
             </div>
             <AppLogo />
-            <Changelog />
+            <SystemStatusGroup />
             {/* Desktop nav links */}
             <div className="hidden items-center gap-x-0.5 md:flex">
               {navMenuItems.map((menu) => (
@@ -92,6 +103,32 @@ export default function Navbar() {
         </Container>
       </nav>
     </>
+  );
+}
+
+function SystemStatusGroup() {
+  const statusClasses = useStatusClasses();
+
+  return (
+    <ButtonGroup>
+      <UiPopover>
+        <Button size="sq-xs" intent="plain" aria-label="System status" className={statusClasses}>
+          <PulseIcon weight="regular" />
+        </Button>
+        <StatusPopoverContent />
+      </UiPopover>
+      <Modal>
+        <Button
+          size="sq-xs"
+          intent="outline"
+          aria-label={m.common_changelog()}
+          // className="border-blue-500/30 bg-blue-100 text-blue-600 [--btn-icon:currentColor] [--btn-overlay:theme(colors.blue.100)] dark:border-blue-500/30 dark:bg-blue-950 dark:text-blue-400 dark:[--btn-overlay:theme(colors.blue.950)]"
+        >
+          <NoteIcon weight="regular" />
+        </Button>
+        <ChangelogContent />
+      </Modal>
+    </ButtonGroup>
   );
 }
 

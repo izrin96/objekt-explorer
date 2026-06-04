@@ -54,7 +54,7 @@ export function LoginButton() {
       })}
     >
       <SignInIcon />
-      <span className="hidden sm:block">{m.nav_sign_in()}</span>
+      <span className="hidden md:block">{m.nav_sign_in()}</span>
     </Link>
   );
 }

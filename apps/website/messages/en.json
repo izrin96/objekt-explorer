@@ -654,5 +654,16 @@
   "trade_view_serial_first_aria": "First serial",
   "trade_view_serial_previous_aria": "Previous serial",
   "trade_view_serial_next_aria": "Next serial",
-  "trade_view_serial_last_aria": "Last serial"
+  "trade_view_serial_last_aria": "Last serial",
+  "status_database_label": "Database",
+  "status_database_behind": "Behind",
+  "status_database_up_to_date": "Up to date",
+  "status_database_last_transfer": "Last transfer:",
+  "status_cosmo_api_label": "Cosmo API",
+  "status_cosmo_api_down": "Down",
+  "status_cosmo_api_partial": "Partially down",
+  "status_cosmo_api_up": "Up",
+  "status_cosmo_api_partial_hint": "Objekt serial may not be available",
+  "status_loading": "Loading...",
+  "status_error": "Unable to fetch status"
 }

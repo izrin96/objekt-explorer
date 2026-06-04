@@ -654,5 +654,16 @@
   "trade_view_serial_first_aria": "첫 번째 시리얼",
   "trade_view_serial_previous_aria": "이전 시리얼",
   "trade_view_serial_next_aria": "다음 시리얼",
-  "trade_view_serial_last_aria": "마지막 시리얼"
+  "trade_view_serial_last_aria": "마지막 시리얼",
+  "status_database_label": "데이터베이스",
+  "status_database_behind": "지연됨",
+  "status_database_up_to_date": "최신 상태",
+  "status_database_last_transfer": "마지막 전송:",
+  "status_cosmo_api_label": "Cosmo API",
+  "status_cosmo_api_down": "서비스 중단",
+  "status_cosmo_api_partial": "부분적 중단",
+  "status_cosmo_api_up": "정상",
+  "status_cosmo_api_partial_hint": "오브젝트 시리얼 번호를 확인할 수 없을 수 있습니다",
+  "status_loading": "불러오는 중...",
+  "status_error": "상태를 불러올 수 없습니다"
 }
