@@ -3,6 +3,7 @@ import { LinkIcon } from "@heroicons/react/24/outline";
 import type { PublicList } from "@/lib/universal/list";
 import { parseNickname } from "@/lib/utils";
 
+import { Badge } from "./badge";
 import { ListTypeBadge } from "./list-type-badge";
 
 export function ListLabel({ list }: { list: PublicList }) {
@@ -14,9 +15,7 @@ export function ListLabel({ list }: { list: PublicList }) {
           <ListTypeBadge className="text-xxs/3" variant="solid" type={list.listTypeNew} />
         )}
         {list.listTypeNew === "sale" && (
-          <ListTypeBadge className="text-xxs/3" variant="solid" type="general">
-            {list.currency}
-          </ListTypeBadge>
+          <Badge className="bg-secondary text-fg text-xxs/3">{list.currency}</Badge>
         )}
       </div>
       <div className="inline-flex items-center gap-x-1">

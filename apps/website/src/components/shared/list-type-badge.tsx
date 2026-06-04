@@ -1,5 +1,3 @@
-import type { PropsWithChildren } from "react";
-
 import type { ListTypeNew } from "@/lib/universal/list";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -33,12 +31,11 @@ export function ListTypeBadge({
   className,
   type,
   variant = "subtle",
-  children,
-}: PropsWithChildren<{
+}: {
   className?: string;
   type: ListTypeNew;
   variant?: "subtle" | "solid";
-}>) {
+}) {
   const config = listTypeBadgeConfig[type];
-  return <Badge className={cn(config[variant], className)}>{children ?? config.label}</Badge>;
+  return <Badge className={cn(config[variant], className)}>{config.label}</Badge>;
 }

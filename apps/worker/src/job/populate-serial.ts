@@ -48,10 +48,19 @@ async function processCollection(collectionId: string) {
   const updates: { id: string; newSerial: number }[] = [];
 
   const isNew = sortedAllObjekts.every((a) => a.serial === 0);
+
+  // for now skip newer collections
+  // because some collection is pre-assigned tokenId
+  // just like offline objekt
+  if (isNew) return;
+
   const maxSerial = Math.max(...sortedAllObjekts.map((a) => a.serial));
   let nextSerial = maxSerial + 1;
 
   sortedAllObjekts.forEach((obj, idx) => {
+    // old collection (already contain non-zero objekt)
+    // might start from serial zero, skip those serial zero objekt
+    // unless its a new collection
     if (obj.serial === 0 && !(idx === 0 && !isNew)) {
       updates.push({ id: obj.id, newSerial: nextSerial++ });
     }
