@@ -4,7 +4,7 @@ export async function safeFetchMetadataV1(tokenId: string) {
   try {
     return await fetchMetadataV1(tokenId);
   } catch (error) {
-    console.error(`[fetchMetadata] Error fetching v3 metadata`);
+    console.error(`[fetchMetadata] Error fetching v1 metadata`);
     return null;
   }
 }

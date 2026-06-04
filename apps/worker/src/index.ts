@@ -11,12 +11,12 @@ const crons: CronJob[] = [];
 // refetch metadata for empty-collection
 // todo: rework, don't store into collection
 await fixEmptyCollection({
-  version: 1,
+  version: 3,
 });
 crons.push(
   cron("0 * * * *", async () => {
     await fixEmptyCollection({
-      version: 1,
+      version: 3,
     });
   }),
 );
