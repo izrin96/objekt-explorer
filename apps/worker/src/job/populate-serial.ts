@@ -2,8 +2,20 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
-import { and, eq, asc, gt, ne } from "drizzle-orm";
+import { and, eq, asc, gt, ne, notInArray, inArray, or } from "drizzle-orm";
 import { FetchError } from "ofetch";
+
+// collection that already pre-assigned tokenId
+// this collection should calculate serial by tokenId instead
+// just like offline objekt
+const excludeCollections = [
+  "cream02-jiyeon-315z",
+  "cream02-kotone-315z",
+  "cream02-hayeon-315z",
+  "cream02-jiwoo-315z",
+  "cream02-xinyu-315z",
+  "cream02-yeonji-315z",
+];
 
 export async function populateSerial() {
   const collectionDiscover = await indexer
@@ -15,6 +27,8 @@ export async function populateSerial() {
         eq(objekts.serial, 0),
         eq(collections.onOffline, "online"),
         ne(collections.slug, "empty-collection"),
+        // skip collection that already pre-assigned tokenId
+        notInArray(collections.slug, excludeCollections),
       ),
     );
 
@@ -148,10 +162,14 @@ export async function populateSerialOffline() {
     .from(collections)
     .innerJoin(objekts, eq(objekts.collectionId, collections.id))
     .where(
-      and(
-        eq(objekts.serial, 0),
-        eq(collections.onOffline, "offline"),
-        ne(collections.slug, "empty-collection"),
+      or(
+        and(
+          eq(objekts.serial, 0),
+          eq(collections.onOffline, "offline"),
+          ne(collections.slug, "empty-collection"),
+        ),
+        // extra collection with pre-assigned tokenId
+        and(eq(objekts.serial, 0), inArray(collections.slug, excludeCollections)),
       ),
     );
 

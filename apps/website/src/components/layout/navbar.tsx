@@ -122,6 +122,7 @@ function SystemStatusGroup() {
           size="sq-xs"
           intent="outline"
           aria-label={m.common_changelog()}
+          className="bg-muted"
           // className="border-blue-500/30 bg-blue-100 text-blue-600 [--btn-icon:currentColor] [--btn-overlay:theme(colors.blue.100)] dark:border-blue-500/30 dark:bg-blue-950 dark:text-blue-400 dark:[--btn-overlay:theme(colors.blue.950)]"
         >
           <NoteIcon weight="regular" />

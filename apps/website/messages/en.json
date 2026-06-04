@@ -663,7 +663,7 @@
   "status_cosmo_api_down": "Down",
   "status_cosmo_api_partial": "Partially down",
   "status_cosmo_api_up": "Up",
-  "status_cosmo_api_partial_hint": "Objekt serial may not be available",
+  "status_cosmo_api_partial_hint": "Objekt serial is manually calculated and may not be accurate",
   "status_loading": "Loading...",
   "status_error": "Unable to fetch status"
 }

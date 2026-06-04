@@ -4,6 +4,7 @@ import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
+import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 
 const crons: CronJob[] = [];
@@ -22,20 +23,20 @@ crons.push(
 );
 
 // populate missing serials for online objekts
-// await populateSerial();
-// crons.push(
-//   cron("*/10 * * * *", async () => {
-//     await populateSerial();
-//   }),
-// );
+await populateSerial();
+crons.push(
+  cron("*/10 * * * *", async () => {
+    await populateSerial();
+  }),
+);
 
-// // populate missing serials for offline objekts
-// await populateSerialOffline();
-// crons.push(
-//   cron("*/10 * * * *", async () => {
-//     await populateSerialOffline();
-//   }),
-// );
+// populate missing serials for offline objekts
+await populateSerialOffline();
+crons.push(
+  cron("*/10 * * * *", async () => {
+    await populateSerialOffline();
+  }),
+);
 
 // cosmo-spin transferable update
 await updateTransferableCosmoSpin();
