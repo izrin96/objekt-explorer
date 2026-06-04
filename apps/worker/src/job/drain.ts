@@ -2,9 +2,11 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { type ListEventOutbox, listEventOutbox, objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, lockedObjekts, pins } from "@repo/db/schema";
+import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
 const BATCH_SIZE = 1000;
+const IN_CHUNK_SIZE = 500;
 
 export async function drainOutbox() {
   console.log("[Outbox Drain] Starting outbox drain");
@@ -146,13 +148,24 @@ async function cleanupLockedObjekts(fromAddress: string, tokenIds: string[]) {
 }
 
 /**
- * Safety net: periodic full scan to catch any stale entries that
- * the outbox drain may have missed (e.g. if worker was down).
+ * Fetch objekts owners from indexer, chunking IDs to keep IN clauses safe.
  */
-export async function cleanupStaleEntries() {
-  console.log("[Cleanup] Starting full scan for stale entries");
+async function fetchOwnerMap(tokenIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  for (let i = 0; i < tokenIds.length; i += IN_CHUNK_SIZE) {
+    const idChunk = tokenIds.slice(i, i + IN_CHUNK_SIZE);
+    const rows = await indexer
+      .select({ id: objekts.id, owner: objekts.owner })
+      .from(objekts)
+      .where(inArray(objekts.id, idChunk));
+    for (const row of rows) {
+      map.set(row.id, row.owner.toLowerCase());
+    }
+  }
+  return map;
+}
 
-  // Clean up profile-bound list entries where the objekt owner doesn't match
+async function cleanupStaleListEntries(): Promise<number> {
   const profileLists = await db.query.lists.findMany({
     where: {
       isProfileBind: true,
@@ -166,8 +179,7 @@ export async function cleanupStaleEntries() {
   });
 
   if (profileLists.length === 0) {
-    console.log("[Cleanup] No profile lists found");
-    return;
+    return 0;
   }
 
   console.log(`[Cleanup] Found ${profileLists.length} profile lists to check`);
@@ -180,47 +192,66 @@ export async function cleanupStaleEntries() {
   }
 
   if (allObjektIds.size === 0) {
-    console.log("[Cleanup] No objekt IDs to check");
-    return;
+    return 0;
   }
 
-  const currentObjekts = await indexer
-    .select({ id: objekts.id, owner: objekts.owner })
-    .from(objekts)
-    .where(inArray(objekts.id, Array.from(allObjektIds)));
+  const ownerMap = await fetchOwnerMap(Array.from(allObjektIds));
 
-  const objektOwnerMap = new Map<string, string>();
-  for (const obj of currentObjekts) {
-    objektOwnerMap.set(obj.id, obj.owner.toLowerCase());
-  }
-
-  let totalEntriesRemoved = 0;
-
+  const staleIds: number[] = [];
   for (const list of profileLists) {
     if (!list.profileAddress) continue;
 
     const profileAddressLower = list.profileAddress.toLowerCase();
 
-    const staleEntryIds = list.entries
-      .filter((e) => {
-        if (!e.objektId) return false;
-        const owner = objektOwnerMap.get(e.objektId);
-        return !owner || owner !== profileAddressLower;
-      })
-      .map((e) => e.id);
-
-    if (staleEntryIds.length > 0) {
-      await db.delete(listEntries).where(inArray(listEntries.id, staleEntryIds));
-      totalEntriesRemoved += staleEntryIds.length;
+    for (const entry of list.entries) {
+      if (!entry.objektId) continue;
+      const owner = ownerMap.get(entry.objektId);
+      if (!owner || owner !== profileAddressLower) {
+        staleIds.push(entry.id);
+      }
     }
   }
 
-  // Clean up pins where owner doesn't match
+  let totalRemoved = 0;
+  await chunk(staleIds, BATCH_SIZE, async (idChunk) => {
+    await db.delete(listEntries).where(inArray(listEntries.id, idChunk));
+    totalRemoved += idChunk.length;
+  });
+
+  return totalRemoved;
+}
+
+async function cleanupStalePins(): Promise<number> {
   const allPins = await db
     .select({ id: pins.id, address: pins.address, tokenId: pins.tokenId })
     .from(pins);
 
-  const allLocked = await db
+  if (allPins.length === 0) {
+    return 0;
+  }
+
+  const tokenIds = [...new Set(allPins.map((p) => String(p.tokenId)))];
+  const ownerMap = await fetchOwnerMap(tokenIds);
+
+  const staleIds: number[] = [];
+  for (const pin of allPins) {
+    const owner = ownerMap.get(String(pin.tokenId));
+    if (!owner || owner !== pin.address.toLowerCase()) {
+      staleIds.push(pin.id);
+    }
+  }
+
+  let totalRemoved = 0;
+  await chunk(staleIds, BATCH_SIZE, async (idChunk) => {
+    await db.delete(pins).where(inArray(pins.id, idChunk));
+    totalRemoved += idChunk.length;
+  });
+
+  return totalRemoved;
+}
+
+async function cleanupStaleLocks(): Promise<number> {
+  const allLocks = await db
     .select({
       id: lockedObjekts.id,
       address: lockedObjekts.address,
@@ -228,47 +259,48 @@ export async function cleanupStaleEntries() {
     })
     .from(lockedObjekts);
 
-  const pinTokenIds = new Set(allPins.map((p) => String(p.tokenId)));
-  const lockedTokenIds = new Set(allLocked.map((l) => String(l.tokenId)));
-  const allTokenIds = new Set([...pinTokenIds, ...lockedTokenIds]);
+  if (allLocks.length === 0) {
+    return 0;
+  }
 
-  if (allTokenIds.size > 0) {
-    const pinObjekts = await indexer
-      .select({ id: objekts.id, owner: objekts.owner })
-      .from(objekts)
-      .where(inArray(objekts.id, Array.from(allTokenIds)));
+  const tokenIds = [...new Set(allLocks.map((l) => String(l.tokenId)))];
+  const ownerMap = await fetchOwnerMap(tokenIds);
 
-    const pinOwnerMap = new Map<string, string>();
-    for (const obj of pinObjekts) {
-      pinOwnerMap.set(obj.id, obj.owner.toLowerCase());
-    }
-
-    const pinsToRemove: number[] = [];
-    for (const pin of allPins) {
-      const owner = pinOwnerMap.get(String(pin.tokenId));
-      if (!owner || owner !== pin.address.toLowerCase()) {
-        pinsToRemove.push(pin.id);
-      }
-    }
-
-    const lockedToRemove: number[] = [];
-    for (const locked of allLocked) {
-      const owner = pinOwnerMap.get(String(locked.tokenId));
-      if (!owner || owner !== locked.address.toLowerCase()) {
-        lockedToRemove.push(locked.id);
-      }
-    }
-
-    if (pinsToRemove.length > 0) {
-      await db.delete(pins).where(inArray(pins.id, pinsToRemove));
-      console.log(`[Cleanup] Removed ${pinsToRemove.length} stale pins`);
-    }
-
-    if (lockedToRemove.length > 0) {
-      await db.delete(lockedObjekts).where(inArray(lockedObjekts.id, lockedToRemove));
-      console.log(`[Cleanup] Removed ${lockedToRemove.length} stale locked objekts`);
+  const staleIds: number[] = [];
+  for (const lock of allLocks) {
+    const owner = ownerMap.get(String(lock.tokenId));
+    if (!owner || owner !== lock.address.toLowerCase()) {
+      staleIds.push(lock.id);
     }
   }
 
-  console.log(`[Cleanup] Full scan complete. List entries removed: ${totalEntriesRemoved}`);
+  let totalRemoved = 0;
+  await chunk(staleIds, BATCH_SIZE, async (idChunk) => {
+    await db.delete(lockedObjekts).where(inArray(lockedObjekts.id, idChunk));
+    totalRemoved += idChunk.length;
+  });
+
+  return totalRemoved;
+}
+
+/**
+ * Safety net: periodic full scan to catch any stale entries that
+ * the outbox drain may have missed (e.g. if worker was down).
+ * Loads all data upfront, processes in batches to avoid massive IN clauses and N+1 deletes.
+ */
+export async function cleanupStaleEntries() {
+  console.log("[Cleanup] Starting full scan for stale entries");
+
+  const listEntriesRemoved = await cleanupStaleListEntries();
+  console.log(`[Cleanup] List entries removed: ${listEntriesRemoved}`);
+
+  const pinsRemoved = await cleanupStalePins();
+  console.log(`[Cleanup] Pins removed: ${pinsRemoved}`);
+
+  const locksRemoved = await cleanupStaleLocks();
+  console.log(`[Cleanup] Locked objekts removed: ${locksRemoved}`);
+
+  console.log(
+    `[Cleanup] Full scan complete. Total removed: ${listEntriesRemoved + pinsRemoved + locksRemoved}`,
+  );
 }
