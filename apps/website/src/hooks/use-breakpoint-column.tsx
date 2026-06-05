@@ -7,6 +7,7 @@ type BreakpointColumnState = {
   columns: number;
   initial: boolean;
   setColumns: (value: number) => void;
+  setResponsiveColumns: (value: number) => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
 };
@@ -17,6 +18,7 @@ export const useBreakpointColumnStore = create<BreakpointColumnState>()(
       columns: GRID_COLUMNS,
       initial: true,
       setColumns: (value) => set({ columns: value, initial: false }),
+      setResponsiveColumns: (value) => set({ columns: value }),
       _hasHydrated: false,
       setHasHydrated: (state) => {
         set({

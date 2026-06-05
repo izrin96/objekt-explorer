@@ -9,7 +9,6 @@ import {
 import ObjektModal from "../objekt/objekt-modal";
 import { ObjektViewSelectable } from "../objekt/objekt-selectable";
 import ObjektView from "../objekt/objekt-view";
-import { useObjektShowOwned } from "./objekt-view-provider";
 
 export interface ObjektGridViewProps {
   objekts: ValidObjekt[];
@@ -38,13 +37,12 @@ function ObjektGridView({
   staticMenu,
   children,
 }: ObjektGridViewProps) {
-  const showOwned = useObjektShowOwned();
   const objekt = objekts[0];
 
   if (!objekt) return null;
 
   return (
-    <ObjektModal key={objekt.id} objekts={objekts} showOwned={showOwned} menu={staticMenu}>
+    <ObjektModal key={objekt.id} objekts={objekts} menu={staticMenu}>
       <ObjektViewSelectable objekts={objekts}>
         {({ isSelected }) => (
           <ObjektView

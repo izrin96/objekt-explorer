@@ -78,7 +78,7 @@ export default function ActivityRender() {
         </div>
         <span className="text-muted-fg text-sm">{m.activity_description()}</span>
       </div>
-      <ObjektModalProvider initialTab="trades">
+      <ObjektModalProvider initialTab="trades" showOwned={false}>
         <ActivityFilter />
 
         <QueryErrorResetBoundary>

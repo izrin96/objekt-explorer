@@ -1,4 +1,3 @@
-import { parseAsNumberLiteral, useQueryState } from "nuqs";
 import {
   createContext,
   type PropsWithChildren,
@@ -12,7 +11,7 @@ import {
 import { toast } from "sonner";
 
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET, validColumns } from "@/lib/utils";
+import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { useBreakpointColumnStore } from "./use-breakpoint-column";
@@ -28,16 +27,15 @@ type ProviderProps = PropsWithChildren<{
 }>;
 
 export function ObjektColumnProvider({ children, initialColumn = null }: ProviderProps) {
-  const isTablet = useMediaQuery("(min-width: 640px)");
+  const isTablet = useMediaQuery("(min-width: 768px)");
   const isDesktop = useMediaQuery("(min-width: 1024px)");
-  const [queryColumn] = useColumnFilter();
-  const [overrideColumn, setOverrideColumn] = useState(queryColumn ?? initialColumn);
+  const [overrideColumn, setOverrideColumn] = useState(() => initialColumn);
   const hasHydrated = useBreakpointColumnStore((a) => a._hasHydrated);
   const initial = useBreakpointColumnStore((a) => a.initial);
   const setColumnStore = useBreakpointColumnStore((a) => a.setColumns);
+  const setResponsiveColumnStore = useBreakpointColumnStore((a) => a.setResponsiveColumns);
   const columnStore = useBreakpointColumnStore((a) => a.columns);
-  const isFirst = useRef(true);
-  const toastShown = useRef(false);
+  const prevInitialColumn = useRef<number | null | undefined>(undefined);
 
   // responsive value - only compute when media queries have resolved
   const breakpointReady = isDesktop !== undefined && isTablet !== undefined;
@@ -60,47 +58,39 @@ export function ObjektColumnProvider({ children, initialColumn = null }: Provide
   useEffect(() => {
     if (!hasHydrated) return;
 
-    const newOverride = queryColumn ?? initialColumn;
-    setOverrideColumn(newOverride);
+    // Only apply override when the initialColumn prop itself changes
+    if (initialColumn !== prevInitialColumn.current) {
+      prevInitialColumn.current = initialColumn;
+      setOverrideColumn(initialColumn);
 
-    if (
-      newOverride !== null &&
-      newOverride !== undefined &&
-      newOverride !== columnStore &&
-      !toastShown.current
-    ) {
-      toastShown.current = true;
-      toast(m.column_override_title(), {
-        description: m.column_override_description({ count: String(newOverride) }),
-        action: {
-          label: m.column_override_revert(),
-          onClick: () => setOverrideColumn(null),
-        },
-        classNames: {
-          cancelButton: "!bg-muted",
-        },
-        cancel: {
-          label: m.column_override_dismiss(),
-          onClick: () => {},
-        },
-        duration: 5000,
-        position: "bottom-center",
-      });
-    } else if (newOverride === null || newOverride === undefined) {
-      toastShown.current = false;
+      if (initialColumn !== null && initialColumn !== undefined && initialColumn !== columnStore) {
+        toast(m.column_override_title(), {
+          description: m.column_override_description({ count: initialColumn }),
+          action: {
+            label: m.column_override_revert(),
+            onClick: () => setOverrideColumn(null),
+          },
+          classNames: {
+            cancelButton: "!bg-muted",
+          },
+          cancel: {
+            label: m.column_override_dismiss(),
+            onClick: () => {},
+          },
+          duration: 5000,
+          position: "bottom-center",
+        });
+      }
     }
-  }, [hasHydrated, initialColumn, queryColumn]);
+  }, [hasHydrated, initialColumn, columnStore]);
 
   useEffect(() => {
     if (!hasHydrated || !breakpointReady) return;
 
-    if (isFirst.current) {
-      if (initial) {
-        setColumnStore(responsiveColumn);
-      }
-      isFirst.current = false;
+    if (initial) {
+      setResponsiveColumnStore(responsiveColumn);
     }
-  }, [hasHydrated, initial, responsiveColumn, setColumnStore, breakpointReady]);
+  }, [hasHydrated, initial, responsiveColumn, setResponsiveColumnStore, breakpointReady]);
 
   const contextValue = useMemo(
     () => ({ initialColumn, columns, setColumns }),
@@ -114,8 +104,4 @@ export function useObjektColumn() {
   const ctx = useContext(ObjektColumnContext);
   if (!ctx) throw new Error("useObjektColumn must be used within ObjektColumnContext");
   return ctx;
-}
-
-export function useColumnFilter() {
-  return useQueryState("column", parseAsNumberLiteral(validColumns));
 }

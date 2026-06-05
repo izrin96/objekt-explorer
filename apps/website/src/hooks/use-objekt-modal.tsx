@@ -1,43 +1,41 @@
-import { createContext, type PropsWithChildren, useContext, useRef } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import {
+  createContext,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export type ValidTab = "owned" | "trades" | "market";
-
-type ObjektModalProps = {
-  initialTab: ValidTab;
-};
-
-const ObjektModalContext = createContext<StoreApi<ObjektModalState> | null>(null);
-
-type ProviderProps = PropsWithChildren<ObjektModalProps>;
 
 interface ObjektModalState {
   currentTab: ValidTab;
   setCurrentTab: (tab: ValidTab) => void;
+  showOwned: boolean;
 }
 
-const createObjektModalStore = (initial: ObjektModalProps) => {
-  return createStore<ObjektModalState>()((set) => ({
-    currentTab: initial.initialTab,
-    setCurrentTab: (tab) => set(() => ({ currentTab: tab })),
-  }));
-};
+const ObjektModalContext = createContext<ObjektModalState | null>(null);
 
-export function ObjektModalProvider({ children, ...props }: ProviderProps) {
-  const storeRef = useRef<StoreApi<ObjektModalState> | null>(null);
-  if (!storeRef.current) {
-    storeRef.current = createObjektModalStore(props);
-  }
+type ProviderProps = PropsWithChildren<{
+  initialTab: ValidTab;
+  showOwned: boolean;
+}>;
 
-  return <ObjektModalContext value={storeRef.current}>{children}</ObjektModalContext>;
+export function ObjektModalProvider({ children, initialTab, showOwned }: ProviderProps) {
+  const [currentTab, setCurrentTab] = useState(initialTab);
+
+  useEffect(() => {
+    setCurrentTab(initialTab);
+  }, [initialTab]);
+
+  const value = useMemo(() => ({ currentTab, setCurrentTab, showOwned }), [currentTab, showOwned]);
+
+  return <ObjektModalContext value={value}>{children}</ObjektModalContext>;
 }
 
-export function useObjektModal<SelectorOutput>(
-  selector: (state: ObjektModalState) => SelectorOutput,
-) {
-  const store = useContext(ObjektModalContext);
-  if (!store) {
-    throw new Error("useObjektModal must be used within an ObjektModalProvider");
-  }
-  return useStore(store, selector);
+export function useObjektModal() {
+  const ctx = useContext(ObjektModalContext);
+  if (!ctx) throw new Error("useObjektModal must be used within an ObjektModalProvider");
+  return ctx;
 }

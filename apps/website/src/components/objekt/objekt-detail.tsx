@@ -30,10 +30,9 @@ import TradeView from "./trade-view";
 
 type ObjektDetailProps = {
   objekts: ValidObjekt[];
-  showOwned?: boolean;
 };
 
-export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetailProps) {
+export default function ObjektDetail({ objekts }: ObjektDetailProps) {
   const [objekt] = objekts;
   if (!objekt) return null;
 
@@ -57,17 +56,16 @@ export default function ObjektDetail({ objekts, showOwned = false }: ObjektDetai
         <Suspense>
           <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
         </Suspense>
-        <ObjektPanel objekts={objekts} showOwned={showOwned} />
+        <ObjektPanel objekts={objekts} />
         <div className="flex-1" aria-hidden />
       </div>
     </div>
   );
 }
 
-function ObjektPanel({ objekts, showOwned }: { objekts: ValidObjekt[]; showOwned: boolean }) {
+function ObjektPanel({ objekts }: { objekts: ValidObjekt[] }) {
+  const { showOwned, currentTab, setCurrentTab } = useObjektModal();
   const [objekt] = objekts;
-  const currentTab = useObjektModal((a) => a.currentTab);
-  const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
   const [serial, setSerial] = useState(() => {
     return objekt && isObjektOwned(objekt) ? objekt.serial : null;
   });
@@ -144,7 +142,12 @@ export function ObjektCard({
       role="button"
       aria-label={m.objekt_flip_card_aria()}
       onClick={() => setFlipped((prev) => !prev)}
-      onKeyDown={() => setFlipped((prev) => !prev)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setFlipped((prev) => !prev);
+        }
+      }}
     >
       <div
         data-flipped={flipped}
@@ -208,7 +211,7 @@ function OwnedListPanel({
   setSerial: (serial: number) => void;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const setCurrentTab = useObjektModal((a) => a.setCurrentTab);
+  const { setCurrentTab } = useObjektModal();
 
   const openTrades = (serial: number) => {
     setSerial(serial);

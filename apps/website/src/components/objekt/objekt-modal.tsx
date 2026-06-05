@@ -7,7 +7,6 @@ import { ModalBody, ModalClose, ModalContent, ModalFooter, ModalHeader } from ".
 import ObjektDetail from "./objekt-detail";
 
 type Props = {
-  showOwned?: boolean;
   objekts: ValidObjekt[];
   children: ReactNode;
   menu?: ReactNode;
@@ -19,7 +18,7 @@ export const ObjektModalContext = createContext({
 
 export const useObjektModal = () => use(ObjektModalContext);
 
-export default function ObjektModal({ children, showOwned, objekts, menu }: Props) {
+export default function ObjektModal({ children, objekts, menu }: Props) {
   const [open, setOpen] = useState(false);
   const handleClick = () => setOpen(true);
 
@@ -29,7 +28,7 @@ export default function ObjektModal({ children, showOwned, objekts, menu }: Prop
         <ModalHeader className="hidden">Objekt detail</ModalHeader>
         <ModalBody className="py-0 [--gutter:0]">
           {menu}
-          <ObjektDetail objekts={objekts} showOwned={showOwned} />
+          <ObjektDetail objekts={objekts} />
         </ModalBody>
         <ModalFooter className="sm:hidden">
           <ModalClose>{m.common_modal_close()}</ModalClose>

@@ -26,7 +26,7 @@ import TradesFilter from "./trades-filter";
 
 export default function ProfileTradesRender() {
   return (
-    <ObjektModalProvider initialTab="trades">
+    <ObjektModalProvider initialTab="trades" showOwned={false}>
       <div className="flex flex-col gap-4">
         <TradesFilter />
 
