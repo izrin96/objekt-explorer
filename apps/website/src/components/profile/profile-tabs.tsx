@@ -44,7 +44,11 @@ export default function ProfileTabs({ user }: { user: PublicProfile }) {
   const filteredItems = items.filter((a) => !a.disabled);
 
   return (
-    <Tabs aria-label="Navbar" className="w-full overflow-x-auto py-1 pb-2" selectedKey={pathname}>
+    <Tabs
+      aria-label={m.profile_tabs_aria_label()}
+      className="w-full overflow-x-auto py-1 pb-2"
+      selectedKey={pathname}
+    >
       <TabList className="border-b-0 px-2.5">
         {filteredItems.map(({ label, disabled: _, ...item }) => {
           const pathname = router.buildLocation(item).pathname;

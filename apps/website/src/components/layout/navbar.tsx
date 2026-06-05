@@ -112,7 +112,12 @@ function SystemStatusGroup() {
   return (
     <ButtonGroup>
       <UiPopover>
-        <Button size="sq-xs" intent="plain" aria-label="System status" className={statusClasses}>
+        <Button
+          size="sq-xs"
+          intent="plain"
+          aria-label={m.nav_system_status()}
+          className={statusClasses}
+        >
           <PulseIcon weight="regular" />
         </Button>
         <StatusPopoverContent />
