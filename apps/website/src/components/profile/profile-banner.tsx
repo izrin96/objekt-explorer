@@ -1,4 +1,5 @@
-import { useElementSize } from "@/hooks/use-element-size";
+import { useElementSize } from "@custom-react-hooks/use-element-size";
+
 import type { PublicProfile } from "@/lib/universal/user";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -17,7 +18,11 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
       {/* banner */}
       <div className="absolute inset-0 top-12 -z-5 overflow-x-hidden lg:top-0">
         <div className="aspect-banner mx-auto w-full max-w-(--breakpoint-2xl)">
-          <div ref={bannerRef} className="relative -mx-12 h-full 2xl:mask-x-from-[calc(100%-96px)]">
+          <div
+            ref={bannerRef}
+            key={profile.address}
+            className="relative -mx-12 h-full 2xl:mask-x-from-[calc(100%-96px)]"
+          >
             {isVideo ? (
               <video
                 className="absolute size-full object-cover object-center"
