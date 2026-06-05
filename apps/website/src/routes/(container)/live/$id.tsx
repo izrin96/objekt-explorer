@@ -1,13 +1,11 @@
 import { LinkBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
 import * as z from "zod";
 
+import LiveStreamingRender from "@/components/live/live-render";
 import { checkAccess, getLiveSessionById } from "@/lib/functions/live";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
-
-const LiveStreamingRender = lazy(() => import("@/components/live/live-render"));
 
 const liveSearchSchema = z.object({
   token: z.string().optional(),
@@ -65,11 +63,7 @@ export const Route = createFileRoute("/(container)/live/$id")({
 function LiveDetailPage() {
   const { live } = Route.useLoaderData();
 
-  return (
-    <Suspense>
-      <LiveStreamingRender live={live} />
-    </Suspense>
-  );
+  return <LiveStreamingRender live={live} />;
 }
 
 function NotFoundComponent() {

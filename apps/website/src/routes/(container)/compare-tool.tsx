@@ -1,16 +1,14 @@
 import { HeartBreakIcon } from "@phosphor-icons/react/dist/ssr";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
 
+import CompareView from "@/components/compare/compare-view";
 import { ListProvider } from "@/hooks/use-list-target";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc/client";
 import { listBySlugQuery } from "@/lib/queries/list";
 import { compareInputSchema } from "@/lib/universal/compare";
 import { m } from "@/paraglide/messages";
-
-const CompareView = lazy(() => import("@/components/compare/compare-view"));
 
 export const Route = createFileRoute("/(container)/compare-tool")({
   validateSearch: (search) => {
@@ -51,9 +49,7 @@ function CompareToolPage() {
   return (
     <ListProvider list={list}>
       <div className="flex flex-col gap-4 pt-4 pb-36">
-        <Suspense>
-          <CompareView input={input} />
-        </Suspense>
+        <CompareView input={input} />
       </div>
     </ListProvider>
   );

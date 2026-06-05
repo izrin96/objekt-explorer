@@ -1,12 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense } from "react";
 
+import ProfileTradesRender from "@/components/profile/trades/profile-trades";
 import { generateMetadata } from "@/lib/meta";
 import { profileQuery } from "@/lib/queries/profile";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-const ProfileTradesRender = lazy(() => import("@/components/profile/trades/profile-trades"));
 
 export const Route = createFileRoute("/@{$nickname}/trades")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -26,9 +24,5 @@ export const Route = createFileRoute("/@{$nickname}/trades")({
 });
 
 function ProfileTradesPage() {
-  return (
-    <Suspense>
-      <ProfileTradesRender />
-    </Suspense>
-  );
+  return <ProfileTradesRender />;
 }
