@@ -18,6 +18,7 @@ export function StatusPopoverContent() {
           <StatusSkeleton />
         ) : data ? (
           <>
+            {/* database status */}
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-fg font-display text-sm font-medium">
@@ -37,8 +38,10 @@ export function StatusPopoverContent() {
               )}
             </div>
 
-            <div className="-mx-3 border-t" />
+            {/* separator */}
+            <div className="bg-border -mx-3 h-px shrink-0 border-0" />
 
+            {/* cosmo status */}
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-fg font-display text-sm font-medium">
