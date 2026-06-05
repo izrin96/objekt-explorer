@@ -14,23 +14,23 @@ export default defineConfig(({ command }) => {
     build: {
       chunkSizeWarningLimit: 1600,
       rolldownOptions: {
-        // output: {
-        //   minify: true,
-        //   codeSplitting: {
-        //     groups: [
-        //       {
-        //         name: "vendor",
-        //         test: /node_modules[\\/]react(-dom)?[\\/]/,
-        //         priority: 20,
-        //       },
-        //       {
-        //         name: "ui",
-        //         test: /node_modules[\\/]@react-stately|@react-aria|@react-spectrum|react-aria-components[\\/]/,
-        //         priority: 15,
-        //       },
-        //     ],
-        //   },
-        // },
+        output: {
+          minify: true,
+          codeSplitting: {
+            groups: [
+              {
+                name: "vendor",
+                test: /node_modules[\\/]react(-dom)?[\\/]/,
+                priority: 20,
+              },
+              {
+                name: "ui",
+                test: /node_modules[\\/]@react-stately|@react-aria|@react-spectrum|react-aria-components[\\/]/,
+                priority: 15,
+              },
+            ],
+          },
+        },
         external: ["bun"],
       },
     },

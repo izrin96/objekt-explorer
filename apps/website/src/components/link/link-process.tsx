@@ -91,7 +91,7 @@ function IntroStep({ onContinue }: { onContinue: () => void }) {
     <div className="flex max-w-xl flex-col items-center justify-center gap-4">
       <h2 className="font-display text-xl font-semibold">{m.link_process_intro_title()}</h2>
       <img
-        src="/assets/icon-smartphone.png"
+        src="/assets/icon-smartphone.webp"
         alt=""
         width={220}
         height={220}
@@ -150,7 +150,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
   return (
     <div className="flex max-w-md flex-col items-center gap-4">
       <img
-        src="/assets/icon-search.png"
+        src="/assets/icon-search.webp"
         alt=""
         width={220}
         height={220}
@@ -228,7 +228,7 @@ function ArtistStep({
   return (
     <div className="flex max-w-md flex-col items-center gap-4">
       <img
-        src="/assets/icon-lanyard.png"
+        src="/assets/icon-lanyard.webp"
         alt=""
         width={220}
         height={220}
@@ -279,14 +279,14 @@ function VerifyStep({
 
   const [randomIcon] = useState(() => {
     const icons = [
-      { src: "/assets/icon-axolotl.png", alt: "" },
-      { src: "/assets/icon-deer.png", alt: "" },
-      { src: "/assets/icon-panda.png", alt: "" },
-      { src: "/assets/icon-squirrel.png", alt: "" },
-      { src: "/assets/icon-bear.png", alt: "" },
-      { src: "/assets/icon-cat.png", alt: "" },
-      { src: "/assets/icon-giraffe.png", alt: "" },
-      { src: "/assets/icon-white-fox.png", alt: "" },
+      { src: "/assets/icon-axolotl.webp", alt: "" },
+      { src: "/assets/icon-deer.webp", alt: "" },
+      { src: "/assets/icon-panda.webp", alt: "" },
+      { src: "/assets/icon-squirrel.webp", alt: "" },
+      { src: "/assets/icon-bear.webp", alt: "" },
+      { src: "/assets/icon-cat.webp", alt: "" },
+      { src: "/assets/icon-giraffe.webp", alt: "" },
+      { src: "/assets/icon-white-fox.webp", alt: "" },
     ];
     return icons[Math.floor(Math.random() * icons.length)]!;
   });
@@ -310,7 +310,7 @@ function VerifyStep({
     return (
       <div className="flex flex-col items-center gap-2">
         <img
-          src="/assets/icon-trash.png"
+          src="/assets/icon-trash.webp"
           alt=""
           width={220}
           height={220}
@@ -328,7 +328,7 @@ function VerifyStep({
     return (
       <div className="flex flex-col items-center gap-2">
         <img
-          src="/assets/icon-error.png"
+          src="/assets/icon-error.webp"
           alt=""
           width={220}
           height={220}
@@ -395,7 +395,7 @@ function SuccessStep({ nickname }: { nickname: string }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <img
-        src="/assets/icon-welcome.png"
+        src="/assets/icon-welcome.webp"
         width={220}
         height={220}
         alt=""

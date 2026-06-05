@@ -10,22 +10,13 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
+import "react-advanced-cropper/dist/style.css";
 import { Button } from "@/components/intentui/button";
 import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
-
-import "react-advanced-cropper/dist/style.css";
 import { Description, Label } from "@/components/intentui/field";
 import { FileTrigger } from "@/components/intentui/file-trigger";
 import { Link } from "@/components/intentui/link";
 import { Loader } from "@/components/intentui/loader";
-import {
-  ModalClose,
-  ModalContent,
-  ModalDescription,
-  ModalFooter,
-  ModalHeader,
-  ModalTitle,
-} from "@/components/intentui/modal";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
 import {
   SheetBody,
@@ -44,49 +35,7 @@ import { m } from "@/paraglide/messages";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-type RemoveLinkModalProps = {
-  address: string;
-  open: boolean;
-  setOpen: (val: boolean) => void;
-};
-
-export function RemoveLinkModal({ address, open, setOpen }: RemoveLinkModalProps) {
-  const removeLink = useMutation(
-    orpc.cosmoLink.removeLink.mutationOptions({
-      onSuccess: (_, _v, _o, { client }) => {
-        setOpen(false);
-        toast.success(m.link_unlink_success());
-        void client.invalidateQueries({
-          queryKey: orpc.user.currentUser.key(),
-        });
-      },
-      onError: () => {
-        toast.error(m.link_unlink_error());
-      },
-    }),
-  );
-  return (
-    <ModalContent isOpen={open} onOpenChange={setOpen} role="alertdialog">
-      <ModalHeader>
-        <ModalTitle>{m.link_unlink_title()}</ModalTitle>
-        <ModalDescription>{m.link_unlink_description()}</ModalDescription>
-      </ModalHeader>
-      <ModalFooter>
-        <ModalClose>{m.common_modal_cancel()}</ModalClose>
-        <Button
-          intent="danger"
-          type="submit"
-          isPending={removeLink.isPending}
-          onPress={() => removeLink.mutate(address)}
-        >
-          {m.link_unlink_submit()}
-        </Button>
-      </ModalFooter>
-    </ModalContent>
-  );
-}
-
-type EditProfileModalProps = {
+export type EditProfileModalProps = {
   nickname: string;
   address: string;
   open: boolean;

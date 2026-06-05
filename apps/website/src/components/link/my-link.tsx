@@ -17,7 +17,8 @@ import { Link } from "../intentui/link";
 import { Loader } from "../intentui/loader";
 import { Menu, MenuContent, MenuItem } from "../intentui/menu";
 import ErrorFallbackRender from "../router/error-boundary";
-import { EditProfileModal, RemoveLinkModal } from "./modal/manage-link";
+import { EditProfileModal } from "./modal/edit-profile-modal";
+import { RemoveLinkModal } from "./modal/remove-link-modal";
 
 export default function MyLinkRender() {
   return (

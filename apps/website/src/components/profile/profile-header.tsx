@@ -9,7 +9,7 @@ import { m } from "@/paraglide/messages";
 import { Avatar } from "../intentui/avatar-custom";
 import { Button, buttonStyles } from "../intentui/button";
 import { ExternalLink } from "../intentui/link";
-import { EditProfileModal } from "../link/modal/manage-link";
+import { EditProfileModal } from "../link/modal/edit-profile-modal";
 import { ApolloIcon } from "../shared/apollo-icon";
 import { Badge } from "../shared/badge";
 import { CopyButton } from "../shared/copy-button";

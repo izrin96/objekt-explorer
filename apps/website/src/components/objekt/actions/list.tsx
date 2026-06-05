@@ -1,13 +1,51 @@
 import { PlusIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
+import { useState } from "react";
 
+import type { ButtonProps } from "@/components/intentui/button";
+import { Button } from "@/components/intentui/button";
 import { MenuItem, MenuLabel, MenuSubMenu, MenuContent } from "@/components/intentui/menu";
+import { AddToListModal } from "@/components/list/modal/add-to-list-modal";
+import { RemoveFromListModal } from "@/components/list/modal/remove-from-list-modal";
 import { ListLabel } from "@/components/shared/list-label";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useListTarget } from "@/hooks/use-list-target";
+import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useUserLists } from "@/hooks/use-user";
 import { m } from "@/paraglide/messages";
+
+// --- Buttons ---
+
+export function AddToList({ size, address }: { size?: ButtonProps["size"]; address?: string }) {
+  const [addOpen, setAddOpen] = useState(false);
+  const handleAction = useObjektSelect((a) => a.handleAction);
+  return (
+    <>
+      <AddToListModal open={addOpen} setOpen={setAddOpen} address={address} />
+      <Button size={size} intent="outline" onPress={() => handleAction(() => setAddOpen(true))}>
+        <PlusIcon weight="regular" />
+        {m.filter_add_to_list()}
+      </Button>
+    </>
+  );
+}
+
+export function RemoveFromList({ size }: { size?: ButtonProps["size"] }) {
+  const [open, setOpen] = useState(false);
+  const handleAction = useObjektSelect((a) => a.handleAction);
+  return (
+    <>
+      <RemoveFromListModal open={open} setOpen={setOpen} />
+      <Button size={size} intent="outline" onPress={() => handleAction(() => setOpen(true))}>
+        <TrashSimpleIcon weight="regular" />
+        {m.filter_remove_from_list()}
+      </Button>
+    </>
+  );
+}
+
+// --- Menu items ---
 
 export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; address?: string }) {
   const lists = useUserLists();

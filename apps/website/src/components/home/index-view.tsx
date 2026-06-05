@@ -16,10 +16,9 @@ import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { Loader } from "../intentui/loader";
-import { AddToList } from "../objekt/actions/add-to-list";
-import { AddToListMenu } from "../objekt/actions/list-menu";
-import { ObjektStaticMenu } from "../objekt/actions/objekt-static-menu";
-import { SelectMenuItem } from "../objekt/actions/select-menu";
+import { AddToList, AddToListMenu } from "../objekt/actions/list";
+import { SelectMenuItem } from "../objekt/actions/select";
+import { ObjektStaticMenu } from "../objekt/actions/static-menu";
 import ErrorFallbackRender from "../router/error-boundary";
 import Filter from "./filter";
 

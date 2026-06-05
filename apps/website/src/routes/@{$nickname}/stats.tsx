@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 
-import ProfileStatsRender from "@/components/profile/stats/stats-render";
 import { generateMetadata } from "@/lib/meta";
 import { profileQuery } from "@/lib/queries/profile";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+const ProfileStatsRender = lazy(() => import("@/components/profile/stats/stats-render"));
 
 export const Route = createFileRoute("/@{$nickname}/stats")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -24,5 +26,9 @@ export const Route = createFileRoute("/@{$nickname}/stats")({
 });
 
 function ProfileStatsPage() {
-  return <ProfileStatsRender />;
+  return (
+    <Suspense>
+      <ProfileStatsRender />
+    </Suspense>
+  );
 }

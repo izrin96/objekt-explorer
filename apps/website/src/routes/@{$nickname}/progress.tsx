@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 
-import ProgressRender from "@/components/profile/progress/progress-render";
 import { generateMetadata } from "@/lib/meta";
 import { profileQuery } from "@/lib/queries/profile";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+const ProgressRender = lazy(() => import("@/components/profile/progress/progress-render"));
 
 export const Route = createFileRoute("/@{$nickname}/progress")({
   loader: async ({ params, context: { queryClient } }) => {
@@ -24,5 +26,9 @@ export const Route = createFileRoute("/@{$nickname}/progress")({
 });
 
 function ProfileProgressPage() {
-  return <ProgressRender />;
+  return (
+    <Suspense>
+      <ProgressRender />
+    </Suspense>
+  );
 }

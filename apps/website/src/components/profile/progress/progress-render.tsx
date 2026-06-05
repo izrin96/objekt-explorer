@@ -26,8 +26,8 @@ import {
   ProgressBarTrack,
   ProgressBarValue,
 } from "@/components/intentui/progress-bar";
-import { AddToListMenu } from "@/components/objekt/actions/list-menu";
-import { ObjektStaticMenu } from "@/components/objekt/actions/objekt-static-menu";
+import { AddToListMenu } from "@/components/objekt/actions/list";
+import { ObjektStaticMenu } from "@/components/objekt/actions/static-menu";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useConfigStore } from "@/hooks/use-config";
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
