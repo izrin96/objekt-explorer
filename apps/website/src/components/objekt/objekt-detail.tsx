@@ -8,7 +8,7 @@ import {
 import { useAsyncList } from "@react-stately/data";
 import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
@@ -39,7 +39,7 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
 
   return (
     <div
-      className="flex size-full flex-col gap-2 p-2 sm:grid sm:h-134 sm:min-h-134 sm:grid-cols-3 sm:p-3"
+      className="flex size-full flex-col gap-2 p-2 md:grid md:h-134 md:grid-cols-3 md:p-3"
       style={
         {
           "--objekt-bg-color": objekt.backgroundColor,
@@ -47,10 +47,10 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
         } as Record<string, string>
       }
     >
-      <div className="flex h-84 self-center select-none sm:h-fit">
+      <div className="flex h-84 self-center select-none md:h-fit">
         <ObjektCard urls={urls} objekts={objekts} />
       </div>
-      <div className="relative col-span-2 flex min-h-screen flex-col gap-2 overflow-y-auto px-2 sm:-me-2 sm:min-h-full sm:scrollbar-gutter-stable">
+      <div className="relative flex min-h-screen flex-col gap-2 overflow-y-auto px-2 md:col-span-2 md:-me-2 md:min-h-full md:scrollbar-gutter-stable">
         <div className="text-sm font-semibold">{objekt.collectionId}</div>
         <Suspense>
           <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
@@ -132,6 +132,13 @@ export function ObjektCard({
   const [loaded, setLoaded] = useState(false);
   const [backLoaded, setBackLoaded] = useState(false);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setFlipped((prev) => !prev);
+    }
+  }, []);
+
   if (!objekt) return null;
 
   return (
@@ -141,16 +148,11 @@ export function ObjektCard({
       role="button"
       aria-label={m.objekt_flip_card_aria()}
       onClick={() => setFlipped((prev) => !prev)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          setFlipped((prev) => !prev);
-        }
-      }}
+      onKeyDown={handleKeyDown}
     >
       <div
         data-flipped={flipped}
-        className="aspect-photocard relative size-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
+        className="relative size-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
       >
         {/* Front side */}
         <div className="rounded-photocard absolute inset-0 grid rotate-y-0 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
@@ -185,7 +187,7 @@ export function ObjektCard({
           )}
           {!backLoaded && (
             <div className="aspect-photocard relative flex size-full bg-white">
-              <div className="h-[88%] w-[91%] self-center rounded-r-lg bg-(--objekt-bg-color) p-5"></div>
+              <div className="h-[88%] w-[91%] self-center rounded-r-[3.5cqi] bg-(--objekt-bg-color) p-5"></div>
             </div>
           )}
         </div>
@@ -206,10 +208,13 @@ function OwnedListPanel({
   const [currentPage, setCurrentPage] = useState(1);
   const { setCurrentTab } = useObjektModal();
 
-  const openTrades = (serial: number) => {
-    setSerial(serial);
-    setCurrentTab("trades");
-  };
+  const openTrades = useCallback(
+    (serial: number) => {
+      setSerial(serial);
+      setCurrentTab("trades");
+    },
+    [setSerial, setCurrentTab],
+  );
 
   const handleSort = useCallback(
     ({ items, sortDescriptor }: { items: OwnedObjekt[]; sortDescriptor: SortDescriptor }) => {
@@ -235,6 +240,7 @@ function OwnedListPanel({
   );
 
   const list = useAsyncList<OwnedObjekt>({
+    getKey: (item) => item.id,
     async load() {
       return {
         items: objekts,
@@ -251,7 +257,7 @@ function OwnedListPanel({
     },
   });
 
-  const totalPages = Math.ceil(list.items.length / ITEM_PAGE);
+  const totalPages = useMemo(() => Math.ceil(list.items.length / ITEM_PAGE), [list.items.length]);
   const startIndex = (currentPage - 1) * ITEM_PAGE;
   const endIndex = startIndex + ITEM_PAGE;
   const currentItems = list.items.slice(startIndex, endIndex);
@@ -259,7 +265,7 @@ function OwnedListPanel({
   return (
     <div className="flex flex-col gap-2">
       <Card className="py-0">
-        <CardContent className="border-t-0! px-3">
+        <CardContent className="px-3">
           <Table
             className="[--gutter:--spacing(3)]"
             bleed

@@ -1,4 +1,4 @@
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
 import { getCollectionEdition } from "./universal/collection-grid";
 import { replaceUrlSize } from "./utils";
@@ -60,7 +60,7 @@ export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {
   };
 }
 
-export function isObjektOwned(objekt: ValidObjekt) {
+export function isObjektOwned(objekt: ValidObjekt): objekt is OwnedObjekt {
   return "serial" in objekt;
 }
 
