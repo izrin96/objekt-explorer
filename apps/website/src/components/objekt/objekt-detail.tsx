@@ -12,7 +12,7 @@ import { Suspense, useCallback, useMemo, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
-import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
+import { isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
 import { m } from "@/paraglide/messages";
 
@@ -35,8 +35,6 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
   const [objekt] = objekts;
   if (!objekt) return null;
 
-  const urls = getObjektImageUrls(objekt);
-
   return (
     <div
       className="flex size-full flex-col gap-2 p-2 md:grid md:h-134 md:grid-cols-3 md:p-3"
@@ -48,7 +46,7 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
       }
     >
       <div className="flex h-84 self-center select-none md:h-fit">
-        <ObjektCard urls={urls} objekts={objekts} />
+        <ObjektCard objekts={objekts} />
       </div>
       <div className="relative flex min-h-screen flex-col gap-2 overflow-y-auto px-2 md:col-span-2 md:-me-2 md:min-h-full md:scrollbar-gutter-stable">
         <div className="text-sm font-semibold">{objekt.collectionId}</div>
@@ -120,13 +118,7 @@ function ObjektPanel({ objekts }: { objekts: ValidObjekt[] }) {
   );
 }
 
-export function ObjektCard({
-  objekts,
-  urls,
-}: {
-  objekts: ValidObjekt[];
-  urls: ReturnType<typeof getObjektImageUrls>;
-}) {
+export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
   const [objekt] = objekts;
   const [flipped, setFlipped] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -160,7 +152,7 @@ export function ObjektCard({
           <img
             className="size-full object-cover"
             loading="eager"
-            src={urls.originalUrl}
+            src={objekt.frontImage}
             alt={objekt.collectionId}
             onLoad={() => setLoaded(true)}
           />
@@ -168,7 +160,7 @@ export function ObjektCard({
             <img
               className="size-full object-cover"
               loading="eager"
-              src={urls.resizedUrl}
+              src={objekt.thumbnailImage}
               alt={objekt.collectionId}
             />
           )}
@@ -176,11 +168,11 @@ export function ObjektCard({
         </div>
         {/* Back side */}
         <div className="rounded-photocard absolute inset-0 grid rotate-y-180 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
-          {urls.backUrl && (
+          {objekt.backImage && (
             <img
               className="size-full object-cover"
               loading="eager"
-              src={urls.backUrl}
+              src={objekt.backImage}
               alt={objekt.collectionId}
               onLoad={() => setBackLoaded(true)}
             />

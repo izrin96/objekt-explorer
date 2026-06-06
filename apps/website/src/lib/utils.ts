@@ -89,10 +89,6 @@ export function getClientLocale() {
   }
 }
 
-export function replaceUrlSize(url: string, size: "4x" | "2x" | "thumbnail" | "original" = "2x") {
-  return url.replace(/(4x|3x|2x|thumbnail|original)$/i, size);
-}
-
 export function tradeableFilter(obj: ValidObjekt) {
   return !unobtainables.includes(obj.slug) && !["Welcome", "Zero"].includes(obj.class);
 }

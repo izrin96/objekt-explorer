@@ -38,7 +38,10 @@ export const collections = pgTable(
     bandImageUrl: varchar("band_image_url", { length: 255 }),
     frontMedia: varchar("front_media", { length: 255 }),
     hasAudio: boolean("has_audio").notNull().default(false),
-    reservedTokenCount: integer("reserved_token_count"),
+    processedThumbnailImage: varchar("processed_thumbnail_image", { length: 512 }),
+    processedFrontImage: varchar("processed_front_image", { length: 512 }),
+    processedBackImage: varchar("processed_back_image", { length: 512 }),
+    imageSyncHash: varchar("image_sync_hash", { length: 32 }),
   },
   (table) => [
     index("IDX_429351eac26f87942861266e48").using("btree", table.onOffline.asc().nullsLast()),

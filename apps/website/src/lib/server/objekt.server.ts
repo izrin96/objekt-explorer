@@ -122,7 +122,7 @@ export function getCollectionColumns() {
     contract: _contract,
     comoAmount: _comoAmount,
     accentColor: _accentColor,
-    thumbnailImage: _thumbnailImage,
+    imageSyncHash: _imageSyncHash,
     ...rest
   } = getColumns(collections);
   return rest;

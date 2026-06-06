@@ -4,7 +4,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
-import { replaceUrlSize, cn, getClientLocale } from "@/lib/utils";
+import { cn, getClientLocale } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
@@ -61,8 +61,6 @@ export default function ObjektView({
     "--objekt-text-color": objekt.textColor,
   } as CSSProperties;
 
-  const resizedUrl = replaceUrlSize(objekt.frontImage);
-
   const hasPrice = objekt.price !== undefined && objekt.price !== null;
   const showPriceContent =
     listCurrency && (objekt.isQyop || hasPrice || objekt.note || onSetPrice !== undefined);
@@ -85,7 +83,7 @@ export default function ObjektView({
               "size-full object-cover transition-opacity -z-10",
               !loaded && "opacity-0",
             )}
-            src={resizedUrl}
+            src={objekt.thumbnailImage}
             width={582}
             height={900}
             alt={objekt.collectionId}

@@ -17,7 +17,8 @@
     "db:migrate": "bun run --env-file=../../.env drizzle-kit migrate",
     "db:studio": "bun run --env-file=../../.env drizzle-kit studio",
     "db:studio:indexer": "bun run --env-file=../../.env drizzle-kit studio --config drizzle-indexer.config.ts",
-    "db:pull:indexer": "bun run --env-file=../../.env drizzle-kit pull --config drizzle-indexer.config.ts"
+    "db:pull:indexer": "bun run --env-file=../../.env drizzle-kit pull --config drizzle-indexer.config.ts",
+    "db:migrate:indexer": "bun run --env-file=../../.env drizzle-kit migrate --config drizzle-indexer.config.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

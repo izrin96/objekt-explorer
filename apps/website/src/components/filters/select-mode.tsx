@@ -5,7 +5,6 @@ import type { PropsWithChildren } from "react";
 import { useShallow } from "zustand/react/shallow";
 
 import { useObjektSelect } from "@/hooks/use-objekt-select";
-import { replaceUrlSize } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
@@ -56,10 +55,9 @@ export function FloatingSelectMode({ children, objekts }: Props) {
           <div className="flex items-center gap-2">
             <div className="flex -space-x-1">
               {selected.slice(0, 3).map((item) => {
-                const resizedUrl = replaceUrlSize(item.frontImage);
                 return (
                   <img
-                    src={resizedUrl}
+                    src={item.thumbnailImage}
                     alt=""
                     key={item.id}
                     className="outline-bg aspect-square h-8 w-8 overflow-hidden rounded-lg object-cover outline-3"

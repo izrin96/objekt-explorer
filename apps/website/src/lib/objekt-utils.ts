@@ -1,7 +1,6 @@
 import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 
 import { getCollectionEdition } from "./universal/collection-grid";
-import { replaceUrlSize } from "./utils";
 
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
@@ -62,14 +61,6 @@ export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {
 
 export function isObjektOwned(objekt: ValidObjekt): objekt is OwnedObjekt {
   return "serial" in objekt;
-}
-
-export function getObjektImageUrls(objekt: ValidObjekt) {
-  return {
-    resizedUrl: replaceUrlSize(objekt.frontImage),
-    originalUrl: replaceUrlSize(objekt.frontImage, "original"),
-    backUrl: replaceUrlSize(objekt.backImage, "original"),
-  };
 }
 
 // Member shortform aliases

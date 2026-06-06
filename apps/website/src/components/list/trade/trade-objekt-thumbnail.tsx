@@ -1,7 +1,5 @@
 import type { IndexedObjekt } from "@repo/lib/types/objekt";
 
-import { replaceUrlSize } from "@/lib/utils";
-
 export function ObjektCollectionThumbnail({
   collection,
 }: {
@@ -19,7 +17,7 @@ export function ObjektCollectionThumbnail({
     <div className="flex flex-col gap-0.5">
       <div className="border-border aspect-photocard bg-muted relative w-12 overflow-hidden rounded-sm border transition-shadow hover:shadow-md">
         <img
-          src={replaceUrlSize(collection.frontImage, "2x")}
+          src={collection.thumbnailImage}
           alt={collection.collectionId}
           className="absolute inset-0 size-full object-cover"
           loading="lazy"

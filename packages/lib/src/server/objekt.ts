@@ -1,8 +1,29 @@
 import type { Objekt, Transfer } from "@repo/db/indexer/schema";
 
-import type { IndexedObjekt, ValidObjekt } from "../types/objekt";
+import type { IndexedObjekt } from "../types/objekt";
 
-type CollectionOverride = Partial<Pick<ValidObjekt, "backgroundColor" | "textColor">>;
+type CollectionOverride = Partial<{
+  backgroundColor: string;
+  textColor: string;
+}>;
+
+type CollectionInput = {
+  slug: string;
+  createdAt: Date | string;
+  frontImage: string;
+  backImage: string;
+  thumbnailImage: string | null;
+  processedFrontImage?: string | null;
+  processedBackImage?: string | null;
+  processedThumbnailImage?: string | null;
+  bandImageUrl: string | null;
+  artist: string;
+  class: string;
+  collectionNo: string;
+  onOffline: string;
+  backgroundColor: string;
+  textColor: string;
+};
 
 /**
  * Override color for some collection
@@ -36,7 +57,7 @@ const collectionOverrides = {
 /**
  * Get custom band image
  */
-function getBandImageUrl(objekt: ValidObjekt) {
+function getBandImageUrl(objekt: CollectionInput) {
   if (objekt.bandImageUrl) return objekt.bandImageUrl;
 
   if (objekt.artist === "idntt") {
@@ -63,13 +84,17 @@ function getBandImageUrl(objekt: ValidObjekt) {
 /**
  * Apply color and band image overrides to any objekt type
  */
-export function overrideCollection<T extends ValidObjekt>(collection: T) {
+export function overrideCollection<T extends CollectionInput>(collection: T) {
+  const { processedThumbnailImage, processedFrontImage, processedBackImage, ...base } = collection;
   const overrides = collectionOverrides[collection.slug as keyof typeof collectionOverrides];
   const bandImageUrl = getBandImageUrl(collection);
 
   return {
-    ...collection,
+    ...base,
     ...overrides,
+    thumbnailImage: processedThumbnailImage ?? collection.thumbnailImage,
+    frontImage: processedFrontImage ?? collection.frontImage,
+    backImage: processedBackImage ?? collection.backImage,
     bandImageUrl,
     createdAt: new Date(collection.createdAt).toISOString(),
   };

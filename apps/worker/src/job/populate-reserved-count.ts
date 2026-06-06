@@ -1,6 +1,6 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { and, desc, eq, inArray, isNull, ne, or } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, or } from "drizzle-orm";
 
 import { findBoundaryTokenId } from "./populate-serial";
 
@@ -25,7 +25,7 @@ export async function populateReservedCount() {
     .where(
       and(
         ne(collections.slug, "empty-collection"),
-        isNull(collections.reservedTokenCount),
+        // isNull(collections.reservedTokenCount),
         or(eq(collections.onOffline, "offline"), inArray(collections.slug, extraCollectionSlugs)),
       ),
     )
@@ -102,10 +102,10 @@ async function processCollection(slug: string, collectionId: string) {
     `[populateReservedCount] ${slug}: base=${baseTokenId} end=${endTokenId} count=${reservedCount}`,
   );
 
-  await indexer
-    .update(collections)
-    .set({ reservedTokenCount: reservedCount })
-    .where(eq(collections.id, collectionId));
+  // await indexer
+  //   .update(collections)
+  //   .set({ reservedTokenCount: reservedCount })
+  //   .where(eq(collections.id, collectionId));
 
   console.log(`[populateReservedCount] ${slug}: Set reserved token count to ${reservedCount}`);
 }

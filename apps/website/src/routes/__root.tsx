@@ -87,6 +87,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { rel: "preconnect", href: "https://imagedelivery.net" },
         { rel: "preconnect", href: "https://resources.cosmo.fans" },
         { rel: "preconnect", href: "https://static.cosmo.fans" },
+        { rel: "preconnect", href: "https://media.objekt.top" },
         {
           rel: "preload",
           href: spaceGroteskLatin,

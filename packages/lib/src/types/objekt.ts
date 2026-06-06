@@ -1,5 +1,3 @@
-import type { Collection, Objekt } from "@repo/db/indexer/schema";
-
 // Extra fields not in DB schema
 type CollectionExtra = {
   tags?: string[];
@@ -10,24 +8,39 @@ type CollectionExtra = {
   note?: string | null;
 };
 
-type OwnedExtra = {
+// Indexed collection — base collection info without ownership
+export type IndexedObjekt = {
+  id: string;
+  createdAt: string;
+  slug: string;
+  collectionId: string;
+  season: string;
+  member: string;
+  artist: string;
+  collectionNo: string;
+  class: string;
+  thumbnailImage: string;
+  frontImage: string;
+  backImage: string;
+  backgroundColor: string;
+  textColor: string;
+  onOffline: "online" | "offline";
+  bandImageUrl: string | null;
+  frontMedia: string | null;
+  hasAudio: boolean;
+} & CollectionExtra;
+
+// Owned objekt — collection + ownership info
+export type OwnedObjekt = IndexedObjekt & {
+  mintedAt: string;
+  receivedAt: string;
+  serial: number;
+  transferable: boolean;
   isPin?: boolean;
   isLocked?: boolean;
   pinOrder?: number | null;
   tokenId?: string;
 };
-
-// Indexed collection - base collection info without ownership
-export type IndexedObjekt = Omit<
-  Collection,
-  "contract" | "comoAmount" | "accentColor" | "thumbnailImage"
-> &
-  CollectionExtra;
-
-// Owned objekt - collection + ownership info
-export type OwnedObjekt = IndexedObjekt &
-  Pick<Objekt, "mintedAt" | "receivedAt" | "serial" | "transferable"> &
-  OwnedExtra;
 
 // Union type for functions that accept either indexed or owned objekts
 export type ValidObjekt = OwnedObjekt | IndexedObjekt;
