@@ -95,6 +95,8 @@ export function overrideCollection<T extends CollectionInput>(collection: T) {
     thumbnailImage: processedThumbnailImage ?? collection.thumbnailImage,
     frontImage: processedFrontImage ?? collection.frontImage,
     backImage: processedBackImage ?? collection.backImage,
+    originalFrontImage: base.frontImage,
+    originalBackImage: base.backImage,
     bandImageUrl,
     createdAt: new Date(collection.createdAt).toISOString(),
   };
