@@ -1,12 +1,8 @@
 import { Addresses } from "@repo/lib";
-import {
-  type BlockHeader,
-  type DataHandlerContext,
-  EvmBatchProcessor,
-  type EvmBatchProcessorFields,
-  type Log as _Log,
-  type Transaction as _Transaction,
-} from "@subsquid/evm-processor";
+import type { DataHandlerContext as BaseDataHandlerContext } from "@subsquid/batch-processor";
+import type * as evmObjects from "@subsquid/evm-objects";
+import { DataSourceBuilder, type FieldSelection } from "@subsquid/evm-stream";
+import type { Logger } from "@subsquid/logger";
 
 import * as ABI_COMO from "./abi/como";
 import * as ABI_GRAVITY from "./abi/gravity";
@@ -19,70 +15,68 @@ console.log(
   `[processor] Starting processor with objekts ${env.ENABLE_OBJEKTS} and gravity ${env.ENABLE_GRAVITY}`,
 );
 
-const processor = new EvmBatchProcessor()
-  .setGateway({
-    url: env.SQD_ENDPOINT,
-    apiKey: env.SQD_API_KEY,
-  })
-  .setRpcEndpoint({
-    url: env.RPC_ENDPOINT,
-    rateLimit: env.RPC_RATE_LIMIT,
-  })
-  .setFields({
-    log: {
-      topics: true,
-      data: true,
-      transactionHash: true,
-      logIndex: true,
-    },
-    transaction: {
-      input: true,
-      sighash: true,
-    },
-  })
-  .setFinalityConfirmation(env.RPC_FINALITY);
+export const fields = {
+  block: { timestamp: true },
+  log: {
+    address: true,
+    topics: true,
+    data: true,
+    transactionHash: true,
+  },
+  transaction: {
+    to: true,
+    input: true,
+    sighash: true,
+  },
+} satisfies FieldSelection;
 
-processor
+export type Fields = typeof fields;
+export type Block = evmObjects.BlockHeader<Fields>;
+export type BlockData = evmObjects.Block<Fields>;
+export type Log = evmObjects.Log<Fields>;
+export type Transaction = evmObjects.Transaction<Fields>;
+export type ProcessorContext<Store> = BaseDataHandlerContext<BlockData, Store> & {
+  log: Logger;
+};
+
+export const dataSource = new DataSourceBuilder()
+  .setPortal({
+    url: "https://portal.sqd.dev/datasets/abstract-mainnet",
+    http: { retryAttempts: Infinity },
+  })
+  .setBlockRange({ from: COSMO_START_BLOCK })
+  .setFields(fields)
   // objekt transfers
   .addLog({
-    address: [Addresses.OBJEKT],
-    topic0: [ABI_OBJEKT.events.Transfer.topic],
+    where: { address: [Addresses.OBJEKT], topic0: [ABI_OBJEKT.events.Transfer.topic] },
     range: { from: COSMO_START_BLOCK },
   })
   // objekt transferability updates
   .addTransaction({
-    to: [Addresses.OBJEKT],
-    sighash: [ABI_OBJEKT.functions.batchUpdateObjektTransferability.sighash],
+    where: {
+      to: [Addresses.OBJEKT],
+      sighash: [ABI_OBJEKT.functions.batchUpdateObjektTransferability.sighash],
+    },
     range: { from: COSMO_START_BLOCK },
   })
   // single como transfers
   .addLog({
-    address: [Addresses.COMO],
-    topic0: [ABI_COMO.events.TransferSingle.topic],
+    where: { address: [Addresses.COMO], topic0: [ABI_COMO.events.TransferSingle.topic] },
     range: { from: COSMO_START_BLOCK },
   })
   // batch como transfers
   .addLog({
-    address: [Addresses.COMO],
-    topic0: [ABI_COMO.events.TransferBatch.topic],
+    where: { address: [Addresses.COMO], topic0: [ABI_COMO.events.TransferBatch.topic] },
     range: { from: COSMO_START_BLOCK },
   })
   // gravity votes
   .addLog({
-    address: [Addresses.GRAVITY],
-    topic0: [ABI_GRAVITY.events.Voted.topic],
+    where: { address: [Addresses.GRAVITY], topic0: [ABI_GRAVITY.events.Voted.topic] },
     range: { from: COSMO_START_BLOCK },
   })
   // gravity reveals
   .addTransaction({
-    to: [Addresses.GRAVITY],
-    sighash: [ABI_GRAVITY.functions.reveal.sighash],
+    where: { to: [Addresses.GRAVITY], sighash: [ABI_GRAVITY.functions.reveal.sighash] },
     range: { from: COSMO_START_BLOCK },
-  });
-
-export { processor };
-export type Fields = EvmBatchProcessorFields<typeof processor>;
-export type Block = BlockHeader<Fields>;
-export type Log = _Log<Fields>;
-export type Transaction = _Transaction<Fields>;
-export type ProcessorContext<Store> = DataHandlerContext<Store, Fields>;
+  })
+  .build();
