@@ -291,7 +291,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
       </div>
 
       <Card className="py-0">
-        <CardContent className="border-t-0! px-3">
+        <CardContent className="px-3">
           <Table
             className="[--gutter:--spacing(3)]"
             bleed
