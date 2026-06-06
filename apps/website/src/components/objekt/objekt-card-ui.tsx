@@ -43,9 +43,9 @@ export function ObjektOverlay({
 }) {
   if (!isPin && !isLocked) return null;
   return (
-    <div className="rounded-br-photocard pointer-events-none flex items-start justify-start gap-x-[calc(100cqi*0.03)] self-start justify-self-start overflow-hidden bg-(--objekt-bg-color) p-[calc(100cqi*0.04)] text-(--objekt-text-color)">
-      {isPin && <PushPinIcon weight="bold" className="size-[calc(100cqi*0.08)]" />}
-      {isLocked && <LockSimpleIcon weight="bold" className="size-[calc(100cqi*0.08)]" />}
+    <div className="rounded-br-photocard pointer-events-none flex items-start justify-start gap-x-[3cqi] self-start justify-self-start overflow-hidden bg-(--objekt-bg-color) p-[4cqi] text-(--objekt-text-color)">
+      {isPin && <PushPinIcon weight="bold" className="size-[8cqi]" />}
+      {isLocked && <LockSimpleIcon weight="bold" className="size-[8cqi]" />}
     </div>
   );
 }

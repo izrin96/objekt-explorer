@@ -75,7 +75,7 @@ export default function ObjektView({
           className={cn(
             "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-photocard bg-overlay shadow-md",
             "contain-layout contain-paint",
-            isSelected && "bg-fg outline-[calc(100cqi*0.034)]",
+            isSelected && "bg-fg outline-[3.4cqi]",
           )}
         >
           <img
