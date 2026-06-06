@@ -1,11 +1,12 @@
 import { addr, Addresses } from "@repo/lib";
+import type { BlockData } from "@subsquid/evm-processor";
 import { v7 as randomUUID } from "uuid";
 
 import * as ABI_COMO from "./abi/como";
 import * as ABI_GRAVITY from "./abi/gravity";
 import * as ABI_OBJEKT from "./abi/objekt";
 import { Transfer } from "./model";
-import type { Log, Transaction, BlockData } from "./processor";
+import type { Fields, Log, Transaction } from "./processor";
 
 const transferability = ABI_OBJEKT.functions.batchUpdateObjektTransferability;
 const reveal = ABI_GRAVITY.functions.reveal;
@@ -13,7 +14,7 @@ const reveal = ABI_GRAVITY.functions.reveal;
 /**
  * Parse incoming blocks.
  */
-export function parseBlocks(blocks: BlockData[]) {
+export function parseBlocks(blocks: BlockData<Fields>[]) {
   const logs = blocks.flatMap((block) => block.logs);
   const transactions = blocks.flatMap((block) => block.transactions);
 
@@ -178,7 +179,7 @@ export function parseVote(log: Log): VoteEvent | undefined {
       tokenId: Number(event.tokenId),
       pollId: Number(event.pollId),
       tokenAmount: event.tokenAmount,
-      blockNumber: log.block.number,
+      blockNumber: log.block.height,
       logIndex: log.logIndex,
     };
   } catch {

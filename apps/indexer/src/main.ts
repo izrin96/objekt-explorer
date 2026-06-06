@@ -1,8 +1,5 @@
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { addr, chunk, slugifyObjekt, Addresses } from "@repo/lib";
-import { run } from "@subsquid/batch-processor";
-import { augmentBlock } from "@subsquid/evm-objects";
-import { createLogger } from "@subsquid/logger";
 import { TypeormDatabase, type Store } from "@subsquid/typeorm-store";
 import { v7 as randomUUID } from "uuid";
 
@@ -16,19 +13,12 @@ import {
   type VoteEvent,
   parseBlocks,
 } from "./parser";
-import { dataSource, type ProcessorContext } from "./processor";
+import { processor, type ProcessorContext } from "./processor";
 import { redis } from "./redis";
 
 const db = new TypeormDatabase({ supportHotBlocks: true });
 
-const logger = createLogger("sqd:processor:mapping");
-
-run(dataSource, db, async (simpleCtx) => {
-  const ctx: ProcessorContext<Store> = {
-    ...simpleCtx,
-    blocks: simpleCtx.blocks.map(augmentBlock),
-    log: logger,
-  };
+processor.run(db, async (ctx) => {
   const { transfers, transferability, comoBalanceUpdates, votes, reveals } = parseBlocks(
     ctx.blocks,
   );
