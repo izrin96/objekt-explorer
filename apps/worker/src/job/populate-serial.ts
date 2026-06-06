@@ -85,8 +85,6 @@ async function processCollection(collectionId: string) {
     return;
   }
 
-  console.log(`[populateSerial] Collection ${collectionId}: Updating ${updates.length} objekts`);
-
   await indexer.transaction(async (tx) => {
     const batchSize = 100;
     for (let i = 0; i < updates.length; i += batchSize) {
@@ -272,10 +270,6 @@ async function processCollectionOffline(collectionId: string) {
     console.log(`[populateSerialOffline] Collection ${collectionId}: No valid updates`);
     return;
   }
-
-  console.log(
-    `[populateSerialOffline] Collection ${collectionId}: Updating ${updates.length} objekts`,
-  );
 
   await indexer.transaction(async (tx) => {
     const batchSize = 100;

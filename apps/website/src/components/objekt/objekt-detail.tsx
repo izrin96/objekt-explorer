@@ -154,7 +154,7 @@ export function ObjektCard({
         className="aspect-photocard relative size-full transform-gpu touch-manipulation transition-transform duration-300 will-change-transform transform-3d data-[flipped=true]:rotate-y-180"
       >
         {/* Front side */}
-        <div className="absolute inset-0 grid rotate-y-0 overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
+        <div className="rounded-photocard absolute inset-0 grid rotate-y-0 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {/* Progressive loading: show resized first, then original when loaded */}
           <img
             className="size-full object-cover"
@@ -178,7 +178,7 @@ export function ObjektCard({
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
         {/* Back side */}
-        <div className="absolute inset-0 grid rotate-y-180 overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
+        <div className="rounded-photocard absolute inset-0 grid rotate-y-180 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {urls.backUrl && (
             <img
               className="size-full object-cover"

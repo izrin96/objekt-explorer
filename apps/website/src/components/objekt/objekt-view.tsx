@@ -73,16 +73,18 @@ export default function ObjektView({
       <div className="@container">
         <div
           className={cn(
-            "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-[calc(100cqi*0.054)] shadow-md transition-opacity",
+            "group grid [&>*]:col-start-1 [&>*]:row-start-1 aspect-photocard cursor-pointer select-none overflow-hidden rounded-photocard bg-overlay shadow-md",
             "contain-layout contain-paint",
             isSelected && "bg-fg outline-[calc(100cqi*0.034)]",
-            !loaded && "opacity-0",
           )}
         >
           <img
             draggable={false}
             onClick={ctx.handleClick}
-            className="size-full object-cover"
+            className={cn(
+              "size-full object-cover transition-opacity -z-10",
+              !loaded && "opacity-0",
+            )}
             src={resizedUrl}
             width={582}
             height={900}
