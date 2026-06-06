@@ -14,7 +14,6 @@ import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { getObjektImageUrls, isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
-import { OBJEKT_SIZE } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
@@ -158,8 +157,6 @@ export function ObjektCard({
           {/* Progressive loading: show resized first, then original when loaded */}
           <img
             className="size-full object-cover"
-            width={OBJEKT_SIZE.width}
-            height={OBJEKT_SIZE.height}
             loading="eager"
             src={urls.originalUrl}
             alt={objekt.collectionId}
@@ -168,8 +165,6 @@ export function ObjektCard({
           {!loaded && (
             <img
               className="size-full object-cover"
-              width={582}
-              height={900}
               loading="eager"
               src={urls.resizedUrl}
               alt={objekt.collectionId}
@@ -182,8 +177,6 @@ export function ObjektCard({
           {urls.backUrl && (
             <img
               className="size-full object-cover"
-              width={OBJEKT_SIZE.width}
-              height={OBJEKT_SIZE.height}
               loading="eager"
               src={urls.backUrl}
               alt={objekt.collectionId}

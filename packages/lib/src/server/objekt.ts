@@ -41,19 +41,19 @@ function getBandImageUrl(objekt: ValidObjekt) {
 
   if (objekt.artist === "idntt") {
     if (objekt.class === "Special") {
-      return "https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/86207a80d354439cada0ec6c45e076ee20250814061643330.png";
+      return "https://media.objekt.top/band-image/86207a80d354439cada0ec6c45e076ee20250814061643330.png";
     }
 
     if (objekt.class === "Unit") {
-      return "https://resources.cosmo.fans/images/collection-band/2025/08/14/06/raw/e0e4fdd950bc4ca8ba49a98b053756f620250814065358420.png";
+      return "https://media.objekt.top/band-image/e0e4fdd950bc4ca8ba49a98b053756f620250814065358420.png";
     }
 
     if (objekt.onOffline === "offline" && objekt.backgroundColor === "#000000") {
-      return "https://resources.cosmo.fans/images/collection-band/2025/07/12/04/raw/fab4f9ec98d24a00a7c417e012a493cd20250712042141653.png";
+      return "https://media.objekt.top/band-image/fab4f9ec98d24a00a7c417e012a493cd20250712042141653.png";
     }
 
     if (objekt.class === "Welcome" && objekt.collectionNo === "200Z") {
-      return "https://resources.cosmo.fans/images/collection-band/2025/04/23/08/raw/7d0e2956b196439eb10dd65ee94ac28e20250423082449685.png";
+      return "https://media.objekt.top/band-image/7d0e2956b196439eb10dd65ee94ac28e20250423082449685.png";
     }
   }
 
