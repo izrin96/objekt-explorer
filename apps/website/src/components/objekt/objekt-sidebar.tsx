@@ -1,5 +1,5 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import { isObjektOwned } from "@/lib/objekt-utils";
 import { OBJEKT_SIZE } from "@/lib/utils";
@@ -29,17 +29,7 @@ type Props = {
 
 export default function ObjektSidebar(props: Props) {
   const ref = useRef<HTMLImageElement>(null);
-  const [offsetPx, setOffsetPx] = useState(0);
   const { objekt } = props;
-
-  const handleImageLoad = () => {
-    if (ref.current) {
-      const offset = ref.current.naturalWidth - CANVAS_W;
-      if (offset > 0) {
-        setOffsetPx(offset);
-      }
-    }
-  };
 
   return (
     <div className="pointer-events-none grid size-full items-center text-base text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
@@ -47,14 +37,10 @@ export default function ObjektSidebar(props: Props) {
       {objekt.bandImageUrl && (
         <img
           ref={ref}
-          onLoad={handleImageLoad}
           className="size-full object-cover"
           loading="eager"
-          style={offsetPx > 0 ? { marginLeft: `${offsetPx}px` } : undefined}
           alt={m.objekt_band_image_alt()}
           src={objekt.bandImageUrl}
-          width={CANVAS_W}
-          height={CANVAS_H}
         />
       )}
       <SidebarBand {...props} />
