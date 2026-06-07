@@ -19,12 +19,33 @@ function replaceUrlSize(url: string, size: string) {
   return url.replace(/(4x|3x|2x|thumbnail|original)$/i, size);
 }
 
-async function convertToWebp(buf: ArrayBuffer) {
-  if (isWebp(buf)) {
+async function convertToWebp(buf: ArrayBuffer, maxHeight?: number) {
+  const buffer = Buffer.from(buf);
+  const sourceIsWebp = isWebp(buf);
+
+  if (sourceIsWebp && !maxHeight) {
     console.log("[process-images] Source is already WebP, skipping re-encode");
-    return Buffer.from(buf);
+    return buffer;
   }
-  return await new Bun.Image(Buffer.from(buf)).webp({ quality: 80 }).toBuffer();
+
+  const img = new Bun.Image(buffer);
+  const { width, height } = await img.metadata();
+
+  if (maxHeight && height > maxHeight) {
+    const newWidth = Math.round(width * (maxHeight / height));
+    const opts = sourceIsWebp ? ({ lossless: true } as const) : ({ quality: 80 } as const);
+    return await img
+      .resize(newWidth || 1, maxHeight)
+      .webp(opts)
+      .toBuffer();
+  }
+
+  if (sourceIsWebp) {
+    console.log("[process-images] Source is already WebP, skipping re-encode");
+    return buffer;
+  }
+
+  return await img.webp({ quality: 80 }).toBuffer();
 }
 
 function computeHash(thumbnail: string, front: string, back: string) {
@@ -100,7 +121,8 @@ async function processOne(c: Collection) {
 
     await Promise.all(
       images.map(async ({ key, buf }) => {
-        const webp = await convertToWebp(buf);
+        const maxHeight = key.endsWith("thumbnail.webp") ? 900 : undefined;
+        const webp = await convertToWebp(buf, maxHeight);
         await uploadWebp(key, webp);
       }),
     );
