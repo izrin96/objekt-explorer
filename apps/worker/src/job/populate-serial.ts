@@ -48,7 +48,7 @@ export async function populateSerial() {
 
 async function processCollection(collectionId: string) {
   const allObjekts = await indexer
-    .select({ id: objekts.id, serial: objekts.serial })
+    .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
     .where(eq(objekts.collectionId, collectionId))
     .orderBy(asc(objekts.id));
@@ -63,10 +63,19 @@ async function processCollection(collectionId: string) {
 
   const isNew = sortedAllObjekts.every((a) => a.serial === 0);
 
-  // for now skip newer collections
-  // because some collection is pre-assigned tokenId
-  // just like offline objekt
-  // if (isNew) return;
+  if (isNew) {
+    // Detect pre-assigned collections: pre-assigned objekts are minted
+    // out of tokenId order, while non-pre-assigned follow proportionally
+    // (higher tokenId = later mintedAt).
+    const outOfOrder = sortedAllObjekts.some(
+      (obj, i) => i > 0 && obj.mintedAt < sortedAllObjekts[i - 1]!.mintedAt,
+    );
+
+    if (outOfOrder) {
+      console.log(`[populateSerial] Collection ${collectionId}: Pre-assigned, skipping`);
+      return;
+    }
+  }
 
   const maxSerial = Math.max(...sortedAllObjekts.map((a) => a.serial));
   let nextSerial = maxSerial + 1;
