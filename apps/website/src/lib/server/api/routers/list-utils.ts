@@ -18,14 +18,16 @@ export const listUtils = {
     .input(
       z.object({
         slug: z.string(),
-        updates: z.array(
-          z.object({
-            entryId: z.number(),
-            price: z.number().nullable(),
-            isQyop: z.boolean(),
-            note: z.string().max(2000).optional().nullable(),
-          }),
-        ),
+        updates: z
+          .array(
+            z.object({
+              entryId: z.number(),
+              price: z.number().min(0).nullable(),
+              isQyop: z.boolean(),
+              note: z.string().max(2000).optional().nullable(),
+            }),
+          )
+          .max(50000),
       }),
     )
     .handler(

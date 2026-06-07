@@ -1,5 +1,6 @@
 import { db } from "@repo/db";
 import { lockedObjekts } from "@repo/db/schema";
+import { isAddress } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
@@ -7,24 +8,26 @@ import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
 export const lockedObjektsRouter = {
-  list: pub.input(z.string()).handler(async ({ input: address }) => {
-    const result = await db.query.lockedObjekts.findMany({
-      columns: {
-        tokenId: true,
-      },
-      where: { address },
-      orderBy: { id: "asc" },
-    });
-    return result.map((a) => ({
-      tokenId: a.tokenId.toString(),
-    }));
-  }),
+  list: pub
+    .input(z.string().refine((val) => isAddress(val)))
+    .handler(async ({ input: address }) => {
+      const result = await db.query.lockedObjekts.findMany({
+        columns: {
+          tokenId: true,
+        },
+        where: { address },
+        orderBy: { id: "asc" },
+      });
+      return result.map((a) => ({
+        tokenId: a.tokenId.toString(),
+      }));
+    }),
 
   batchLock: authed
     .input(
       z.object({
-        address: z.string(),
-        tokenIds: z.number().array(),
+        address: z.string().refine((val) => isAddress(val)),
+        tokenIds: z.number().array().max(50000),
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
@@ -50,8 +53,8 @@ export const lockedObjektsRouter = {
   batchUnlock: authed
     .input(
       z.object({
-        address: z.string(),
-        tokenIds: z.number().array(),
+        address: z.string().refine((val) => isAddress(val)),
+        tokenIds: z.number().array().max(50000),
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {

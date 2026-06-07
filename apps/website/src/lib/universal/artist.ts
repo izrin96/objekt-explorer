@@ -12,5 +12,6 @@ export const artistSchema = z.string().transform(toCanonicalArtist).pipe(z.enum(
 /** Case-insensitive artist array enum. */
 export const artistsArraySchema = z
   .array(z.string())
+  .max(10)
   .transform((arr) => arr.map(toCanonicalArtist))
   .pipe(z.array(z.enum(validArtists)));

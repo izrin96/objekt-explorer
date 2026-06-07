@@ -5,6 +5,7 @@ import { fetchUserProfile } from "@repo/cosmo/server/user";
 import type { ValidArtist } from "@repo/cosmo/types/common";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
+import { isAddress } from "@repo/lib";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
@@ -48,26 +49,28 @@ async function assertAddressNotLinked(address: string, userId: string) {
 export const cosmoLinkRouter = {
   // check if address is already linked
   checkAddress: authed
-    .input(z.string())
+    .input(z.string().refine((val) => isAddress(val)))
     .handler(async ({ input: address, context: { session } }) => {
       await assertAddressNotLinked(address, session.user.id);
     }),
 
   // remove link
-  removeLink: authed.input(z.string()).handler(async ({ input: address, context: { session } }) => {
-    await db
-      .update(userAddress)
-      .set({
-        userId: null,
-      })
-      .where(and(eq(userAddress.userId, session.user.id), eq(userAddress.address, address)));
-  }),
+  removeLink: authed
+    .input(z.string().refine((val) => isAddress(val)))
+    .handler(async ({ input: address, context: { session } }) => {
+      await db
+        .update(userAddress)
+        .set({
+          userId: null,
+        })
+        .where(and(eq(userAddress.userId, session.user.id), eq(userAddress.address, address)));
+    }),
 
   // generate verification code for a specific artist profile
   generateCode: authed
     .input(
       z.object({
-        address: z.string(),
+        address: z.string().refine((val) => isAddress(val)),
         cosmoId: z.number().int().positive(),
         nickname: z.string().min(1).max(24),
         artistId: artistSchema,
@@ -112,7 +115,7 @@ export const cosmoLinkRouter = {
 
   // verify bio contains the code and link the account
   verifyStatusMessage: authed
-    .input(z.string())
+    .input(z.string().refine((val) => isAddress(val)))
     .handler(async ({ input: address, context: { session } }) => {
       const redisKey = `cosmo-verify:${session.user.id}:${address}`;
       const raw = await redis.get(redisKey);

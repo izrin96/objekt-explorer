@@ -2,6 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { pins } from "@repo/db/schema";
+import { isAddress } from "@repo/lib";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 
@@ -35,19 +36,21 @@ async function getValidPins(address: string) {
 }
 
 export const pinsRouter = {
-  list: pub.input(z.string()).handler(async ({ input: address }) => {
-    const validPins = await getValidPins(address);
-    return validPins.map((a) => ({
-      tokenId: a.tokenId.toString(),
-      order: a.order ?? a.id,
-    }));
-  }),
+  list: pub
+    .input(z.string().refine((val) => isAddress(val)))
+    .handler(async ({ input: address }) => {
+      const validPins = await getValidPins(address);
+      return validPins.map((a) => ({
+        tokenId: a.tokenId.toString(),
+        order: a.order ?? a.id,
+      }));
+    }),
 
   batchPin: authed
     .input(
       z.object({
-        address: z.string(),
-        tokenIds: z.number().array(),
+        address: z.string().refine((val) => isAddress(val)),
+        tokenIds: z.number().array().max(50000),
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
@@ -78,8 +81,8 @@ export const pinsRouter = {
   batchUnpin: authed
     .input(
       z.object({
-        address: z.string(),
-        tokenIds: z.number().array(),
+        address: z.string().refine((val) => isAddress(val)),
+        tokenIds: z.number().array().max(50000),
       }),
     )
     .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
@@ -93,7 +96,7 @@ export const pinsRouter = {
   movePin: authed
     .input(
       z.object({
-        address: z.string(),
+        address: z.string().refine((val) => isAddress(val)),
         tokenId: z.number(),
         direction: z.enum(["up", "down"]),
       }),

@@ -60,8 +60,8 @@ export const listEntriesRouter = {
       z.object({
         slug: z.string(),
         skipDups: z.boolean(),
-        collectionSlugs: z.string().array().optional(),
-        objekts: z.string().array().optional(),
+        collectionSlugs: z.string().array().max(50000).optional(),
+        objekts: z.string().array().max(50000).optional(),
       }),
     )
     .handler(
@@ -171,7 +171,7 @@ export const listEntriesRouter = {
     .input(
       z.object({
         slug: z.string(),
-        entryIds: z.number().array(),
+        entryIds: z.number().array().max(50000),
       }),
     )
     .handler(

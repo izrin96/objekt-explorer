@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
+import { isAddress } from "@repo/lib";
 import { and, eq } from "drizzle-orm";
 import * as z from "zod";
 
@@ -11,10 +12,12 @@ import { createPresignedUploadUrl, deleteFileFromBucket, getS3PublicUrl } from "
 import { authed } from "../orpc";
 
 export const profileRouter = {
-  find: authed.input(z.string()).handler(async ({ input: address, context: { session } }) => {
-    const profile = await fetchOwnedProfile(address, session.user.id);
-    return profile;
-  }),
+  find: authed
+    .input(z.string().refine((val) => isAddress(val)))
+    .handler(async ({ input: address, context: { session } }) => {
+      const profile = await fetchOwnedProfile(address, session.user.id);
+      return profile;
+    }),
 
   edit: authed
     .input(
