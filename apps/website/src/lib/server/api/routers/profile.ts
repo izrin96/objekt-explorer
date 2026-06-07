@@ -22,7 +22,7 @@ export const profileRouter = {
   edit: authed
     .input(
       z.object({
-        address: z.string().max(42),
+        address: z.string().refine((val) => isAddress(val)),
         hideUser: z.boolean(),
         bannerImgUrl: z
           .url()
@@ -59,7 +59,7 @@ export const profileRouter = {
   getPresignedPost: authed
     .input(
       z.object({
-        address: z.string().max(42),
+        address: z.string().refine((val) => isAddress(val)),
         fileName: z.string().min(1),
         mimeType: z
           .string()

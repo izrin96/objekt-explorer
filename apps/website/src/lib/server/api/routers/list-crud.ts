@@ -1,6 +1,7 @@
 import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { lists } from "@repo/db/schema";
+import { isAddress } from "@repo/lib";
 import { and, eq, ne } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as z from "zod";
@@ -35,7 +36,10 @@ export const listCrud = {
         isProfileBind: z.boolean().default(false),
         hideSerial: z.boolean().default(false),
         linkedListId: z.number().nullable(),
-        profileAddress: z.string().min(1).max(42).nullable(),
+        profileAddress: z
+          .string()
+          .refine((val) => isAddress(val))
+          .nullable(),
         description: z.string().max(5000).nullable(),
         currency: z.string().max(10).nullable(),
         discoverable: z.boolean().default(false),
@@ -145,7 +149,10 @@ export const listCrud = {
         name: z.string().min(1).max(256),
         hideUser: z.boolean(),
         gridColumns: z.number().min(2).max(18).nullable(),
-        profileAddress: z.string().min(1).max(42).nullable(),
+        profileAddress: z
+          .string()
+          .refine((val) => isAddress(val))
+          .nullable(),
         description: z.string().max(5000).nullable(),
         currency: z.string().max(10).nullable(),
         hideSerial: z.boolean(),
