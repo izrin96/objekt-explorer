@@ -48,7 +48,7 @@ export async function populateSerial() {
 
 async function processCollection(collectionId: string) {
   const allObjekts = await indexer
-    .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
+    .select({ id: objekts.id, serial: objekts.serial })
     .from(objekts)
     .where(eq(objekts.collectionId, collectionId))
     .orderBy(asc(objekts.id));
@@ -64,14 +64,22 @@ async function processCollection(collectionId: string) {
   const isNew = sortedAllObjekts.every((a) => a.serial === 0);
 
   if (isNew) {
-    // Detect pre-assigned collections: pre-assigned objekts are minted
-    // out of tokenId order, while non-pre-assigned follow proportionally
-    // (higher tokenId = later mintedAt).
-    const outOfOrder = sortedAllObjekts.some(
-      (obj, i) => i > 0 && obj.mintedAt < sortedAllObjekts[i - 1]!.mintedAt,
-    );
+    // Detect pre-assigned collections: call findBoundaryTokenId
+    // backwards. If the base token matches the first objekt's tokenId,
+    // the collection boundary is properly positioned — proceed.
+    // Otherwise it's a pre-assigned collection — skip.
+    const [collection] = await indexer
+      .select({ collectionId: collections.collectionId })
+      .from(collections)
+      .where(eq(collections.id, collectionId))
+      .limit(1);
 
-    if (outOfOrder) {
+    if (!collection) return;
+
+    const firstTokenId = parseInt(sortedAllObjekts[0]!.id);
+    const baseTokenId = await findBoundaryTokenId(collection.collectionId, firstTokenId, -1);
+
+    if (baseTokenId !== firstTokenId) {
       console.log(`[populateSerial] Collection ${collectionId}: Pre-assigned, skipping`);
       return;
     }
