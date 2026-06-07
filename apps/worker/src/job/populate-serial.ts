@@ -66,7 +66,7 @@ async function processCollection(collectionId: string) {
   // for now skip newer collections
   // because some collection is pre-assigned tokenId
   // just like offline objekt
-  if (isNew) return;
+  // if (isNew) return;
 
   const maxSerial = Math.max(...sortedAllObjekts.map((a) => a.serial));
   let nextSerial = maxSerial + 1;
