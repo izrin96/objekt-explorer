@@ -2,7 +2,7 @@ import { type CronJob, cron } from "bun";
 
 import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
-import { cleanupStaleEntries, drainOutbox } from "./job/drain";
+import { drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
 import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
@@ -55,8 +55,8 @@ await drainOutbox();
 crons.push(cron("*/5 * * * *", drainOutbox));
 
 // periodic safety-net full scan for stale entries
-await cleanupStaleEntries();
-crons.push(cron("2 * * * *", cleanupStaleEntries));
+// await cleanupStaleEntries();
+// crons.push(cron("2 * * * *", cleanupStaleEntries));
 
 // cache collection rarity list
 await populateRarity();
