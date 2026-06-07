@@ -90,7 +90,7 @@ export default function ObjektView({
             onLoad={() => setLoaded(true)}
             fetchPriority={isPriority ? "high" : "auto"}
             loading={isPriority ? "eager" : "lazy"}
-            decoding="async"
+            decoding={isPriority ? "auto" : "async"}
           />
           <ObjektSidebar objekt={objekt} hideSerial={!showSerial} />
           {showCount && objekts.length > 1 && (
