@@ -37,8 +37,14 @@ export const userRouter = {
 
       const provider = authContext.socialProviders.find((p) => p.id === providerId);
 
+      if (!provider) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: m.api_errors_user_not_linked_provider(),
+        });
+      }
+
       // fetch from provider
-      const info = await provider!.getUserInfo({
+      const info = await provider.getUserInfo({
         idToken: account.idToken ?? undefined,
         accessToken: account.accessToken ?? undefined,
         refreshToken: account.refreshToken ?? undefined,
@@ -66,7 +72,7 @@ export const userRouter = {
     .input(
       z.object({
         providerId: z.enum(["discord", "twitter"]),
-        accountId: z.string(),
+        accountId: z.string().min(1).max(64),
       }),
     )
     .handler(
@@ -103,7 +109,7 @@ export const userRouter = {
   updateAccount: authed
     .input(
       z.object({
-        name: z.string(),
+        name: z.string().min(1).max(256),
         showSocial: z.boolean(),
         removePic: z.boolean(),
       }),

@@ -18,7 +18,6 @@ export const serverEnv = createEnv({
     SES_MAIL_FROM: z.string().min(1),
     BYPASS_LIVE_KEY: z.string().min(1).optional(),
     REDIS_URL: z.string().min(1),
-    COSMO_KEY: z.string().min(1),
     // client
     VITE_SITE_URL: z.string().min(1),
     VITE_UMAMI_SCRIPT_URL: z.string().min(1).optional(),

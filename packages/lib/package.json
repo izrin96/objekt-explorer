@@ -4,7 +4,9 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./*": "./src/*.ts"
+    "./*": "./src/*.ts",
+    "./server": "./src/server/index.ts",
+    "./server/*": "./src/server/*.ts"
   },
   "scripts": {
     "lint": "oxlint --type-aware",
@@ -14,7 +16,8 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
-    "drizzle-orm": "catalog:"
+    "drizzle-orm": "catalog:",
+    "jose": "^6.2.3"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",

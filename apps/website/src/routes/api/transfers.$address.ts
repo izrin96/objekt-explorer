@@ -58,7 +58,9 @@ export const Route = createFileRoute("/api/transfers/$address")({
       GET: async ({ request, params }) => {
         const session = await getSession();
         const url = new URL(request.url);
-        const query = parseParams(url.searchParams);
+        const parsed = parseParams(url.searchParams);
+        if (!parsed.ok) return parsed.response;
+        const query = parsed.data;
 
         const owner = await db.query.userAddress.findFirst({
           where: { address: params.address },
@@ -303,7 +305,22 @@ function mergeSortedTransfers<T extends { transfer: { id: string; timestamp: str
   return result;
 }
 
-function parseParams(params: URLSearchParams): TransferParams {
+function parseParams(
+  params: URLSearchParams,
+): { ok: true; data: TransferParams } | { ok: false; response: Response } {
+  let cursor: unknown = undefined;
+  const cursorRaw = params.get("cursor");
+  if (cursorRaw) {
+    try {
+      cursor = JSON.parse(cursorRaw);
+    } catch {
+      return {
+        ok: false,
+        response: Response.json({ error: "Invalid cursor" }, { status: 400 }),
+      };
+    }
+  }
+
   const result = transfersSchema.safeParse({
     type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
@@ -313,19 +330,15 @@ function parseParams(params: URLSearchParams): TransferParams {
     on_offline: params.getAll("on_offline"),
     collection: params.getAll("collection"),
     at: params.get("at") ?? undefined,
-    cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
+    cursor,
   });
 
-  return result.success
-    ? result.data
-    : {
-        type: "all",
-        artist: [],
-        member: [],
-        season: [],
-        class: [],
-        on_offline: [],
-        collection: [],
-        cursor: undefined,
-      };
+  if (!result.success) {
+    return {
+      ok: false,
+      response: Response.json({ error: "Invalid query parameters" }, { status: 400 }),
+    };
+  }
+
+  return { ok: true, data: result.data };
 }

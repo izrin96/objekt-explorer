@@ -12,7 +12,7 @@ import {
   fetchOwnedLists,
   findOwnedList,
 } from "../../list.server";
-import { authed, pub, selectedArtistsMiddleware } from "../orpc";
+import { authed, optionalAuthed, pub, selectedArtistsMiddleware } from "../orpc";
 
 export const listEntriesRouter = {
   listEntries: pub
@@ -33,13 +33,24 @@ export const listEntriesRouter = {
       });
     }),
 
-  profileLists: pub
+  profileLists: optionalAuthed
     .input(
       z.object({
         profileAddress: z.string(),
       }),
     )
-    .handler(async ({ input: { profileAddress } }) => {
+    .handler(async ({ input: { profileAddress }, context: { session } }) => {
+      const owner = await db.query.userAddress.findFirst({
+        columns: { privateProfile: true, userId: true },
+        where: { address: profileAddress },
+      });
+
+      // Hide lists entirely for private profiles unless the requester owns
+      // the profile.
+      if (owner?.privateProfile && session?.user.id !== owner.userId) {
+        return [];
+      }
+
       return await fetchOwnedLists("profileAddress", profileAddress);
     }),
 

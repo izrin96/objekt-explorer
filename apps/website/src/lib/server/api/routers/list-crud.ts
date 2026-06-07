@@ -29,14 +29,14 @@ export const listCrud = {
   create: authed
     .input(
       z.object({
-        name: z.string().min(1),
+        name: z.string().min(1).max(256),
         hideUser: z.boolean(),
         listTypeNew: z.enum(["general", "sale", "have", "want"]).default("general"),
         isProfileBind: z.boolean().default(false),
         hideSerial: z.boolean().default(false),
         linkedListId: z.number().nullable(),
-        profileAddress: z.string().min(1).nullable(),
-        description: z.string().nullable(),
+        profileAddress: z.string().min(1).max(42).nullable(),
+        description: z.string().max(5000).nullable(),
         currency: z.string().max(10).nullable(),
         discoverable: z.boolean().default(false),
       }),
@@ -142,11 +142,11 @@ export const listCrud = {
     .input(
       z.object({
         slug: z.string(),
-        name: z.string().min(1),
+        name: z.string().min(1).max(256),
         hideUser: z.boolean(),
         gridColumns: z.number().min(2).max(18).nullable(),
-        profileAddress: z.string().min(1).nullable(),
-        description: z.string().nullable(),
+        profileAddress: z.string().min(1).max(42).nullable(),
+        description: z.string().max(5000).nullable(),
         currency: z.string().max(10).nullable(),
         hideSerial: z.boolean(),
         linkedListId: z.number().nullable(),
@@ -184,11 +184,17 @@ export const listCrud = {
         }
 
         let profileSlug: string | null = null;
-        if (input.profileAddress) {
+        // For isProfileBind lists, the profileAddress is locked to the
+        // original address — derive the slug from that, not from any
+        // untrusted input the caller may have passed.
+        const effectiveProfileAddress = list.isProfileBind
+          ? list.profileAddress
+          : input.profileAddress;
+        if (effectiveProfileAddress) {
           profileSlug = await generateProfileSlug(
             input.name,
             list.slug,
-            input.profileAddress.toLowerCase(),
+            effectiveProfileAddress.toLowerCase(),
             list.id,
           );
         }

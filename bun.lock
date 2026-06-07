@@ -201,6 +201,7 @@
       "dependencies": {
         "@repo/db": "workspace:*",
         "drizzle-orm": "catalog:",
+        "jose": "^6.2.3",
       },
       "devDependencies": {
         "@repo/tsconfig": "workspace:*",

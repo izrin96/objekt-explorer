@@ -6,9 +6,16 @@ import { cleanupStaleEntries, drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
 import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
+import { refreshAccessToken } from "./job/refresh-access-token";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 
 const crons: CronJob[] = [];
+
+// refresh the Cosmo access token proactively so the website never races
+// to refresh it. Runs on startup (in case the worker just started and the
+// token is already expired) and every 2 minutes thereafter.
+await refreshAccessToken();
+crons.push(cron("*/2 * * * *", refreshAccessToken));
 
 // refetch metadata for empty-collection
 // todo: rework, don't store into collection

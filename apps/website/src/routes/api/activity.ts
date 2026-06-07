@@ -54,7 +54,9 @@ export const Route = createFileRoute("/api/activity")({
     handlers: {
       GET: async ({ request }) => {
         const url = new URL(request.url);
-        const query = parseParams(url.searchParams);
+        const parsed = parseParams(url.searchParams);
+        if (!parsed.ok) return parsed.response;
+        const query = parsed.data;
 
         const transferResults = await fetchTransfers(query);
 
@@ -182,7 +184,22 @@ async function fetchTransfers(query: ActivityParams) {
     .limit(PAGE_SIZE + 1);
 }
 
-function parseParams(params: URLSearchParams): ActivityParams {
+function parseParams(
+  params: URLSearchParams,
+): { ok: true; data: ActivityParams } | { ok: false; response: Response } {
+  let cursor: unknown = undefined;
+  const cursorRaw = params.get("cursor");
+  if (cursorRaw) {
+    try {
+      cursor = JSON.parse(cursorRaw);
+    } catch {
+      return {
+        ok: false,
+        response: Response.json({ error: "Invalid cursor" }, { status: 400 }),
+      };
+    }
+  }
+
   const result = activitySchema.safeParse({
     type: params.get("type") ?? "all",
     artist: params.getAll("artist"),
@@ -191,19 +208,15 @@ function parseParams(params: URLSearchParams): ActivityParams {
     class: params.getAll("class"),
     on_offline: params.getAll("on_offline"),
     collection: params.getAll("collection"),
-    cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
+    cursor,
   });
 
-  return result.success
-    ? result.data
-    : {
-        type: "all",
-        artist: [],
-        member: [],
-        season: [],
-        class: [],
-        on_offline: [],
-        collection: [],
-        cursor: undefined,
-      };
+  if (!result.success) {
+    return {
+      ok: false,
+      response: Response.json({ error: "Invalid query parameters" }, { status: 400 }),
+    };
+  }
+
+  return { ok: true, data: result.data };
 }

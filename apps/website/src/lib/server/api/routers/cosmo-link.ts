@@ -74,10 +74,15 @@ export const cosmoLinkRouter = {
       }),
     )
     .handler(async ({ input, context: { session } }) => {
-      // rate limit: 1 active code per user per address (Redis key is scoped)
+      // rate limit: max 5 attempts per user per 30s.
+      // INCR creates the counter; EXPIRE NX (Redis 7+) sets the TTL only
+      // when no TTL is set yet, so subsequent INCRs preserve the original
+      // window. EXPIRE is sent unconditionally so that a process crash
+      // between INCR and EXPIRE on the first call does not leave a
+      // TTL-less counter.
       const rateLimitKey = `cosmo-verify-rate:${session.user.id}`;
-      await redis.set(rateLimitKey, "0", "EX", "30", "NX");
       const attempts = await redis.incr(rateLimitKey);
+      await redis.send("EXPIRE", [rateLimitKey, "30", "NX"]);
       if (attempts > 5) {
         throw new ORPCError("TOO_MANY_REQUESTS", {
           message: m.api_errors_cosmo_link_rate_limit(),

@@ -19,13 +19,14 @@ export const profileRouter = {
   edit: authed
     .input(
       z.object({
-        address: z.string(),
+        address: z.string().max(42),
         hideUser: z.boolean(),
         bannerImgUrl: z
           .url()
+          .max(512)
           .refine((url) => url.startsWith(`${serverEnv.S3_ENDPOINT}/profile-banner/`))
           .nullish(),
-        bannerImgType: z.string().nullish(),
+        bannerImgType: z.string().max(50).nullish(),
         privateSerial: z.boolean(),
         privateProfile: z.boolean(),
         hideNickname: z.boolean(),
@@ -55,9 +56,12 @@ export const profileRouter = {
   getPresignedPost: authed
     .input(
       z.object({
-        address: z.string(),
-        fileName: z.string(),
-        mimeType: z.string(),
+        address: z.string().max(42),
+        fileName: z.string().min(1),
+        mimeType: z
+          .string()
+          .max(50)
+          .regex(/^[\w.+-]+\/[\w.+-]+$/),
       }),
     )
     .handler(async ({ input: { address, fileName, mimeType }, context: { session } }) => {

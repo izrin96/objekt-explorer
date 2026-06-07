@@ -112,15 +112,19 @@ export const pinsRouter = {
       const current = validPins[currentIdx]!;
       const adjacent = validPins[swapIdx]!;
 
+      // Use a temp order to avoid clobbering when current and adjacent share
+      // an order value, then commit the swap in a single transaction.
+      const tempOrder = -1;
       await db.transaction(async (tx) => {
-        await tx
-          .update(pins)
-          .set({ order: adjacent.order ?? adjacent.id })
-          .where(eq(pins.id, current.id));
+        await tx.update(pins).set({ order: tempOrder }).where(eq(pins.id, current.id));
         await tx
           .update(pins)
           .set({ order: current.order ?? current.id })
           .where(eq(pins.id, adjacent.id));
+        await tx
+          .update(pins)
+          .set({ order: adjacent.order ?? adjacent.id })
+          .where(eq(pins.id, current.id));
       });
     }),
 };

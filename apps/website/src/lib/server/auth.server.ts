@@ -148,7 +148,8 @@ export const auth = betterAuth({
 
           const authContext = await auth.$context;
           const provider = authContext.socialProviders.find((p) => p.id === account.providerId);
-          const info = await provider!.getUserInfo({
+          if (!provider) return;
+          const info = await provider.getUserInfo({
             accessToken: account.accessToken ?? undefined,
           });
 

@@ -5,7 +5,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { desc, like } from "drizzle-orm";
 
 import { cacheUsers } from "@/lib/server/auth.server";
+import { rateLimit } from "@/lib/server/redis.server";
 import { getAccessToken } from "@/lib/server/token.server";
+
+const MAX_QUERY_LENGTH = 50;
+const RATE_LIMIT = 30; // requests
+const RATE_WINDOW_SECONDS = 60;
 
 export const Route = createFileRoute("/api/user/search")({
   server: {
@@ -15,6 +20,17 @@ export const Route = createFileRoute("/api/user/search")({
         const query = url.searchParams.get("query") ?? "";
 
         if (query.length < 1) return Response.json({ results: [] });
+        if (query.length > MAX_QUERY_LENGTH) {
+          return Response.json({ error: "Query too long" }, { status: 400 });
+        }
+
+        // best-effort per-IP rate limit to protect the upstream Cosmo API
+        const ip =
+          request.headers.get("x-client-ip") ?? request.headers.get("x-forwarded-for") ?? "unknown";
+        const attempts = await rateLimit(`user-search:rl:${ip}`, RATE_WINDOW_SECONDS);
+        if (attempts > RATE_LIMIT) {
+          return Response.json({ error: "Too many requests" }, { status: 429 });
+        }
 
         try {
           const accessToken = await getAccessToken();

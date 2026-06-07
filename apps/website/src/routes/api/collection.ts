@@ -14,17 +14,22 @@ const collectionSchema = z.object({
   at: z.string().optional(),
 });
 
-function parseParams(params: URLSearchParams): z.infer<typeof collectionSchema> {
+function parseParams(
+  params: URLSearchParams,
+): { ok: true; data: z.infer<typeof collectionSchema> } | { ok: false; response: Response } {
   const result = collectionSchema.safeParse({
     artist: params.getAll("artist"),
     at: params.get("at") ?? undefined,
   });
 
-  return result.success
-    ? result.data
-    : {
-        artist: [],
-      };
+  if (!result.success) {
+    return {
+      ok: false,
+      response: Response.json({ error: "Invalid query parameters" }, { status: 400 }),
+    };
+  }
+
+  return { ok: true, data: result.data };
 }
 
 export const Route = createFileRoute("/api/collection")({
@@ -32,7 +37,9 @@ export const Route = createFileRoute("/api/collection")({
     handlers: {
       GET: async ({ request }) => {
         const url = new URL(request.url);
-        const query = parseParams(url.searchParams);
+        const parsed = parseParams(url.searchParams);
+        if (!parsed.ok) return parsed.response;
+        const query = parsed.data;
 
         const whereQuery = and(
           ...(query.artist.length

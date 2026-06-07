@@ -156,7 +156,9 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
         const session = await getSession();
         const addr = params.address.toLowerCase();
         const url = new URL(request.url);
-        const query = parseParams(url.searchParams);
+        const parsed = parseParams(url.searchParams);
+        if (!parsed.ok) return parsed.response;
+        const query = parsed.data;
 
         const owner = await db.query.userAddress.findFirst({
           where: { address: addr },
@@ -190,7 +192,10 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
         const objektFilters = buildObjektFilters(query);
         const sortConfig = getSortConfig(query);
         const isFirstPage = !query.cursor;
-        const limit = query.limit ?? PER_PAGE;
+        // Clamp user-supplied limit to [1, PER_PAGE] to prevent unbounded
+        // queries via query string.
+        const requested = query.limit ?? PER_PAGE;
+        const limit = Math.min(Math.max(1, requested), PER_PAGE);
 
         // snapshot
         if (query.at) {
@@ -318,10 +323,34 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
   },
 });
 
-function parseParams(params: URLSearchParams): OwnedBySchema {
+function parseParams(
+  params: URLSearchParams,
+): { ok: true; data: OwnedBySchema } | { ok: false; response: Response } {
+  let cursor: unknown = undefined;
+  const cursorRaw = params.get("cursor");
+  if (cursorRaw) {
+    try {
+      cursor = JSON.parse(cursorRaw);
+    } catch {
+      return {
+        ok: false,
+        response: Response.json({ error: "Invalid cursor" }, { status: 400 }),
+      };
+    }
+  }
+
+  const limitRaw = params.get("limit");
+  const limitParsed = limitRaw ? Number(limitRaw) : undefined;
+  if (limitRaw && (Number.isNaN(limitParsed) || !Number.isFinite(limitParsed))) {
+    return {
+      ok: false,
+      response: Response.json({ error: "Invalid limit" }, { status: 400 }),
+    };
+  }
+
   const result = ownedBySchema.safeParse({
     at: params.get("at") ?? undefined,
-    cursor: params.get("cursor") ? JSON.parse(params.get("cursor")!) : undefined,
+    cursor,
     artist: params.getAll("artist").length ? params.getAll("artist") : undefined,
     member: params.getAll("member").length ? params.getAll("member") : undefined,
     class: params.getAll("class").length ? params.getAll("class") : undefined,
@@ -331,8 +360,15 @@ function parseParams(params: URLSearchParams): OwnedBySchema {
     collection: params.getAll("collection").length ? params.getAll("collection") : undefined,
     sort: params.get("sort") ?? undefined,
     sort_dir: params.get("sort_dir") ?? undefined,
-    limit: params.get("limit") ? Number(params.get("limit")) : undefined,
+    limit: limitParsed,
   });
 
-  return result.success ? result.data : {};
+  if (!result.success) {
+    return {
+      ok: false,
+      response: Response.json({ error: "Invalid query parameters" }, { status: 400 }),
+    };
+  }
+
+  return { ok: true, data: result.data };
 }
