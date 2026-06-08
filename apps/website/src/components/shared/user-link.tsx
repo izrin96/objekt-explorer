@@ -30,7 +30,7 @@ export default function UserLink({
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
               <TooltipTrigger aria-label={m.user_link_preview()}>
-                <InfoIcon size={16} className="text-muted-fg size-3 sm:size-4" />
+                <InfoIcon size={16} className="text-muted-fg size-3 md:size-3.5" />
               </TooltipTrigger>
               <TooltipContent inverse>{m.user_link_nickname_not_available()}</TooltipContent>
             </Tooltip>

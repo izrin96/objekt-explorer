@@ -279,7 +279,7 @@ function Activity() {
   return (
     <>
       <Card className="py-0">
-        <div className="w-full overflow-hidden text-sm">
+        <div className="w-full overflow-hidden text-xs lg:text-sm">
           {/* Desktop header */}
           <div className="hidden border-b lg:flex">
             <div className="max-w-[220px] min-w-[110px] flex-1 px-3 py-2.5">
@@ -289,6 +289,13 @@ function Activity() {
             <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.activity_table_from()}</div>
             <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.activity_table_to()}</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.activity_table_time()}</div>
+          </div>
+
+          {/* Medium header: 3 cols */}
+          <div className="hidden border-b md:flex lg:hidden">
+            <div className="min-w-[220px] flex-1 px-3 py-2.5">{m.activity_table_objekt()}</div>
+            <div className="min-w-[340px] flex-2 px-3 py-2.5">{m.activity_table_event()}</div>
+            <div className="min-w-[200px] flex-1 px-3 py-2.5">{m.activity_table_time()}</div>
           </div>
 
           <ObjektModal objekts={currentObjekt}>
@@ -374,7 +381,7 @@ const ActivityRow = memo(function ActivityRow({
 
   return (
     <div className="border-b">
-      {/* Desktop: horizontal flex layout */}
+      {/* Desktop: horizontal 5-column flex layout */}
       <div className="hidden items-center lg:flex">
         <div className="max-w-[220px] min-w-[110px] flex-1 px-3 py-0">
           <Badge className={cn("text-xs", config.className)}>
@@ -387,7 +394,7 @@ const ActivityRow = memo(function ActivityRow({
           className="min-w-[270px] flex-1 cursor-pointer truncate px-3 py-2.5"
           onClick={openObjekt}
         >
-          {item.objekt.collectionId} <span>#{item.objekt.serial}</span>
+          {item.objekt.collectionId} <span className="font-medium">#{item.objekt.serial}</span>
         </div>
         <div className="min-w-[210px] flex-1 truncate px-3 py-2.5">
           {event === "mint" ? (
@@ -408,12 +415,47 @@ const ActivityRow = memo(function ActivityRow({
         </div>
       </div>
 
+      {/* Medium: 3-column layout (collectionId, status+from+to, date) */}
+      <div className="hidden items-center md:flex lg:hidden">
+        <div
+          role="none"
+          className="min-w-[220px] flex-1 cursor-pointer truncate px-3 py-2.5"
+          onClick={openObjekt}
+        >
+          {item.objekt.collectionId} <span className="font-medium">#{item.objekt.serial}</span>
+        </div>
+        <div className="flex min-w-[340px] flex-[2] items-center gap-1.5 truncate px-3 py-2.5">
+          <Badge className={cn("shrink-0 text-xs", config.className)}>
+            <Icon size={14} weight="light" />
+            {config.label()}
+          </Badge>
+          <span className="truncate">
+            {event === "mint" ? (
+              <span className="text-muted-fg font-mono">{m.activity_cosmo()}</span>
+            ) : (
+              <UserLink address={item.transfer.from} nickname={item.nickname.from} />
+            )}
+          </span>
+          <span className="text-muted-fg/60 shrink-0">→</span>
+          <span className="truncate">
+            {event === "spin" ? (
+              <span className="text-muted-fg font-mono">{m.activity_cosmo_spin()}</span>
+            ) : (
+              <UserLink address={item.transfer.to} nickname={item.nickname.to} />
+            )}
+          </span>
+        </div>
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">
+          {format(item.transfer.timestamp, "d MMM yyyy h:mm:ss a")}
+        </div>
+      </div>
+
       {/* Mobile: compact 2-line grid layout */}
-      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs lg:hidden">
+      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs md:hidden">
         {/* Line 1: Event + Objekt + Serial + Time */}
         <div className="flex min-w-0 items-center gap-2">
           <span role="none" className="cursor-pointer truncate" onClick={openObjekt}>
-            {item.objekt.collectionId} <span>#{item.objekt.serial}</span>
+            {item.objekt.collectionId} <span className="font-medium">#{item.objekt.serial}</span>
           </span>
         </div>
         <span className="whitespace-nowrap">
