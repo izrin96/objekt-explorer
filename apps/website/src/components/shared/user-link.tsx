@@ -15,7 +15,7 @@ export default function UserLink({
   className?: string;
 }) {
   return (
-    <div className={cn("flex min-w-0 gap-2", className)}>
+    <div className={cn("flex min-w-0 gap-1.5", className)}>
       {address ? (
         <>
           <Link
@@ -30,7 +30,7 @@ export default function UserLink({
           {!nickname && (
             <Tooltip delay={0} closeDelay={0}>
               <TooltipTrigger aria-label={m.user_link_preview()}>
-                <InfoIcon size={16} />
+                <InfoIcon size={16} className="text-muted-fg size-3 sm:size-4" />
               </TooltipTrigger>
               <TooltipContent inverse>{m.user_link_nickname_not_available()}</TooltipContent>
             </Tooltip>

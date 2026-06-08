@@ -4,7 +4,7 @@ import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { Card } from "@/components/intentui/card";
@@ -124,49 +124,21 @@ function ProfileTradesVirtualizer({
   address: string;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const [resizeTick, setResizeTick] = useState(0);
 
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
-    estimateSize: () => 42,
+    estimateSize: () => 40,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
-    measureElement: (el) => el.getBoundingClientRect().height,
   });
-
-  // re-measure visible rows on window resize (responsive layout changes height)
-  useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    const handleResize = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        rowVirtualizer.measure();
-        setResizeTick((n) => n + 1);
-      }, 100);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(timeout);
-    };
-  }, [rowVirtualizer]);
-
-  // changing callback identity forces React to re-fire refs on visible items,
-  // which re-measures them after responsive layout changes (desktop ↔ mobile)
-  const measureRef = useCallback(
-    (el: HTMLDivElement | null) => {
-      if (el) rowVirtualizer.measureElement(el);
-    },
-    [rowVirtualizer, resizeTick],
-  );
 
   return (
     <div className="relative w-full overflow-hidden text-sm" ref={parentRef}>
       {/* Desktop header */}
-      <div className="hidden border-b lg:flex">
+      <div className="hidden border-b md:flex">
         <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.trades_table_headers_date()}</div>
-        <div className="min-w-[300px] flex-1 px-3 py-2.5">{m.trades_table_headers_objekt()}</div>
-        <div className="min-w-[130px] flex-1 px-3 py-2.5">{m.trades_table_headers_action()}</div>
+        <div className="min-w-[280px] flex-1 px-3 py-2.5">{m.trades_table_headers_objekt()}</div>
+        <div className="min-w-[110px] flex-1 px-3 py-2.5">{m.trades_table_headers_action()}</div>
         <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.trades_table_headers_user()}</div>
       </div>
 
@@ -185,7 +157,7 @@ function ProfileTradesVirtualizer({
             <div
               className="absolute top-0 left-0 w-full"
               key={row.transfer.id}
-              ref={measureRef}
+              ref={rowVirtualizer.measureElement}
               data-index={virtualRow.index}
               style={{
                 transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
@@ -237,21 +209,19 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
   return (
     <div className="border-b">
       {/* Desktop: horizontal flex layout */}
-      <div className="hidden items-center lg:flex">
+      <div className="hidden items-center md:flex">
         <div className="text-muted-fg min-w-[210px] flex-1 px-3 py-2.5 text-xs">
-          {format(row.transfer.timestamp, "d MMMM yyyy h:mm:ss a")
-            .replace("AM", "am")
-            .replace("PM", "pm")}
+          {format(row.transfer.timestamp, "d MMMM yyyy h:mm:ss a")}
         </div>
         <div
           role="none"
-          className="min-w-[300px] flex-1 cursor-pointer truncate px-3 py-2.5"
+          className="min-w-[280px] flex-1 cursor-pointer truncate px-3 py-2.5"
           onClick={ctx.handleClick}
         >
           {row.objekt.collectionId}{" "}
           <span className="text-muted-fg font-mono">#{row.objekt.serial}</span>
         </div>
-        <div className="min-w-[130px] flex-1 px-3 py-2.5">
+        <div className="min-w-[110px] flex-1 px-3 py-0">
           <Badge className={cn("text-xs", badgeClassName)}>
             {isReceiver ? m.trades_actions_received_from() : m.trades_actions_sent_to()}
           </Badge>
@@ -260,25 +230,23 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
       </div>
 
       {/* Mobile: compact 2-line grid layout */}
-      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs lg:hidden">
+      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs md:hidden">
         {/* Line 1: Badge + Objekt + Serial + Date */}
         <div className="flex min-w-0 items-center gap-2">
-          <Badge className={cn("shrink-0 text-xs", badgeClassName)}>
-            {isReceiver ? m.trades_actions_received_from() : m.trades_actions_sent_to()}
-          </Badge>
           <span role="none" className="cursor-pointer truncate" onClick={ctx.handleClick}>
             {row.objekt.collectionId}{" "}
             <span className="text-muted-fg font-mono">#{row.objekt.serial}</span>
           </span>
         </div>
         <span className="text-muted-fg whitespace-nowrap">
-          {format(row.transfer.timestamp, "d MMMM yyyy h:mm:ss a")
-            .replace("AM", "am")
-            .replace("PM", "pm")}
+          {format(row.transfer.timestamp, "d/M/yy HH:mm:ss")}
         </span>
 
         {/* Line 2: User */}
-        <div className="col-span-2 flex min-w-0 items-center">
+        <div className="col-span-2 flex min-w-0 items-center gap-2">
+          <Badge className={cn("shrink-0 text-xxs", badgeClassName)}>
+            {isReceiver ? m.trades_actions_received_from() : m.trades_actions_sent_to()}
+          </Badge>
           <div className="min-w-0 flex-1 overflow-hidden">{user}</div>
         </div>
       </div>

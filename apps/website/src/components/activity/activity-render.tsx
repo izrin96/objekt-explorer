@@ -38,7 +38,7 @@ type WebSocketMessage =
   | { type: "transfer"; data: ActivityData[] }
   | { type: "history"; data: ActivityData[] };
 
-const ROW_HEIGHT = 42;
+const ROW_HEIGHT = 40;
 const ANIMATION_DURATION = 1500;
 
 const EVENT_CONFIG: Record<
@@ -102,7 +102,6 @@ function Activity() {
   const parentRef = useRef<HTMLDivElement>(null);
   const isHoveringRef = useRef(false);
   const [currentObjekt, setCurrentObjekt] = useState<ValidObjekt[]>([]);
-  const [resizeTick, setResizeTick] = useState(0);
 
   const parsedSelectedArtistIds = useMemo(
     () => getSelectedArtistIds(filters.artist),
@@ -160,34 +159,7 @@ function Activity() {
     estimateSize: () => ROW_HEIGHT,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
-    measureElement: (el) => el.getBoundingClientRect().height,
   });
-
-  // re-measure visible rows on window resize (responsive layout changes height)
-  useEffect(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    const handleResize = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        rowVirtualizer.measure();
-        setResizeTick((n) => n + 1);
-      }, 100);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(timeout);
-    };
-  }, [rowVirtualizer]);
-
-  // changing callback identity forces React to re-fire refs on visible items,
-  // which re-measures them after responsive layout changes (desktop ↔ mobile)
-  const measureRef = useCallback(
-    (el: HTMLDivElement | null) => {
-      if (el) rowVirtualizer.measureElement(el);
-    },
-    [rowVirtualizer, resizeTick],
-  );
 
   const markAsNew = useCallback((items: ActivityData[]) => {
     const ids = items.map((d) => d.transfer.id);
@@ -305,7 +277,7 @@ function Activity() {
         <div className="relative w-full overflow-hidden text-sm" ref={parentRef}>
           {/* Desktop header */}
           <div className="hidden border-b lg:flex">
-            <div className="max-w-[200px] min-w-[110px] flex-1 px-3 py-2.5">
+            <div className="max-w-[220px] min-w-[110px] flex-1 px-3 py-2.5">
               {m.activity_table_event()}
             </div>
             <div className="min-w-[280px] flex-1 px-3 py-2.5">{m.activity_table_objekt()}</div>
@@ -341,7 +313,7 @@ function Activity() {
                         "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
                     )}
                     key={item.transfer.id}
-                    ref={measureRef}
+                    ref={rowVirtualizer.measureElement}
                     data-index={virtualRow.index}
                     style={{
                       transform: `translateY(${
@@ -397,7 +369,7 @@ const ActivityRow = memo(function ActivityRow({
     <div className="border-b">
       {/* Desktop: horizontal flex layout */}
       <div className="hidden items-center lg:flex">
-        <div className="max-w-[200px] min-w-[110px] flex-1 px-3 py-2.5">
+        <div className="max-w-[220px] min-w-[110px] flex-1 px-3 py-0">
           <Badge className={cn("text-xs", config.className)}>
             <Icon size={14} weight="light" />
             {config.label()}
@@ -434,22 +406,22 @@ const ActivityRow = memo(function ActivityRow({
       <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs lg:hidden">
         {/* Line 1: Event + Objekt + Serial + Time */}
         <div className="flex min-w-0 items-center gap-2">
-          <Badge className={cn("shrink-0 text-xs", config.className)}>
-            <Icon size={12} weight="light" />
-            {config.label()}
-          </Badge>
           <span role="none" className="cursor-pointer truncate" onClick={openObjekt}>
             {item.objekt.collectionId}{" "}
             <span className="text-muted-fg font-mono">#{item.objekt.serial}</span>
           </span>
         </div>
         <span className="text-muted-fg whitespace-nowrap">
-          {format(item.transfer.timestamp, "d MMMM yyyy h:mm:ss a")}
+          {format(item.transfer.timestamp, "d/M/yy HH:mm:ss")}
         </span>
 
         {/* Line 2: From → To */}
         <div className="col-span-2 flex min-w-0 items-center gap-1.5">
-          <div className="min-w-0 flex-1 overflow-hidden">
+          <Badge className={cn("shrink-0 text-xxs", config.className)}>
+            <Icon size={12} weight="light" />
+            {config.label()}
+          </Badge>
+          <div className="shrink-0 overflow-hidden">
             {event === "mint" ? (
               <span className="text-muted-fg block truncate font-mono">{m.activity_cosmo()}</span>
             ) : (
