@@ -285,9 +285,9 @@ function Activity() {
             <div className="max-w-[220px] min-w-[110px] flex-1 px-3 py-2.5">
               {m.activity_table_event()}
             </div>
-            <div className="min-w-[280px] flex-1 px-3 py-2.5">{m.activity_table_objekt()}</div>
-            <div className="min-w-[220px] flex-1 px-3 py-2.5">{m.activity_table_from()}</div>
-            <div className="min-w-[220px] flex-1 px-3 py-2.5">{m.activity_table_to()}</div>
+            <div className="min-w-[270px] flex-1 px-3 py-2.5">{m.activity_table_objekt()}</div>
+            <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.activity_table_from()}</div>
+            <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.activity_table_to()}</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.activity_table_time()}</div>
           </div>
 
@@ -384,28 +384,28 @@ const ActivityRow = memo(function ActivityRow({
         </div>
         <div
           role="none"
-          className="min-w-[280px] flex-1 cursor-pointer truncate px-3 py-2.5"
+          className="min-w-[270px] flex-1 cursor-pointer truncate px-3 py-2.5"
           onClick={openObjekt}
         >
           {item.objekt.collectionId}{" "}
           <span className="text-muted-fg font-mono">#{item.objekt.serial}</span>
         </div>
-        <div className="min-w-[220px] flex-1 truncate px-3 py-2.5">
+        <div className="min-w-[210px] flex-1 truncate px-3 py-2.5">
           {event === "mint" ? (
             <span className="text-muted-fg font-mono">{m.activity_cosmo()}</span>
           ) : (
             <UserLink address={item.transfer.from} nickname={item.nickname.from} />
           )}
         </div>
-        <div className="min-w-[220px] flex-1 truncate px-3 py-2.5">
+        <div className="min-w-[210px] flex-1 truncate px-3 py-2.5">
           {event === "spin" ? (
             <span className="text-muted-fg font-mono">{m.activity_cosmo_spin()}</span>
           ) : (
             <UserLink address={item.transfer.to} nickname={item.nickname.to} />
           )}
         </div>
-        <div className="text-muted-fg min-w-[250px] flex-1 px-3 py-2.5 text-xs">
-          {format(item.transfer.timestamp, "d MMMM yyyy h:mm:ss a")}
+        <div className="min-w-[250px] flex-1 px-3 py-2.5">
+          {format(item.transfer.timestamp, "d MMM yyyy h:mm:ss a")}
         </div>
       </div>
 
@@ -418,7 +418,7 @@ const ActivityRow = memo(function ActivityRow({
             <span className="text-muted-fg font-mono">#{item.objekt.serial}</span>
           </span>
         </div>
-        <span className="text-muted-fg whitespace-nowrap">
+        <span className="whitespace-nowrap">
           {format(item.transfer.timestamp, "d/M/yy HH:mm:ss")}
         </span>
 

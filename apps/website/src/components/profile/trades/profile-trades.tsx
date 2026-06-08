@@ -141,8 +141,8 @@ function ProfileTradesVirtualizer({
     <div className="w-full overflow-hidden text-sm">
       {/* Desktop header */}
       <div className="hidden border-b md:flex">
-        <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.trades_table_headers_date()}</div>
-        <div className="min-w-[280px] flex-1 px-3 py-2.5">{m.trades_table_headers_objekt()}</div>
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">{m.trades_table_headers_date()}</div>
+        <div className="min-w-[270px] flex-1 px-3 py-2.5">{m.trades_table_headers_objekt()}</div>
         <div className="min-w-[110px] flex-1 px-3 py-2.5">{m.trades_table_headers_action()}</div>
         <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.trades_table_headers_user()}</div>
       </div>
@@ -217,12 +217,12 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
     <div className="border-b">
       {/* Desktop: horizontal flex layout */}
       <div className="hidden items-center md:flex">
-        <div className="text-muted-fg min-w-[210px] flex-1 px-3 py-2.5 text-xs">
-          {format(row.transfer.timestamp, "d MMMM yyyy h:mm:ss a")}
+        <div className="min-w-[200px] flex-1 px-3 py-2.5">
+          {format(row.transfer.timestamp, "d MMM yyyy h:mm:ss a")}
         </div>
         <div
           role="none"
-          className="min-w-[280px] flex-1 cursor-pointer truncate px-3 py-2.5"
+          className="min-w-[270px] flex-1 cursor-pointer truncate px-3 py-2.5"
           onClick={ctx.handleClick}
         >
           {row.objekt.collectionId}{" "}
@@ -245,7 +245,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
             <span className="text-muted-fg font-mono">#{row.objekt.serial}</span>
           </span>
         </div>
-        <span className="text-muted-fg whitespace-nowrap">
+        <span className="whitespace-nowrap">
           {format(row.transfer.timestamp, "d/M/yy HH:mm:ss")}
         </span>
 

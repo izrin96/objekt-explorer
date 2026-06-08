@@ -311,7 +311,7 @@ function TradeTableContent({ data }: { data: ObjektTransferResult }) {
                   <TableCell>
                     <UserLink address={item.to} nickname={item.nickname} />
                   </TableCell>
-                  <TableCell>{format(item.timestamp, "d MMMM yyyy h:mm:ss a")}</TableCell>
+                  <TableCell>{format(item.timestamp, "d MMM yyyy h:mm:ss a")}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

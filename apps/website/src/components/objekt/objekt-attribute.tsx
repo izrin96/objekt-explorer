@@ -102,7 +102,7 @@ export function AttributePanel({
       )}
       <Pill
         label={m.objekt_created_at()}
-        value={format(objekt.createdAt, "d MMMM yyyy h:mm:ss a")}
+        value={format(objekt.createdAt, "d MMM yyyy h:mm:ss a")}
       />
       <PillMetadata objekt={objekt} />
     </div>
