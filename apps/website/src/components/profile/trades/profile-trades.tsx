@@ -225,8 +225,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
           className="min-w-[270px] flex-1 cursor-pointer truncate px-3 py-2.5"
           onClick={ctx.handleClick}
         >
-          {row.objekt.collectionId}{" "}
-          <span className="text-muted-fg font-mono">#{row.objekt.serial}</span>
+          {row.objekt.collectionId} <span>#{row.objekt.serial}</span>
         </div>
         <div className="min-w-[110px] flex-1 px-3 py-0">
           <Badge className={cn("text-xs", badgeClassName)}>
@@ -241,8 +240,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
         {/* Line 1: Badge + Objekt + Serial + Date */}
         <div className="flex min-w-0 items-center gap-2">
           <span role="none" className="cursor-pointer truncate" onClick={ctx.handleClick}>
-            {row.objekt.collectionId}{" "}
-            <span className="text-muted-fg font-mono">#{row.objekt.serial}</span>
+            {row.objekt.collectionId} <span>#{row.objekt.serial}</span>
           </span>
         </div>
         <span className="whitespace-nowrap">

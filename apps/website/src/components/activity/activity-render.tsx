@@ -387,8 +387,7 @@ const ActivityRow = memo(function ActivityRow({
           className="min-w-[270px] flex-1 cursor-pointer truncate px-3 py-2.5"
           onClick={openObjekt}
         >
-          {item.objekt.collectionId}{" "}
-          <span className="text-muted-fg font-mono">#{item.objekt.serial}</span>
+          {item.objekt.collectionId} <span>#{item.objekt.serial}</span>
         </div>
         <div className="min-w-[210px] flex-1 truncate px-3 py-2.5">
           {event === "mint" ? (
@@ -414,8 +413,7 @@ const ActivityRow = memo(function ActivityRow({
         {/* Line 1: Event + Objekt + Serial + Time */}
         <div className="flex min-w-0 items-center gap-2">
           <span role="none" className="cursor-pointer truncate" onClick={openObjekt}>
-            {item.objekt.collectionId}{" "}
-            <span className="text-muted-fg font-mono">#{item.objekt.serial}</span>
+            {item.objekt.collectionId} <span>#{item.objekt.serial}</span>
           </span>
         </div>
         <span className="whitespace-nowrap">
