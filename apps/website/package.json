@@ -58,7 +58,6 @@
     "drizzle-orm": "catalog:",
     "es-toolkit": "^1.47.0",
     "jose": "^6.2.3",
-    "motion": "^12.40.0",
     "nanoid": "^5.1.11",
     "nuqs": "^2.8.9",
     "ofetch": "^1.5.1",
