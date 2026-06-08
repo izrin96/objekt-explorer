@@ -239,7 +239,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
       {/* Desktop: horizontal flex layout */}
       <div className="hidden items-center lg:flex">
         <div className="text-muted-fg min-w-[210px] flex-1 px-3 py-2.5 text-xs">
-          {format(row.transfer.timestamp, "d MMMM yyyy, h:mm:ss a")
+          {format(row.transfer.timestamp, "d MMMM yyyy h:mm:ss a")
             .replace("AM", "am")
             .replace("PM", "pm")}
         </div>
@@ -272,7 +272,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
           </span>
         </div>
         <span className="text-muted-fg whitespace-nowrap">
-          {format(row.transfer.timestamp, "d MMMM yyyy, h:mm:ss a")
+          {format(row.transfer.timestamp, "d MMMM yyyy h:mm:ss a")
             .replace("AM", "am")
             .replace("PM", "pm")}
         </span>

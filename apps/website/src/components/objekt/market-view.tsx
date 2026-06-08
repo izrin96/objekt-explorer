@@ -165,7 +165,7 @@ function MarketRow({ item }: { item: MarketListing }) {
 
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_date()}</span>
-          <div className="truncate text-xs">{format(item.createdAt, "yyyy/MM/dd hh:mm:ss a")}</div>
+          <div className="truncate text-xs">{format(item.createdAt, "d MMMM yyyy h:mm:ss a")}</div>
         </div>
       </div>
     </Link>

@@ -141,6 +141,7 @@
   }
 
   --color-accent-solid: var(--accent-solid);
+  --color-discord: #5865f2;
 }
 
 :root {
