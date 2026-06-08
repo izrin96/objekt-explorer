@@ -450,10 +450,13 @@ const ActivityRow = memo(function ActivityRow({
       </div>
 
       {/* Mobile: compact 2-line grid layout */}
-      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-3 py-2.5 text-xs md:hidden">
+      <div
+        className="grid cursor-pointer grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs md:hidden"
+        onClick={openObjekt}
+      >
         {/* Line 1: Event + Objekt + Serial + Time */}
         <div className="flex min-w-0 items-center gap-2">
-          <span role="none" className="cursor-pointer truncate" onClick={openObjekt}>
+          <span role="none" className="truncate">
             {item.objekt.collectionId} <span className="font-medium">#{item.objekt.serial}</span>
           </span>
         </div>
