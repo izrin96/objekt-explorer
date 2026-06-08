@@ -109,6 +109,18 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /* custom */
+  --color-mint-50: oklch(98.2% 0.018 142.71);
+  --color-mint-100: oklch(95.389% 0.03258 143.63);
+  --color-mint-200: oklch(90.877% 0.06116 142.88);
+  --color-mint-300: oklch(85.68% 0.13002 141.33);
+  --color-mint-400: oklch(77.983% 0.19187 138.59);
+  --color-mint-500: oklch(71.286% 0.20473 136.46);
+  --color-mint-600: oklch(61.889% 0.18258 136.1);
+  --color-mint-700: oklch(52.091% 0.14544 136.95);
+  --color-mint-800: oklch(44.394% 0.11329 138.21);
+  --color-mint-900: oklch(39.097% 0.09215 139.42);
+  --color-mint-950: oklch(26.6% 0.065 139.82);
+
   --text-xxs: 0.6rem;
   --aspect-photocard: 1083 / 1673;
   --aspect-banner: 2.4;

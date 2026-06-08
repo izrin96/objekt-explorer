@@ -23,11 +23,11 @@ import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { Badge } from "../intentui/badge";
 import { Card } from "../intentui/card";
 import { Loader } from "../intentui/loader";
 import ObjektModal, { useObjektModal } from "../objekt/objekt-modal";
 import ErrorFallbackRender from "../router/error-boundary";
+import { Badge } from "../shared/badge";
 import { InfiniteQueryNext } from "../shared/infinite-query-pending";
 import UserLink from "../shared/user-link";
 import ActivityFilter from "./activity-filter";
@@ -52,20 +52,17 @@ const EVENT_CONFIG: Record<
   mint: {
     icon: LeafIcon,
     label: () => m.activity_event_type_mint(),
-    className:
-      "[--badge-bg:var(--color-lime-500)]/15 [--badge-fg:var(--color-lime-700)] [--badge-overlay:var(--color-lime-500)]/20 dark:[--badge-fg:var(--color-lime-300)]",
+    className: "bg-mint-500/10 text-mint-700 dark:bg-mint-400/10 dark:text-mint-300",
   },
   spin: {
     icon: ArrowsClockwiseIcon,
     label: () => m.activity_event_type_spin(),
-    className:
-      "[--badge-bg:var(--color-indigo-500)]/15 [--badge-fg:var(--color-indigo-700)] [--badge-overlay:var(--color-indigo-500)]/20 dark:[--badge-fg:var(--color-indigo-300)]",
+    className: "bg-indigo-500/10 text-indigo-700 dark:bg-indigo-400/10 dark:text-indigo-300",
   },
   transfer: {
     icon: PaperPlaneTiltIcon,
     label: () => m.activity_event_type_transfer(),
-    className:
-      "[--badge-bg:var(--color-rose-500)]/15 [--badge-fg:var(--color-rose-700)] [--badge-overlay:var(--color-rose-500)]/20 dark:[--badge-fg:var(--color-rose-300)]",
+    className: "bg-rose-500/10 text-rose-700 dark:bg-rose-400/10 dark:text-rose-300",
   },
 };
 
@@ -105,6 +102,7 @@ function Activity() {
   const parentRef = useRef<HTMLDivElement>(null);
   const isHoveringRef = useRef(false);
   const [currentObjekt, setCurrentObjekt] = useState<ValidObjekt[]>([]);
+  const [resizeTick, setResizeTick] = useState(0);
 
   const parsedSelectedArtistIds = useMemo(
     () => getSelectedArtistIds(filters.artist),
@@ -162,7 +160,34 @@ function Activity() {
     estimateSize: () => ROW_HEIGHT,
     overscan: 5,
     scrollMargin: parentRef.current?.offsetTop ?? 0,
+    measureElement: (el) => el.getBoundingClientRect().height,
   });
+
+  // re-measure visible rows on window resize (responsive layout changes height)
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    const handleResize = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        rowVirtualizer.measure();
+        setResizeTick((n) => n + 1);
+      }, 100);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      clearTimeout(timeout);
+    };
+  }, [rowVirtualizer]);
+
+  // changing callback identity forces React to re-fire refs on visible items,
+  // which re-measures them after responsive layout changes (desktop ↔ mobile)
+  const measureRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (el) rowVirtualizer.measureElement(el);
+    },
+    [rowVirtualizer, resizeTick],
+  );
 
   const markAsNew = useCallback((items: ActivityData[]) => {
     const ids = items.map((d) => d.transfer.id);
@@ -266,25 +291,33 @@ function Activity() {
     );
   }
 
+  if (transfers.length === 0) {
+    return (
+      <Card className="py-8">
+        <p className="text-muted-fg text-center text-sm">{m.activity_empty()}</p>
+      </Card>
+    );
+  }
+
   return (
     <>
       <Card className="py-0">
-        <div className="relative w-full overflow-x-auto text-sm" ref={parentRef}>
-          <div className="flex min-w-fit border-b">
-            <div className="min-w-[120px] flex-1 px-3 py-2.5">{m.activity_table_event()}</div>
-            <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.activity_table_objekt()}</div>
-            <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">
-              {m.activity_table_serial()}
+        <div className="relative w-full overflow-hidden text-sm" ref={parentRef}>
+          {/* Desktop header */}
+          <div className="hidden border-b lg:flex">
+            <div className="max-w-[200px] min-w-[110px] flex-1 px-3 py-2.5">
+              {m.activity_table_event()}
             </div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">{m.activity_table_from()}</div>
-            <div className="min-w-[300px] flex-1 px-3 py-2.5">{m.activity_table_to()}</div>
+            <div className="min-w-[280px] flex-1 px-3 py-2.5">{m.activity_table_objekt()}</div>
+            <div className="min-w-[220px] flex-1 px-3 py-2.5">{m.activity_table_from()}</div>
+            <div className="min-w-[220px] flex-1 px-3 py-2.5">{m.activity_table_to()}</div>
             <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.activity_table_time()}</div>
           </div>
 
           <ObjektModal objekts={currentObjekt}>
             <div
               style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-              className="relative min-w-fit"
+              className="relative w-full"
               role="region"
               aria-label={m.activity_table_aria_label()}
               onMouseEnter={() => {
@@ -303,13 +336,14 @@ function Activity() {
                 return (
                   <div
                     className={cn(
-                      "absolute top-0 left-0 min-w-full overflow-hidden",
+                      "absolute top-0 left-0 w-full",
                       isNew &&
                         "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
                     )}
                     key={item.transfer.id}
+                    ref={measureRef}
+                    data-index={virtualRow.index}
                     style={{
-                      height: `${virtualRow.size}px`,
                       transform: `translateY(${
                         virtualRow.start - rowVirtualizer.options.scrollMargin
                       }px)`,
@@ -360,37 +394,79 @@ const ActivityRow = memo(function ActivityRow({
   const Icon = config.icon;
 
   return (
-    <div className="flex min-w-fit items-center border-b">
-      <div className="min-w-[120px] flex-1 px-3 py-2.5">
-        <div className="flex items-center gap-2 font-semibold">
-          <Icon size={18} weight="light" />
-          <Badge className={cn("text-xs", config.className)}>{config.label()}</Badge>
+    <div className="border-b">
+      {/* Desktop: horizontal flex layout */}
+      <div className="hidden items-center lg:flex">
+        <div className="max-w-[200px] min-w-[110px] flex-1 px-3 py-2.5">
+          <Badge className={cn("text-xs", config.className)}>
+            <Icon size={14} weight="light" />
+            {config.label()}
+          </Badge>
+        </div>
+        <div
+          role="none"
+          className="min-w-[280px] flex-1 cursor-pointer truncate px-3 py-2.5"
+          onClick={openObjekt}
+        >
+          {item.objekt.collectionId}{" "}
+          <span className="text-muted-fg font-mono">#{item.objekt.serial}</span>
+        </div>
+        <div className="min-w-[220px] flex-1 truncate px-3 py-2.5">
+          {event === "mint" ? (
+            <span className="text-muted-fg font-mono">{m.activity_cosmo()}</span>
+          ) : (
+            <UserLink address={item.transfer.from} nickname={item.nickname.from} />
+          )}
+        </div>
+        <div className="min-w-[220px] flex-1 truncate px-3 py-2.5">
+          {event === "spin" ? (
+            <span className="text-muted-fg font-mono">{m.activity_cosmo_spin()}</span>
+          ) : (
+            <UserLink address={item.transfer.to} nickname={item.nickname.to} />
+          )}
+        </div>
+        <div className="text-muted-fg min-w-[250px] flex-1 px-3 py-2.5 text-xs">
+          {format(item.transfer.timestamp, "d MMMM yyyy h:mm:ss a")}
         </div>
       </div>
-      <div
-        role="none"
-        className="min-w-[250px] flex-1 cursor-pointer px-3 py-2.5"
-        onClick={openObjekt}
-      >
-        {item.objekt.collectionId}
-      </div>
-      <div className="max-w-[130px] min-w-[100px] flex-1 px-3 py-2.5">{item.objekt.serial}</div>
-      <div className="min-w-[300px] flex-1 px-3 py-2.5">
-        {event === "mint" ? (
-          <span className="text-muted-fg font-mono">{m.activity_cosmo()}</span>
-        ) : (
-          <UserLink address={item.transfer.from} nickname={item.nickname.from} />
-        )}
-      </div>
-      <div className="min-w-[300px] flex-1 px-3 py-2.5">
-        {event === "spin" ? (
-          <span className="text-muted-fg font-mono">{m.activity_cosmo_spin()}</span>
-        ) : (
-          <UserLink address={item.transfer.to} nickname={item.nickname.to} />
-        )}
-      </div>
-      <div className="min-w-[250px] flex-1 px-3 py-2.5">
-        {format(item.transfer.timestamp, "yyyy/MM/dd hh:mm:ss a")}
+
+      {/* Mobile: compact 2-line grid layout */}
+      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs lg:hidden">
+        {/* Line 1: Event + Objekt + Serial + Time */}
+        <div className="flex min-w-0 items-center gap-2">
+          <Badge className={cn("shrink-0 text-xs", config.className)}>
+            <Icon size={12} weight="light" />
+            {config.label()}
+          </Badge>
+          <span role="none" className="cursor-pointer truncate" onClick={openObjekt}>
+            {item.objekt.collectionId}{" "}
+            <span className="text-muted-fg font-mono">#{item.objekt.serial}</span>
+          </span>
+        </div>
+        <span className="text-muted-fg whitespace-nowrap">
+          {format(item.transfer.timestamp, "d MMMM yyyy h:mm:ss a")}
+        </span>
+
+        {/* Line 2: From → To */}
+        <div className="col-span-2 flex min-w-0 items-center gap-1.5">
+          <div className="min-w-0 flex-1 overflow-hidden">
+            {event === "mint" ? (
+              <span className="text-muted-fg block truncate font-mono">{m.activity_cosmo()}</span>
+            ) : (
+              <UserLink address={item.transfer.from} nickname={item.nickname.from} />
+            )}
+          </div>
+          <span className="text-muted-fg/60 shrink-0">→</span>
+          <div className="min-w-0 flex-1 overflow-hidden">
+            {event === "spin" ? (
+              <span className="text-muted-fg block truncate font-mono">
+                {m.activity_cosmo_spin()}
+              </span>
+            ) : (
+              <UserLink address={item.transfer.to} nickname={item.nickname.to} />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
