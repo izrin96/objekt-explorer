@@ -11,7 +11,7 @@ import {
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
@@ -100,6 +100,7 @@ function Activity() {
   const [isHovering, setIsHovering] = useState(false);
   const [queuedTransfers, setQueuedTransfers] = useState<ActivityData[]>([]);
   const parentRef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
   const isHoveringRef = useRef(false);
   const [currentObjekt, setCurrentObjekt] = useState<ValidObjekt[]>([]);
 
@@ -154,11 +155,15 @@ function Activity() {
     [realtimeTransfers, data?.pages],
   );
 
+  useLayoutEffect(() => {
+    offsetRef.current = parentRef.current?.offsetTop ?? 0;
+  }, []);
+
   const rowVirtualizer = useWindowVirtualizer({
     count: transfers.length,
     estimateSize: () => ROW_HEIGHT,
     overscan: 5,
-    scrollMargin: parentRef.current?.offsetTop ?? 0,
+    scrollMargin: offsetRef.current,
   });
 
   const markAsNew = useCallback((items: ActivityData[]) => {
@@ -274,7 +279,7 @@ function Activity() {
   return (
     <>
       <Card className="py-0">
-        <div className="relative w-full overflow-hidden text-sm" ref={parentRef}>
+        <div className="w-full overflow-hidden text-sm">
           {/* Desktop header */}
           <div className="hidden border-b lg:flex">
             <div className="max-w-[220px] min-w-[110px] flex-1 px-3 py-2.5">
@@ -287,44 +292,46 @@ function Activity() {
           </div>
 
           <ObjektModal objekts={currentObjekt}>
-            <div
-              style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-              className="relative w-full"
-              role="region"
-              aria-label={m.activity_table_aria_label()}
-              onMouseEnter={() => {
-                setIsHovering(true);
-                isHoveringRef.current = true;
-              }}
-              onMouseLeave={() => {
-                setIsHovering(false);
-                isHoveringRef.current = false;
-              }}
-            >
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const item = transfers[virtualRow.index];
-                if (!item) return null;
-                const isNew = newTransferIds.has(item.transfer.id);
-                return (
-                  <div
-                    className={cn(
-                      "absolute top-0 left-0 w-full",
-                      isNew &&
-                        "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
-                    )}
-                    key={item.transfer.id}
-                    ref={rowVirtualizer.measureElement}
-                    data-index={virtualRow.index}
-                    style={{
-                      transform: `translateY(${
-                        virtualRow.start - rowVirtualizer.options.scrollMargin
-                      }px)`,
-                    }}
-                  >
-                    <ActivityRow item={item} setCurrentObjekt={setCurrentObjekt} />
-                  </div>
-                );
-              })}
+            <div ref={parentRef}>
+              <div
+                style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+                className="relative w-full"
+                role="region"
+                aria-label={m.activity_table_aria_label()}
+                onMouseEnter={() => {
+                  setIsHovering(true);
+                  isHoveringRef.current = true;
+                }}
+                onMouseLeave={() => {
+                  setIsHovering(false);
+                  isHoveringRef.current = false;
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const item = transfers[virtualRow.index];
+                  if (!item) return null;
+                  const isNew = newTransferIds.has(item.transfer.id);
+                  return (
+                    <div
+                      className={cn(
+                        "absolute top-0 left-0 w-full",
+                        isNew &&
+                          "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
+                      )}
+                      key={item.transfer.id}
+                      ref={rowVirtualizer.measureElement}
+                      data-index={virtualRow.index}
+                      style={{
+                        transform: `translateY(${
+                          virtualRow.start - rowVirtualizer.options.scrollMargin
+                        }px)`,
+                      }}
+                    >
+                      <ActivityRow item={item} setCurrentObjekt={setCurrentObjekt} />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </ObjektModal>
 

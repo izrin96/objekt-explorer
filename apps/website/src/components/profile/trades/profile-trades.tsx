@@ -4,7 +4,7 @@ import { QueryErrorResetBoundary, useInfiniteQuery } from "@tanstack/react-query
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
-import { memo, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { Card } from "@/components/intentui/card";
@@ -124,16 +124,21 @@ function ProfileTradesVirtualizer({
   address: string;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
+  const offsetRef = useRef(0);
+
+  useLayoutEffect(() => {
+    offsetRef.current = parentRef.current?.offsetTop ?? 0;
+  }, []);
 
   const rowVirtualizer = useWindowVirtualizer({
     count: rows.length,
     estimateSize: () => 40,
     overscan: 5,
-    scrollMargin: parentRef.current?.offsetTop ?? 0,
+    scrollMargin: offsetRef.current,
   });
 
   return (
-    <div className="relative w-full overflow-hidden text-sm" ref={parentRef}>
+    <div className="w-full overflow-hidden text-sm">
       {/* Desktop header */}
       <div className="hidden border-b md:flex">
         <div className="min-w-[210px] flex-1 px-3 py-2.5">{m.trades_table_headers_date()}</div>
@@ -142,31 +147,33 @@ function ProfileTradesVirtualizer({
         <div className="min-w-[250px] flex-1 px-3 py-2.5">{m.trades_table_headers_user()}</div>
       </div>
 
-      <div
-        style={{
-          height: `${rowVirtualizer.getTotalSize()}px`,
-        }}
-        className="relative w-full"
-        role="region"
-        aria-label={m.objekt_trades_table_aria()}
-      >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const row = rows[virtualRow.index];
-          if (!row) return null;
-          return (
-            <div
-              className="absolute top-0 left-0 w-full"
-              key={row.transfer.id}
-              ref={rowVirtualizer.measureElement}
-              data-index={virtualRow.index}
-              style={{
-                transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
-              }}
-            >
-              <RowsRender address={address} item={row} />
-            </div>
-          );
-        })}
+      <div ref={parentRef}>
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+          }}
+          className="relative w-full"
+          role="region"
+          aria-label={m.objekt_trades_table_aria()}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const row = rows[virtualRow.index];
+            if (!row) return null;
+            return (
+              <div
+                className="absolute top-0 left-0 w-full"
+                key={row.transfer.id}
+                ref={rowVirtualizer.measureElement}
+                data-index={virtualRow.index}
+                style={{
+                  transform: `translateY(${virtualRow.start - rowVirtualizer.options.scrollMargin}px)`,
+                }}
+              >
+                <RowsRender address={address} item={row} />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
