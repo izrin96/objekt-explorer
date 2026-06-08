@@ -144,6 +144,12 @@ async function fetchTransfers(query: ActivityParams) {
       .from(collections)
       .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
 
+    // Run the collection query first to check if any match,
+    // avoids a full scan of transfers when no collections match the filters.
+    const matchingCollections = await collectionSubquery;
+
+    if (matchingCollections.length === 0) return [];
+
     // Step 1: IDs only — subquery lets planner use collection index first,
     // then nested-loop into transfer indexes
     const ids = await indexer

@@ -182,6 +182,12 @@ async function fetchTransfers(query: TransferParams, addr: string) {
       .from(collections)
       .where(and(ne(collections.slug, "empty-collection"), ...collectionFilters));
 
+    // Run the collection query first to check if any match,
+    // avoids a full scan of transfers when no collections match the filters.
+    const matchingCollections = await collectionSubquery;
+
+    if (matchingCollections.length === 0) return [];
+
     const getIds = (...addressFilters: (SQL | undefined)[]) =>
       indexer
         .select({ id: transfers.id })
