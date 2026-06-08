@@ -427,7 +427,6 @@ const ActivityRow = memo(function ActivityRow({
         <div className="flex min-w-[340px] flex-[2] items-center gap-1.5 truncate px-3 py-2.5">
           <Badge className={cn("shrink-0 text-xs", config.className)}>
             <Icon size={14} weight="light" />
-            {config.label()}
           </Badge>
           <span className="truncate">
             {event === "mint" ? (
@@ -451,7 +450,7 @@ const ActivityRow = memo(function ActivityRow({
       </div>
 
       {/* Mobile: compact 2-line grid layout */}
-      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-2 py-2 text-xs md:hidden">
+      <div className="grid grid-cols-[1fr_auto] gap-x-2 gap-y-1 px-3 py-2.5 text-xs md:hidden">
         {/* Line 1: Event + Objekt + Serial + Time */}
         <div className="flex min-w-0 items-center gap-2">
           <span role="none" className="cursor-pointer truncate" onClick={openObjekt}>
@@ -466,7 +465,6 @@ const ActivityRow = memo(function ActivityRow({
         <div className="col-span-2 flex min-w-0 items-center gap-1.5">
           <Badge className={cn("shrink-0 text-xxs", config.className)}>
             <Icon size={12} weight="light" />
-            {config.label()}
           </Badge>
           <div className="shrink-0 overflow-hidden">
             {event === "mint" ? (
