@@ -21,7 +21,6 @@ export async function uploadWebp(key: string, buffer: Buffer) {
     ...s3Config,
     bucket: BUCKET,
     type: "image/webp",
-    acl: "public-read",
   });
 }
 

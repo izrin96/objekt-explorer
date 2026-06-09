@@ -33,7 +33,6 @@ export function createPresignedUploadUrl(bucketName: string, key: string, mimeTy
       method: "PUT",
       expiresIn: 3600,
       type: mimeType,
-      acl: "public-read",
     });
 
     return { url, key };
