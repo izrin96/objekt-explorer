@@ -25,10 +25,10 @@ FROM base AS runner
 # Install curl for healthchecks
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app/apps/worker
+WORKDIR /app
 ENV NODE_ENV=production
 
 # Only the bundled output is needed - bun build bundles all deps
-COPY --from=installer /app/apps/worker/dist ./dist
+COPY --from=installer /app/apps/worker/dist ./apps/worker/dist
 
-CMD ["bun", "run", "dist/index.js"]
+CMD ["bun", "apps/worker/dist/index.js"]

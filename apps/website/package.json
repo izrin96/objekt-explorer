@@ -5,6 +5,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "bun run --bun --env-file=../../.env vite dev",
+    "dev:ws": "bun run --bun --env-file=../../.env dev-websocket.ts",
     "build": "bun run --bun --env-file=../../.env vite build",
     "build:prod": "bun run --bun vite build",
     "preview": "bun run --bun --env-file=../../.env vite preview",

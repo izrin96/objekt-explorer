@@ -24,15 +24,7 @@ RUN --mount=type=secret,id=VITE_SITE_URL \
     bun run --filter website build:prod
 
 # Compile server.ts into a standalone binary
-FROM base AS compiler
-WORKDIR /app
-COPY --from=builder /app/apps/website/dist ./apps/website/dist
-COPY --from=builder /app/apps/website/server.ts ./apps/website/server.ts
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/apps/website/package.json ./apps/website/package.json
-COPY --from=builder /app/apps/website/node_modules ./apps/website/node_modules
-
+# (builder stage has the full source from turbo prune)
 RUN bun build ./apps/website/server.ts \
   --compile \
   --outfile /app/server \
@@ -47,7 +39,7 @@ ENV NODE_ENV=production
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
 # Only the binary and static assets
-COPY --from=compiler /app/server ./server
+COPY --from=builder /app/server ./server
 COPY --from=builder /app/apps/website/dist ./dist
 
 EXPOSE 3000/tcp
