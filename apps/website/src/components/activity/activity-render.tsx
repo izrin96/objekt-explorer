@@ -144,6 +144,7 @@ function Activity() {
   const wsUrl = useMemo(() => {
     const configured = clientEnv.VITE_ACTIVITY_WEBSOCKET_URL;
     if (configured) return configured;
+    if (typeof document === "undefined") return "";
     return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`;
   }, []);
 
