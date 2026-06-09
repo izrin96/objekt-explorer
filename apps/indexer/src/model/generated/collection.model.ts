@@ -85,6 +85,19 @@ export class Collection {
   @Column("bool", { nullable: false, default: false })
   hasAudio!: boolean;
 
+  // manual add, migrate with drizzle
+  @Column({ type: "varchar", nullable: true, length: 512 })
+  processedThumbnailImage!: string | null;
+
+  @Column({ type: "varchar", nullable: true, length: 512 })
+  processedFrontImage!: string | null;
+
+  @Column({ type: "varchar", nullable: true, length: 512 })
+  processedBackImage!: string | null;
+
+  @Column({ type: "varchar", nullable: true, length: 32 })
+  imageSyncHash!: string | null;
+
   @OneToMany(() => Transfer, (e) => e.collection)
   transfers!: Transfer[];
 

@@ -21,6 +21,10 @@ type Collection @entity {
   onOffline: String! @index
   bandImageUrl: String
   hasAudio: Boolean!
+  processedThumbnailImage: String
+  processedFrontImage: String
+  processedBackImage: String
+  imageSyncHash: String
   transfers: [Transfer!] @derivedFrom(field: "collection")
   objekts: [Objekt!] @derivedFrom(field: "collection")
 }
