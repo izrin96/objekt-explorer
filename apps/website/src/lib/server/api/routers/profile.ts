@@ -5,10 +5,15 @@ import { isAddress } from "@repo/lib";
 import { and, eq } from "drizzle-orm";
 import * as z from "zod";
 
-import { serverEnv } from "@/lib/env/server";
 import { m } from "@/paraglide/messages";
 
-import { createPresignedUploadUrl, deleteFileFromBucket, getS3PublicUrl } from "../../s3.server";
+import {
+  createPresignedUploadUrl,
+  deleteFileFromBucket,
+  getS3PublicUrl,
+  S3_BUCKET,
+  S3_PUBLIC_URL,
+} from "../../s3.server";
 import { authed } from "../orpc";
 
 export const profileRouter = {
@@ -27,7 +32,7 @@ export const profileRouter = {
         bannerImgUrl: z
           .url()
           .max(512)
-          .refine((url) => url.startsWith(`${serverEnv.S3_ENDPOINT}/profile-banner/`))
+          .refine((url) => url.startsWith(`${S3_PUBLIC_URL}/profile-banner/`))
           .nullish(),
         bannerImgType: z.string().max(50).nullish(),
         privateSerial: z.boolean(),
@@ -44,7 +49,7 @@ export const profileRouter = {
       if (profile.bannerImgUrl && rest.bannerImgUrl !== undefined) {
         const fileName = profile.bannerImgUrl.split("/").pop();
         if (fileName) {
-          await deleteFileFromBucket("profile-banner", fileName);
+          await deleteFileFromBucket(S3_BUCKET, `profile-banner/${fileName}`);
         }
       }
 
@@ -72,9 +77,13 @@ export const profileRouter = {
 
       const ext = fileName.split(".").pop();
       const key = `${address.toLowerCase()}-${Date.now()}.${ext}`;
-      const { url } = createPresignedUploadUrl("profile-banner", key, mimeType);
+      const { url } = createPresignedUploadUrl(S3_BUCKET, `profile-banner/${key}`, mimeType);
 
-      return { url, key, publicUrl: getS3PublicUrl("profile-banner", key) };
+      return {
+        url,
+        key: `profile-banner/${key}`,
+        publicUrl: getS3PublicUrl(`profile-banner/${key}`),
+      };
     }),
 };
 

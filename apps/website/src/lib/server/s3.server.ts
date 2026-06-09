@@ -2,10 +2,14 @@ import { S3Client, type S3Options } from "bun";
 
 import { serverEnv } from "@/lib/env/server";
 
+export const S3_BUCKET = serverEnv.S3_BUCKET ?? "";
+export const S3_PUBLIC_URL = serverEnv.S3_PUBLIC_URL ?? serverEnv.S3_ENDPOINT;
+
 const s3Config: S3Options = {
   accessKeyId: serverEnv.S3_ACCESS_KEY,
   secretAccessKey: serverEnv.S3_SECRET_KEY,
   endpoint: serverEnv.S3_ENDPOINT,
+  region: serverEnv.S3_REGION ?? "auto",
 };
 
 export async function deleteFileFromBucket(bucketName: string, fileName: string) {
@@ -17,8 +21,8 @@ export async function deleteFileFromBucket(bucketName: string, fileName: string)
   }
 }
 
-export function getS3PublicUrl(bucketName: string, key: string) {
-  return `${serverEnv.S3_ENDPOINT}/${bucketName}/${key}`;
+export function getS3PublicUrl(key: string) {
+  return `${S3_PUBLIC_URL}/${key}`;
 }
 
 export function createPresignedUploadUrl(bucketName: string, key: string, mimeType: string) {
