@@ -18,23 +18,6 @@ services:
       interval: 5s
       retries: 1
 
-  # websocket server
-  server:
-    restart: always
-    ports:
-      - "4000:3000"
-    build:
-      context: .
-      dockerfile: ./apps/server/Dockerfile
-    environment:
-      - REDIS_URL=redis://valkey:6379
-      - DATABASE_URL=postgresql://postgres:postgres@pgbouncer:5432/main
-      - INDEXER_DATABASE_URL=postgresql://postgres:postgres@pgbouncer-indexer:5432/indexer
-    healthcheck:
-      test: test ! -f /tmp/drain && curl -f http://localhost:3000
-      interval: 5s
-      retries: 1
-
   # indexer processor
   processor:
     build:
@@ -108,13 +91,11 @@ services:
       args:
         - VITE_UMAMI_SCRIPT_URL
         - VITE_UMAMI_WEBSITE_ID
-        - VITE_ACTIVITY_WEBSOCKET_URL
         - VITE_SITE_URL
         - VITE_LIVE_API_KEY
     environment:
       - VITE_UMAMI_SCRIPT_URL
       - VITE_UMAMI_WEBSITE_ID
-      - VITE_ACTIVITY_WEBSOCKET_URL
       - BETTER_AUTH_SECRET
       - DISCORD_CLIENT_ID
       - DISCORD_CLIENT_SECRET

@@ -65,6 +65,12 @@
 
 import path from "node:path";
 
+import {
+  closeWebSocketConnections,
+  startActivityWebSocket,
+  websocketHandlers,
+} from "./src/lib/server/activity-websocket.server";
+
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000);
 const CLIENT_DIRECTORY = "./dist/client";
@@ -481,26 +487,39 @@ async function initializeServer() {
   }
 
   // Build static routes with intelligent preloading
-  const { routes } = await initializeStaticRoutes(CLIENT_DIRECTORY);
+  const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY);
+
+  // Start activity WebSocket pub/sub listener
+  startActivityWebSocket();
 
   // Create Bun server
   const server = Bun.serve({
     port: SERVER_PORT,
 
-    routes: {
-      // Serve static assets (preloaded or on-demand)
-      ...routes,
+    fetch(req, server) {
+      const url = new URL(req.url);
+
+      // WebSocket upgrade for activity feed
+      if (url.pathname === "/ws") {
+        const upgraded = server.upgrade(req);
+        if (upgraded) return undefined;
+        return new Response("Upgrade failed", { status: 500 });
+      }
+
+      // Serve preloaded or on-demand static assets
+      const staticHandler = staticRoutes[url.pathname];
+      if (staticHandler) return staticHandler(req);
 
       // Fallback to TanStack Start handler for all other routes
-      "/*": (req: Request) => {
-        try {
-          return handler.fetch(req);
-        } catch (error) {
-          log.error(`Server handler error: ${String(error)}`);
-          return new Response("Internal Server Error", { status: 500 });
-        }
-      },
+      try {
+        return handler.fetch(req);
+      } catch (error) {
+        log.error(`Server handler error: ${String(error)}`);
+        return new Response("Internal Server Error", { status: 500 });
+      }
     },
+
+    websocket: websocketHandlers,
 
     // Global error handler
     error(error) {
@@ -510,6 +529,17 @@ async function initializeServer() {
   });
 
   log.success(`Server listening on http://localhost:${String(server.port)}`);
+
+  // Graceful shutdown
+  async function shutdown(signal: string) {
+    log.info(`Received ${signal}, shutting down gracefully...`);
+    closeWebSocketConnections();
+    await server.stop();
+    process.exit(0);
+  }
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 // Initialize the server

@@ -8,8 +8,7 @@
 
 | Path                | Name             | Purpose                                     |
 | ------------------- | ---------------- | ------------------------------------------- |
-| `apps/website`      | `website`        | Main frontend (TanStack React Start + Vite) |
-| `apps/server`       | `server`         | WebSocket activity server                   |
+| `apps/website`      | `website`        | Main frontend (TanStack React Start + Vite) with embedded WebSocket activity server |
 | `apps/worker`       | `worker`         | Background job worker (Croner)              |
 | `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)             |
 | `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)  |
@@ -80,7 +79,7 @@ Full list in `.env.example`.
 
 ## Docker
 
-`docker-compose.yml` provides the full stack: website, server, worker, processor, PostgreSQL, Valkey, S3-compatible storage (rustfs), and connection pooling (pgbouncer).
+`docker-compose.yml` provides the full stack: website, worker, processor, PostgreSQL, Valkey, S3-compatible storage (rustfs), and connection pooling (pgbouncer).
 
 ## CI/CD
 

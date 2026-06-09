@@ -141,8 +141,14 @@ function Activity() {
       throwOnError: true,
     });
 
+  const wsUrl = useMemo(() => {
+    const configured = clientEnv.VITE_ACTIVITY_WEBSOCKET_URL;
+    if (configured) return configured;
+    return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`;
+  }, []);
+
   const { lastMessage, sendMessage, readyState } = useWebSocket(
-    !(isPending || isRefetching) ? clientEnv.VITE_ACTIVITY_WEBSOCKET_URL : null,
+    !(isPending || isRefetching) ? wsUrl : null,
     {
       shouldReconnect: true,
       reconnectAttempts: Infinity,

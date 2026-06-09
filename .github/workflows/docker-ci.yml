@@ -29,7 +29,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       web: ${{ steps.filter.outputs.web }}
-      server: ${{ steps.filter.outputs.server }}
       worker: ${{ steps.filter.outputs.worker }}
       indexer: ${{ steps.filter.outputs.indexer }}
       packages: ${{ steps.filter.outputs.packages }}
@@ -44,12 +43,6 @@ jobs:
           filters: |
             web:
               - 'apps/website/**'
-              - 'packages/**'
-              - 'turbo.json'
-              - 'package.json'
-              - 'bun.lock'
-            server:
-              - 'apps/server/**'
               - 'packages/**'
               - 'turbo.json'
               - 'package.json'
@@ -75,7 +68,6 @@ jobs:
     # Only run validation if there are code changes
     if: |
       needs.detect-changes.outputs.web == 'true' ||
-      needs.detect-changes.outputs.server == 'true' ||
       needs.detect-changes.outputs.worker == 'true' ||
       needs.detect-changes.outputs.indexer == 'true' ||
       needs.detect-changes.outputs.packages == 'true'
@@ -110,7 +102,6 @@ jobs:
       always() &&
       (needs.validate.result == 'success' || needs.validate.result == 'skipped') &&
       (needs.detect-changes.outputs.web == 'true' ||
-      needs.detect-changes.outputs.server == 'true' ||
       needs.detect-changes.outputs.worker == 'true' ||
       needs.detect-changes.outputs.indexer == 'true' ||
       github.event_name == 'workflow_dispatch')
@@ -121,8 +112,6 @@ jobs:
         include:
           - app: web
             dockerfile: ./apps/website/Dockerfile
-          - app: server
-            dockerfile: ./apps/server/Dockerfile
           - app: worker
             dockerfile: ./apps/worker/Dockerfile
           - app: indexer
@@ -132,7 +121,6 @@ jobs:
         run: |
           echo "Changes detected for ${{ matrix.app }}: ${{ needs.detect-changes.outputs[matrix.app] }}"
           echo "Web changes: ${{ needs.detect-changes.outputs.web }}"
-          echo "Server changes: ${{ needs.detect-changes.outputs.server }}"
           echo "Worker changes: ${{ needs.detect-changes.outputs.worker }}"
           echo "Indexer changes: ${{ needs.detect-changes.outputs.indexer }}"
           echo "Package changes: ${{ needs.detect-changes.outputs.packages }}"
@@ -171,7 +159,6 @@ jobs:
             VITE_SITE_URL=${{ secrets.VITE_SITE_URL }}
             VITE_UMAMI_SCRIPT_URL=${{ secrets.VITE_UMAMI_SCRIPT_URL }}
             VITE_UMAMI_WEBSITE_ID=${{ secrets.VITE_UMAMI_WEBSITE_ID }}
-            VITE_ACTIVITY_WEBSOCKET_URL=${{ secrets.VITE_ACTIVITY_WEBSOCKET_URL }}
             VITE_LIVE_API_KEY=${{ secrets.VITE_LIVE_API_KEY }}
 
   cleanup:
@@ -185,7 +172,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, server, worker, indexer]
+        app: [web, worker, indexer]
     steps:
       - name: Delete untagged ${{ matrix.app }} images
         if: needs.detect-changes.outputs[matrix.app] == 'true' || github.event.inputs.force_build_all == 'true'
