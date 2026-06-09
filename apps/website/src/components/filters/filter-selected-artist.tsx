@@ -7,7 +7,7 @@ import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { orpc } from "@/lib/orpc/client";
 import { m } from "@/paraglide/messages";
 
-import { Avatar } from "../intentui/avatar-custom";
+import { Avatar } from "../intentui/avatar";
 import { Button } from "../intentui/button";
 import { Loader } from "../intentui/loader";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "../intentui/menu";

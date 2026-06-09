@@ -461,7 +461,7 @@ const ActivityRow = memo(function ActivityRow({
           </span>
         </div>
         <span className="whitespace-nowrap">
-          {format(item.transfer.timestamp, "d/M/yy HH:mm:ss")}
+          {format(item.transfer.timestamp, "d MMM yy h:mm:ss a")}
         </span>
 
         {/* Line 2: From → To */}

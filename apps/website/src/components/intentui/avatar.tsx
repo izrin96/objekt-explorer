@@ -1,4 +1,3 @@
-import { Avatar as AvatarPrimitive } from "@base-ui/react/avatar";
 import { twMerge } from "tailwind-merge";
 
 export interface AvatarProps {
@@ -23,7 +22,7 @@ export interface AvatarProps {
     | "9xl";
 }
 
-export const Avatar = ({
+export function Avatar({
   src = null,
   isSquare = false,
   size = "md",
@@ -31,9 +30,9 @@ export const Avatar = ({
   alt = "",
   className,
   ...props
-}: AvatarProps & React.ComponentPropsWithoutRef<"span">) => {
+}: AvatarProps & React.ComponentPropsWithoutRef<"span">) {
   return (
-    <AvatarPrimitive.Root
+    <span
       data-slot="avatar"
       {...props}
       className={twMerge(
@@ -50,41 +49,33 @@ export const Avatar = ({
         size === "6xl" && "[--avatar-size:--spacing(28)]",
         size === "7xl" && "[--avatar-size:--spacing(32)]",
         size === "8xl" && "[--avatar-size:--spacing(36)]",
-        size === "9xl" && "[--avatar-size:--spacing(32)]",
+        size === "9xl" && "[--avatar-size:--spacing(42)]",
         isSquare
           ? "rounded-(--avatar-radius) *:rounded-(--avatar-radius)"
           : "rounded-full *:rounded-full",
         className,
       )}
     >
-      <AvatarPrimitive.Fallback
-        render={
-          <svg
-            className="font-md size-full fill-current p-[5%] text-[48px] uppercase select-none"
-            viewBox="0 0 100 100"
-            aria-hidden={alt ? undefined : "true"}
-          />
-        }
-      >
-        {alt && <title>{alt}</title>}
-        <text
-          x="50%"
-          y="50%"
-          alignmentBaseline="middle"
-          dominantBaseline="middle"
-          textAnchor="middle"
-          dy=".125em"
+      {initials && (
+        <svg
+          className="font-md size-full fill-current p-[5%] text-[48px] uppercase select-none"
+          viewBox="0 0 100 100"
+          aria-hidden={alt ? undefined : "true"}
         >
-          {initials}
-        </text>
-      </AvatarPrimitive.Fallback>
-      {src && (
-        <AvatarPrimitive.Image
-          className="size-full object-cover object-center"
-          src={src}
-          alt={alt}
-        />
+          {alt && <title>{alt}</title>}
+          <text
+            x="50%"
+            y="50%"
+            alignmentBaseline="middle"
+            dominantBaseline="middle"
+            textAnchor="middle"
+            dy=".125em"
+          >
+            {initials}
+          </text>
+        </svg>
       )}
-    </AvatarPrimitive.Root>
+      {src && <img className="size-full object-cover object-center" src={src} alt={alt} />}
+    </span>
   );
-};
+}

@@ -24,14 +24,12 @@ export interface RouterContext {
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {
-    const [artists] = await Promise.all([
+    await Promise.all([
       queryClient.ensureQueryData(orpc.config.getArtists.queryOptions()),
       queryClient.ensureQueryData(currentUserOptions),
       queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions()),
       queryClient.ensureQueryData(orpc.config.getSelectedArtists.queryOptions()),
     ]);
-
-    return { artists };
   },
   head: () => {
     const { meta, links } = generateMetadata({

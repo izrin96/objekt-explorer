@@ -247,7 +247,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
           </span>
         </div>
         <span className="whitespace-nowrap">
-          {format(row.transfer.timestamp, "d/M/yy HH:mm:ss")}
+          {format(row.transfer.timestamp, "d MMM yy h:mm:ss a")}
         </span>
 
         {/* Line 2: User */}

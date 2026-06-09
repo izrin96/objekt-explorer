@@ -2,7 +2,7 @@ import type { CSSProperties, PropsWithChildren } from "react";
 
 import { useLiveSession } from "@/hooks/use-live-session";
 
-import { Avatar } from "../intentui/avatar-custom";
+import { Avatar } from "../intentui/avatar";
 
 type LiveFooterProps = PropsWithChildren;
 
