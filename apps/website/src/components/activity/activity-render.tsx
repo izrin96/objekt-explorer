@@ -418,7 +418,7 @@ const ActivityRow = memo(function ActivityRow({
           )}
         </div>
         <div className="min-w-[250px] flex-1 px-3 py-2.5">
-          {format(item.transfer.timestamp, "d MMM yyyy h:mm:ss a")}
+          {format(item.transfer.timestamp, "yyyy/MM/dd h:mm:ss a")}
         </div>
       </div>
 
@@ -452,7 +452,7 @@ const ActivityRow = memo(function ActivityRow({
           </span>
         </div>
         <div className="min-w-[200px] flex-1 px-3 py-2.5">
-          {format(item.transfer.timestamp, "d MMM yyyy h:mm:ss a")}
+          {format(item.transfer.timestamp, "yyyy/MM/dd h:mm:ss a")}
         </div>
       </div>
 
@@ -468,7 +468,7 @@ const ActivityRow = memo(function ActivityRow({
           </span>
         </div>
         <span className="whitespace-nowrap">
-          {format(item.transfer.timestamp, "d MMM yy h:mm:ss a")}
+          {format(item.transfer.timestamp, "yyyy/MM/dd h:mm:ss a")}
         </span>
 
         {/* Line 2: From → To */}

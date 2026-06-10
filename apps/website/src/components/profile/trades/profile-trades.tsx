@@ -218,7 +218,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
       {/* Desktop: horizontal flex layout */}
       <div className="hidden items-center md:flex">
         <div className="min-w-[200px] flex-1 px-3 py-2.5">
-          {format(row.transfer.timestamp, "d MMM yyyy h:mm:ss a")}
+          {format(row.transfer.timestamp, "yyyy/MM/dd h:mm:ss a")}
         </div>
         <div
           role="none"
@@ -247,7 +247,7 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
           </span>
         </div>
         <span className="whitespace-nowrap">
-          {format(row.transfer.timestamp, "d MMM yy h:mm:ss a")}
+          {format(row.transfer.timestamp, "yyyy/MM/dd h:mm:ss a")}
         </span>
 
         {/* Line 2: User */}

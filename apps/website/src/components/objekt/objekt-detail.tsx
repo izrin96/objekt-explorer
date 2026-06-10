@@ -286,7 +286,7 @@ function OwnedListPanel({
                     </div>
                   </TableCell>
                   <TableCell>{item.tokenId}</TableCell>
-                  <TableCell>{format(item.receivedAt, "d MMM yyyy h:mm:ss a")}</TableCell>
+                  <TableCell>{format(item.receivedAt, "yyyy/MM/dd h:mm:ss a")}</TableCell>
                   <TableCell>
                     <Badge intent={item.transferable ? "info" : "danger"}>
                       {item.transferable ? m.objekt_yes() : m.objekt_no()}

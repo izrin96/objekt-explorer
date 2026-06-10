@@ -33,7 +33,7 @@ export function StatusPopoverContent() {
               {data.database.latestTransferDate && (
                 <span className="text-muted-fg text-xs">
                   {m.status_database_last_transfer()}{" "}
-                  {format(new Date(data.database.latestTransferDate), "d MMM yyyy h:mm:ss a")}
+                  {format(new Date(data.database.latestTransferDate), "yyyy/MM/dd h:mm:ss a")}
                 </span>
               )}
             </div>
