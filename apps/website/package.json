@@ -19,9 +19,9 @@
     "scan": "bunx react-scan@latest localhost:3000"
   },
   "dependencies": {
-    "@aws-sdk/client-sesv2": "^3.1058.0",
+    "@aws-sdk/client-sesv2": "^3.1066.0",
     "@base-ui/react": "^1.5.0",
-    "@better-auth/i18n": "^1.6.13",
+    "@better-auth/i18n": "^1.6.16",
     "@custom-react-hooks/use-element-size": "^1.5.1",
     "@custom-react-hooks/use-websocket": "^1.0.0",
     "@fontsource-variable/fira-code": "^5.2.7",
@@ -33,9 +33,9 @@
     "@inlang/paraglide-js-react": "^1.0.2",
     "@internationalized/date": "^3.12.2",
     "@internationalized/number": "^3.6.7",
-    "@orpc/client": "^1.14.4",
-    "@orpc/server": "^1.14.4",
-    "@orpc/tanstack-query": "^1.14.4",
+    "@orpc/client": "^1.14.5",
+    "@orpc/server": "^1.14.5",
+    "@orpc/tanstack-query": "^1.14.5",
     "@phosphor-icons/react": "^2.1.10",
     "@react-aria/i18n": "^3.13.1",
     "@react-aria/optimize-locales-plugin": "^1.2.1",
@@ -46,12 +46,12 @@
     "@repo/lib": "workspace:*",
     "@stream-io/video-react-sdk": "^1.37.4",
     "@t3-oss/env-core": "^0.13.11",
-    "@tanstack/react-query": "^5.100.14",
-    "@tanstack/react-router": "^1.170.10",
+    "@tanstack/react-query": "^5.101.0",
+    "@tanstack/react-router": "^1.170.15",
     "@tanstack/react-router-ssr-query": "^1.167.1",
-    "@tanstack/react-start": "^1.168.18",
-    "@tanstack/react-virtual": "^3.14.1",
-    "better-auth": "^1.6.13",
+    "@tanstack/react-start": "^1.168.25",
+    "@tanstack/react-virtual": "^3.14.2",
+    "better-auth": "^1.6.16",
     "chroma-js": "^3.2.0",
     "clsx": "^2.1.1",
     "core-js": "^3.49.0",
@@ -67,7 +67,7 @@
     "react-aria-components": "^1.18.0",
     "react-dom": "^19.2.7",
     "react-error-boundary": "^6.1.2",
-    "react-hook-form": "^7.77.0",
+    "react-hook-form": "^7.78.0",
     "react-intersection-observer": "^10.0.3",
     "recharts": "^3.8.1",
     "slugify": "^1.6.9",
@@ -84,15 +84,15 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
-    "@inlang/paraglide-js": "^2.18.1",
+    "@inlang/paraglide-js": "^2.19.0",
     "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@rolldown/plugin-babel": "^0.2.3",
     "@tailwindcss/vite": "^4.3.0",
     "@types/bun": "catalog:dev",
     "@types/chroma-js": "^3.1.2",
-    "@types/node": "^25.9.1",
-    "@types/react": "^19.2.16",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "babel-plugin-react-compiler": "^1.0.0",
@@ -100,6 +100,6 @@
     "vite": "^8.0.16"
   },
   "peerDependencies": {
-    "@tanstack/query-core": "^5.100.14"
+    "@tanstack/query-core": "^5.101.0"
   }
 }

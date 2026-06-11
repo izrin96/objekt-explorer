@@ -24,7 +24,7 @@
     "dotenv": "^17.4.2",
     "ethers": "^6.16.0",
     "glob": "^13.0.6",
-    "ioredis": "^5.11.0",
+    "ioredis": "^5.11.1",
     "lru-cache": "^11.5.1",
     "ofetch": "catalog:",
     "path-scurry": "^2.0.2",
