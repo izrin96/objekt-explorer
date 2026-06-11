@@ -490,7 +490,7 @@ async function initializeServer() {
   const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY);
 
   // Start activity WebSocket pub/sub listener
-  startActivityWebSocket();
+  void startActivityWebSocket();
 
   // Create Bun server
   const server = Bun.serve({

@@ -1,7 +1,7 @@
 import { NumberFormatter } from "@internationalized/number";
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { type CSSProperties, type PropsWithChildren, useState } from "react";
+import { memo, type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
 import { cn, getClientLocale } from "@/lib/utils";
@@ -37,7 +37,7 @@ type Props = PropsWithChildren<{
   onSetPrice?: () => void;
 }>;
 
-export default function ObjektView({
+const ObjektView = memo(function ObjektView({
   objekts,
   isFade = false,
   unobtainable = false,
@@ -173,4 +173,6 @@ export default function ObjektView({
       )}
     </div>
   );
-}
+});
+
+export default ObjektView;

@@ -152,6 +152,7 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
           <img
             className="size-full object-cover"
             loading="eager"
+            decoding="async"
             src={objekt.frontImage}
             alt={objekt.collectionId}
             onLoad={() => setLoaded(true)}
@@ -160,6 +161,7 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
             <img
               className="size-full object-cover"
               loading="eager"
+              decoding="async"
               src={objekt.thumbnailImage}
               alt={objekt.collectionId}
             />
@@ -172,6 +174,7 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
             <img
               className="size-full object-cover"
               loading="eager"
+              decoding="async"
               src={objekt.backImage}
               alt={objekt.collectionId}
               onLoad={() => setBackLoaded(true)}

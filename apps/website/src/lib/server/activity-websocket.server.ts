@@ -6,7 +6,9 @@ import { RedisClient, type ServerWebSocket } from "bun";
 
 import { serverEnv } from "@/lib/env/server";
 
-const pubsub = new RedisClient(serverEnv.REDIS_URL);
+const pubsub = new RedisClient(serverEnv.REDIS_URL, {
+  connectionTimeout: 5000,
+});
 
 const clients = new Set<ServerWebSocket>();
 
@@ -27,56 +29,64 @@ type TransferSendData = {
   objekt: OwnedObjekt;
 };
 
-export function startActivityWebSocket(): void {
-  void pubsub.subscribe("transfers", async (message, channel) => {
-    if (channel === "transfers") {
-      const transfers = JSON.parse(message) as TransferData[];
+export async function startActivityWebSocket(): Promise<void> {
+  try {
+    await pubsub.subscribe("transfers", async (message, channel) => {
+      if (channel === "transfers") {
+        const transfers = JSON.parse(message) as TransferData[];
 
-      const addresses = transfers.flatMap((a) => [a.from, a.to]);
-      const knownAddresses = await fetchKnownAddresses(addresses);
+        const addresses = transfers.flatMap((a) => [a.from, a.to]);
+        const knownAddresses = await fetchKnownAddresses(addresses);
 
-      const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+        const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
 
-      const transferBatch: TransferSendData[] = [];
+        const transferBatch: TransferSendData[] = [];
 
-      for (const transfer of transfers) {
-        if (transfer.collection.slug === "empty-collection") continue;
+        for (const transfer of transfers) {
+          if (transfer.collection.slug === "empty-collection") continue;
 
-        const { objekt, collection, ...rest } = transfer;
-        const fromUser = addressMap.get(transfer.from.toLowerCase());
-        const toUser = addressMap.get(transfer.to.toLowerCase());
+          const { objekt, collection, ...rest } = transfer;
+          const fromUser = addressMap.get(transfer.from.toLowerCase());
+          const toUser = addressMap.get(transfer.to.toLowerCase());
 
-        const transferEvent = {
-          nickname: {
-            from: fromUser?.hideNickname ? undefined : (fromUser?.nickname ?? undefined),
-            to: toUser?.hideNickname ? undefined : (toUser?.nickname ?? undefined),
-          },
-          transfer: rest,
-          objekt: mapOwnedObjekt(objekt, collection),
-        };
+          const transferEvent = {
+            nickname: {
+              from: fromUser?.hideNickname ? undefined : (fromUser?.nickname ?? undefined),
+              to: toUser?.hideNickname ? undefined : (toUser?.nickname ?? undefined),
+            },
+            transfer: rest,
+            objekt: mapOwnedObjekt(objekt, collection),
+          };
 
-        transferBatch.push(transferEvent);
-      }
-
-      transferHistory.unshift(...transferBatch);
-      if (transferHistory.length > MAX_HISTORY_SIZE) {
-        transferHistory.length = MAX_HISTORY_SIZE;
-      }
-
-      transferBatch.reverse();
-
-      clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(
-            JSON.stringify({
-              type: "transfer",
-              data: transferBatch,
-            }),
-          );
+          transferBatch.push(transferEvent);
         }
-      });
-    }
-  });
+
+        transferHistory.unshift(...transferBatch);
+        if (transferHistory.length > MAX_HISTORY_SIZE) {
+          transferHistory.length = MAX_HISTORY_SIZE;
+        }
+
+        transferBatch.reverse();
+
+        clients.forEach((client) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(
+              JSON.stringify({
+                type: "transfer",
+                data: transferBatch,
+              }),
+            );
+          }
+        });
+      }
+    });
+    console.log("[ActivityWS] Subscribed to transfers channel");
+  } catch (error) {
+    console.error(
+      "[ActivityWS] Failed to subscribe to transfers channel:",
+      error instanceof Error ? error.message : String(error),
+    );
+  }
 }
 
 export const websocketHandlers = {

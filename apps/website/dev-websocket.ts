@@ -5,7 +5,7 @@ import {
   websocketHandlers,
 } from "./src/lib/server/activity-websocket.server";
 
-startActivityWebSocket();
+void startActivityWebSocket();
 
 serve({
   port: 3001,

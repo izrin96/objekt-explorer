@@ -1,5 +1,5 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 
 import {
   ObjektHoverMenu,
@@ -24,7 +24,7 @@ export interface ObjektGridViewProps {
   children?: ReactNode;
 }
 
-function ObjektGridView({
+const ObjektGridView = memo(function ObjektGridView({
   objekts,
   hideLabel,
   showCount,
@@ -63,7 +63,7 @@ function ObjektGridView({
       </ObjektViewSelectable>
     </ObjektModal>
   );
-}
+});
 
 interface ObjektGridSelectProps {
   objekts: ValidObjekt[];

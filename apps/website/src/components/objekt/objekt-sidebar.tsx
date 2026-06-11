@@ -41,6 +41,7 @@ export default function ObjektSidebar(props: Props) {
           loading="eager"
           alt={m.objekt_band_image_alt()}
           src={objekt.bandImageUrl}
+          decoding="async"
         />
       )}
       <SidebarBand {...props} />
