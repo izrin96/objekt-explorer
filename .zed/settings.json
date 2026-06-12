@@ -1,73 +1,56 @@
 {
+  "tab_size": 2,
+  "hard_tabs": false,
+  "preferred_line_length": 100,
   "format_on_save": "on",
-  "formatter": "language_server",
+  "file_scan_exclusions": [
+    "**/routeTree.gen.ts",
+    "**/paraglide/**",
+    "**/.tanstack/**",
+    "**/dist/**",
+    "**/.turbo/**",
+    "**/lib/**",
+    "**/node_modules/**",
+    "**/.git/**"
+  ],
   "lsp": {
-    "typescript-language-server": {
-      "settings": {
-        "typescript": {
-          "preferences": {
-            "includePackageJsonAutoImports": "on"
-          }
-        }
-      }
-    },
-    "oxfmt": {
-      "initialization_options": {
-        "settings": {
-          "configPath": null,
-          "flags": {},
-          "fmt.configPath": null,
-          "fmt.experimental": true,
-          "run": "onSave",
-          "typeAware": false,
-          "unusedDisableDirectives": false
-        }
-      }
-    },
     "oxlint": {
-      "initialization_options": {
-        "settings": {
-          "disableNestedConfig": false,
-          "fixKind": "safe_fix",
-          "run": "onType",
-          "typeAware": true,
-          "unusedDisableDirectives": "deny"
-        }
+      "settings": {
+        "typeAware": true,
+        "run": "onSave"
+      }
+    },
+    "tailwindcss-language-server": {
+      "settings": {
+        "tailwindCSS": {
+          "lint": {
+            "suggestCanonicalClasses": "ignore"
+          }
+        },
+        "classFunctions": ["tv", "twMerge", "twJoin", "composeRenderProps", "composeTailwindRenderProps"]
       }
     }
   },
   "languages": {
-    "JavaScript": {
+    "TypeScript": {
+      "language_servers": ["oxlint", "oxfmt", "tailwindcss-language-server", "..."],
       "code_actions_on_format": {
         "source.fixAll.oxc": true,
-        "source.organizeImports.oxc": true
-      },
-      "formatter": {
-        "language_server": {
-          "name": "oxfmt"
-        }
+        "source.organizeImports": true
       }
     },
     "TSX": {
+      "language_servers": ["oxlint", "oxfmt", "tailwindcss-language-server", "..."],
       "code_actions_on_format": {
         "source.fixAll.oxc": true,
-        "source.organizeImports.oxc": true
-      },
-      "formatter": {
-        "language_server": {
-          "name": "oxfmt"
-        }
+        "source.organizeImports": true
       }
     },
-    "TypeScript": {
+    "JavaScript": {
+      "language_servers": ["oxlint", "oxfmt", "tailwindcss-language-server", "..."],
       "code_actions_on_format": {
         "source.fixAll.oxc": true,
-        "source.organizeImports.oxc": true
-      },
-      "formatter": {
-        "language_server": {
-          "name": "oxfmt"
-        }
+        "source.organizeImports": true
       }
     }
   }
