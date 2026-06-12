@@ -496,7 +496,7 @@ async function initializeServer() {
   const server = Bun.serve({
     port: SERVER_PORT,
 
-    fetch(req, server) {
+    async fetch(req, server) {
       const url = new URL(req.url);
 
       // WebSocket upgrade for activity feed
@@ -512,7 +512,18 @@ async function initializeServer() {
 
       // Fallback to TanStack Start handler for all other routes
       try {
-        return handler.fetch(req);
+        const response = await handler.fetch(req);
+        const contentType = response.headers.get("content-type") ?? "";
+        if (contentType.startsWith("text/html")) {
+          const newHeaders = new Headers(response.headers);
+          newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
+          return new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: newHeaders,
+          });
+        }
+        return response;
       } catch (error) {
         log.error(`Server handler error: ${String(error)}`);
         return new Response("Internal Server Error", { status: 500 });
