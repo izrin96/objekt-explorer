@@ -14,6 +14,11 @@
     "**/.git/**"
   ],
   "lsp": {
+    "tsgo": {
+      "settings": {
+        "package_version": "7.0.0-dev.20260611.2"
+      }
+    },
     "oxlint": {
       "settings": {
         "typeAware": true,
@@ -33,21 +38,21 @@
   },
   "languages": {
     "TypeScript": {
-      "language_servers": ["oxlint", "oxfmt", "tailwindcss-language-server", "..."],
+      "language_servers": ["tsgo", "oxlint", "oxfmt", "tailwindcss-language-server", "vtsls", "..."],
       "code_actions_on_format": {
         "source.fixAll.oxc": true,
         "source.organizeImports": true
       }
     },
     "TSX": {
-      "language_servers": ["oxlint", "oxfmt", "tailwindcss-language-server", "..."],
+      "language_servers": ["tsgo", "oxlint", "oxfmt", "tailwindcss-language-server", "vtsls", "..."],
       "code_actions_on_format": {
         "source.fixAll.oxc": true,
         "source.organizeImports": true
       }
     },
     "JavaScript": {
-      "language_servers": ["oxlint", "oxfmt", "tailwindcss-language-server", "..."],
+      "language_servers": ["tsgo", "oxlint", "oxfmt", "tailwindcss-language-server", "vtsls", "..."],
       "code_actions_on_format": {
         "source.fixAll.oxc": true,
         "source.organizeImports": true
