@@ -1,4 +1,4 @@
-import { type CronJob, cron } from "bun";
+import { cron, type CronJob } from "bun";
 
 import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
@@ -33,7 +33,7 @@ crons.push(
 // populate missing serials for online objekts
 await populateSerial();
 crons.push(
-  cron("*/10 * * * *", async () => {
+  cron("*/5 * * * *", async () => {
     await populateSerial();
   }),
 );
@@ -41,7 +41,7 @@ crons.push(
 // populate missing serials for offline objekts
 await populateSerialOffline();
 crons.push(
-  cron("*/10 * * * *", async () => {
+  cron("*/5 * * * *", async () => {
     await populateSerialOffline();
   }),
 );
@@ -52,7 +52,7 @@ crons.push(cron("0 * * * *", updateTransferableCosmoSpin));
 
 // drain outbox events from indexer (handles pins, locked objekts, and list entries)
 await drainOutbox();
-crons.push(cron("*/5 * * * *", drainOutbox));
+crons.push(cron("*/1 * * * *", drainOutbox));
 
 // periodic safety-net full scan for stale entries
 // await cleanupStaleEntries();
