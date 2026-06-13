@@ -296,8 +296,11 @@ export async function fetchUserByIdentifier(
             },
           ]);
 
-          // refetch again with new nickname
-          return await fetchUserByIdentifier(user.nickname, currentUser);
+          // redirect to new nickname
+          throw redirect({
+            to: "/@{$nickname}",
+            params: { nickname: user.nickname },
+          });
         }
 
         // no changes, update last check
@@ -313,6 +316,7 @@ export async function fetchUserByIdentifier(
           .set({ nickname: null, cosmoId: null, lastCosmoCheck: null })
           .where(eq(userAddress.nickname, cachedUser.nickname));
 
+        // redirect to address
         throw redirect({
           to: "/@{$nickname}",
           params: { nickname: cachedUser.address.toLowerCase() },
