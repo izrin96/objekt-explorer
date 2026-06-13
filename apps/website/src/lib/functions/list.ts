@@ -11,7 +11,7 @@ export const listBySlugInputSchema = z.object({
 });
 
 export const getListBySlug = createServerFn({ method: "GET" })
-  .inputValidator(listBySlugInputSchema)
+  .validator(listBySlugInputSchema)
   .handler(async ({ data }) => {
     const lookup = data.nickname
       ? { profileSlug: data.slug, profileAddress: (await resolveAddress(data.nickname))! }

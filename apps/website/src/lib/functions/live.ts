@@ -7,7 +7,7 @@ import { serverEnv } from "../env/server";
 import { getAccessToken } from "../server/token.server";
 
 export const getLiveSessionById = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ id: z.string() }))
+  .validator(z.object({ id: z.string() }))
   .handler(async ({ data }) => {
     const { accessToken } = await getAccessToken();
     const live = await fetchLiveSession(accessToken, data.id).catch(() => undefined);
@@ -16,7 +16,7 @@ export const getLiveSessionById = createServerFn({ method: "GET" })
   });
 
 export const checkAccess = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ token: z.string().optional() }))
+  .validator(z.object({ token: z.string().optional() }))
   .handler(async ({ data: { token } }) => {
     if (!token) return false;
     const bypassToken = serverEnv.BYPASS_LIVE_KEY;

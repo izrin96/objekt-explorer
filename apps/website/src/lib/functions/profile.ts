@@ -9,7 +9,7 @@ export const profileInputSchema = z.object({ nickname: z.string() });
 
 export const getProfile = createServerFn({ method: "GET" })
   .middleware([optionalAuth])
-  .inputValidator(profileInputSchema)
+  .validator(profileInputSchema)
   .handler(async ({ data, context: { session } }) => {
     const profile = await fetchUserByIdentifier(data.nickname, session?.user);
     if (!profile) throw notFound();
