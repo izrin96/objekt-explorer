@@ -286,6 +286,7 @@ export async function fetchUserByIdentifier(
           user.address.toLowerCase() !== cachedUser.address.toLowerCase() ||
           user.nickname.toLowerCase() !== cachedUser.nickname.toLowerCase()
         ) {
+          // update nickname and last check
           await touchLastCheck(cachedUser.nickname);
 
           await cacheUsers([
@@ -295,9 +296,11 @@ export async function fetchUserByIdentifier(
             },
           ]);
 
-          return await fetchUserByIdentifier(identifier, currentUser);
+          // refetch again with new nickname
+          return await fetchUserByIdentifier(user.nickname, currentUser);
         }
 
+        // no changes, update last check
         await touchLastCheck(cachedUser.nickname);
 
         return toPublicProfile(cachedUser, cachedUser.user, currentUser);
@@ -316,7 +319,7 @@ export async function fetchUserByIdentifier(
         });
       }
 
-      // update last check
+      // api down, check again in next hour
       await touchLastCheck(cachedUser.nickname);
     }
 
