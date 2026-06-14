@@ -5,6 +5,7 @@ import { isAddress } from "@repo/lib";
 import { and, eq } from "drizzle-orm";
 import * as z from "zod";
 
+import { acceptedFileMimeTypes, MAX_FILE_SIZE } from "@/lib/file";
 import { m } from "@/paraglide/messages";
 
 import {
@@ -66,18 +67,21 @@ export const profileRouter = {
       z.object({
         address: z.string().refine((val) => isAddress(val)),
         fileName: z.string().min(1),
-        mimeType: z
-          .string()
-          .max(50)
-          .regex(/^[\w.+-]+\/[\w.+-]+$/),
+        mimeType: z.string().refine((val) => new Set<string>(acceptedFileMimeTypes).has(val)),
+        fileSize: z.number().int().min(1).max(MAX_FILE_SIZE),
       }),
     )
-    .handler(async ({ input: { address, fileName, mimeType }, context: { session } }) => {
+    .handler(async ({ input: { address, fileName, mimeType, fileSize }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
       const ext = fileName.split(".").pop();
       const key = `${address.toLowerCase()}-${Date.now()}.${ext}`;
-      const { url } = createPresignedUploadUrl(S3_BUCKET, `profile-banner/${key}`, mimeType);
+      const { url } = await createPresignedUploadUrl(
+        S3_BUCKET,
+        `profile-banner/${key}`,
+        mimeType,
+        fileSize,
+      );
 
       return {
         url,

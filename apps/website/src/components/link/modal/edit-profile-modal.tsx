@@ -29,11 +29,10 @@ import {
 } from "@/components/intentui/sheet";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import Portal from "@/components/shared/portal";
+import { acceptedFileMimeTypes, MAX_FILE_SIZE } from "@/lib/file";
 import { orpc } from "@/lib/orpc/client";
-import { acceptedFileMimeTypes, SITE_NAME, validColumns } from "@/lib/utils";
+import { SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export type EditProfileModalProps = {
   nickname: string;
@@ -198,7 +197,10 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
       const response = await ofetch.raw(url, {
         method: "PUT",
         body: file,
-        headers: { "Content-Type": file.type },
+        headers: {
+          "Content-Type": file.type,
+          "Content-Length": String(file.size),
+        },
       });
 
       if (!response.ok) {
@@ -244,15 +246,16 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
 
   const onSubmit = handleSubmit(async (data) => {
     if (droppedImage && !data.removeBanner) {
-      const croppedFile = await generateCroppedImage();
+      const fileToUpload = (await generateCroppedImage()) ?? droppedImage;
       const { url, publicUrl } = await getPresignedPost.mutateAsync({
         address,
-        fileName: droppedImage.name,
-        mimeType: droppedImage.type,
+        fileName: fileToUpload.name,
+        mimeType: fileToUpload.type,
+        fileSize: fileToUpload.size,
       });
 
       try {
-        await handleUpload(url, croppedFile ?? droppedImage);
+        await handleUpload(url, fileToUpload);
       } catch {
         toast.error(m.profile_edit_upload_error());
         return;
@@ -262,7 +265,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         address: address,
         hideUser: data.hideUser,
         bannerImgUrl: publicUrl,
-        bannerImgType: droppedImage.type,
+        bannerImgType: fileToUpload.type,
         privateSerial: data.privateSerial,
         privateProfile: data.privateProfile,
         hideNickname: data.hideNickname,
