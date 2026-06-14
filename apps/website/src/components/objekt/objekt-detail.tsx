@@ -14,7 +14,6 @@ import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { isObjektOwned } from "@/lib/objekt-utils";
 import { unobtainables } from "@/lib/unobtainables";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
@@ -149,24 +148,28 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
       >
         {/* Front side */}
         <div className="rounded-photocard absolute inset-0 grid rotate-y-0 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
-          {/* Progressive loading: thumbnail stays until front image decodes */}
+          {/* Progressive loading: show thumbnail until front image is decoded */}
           <img
             className="size-full object-cover"
             loading="eager"
             decoding="async"
             src={objekt.frontImage}
             alt={objekt.collectionId}
-            onLoad={() => setLoaded(true)}
+            onLoad={(e) => {
+              e.currentTarget
+                .decode()
+                .then(() => setLoaded(true))
+                .catch(() => setLoaded(true));
+            }}
           />
-          <img
-            className={cn(
-              "size-full object-cover transition-opacity",
-              loaded ? "opacity-0" : "opacity-100",
-            )}
-            loading="eager"
-            src={objekt.thumbnailImage}
-            alt={objekt.collectionId}
-          />
+          {!loaded && (
+            <img
+              className="size-full object-cover"
+              loading="eager"
+              src={objekt.thumbnailImage}
+              alt={objekt.collectionId}
+            />
+          )}
           <ObjektSidebar objekt={objekt} hideSerial={objekts.length > 1} />
         </div>
         {/* Back side */}
@@ -178,17 +181,19 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
               decoding="async"
               src={objekt.backImage}
               alt={objekt.collectionId}
-              onLoad={() => setBackLoaded(true)}
+              onLoad={(e) => {
+                e.currentTarget
+                  .decode()
+                  .then(() => setBackLoaded(true))
+                  .catch(() => setBackLoaded(true));
+              }}
             />
           )}
-          <div
-            className={cn(
-              "aspect-photocard relative flex size-full bg-white transition-opacity",
-              backLoaded ? "opacity-0" : "opacity-100",
-            )}
-          >
-            <div className="h-[88%] w-[91%] self-center rounded-r-[3.5cqi] bg-(--objekt-bg-color) p-5"></div>
-          </div>
+          {!backLoaded && (
+            <div className="aspect-photocard relative flex size-full bg-white">
+              <div className="h-[88%] w-[91%] self-center rounded-r-[3.5cqi] bg-(--objekt-bg-color) p-5"></div>
+            </div>
+          )}
         </div>
       </div>
     </div>
