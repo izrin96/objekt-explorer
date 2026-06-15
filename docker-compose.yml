@@ -91,7 +91,7 @@ services:
     build:
       context: .
       dockerfile: ./apps/website/Dockerfile
-      args:
+      secrets:
         - VITE_UMAMI_SCRIPT_URL
         - VITE_UMAMI_WEBSITE_ID
         - VITE_SITE_URL
@@ -174,3 +174,13 @@ services:
 volumes:
   postgres-data:
   postgres-indexer-data:
+
+secrets:
+  VITE_SITE_URL:
+    environment: VITE_SITE_URL
+  VITE_UMAMI_SCRIPT_URL:
+    environment: VITE_UMAMI_SCRIPT_URL
+  VITE_UMAMI_WEBSITE_ID:
+    environment: VITE_UMAMI_WEBSITE_ID
+  VITE_LIVE_API_KEY:
+    environment: VITE_LIVE_API_KEY
