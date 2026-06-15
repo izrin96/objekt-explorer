@@ -1,4 +1,4 @@
-FROM oven/bun:1.3.14-slim AS base
+FROM oven/bun:canary-slim AS base
 
 # Prune the monorepo to only include worker and its dependencies
 FROM base AS pruner
