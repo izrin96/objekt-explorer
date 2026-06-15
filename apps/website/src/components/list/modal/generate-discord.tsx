@@ -149,8 +149,8 @@ function GenerateDiscordFormatRender() {
 
             if (formData.includeLink && haveList) {
               const linkOption = getListLinkOption(haveList);
-              const href = router.buildLocation(linkOption).publicHref;
-              output.push("", `[View this list](<${href}>)`);
+              const href = router.buildLocation(linkOption).href;
+              output.push("", `[View this list](<${window.location.origin + href}>)`);
             }
           }
 
@@ -166,8 +166,8 @@ function GenerateDiscordFormatRender() {
 
             if (formData.includeLink && wantList) {
               const linkOption = getListLinkOption(wantList);
-              const href = router.buildLocation(linkOption).publicHref;
-              output.push("", `[View this list](<${href}>)`);
+              const href = router.buildLocation(linkOption).href;
+              output.push("", `[View this list](<${window.location.origin + href}>)`);
             }
           }
 
