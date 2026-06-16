@@ -2,7 +2,7 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt, chunk } from "@repo/lib";
-import { and, eq, asc, gt, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
+import { and, eq, asc, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 // collection that already pre-assigned tokenId
@@ -222,23 +222,20 @@ export async function populateSerialOffline() {
 }
 
 async function processCollectionOffline(collectionId: string) {
-  const knownObjekts = await indexer
+  const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial })
-    .from(objekts)
-    .where(and(eq(objekts.collectionId, collectionId), gt(objekts.serial, 0)))
-    .orderBy(asc(objekts.id));
-
-  const zeroObjekts = await indexer
-    .select({ id: objekts.id })
     .from(objekts)
     .where(
       and(
         eq(objekts.collectionId, collectionId),
-        eq(objekts.serial, 0),
         // give some delay
         lte(objekts.mintedAt, new Date(Date.now() - 120 * 1000).toISOString()),
       ),
-    );
+    )
+    .orderBy(asc(objekts.id));
+
+  const knownObjekts = allObjekts.filter((o) => o.serial > 0);
+  const zeroObjekts = allObjekts.filter((o) => o.serial === 0);
 
   if (zeroObjekts.length === 0) {
     return;
