@@ -4,7 +4,6 @@ import { fixEmptyCollection } from "./job/collection";
 import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
-import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
 import { refreshAccessToken } from "./job/refresh-access-token";
 import { updateCurrencyRates } from "./job/update-currency-rates";
@@ -31,20 +30,20 @@ crons.push(
 );
 
 // populate missing serials for online objekts
-await populateSerial();
-crons.push(
-  cron("*/5 * * * *", async () => {
-    await populateSerial();
-  }),
-);
+// await populateSerial();
+// crons.push(
+//   cron("*/5 * * * *", async () => {
+//     await populateSerial();
+//   }),
+// );
 
 // populate missing serials for offline objekts
-await populateSerialOffline();
-crons.push(
-  cron("*/5 * * * *", async () => {
-    await populateSerialOffline();
-  }),
-);
+// await populateSerialOffline();
+// crons.push(
+//   cron("*/5 * * * *", async () => {
+//     await populateSerialOffline();
+//   }),
+// );
 
 // cosmo-spin transferable update
 await updateTransferableCosmoSpin();
@@ -52,7 +51,7 @@ crons.push(cron("0 * * * *", updateTransferableCosmoSpin));
 
 // drain outbox events from indexer (handles pins, locked objekts, and list entries)
 await drainOutbox();
-crons.push(cron("*/1 * * * *", drainOutbox));
+crons.push(cron("*/2 * * * *", drainOutbox));
 
 // periodic safety-net full scan for stale entries
 // await cleanupStaleEntries();
