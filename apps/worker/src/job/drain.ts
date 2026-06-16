@@ -5,7 +5,7 @@ import { listEntries, lists, lockedObjekts, pins } from "@repo/db/schema";
 import { chunk } from "@repo/lib";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
-const BATCH_SIZE = 1000;
+const BATCH_SIZE = 5000;
 const IN_CHUNK_SIZE = 500;
 
 export async function drainOutbox() {
