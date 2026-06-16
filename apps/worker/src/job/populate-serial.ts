@@ -2,7 +2,7 @@ import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { slugifyObjekt } from "@repo/lib";
-import { and, eq, asc, gt, ne, notInArray, inArray, or } from "drizzle-orm";
+import { and, eq, asc, gt, ne, notInArray, inArray, or, lte } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 // collection that already pre-assigned tokenId
@@ -50,18 +50,22 @@ async function processCollection(collectionId: string) {
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial })
     .from(objekts)
-    .where(eq(objekts.collectionId, collectionId))
+    .where(
+      and(
+        eq(objekts.collectionId, collectionId),
+        // give some delay
+        lte(objekts.mintedAt, new Date(Date.now() - 120 * 1000).toISOString()),
+      ),
+    )
     .orderBy(asc(objekts.id));
 
   if (allObjekts.length === 0) {
     return;
   }
 
-  const sortedAllObjekts = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
+  const sorted = allObjekts.toSorted((a, b) => parseInt(a.id) - parseInt(b.id));
 
-  const updates: { id: string; newSerial: number }[] = [];
-
-  const isNew = sortedAllObjekts.every((a) => a.serial === 0);
+  const isNew = sorted.every((a) => a.serial === 0);
 
   if (isNew) {
     // Detect pre-assigned collections: call findBoundaryTokenId
@@ -76,7 +80,7 @@ async function processCollection(collectionId: string) {
 
     if (!collection) return;
 
-    const firstTokenId = parseInt(sortedAllObjekts[0]!.id);
+    const firstTokenId = parseInt(sorted[0]!.id);
     const baseTokenId = await findBoundaryTokenId(collection.collectionId, firstTokenId, -1);
 
     if (baseTokenId !== firstTokenId) {
@@ -85,16 +89,24 @@ async function processCollection(collectionId: string) {
     }
   }
 
-  const maxSerial = Math.max(...sortedAllObjekts.map((a) => a.serial));
+  const maxSerial = Math.max(...sorted.map((a) => a.serial));
   let nextSerial = maxSerial + 1;
 
-  sortedAllObjekts.forEach((obj, idx) => {
+  const updates: { id: string; newSerial: number }[] = [];
+
+  sorted.forEach((obj, idx) => {
     // old collection (already contain non-zero objekt)
     // might start from serial zero, skip those serial zero objekt
     // unless its a new collection
     if (obj.serial === 0 && !(idx === 0 && !isNew)) {
       updates.push({ id: obj.id, newSerial: nextSerial++ });
     }
+
+    // overwrite serial
+    // const newSerial = idx + 1;
+    // if (obj.serial !== newSerial) {
+    //   updates.push({ id: obj.id, newSerial });
+    // }
   });
 
   if (updates.length === 0) {
@@ -177,14 +189,13 @@ export async function populateSerialOffline() {
     .from(collections)
     .innerJoin(objekts, eq(objekts.collectionId, collections.id))
     .where(
-      or(
-        and(
-          eq(objekts.serial, 0),
-          eq(collections.onOffline, "offline"),
-          ne(collections.slug, "empty-collection"),
+      and(
+        eq(objekts.serial, 0),
+        or(
+          and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
+          // extra collection with pre-assigned tokenId
+          inArray(collections.slug, excludeCollections),
         ),
-        // extra collection with pre-assigned tokenId
-        and(eq(objekts.serial, 0), inArray(collections.slug, excludeCollections)),
       ),
     );
 
@@ -214,7 +225,14 @@ async function processCollectionOffline(collectionId: string) {
   const zeroObjekts = await indexer
     .select({ id: objekts.id })
     .from(objekts)
-    .where(and(eq(objekts.collectionId, collectionId), eq(objekts.serial, 0)));
+    .where(
+      and(
+        eq(objekts.collectionId, collectionId),
+        eq(objekts.serial, 0),
+        // give some delay
+        lte(objekts.mintedAt, new Date(Date.now() - 120 * 1000).toISOString()),
+      ),
+    );
 
   if (zeroObjekts.length === 0) {
     return;
