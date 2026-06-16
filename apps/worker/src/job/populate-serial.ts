@@ -1,8 +1,8 @@
 import { fetchMetadataV3, normalizeV3 } from "@repo/cosmo/server/metadata";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
-import { slugifyObjekt } from "@repo/lib";
-import { and, eq, asc, gt, ne, notInArray, inArray, or, lte } from "drizzle-orm";
+import { slugifyObjekt, chunk } from "@repo/lib";
+import { and, eq, asc, gt, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 // collection that already pre-assigned tokenId
@@ -16,6 +16,9 @@ const excludeCollections = [
   "cream02-xinyu-315z",
   "cream02-yeonji-315z",
 ];
+
+const COLLECTION_CONCURRENCY = 5;
+const DB_BATCH_SIZE = 500;
 
 export async function populateSerial() {
   const collectionDiscover = await indexer
@@ -39,9 +42,9 @@ export async function populateSerial() {
 
   console.log(`[populateSerial] Found ${collectionDiscover.length} collections with zero serials`);
 
-  for (const { id: collectionId } of collectionDiscover) {
-    await processCollection(collectionId);
-  }
+  await chunk(collectionDiscover, COLLECTION_CONCURRENCY, async (batch) => {
+    await Promise.all(batch.map(({ id }) => processCollection(id)));
+  });
 
   console.log("[populateSerial] Done");
 }
@@ -115,13 +118,16 @@ async function processCollection(collectionId: string) {
   }
 
   await indexer.transaction(async (tx) => {
-    const batchSize = 100;
-    for (let i = 0; i < updates.length; i += batchSize) {
-      const batch = updates.slice(i, i + batchSize);
-
-      for (const update of batch) {
-        await tx.update(objekts).set({ serial: update.newSerial }).where(eq(objekts.id, update.id));
-      }
+    for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
+      const batch = updates.slice(i, i + DB_BATCH_SIZE);
+      const ids = batch.map((u) => u.id);
+      const caseExpr = batch
+        .map((u) => sql`WHEN ${u.id} THEN ${u.newSerial}`)
+        .reduce((acc, curr) => sql`${acc} ${curr}`, sql``);
+      await tx
+        .update(objekts)
+        .set({ serial: sql`(CASE id ${caseExpr} END)::int` })
+        .where(inArray(objekts.id, ids));
     }
   });
 
@@ -208,9 +214,9 @@ export async function populateSerialOffline() {
     `[populateSerialOffline] Found ${affectedCollections.length} collections with zero serials`,
   );
 
-  for (const { id: collectionId } of affectedCollections) {
-    await processCollectionOffline(collectionId);
-  }
+  await chunk(affectedCollections, COLLECTION_CONCURRENCY, async (batch) => {
+    await Promise.all(batch.map(({ id }) => processCollectionOffline(id)));
+  });
 
   console.log("[populateSerialOffline] Done");
 }
@@ -307,13 +313,16 @@ async function processCollectionOffline(collectionId: string) {
   }
 
   await indexer.transaction(async (tx) => {
-    const batchSize = 100;
-    for (let i = 0; i < updates.length; i += batchSize) {
-      const batch = updates.slice(i, i + batchSize);
-
-      for (const update of batch) {
-        await tx.update(objekts).set({ serial: update.newSerial }).where(eq(objekts.id, update.id));
-      }
+    for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
+      const batch = updates.slice(i, i + DB_BATCH_SIZE);
+      const ids = batch.map((u) => u.id);
+      const caseExpr = batch
+        .map((u) => sql`WHEN ${u.id} THEN ${u.newSerial}`)
+        .reduce((acc, curr) => sql`${acc} ${curr}`, sql``);
+      await tx
+        .update(objekts)
+        .set({ serial: sql`(CASE id ${caseExpr} END)::int` })
+        .where(inArray(objekts.id, ids));
     }
   });
 
