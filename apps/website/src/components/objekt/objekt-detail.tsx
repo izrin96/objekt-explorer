@@ -148,19 +148,13 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
       >
         {/* Front side */}
         <div className="rounded-photocard absolute inset-0 grid rotate-y-0 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
-          {/* Progressive loading: show thumbnail until front image is decoded */}
+          {/* Progressive loading: show thumbnail until front image loads */}
           <img
             className="size-full object-cover"
             loading="eager"
-            decoding="async"
             src={objekt.frontImage}
             alt={objekt.collectionId}
-            onLoad={(e) => {
-              e.currentTarget
-                .decode()
-                .then(() => setLoaded(true))
-                .catch(() => setLoaded(true));
-            }}
+            onLoad={() => setLoaded(true)}
           />
           {!loaded && (
             <img
@@ -177,7 +171,7 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
           {objekt.backImage && (
             <img
               className="size-full object-cover"
-              loading="eager"
+              loading="lazy"
               decoding="async"
               src={objekt.backImage}
               alt={objekt.collectionId}
