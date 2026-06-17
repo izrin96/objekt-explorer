@@ -39,7 +39,7 @@ type WebSocketMessage =
   | { type: "history"; data: ActivityData[] };
 
 const ROW_HEIGHT = 40;
-const ANIMATION_DURATION = 1500;
+const ANIMATION_DURATION = 1000;
 
 const EVENT_CONFIG: Record<
   EventType,
@@ -267,6 +267,16 @@ function Activity() {
     }
   }, [isHovering, queuedTransfers, markAsNew]);
 
+  const handleMouseEnter = useCallback(() => {
+    setIsHovering(true);
+    isHoveringRef.current = true;
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovering(false);
+    isHoveringRef.current = false;
+  }, []);
+
   if (isPending || isRefetching) {
     return (
       <div className="flex justify-center py-2">
@@ -312,14 +322,8 @@ function Activity() {
                 className="relative w-full"
                 role="region"
                 aria-label={m.activity_table_aria_label()}
-                onMouseEnter={() => {
-                  setIsHovering(true);
-                  isHoveringRef.current = true;
-                }}
-                onMouseLeave={() => {
-                  setIsHovering(false);
-                  isHoveringRef.current = false;
-                }}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
               >
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                   const item = transfers[virtualRow.index];
@@ -327,11 +331,7 @@ function Activity() {
                   const isNew = newTransferIds.has(item.transfer.id);
                   return (
                     <div
-                      className={cn(
-                        "absolute top-0 left-0 w-full",
-                        isNew &&
-                          "slide-in-from-top animate-in duration-300 ease-out-quint *:animate-live-animation-bg",
-                      )}
+                      className="absolute top-0 left-0 w-full will-change-transform"
                       key={item.transfer.id}
                       ref={rowVirtualizer.measureElement}
                       data-index={virtualRow.index}
@@ -339,9 +339,20 @@ function Activity() {
                         transform: `translateY(${
                           virtualRow.start - rowVirtualizer.options.scrollMargin
                         }px)`,
+                        contain: "layout style",
                       }}
                     >
-                      <ActivityRow item={item} setCurrentObjekt={setCurrentObjekt} />
+                      <div
+                        className={cn(
+                          isNew && "slide-in-from-top animate-in duration-300 ease-out-quint",
+                        )}
+                      >
+                        <ActivityRow
+                          item={item}
+                          isNew={isNew}
+                          setCurrentObjekt={setCurrentObjekt}
+                        />
+                      </div>
                     </div>
                   );
                 })}
@@ -370,9 +381,11 @@ function Activity() {
 
 const ActivityRow = memo(function ActivityRow({
   item,
+  isNew,
   setCurrentObjekt,
 }: {
   item: ActivityData;
+  isNew: boolean;
   setCurrentObjekt: (objekts: ValidObjekt[]) => void;
 }) {
   const ctx = useObjektModal();
@@ -387,7 +400,7 @@ const ActivityRow = memo(function ActivityRow({
   const Icon = config.icon;
 
   return (
-    <div className="border-b">
+    <div className={cn("border-b", isNew && "animate-live-animation-bg")}>
       {/* Desktop: horizontal 5-column flex layout */}
       <div className="hidden items-center lg:flex">
         <div className="max-w-[220px] min-w-[110px] flex-1 px-3 py-0">
