@@ -23,7 +23,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/intentui/sheet";
-import { Switch, SwitchField } from "@/components/intentui/switch";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
@@ -359,14 +358,14 @@ function EditListForm({
             control={control}
             name="discoverable"
             render={({ field: { name, value, onChange, onBlur } }) => (
-              <SwitchField
+              <CheckboxField
                 name={name}
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isDisabled={data.listTypeNew !== "want" && !data.isProfileBind}
               >
-                <Switch>{m.list_create_discoverable_label()}</Switch>
+                <Checkbox>{m.list_create_discoverable_label()}</Checkbox>
                 <Description>
                   {data.listTypeNew === "want"
                     ? m.list_create_discoverable_want_desc()
@@ -374,7 +373,7 @@ function EditListForm({
                       ? m.list_create_discoverable_sale_desc()
                       : m.list_create_discoverable_have_desc()}
                 </Description>
-              </SwitchField>
+              </CheckboxField>
             )}
           />
         )}

@@ -20,7 +20,8 @@ const Dialog = ({
       role={role}
       className={twMerge(
         // custom sm:[--gutter:--spacing(8)] to sm:[--gutter:--spacing(6)]
-        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden outline-hidden [--gutter:--spacing(6)] sm:[--gutter:--spacing(6)]",
+        // change overflow-hidden to overflow-clip
+        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-clip outline-hidden [--gutter:--spacing(6)] sm:[--gutter:--spacing(6)]",
         className,
       )}
       {...props}

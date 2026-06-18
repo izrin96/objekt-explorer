@@ -35,11 +35,11 @@ export default function CollectionFilter() {
     >
       <SelectTrigger />
       <Popover className="entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out bg-overlay flex max-h-80 w-(--trigger-width) flex-col overflow-hidden rounded-lg border">
-        <Dialog aria-label={m.filter_collection_no()}>
+        <Dialog aria-label={m.filter_collection_no()} className="overflow-hidden">
           <Autocomplete filter={contains}>
-            <div className="bg-muted border-b p-2">
-              <SearchField className="bg-bg rounded-lg" autoFocus>
-                <SearchInput />
+            <div className="border-b py-0.5">
+              <SearchField className="rounded-lg focus-within:ring-0" autoFocus>
+                <SearchInput className="border-none ring-0 focus:ring-0" />
               </SearchField>
             </div>
             <ListBox className="max-h-[inherit] min-w-[inherit] rounded-t-none border-0 bg-transparent shadow-none">

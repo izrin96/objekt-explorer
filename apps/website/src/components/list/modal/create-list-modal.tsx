@@ -20,7 +20,6 @@ import {
 } from "@/components/intentui/modal";
 import { Radio, RadioField, RadioGroup } from "@/components/intentui/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
-import { Switch, SwitchField } from "@/components/intentui/switch";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
@@ -368,14 +367,14 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             control={control}
             name="discoverable"
             render={({ field: { name, value, onChange, onBlur } }) => (
-              <SwitchField
+              <CheckboxField
                 name={name}
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isDisabled={watchedListTypeNew !== "want" && !watchedIsProfileBind}
               >
-                <Switch>{m.list_create_discoverable_label()}</Switch>
+                <Checkbox>{m.list_create_discoverable_label()}</Checkbox>
                 <Description>
                   {watchedListTypeNew === "want"
                     ? m.list_create_discoverable_want_desc()
@@ -383,7 +382,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                       ? m.list_create_discoverable_sale_desc()
                       : m.list_create_discoverable_have_desc()}
                 </Description>
-              </SwitchField>
+              </CheckboxField>
             )}
           />
         )}
