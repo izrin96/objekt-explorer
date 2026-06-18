@@ -6,12 +6,22 @@ function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
 }
 
+const seasonShortNames: Record<string, string> = {
+  spring: "Sp",
+  summer: "Su",
+  autumn: "A",
+  winter: "W",
+};
+
 export function getCollectionShortId(objekt: ValidObjekt) {
   if (objekt.artist === "idntt") {
-    return `${objekt.member} ${objekt.season} ${objekt.collectionNo}`;
+    const prefix = objekt.season.slice(0, -2).toLowerCase();
+    const shortName = seasonShortNames[prefix] ?? objekt.season.slice(0, -2);
+    const year = objekt.season.slice(-2);
+    return `${objekt.member} ${shortName}${year} ${objekt.collectionNo}`;
   }
   const seasonNumber = Number(objekt.season.slice(-2));
-  if (seasonNumber <= 1) return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
+  if (seasonNumber < 2) return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
   return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${objekt.collectionNo}`;
 }
 
