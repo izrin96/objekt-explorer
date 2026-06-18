@@ -10,6 +10,7 @@ import type {
   TableHeaderProps as HeaderProps,
   RowProps,
   TableBodyProps,
+  TableFooterProps,
   TableProps as TablePrimitiveProps,
 } from "react-aria-components/Table";
 import {
@@ -30,7 +31,7 @@ import { twJoin, twMerge } from "tailwind-merge";
 import { CardDescription, CardTitle } from "@/components/intentui/card";
 import { cx } from "@/lib/primitive";
 
-import { Checkbox } from "./checkbox";
+import { Checkbox, CheckboxField } from "./checkbox";
 
 interface TableProps extends Omit<TablePrimitiveProps, "className"> {
   allowResize?: boolean;
@@ -370,7 +371,11 @@ const TableHeader = <T extends object>({
             !bleed && "sm:first:ps-1 sm:last:pe-1",
           )}
         >
-          {selectionMode === "multiple" && <Checkbox slot="selection" />}
+          {selectionMode === "multiple" && (
+            <CheckboxField className="gap-x-0" slot="selection">
+              <Checkbox className="col-span-1" />
+            </CheckboxField>
+          )}
         </Column>
       )}
       <Collection items={columns}>{children}</Collection>
@@ -458,7 +463,9 @@ const TableRow = <T extends object>({
       )}
       {selectionBehavior === "toggle" && (
         <TableCell className="px-0">
-          <Checkbox slot="selection" />
+          <CheckboxField className="gap-x-0" slot="selection">
+            <Checkbox className="col-span-1" />
+          </CheckboxField>
         </TableCell>
       )}
       <Collection items={columns}>{children}</Collection>
@@ -521,7 +528,9 @@ const TableCell = ({ className, ref, ...props }: TableCellProps) => {
   );
 };
 
-const TableFooter = TableFooterPrimitive;
+const TableFooter = <T extends object>({ className, ...props }: TableFooterProps<T>) => {
+  return <TableFooterPrimitive className={twMerge("**:font-semibold", className)} {...props} />;
+};
 
 export type { TableColumnProps, TableProps, TableRowProps };
 export { Table, TableBody, TableCell, TableColumn, TableFooter, TableHeader, TableRow };

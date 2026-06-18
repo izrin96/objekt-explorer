@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 import "react-advanced-cropper/dist/style.css";
 import { Button } from "@/components/intentui/button";
-import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxField } from "@/components/intentui/checkbox";
 import { Description, Label } from "@/components/intentui/field";
 import { FileTrigger } from "@/components/intentui/file-trigger";
 import { Link } from "@/components/intentui/link";
@@ -296,80 +296,80 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               isSelected={value}
               onChange={onChange}
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.profile_edit_hide_user_label()}</CheckboxLabel>
+              <Checkbox>{m.profile_edit_hide_user_label()}</Checkbox>
               <Description>{m.profile_edit_hide_user_desc({ siteName: SITE_NAME })}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
         <Controller
           control={control}
           name="hideNickname"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               isSelected={value}
               onChange={onChange}
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.profile_edit_hide_nickname_label()}</CheckboxLabel>
+              <Checkbox>{m.profile_edit_hide_nickname_label()}</Checkbox>
               <Description>{m.profile_edit_hide_nickname_desc()}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
         <Controller
           control={control}
           name="privateSerial"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               isSelected={value}
               onChange={onChange}
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.profile_edit_private_serial_label()}</CheckboxLabel>
+              <Checkbox>{m.profile_edit_private_serial_label()}</Checkbox>
               <Description>{m.profile_edit_private_serial_desc()}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
         <Controller
           control={control}
           name="hideTransfer"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               isSelected={value}
               onChange={onChange}
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.profile_edit_hide_transfer_label()}</CheckboxLabel>
+              <Checkbox>{m.profile_edit_hide_transfer_label()}</Checkbox>
               <Description>{m.profile_edit_hide_transfer_desc()}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
         <Controller
           control={control}
           name="privateProfile"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               isSelected={value}
               onChange={onChange}
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.profile_edit_private_profile_label()}</CheckboxLabel>
+              <Checkbox>{m.profile_edit_private_profile_label()}</Checkbox>
               <Description>{m.profile_edit_private_profile_desc()}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
 

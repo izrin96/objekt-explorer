@@ -10,7 +10,7 @@ import {
   ModalTitle,
 } from "@/components/intentui/modal";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
-import { Switch, SwitchLabel } from "@/components/intentui/switch";
+import { Switch, SwitchField } from "@/components/intentui/switch";
 import { useTheme } from "@/components/shared/theme-provider";
 import { useConfigStore } from "@/hooks/use-config";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -91,24 +91,24 @@ export function SettingsModal({
           <h3 className="text-sm font-medium">{m.common_settings_filters_label()}</h3>
 
           {!isCompact && (
-            <Switch
+            <SwitchField
               isSelected={wide}
               onChange={setWide}
               aria-label={m.common_settings_filters_wide()}
             >
-              <SwitchLabel>{m.common_settings_filters_wide()}</SwitchLabel>
+              <Switch>{m.common_settings_filters_wide()}</Switch>
               <Description>{m.common_settings_filters_wide_desc()}</Description>
-            </Switch>
+            </SwitchField>
           )}
 
-          <Switch
+          <SwitchField
             isSelected={hideLabel}
             onChange={setHideLabel}
             aria-label={m.common_settings_filters_hide_label()}
           >
-            <SwitchLabel>{m.common_settings_filters_hide_label()}</SwitchLabel>
+            <Switch>{m.common_settings_filters_hide_label()}</Switch>
             <Description>{m.common_settings_filters_hide_label_desc()}</Description>
-          </Switch>
+          </SwitchField>
         </div>
       </ModalBody>
       <ModalFooter>

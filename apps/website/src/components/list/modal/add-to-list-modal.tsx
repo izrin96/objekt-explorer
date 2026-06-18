@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { useShallow } from "zustand/react/shallow";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxField } from "@/components/intentui/checkbox";
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { ExternalLink } from "@/components/intentui/link";
 import { Loader } from "@/components/intentui/loader";
@@ -181,16 +181,16 @@ function AddToListForm({
           control={control}
           name="skipDups"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               onChange={onChange}
               onBlur={onBlur}
               isSelected={value}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.list_manage_objekt_skip_dups_label()}</CheckboxLabel>
+              <Checkbox>{m.list_manage_objekt_skip_dups_label()}</Checkbox>
               <Description>{m.list_manage_objekt_skip_dups_desc()}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
         <Portal to="#submit-form-add-to-list">

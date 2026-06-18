@@ -6,7 +6,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxField } from "@/components/intentui/checkbox";
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { Input } from "@/components/intentui/input";
 import { Loader } from "@/components/intentui/loader";
@@ -18,9 +18,9 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/intentui/modal";
-import { Radio, RadioGroup, RadioLabel } from "@/components/intentui/radio";
+import { Radio, RadioField, RadioGroup } from "@/components/intentui/radio";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/intentui/select";
-import { Switch, SwitchLabel } from "@/components/intentui/switch";
+import { Switch, SwitchField } from "@/components/intentui/switch";
 import { TextField } from "@/components/intentui/text-field";
 import { Textarea } from "@/components/intentui/textarea";
 import ErrorFallbackRender from "@/components/router/error-boundary";
@@ -198,22 +198,22 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
               <Label>{m.list_create_list_type_label()}</Label>
               <Description>{m.list_create_list_type_desc()}</Description>
-              <Radio value="general">
-                <RadioLabel>{m.list_create_general_list_label()}</RadioLabel>
+              <RadioField value="general">
+                <Radio>{m.list_create_general_list_label()}</Radio>
                 <Description>{m.list_create_general_list_desc()}</Description>
-              </Radio>
-              <Radio value="sale">
-                <RadioLabel>{m.list_create_sale_list_label()}</RadioLabel>
+              </RadioField>
+              <RadioField value="sale">
+                <Radio>{m.list_create_sale_list_label()}</Radio>
                 <Description>{m.list_create_sale_list_desc()}</Description>
-              </Radio>
-              <Radio value="have">
-                <RadioLabel>{m.list_create_have_list_label()}</RadioLabel>
+              </RadioField>
+              <RadioField value="have">
+                <Radio>{m.list_create_have_list_label()}</Radio>
                 <Description>{m.list_create_have_list_desc()}</Description>
-              </Radio>
-              <Radio value="want">
-                <RadioLabel>{m.list_create_want_list_label()}</RadioLabel>
+              </RadioField>
+              <RadioField value="want">
+                <Radio>{m.list_create_want_list_label()}</Radio>
                 <Description>{m.list_create_want_list_desc()}</Description>
-              </Radio>
+              </RadioField>
             </RadioGroup>
           )}
         />
@@ -347,16 +347,16 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             control={control}
             name="isProfileBind"
             render={({ field: { name, value, onChange, onBlur } }) => (
-              <Checkbox
+              <CheckboxField
                 name={name}
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 validationBehavior="aria"
               >
-                <CheckboxLabel>{m.list_create_profile_bind_label()}</CheckboxLabel>
+                <Checkbox>{m.list_create_profile_bind_label()}</Checkbox>
                 <Description>{m.list_create_profile_bind_desc()}</Description>
-              </Checkbox>
+              </CheckboxField>
             )}
           />
         )}
@@ -368,14 +368,14 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             control={control}
             name="discoverable"
             render={({ field: { name, value, onChange, onBlur } }) => (
-              <Switch
+              <SwitchField
                 name={name}
                 isSelected={value}
                 onChange={onChange}
                 onBlur={onBlur}
                 isDisabled={watchedListTypeNew !== "want" && !watchedIsProfileBind}
               >
-                <SwitchLabel>{m.list_create_discoverable_label()}</SwitchLabel>
+                <Switch>{m.list_create_discoverable_label()}</Switch>
                 <Description>
                   {watchedListTypeNew === "want"
                     ? m.list_create_discoverable_want_desc()
@@ -383,7 +383,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                       ? m.list_create_discoverable_sale_desc()
                       : m.list_create_discoverable_have_desc()}
                 </Description>
-              </Switch>
+              </SwitchField>
             )}
           />
         )}
@@ -393,7 +393,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             control={control}
             name="hideSerial"
             render={({ field: { name, value, onChange, onBlur } }) => (
-              <Checkbox
+              <CheckboxField
                 name={name}
                 isSelected={value}
                 onChange={onChange}
@@ -401,9 +401,9 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
                 validationBehavior="aria"
                 isDisabled={!watchedIsProfileBind}
               >
-                <CheckboxLabel>{m.list_create_hide_serial_label()}</CheckboxLabel>
+                <Checkbox>{m.list_create_hide_serial_label()}</Checkbox>
                 <Description>{m.list_create_hide_serial_desc()}</Description>
-              </Checkbox>
+              </CheckboxField>
             )}
           />
         )}
@@ -412,16 +412,16 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           control={control}
           name="hideUser"
           render={({ field: { name, value, onChange, onBlur } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               isSelected={value}
               onChange={onChange}
               onBlur={onBlur}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.list_create_hide_user_label()}</CheckboxLabel>
+              <Checkbox>{m.list_create_hide_user_label()}</Checkbox>
               <Description>{m.list_create_hide_user_desc({ siteName: SITE_NAME })}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
 

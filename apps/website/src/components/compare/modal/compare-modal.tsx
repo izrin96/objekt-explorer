@@ -14,7 +14,7 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@/components/intentui/modal";
-import { Radio, RadioGroup, RadioLabel } from "@/components/intentui/radio";
+import { Radio, RadioField, RadioGroup } from "@/components/intentui/radio";
 import Portal from "@/components/shared/portal";
 import { m } from "@/paraglide/messages";
 
@@ -93,14 +93,14 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
               <Label>{m.compare_modal_target_type_label()}</Label>
               <Description>{m.compare_modal_target_type_description()}</Description>
-              <Radio value="profile">
-                <RadioLabel>{m.compare_modal_target_type_profile_label()}</RadioLabel>
+              <RadioField value="profile">
+                <Radio>{m.compare_modal_target_type_profile_label()}</Radio>
                 <Description>{m.compare_modal_target_type_profile_description()}</Description>
-              </Radio>
-              <Radio value="list">
-                <RadioLabel>{m.compare_modal_target_type_list_label()}</RadioLabel>
+              </RadioField>
+              <RadioField value="list">
+                <Radio>{m.compare_modal_target_type_list_label()}</Radio>
                 <Description>{m.compare_modal_target_type_list_description()}</Description>
-              </Radio>
+              </RadioField>
             </RadioGroup>
           )}
         />
@@ -118,14 +118,14 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
             <RadioGroup name={name} value={value} onChange={onChange} validationBehavior="aria">
               <Label>{m.compare_modal_comparison_type_label()}</Label>
               <Description>{m.compare_modal_comparison_type_description()}</Description>
-              <Radio value="missing">
-                <RadioLabel>{m.compare_modal_comparison_type_missing_label()}</RadioLabel>
+              <RadioField value="missing">
+                <Radio>{m.compare_modal_comparison_type_missing_label()}</Radio>
                 <Description>{m.compare_modal_comparison_type_missing_description()}</Description>
-              </Radio>
-              <Radio value="matches">
-                <RadioLabel>{m.compare_modal_comparison_type_matches_label()}</RadioLabel>
+              </RadioField>
+              <RadioField value="matches">
+                <Radio>{m.compare_modal_comparison_type_matches_label()}</Radio>
                 <Description>{m.compare_modal_comparison_type_matches_description()}</Description>
-              </Radio>
+              </RadioField>
             </RadioGroup>
           )}
         />

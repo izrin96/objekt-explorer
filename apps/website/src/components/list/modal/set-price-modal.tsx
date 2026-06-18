@@ -4,7 +4,7 @@ import { Form } from "react-aria-components/Form";
 import { Controller, useForm } from "react-hook-form";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxField } from "@/components/intentui/checkbox";
 import { Description, FieldError, Label } from "@/components/intentui/field";
 import { Input } from "@/components/intentui/input";
 import {
@@ -111,9 +111,9 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
               control={control}
               name="isQyop"
               render={({ field: { value, onChange } }) => (
-                <Checkbox isSelected={value} onChange={onChange} validationBehavior="aria">
-                  {m.list_manage_objekt_set_price_qyop()}
-                </Checkbox>
+                <CheckboxField isSelected={value} onChange={onChange} validationBehavior="aria">
+                  <Checkbox>{m.list_manage_objekt_set_price_qyop()}</Checkbox>
+                </CheckboxField>
               )}
             />
             <Controller

@@ -7,7 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
-import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxField } from "@/components/intentui/checkbox";
 import { FieldError, Label } from "@/components/intentui/field";
 import { Loader } from "@/components/intentui/loader";
 import {
@@ -239,52 +239,52 @@ function GenerateDiscordFormatRender() {
         control={control}
         name="showCount"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox
+          <CheckboxField
             name={name}
             isSelected={value}
             onChange={onChange}
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <CheckboxLabel>{m.generate_discord_show_count()}</CheckboxLabel>
-          </Checkbox>
+            <Checkbox>{m.generate_discord_show_count()}</Checkbox>
+          </CheckboxField>
         )}
       />
       <Controller
         control={control}
         name="includeLink"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox
+          <CheckboxField
             name={name}
             isSelected={value}
             onChange={onChange}
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <CheckboxLabel>{m.generate_discord_include_link()}</CheckboxLabel>
-          </Checkbox>
+            <Checkbox>{m.generate_discord_include_link()}</Checkbox>
+          </CheckboxField>
         )}
       />
       <Controller
         control={control}
         name="lowercaseCollection"
         render={({ field: { name, value, onChange, onBlur } }) => (
-          <Checkbox
+          <CheckboxField
             name={name}
             isSelected={value}
             onChange={onChange}
             onBlur={onBlur}
             validationBehavior="aria"
           >
-            <CheckboxLabel>{m.generate_discord_lower_case()}</CheckboxLabel>
-          </Checkbox>
+            <Checkbox>{m.generate_discord_lower_case()}</Checkbox>
+          </CheckboxField>
         )}
       />
       <Controller
         control={control}
         name="bullet"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
-          <Checkbox
+          <CheckboxField
             name={name}
             isSelected={value}
             onChange={onChange}
@@ -292,15 +292,15 @@ function GenerateDiscordFormatRender() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <CheckboxLabel>{m.generate_discord_bulleted_list()}</CheckboxLabel>
-          </Checkbox>
+            <Checkbox>{m.generate_discord_bulleted_list()}</Checkbox>
+          </CheckboxField>
         )}
       />
       <Controller
         control={control}
         name="showMemberEmoji"
         render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
-          <Checkbox
+          <CheckboxField
             name={name}
             isSelected={value}
             onChange={onChange}
@@ -308,8 +308,8 @@ function GenerateDiscordFormatRender() {
             isInvalid={invalid}
             validationBehavior="aria"
           >
-            <CheckboxLabel>{m.generate_discord_show_member_emoji()}</CheckboxLabel>
-          </Checkbox>
+            <Checkbox>{m.generate_discord_show_member_emoji()}</Checkbox>
+          </CheckboxField>
         )}
       />
       <Controller

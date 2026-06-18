@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { Avatar } from "@/components/intentui/avatar-custom";
 import { Button } from "@/components/intentui/button";
-import { Checkbox, CheckboxLabel } from "@/components/intentui/checkbox";
+import { Checkbox, CheckboxField } from "@/components/intentui/checkbox";
 import {
   Disclosure,
   DisclosureGroup,
@@ -187,7 +187,7 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
           control={control}
           name="showSocial"
           render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
-            <Checkbox
+            <CheckboxField
               name={name}
               onChange={onChange}
               onBlur={onBlur}
@@ -195,9 +195,9 @@ function UserAccountForm({ user, setOpen }: { user: User; setOpen: (val: boolean
               isInvalid={invalid}
               validationBehavior="aria"
             >
-              <CheckboxLabel>{m.auth_account_show_social_label()}</CheckboxLabel>
+              <Checkbox>{m.auth_account_show_social_label()}</Checkbox>
               <Description>{m.auth_account_show_social_desc()}</Description>
-            </Checkbox>
+            </CheckboxField>
           )}
         />
 
