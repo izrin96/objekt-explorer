@@ -94,7 +94,8 @@ const ModalContent = ({
           className,
         )}
       >
-        <Dialog role={role}>
+        {/* custom add overflow-clip */}
+        <Dialog className="overflow-clip" role={role}>
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}
