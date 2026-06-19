@@ -12,23 +12,25 @@ COPY --from=pruner /app/out/json/ .
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile --ignore-scripts
 COPY --from=pruner /app/out/full/ .
 
-# stage 3: build with node
-FROM node:22-slim AS builder
-WORKDIR /app
-COPY --from=installer /app .
-# this should be kept in sync with the build script in package.json
-RUN cd apps/indexer && rm -rf lib/ && npx tsc -p tsconfig.build.json
+RUN bun run --filter indexer build
 
-# stage 4: run with node due to the subsquid SDK not working in bun
+# stage 2b: runtime-only deps, no devDeps
+FROM oven/bun:canary-slim AS prod-deps
+WORKDIR /app
+COPY --from=pruner /app/out/bun.lock ./bun.lock
+COPY --from=pruner /app/out/json/ .
+RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile --production --ignore-scripts
+
+# stage 3: run with node due to the subsquid SDK not working in bun
 FROM node:22-slim AS runner
 WORKDIR /app/apps/indexer
 ENV NODE_ENV=production
-COPY --from=builder /app/apps/indexer/lib ./lib
-COPY --from=builder /app/apps/indexer/db ./db
-COPY --from=builder /app/apps/indexer/package.json ./package.json
-COPY --from=builder /app/apps/indexer/commands.json ./commands.json
-COPY --from=builder /app/apps/indexer/node_modules ./node_modules
-COPY --from=builder /app/node_modules/.bun /app/node_modules/.bun
-COPY --from=builder /app/packages /app/packages
+COPY --from=installer /app/apps/indexer/lib ./lib
+COPY --from=installer /app/apps/indexer/db ./db
+COPY --from=installer /app/apps/indexer/package.json ./package.json
+COPY --from=installer /app/apps/indexer/commands.json ./commands.json
+COPY --from=prod-deps /app/apps/indexer/node_modules ./node_modules
+COPY --from=prod-deps /app/node_modules/.bun /app/node_modules/.bun
+COPY --from=prod-deps /app/packages /app/packages
 RUN npm install -g @subsquid/commands && mv $(which squid-commands) /usr/local/bin/sqd
 CMD ["sqd", "process:prod"]
