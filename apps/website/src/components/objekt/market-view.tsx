@@ -1,4 +1,5 @@
-import { StorefrontIcon, CaretDownIcon, CaretUpIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { StorefrontIcon } from "@phosphor-icons/react/dist/ssr";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -102,9 +103,14 @@ function SortButton({
   children: React.ReactNode;
 }) {
   return (
-    <Button size="xs" intent={active ? "primary" : "outline"} onPress={onClick} className="gap-1">
+    <Button
+      size="xs"
+      intent={active ? "primary" : "outline"}
+      onPress={onClick}
+      className="gap-1 *:[svg]:transition-transform *:[svg]:duration-200"
+    >
       {children}
-      {active && (dir === "asc" ? <CaretUpIcon size={12} /> : <CaretDownIcon size={12} />)}
+      {active && <ChevronDownIcon className={dir === "asc" ? "rotate-180" : ""} />}
     </Button>
   );
 }
