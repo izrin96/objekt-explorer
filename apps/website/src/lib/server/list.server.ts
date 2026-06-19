@@ -83,7 +83,7 @@ async function buildProfileListEntries(
       const data = objektMap.get(entry.objektId!);
       if (!data) return null;
       const objekt = config?.hideSerial
-        ? data.collection
+        ? overrideCollection(data.collection)
         : mapOwnedObjekt(data.objekt, data.collection);
       return Object.assign({}, objekt, {
         id: entry.id.toString(),
