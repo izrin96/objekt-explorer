@@ -65,14 +65,10 @@ export function getListLinkOption(list: PublicList) {
     });
   }
 
-  return getListSlugLinkOption(list.slug);
-}
-
-export function getListSlugLinkOption(slug: string) {
   return linkOptions({
     to: "/list/$slug",
     params: {
-      slug,
+      slug: list.slug,
     },
   });
 }

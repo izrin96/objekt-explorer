@@ -1,28 +1,31 @@
-import type { Objekt, Transfer } from "@repo/db/indexer/schema";
+import type { Objekt } from "@repo/db/indexer/schema";
 
-import type { IndexedObjekt } from "../types/objekt";
+import type { IndexedObjekt, OwnedObjekt } from "../types/objekt";
 
 type CollectionOverride = Partial<{
   backgroundColor: string;
   textColor: string;
 }>;
 
-type CollectionInput = {
-  slug: string;
-  createdAt: Date | string;
-  frontImage: string;
-  backImage: string;
-  thumbnailImage: string | null;
+type CollectionInput = IndexedObjekt & {
   processedFrontImage?: string | null;
   processedBackImage?: string | null;
   processedThumbnailImage?: string | null;
-  bandImageUrl: string | null;
-  artist: string;
-  class: string;
-  collectionNo: string;
-  onOffline: string;
-  backgroundColor: string;
-  textColor: string;
+};
+
+export type OverriddenCollection = IndexedObjekt & {
+  originalFrontImage: string;
+  originalBackImage: string;
+};
+
+type TransferRow = {
+  id: string;
+  from: string;
+  to: string;
+  timestamp: string | null;
+  hash?: string;
+  objektId?: string | null;
+  collectionId?: string | null;
 };
 
 /**
@@ -84,7 +87,7 @@ function getBandImageUrl(objekt: CollectionInput) {
 /**
  * Apply color and band image overrides to any objekt type
  */
-export function overrideCollection<T extends CollectionInput>(collection: T) {
+export function overrideCollection(collection: CollectionInput): OverriddenCollection {
   const { processedThumbnailImage, processedFrontImage, processedBackImage, ...base } = collection;
   const overrides = collectionOverrides[collection.slug as keyof typeof collectionOverrides];
   const bandImageUrl = getBandImageUrl(collection);
@@ -105,7 +108,7 @@ export function overrideCollection<T extends CollectionInput>(collection: T) {
 /**
  * Map database Objekt + Collection to OwnedObjekt type
  */
-export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
+export function mapOwnedObjekt(objekt: Objekt, collection: CollectionInput): OwnedObjekt {
   return {
     ...overrideCollection(collection),
     id: objekt.id,
@@ -117,7 +120,7 @@ export function mapOwnedObjekt(objekt: Objekt, collection: IndexedObjekt) {
   };
 }
 
-export function mapTransfer(transfer: Partial<Transfer>) {
+export function mapTransfer(transfer: TransferRow): TransferRow {
   return {
     ...transfer,
     timestamp: transfer.timestamp ? new Date(transfer.timestamp).toISOString() : null,
