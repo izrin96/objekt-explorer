@@ -17,7 +17,7 @@ FROM node:22-slim AS builder
 WORKDIR /app
 COPY --from=installer /app .
 # this should be kept in sync with the build script in package.json
-RUN cd apps/indexer && rm -rf lib/ && npx tsgo -p tsconfig.build.json
+RUN cd apps/indexer && rm -rf lib/ && npx tsc -p tsconfig.build.json
 
 # stage 4: run with node due to the subsquid SDK not working in bun
 FROM node:22-slim AS runner

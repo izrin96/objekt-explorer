@@ -10,7 +10,7 @@
   "scripts": {
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "tsgo --noEmit",
+    "typecheck": "tsc --noEmit",
     "format": "oxfmt .",
     "db:generate": "drizzle-kit generate",
     "db:push": "bun run --env-file=../../.env drizzle-kit push",
@@ -28,6 +28,7 @@
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
     "@types/pg": "^8.20.0",
-    "drizzle-kit": "catalog:dev"
+    "drizzle-kit": "catalog:dev",
+    "typescript": "catalog:dev"
   }
 }

@@ -11,7 +11,7 @@
   "scripts": {
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --type-aware --fix",
-    "typecheck": "tsgo --noEmit",
+    "typecheck": "tsc --noEmit",
     "format": "oxfmt ."
   },
   "dependencies": {
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
-    "@types/bun": "catalog:dev"
+    "@types/bun": "catalog:dev",
+    "typescript": "catalog:dev"
   }
 }
