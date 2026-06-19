@@ -1,5 +1,4 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { useRef } from "react";
 
 import { isObjektOwned } from "@/lib/objekt-utils";
 import { OBJEKT_SIZE } from "@/lib/utils";
@@ -22,33 +21,35 @@ const memberY = 148;
 const collectionY = CANVAS_H / 2;
 const logo = { x: band.cx + 26, y: band.h - 92, scale: 0.33 } as const;
 
+// Absolute viewBox units, not em. em resolves against the inherited CSS font-size
+// (text-base → root font-size), so users with a non-16px root got oversized glyphs
+// at fixed anchors — text drifted off the band.
+const memberFontSize = 54.4; // 3.4em @ 16px root
+const collectionFontSize = 65.6; // 4.1em @ 16px root
+
 type Props = {
   objekt: ValidObjekt;
   hideSerial?: boolean;
 };
 
-export default function ObjektSidebar(props: Props) {
-  const ref = useRef<HTMLImageElement>(null);
-  const { objekt } = props;
-
+export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
   return (
     <div className="pointer-events-none grid size-full items-center text-base text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
       {/* custom band image */}
       {objekt.bandImageUrl && (
         <img
-          ref={ref}
           className="size-full object-cover"
           loading="eager"
           alt={m.objekt_band_image_alt()}
           src={objekt.bandImageUrl}
         />
       )}
-      <SidebarBand {...props} />
+      <SidebarBand objekt={objekt} hideSerial={hideSerial} />
     </div>
   );
 }
 
-export function SidebarBand({ objekt, hideSerial = false }: Props) {
+function SidebarBand({ objekt, hideSerial = false }: Props) {
   const isIdntt = objekt.artist === "idntt";
 
   return (
@@ -76,7 +77,7 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
           fill="currentColor"
           textAnchor="start"
           dy=".33em"
-          fontSize="3.4em"
+          fontSize={memberFontSize}
           className="font-semibold"
           transform={`rotate(90 ${band.cx} ${memberY})`}
         >
@@ -90,8 +91,8 @@ export function SidebarBand({ objekt, hideSerial = false }: Props) {
         y={collectionY}
         fill="currentColor"
         textAnchor="middle"
-        dy=".32em"
-        fontSize="4.1em"
+        dy=".33em"
+        fontSize={collectionFontSize}
         className="font-medium"
         transform={`rotate(90 ${band.cx} ${collectionY})`}
       >
