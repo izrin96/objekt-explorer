@@ -388,7 +388,7 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
             >
               <Label>{m.profile_edit_grid_columns_label()}</Label>
               <Description>{m.profile_edit_grid_columns_desc()}</Description>
-              <SelectTrigger className="w-[150px]" />
+              <SelectTrigger className="w-38" />
               <SelectContent>
                 {[
                   { id: 0, name: m.profile_edit_grid_columns_not_set() },

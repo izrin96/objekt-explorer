@@ -9,7 +9,7 @@ export default function ColumnFilter() {
 
   return (
     <Select
-      className="w-[130px]"
+      className="w-32"
       value={columns}
       onChange={(value) => {
         setColumns(Number(value));
@@ -17,7 +17,7 @@ export default function ColumnFilter() {
       aria-label={m.filter_column()}
     >
       <SelectTrigger />
-      <SelectContent className="min-w-[160px]">
+      <SelectContent className="min-w-40">
         {validColumns
           .map((a) => ({ id: a, name: `${a} ${m.filter_column().toLowerCase()}` }))
           .map((item) => (

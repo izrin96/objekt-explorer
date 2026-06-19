@@ -434,7 +434,7 @@ function EditListForm({
             >
               <Label>{m.list_edit_objekt_columns_label()}</Label>
               <Description>{m.list_edit_objekt_columns_desc()}</Description>
-              <SelectTrigger className="w-[150px]" />
+              <SelectTrigger className="w-38" />
               <SelectContent>
                 {[
                   { id: 0, name: m.list_edit_objekt_columns_not_set() },

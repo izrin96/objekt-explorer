@@ -182,7 +182,7 @@ function MarketSkeleton() {
   return (
     <div className="flex flex-col gap-2">
       {Array.from({ length: 2 }).map((_, i) => (
-        <Skeleton key={i} className="h-[64px] rounded-lg" soft />
+        <Skeleton key={i} className="h-16 rounded-lg" soft />
       ))}
     </div>
   );
