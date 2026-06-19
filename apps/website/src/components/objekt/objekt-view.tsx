@@ -62,8 +62,12 @@ const ObjektView = memo(function ObjektView({
   } as CSSProperties;
 
   const hasPrice = objekt.price !== undefined && objekt.price !== null;
-  const showPriceContent =
-    listCurrency && (objekt.isQyop || hasPrice || objekt.note || onSetPrice !== undefined);
+  const priceLabel = objekt.isQyop
+    ? m.objekt_qyop()
+    : hasPrice
+      ? formatPrice(objekt.price!, listCurrency!)
+      : onSetPrice && m.objekt_set_price();
+  const showPriceContent = listCurrency && (priceLabel || objekt.note);
   const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
@@ -104,37 +108,20 @@ const ObjektView = memo(function ObjektView({
       </div>
       {showBottomContent && (
         <div className="flex flex-col items-center justify-center gap-1 text-center">
-          {showPriceContent ? (
+          {showPriceContent && (
             <div className="flex flex-wrap items-center justify-center gap-0.5">
-              {objekt.isQyop ? (
-                <Badge
-                  intent="secondary"
-                  className={cn("text-xxs sm:text-xs", onSetPrice && "cursor-pointer")}
-                  onClick={onSetPrice}
-                >
-                  {m.objekt_qyop()}
-                </Badge>
-              ) : hasPrice ? (
+              {priceLabel && (
                 <Badge
                   intent="secondary"
                   className={cn(
-                    "text-xxs sm:text-xs bg-fg text-bg",
+                    "text-xxs sm:text-xs",
                     onSetPrice && "cursor-pointer",
+                    hasPrice && !objekt.isQyop && "bg-fg text-bg",
                   )}
                   onClick={onSetPrice}
                 >
-                  {formatPrice(objekt.price!, listCurrency)}
+                  {priceLabel}
                 </Badge>
-              ) : (
-                onSetPrice && (
-                  <Badge
-                    intent="secondary"
-                    className="text-xxs cursor-pointer sm:text-xs"
-                    onClick={onSetPrice}
-                  >
-                    {m.objekt_set_price()}
-                  </Badge>
-                )
               )}
               {objekt.note && (
                 <Popover>
@@ -150,7 +137,7 @@ const ObjektView = memo(function ObjektView({
                 </Popover>
               )}
             </div>
-          ) : null}
+          )}
 
           {!hideLabel && (
             <Badge
