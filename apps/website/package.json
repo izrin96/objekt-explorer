@@ -72,6 +72,7 @@
     "react-hook-form": "^7.79.0",
     "react-intersection-observer": "^10.0.3",
     "recharts": "^3.8.1",
+    "slot-text": "^0.3.1",
     "slugify": "^1.6.9",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",

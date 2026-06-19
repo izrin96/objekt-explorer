@@ -17,6 +17,7 @@ import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
 import appCss from "@/styles/app.css?url";
+import slotTextCss from "slot-text/style.css?url";
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -97,6 +98,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         {
           rel: "stylesheet",
           href: appCss,
+        },
+        {
+          rel: "stylesheet",
+          href: slotTextCss,
         },
         ...links,
       ],

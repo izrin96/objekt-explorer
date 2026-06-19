@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { SlotText } from "slot-text/react";
 
 import { m } from "@/paraglide/messages";
 
@@ -9,36 +9,6 @@ export interface ObjektCountProps {
   grouped?: unknown[];
   hasNextPage?: boolean;
   total?: number;
-}
-
-function DigitGroup({ value }: { value: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const str = value.toLocaleString();
-
-  useEffect(() => {
-    const group = ref.current;
-    if (!group) return;
-    group.classList.remove("is-animating");
-    void group.offsetHeight; // force reflow
-    group.classList.add("is-animating");
-  }, [value]);
-
-  const chars = str.split("");
-  const totalChars = chars.length;
-
-  return (
-    <span ref={ref} className="t-digit-group">
-      {chars.map((ch, i) => (
-        <span
-          key={`${value}-${i}`}
-          className="t-digit"
-          data-stagger={i === totalChars - 2 ? "1" : i === totalChars - 1 ? "2" : undefined}
-        >
-          {ch}
-        </span>
-      ))}
-    </span>
-  );
 }
 
 export function ObjektCount({ filtered, grouped, hasNextPage, total }: ObjektCountProps) {
@@ -54,14 +24,14 @@ export function ObjektCount({ filtered, grouped, hasNextPage, total }: ObjektCou
     >
       <span className="inline-flex items-baseline gap-1">
         {m.common_count_total_prefix()}
-        <DigitGroup value={displayCount} />
+        <SlotText text={displayCount.toLocaleString()} />
         {m.common_count_total_suffix()}
       </span>
       {hasGrouped && <span className="text-muted-fg">·</span>}
       {hasGrouped && (
         <span className="inline-flex items-baseline gap-1">
           {m.common_count_types_prefix()}
-          <DigitGroup value={displayGroupedCount} />
+          <SlotText text={displayGroupedCount.toLocaleString()} />
           {m.common_count_types_suffix()}
         </span>
       )}
