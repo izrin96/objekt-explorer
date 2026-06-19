@@ -29,7 +29,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
         window.scrollTo({ top: offset, behavior: "instant" });
       }
     }
-  }, []);
+  }, [user.address]);
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]" ref={ref}>
