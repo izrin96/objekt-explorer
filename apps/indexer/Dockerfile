@@ -31,6 +31,6 @@ COPY --from=installer /app/apps/indexer/package.json ./package.json
 COPY --from=installer /app/apps/indexer/commands.json ./commands.json
 COPY --from=prod-deps /app/apps/indexer/node_modules ./node_modules
 COPY --from=prod-deps /app/node_modules/.bun /app/node_modules/.bun
-COPY --from=prod-deps /app/packages /app/packages
+COPY --from=installer /app/packages /app/packages
 RUN npm install -g @subsquid/commands && mv $(which squid-commands) /usr/local/bin/sqd
 CMD ["sqd", "process:prod"]
