@@ -21,18 +21,15 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
 
+  // instant scroll to profile header if banner exists
   useEffect(() => {
     if (user.bannerImgType && user.bannerImgUrl && ref.current) {
-      // instant scroll to profile header if banner exists
       const offset = ref.current.offsetTop - 90;
       if (offset > 0) {
-        window.scrollTo({
-          top: offset,
-          behavior: "instant",
-        });
+        window.scrollTo({ top: offset, behavior: "instant" });
       }
     }
-  }, [user.bannerImgType, user.bannerImgUrl]);
+  }, []);
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]" ref={ref}>
