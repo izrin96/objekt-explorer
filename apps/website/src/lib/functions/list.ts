@@ -1,4 +1,4 @@
-import { notFound } from "@tanstack/react-router";
+import { notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
@@ -25,9 +25,11 @@ export const getListBySlug = createServerFn({ method: "GET" })
   });
 
 async function resolveAddress(nickname: string, slug: string) {
-  const profile = await fetchUserByIdentifierOrThrow(nickname, undefined, (newNickname) => ({
-    to: "/@{$nickname}/list/$slug",
-    params: { nickname: newNickname, slug },
-  }));
+  const profile = await fetchUserByIdentifierOrThrow(nickname, undefined, (newNickname) =>
+    redirect({
+      to: "/@{$nickname}/list/$slug",
+      params: { nickname: newNickname, slug },
+    }),
+  );
   return profile.address;
 }

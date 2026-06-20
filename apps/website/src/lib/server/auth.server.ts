@@ -5,7 +5,7 @@ import * as authSchema from "@repo/db/auth-schema";
 import { type UserAddress, userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { notFound, redirect } from "@tanstack/react-router";
+import { notFound, type redirect } from "@tanstack/react-router";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
@@ -355,14 +355,14 @@ export async function fetchUserByIdentifier(
 export async function fetchUserByIdentifierOrThrow(
   identifier: string,
   currentUser: User | undefined,
-  getRedirectTarget: (newIdentifier: string) => { to: string; params?: Record<string, string> },
+  getRedirect: (newIdentifier: string) => ReturnType<typeof redirect>,
 ): Promise<PublicProfile> {
   try {
     const profile = await fetchUserByIdentifier(identifier, currentUser);
     if (!profile) throw notFound();
     return profile;
   } catch (err) {
-    if (err instanceof RedirectError) throw redirect(getRedirectTarget(err.newIdentifier));
+    if (err instanceof RedirectError) throw getRedirect(err.newIdentifier);
     throw err;
   }
 }
