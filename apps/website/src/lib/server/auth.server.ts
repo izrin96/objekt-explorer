@@ -28,7 +28,7 @@ import {
 } from "./mail.server";
 
 export class RedirectError extends Error {
-  constructor(public readonly redirectTo: () => ReturnType<typeof redirect>) {
+  constructor(public readonly newIdentifier: string) {
     super("Redirect");
   }
 }
@@ -259,8 +259,7 @@ export function toPublicProfile(
 
 export async function fetchUserByIdentifier(
   identifier: string,
-  currentUser: User | undefined,
-  onNicknameChange: (newIdentifier: string) => { to: string; params?: Record<string, string> },
+  currentUser?: User,
 ): Promise<PublicProfile | undefined> {
   if (!identifier) return undefined;
 
@@ -304,7 +303,7 @@ export async function fetchUserByIdentifier(
           ]);
 
           // redirect to new nickname
-          throw new RedirectError(() => redirect(onNicknameChange(user.nickname)));
+          throw new RedirectError(user.nickname);
         }
 
         // no changes, update last check
@@ -321,7 +320,7 @@ export async function fetchUserByIdentifier(
           .where(eq(userAddress.nickname, cachedUser.nickname));
 
         // redirect to address
-        throw new RedirectError(() => redirect(onNicknameChange(cachedUser.address.toLowerCase())));
+        throw new RedirectError(cachedUser.address.toLowerCase());
       }
 
       // api down, check again in next hour
@@ -350,20 +349,20 @@ export async function fetchUserByIdentifier(
     },
   ]);
 
-  return await fetchUserByIdentifier(identifier, currentUser, onNicknameChange);
+  return await fetchUserByIdentifier(identifier, currentUser);
 }
 
 export async function fetchUserByIdentifierOrThrow(
   identifier: string,
   currentUser: User | undefined,
-  onNicknameChange: (newIdentifier: string) => { to: string; params?: Record<string, string> },
+  getRedirectTarget: (newIdentifier: string) => { to: string; params?: Record<string, string> },
 ): Promise<PublicProfile> {
   try {
-    const profile = await fetchUserByIdentifier(identifier, currentUser, onNicknameChange);
+    const profile = await fetchUserByIdentifier(identifier, currentUser);
     if (!profile) throw notFound();
     return profile;
   } catch (err) {
-    if (err instanceof RedirectError) throw err.redirectTo();
+    if (err instanceof RedirectError) throw redirect(getRedirectTarget(err.newIdentifier));
     throw err;
   }
 }
