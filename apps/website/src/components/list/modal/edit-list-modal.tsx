@@ -109,9 +109,7 @@ function EditListForm({
         });
 
         if (redirectOnSave) {
-          const list = await client.fetchQuery(
-            orpc.list.findPublic.queryOptions({ input: { slug } }),
-          );
+          const list = await orpc.list.findPublic.call({ slug });
           if (list) {
             void router.navigate({ ...getListLinkOption(list), replace: true });
           }
