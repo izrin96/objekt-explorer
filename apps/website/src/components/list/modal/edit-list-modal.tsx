@@ -29,7 +29,7 @@ import ErrorFallbackRender from "@/components/router/error-boundary";
 import Portal from "@/components/shared/portal";
 import { useUserProfiles, useUserLists } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
-import { getListLinkOption, parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
+import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 type EditListModalProps = {
@@ -109,10 +109,7 @@ function EditListForm({
         });
 
         if (redirectOnSave) {
-          const list = await orpc.list.findPublic.call({ slug });
-          if (list) {
-            void router.navigate({ ...getListLinkOption(list), replace: true });
-          }
+          void router.navigate({ to: "/list/$slug", params: { slug }, replace: true });
         }
       },
       onError: () => {

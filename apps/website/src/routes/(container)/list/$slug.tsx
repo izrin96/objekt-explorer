@@ -11,7 +11,7 @@ import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/list/$slug")({
   beforeLoad: async ({ params, context: { queryClient } }) => {
-    const list = await queryClient.ensureQueryData(listBySlugQuery({ slug: params.slug }));
+    const list = await queryClient.fetchQuery(listBySlugQuery({ slug: params.slug }));
 
     if (list.profileAddress && list.profileSlug) {
       if (!list.profile) throw notFound();
