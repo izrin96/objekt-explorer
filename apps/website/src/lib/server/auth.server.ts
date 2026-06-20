@@ -5,7 +5,7 @@ import * as authSchema from "@repo/db/auth-schema";
 import { type UserAddress, userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { redirect } from "@tanstack/react-router";
+import { notFound, redirect } from "@tanstack/react-router";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
@@ -26,6 +26,12 @@ import {
   sendResetPassword,
   sendVerificationEmail,
 } from "./mail.server";
+
+export class RedirectError extends Error {
+  constructor(public readonly redirectTo: () => ReturnType<typeof redirect>) {
+    super("Redirect");
+  }
+}
 
 export const auth = betterAuth({
   appName: SITE_NAME,
@@ -253,7 +259,8 @@ export function toPublicProfile(
 
 export async function fetchUserByIdentifier(
   identifier: string,
-  currentUser?: User,
+  currentUser: User | undefined,
+  onNicknameChange: (newIdentifier: string) => { to: string; params?: Record<string, string> },
 ): Promise<PublicProfile | undefined> {
   if (!identifier) return undefined;
 
@@ -297,10 +304,7 @@ export async function fetchUserByIdentifier(
           ]);
 
           // redirect to new nickname
-          throw redirect({
-            to: "/@{$nickname}",
-            params: { nickname: user.nickname },
-          });
+          throw new RedirectError(() => redirect(onNicknameChange(user.nickname)));
         }
 
         // no changes, update last check
@@ -317,10 +321,7 @@ export async function fetchUserByIdentifier(
           .where(eq(userAddress.nickname, cachedUser.nickname));
 
         // redirect to address
-        throw redirect({
-          to: "/@{$nickname}",
-          params: { nickname: cachedUser.address.toLowerCase() },
-        });
+        throw new RedirectError(() => redirect(onNicknameChange(cachedUser.address.toLowerCase())));
       }
 
       // api down, check again in next hour
@@ -349,7 +350,22 @@ export async function fetchUserByIdentifier(
     },
   ]);
 
-  return await fetchUserByIdentifier(identifier, currentUser);
+  return await fetchUserByIdentifier(identifier, currentUser, onNicknameChange);
+}
+
+export async function fetchUserByIdentifierOrThrow(
+  identifier: string,
+  currentUser: User | undefined,
+  onNicknameChange: (newIdentifier: string) => { to: string; params?: Record<string, string> },
+): Promise<PublicProfile> {
+  try {
+    const profile = await fetchUserByIdentifier(identifier, currentUser, onNicknameChange);
+    if (!profile) throw notFound();
+    return profile;
+  } catch (err) {
+    if (err instanceof RedirectError) throw err.redirectTo();
+    throw err;
+  }
 }
 
 export async function cacheUsers(
