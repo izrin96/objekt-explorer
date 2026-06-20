@@ -9,10 +9,11 @@ import * as z from "zod";
 import {
   checkLinkedList,
   checkProfileOwnership,
+  fetchList,
   generateProfileSlug,
   findOwnedList,
 } from "../../list.server";
-import { authed } from "../orpc";
+import { authed, pub } from "../orpc";
 
 export const listCrud = {
   find: authed
@@ -26,6 +27,10 @@ export const listCrud = {
 
       return result;
     }),
+
+  findPublic: pub.input(z.object({ slug: z.string() })).handler(async ({ input: { slug } }) => {
+    return fetchList({ slug: slug });
+  }),
 
   create: authed
     .input(
@@ -266,29 +271,6 @@ export const listCrud = {
               .where(eq(lists.id, linkedListId));
           }
         });
-
-        // return redirect options
-        const effectiveProfile = list.isProfileBind
-          ? list.profileAddress
-          : input.profileAddress?.toLowerCase();
-
-        if (effectiveProfile && profileSlug) {
-          const addr = await db.query.userAddress.findFirst({
-            columns: { address: true, nickname: true, hideNickname: true },
-            where: { address: effectiveProfile },
-          });
-          const nickname = addr?.nickname && !addr.hideNickname ? addr.nickname : effectiveProfile;
-
-          return {
-            to: "/@{$nickname}/list/$slug",
-            params: { nickname, slug: profileSlug },
-          };
-        }
-
-        return {
-          to: "/list/$slug",
-          params: { slug: input.slug },
-        };
       },
     ),
 

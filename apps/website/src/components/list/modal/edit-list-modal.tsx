@@ -29,7 +29,7 @@ import ErrorFallbackRender from "@/components/router/error-boundary";
 import Portal from "@/components/shared/portal";
 import { useUserProfiles, useUserLists } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
-import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
+import { getListLinkOption, parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 type EditListModalProps = {
@@ -95,7 +95,7 @@ function EditListForm({
   });
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
-      onSuccess: (result, _d, _o, { client }) => {
+      onSuccess: async (_, { slug }, _o, { client }) => {
         setOpen(false);
         toast.success(m.list_edit_success());
         void client.invalidateQueries({
@@ -104,13 +104,17 @@ function EditListForm({
         void client.invalidateQueries({
           queryKey: ["list"],
         });
+        void client.invalidateQueries({
+          queryKey: orpc.list.listEntries.key({ input: { slug } }),
+        });
 
-        if (redirectOnSave && result) {
-          void router.navigate({
-            to: result.to,
-            params: result.params,
-            replace: true,
-          });
+        if (redirectOnSave) {
+          const list = await client.fetchQuery(
+            orpc.list.findPublic.queryOptions({ input: { slug } }),
+          );
+          if (list) {
+            void router.navigate({ ...getListLinkOption(list), replace: true });
+          }
         }
       },
       onError: () => {
