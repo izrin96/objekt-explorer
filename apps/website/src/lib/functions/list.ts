@@ -1,8 +1,8 @@
-import { notFound, redirect } from "@tanstack/react-router";
+import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
-import { fetchUserByIdentifierOrThrow } from "../server/auth.server";
+import { fetchUserByIdentifier } from "../server/auth.server";
 import { fetchList } from "../server/list.server";
 
 export const listBySlugInputSchema = z.object({
@@ -16,7 +16,7 @@ export const getListBySlug = createServerFn({ method: "GET" })
     const lookup = data.nickname
       ? {
           profileSlug: data.slug,
-          profileAddress: await resolveAddress(data.nickname, data.slug),
+          profileAddress: await resolveAddress(data.nickname),
         }
       : { slug: data.slug };
     const list = await fetchList(lookup);
@@ -24,12 +24,8 @@ export const getListBySlug = createServerFn({ method: "GET" })
     return list;
   });
 
-async function resolveAddress(nickname: string, slug: string) {
-  const profile = await fetchUserByIdentifierOrThrow(nickname, undefined, (newNickname) =>
-    redirect({
-      to: "/@{$nickname}/list/$slug",
-      params: { nickname: newNickname, slug },
-    }),
-  );
+async function resolveAddress(nickname: string) {
+  const profile = await fetchUserByIdentifier(nickname);
+  if (!profile) throw notFound();
   return profile.address;
 }

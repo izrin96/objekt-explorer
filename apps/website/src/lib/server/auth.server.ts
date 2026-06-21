@@ -5,7 +5,6 @@ import * as authSchema from "@repo/db/auth-schema";
 import { type UserAddress, userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
 import { fetchUserProfiles } from "@repo/lib/server/user";
-import { notFound, type redirect } from "@tanstack/react-router";
 import { getRequestHeaders, setResponseHeader } from "@tanstack/react-start/server";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
@@ -26,12 +25,6 @@ import {
   sendResetPassword,
   sendVerificationEmail,
 } from "./mail.server";
-
-export class RedirectError extends Error {
-  constructor(public readonly newIdentifier: string) {
-    super("Redirect");
-  }
-}
 
 export const auth = betterAuth({
   appName: SITE_NAME,
@@ -279,20 +272,16 @@ export async function fetchUserByIdentifier(
 
   if (cachedUser) {
     // double check address with cosmo if last check more than 1 hour
-    const ONE_HOUR = 60 * 60 * 1000;
     const needsCheck =
       !cachedUser.lastCosmoCheck ||
-      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > ONE_HOUR;
+      Date.now() - new Date(cachedUser.lastCosmoCheck).getTime() > 60 * 60 * 1000;
 
     if (needsCheck && cachedUser.nickname) {
       const user = await safeFetchByNickname(cachedUser.nickname);
 
       if (user) {
-        if (
-          user.address.toLowerCase() !== cachedUser.address.toLowerCase() ||
-          user.nickname.toLowerCase() !== cachedUser.nickname.toLowerCase()
-        ) {
-          // update nickname and last check
+        // address changes
+        if (user.address.toLowerCase() !== cachedUser.address.toLowerCase()) {
           await touchLastCheck(cachedUser.nickname);
 
           await cacheUsers([
@@ -302,8 +291,7 @@ export async function fetchUserByIdentifier(
             },
           ]);
 
-          // redirect to new nickname
-          throw new RedirectError(user.nickname);
+          return fetchUserByIdentifier(identifier);
         }
 
         // no changes, update last check
@@ -319,8 +307,7 @@ export async function fetchUserByIdentifier(
           .set({ nickname: null, cosmoId: null, lastCosmoCheck: null })
           .where(eq(userAddress.nickname, cachedUser.nickname));
 
-        // redirect to address
-        throw new RedirectError(cachedUser.address.toLowerCase());
+        return undefined;
       }
 
       // api down, check again in next hour
@@ -349,22 +336,7 @@ export async function fetchUserByIdentifier(
     },
   ]);
 
-  return await fetchUserByIdentifier(identifier, currentUser);
-}
-
-export async function fetchUserByIdentifierOrThrow(
-  identifier: string,
-  currentUser: User | undefined,
-  getRedirect: (newIdentifier: string) => ReturnType<typeof redirect>,
-): Promise<PublicProfile> {
-  try {
-    const profile = await fetchUserByIdentifier(identifier, currentUser);
-    if (!profile) throw notFound();
-    return profile;
-  } catch (err) {
-    if (err instanceof RedirectError) throw getRedirect(err.newIdentifier);
-    throw err;
-  }
+  return fetchUserByIdentifier(identifier, currentUser);
 }
 
 export async function cacheUsers(
