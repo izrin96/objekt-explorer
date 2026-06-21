@@ -291,7 +291,7 @@ export async function fetchUserByIdentifier(
             },
           ]);
 
-          return fetchUserByIdentifier(identifier);
+          return fetchUserByIdentifier(identifier, currentUser);
         }
 
         // no changes, update last check
