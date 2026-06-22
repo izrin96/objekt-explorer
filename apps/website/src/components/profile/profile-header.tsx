@@ -1,4 +1,5 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { useElementScrollRestoration } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { useProfileAuthed } from "@/hooks/use-user";
@@ -21,15 +22,24 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();
   const nickname = parseNickname(user.address, user.nickname);
 
+  const scrollEntry = useElementScrollRestoration({
+    getElement: () => window,
+  });
+
   // instant scroll to profile header if banner exists
   useEffect(() => {
-    if (user.bannerImgType && user.bannerImgUrl && ref.current) {
-      const offset = ref.current.offsetTop - 90;
-      if (offset > 0) {
-        window.scrollTo({ top: offset, behavior: "instant" });
+    if (!scrollEntry) {
+      if (user.bannerImgType && user.bannerImgUrl && ref.current) {
+        const offset = ref.current.offsetTop - 90;
+        if (offset > 0) {
+          window.scrollTo({ top: offset, behavior: "instant" });
+        }
       }
+      return;
     }
-  }, [user.address]);
+
+    window.scrollTo({ top: scrollEntry.scrollY, behavior: "instant" });
+  }, [user.address, scrollEntry]);
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]" ref={ref}>
