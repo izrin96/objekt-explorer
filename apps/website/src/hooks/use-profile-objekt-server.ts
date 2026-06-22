@@ -4,10 +4,8 @@ import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useOwnedCollectionsServer } from "./use-owned-collections-server";
 import { useProfileTarget } from "./use-profile-target";
-import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useProfileObjektsServer() {
-  const shape = useShapeObjekts();
   const profile = useProfileTarget()!;
   const { getSelectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
@@ -35,7 +33,6 @@ export function useProfileObjektsServer() {
   } = useOwnedCollectionsServer(profile.address, serverFilters);
 
   return {
-    shaped: shape(filtered, filters, true),
     filtered,
     total,
     filters,

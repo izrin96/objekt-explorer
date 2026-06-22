@@ -124,7 +124,7 @@ function ListView({
   const { data: user } = useCurrentUser();
   const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, grouped, filters, isPending } = useListObjekts();
+  const { filtered, grouped, filters, rarityMap, isPending } = useListObjekts();
   const { openSetPrice } = use(SetPriceContext);
 
   const renderObjekt = useCallback(
@@ -208,7 +208,12 @@ function ListView({
       {discordTarget && createPortal(<GenerateDiscordButton objekts={filtered} />, discordTarget)}
 
       <ObjektCount filtered={filtered} grouped={filters.grouped ? grouped : undefined} />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid
+        objekts={filtered}
+        filters={filters}
+        rarityMap={rarityMap}
+        renderItem={renderObjekt}
+      />
     </>
   );
 }

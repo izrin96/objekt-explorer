@@ -56,7 +56,7 @@ function IndexFilter({ selectRef }: { selectRef: (el: HTMLDivElement | null) => 
 function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
   const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, isPending } = useCollectionObjekts();
+  const { filtered, filters, rarityMap, isPending } = useCollectionObjekts();
 
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
@@ -113,7 +113,12 @@ function IndexView({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
         )}
 
       <ObjektCount filtered={filtered} />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid
+        objekts={filtered}
+        filters={filters}
+        rarityMap={rarityMap}
+        renderItem={renderObjekt}
+      />
     </>
   );
 }

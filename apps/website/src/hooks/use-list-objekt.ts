@@ -9,11 +9,9 @@ import { orpc } from "@/lib/orpc/client";
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useFilters } from "./use-filters";
 import { useListTarget } from "./use-list-target";
-import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useListObjekts() {
   const list = useListTarget()!;
-  const shape = useShapeObjekts();
   const query = useQuery(
     orpc.list.listEntries.queryOptions({
       input: {
@@ -31,14 +29,14 @@ export function useListObjekts() {
   const result = useMemo(() => {
     const filtered = filterObjekts(deferredFilters, query.data ?? []);
     return {
-      shaped: shape(filtered, deferredFilters, false, rarityMap),
       filtered,
       grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
       filters: deferredFilters,
+      rarityMap,
       isStale: filters !== deferredFilters,
       isPending: query.isPending,
     };
-  }, [shape, deferredFilters, query.data, query.isPending, filters, rarityMap]);
+  }, [deferredFilters, query.data, query.isPending, filters, rarityMap]);
 
   return result;
 }

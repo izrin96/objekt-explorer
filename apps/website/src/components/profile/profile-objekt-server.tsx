@@ -72,7 +72,7 @@ function ProfileObjektServer({
 }) {
   const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, total, query, filters } = useProfileObjektsServer();
+  const { filtered, total, query, filters } = useProfileObjektsServer();
   const showActions = user && !filters.at;
 
   const renderObjekt = useCallback(
@@ -133,14 +133,19 @@ function ProfileObjektServer({
         )}
 
       <ObjektCount filtered={filtered} total={total} />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt}>
-        <ObjektVirtualGridLoadMore
-          status={query.status}
-          hasNextPage={query.hasNextPage}
-          isFetchingNextPage={query.isFetchingNextPage}
-          fetchNextPage={query.fetchNextPage}
+      <ObjektVirtualGridLoadMore
+        status={query.status}
+        hasNextPage={query.hasNextPage}
+        isFetchingNextPage={query.isFetchingNextPage}
+        fetchNextPage={query.fetchNextPage}
+      >
+        <ObjektVirtualGrid
+          objekts={filtered}
+          filters={filters}
+          isProfile
+          renderItem={renderObjekt}
         />
-      </ObjektVirtualGrid>
+      </ObjektVirtualGridLoadMore>
     </>
   );
 }

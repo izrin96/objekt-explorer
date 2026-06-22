@@ -12,10 +12,8 @@ import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";
 import { useOwnedCollections } from "./use-owned-collections";
 import { useProfileTarget } from "./use-profile-target";
-import { useShapeObjekts } from "./use-shape-objekt";
 
 export function useProfileObjekts() {
-  const shape = useShapeObjekts();
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const [filters] = useFilters();
@@ -49,7 +47,6 @@ export function useProfileObjekts() {
   const collectionQuery = useQuery(collectionOptions(serverFilters, !query.hasNextPage));
 
   const result = useMemo(() => {
-    // augment owned objekts with pin/lock status
     const pinsMap = pinsQuery.data;
     const lockedSet = lockedObjektQuery.data;
 
@@ -67,7 +64,6 @@ export function useProfileObjekts() {
 
     const ownedFiltered = filterObjekts(deferredFilters, ownedWithPinLock);
 
-    // find missing objekts based on owned slug
     const ownedSlugs = new Set(ownedFiltered.map((obj) => obj.slug));
     const missingObjekts =
       deferredFilters.unowned || deferredFilters.missing
@@ -75,20 +71,18 @@ export function useProfileObjekts() {
         : [];
     const missingFiltered = filterObjekts(deferredFilters, missingObjekts);
 
-    // combine both
     const filtered = [...ownedFiltered, ...missingFiltered];
 
     return {
-      shaped: shape(filtered, deferredFilters, true, rarityMap),
       filtered,
       grouped: Object.values(groupBy(filtered, (a) => a.collectionId)),
       filters: deferredFilters,
+      rarityMap,
       hasNextPage: query.hasNextPage,
       isPending: query.isPending,
       isStale: filters !== deferredFilters,
     };
   }, [
-    shape,
     deferredFilters,
     objekts,
     pinsQuery.data,

@@ -76,7 +76,7 @@ function ListCompareHeader({ input }: { input: CompareInput }) {
 
 function CompareGrid({ input, list }: { input: CompareInput; list: PublicList }) {
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, filters } = useCompareObjekts(input);
+  const { filtered, filters, rarityMap } = useCompareObjekts(input);
 
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
@@ -100,7 +100,12 @@ function CompareGrid({ input, list }: { input: CompareInput; list: PublicList })
   return (
     <>
       <ObjektCount filtered={filtered} />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid
+        objekts={filtered}
+        filters={filters}
+        rarityMap={rarityMap}
+        renderItem={renderObjekt}
+      />
     </>
   );
 }

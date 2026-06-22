@@ -82,7 +82,7 @@ function ProfileObjekt({
 }) {
   const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { shaped, filtered, grouped, filters, hasNextPage, isPending } = useProfileObjekts();
+  const { filtered, grouped, filters, rarityMap, hasNextPage, isPending } = useProfileObjekts();
   const isProfileAuthed = useProfileAuthed();
   const showActions = user && !filters.at;
 
@@ -196,7 +196,13 @@ function ProfileObjekt({
         grouped={filters.grouped ? grouped : undefined}
         hasNextPage={hasNextPage}
       />
-      <ObjektVirtualGrid shaped={shaped} renderItem={renderObjekt} />
+      <ObjektVirtualGrid
+        objekts={filtered}
+        filters={filters}
+        rarityMap={rarityMap}
+        isProfile
+        renderItem={renderObjekt}
+      />
     </>
   );
 }
