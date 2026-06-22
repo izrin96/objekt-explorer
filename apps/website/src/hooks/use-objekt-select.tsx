@@ -1,5 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { createContext, type PropsWithChildren, useContext, useRef } from "react";
+import { useLocation } from "@tanstack/react-router";
+import { createContext, type PropsWithChildren, useContext, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { createStore, type StoreApi, useStore } from "zustand";
 
@@ -80,6 +81,11 @@ export function ObjektSelectProvider({ children }: PropsWithChildren) {
   if (!storeRef.current) {
     storeRef.current = createObjektSelectStore(m.objekt_must_select_one());
   }
+
+  const { pathname } = useLocation();
+  useEffect(() => {
+    storeRef.current?.getState().reset();
+  }, [pathname]);
 
   return <ObjektSelectContext value={storeRef.current}>{children}</ObjektSelectContext>;
 }
