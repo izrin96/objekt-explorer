@@ -1,7 +1,7 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import type React from "react";
 import { useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -35,7 +35,7 @@ import { useFilters } from "@/hooks/use-filters";
 import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useCurrentUser } from "@/hooks/use-user";
-import { SPRING_LAYOUT } from "@/lib/ease";
+import { EASE_IN_OUT } from "@/lib/ease";
 import { unobtainables } from "@/lib/unobtainables";
 import { tradeableFilter, cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -182,62 +182,69 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           <ProgressBarValue className="text-muted-fg flex-none text-sm tabular-nums" />
         </ProgressBar>
       </div>
-      <AnimatePresence initial={false}>
-        {show && (
-          <motion.div
-            key="progress-grid"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={SPRING_LAYOUT}
-            className="overflow-hidden"
-          >
-            <div className="mt-4 flex flex-col">
-              {makeObjektRows({
-                items: grouped,
-                columns,
-                renderItem: ({ items: rowItems, rowIndex }) => (
-                  <ObjektsRenderRow
-                    key={`${title}-${rowIndex}`}
-                    columns={columns}
-                    rowIndex={rowIndex}
-                    items={rowItems}
-                  >
-                    {({ item: objekts }) => {
-                      const objekt = objekts[0];
-                      if (!objekt) return null;
-                      return (
-                        <ObjektGridView
-                          objekts={objekts}
-                          hideLabel={hideLabel}
-                          showCount={showCount}
-                          isFade={!ownedSlugs.has(objekt.slug)}
-                          unobtainable={unobtainables.includes(objekt.slug)}
-                          staticMenu={
-                            user && (
-                              <ObjektStaticMenu>
-                                <AddToListMenu objekts={[objekt]} />
-                              </ObjektStaticMenu>
-                            )
-                          }
-                        >
-                          {user && (
-                            <ObjektGridActionBar>
-                              <ObjektGridHoverMenu>
-                                <AddToListMenu objekts={[objekt]} />
-                              </ObjektGridHoverMenu>
-                            </ObjektGridActionBar>
-                          )}
-                        </ObjektGridView>
-                      );
-                    }}
-                  </ObjektsRenderRow>
-                ),
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <MotionConfig reducedMotion="user">
+        <AnimatePresence initial={false}>
+          {show && (
+            <motion.div
+              key="progress-grid"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{
+                type: "tween",
+                ease: EASE_IN_OUT,
+                duration: 0.25,
+              }}
+              style={{ willChange: "height" }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 flex flex-col">
+                {makeObjektRows({
+                  items: grouped,
+                  columns,
+                  renderItem: ({ items: rowItems, rowIndex }) => (
+                    <ObjektsRenderRow
+                      key={`${title}-${rowIndex}`}
+                      columns={columns}
+                      rowIndex={rowIndex}
+                      items={rowItems}
+                    >
+                      {({ item: objekts }) => {
+                        const objekt = objekts[0];
+                        if (!objekt) return null;
+                        return (
+                          <ObjektGridView
+                            objekts={objekts}
+                            hideLabel={hideLabel}
+                            showCount={showCount}
+                            isFade={!ownedSlugs.has(objekt.slug)}
+                            unobtainable={unobtainables.includes(objekt.slug)}
+                            staticMenu={
+                              user && (
+                                <ObjektStaticMenu>
+                                  <AddToListMenu objekts={[objekt]} />
+                                </ObjektStaticMenu>
+                              )
+                            }
+                          >
+                            {user && (
+                              <ObjektGridActionBar>
+                                <ObjektGridHoverMenu>
+                                  <AddToListMenu objekts={[objekt]} />
+                                </ObjektGridHoverMenu>
+                              </ObjektGridActionBar>
+                            )}
+                          </ObjektGridView>
+                        );
+                      }}
+                    </ObjektsRenderRow>
+                  ),
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </MotionConfig>
     </div>
   );
 }
