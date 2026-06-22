@@ -11,8 +11,8 @@ import type {
   MenuTriggerProps as MenuTriggerPrimitiveProps,
 } from "react-aria-components/Menu";
 import {
-  MenuItem as MenuItemPrimitive,
   Menu as MenuPrimitive,
+  MenuItem as MenuItemPrimitive,
   MenuSection as MenuSectionPrimitive,
   MenuTrigger as MenuTriggerPrimitive,
   SubmenuTrigger as SubmenuTriggerPrimitive,
@@ -24,11 +24,11 @@ import { cx } from "@/lib/primitive";
 
 import {
   DropdownDescription,
+  dropdownItemStyles,
   DropdownKeyboard,
   DropdownLabel,
-  DropdownSeparator,
-  dropdownItemStyles,
   dropdownSectionStyles,
+  DropdownSeparator,
 } from "./dropdown";
 import { PopoverContent, type PopoverContentProps } from "./popover";
 
@@ -72,6 +72,9 @@ interface MenuContentProps<T>
     | "isOpen"
     | "onOpenChange"
     | "shouldFlip"
+    | "isNonModal"
+    | "trigger"
+    | "getTargetRect"
   >;
 }
 

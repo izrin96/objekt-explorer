@@ -4,9 +4,9 @@ import {
   type DialogTriggerProps,
 } from "react-aria-components/Dialog";
 import {
+  Modal as ModalPrimitive,
   ModalOverlay,
   type ModalOverlayProps,
-  Modal as ModalPrimitive,
 } from "react-aria-components/Modal";
 
 import { cx } from "@/lib/primitive";

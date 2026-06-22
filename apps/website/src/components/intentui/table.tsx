@@ -7,10 +7,10 @@ import type {
   CellProps,
   ColumnProps,
   ColumnResizerProps,
-  TableHeaderProps as HeaderProps,
   RowProps,
   TableBodyProps,
   TableFooterProps,
+  TableHeaderProps as HeaderProps,
   TableProps as TablePrimitiveProps,
 } from "react-aria-components/Table";
 import {
@@ -20,10 +20,10 @@ import {
   ColumnResizer as ColumnResizerPrimitive,
   ResizableTableContainer,
   Row,
+  Table as TablePrimitive,
   TableBody as TableBodyPrimitive,
   TableFooter as TableFooterPrimitive,
   TableHeader as TableHeaderPrimitive,
-  Table as TablePrimitive,
   useTableOptions,
 } from "react-aria-components/Table";
 import { twJoin, twMerge } from "tailwind-merge";

@@ -6,8 +6,8 @@ import type {
   ListBoxSectionProps,
 } from "react-aria-components/ListBox";
 import {
-  ListBoxItem as ListBoxItemPrimitive,
   ListBox as ListBoxPrimitive,
+  ListBoxItem as ListBoxItemPrimitive,
 } from "react-aria-components/ListBox";
 import { twJoin, twMerge } from "tailwind-merge";
 
@@ -15,10 +15,10 @@ import { cx } from "@/lib/primitive";
 
 import {
   DropdownDescription,
+  dropdownItemStyles,
   DropdownLabel,
   DropdownSection,
   type DropdownSectionProps,
-  dropdownItemStyles,
 } from "./dropdown";
 
 const ListBox = <T extends object>({ className, ...props }: ListBoxProps<T>) => (

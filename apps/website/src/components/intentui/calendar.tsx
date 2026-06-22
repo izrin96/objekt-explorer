@@ -1,12 +1,12 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import {
+  Calendar as CalendarPrimitive,
   CalendarCell,
   CalendarGrid,
   CalendarGridBody,
   CalendarGridHeader as CalendarGridHeaderPrimitive,
   CalendarHeaderCell,
   CalendarMonthPicker,
-  Calendar as CalendarPrimitive,
   type CalendarProps as CalendarPrimitiveProps,
   CalendarYearPicker,
   type DateValue,

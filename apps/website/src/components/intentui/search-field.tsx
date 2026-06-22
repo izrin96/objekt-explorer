@@ -3,7 +3,7 @@ import { Button } from "react-aria-components/Button";
 import type { InputProps } from "react-aria-components/Input";
 import {
   SearchField as SearchFieldPrimitive,
-  type SearchFieldProps,
+  type SearchFieldProps as SearchFieldPrimitiveProps,
 } from "react-aria-components/SearchField";
 import { twJoin } from "tailwind-merge";
 
@@ -12,13 +12,18 @@ import { cx } from "@/lib/primitive";
 
 import { Input, InputGroup } from "./input";
 
-export function SearchField({ className, ...props }: SearchFieldProps) {
+interface SearchFieldProps extends SearchFieldPrimitiveProps {
+  ref?: React.RefObject<HTMLInputElement | null>;
+}
+
+export function SearchField({ className, ref, ...props }: SearchFieldProps) {
   return (
     <SearchFieldPrimitive
       data-slot="control"
-      {...props}
       aria-label={props["aria-label"] ?? "Search"}
       className={cx(fieldStyles({ className: "group/search-field" }), className)}
+      ref={ref}
+      {...props}
     />
   );
 }
@@ -29,7 +34,6 @@ export function SearchInput(props: InputProps) {
       <MagnifyingGlassIcon className="in-disabled:opacity-50" />
       <Input {...props} />
       <Button
-        aria-label="Clear"
         className={twJoin(
           "touch-target pressed:text-fg text-muted-fg hover:text-fg grid place-content-center group-empty/search-field:invisible",
           "px-3 py-2 sm:px-2.5 sm:py-1.5 sm:text-sm/5",

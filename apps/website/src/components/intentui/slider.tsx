@@ -2,10 +2,10 @@ import type { ComponentProps } from "react";
 import {
   Slider as PrimitiveSlider,
   SliderFill as PrimitiveSliderFill,
+  type SliderFillProps,
   SliderOutput as PrimitiveSliderOutput,
   SliderThumb as PrimitiveSliderThumb,
   SliderTrack as PrimitiveSliderTrack,
-  type SliderFillProps,
 } from "react-aria-components/Slider";
 import { twMerge } from "tailwind-merge";
 

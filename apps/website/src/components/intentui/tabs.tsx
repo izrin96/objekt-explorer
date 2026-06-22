@@ -11,12 +11,12 @@ import type {
   TabsProps as TabsPrimitiveProps,
 } from "react-aria-components/Tabs";
 import {
-  TabPanels as PrimitiveTabPanels,
+  Tab as TabPrimitive,
   TabList as TabListPrimitive,
   TabPanel as TabPanelPrimitive,
-  Tab as TabPrimitive,
-  TabsContext,
+  TabPanels as PrimitiveTabPanels,
   Tabs as TabsPrimitive,
+  TabsContext,
 } from "react-aria-components/Tabs";
 import { twMerge } from "tailwind-merge";
 
