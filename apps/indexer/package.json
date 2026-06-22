@@ -22,14 +22,14 @@
     "@subsquid/typeorm-store": "^1.9.1",
     "@subsquid/util-internal": "^3.3.0",
     "dotenv": "^17.4.2",
-    "ethers": "^6.16.0",
+    "ethers": "^6.17.0",
     "glob": "^13.0.6",
     "ioredis": "^5.11.1",
     "lru-cache": "^11.5.1",
     "ofetch": "catalog:",
     "path-scurry": "^2.0.2",
     "typeorm": "^0.3.30",
-    "uuid": "^14.0.0",
+    "uuid": "^14.0.1",
     "zod": "catalog:"
   },
   "devDependencies": {

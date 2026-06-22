@@ -22,12 +22,12 @@
   },
   "dependencies": {
     "drizzle-orm": "catalog:",
-    "pg": "^8.21.0",
+    "pg": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",
-    "@types/pg": "^8.20.0",
+    "@types/pg": "catalog:dev",
     "drizzle-kit": "catalog:dev",
     "typescript": "catalog:dev"
   }
