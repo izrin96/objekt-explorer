@@ -187,16 +187,14 @@ function ProgressCollapse(props: ProgressCollapseProps) {
           {show && (
             <motion.div
               key="progress-grid"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={{
                 type: "tween",
                 ease: EASE_IN_OUT,
                 duration: 0.25,
               }}
-              style={{ willChange: "height" }}
-              className="overflow-hidden"
             >
               <div className="mt-4 flex flex-col">
                 {makeObjektRows({
