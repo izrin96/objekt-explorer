@@ -26,15 +26,13 @@ interface SearchFilterFieldProps {
 }
 
 function SearchFilterField({ initialValue, onCommit }: SearchFilterFieldProps) {
-  const [localQuery, setLocalQuery] = useState(initialValue);
   const ref = useRef<HTMLInputElement>(null!);
   const [query, setQuery] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 80);
 
-  if (initialValue !== localQuery) {
-    setLocalQuery(initialValue);
+  useEffect(() => {
     setQuery(initialValue);
-  }
+  }, [initialValue]);
 
   const handleChange = (value: string) => {
     setQuery(value);

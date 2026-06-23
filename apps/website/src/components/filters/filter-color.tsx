@@ -1,6 +1,6 @@
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { type Color, parseColor } from "@react-stately/color";
-import { type CSSProperties, useState } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 
 import { useFilters } from "@/hooks/use-filters";
@@ -53,14 +53,12 @@ interface ColorPickerControlProps {
 }
 
 function ColorPickerControl({ initialValue, onCommit }: ColorPickerControlProps) {
-  const [localColor, setLocalColor] = useState(initialValue);
   const [color, setColor] = useState(initialValue);
   const debouncedCommit = useDebounceCallback(onCommit, 60);
 
-  if (initialValue !== localColor) {
-    setLocalColor(initialValue);
+  useEffect(() => {
     setColor(initialValue);
-  }
+  }, [initialValue]);
 
   const handleChange = (c: Color) => {
     const hsl = c.toString("hsl");
