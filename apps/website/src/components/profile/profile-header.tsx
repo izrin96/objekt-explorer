@@ -24,6 +24,7 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
 
   const scrollEntry = useElementScrollRestoration({
     getElement: () => window,
+    getKey: (location) => location.pathname,
   });
 
   // instant scroll to profile header if banner exists
