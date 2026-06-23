@@ -22,11 +22,7 @@ export function getRouter() {
       queryClient,
     },
     defaultPreload: "intent",
-    scrollRestoration: ({ location }) => {
-      return location.pathname.startsWith("/@") && !location.pathname.includes("/list/")
-        ? false
-        : true;
-    },
+    scrollRestoration: true,
     defaultPreloadStaleTime: 0,
     defaultStaleTime: 0,
     defaultErrorComponent: CommonErrorComponent,
