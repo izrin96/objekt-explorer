@@ -4,11 +4,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import { m } from "@/paraglide/messages";
 
-import { useObjektSelect } from "../use-objekt-select";
-
 export function useBatchLock() {
-  const reset = useObjektSelect((a) => a.reset);
-
   const batchLock = useMutation(
     orpc.lockedObjekt.batchLock.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
@@ -33,7 +29,6 @@ export function useBatchLock() {
             ? m.actions_lock_success_multiple({ count: tokenIds.length.toLocaleString() })
             : m.actions_lock_success_single();
         toast.success(message);
-        reset();
       },
       onError: async (_err, { tokenIds, address }, context, { client }) => {
         const queryKey = orpc.lockedObjekt.list.queryKey({ input: address });

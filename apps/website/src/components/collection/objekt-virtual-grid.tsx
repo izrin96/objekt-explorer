@@ -1,4 +1,4 @@
-import { CaretDownIcon, FlagBannerFoldIcon } from "@phosphor-icons/react/dist/ssr";
+import { FlagBannerFoldIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { QueryStatus } from "@tanstack/react-query";
 import type { ReactElement, ReactNode } from "react";
@@ -124,14 +124,7 @@ function ObjektVirtualGridBase({
         }}
       </WindowVirtualizer>
 
-      {loadMore?.hasNextPage && !loadMore.isFetchingNextPage && (
-        <div className="flex justify-center py-6">
-          <button type="button" aria-label="Load more" onClick={() => loadMore.fetchNextPage()}>
-            <CaretDownIcon size={32} weight="light" />
-          </button>
-        </div>
-      )}
-      {loadMore?.isFetchingNextPage && (
+      {loadMore?.hasNextPage && (
         <div className="flex justify-center py-6">
           <Loader variant="ring" />
         </div>

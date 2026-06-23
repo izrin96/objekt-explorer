@@ -4,11 +4,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import { m } from "@/paraglide/messages";
 
-import { useObjektSelect } from "../use-objekt-select";
-
 export function useRemoveFromList() {
-  const reset = useObjektSelect((a) => a.reset);
-
   const removeObjektsFromList = useMutation(
     orpc.list.removeObjektsFromList.mutationOptions({
       onMutate: async ({ slug, entryIds }, { client }) => {
@@ -40,7 +36,6 @@ export function useRemoveFromList() {
         if (message) {
           toast.success(message);
         }
-        reset();
       },
       onError: async (_err, { slug }, context, { client }) => {
         const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });

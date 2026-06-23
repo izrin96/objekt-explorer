@@ -4,11 +4,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import { m } from "@/paraglide/messages";
 
-import { useObjektSelect } from "../use-objekt-select";
-
 export function useAddToList() {
-  const reset = useObjektSelect((a) => a.reset);
-
   const addToList = useMutation(
     orpc.list.addObjektsToList.mutationOptions({
       onSuccess: async (rows, { slug }, _o, { client }) => {
@@ -32,7 +28,6 @@ export function useAddToList() {
         if (message) {
           toast.success(message);
         }
-        reset();
       },
       onError: () => {
         toast.error(m.actions_add_to_list_error());

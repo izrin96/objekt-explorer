@@ -4,11 +4,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import { m } from "@/paraglide/messages";
 
-import { useObjektSelect } from "../use-objekt-select";
-
 export function useUpdateEntryPrices() {
-  const reset = useObjektSelect((a) => a.reset);
-
   const batchUpdatePrices = useMutation(
     orpc.list.updateEntryPrices.mutationOptions({
       onMutate: async ({ slug, updates }, { client }) => {
@@ -35,7 +31,6 @@ export function useUpdateEntryPrices() {
       },
       onSuccess: () => {
         toast.success(m.list_manage_objekt_set_price_success());
-        reset();
       },
       onError: async (_err, { slug }, context, { client }) => {
         const queryKey = orpc.list.listEntries.queryKey({ input: { slug } });

@@ -4,11 +4,7 @@ import { toast } from "sonner";
 import { orpc } from "@/lib/orpc/client";
 import { m } from "@/paraglide/messages";
 
-import { useObjektSelect } from "../use-objekt-select";
-
 export function useBatchUnpin() {
-  const reset = useObjektSelect((a) => a.reset);
-
   const batchUnpin = useMutation(
     orpc.pins.batchUnpin.mutationOptions({
       onMutate: async ({ tokenIds, address }, { client }) => {
@@ -30,7 +26,6 @@ export function useBatchUnpin() {
             ? m.actions_unpin_success_multiple({ count: tokenIds.length.toLocaleString() })
             : m.actions_unpin_success_single();
         toast.success(message);
-        reset();
       },
       onError: async (_err, { tokenIds, address }, context, { client }) => {
         const queryKey = orpc.pins.list.queryKey({ input: address });
