@@ -26,8 +26,10 @@ export default function ProfileHeader({ user }: { user: PublicProfile }) {
       const offset = ref.current.offsetTop - 90;
       if (offset > 0) {
         window.scrollTo({ top: offset, behavior: "instant" });
+        return;
       }
     }
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [user.address]);
 
   return (
