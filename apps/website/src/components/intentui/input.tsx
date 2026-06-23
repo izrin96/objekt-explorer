@@ -1,20 +1,18 @@
 import { Group, type GroupProps } from "react-aria-components/Group";
 import {
   Input as InputPrimitive,
-  type InputProps as PrimitiveInputProps,
+  type InputProps as InputPrimitiveProps,
 } from "react-aria-components/Input";
 
 import { cx } from "@/lib/primitive";
 
-interface InputProps extends PrimitiveInputProps {
-  ref?: React.RefObject<HTMLInputElement>;
+interface InputProps extends InputPrimitiveProps {
+  ref?: React.RefObject<HTMLInputElement | null>;
 }
-
 export function Input({ className, ref, ...props }: InputProps) {
   return (
     <span data-slot="control" className="relative block w-full">
       <InputPrimitive
-        ref={ref}
         className={cx(
           "relative block w-full appearance-none rounded-lg bg-(--control-bg,transparent) px-[calc(--spacing(3.5)-1px)] py-[calc(--spacing(2.5)-1px)] sm:px-[calc(--spacing(3)-1px)] sm:py-[calc(--spacing(1.5)-1px)]",
           "text-sm/6 text-fg placeholder:text-muted-fg sm:text-sm/6",
@@ -27,6 +25,7 @@ export function Input({ className, ref, ...props }: InputProps) {
           "dark:scheme-dark",
           className,
         )}
+        ref={ref}
         {...props}
       />
     </span>

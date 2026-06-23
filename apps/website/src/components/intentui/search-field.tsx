@@ -3,7 +3,7 @@ import { Button } from "react-aria-components/Button";
 import type { InputProps } from "react-aria-components/Input";
 import {
   SearchField as SearchFieldPrimitive,
-  type SearchFieldProps as SearchFieldPrimitiveProps,
+  type SearchFieldProps,
 } from "react-aria-components/SearchField";
 import { twJoin } from "tailwind-merge";
 
@@ -12,17 +12,12 @@ import { cx } from "@/lib/primitive";
 
 import { Input, InputGroup } from "./input";
 
-interface SearchFieldProps extends SearchFieldPrimitiveProps {
-  ref?: React.RefObject<HTMLInputElement | null>;
-}
-
-export function SearchField({ className, ref, ...props }: SearchFieldProps) {
+export function SearchField({ className, ...props }: SearchFieldProps) {
   return (
     <SearchFieldPrimitive
       data-slot="control"
       aria-label={props["aria-label"] ?? "Search"}
       className={cx(fieldStyles({ className: "group/search-field" }), className)}
-      ref={ref}
       {...props}
     />
   );
