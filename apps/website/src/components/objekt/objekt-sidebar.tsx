@@ -34,7 +34,7 @@ type Props = {
 
 export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
   return (
-    <div className="pointer-events-none grid size-full items-center text-base text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
+    <div className="pointer-events-none isolate grid size-full items-center text-base text-(--objekt-text-color) select-none [&>*]:col-start-1 [&>*]:row-start-1">
       {/* custom band image */}
       {objekt.bandImageUrl && (
         <img
