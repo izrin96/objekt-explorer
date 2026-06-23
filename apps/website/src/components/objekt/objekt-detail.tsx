@@ -73,7 +73,7 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
         <div className="rounded-photocard absolute inset-0 grid rotate-y-0 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {/* Progressive loading: show thumbnail until front image loads */}
           <img
-            className="size-full object-cover"
+            className="-z-10 size-full object-cover"
             loading="eager"
             src={objekt.frontImage}
             alt={objekt.collectionId}
@@ -81,7 +81,7 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
           />
           {!loaded && (
             <img
-              className="size-full object-cover"
+              className="-z-10 size-full object-cover"
               loading="eager"
               src={objekt.thumbnailImage}
               alt={objekt.collectionId}
@@ -93,7 +93,7 @@ export function ObjektCard({ objekts }: { objekts: ValidObjekt[] }) {
         <div className="rounded-photocard absolute inset-0 grid rotate-y-180 overflow-hidden shadow-md contain-layout contain-paint backface-hidden [&>*]:col-start-1 [&>*]:row-start-1">
           {objekt.backImage && (
             <img
-              className="size-full object-cover"
+              className="-z-10 size-full object-cover"
               loading="lazy"
               decoding="async"
               src={objekt.backImage}

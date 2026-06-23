@@ -38,7 +38,7 @@ export default function ObjektSidebar({ objekt, hideSerial = false }: Props) {
       {/* custom band image */}
       {objekt.bandImageUrl && (
         <img
-          className="size-full object-cover"
+          className="z-0 size-full object-cover"
           loading="eager"
           alt={m.objekt_band_image_alt()}
           src={objekt.bandImageUrl}
@@ -58,7 +58,7 @@ function SidebarBand({ objekt, hideSerial = false }: Props) {
       height={CANVAS_H}
       viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
       xmlns="http://www.w3.org/2000/svg"
-      className="size-full"
+      className="z-10 size-full"
     >
       {/* band background */}
       {isIdntt && !objekt.bandImageUrl && (
