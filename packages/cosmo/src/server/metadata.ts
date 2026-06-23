@@ -118,7 +118,7 @@ export function normalizeV3(
       // not possible to get from v3
       backImage: "",
       accentColor: "",
-      textColor: "#000000",
+      textColor: "#ffffff",
       objektNo: 0,
       tokenAddress: "0x0000000000000000000000000000000000000000",
       transferable: true,
