@@ -82,7 +82,7 @@ export function ObjektSelectProvider({ children }: PropsWithChildren) {
     storeRef.current = createObjektSelectStore(m.objekt_must_select_one());
   }
 
-  const { pathname } = useLocation();
+  const pathname = useLocation({ select: (s) => s.pathname });
   useEffect(() => {
     storeRef.current?.getState().reset();
   }, [pathname]);

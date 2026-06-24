@@ -1,5 +1,6 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import { createContext, type ReactNode, use, useState } from "react";
+import { useLocation } from "@tanstack/react-router";
+import { createContext, type ReactNode, use, useEffect, useState } from "react";
 
 import { m } from "@/paraglide/messages";
 
@@ -21,6 +22,11 @@ export const useObjektModal = () => use(ObjektModalContext);
 export default function ObjektModal({ children, objekts, menu }: Props) {
   const [open, setOpen] = useState(false);
   const handleClick = () => setOpen(true);
+  const pathname = useLocation({ select: (s) => s.pathname });
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <ObjektModalContext value={{ handleClick }}>
