@@ -5,7 +5,7 @@ import { updateTransferableCosmoSpin } from "./job/cosmo-spin";
 import { drainOutbox } from "./job/drain";
 import { populateRarity } from "./job/populate-rarity";
 import { populateSerial, populateSerialOffline } from "./job/populate-serial";
-import { processCollectionImages } from "./job/process-collection-images";
+// import { processCollectionImages } from "./job/process-collection-images";
 import { refreshAccessToken } from "./job/refresh-access-token";
 import { updateCurrencyRates } from "./job/update-currency-rates";
 
@@ -59,8 +59,8 @@ await updateCurrencyRates();
 crons.push(cron("0 1 * * *", updateCurrencyRates));
 
 // process collection images - download, convert to WebP, upload to S3
-await processCollectionImages();
-crons.push(cron("*/10 * * * *", processCollectionImages));
+// await processCollectionImages();
+// crons.push(cron("*/10 * * * *", processCollectionImages));
 
 async function shutdown(signal: NodeJS.Signals) {
   console.log(`[shutdown] Received ${signal}, stopping cron jobs...`);

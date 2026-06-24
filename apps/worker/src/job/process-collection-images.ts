@@ -2,11 +2,12 @@ import { indexer } from "@repo/db/indexer";
 import type { Collection } from "@repo/db/indexer/schema";
 import { collections } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
+import { S3Client } from "bun";
 import { eq, ne } from "drizzle-orm";
 import { ofetch } from "ofetch";
 
 import { redis } from "@/lib/redis";
-import { uploadWebp, s3Url } from "@/lib/s3";
+import { uploadWebp, s3Url, s3Config, BUCKET, FOLDER } from "@/lib/s3";
 
 const BATCH_SIZE = 5;
 
@@ -98,43 +99,67 @@ export async function processCollectionImages() {
   console.log("[process-images] Done");
 }
 
+function s3DeleteKey(url: string): string {
+  const idx = url.indexOf(`/${FOLDER}/`);
+  if (idx === -1) throw new Error(`Cannot extract S3 key from URL: ${url}`);
+  return url.slice(idx + 1);
+}
+
 async function processOne(c: Collection) {
   try {
     const slug = c.slug;
 
+    const oldKeys: string[] = [];
+    if (c.processedFrontImage) oldKeys.push(s3DeleteKey(c.processedFrontImage));
+    if (c.processedThumbnailImage) oldKeys.push(s3DeleteKey(c.processedThumbnailImage));
+    if (c.processedBackImage) oldKeys.push(s3DeleteKey(c.processedBackImage));
+
+    const ts = Date.now();
+    const frontKey = `front/${slug}-${ts}.webp`;
+    const thumbKey = `thumbnail/${slug}-${ts}.webp`;
+    const backKey = c.backImage ? `back/${slug}-${ts}.webp` : undefined;
+
     const images = await Promise.all([
       ofetch(replaceUrlSize(c.frontImage, "original"), { responseType: "arrayBuffer" }).then(
-        (buf) => ({ key: `${slug}/front.webp`, buf }),
+        (buf) => ({ key: frontKey, buf }),
       ),
       ofetch(replaceUrlSize(c.frontImage, "2x"), { responseType: "arrayBuffer" }).then((buf) => ({
-        key: `${slug}/thumbnail.webp`,
+        key: thumbKey,
         buf,
       })),
-      ...(c.backImage
+      ...(backKey
         ? [
             ofetch(replaceUrlSize(c.backImage, "original"), {
               responseType: "arrayBuffer",
-            }).then((buf) => ({ key: `${slug}/back.webp`, buf })),
+            }).then((buf) => ({ key: backKey, buf })),
           ]
         : []),
     ]);
 
     await Promise.all(
       images.map(async ({ key, buf }) => {
-        const maxHeight = key.endsWith("thumbnail.webp") ? 900 : undefined;
+        const maxHeight = key === thumbKey ? 900 : undefined;
         const webp = await convertToWebp(buf, maxHeight);
         await uploadWebp(key, webp);
       }),
     );
+
+    for (const key of oldKeys) {
+      try {
+        await S3Client.delete(key, { ...s3Config, bucket: BUCKET });
+      } catch {
+        // old object may not exist
+      }
+    }
 
     const hash = computeHash(c.thumbnailImage, c.frontImage, c.backImage);
 
     await indexer
       .update(collections)
       .set({
-        processedFrontImage: s3Url(`${slug}/front.webp`),
-        processedThumbnailImage: s3Url(`${slug}/thumbnail.webp`),
-        ...(c.backImage ? { processedBackImage: s3Url(`${slug}/back.webp`) } : {}),
+        processedFrontImage: s3Url(frontKey),
+        processedThumbnailImage: s3Url(thumbKey),
+        ...(backKey ? { processedBackImage: s3Url(backKey) } : {}),
         imageSyncHash: hash,
       })
       .where(eq(collections.slug, slug));

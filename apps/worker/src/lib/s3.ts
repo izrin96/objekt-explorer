@@ -6,10 +6,10 @@ const secretAccessKey = process.env.S3_SECRET_KEY;
 const region = process.env.S3_REGION ?? "auto";
 const publicUrl = process.env.S3_PUBLIC_URL ?? endpoint;
 
-const BUCKET = process.env.S3_BUCKET ?? "";
-const FOLDER = "collection-images";
+export const BUCKET = process.env.S3_BUCKET ?? "";
+export const FOLDER = "collection-images";
 
-const s3Config: S3Options = {
+export const s3Config: S3Options = {
   accessKeyId,
   secretAccessKey,
   endpoint,
