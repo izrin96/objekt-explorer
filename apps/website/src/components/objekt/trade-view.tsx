@@ -108,6 +108,13 @@ function Trades({
     [serials],
   );
 
+  const handleChange = useCallback((value: number) => {
+    if (isNaN(value)) {
+      return setSerial(0);
+    }
+    return setSerial(value);
+  }, []);
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
@@ -115,7 +122,7 @@ function Trades({
           minValue={0}
           aria-label={m.objekt_serial_aria()}
           value={serial}
-          onChange={setSerial}
+          onChange={handleChange}
           isWheelDisabled
           className="grow"
         >
