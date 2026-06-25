@@ -63,7 +63,6 @@ function ObjektVirtualGridBase({
         compareClass,
         isProfile,
         rarityMap,
-        hasNextPage: loadMore?.hasNextPage,
       }),
     [
       objekts,
@@ -75,7 +74,6 @@ function ObjektVirtualGridBase({
       compareClass,
       isProfile,
       rarityMap,
-      loadMore?.hasNextPage,
     ],
   );
 
@@ -90,27 +88,10 @@ function ObjektVirtualGridBase({
           </div>
         )}
       >
-        {(item) => {
-          if (item.type === "sentinel") {
-            if (loadMore) {
-              return (
-                <InView
-                  as="div"
-                  className="h-0"
-                  onChange={(inView) => {
-                    if (inView && loadMore.hasNextPage && !loadMore.isFetchingNextPage) {
-                      loadMore.fetchNextPage();
-                    }
-                  }}
-                />
-              );
-            }
-            return <div className="h-0" />;
-          }
-          if (item.type === "label") {
-            return <GroupLabelRender title={item.title} />;
-          }
-          return (
+        {(item) =>
+          item.type === "label" ? (
+            <GroupLabelRender title={item.title} />
+          ) : (
             <ObjektsRenderRow columns={columns} rowIndex={item.rowIndex} items={item.items}>
               {({ item: cell }) =>
                 renderItem({
@@ -120,30 +101,42 @@ function ObjektVirtualGridBase({
                 })
               }
             </ObjektsRenderRow>
-          );
-        }}
+          )
+        }
       </WindowVirtualizer>
 
-      {loadMore?.hasNextPage && !loadMore.isFetchingNextPage && (
-        <div className="flex justify-center py-6">
-          <button type="button" aria-label="Load more" onClick={() => loadMore.fetchNextPage()}>
-            <CaretDownIcon size={32} weight="light" />
-          </button>
-        </div>
+      {loadMore && (
+        <>
+          {loadMore.hasNextPage && !loadMore.isFetchingNextPage && (
+            <InView
+              as="div"
+              onChange={(inView) => {
+                if (inView && loadMore.hasNextPage && !loadMore.isFetchingNextPage) {
+                  loadMore.fetchNextPage();
+                }
+              }}
+            >
+              <div className="flex justify-center py-6">
+                <CaretDownIcon size={16} weight="regular" />
+              </div>
+            </InView>
+          )}
+
+          {loadMore.isFetchingNextPage && (
+            <div className="flex justify-center py-6">
+              <Loader variant="ring" />
+            </div>
+          )}
+
+          {loadMore.status === "success" &&
+            !loadMore.hasNextPage &&
+            !loadMore.isFetchingNextPage && (
+              <div className="flex justify-center py-6">
+                <FlagBannerFoldIcon size={32} weight="light" />
+              </div>
+            )}
+        </>
       )}
-      {loadMore?.isFetchingNextPage && (
-        <div className="flex justify-center py-6">
-          <Loader variant="ring" />
-        </div>
-      )}
-      {loadMore?.status === "success" &&
-        !loadMore.hasNextPage &&
-        !loadMore.isFetchingNextPage &&
-        data.length > 0 && (
-          <div className="flex justify-center py-6">
-            <FlagBannerFoldIcon size={32} weight="light" />
-          </div>
-        )}
     </>
   );
 }

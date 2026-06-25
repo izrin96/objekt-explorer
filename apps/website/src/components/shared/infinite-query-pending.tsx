@@ -33,7 +33,7 @@ export function InfiniteQueryNext({
           onClick={fetchNextPage}
           disabled={!hasNextPage || isFetchingNextPage}
         >
-          <CaretDownIcon size={32} weight="light" />
+          <CaretDownIcon size={16} weight="regular" />
         </InView>
       )}
 

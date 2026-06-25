@@ -7,8 +7,7 @@ import { isObjektOwned } from "@/lib/objekt-utils";
 
 export type VirtualItem =
   | { type: "label"; title: string }
-  | { type: "row"; items: ValidObjekt[][]; rowIndex: number; groupTitle: string }
-  | { type: "sentinel" };
+  | { type: "row"; items: ValidObjekt[][]; rowIndex: number; groupTitle: string };
 
 export interface BuildVirtualDataConfig {
   objekts: ValidObjekt[];
@@ -20,7 +19,6 @@ export interface BuildVirtualDataConfig {
   compareClass: (a: string, b: string) => number;
   isProfile?: boolean;
   rarityMap?: Map<string, number>;
-  hasNextPage?: boolean;
 }
 
 export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] {
@@ -108,10 +106,6 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
         groupTitle: key,
       });
     }
-  }
-
-  if (config.hasNextPage) {
-    result.push({ type: "sentinel" });
   }
 
   return result;
