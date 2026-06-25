@@ -2,7 +2,7 @@ import { ORPCError } from "@orpc/server";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { isAddress } from "@repo/lib";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { acceptedFileMimeTypes, MAX_FILE_SIZE } from "@/lib/file";
@@ -58,6 +58,7 @@ export const profileRouter = {
         .update(userAddress)
         .set({
           ...rest,
+          bannerUpdatedAt: rest.bannerImgUrl !== undefined ? sql`'now'` : undefined,
         })
         .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
     }),

@@ -1,0 +1,1 @@
+ALTER TABLE "user_address" ADD COLUMN "banner_updated_at" timestamp with time zone;
