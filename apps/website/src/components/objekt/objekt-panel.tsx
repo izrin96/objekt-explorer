@@ -99,10 +99,10 @@ function OwnedListPanel({
   setSerial: (serial: number) => void;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const { setCurrentTab, isProfile } = useObjektModal();
+  const { setCurrentTab, isProfile, showPinLock } = useObjektModal();
   const profile = useProfileTarget();
   const isProfileAuthed = useProfileAuthed();
-  const showPinLockActions = isProfile && isProfileAuthed;
+  const showPinLockActions = showPinLock && isProfileAuthed;
 
   const openTrades = useCallback(
     (serial: number) => {

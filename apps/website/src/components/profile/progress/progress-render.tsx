@@ -45,7 +45,7 @@ import ProgressFilter from "./progress-filter";
 
 export default function ProgressRender() {
   return (
-    <ObjektViewProvider modalTab="owned">
+    <ObjektViewProvider modalTab="owned" isProfile>
       <div className="flex flex-col gap-4">
         <ProgressFilter />
 

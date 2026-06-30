@@ -12,22 +12,25 @@ export type ValidTab = "owned" | "trades" | "market";
 interface ObjektModalState {
   currentTab: ValidTab;
   setCurrentTab: (tab: ValidTab) => void;
-  showOwned: boolean;
-  isProfile: boolean;
+  showOwned?: boolean;
+  showPinLock?: boolean;
+  isProfile?: boolean;
 }
 
 const ObjektModalContext = createContext<ObjektModalState | null>(null);
 
 type ProviderProps = PropsWithChildren<{
   initialTab: ValidTab;
-  showOwned: boolean;
+  showOwned?: boolean;
+  showPinLock?: boolean;
   isProfile?: boolean;
 }>;
 
 export function ObjektModalProvider({
   children,
   initialTab,
-  showOwned,
+  showOwned = false,
+  showPinLock = false,
   isProfile = false,
 }: ProviderProps) {
   const [currentTab, setCurrentTab] = useState(initialTab);
@@ -37,8 +40,8 @@ export function ObjektModalProvider({
   }, [initialTab]);
 
   const value = useMemo(
-    () => ({ currentTab, setCurrentTab, showOwned, isProfile }),
-    [currentTab, showOwned, isProfile],
+    () => ({ currentTab, setCurrentTab, showOwned, showPinLock, isProfile }),
+    [currentTab, showOwned, showPinLock, isProfile],
   );
 
   return <ObjektModalContext value={value}>{children}</ObjektModalContext>;
