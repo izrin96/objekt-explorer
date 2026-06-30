@@ -13,6 +13,7 @@ import { useRemoveFromList } from "@/hooks/actions/remove-from-list";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useUserLists } from "@/hooks/use-user";
+import { isObjektOwned } from "@/lib/objekt-utils";
 import { m } from "@/paraglide/messages";
 
 // --- Buttons ---
@@ -64,13 +65,13 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
     addToList.mutate({
       slug: slug,
       skipDups: false,
-      objekts: isProfileBind ? objekts.map((a) => a.id) : undefined,
+      objekts: isProfileBind ? objekts.filter(isObjektOwned).map((a) => a.tokenId) : undefined,
       collectionSlugs: !isProfileBind ? objekts.map((a) => a.slug) : undefined,
     });
   };
 
   return (
-    <MenuSubMenu>
+    <MenuSubMenu delay={80}>
       <MenuItem>
         <PlusIcon />
         <MenuLabel>{m.objekt_menu_add_to_list()}</MenuLabel>

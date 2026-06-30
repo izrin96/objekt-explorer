@@ -17,6 +17,7 @@ import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { FilterContainer } from "../filters/filter-container";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
 import { Loader } from "../intentui/loader";
+import { MenuSeparator } from "../intentui/menu";
 import { AddToList, AddToListMenu } from "../objekt/actions/list";
 import { LockObjekt, ToggleLockMenuItem, UnlockObjekt } from "../objekt/actions/lock";
 import { MovePinMenuItem, PinObjekt, TogglePinMenuItem, UnpinObjekt } from "../objekt/actions/pin";
@@ -33,7 +34,11 @@ export default function ProfileObjektRender() {
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 
   return (
-    <ObjektViewProvider initialColumn={profile.gridColumns ?? undefined} modalTab="owned">
+    <ObjektViewProvider
+      initialColumn={profile.gridColumns ?? undefined}
+      modalTab="owned"
+      showPinLock
+    >
       <div className="flex flex-col gap-4">
         <ProfileObjektFilters selectRef={setSelectTarget} discordRef={setDiscordTarget} />
 
@@ -107,14 +112,18 @@ function ProfileObjekt({
                 <SelectMenuItem objekts={item} />
                 {isProfileAuthed && isOwned && (
                   <>
-                    <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
+                    <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.tokenId} />
                     {objekt.isPin && (
                       <>
-                        <MovePinMenuItem tokenId={objekt.id} direction="up" />
-                        <MovePinMenuItem tokenId={objekt.id} direction="down" />
+                        <MovePinMenuItem tokenId={objekt.tokenId} direction="up" />
+                        <MovePinMenuItem tokenId={objekt.tokenId} direction="down" />
                       </>
                     )}
-                    <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
+                    <ToggleLockMenuItem
+                      isLocked={objekt.isLocked ?? false}
+                      tokenId={objekt.tokenId}
+                    />
+                    <MenuSeparator />
                   </>
                 )}
                 <AddToListMenu objekts={[objekt]} address={address} />
@@ -126,14 +135,18 @@ function ProfileObjekt({
             <ObjektGridActions objekts={item}>
               {isProfileAuthed && isOwned && (
                 <>
-                  <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.id} />
+                  <TogglePinMenuItem isPin={objekt.isPin ?? false} tokenId={objekt.tokenId} />
                   {objekt.isPin && (
                     <>
-                      <MovePinMenuItem tokenId={objekt.id} direction="up" />
-                      <MovePinMenuItem tokenId={objekt.id} direction="down" />
+                      <MovePinMenuItem tokenId={objekt.tokenId} direction="up" />
+                      <MovePinMenuItem tokenId={objekt.tokenId} direction="down" />
                     </>
                   )}
-                  <ToggleLockMenuItem isLocked={objekt.isLocked ?? false} tokenId={objekt.id} />
+                  <ToggleLockMenuItem
+                    isLocked={objekt.isLocked ?? false}
+                    tokenId={objekt.tokenId}
+                  />
+                  <MenuSeparator />
                 </>
               )}
               <AddToListMenu objekts={[objekt]} address={address} />

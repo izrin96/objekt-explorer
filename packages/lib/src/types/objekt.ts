@@ -36,10 +36,11 @@ export type OwnedObjekt = IndexedObjekt & {
   receivedAt: string;
   serial: number;
   transferable: boolean;
+  tokenId: string;
+  // todo: separate this
   isPin?: boolean;
   isLocked?: boolean;
   pinOrder?: number | null;
-  tokenId?: string;
 };
 
 // Union type for functions that accept either indexed or owned objekts

@@ -13,6 +13,7 @@ interface ObjektModalState {
   currentTab: ValidTab;
   setCurrentTab: (tab: ValidTab) => void;
   showOwned: boolean;
+  showPinLock: boolean;
 }
 
 const ObjektModalContext = createContext<ObjektModalState | null>(null);
@@ -20,16 +21,25 @@ const ObjektModalContext = createContext<ObjektModalState | null>(null);
 type ProviderProps = PropsWithChildren<{
   initialTab: ValidTab;
   showOwned: boolean;
+  showPinLock?: boolean;
 }>;
 
-export function ObjektModalProvider({ children, initialTab, showOwned }: ProviderProps) {
+export function ObjektModalProvider({
+  children,
+  initialTab,
+  showOwned,
+  showPinLock = false,
+}: ProviderProps) {
   const [currentTab, setCurrentTab] = useState(initialTab);
 
   useEffect(() => {
     setCurrentTab(initialTab);
   }, [initialTab]);
 
-  const value = useMemo(() => ({ currentTab, setCurrentTab, showOwned }), [currentTab, showOwned]);
+  const value = useMemo(
+    () => ({ currentTab, setCurrentTab, showOwned, showPinLock }),
+    [currentTab, showOwned, showPinLock],
+  );
 
   return <ObjektModalContext value={value}>{children}</ObjektModalContext>;
 }

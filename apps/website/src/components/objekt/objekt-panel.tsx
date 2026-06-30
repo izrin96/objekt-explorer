@@ -2,6 +2,7 @@ import { ArchiveBoxXMarkIcon } from "@heroicons/react/24/outline";
 import {
   CaretLeftIcon,
   CaretRightIcon,
+  DotsThreeVerticalIcon,
   LockSimpleIcon,
   PushPinIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -12,15 +13,21 @@ import { useCallback, useMemo, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
+import { useProfileTarget } from "@/hooks/use-profile-target";
+import { useProfileAuthed } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
 import { Button } from "../intentui/button";
 import { Card, CardContent } from "../intentui/card";
+import { Menu, MenuContent, MenuSeparator } from "../intentui/menu";
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "../intentui/table";
 import { Tab, TabList, TabPanel, Tabs } from "../intentui/tabs";
 import { ApolloIcon } from "../shared/apollo-icon";
+import { AddToListMenu } from "./actions/list";
+import { ToggleLockMenuItem } from "./actions/lock";
+import { MovePinMenuItem, TogglePinMenuItem } from "./actions/pin";
 import MarketView from "./market-view";
 import TradeView from "./trade-view";
 
@@ -92,7 +99,10 @@ function OwnedListPanel({
   setSerial: (serial: number) => void;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const { setCurrentTab } = useObjektModal();
+  const { setCurrentTab, showPinLock } = useObjektModal();
+  const profile = useProfileTarget();
+  const isProfileAuthed = useProfileAuthed();
+  const showPinLockActions = showPinLock && isProfileAuthed;
 
   const openTrades = useCallback(
     (serial: number) => {
@@ -168,6 +178,7 @@ function OwnedListPanel({
                 {m.objekt_received()}
               </TableColumn>
               <TableColumn>{m.objekt_transferable()}</TableColumn>
+              <TableColumn maxWidth={48} />
             </TableHeader>
             <TableBody>
               {currentItems.map((item) => (
@@ -185,6 +196,32 @@ function OwnedListPanel({
                     <Badge intent={item.transferable ? "info" : "danger"}>
                       {item.transferable ? m.objekt_yes() : m.objekt_no()}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Menu>
+                      <Button size="sq-xs" intent="plain" aria-label={m.objekt_menu_aria()}>
+                        <DotsThreeVerticalIcon size={16} weight="bold" />
+                      </Button>
+                      <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+                        {showPinLockActions && (
+                          <>
+                            <TogglePinMenuItem isPin={item.isPin ?? false} tokenId={item.tokenId} />
+                            {item.isPin && (
+                              <>
+                                <MovePinMenuItem tokenId={item.tokenId} direction="up" />
+                                <MovePinMenuItem tokenId={item.tokenId} direction="down" />
+                              </>
+                            )}
+                            <ToggleLockMenuItem
+                              isLocked={item.isLocked ?? false}
+                              tokenId={item.tokenId}
+                            />
+                            <MenuSeparator />
+                          </>
+                        )}
+                        <AddToListMenu objekts={[item]} address={profile?.address} />
+                      </MenuContent>
+                    </Menu>
                   </TableCell>
                 </TableRow>
               ))}

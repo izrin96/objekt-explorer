@@ -43,7 +43,7 @@ export default function ProfileObjektServerRender() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={ErrorFallbackRender}>
-              <ProfileObjektServer selectTarget={selectTarget} address={profile.address} />
+              <ProfileObjektServer selectTarget={selectTarget} />
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
@@ -63,13 +63,7 @@ function ProfileObjektFilters({ selectRef }: { selectRef: (el: HTMLDivElement | 
   );
 }
 
-function ProfileObjektServer({
-  selectTarget,
-  address,
-}: {
-  selectTarget: HTMLDivElement | null;
-  address: string;
-}) {
+function ProfileObjektServer({ selectTarget }: { selectTarget: HTMLDivElement | null }) {
   const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
   const { filtered, total, query, filters } = useProfileObjektsServer();
@@ -91,20 +85,20 @@ function ProfileObjektServer({
             showActions && (
               <ObjektStaticMenu>
                 <SelectMenuItem objekts={item} />
-                <AddToListMenu objekts={[objekt]} address={address} />
+                <AddToListMenu objekts={[objekt]} />
               </ObjektStaticMenu>
             )
           }
         >
           {showActions && (
             <ObjektGridActions objekts={item}>
-              <AddToListMenu objekts={[objekt]} address={address} />
+              <AddToListMenu objekts={[objekt]} />
             </ObjektGridActions>
           )}
         </ObjektGridView>
       );
     },
-    [showActions, hideLabel, address],
+    [showActions, hideLabel],
   );
 
   if (query.isPending) {
@@ -119,7 +113,7 @@ function ProfileObjektServer({
     <>
       {showActions && (
         <FloatingSelectMode objekts={filtered}>
-          <AddToList size="sm" address={address} />
+          <AddToList size="sm" />
         </FloatingSelectMode>
       )}
 
@@ -127,7 +121,7 @@ function ProfileObjektServer({
         selectTarget &&
         createPortal(
           <SelectMode objekts={filtered}>
-            <AddToList address={address} />
+            <AddToList />
           </SelectMode>,
           selectTarget,
         )}

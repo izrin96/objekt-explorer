@@ -28,7 +28,7 @@ export function LockObjekt({ size }: { size?: ButtonProps["size"] }) {
             address: target.address,
             tokenIds: selected
               .filter(isObjektOwned)
-              .map((a) => Number(a.id))
+              .map((a) => Number(a.tokenId))
               .filter(Boolean),
           });
         })
@@ -55,7 +55,7 @@ export function UnlockObjekt({ size }: { size?: ButtonProps["size"] }) {
             address: target.address,
             tokenIds: selected
               .filter(isObjektOwned)
-              .map((a) => Number(a.id))
+              .map((a) => Number(a.tokenId))
               .filter(Boolean),
           });
         });

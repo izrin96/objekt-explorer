@@ -5,14 +5,17 @@ import ListHeader from "@/components/list/list-header";
 import ListRender from "@/components/list/list-view";
 import ListNotFoundComponent from "@/components/router/list-notfound";
 import { ListProvider } from "@/hooks/use-list-target";
+import { ProfileProvider } from "@/hooks/use-profile-target";
 import { generateMetadata } from "@/lib/meta";
 import { listBySlugQuery } from "@/lib/queries/list";
+import { profileQuery } from "@/lib/queries/profile";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   loader: async ({ params, context: { queryClient } }) => {
+    const profile = await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
     const list = await queryClient.ensureQueryData(
-      listBySlugQuery({ slug: params.slug, nickname: params.nickname }),
+      listBySlugQuery({ slug: params.slug, address: profile.address }),
     );
     return { list };
   },
@@ -29,16 +32,19 @@ export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
 
 function ProfileListDetailPage() {
   const params = Route.useParams();
+  const { data: profile } = useSuspenseQuery(profileQuery({ nickname: params.nickname }));
   const { data: list } = useSuspenseQuery(
-    listBySlugQuery({ slug: params.slug, nickname: params.nickname }),
+    listBySlugQuery({ slug: params.slug, address: profile.address }),
   );
 
   return (
-    <ListProvider list={list}>
-      <div className="flex flex-col gap-4 pt-4 pb-36">
-        <ListHeader />
-        <ListRender />
-      </div>
-    </ListProvider>
+    <ProfileProvider profile={profile}>
+      <ListProvider list={list}>
+        <div className="flex flex-col gap-4 pt-4 pb-36">
+          <ListHeader />
+          <ListRender />
+        </div>
+      </ListProvider>
+    </ProfileProvider>
   );
 }

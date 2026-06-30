@@ -31,6 +31,7 @@ import Portal from "@/components/shared/portal";
 import { useAddToList } from "@/hooks/actions/add-to-list";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useUserLists } from "@/hooks/use-user";
+import { isObjektOwned } from "@/lib/objekt-utils";
 import { m } from "@/paraglide/messages";
 
 import ErrorFallbackRender from "../../router/error-boundary";
@@ -111,7 +112,9 @@ function AddToListForm({
       {
         slug: data.slug,
         skipDups: data.skipDups,
-        objekts: selectedList.isProfileBind ? selected.map((a) => a.id) : undefined,
+        objekts: selectedList.isProfileBind
+          ? selected.filter(isObjektOwned).map((a) => a.tokenId)
+          : undefined,
         collectionSlugs: !selectedList.isProfileBind ? selected.map((a) => a.slug) : undefined,
       },
       {
