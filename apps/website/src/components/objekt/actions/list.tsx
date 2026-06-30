@@ -71,7 +71,7 @@ export function AddToListMenu({ objekts, address }: { objekts: ValidObjekt[]; ad
   };
 
   return (
-    <MenuSubMenu delay={80}>
+    <MenuSubMenu>
       <MenuItem>
         <PlusIcon />
         <MenuLabel>{m.objekt_menu_add_to_list()}</MenuLabel>
