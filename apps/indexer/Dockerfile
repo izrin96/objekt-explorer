@@ -2,7 +2,7 @@
 FROM oven/bun:canary-slim AS pruner
 WORKDIR /app
 COPY . .
-RUN bunx turbo@2.9.18 prune indexer --docker
+RUN bunx turbo@2.10.1 prune indexer --docker
 
 # stage 2: install dependencies with bun
 FROM oven/bun:canary-slim AS installer
