@@ -34,11 +34,7 @@ export default function ProfileObjektRender() {
   const [discordTarget, setDiscordTarget] = useState<HTMLDivElement | null>(null);
 
   return (
-    <ObjektViewProvider
-      initialColumn={profile.gridColumns ?? undefined}
-      modalTab="owned"
-      showPinLock
-    >
+    <ObjektViewProvider initialColumn={profile.gridColumns ?? undefined} modalTab="owned" isProfile>
       <div className="flex flex-col gap-4">
         <ProfileObjektFilters selectRef={setSelectTarget} discordRef={setDiscordTarget} />
 

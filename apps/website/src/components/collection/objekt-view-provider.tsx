@@ -7,13 +7,13 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 interface ObjektViewProviderProps extends PropsWithChildren {
   initialColumn?: number;
   modalTab: "owned" | "trades";
-  showPinLock?: boolean;
+  isProfile?: boolean;
 }
 
 export function ObjektViewProvider({
   initialColumn,
   modalTab,
-  showPinLock,
+  isProfile,
   children,
 }: ObjektViewProviderProps) {
   return (
@@ -22,7 +22,7 @@ export function ObjektViewProvider({
         <ObjektModalProvider
           initialTab={modalTab}
           showOwned={modalTab === "owned"}
-          showPinLock={showPinLock}
+          isProfile={isProfile}
         >
           {children}
         </ObjektModalProvider>

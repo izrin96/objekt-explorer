@@ -99,10 +99,10 @@ function OwnedListPanel({
   setSerial: (serial: number) => void;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-  const { setCurrentTab, showPinLock } = useObjektModal();
+  const { setCurrentTab, isProfile } = useObjektModal();
   const profile = useProfileTarget();
   const isProfileAuthed = useProfileAuthed();
-  const showPinLockActions = showPinLock && isProfileAuthed;
+  const showPinLockActions = isProfile && isProfileAuthed;
 
   const openTrades = useCallback(
     (serial: number) => {
@@ -219,7 +219,10 @@ function OwnedListPanel({
                             <MenuSeparator />
                           </>
                         )}
-                        <AddToListMenu objekts={[item]} address={profile?.address} />
+                        <AddToListMenu
+                          objekts={[item]}
+                          address={isProfile ? profile?.address : undefined}
+                        />
                       </MenuContent>
                     </Menu>
                   </TableCell>
