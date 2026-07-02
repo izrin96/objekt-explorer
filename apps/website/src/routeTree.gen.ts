@@ -25,7 +25,6 @@ import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@
 import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
 import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
 import { Route as containerLoginRouteImport } from './routes/(container)/login'
-import { Route as containerCompareToolRouteImport } from './routes/(container)/compare-tool'
 import { Route as containerActivityRouteImport } from './routes/(container)/activity'
 import { Route as containerLiveIndexRouteImport } from './routes/(container)/live/index'
 import { Route as containerListIndexRouteImport } from './routes/(container)/list/index'
@@ -129,11 +128,6 @@ const containerLoginRoute = containerLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => containerRouteRoute,
 } as any)
-const containerCompareToolRoute = containerCompareToolRouteImport.update({
-  id: '/compare-tool',
-  path: '/compare-tool',
-  getParentRoute: () => containerRouteRoute,
-} as any)
 const containerActivityRoute = containerActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -229,7 +223,6 @@ const ApiObjektsTransfersCollectionSlugSerialRoute =
 export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/activity': typeof containerActivityRoute
-  '/compare-tool': typeof containerCompareToolRoute
   '/login': typeof containerLoginRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
@@ -263,7 +256,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/activity': typeof containerActivityRoute
-  '/compare-tool': typeof containerCompareToolRoute
   '/login': typeof containerLoginRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
@@ -300,7 +292,6 @@ export interface FileRoutesById {
   '/(container)': typeof containerRouteRouteWithChildren
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/(container)/activity': typeof containerActivityRoute
-  '/(container)/compare-tool': typeof containerCompareToolRoute
   '/(container)/login': typeof containerLoginRoute
   '/(container)/terms-privacy': typeof containerTermsPrivacyRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
@@ -337,7 +328,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/@{$nickname}'
     | '/activity'
-    | '/compare-tool'
     | '/login'
     | '/terms-privacy'
     | '/@{$nickname}/list'
@@ -371,7 +361,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/activity'
-    | '/compare-tool'
     | '/login'
     | '/terms-privacy'
     | '/@{$nickname}/list'
@@ -407,7 +396,6 @@ export interface FileRouteTypes {
     | '/(container)'
     | '/@{$nickname}'
     | '/(container)/activity'
-    | '/(container)/compare-tool'
     | '/(container)/login'
     | '/(container)/terms-privacy'
     | '/@{$nickname}/list'
@@ -572,13 +560,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerLoginRouteImport
       parentRoute: typeof containerRouteRoute
     }
-    '/(container)/compare-tool': {
-      id: '/(container)/compare-tool'
-      path: '/compare-tool'
-      fullPath: '/compare-tool'
-      preLoaderRoute: typeof containerCompareToolRouteImport
-      parentRoute: typeof containerRouteRoute
-    }
     '/(container)/activity': {
       id: '/(container)/activity'
       path: '/activity'
@@ -703,7 +684,6 @@ declare module '@tanstack/react-router' {
 
 interface containerRouteRouteChildren {
   containerActivityRoute: typeof containerActivityRoute
-  containerCompareToolRoute: typeof containerCompareToolRoute
   containerLoginRoute: typeof containerLoginRoute
   containerTermsPrivacyRoute: typeof containerTermsPrivacyRoute
   containerIndexRoute: typeof containerIndexRoute
@@ -720,7 +700,6 @@ interface containerRouteRouteChildren {
 
 const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerActivityRoute: containerActivityRoute,
-  containerCompareToolRoute: containerCompareToolRoute,
   containerLoginRoute: containerLoginRoute,
   containerTermsPrivacyRoute: containerTermsPrivacyRoute,
   containerIndexRoute: containerIndexRoute,

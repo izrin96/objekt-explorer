@@ -6,11 +6,13 @@ import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { GenerateDiscordButton } from "@/components/shared/generate-discord-button";
+import { isComparing, useCompareFilters } from "@/hooks/use-compare-filters";
 import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useCurrentUser, useListAuthed } from "@/hooks/use-user";
 import type { PublicList } from "@/lib/universal/list";
+import { m } from "@/paraglide/messages";
 
 import { ObjektCount } from "../collection/objekt-count";
 import { ObjektGridView, ObjektGridActions } from "../collection/objekt-grid";
@@ -19,7 +21,9 @@ import { ObjektVirtualGrid } from "../collection/objekt-virtual-grid";
 import { CompareButton } from "../compare/compare-button";
 import { FilterContainer } from "../filters/filter-container";
 import { FloatingSelectMode, SelectMode } from "../filters/select-mode";
+import { Button } from "../intentui/button";
 import { Loader } from "../intentui/loader";
+import { Note } from "../intentui/note";
 import {
   AddToList,
   AddToListMenu,
@@ -112,6 +116,48 @@ function ListFilter({
   );
 }
 
+function CompareBanner({
+  compare,
+  onClear,
+  error,
+}: {
+  compare: ReturnType<typeof useCompareFilters>[0];
+  onClear: () => void;
+  error?: Error | null;
+}) {
+  if (error) {
+    return (
+      <Note intent="warning">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="font-medium">{error.message}</span>
+          <Button intent="outline" size="sm" onPress={onClear}>
+            {m.common_modal_cancel()}
+          </Button>
+        </div>
+      </Note>
+    );
+  }
+
+  return (
+    <div className="border-border bg-secondary/50 flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm">
+      <div className="flex flex-col gap-1">
+        <span className="text-fg font-medium">
+          {compare.cmp_mode === "missing"
+            ? m.compare_view_showing_missing()
+            : m.compare_view_showing_matches()}
+        </span>
+        <span className="text-muted-fg text-xs">
+          {m.compare_view_target_label()}: <span className="text-fg">{compare.cmp_to}</span>
+          {` (${compare.cmp_type === "list" ? m.compare_view_type_list() : m.compare_view_type_profile()})`}
+        </span>
+      </div>
+      <Button intent="outline" size="sm" onPress={onClear}>
+        {m.common_modal_cancel()}
+      </Button>
+    </div>
+  );
+}
+
 function ListView({
   selectTarget,
   discordTarget,
@@ -124,8 +170,14 @@ function ListView({
   const { data: user } = useCurrentUser();
   const isOwned = useListAuthed();
   const hideLabel = useConfigStore((a) => a.hideLabel);
-  const { filtered, grouped, filters, rarityMap, isPending } = useListObjekts();
+  const [compare, setCompare] = useCompareFilters();
+  const { filtered, grouped, filters, rarityMap, isPending, isError, error } = useListObjekts();
   const { openSetPrice } = use(SetPriceContext);
+  const comparing = isComparing(compare);
+  const clearCompare = useCallback(
+    () => void setCompare({ cmp_type: null, cmp_to: null, cmp_mode: null }),
+    [setCompare],
+  );
 
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
@@ -178,14 +230,23 @@ function ListView({
 
   if (isPending) {
     return (
-      <div className="flex justify-center">
-        <Loader variant="ring" />
+      <div className="flex flex-col gap-4">
+        {comparing && <CompareBanner compare={compare} onClear={clearCompare} />}
+        <div className="flex justify-center">
+          <Loader variant="ring" />
+        </div>
       </div>
     );
   }
 
+  if (isError) {
+    return <CompareBanner compare={compare} onClear={clearCompare} error={error} />;
+  }
+
   return (
     <>
+      {comparing && <CompareBanner compare={compare} onClear={clearCompare} />}
+
       {user && (
         <FloatingSelectMode objekts={filtered}>
           {isOwned && <RemoveFromList size="sm" />}

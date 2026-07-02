@@ -16,6 +16,7 @@ import {
 } from "@/components/intentui/modal";
 import { Radio, RadioField, RadioGroup } from "@/components/intentui/radio";
 import Portal from "@/components/shared/portal";
+import { useCompareFilters } from "@/hooks/use-compare-filters";
 import { m } from "@/paraglide/messages";
 
 type SourceList = {
@@ -55,7 +56,8 @@ export function CompareModal({ open, setOpen, sourceList }: CompareModalProps) {
   );
 }
 
-function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: boolean) => void }) {
+function CompareForm({ setOpen }: { sourceList: SourceList; setOpen: (val: boolean) => void }) {
+  const [, setCompare] = useCompareFilters();
   const { control, watch, handleSubmit } = useForm<CompareFormData>({
     defaultValues: {
       targetType: "profile",
@@ -68,19 +70,12 @@ function CompareForm({ sourceList }: { sourceList: SourceList; setOpen: (val: bo
   const watchedTargetType = watch("targetType");
 
   const onSubmit = handleSubmit((data) => {
-    const params = new URLSearchParams({
-      sourceId: sourceList.id,
-      targetType: data.targetType,
-      mode: data.mode,
+    void setCompare({
+      cmp_type: data.targetType,
+      cmp_to: data.targetType === "profile" ? data.targetProfile : data.targetList,
+      cmp_mode: data.mode,
     });
-
-    if (data.targetType === "profile") {
-      params.set("targetProfile", data.targetProfile);
-    } else {
-      params.set("targetListId", data.targetList);
-    }
-
-    window.open(`/compare-tool?${params.toString()}`, "_blank");
+    setOpen(false);
   });
 
   return (
