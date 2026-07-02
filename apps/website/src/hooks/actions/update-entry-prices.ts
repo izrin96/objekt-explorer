@@ -1,10 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { orpc } from "@/lib/orpc/client";
 import { m } from "@/paraglide/messages";
 
 export function useUpdateEntryPrices() {
+  const updateSelected = useObjektSelect((a) => a.updateSelected);
+
   const batchUpdatePrices = useMutation(
     orpc.list.updateEntryPrices.mutationOptions({
       onMutate: async ({ slug, updates }, { client }) => {
@@ -29,7 +32,15 @@ export function useUpdateEntryPrices() {
 
         return { snapshot };
       },
-      onSuccess: () => {
+      onSuccess: (_data, { updates }) => {
+        updateSelected(
+          new Map(
+            updates.map((u) => [
+              String(u.entryId),
+              { price: u.price ?? undefined, isQyop: u.isQyop, note: u.note ?? undefined },
+            ]),
+          ),
+        );
         toast.success(m.list_manage_objekt_set_price_success());
       },
       onError: async (_err, { slug }, context, { client }) => {

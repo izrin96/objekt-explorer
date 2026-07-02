@@ -13,6 +13,7 @@ type ObjektSelectedState = {
   getSelected: () => ValidObjekt[];
   select: (selected: ValidObjekt[]) => void;
   batchSelect: (selected: ValidObjekt[]) => void;
+  updateSelected: (updates: Map<string, Partial<ValidObjekt>>) => void;
   isSelected: (selected: ValidObjekt) => boolean;
   reset: () => void;
   handleAction: (callback: () => void) => void;
@@ -51,6 +52,17 @@ const createObjektSelectStore = (errorMessage: string) =>
           selected: new Map(selected.toReversed().map((a) => [a.id, a])),
           mode: true,
         };
+      }),
+
+    updateSelected: (updates) =>
+      set((state) => {
+        if (state.selected.size === 0) return state;
+        const map = new Map(state.selected);
+        for (const [id, changes] of updates) {
+          const item = map.get(id);
+          if (item) map.set(id, { ...item, ...changes });
+        }
+        return { selected: map };
       }),
 
     isSelected: (selected) => get().selected.has(selected.id),
