@@ -223,21 +223,27 @@ export function parseRevealFunction(tx: Transaction): RevealFunction[] {
   }
 }
 
-export type TransferabilityUpdate = {
+export type TransferabilityUpdateEvent = {
   tokenId: string;
   transferable: boolean;
+  blockNumber: number;
+  transactionIndex: number;
+  hash: string;
 };
 
 /**
  * Parse an event into an objekt update.
  */
-export function parseTransferabilityUpdate(tx: Transaction): TransferabilityUpdate[] {
+export function parseTransferabilityUpdate(tx: Transaction): TransferabilityUpdateEvent[] {
   try {
     const { tokenIds, transferable } = transferability.decode(tx.input);
 
     return tokenIds.map((tokenId) => ({
       tokenId: tokenId.toString(),
       transferable: transferable,
+      blockNumber: tx.block.height,
+      transactionIndex: tx.transactionIndex,
+      hash: tx.hash,
     }));
   } catch {
     return [];

@@ -1,15 +1,25 @@
+import { emptyMetadata } from "@repo/cosmo/server/metadata";
 import type { CosmoObjektMetadataV1 } from "@repo/cosmo/types/metadata";
 import { addr, chunk, slugifyObjekt, Addresses } from "@repo/lib";
 import { TypeormDatabase, type Store } from "@subsquid/typeorm-store";
+import { IsNull } from "typeorm";
 import { v7 as randomUUID } from "uuid";
 
 import { env } from "./env";
 import { fetchMetadata } from "./metadata";
-import { Collection, ComoBalance, ListEventOutbox, Objekt, type Transfer, Vote } from "./model";
+import {
+  Collection,
+  ComoBalance,
+  ListEventOutbox,
+  Objekt,
+  type Transfer,
+  TransferabilityUpdate,
+  Vote,
+} from "./model";
 import {
   type ComoBalanceEvent,
   type RevealFunction,
-  type TransferabilityUpdate,
+  type TransferabilityUpdateEvent,
   type VoteEvent,
   parseBlocks,
 } from "./parser";
@@ -36,7 +46,10 @@ processor.run(db, async (ctx) => {
       const collectionBatch = new Map<string, Collection>();
       const objektBatch = new Map<string, Objekt>();
 
-      const metadataBatch = await Promise.allSettled(chunk.map((e) => fetchMetadata(e.tokenId)));
+      const metadataBatch = env.SKIP_METADATA
+        ? chunk.map((e) => ({ status: "fulfilled" as const, value: emptyMetadata(e.tokenId) }))
+        : await Promise.allSettled(chunk.map((e) => fetchMetadata(e.tokenId)));
+      const newlyMintedIds: string[] = [];
 
       // iterate over each objekt metadata request
       for (let j = 0; j < metadataBatch.length; j++) {
@@ -52,14 +65,22 @@ processor.run(db, async (ctx) => {
         collectionBatch.set(collection.slug, collection);
 
         // handle objekt
-        const objekt = await handleObjekt(ctx, request.value, objektBatch, transfer);
+        const { objekt, isNew } = await handleObjekt(ctx, request.value, objektBatch, transfer);
         objekt.collection = collection;
         objektBatch.set(objekt.id, objekt);
+        if (isNew) {
+          newlyMintedIds.push(objekt.id);
+        }
 
         // handle transfer
         transfer.objekt = objekt;
         transfer.collection = collection;
         transferBatch.push(transfer);
+      }
+
+      // apply any pending transferability updates that were waiting for these mints
+      if (newlyMintedIds.length > 0) {
+        await applyPendingTransferabilityUpdates(ctx, objektBatch, newlyMintedIds);
       }
 
       // upsert collections
@@ -82,7 +103,7 @@ processor.run(db, async (ctx) => {
       const userTransfers = transferBatch.filter((t) => t.from !== Addresses.NULL);
 
       // insert outbox rows
-      if (userTransfers.length > 0) {
+      if (!env.SKIP_OUTBOX && userTransfers.length > 0) {
         const outboxRows = userTransfers.map(
           (t) =>
             new ListEventOutbox({
@@ -236,43 +257,106 @@ async function handleObjekt(
   if (objekt) {
     objekt.receivedAt = new Date(transfer.timestamp);
     objekt.owner = addr(transfer.to);
-    return objekt;
+    return { objekt, isNew: false };
   }
 
   // otherwise create it
-  if (!objekt) {
-    objekt = new Objekt({
-      id: transfer.tokenId,
-      mintedAt: new Date(transfer.timestamp),
-      receivedAt: new Date(transfer.timestamp),
-      owner: addr(transfer.to),
-      serial: metadata.objekt.objektNo,
-      transferable: metadata.objekt.transferable,
-    });
-  }
+  objekt = new Objekt({
+    id: transfer.tokenId,
+    mintedAt: new Date(transfer.timestamp),
+    receivedAt: new Date(transfer.timestamp),
+    owner: addr(transfer.to),
+    serial: metadata.objekt.objektNo,
+    transferable: metadata.objekt.transferable,
+  });
 
-  return objekt;
+  return { objekt, isNew: true };
 }
 
 /**
- * Update a batch of transferability updates.
+ * Record every transferability update as an append-only audit row, applying it
+ * immediately when the objekt already exists. Updates for objekts that don't
+ * exist yet (e.g. their mint transfer hasn't been seen) are left pending
+ * (appliedAt = null) and picked up later by applyPendingTransferabilityUpdates
+ * once the objekt is minted, instead of being silently dropped.
  */
 async function handleTransferabilityUpdates(
   ctx: ProcessorContext<Store>,
-  updates: TransferabilityUpdate[],
+  updates: TransferabilityUpdateEvent[],
 ) {
-  const batch = new Map<string, Objekt>();
+  const objektBatch = new Map<string, Objekt>();
+  const updateRows: TransferabilityUpdate[] = [];
+
   for (const update of updates) {
     const objekt = await ctx.store.get(Objekt, update.tokenId);
+    const appliedNow = objekt !== undefined;
+
     if (objekt) {
       objekt.transferable = update.transferable;
-      batch.set(objekt.id, objekt);
+      objektBatch.set(objekt.id, objekt);
     } else {
-      ctx.log.error(`Unable to find objekt ${update.tokenId} for transferability update`);
+      ctx.log.warn(
+        `Objekt ${update.tokenId} not found yet for transferability update, marking pending`,
+      );
     }
+
+    updateRows.push(
+      new TransferabilityUpdate({
+        id: randomUUID(),
+        tokenId: update.tokenId,
+        transferable: update.transferable,
+        blockNumber: update.blockNumber,
+        transactionIndex: update.transactionIndex,
+        hash: update.hash,
+        appliedAt: appliedNow ? new Date() : null,
+      }),
+    );
   }
-  if (batch.size > 0) {
-    await ctx.store.upsert(Array.from(batch.values()));
+
+  if (updateRows.length > 0) {
+    await ctx.store.insert(updateRows);
+  }
+  if (objektBatch.size > 0) {
+    await ctx.store.upsert(Array.from(objektBatch.values()));
+  }
+}
+
+/**
+ * Apply any transferability updates that arrived before their objekt was
+ * minted, now that the objekt(s) in `newlyMintedIds` exist. Mutates the
+ * matching entries in `objektBatch` in place so the caller's upsert picks up
+ * the corrected transferable value in the same write.
+ */
+async function applyPendingTransferabilityUpdates(
+  ctx: ProcessorContext<Store>,
+  objektBatch: Map<string, Objekt>,
+  newlyMintedIds: string[],
+) {
+  const pending = await ctx.store.find(TransferabilityUpdate, {
+    where: newlyMintedIds.map((tokenId) => ({ tokenId, appliedAt: IsNull() })),
+    order: { blockNumber: "ASC", transactionIndex: "ASC" },
+  });
+  if (pending.length === 0) {
+    return;
+  }
+
+  // keep only the latest pending update per tokenId
+  const latestByTokenId = new Map<string, TransferabilityUpdate>();
+  for (const update of pending) {
+    latestByTokenId.set(update.tokenId, update);
+  }
+
+  const now = new Date();
+  for (const update of pending) {
+    update.appliedAt = now;
+  }
+  await ctx.store.upsert(pending);
+
+  for (const [tokenId, update] of latestByTokenId) {
+    const objekt = objektBatch.get(tokenId);
+    if (objekt) {
+      objekt.transferable = update.transferable;
+    }
   }
 }
 

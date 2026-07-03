@@ -9,6 +9,9 @@ const envSchema = z.object({
   ENABLE_OBJEKTS: z.preprocess((x) => x === "true", z.coerce.boolean()),
   ENABLE_GRAVITY: z.preprocess((x) => x === "true", z.coerce.boolean()),
   COSMO_PARALLEL_COUNT: z.coerce.number().positive().default(500),
+  // diagnostic-only speed-up flags, not for production use
+  SKIP_METADATA: z.preprocess((x) => x === "true", z.coerce.boolean()).default(false),
+  SKIP_OUTBOX: z.preprocess((x) => x === "true", z.coerce.boolean()).default(false),
   DB_URL: z.url(),
   // legacy variables for backwards compatibility
   DB_NAME: z.string(),

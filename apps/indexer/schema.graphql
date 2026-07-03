@@ -69,6 +69,16 @@ type Vote @entity {
   amount: Int! @index
 }
 
+type TransferabilityUpdate @entity {
+  id: ID! # uuid
+  tokenId: String! @index
+  transferable: Boolean!
+  blockNumber: Int! @index
+  transactionIndex: Int!
+  hash: String!
+  appliedAt: DateTime @index
+}
+
 type ListEventOutbox @entity {
   id: ID! # auto-generated bigserial seq
   transferId: String!
