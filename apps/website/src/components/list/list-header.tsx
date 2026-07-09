@@ -11,6 +11,7 @@ import { m } from "@/paraglide/messages";
 import { Avatar } from "../intentui/avatar-custom";
 import { Button, buttonStyles } from "../intentui/button";
 import { Link } from "../intentui/link";
+import { Badge } from "../shared/badge";
 import { ListTypeBadge } from "../shared/list-type-badge";
 import { SocialBadge } from "../shared/social-badge";
 import { EditListModal } from "./modal/edit-list-modal";
@@ -27,6 +28,11 @@ export default function ListHeader() {
         <div className="flex min-w-0 flex-col justify-center gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="font-display text-xl font-semibold">{list.name}</h2>
+            {list.isProfileBind && (
+              <Badge className="border-border bg-muted text-muted-fg">
+                {m.profile_header_verified()}
+              </Badge>
+            )}
             {list.listTypeNew !== "general" && <ListTypeBadge type={list.listTypeNew} />}
             {list.listTypeNew === "sale" && list.currency && (
               <span className="text-muted-fg text-xs">({list.currency})</span>
