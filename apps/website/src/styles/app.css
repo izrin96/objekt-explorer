@@ -148,6 +148,8 @@
 :root {
   --bg: oklch(0.987 0 0);
   --fg: oklch(0.21 0.006 285.885);
+  --card: oklch(1 0 0);
+  --card-fg: oklch(0.21 0.006 285.885);
   --primary: oklch(0.141 0.005 285.823);
   --primary-fg: oklch(0.985 0 0);
   --primary-subtle: oklch(0.442 0.017 285.786 / 0.1);
@@ -183,7 +185,6 @@
   --ring: oklch(0.141 0.005 285.823);
   --background: var(--bg);
   --foreground: var(--fg);
-  --card: var(--bg);
   --card-foreground: var(--fg);
   --popover: var(--overlay);
   --popover-foreground: var(--overlay-fg);
@@ -233,6 +234,8 @@
 .dark {
   --bg: oklch(0.141 0.005 285.823);
   --fg: oklch(0.985 0 0);
+  --card: oklch(0.19 0.006 285.885);
+  --card-fg: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
   --primary-fg: oklch(0.141 0.005 285.823);
   --primary-subtle: oklch(0.442 0.017 285.786 / 0.1);
@@ -268,7 +271,6 @@
   --ring: oklch(0.985 0 0);
   --background: var(--bg);
   --foreground: var(--fg);
-  --card: var(--bg);
   --card-foreground: var(--fg);
   --popover: var(--overlay);
   --popover-foreground: var(--overlay-fg);
