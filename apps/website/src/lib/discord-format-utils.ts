@@ -64,6 +64,7 @@ export type FormatOptions = {
   lowercaseCollection: boolean;
   bullet: boolean;
   showMemberEmoji: boolean;
+  hideType: boolean;
   groupByMode?: GroupByMode;
   style?: FormatStyle;
   compareArtistMember: (a: string, b: string) => number;
@@ -77,14 +78,20 @@ function formatCollection(
   showSeason: boolean,
 ): string {
   let text = "";
+  const collectionNo = options.hideType
+    ? collection.collectionNo.slice(0, -1)
+    : collection.collectionNo;
 
   if (collection.artist === "idntt") {
-    text = `${showSeason ? getSeasonEmoji(collection.season) : ""}${collection.collectionNo}`;
+    const season = showSeason
+      ? `${getSeasonEmoji(collection.season)}${collection.season.slice(-2)} `
+      : "";
+    text = `${season}${collectionNo}`;
   } else {
     const seasonCode = collection.season.charAt(0);
     const seasonNumber = collection.season.slice(-2);
     const seasonFormat = seasonCode.repeat(Number(seasonNumber));
-    text = `${seasonFormat}${collection.collectionNo}`;
+    text = `${seasonFormat}${collectionNo}`;
   }
 
   const result = `${text}${options.showQuantity && quantity > 1 ? ` (x${quantity})` : ""}`;

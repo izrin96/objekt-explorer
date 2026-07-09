@@ -42,6 +42,7 @@
   "generate_discord_include_link": "Include link",
   "generate_discord_lower_case": "Lower case",
   "generate_discord_show_member_emoji": "Member emoji",
+  "generate_discord_hide_type": "Hide type",
   "generate_discord_bulleted_list": "Bulleted list",
   "generate_discord_group_by_label": "Group by",
   "generate_discord_group_by_placeholder": "Select grouping mode",

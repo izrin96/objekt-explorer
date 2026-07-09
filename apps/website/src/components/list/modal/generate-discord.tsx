@@ -87,6 +87,7 @@ function GenerateDiscordFormatRender() {
       lowercaseCollection: false,
       bullet: false,
       showMemberEmoji: false,
+      hideType: false,
       groupBy: "none" as GroupByMode,
       style: "default" as FormatStyle,
     },
@@ -135,6 +136,7 @@ function GenerateDiscordFormatRender() {
             lowercaseCollection: formData.lowercaseCollection,
             bullet: formData.bullet,
             showMemberEmoji: formData.showMemberEmoji,
+            hideType: formData.hideType,
             groupByMode: formData.groupBy,
             style: formData.style,
             compareArtistMember,
@@ -309,6 +311,22 @@ function GenerateDiscordFormatRender() {
             validationBehavior="aria"
           >
             <Checkbox>{m.generate_discord_show_member_emoji()}</Checkbox>
+          </CheckboxField>
+        )}
+      />
+      <Controller
+        control={control}
+        name="hideType"
+        render={({ field: { name, value, onChange, onBlur }, fieldState: { invalid } }) => (
+          <CheckboxField
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            isInvalid={invalid}
+            validationBehavior="aria"
+          >
+            <Checkbox>{m.generate_discord_hide_type()}</Checkbox>
           </CheckboxField>
         )}
       />

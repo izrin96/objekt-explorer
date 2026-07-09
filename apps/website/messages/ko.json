@@ -42,6 +42,7 @@
   "generate_discord_include_link": "링크 포함",
   "generate_discord_lower_case": "소문자",
   "generate_discord_show_member_emoji": "멤버 이모지",
+  "generate_discord_hide_type": "타입 숨기기",
   "generate_discord_bulleted_list": "글머리 기호 목록",
   "generate_discord_group_by_label": "그룹 기준",
   "generate_discord_group_by_placeholder": "그룹 모드 선택",
