@@ -72,7 +72,8 @@ export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDi
   return (
     <div
       data-slot="card-content"
-      className={twMerge("px-(--gutter) has-[table]:border-t", className)}
+      // custom remove has-[table]:border-t
+      className={twMerge("px-(--gutter)", className)}
       {...props}
     />
   );
