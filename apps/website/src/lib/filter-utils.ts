@@ -230,6 +230,15 @@ export function sortObjekts(
     } else {
       objekts = objekts.toSorted((a, b) => compareMember(b.member, a.member));
     }
+  } else if (sort === "price") {
+    objekts = objekts.toSorted((a, b) => {
+      const priceA = a.price ?? null;
+      const priceB = b.price ?? null;
+      if (priceA === null && priceB === null) return 0;
+      if (priceA === null) return 1;
+      if (priceB === null) return -1;
+      return sortDir === "asc" ? priceA - priceB : priceB - priceA;
+    });
   }
 
   return objekts;

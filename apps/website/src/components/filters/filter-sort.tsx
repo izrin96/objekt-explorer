@@ -27,6 +27,7 @@ export default function SortFilter({ enabled = defaultSort }: Props) {
     duplicate: { label: m.filter_sort_by_dups_label(), desc: m.filter_sort_by_dups_desc() },
     member: { label: m.filter_sort_by_member_label(), desc: m.filter_sort_by_member_desc() },
     rare: { label: m.filter_sort_by_rare_label(), desc: m.filter_sort_by_rare_desc() },
+    price: { label: m.filter_sort_by_price_label(), desc: m.filter_sort_by_price_desc() },
   };
 
   function update(key: Selection) {

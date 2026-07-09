@@ -29,6 +29,7 @@ export const validCustomSorts = [
   "serial",
   "duplicate",
   "rare",
+  "price",
 ] as const;
 export type ValidCustomSort = (typeof validCustomSorts)[number];
 

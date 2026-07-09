@@ -587,6 +587,8 @@
   "filter_sort_by_member_desc": "Sort by Member order",
   "filter_sort_by_rare_label": "Rarity",
   "filter_sort_by_rare_desc": "Sort by mint count",
+  "filter_sort_by_price_label": "Price",
+  "filter_sort_by_price_desc": "Sort by price",
   "filter_desc": "Descending",
   "filter_asc": "Ascending",
   "filter_group_by_label": "Group by",

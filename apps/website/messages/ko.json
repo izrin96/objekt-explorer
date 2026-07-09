@@ -587,6 +587,8 @@
   "filter_sort_by_member_desc": "멤버 순서대로 정렬",
   "filter_sort_by_rare_label": "희귀도",
   "filter_sort_by_rare_desc": "민트 수량순 정렬",
+  "filter_sort_by_price_label": "가격",
+  "filter_sort_by_price_desc": "가격순으로 정렬",
   "filter_desc": "내림차순",
   "filter_asc": "오름차순",
   "filter_group_by_label": "그룹 기준",

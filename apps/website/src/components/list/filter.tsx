@@ -31,8 +31,10 @@ export default function Filter({
   const isFiltering = useIsFiltering();
   const list = useListTarget()!;
 
-  const sortOptions: ValidCustomSort[] =
-    list.isProfileBind && !list.hideSerial ? defaultSortDuplicateSerial : defaultSortDuplicate;
+  const sortOptions: ValidCustomSort[] = [
+    ...(list.isProfileBind && !list.hideSerial ? defaultSortDuplicateSerial : defaultSortDuplicate),
+    ...(list.listTypeNew === "sale" ? (["price"] as const) : []),
+  ];
 
   return (
     <div className="flex flex-col gap-4">
