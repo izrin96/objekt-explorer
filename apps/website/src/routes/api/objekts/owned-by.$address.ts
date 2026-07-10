@@ -1,13 +1,11 @@
-import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
-import { fetchUserProfiles } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, asc, count, desc, eq, getColumns, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
 
-import { getSession } from "@/lib/server/auth.server";
 import { getCollectionColumns } from "@/lib/server/objekt.server";
+import { isAddressHiddenFromCaller } from "@/lib/server/privacy.server";
 import { ownedBySchema, type OwnedBySchema } from "@/lib/universal/owned-by";
 
 const PER_PAGE = 8000;
@@ -153,39 +151,14 @@ export const Route = createFileRoute("/api/objekts/owned-by/$address")({
   server: {
     handlers: {
       GET: async ({ request, params }) => {
-        const session = await getSession();
         const addr = params.address.toLowerCase();
         const url = new URL(request.url);
         const parsed = parseParams(url.searchParams);
         if (!parsed.ok) return parsed.response;
         const query = parsed.data;
 
-        const owner = await db.query.userAddress.findFirst({
-          where: { address: addr },
-          columns: {
-            privateProfile: true,
-          },
-          orderBy: {
-            id: "desc",
-          },
-        });
-
-        const isPrivate = owner?.privateProfile ?? false;
-
-        if (!session && isPrivate)
-          return Response.json({
-            objekts: [],
-          });
-
-        if (session && isPrivate) {
-          const profiles = await fetchUserProfiles(session.user.id);
-
-          const isProfileAuthed = profiles.some((a) => a.address.toLowerCase() === addr);
-
-          if (!isProfileAuthed)
-            return Response.json({
-              objekts: [],
-            });
+        if (await isAddressHiddenFromCaller(addr)) {
+          return Response.json({ objekts: [] });
         }
 
         const collectionFilters = buildCollectionFilters(query);

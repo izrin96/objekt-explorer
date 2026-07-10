@@ -3,14 +3,19 @@ import { fetchUserProfiles } from "@repo/lib/server/user";
 
 import { getSession } from "./auth.server";
 
-export async function isAddressHiddenFromCaller(address: string): Promise<boolean> {
+export async function isAddressHiddenFromCaller(
+  address: string,
+  opts?: { checkHideTransfer?: boolean },
+): Promise<boolean> {
   const addr = address.toLowerCase();
   const owner = await db.query.userAddress.findFirst({
     where: { address: addr },
-    columns: { privateProfile: true },
+    columns: { privateProfile: true, hideTransfer: true },
     orderBy: { id: "desc" },
   });
-  const isPrivate = owner?.privateProfile ?? false;
+  const isPrivate =
+    (owner?.privateProfile ?? false) ||
+    (!!opts?.checkHideTransfer && (owner?.hideTransfer ?? false));
   if (!isPrivate) return false;
 
   const session = await getSession();

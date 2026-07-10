@@ -654,7 +654,6 @@
   "api_errors_compare_source_list_not_found": "원본 목록을 찾을 수 없습니다",
   "api_errors_compare_target_profile_not_found": "대상 프로필을 찾을 수 없습니다",
   "api_errors_compare_target_list_not_found": "대상 목록을 찾을 수 없습니다",
-  "api_errors_compare_target_profile_private": "이 프로필은 비공개로 설정되어 있어 비교할 수 없습니다.",
   "profile_spin_notice": "COSMO 스핀에서는 일부 필터를 사용할 수 없습니다. 폴리곤 체인에서 스핀한 오브젝트가 아직 병합되지 않았습니다.",
   "about_description": "오브젝트 트래커는 오브젝트 탐색을 위해 특별히 제작된 간편한 클라이언트 사이드 탐색기입니다.",
   "about_discord_invite": "버그 제보나 건의 사항이 있으시면 지원 디스코드 서버에 참여해 주세요.",

@@ -1,16 +1,15 @@
 import { validOnlineTypes } from "@repo/cosmo/types/common";
-import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
-import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
+import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { type SQL, and, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
-import { getSession } from "@/lib/server/auth.server";
 import { getCollectionColumns } from "@/lib/server/objekt.server";
+import { isAddressHiddenFromCaller } from "@/lib/server/privacy.server";
 import { artistsArraySchema } from "@/lib/universal/artist";
 import { validType } from "@/lib/universal/transfers";
 
@@ -56,46 +55,16 @@ export const Route = createFileRoute("/api/transfers/$address")({
   server: {
     handlers: {
       GET: async ({ request, params }) => {
-        const session = await getSession();
         const url = new URL(request.url);
         const parsed = parseParams(url.searchParams);
         if (!parsed.ok) return parsed.response;
         const query = parsed.data;
 
-        const owner = await db.query.userAddress.findFirst({
-          where: { address: params.address },
-          columns: {
-            privateProfile: true,
-            hideTransfer: true,
-          },
-          orderBy: {
-            id: "desc",
-          },
-        });
-
-        const isPrivate = (owner?.privateProfile ?? false) || (owner?.hideTransfer ?? false);
-
-        if (!session && isPrivate)
-          return Response.json({
-            hide: true,
-            results: [],
-          });
-
-        if (session && isPrivate) {
-          const profiles = await fetchUserProfiles(session.user.id);
-
-          const isProfileAuthed = profiles.some(
-            (a) => a.address.toLowerCase() === params.address.toLowerCase(),
-          );
-
-          if (!isProfileAuthed)
-            return Response.json({
-              hide: true,
-              results: [],
-            });
-        }
-
         const addr = params.address.toLowerCase();
+
+        if (await isAddressHiddenFromCaller(addr, { checkHideTransfer: true })) {
+          return Response.json({ hide: true, results: [] });
+        }
 
         const results = await fetchTransfers(query, addr);
 

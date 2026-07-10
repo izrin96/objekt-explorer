@@ -654,7 +654,6 @@
   "api_errors_compare_source_list_not_found": "Source list not found",
   "api_errors_compare_target_profile_not_found": "Target profile not found",
   "api_errors_compare_target_list_not_found": "Target list not found",
-  "api_errors_compare_target_profile_private": "This profile is private and cannot be used for comparison.",
   "profile_spin_notice": "Some filters are unavailable for COSMO Spin. Objekts spun on the Polygon chain have not been merged yet.",
   "about_description": "Objekt Tracker is a simple, client-side explorer built specifically for exploring objekts.",
   "about_discord_invite": "Join our support Discord server for bug reporting or suggestions.",

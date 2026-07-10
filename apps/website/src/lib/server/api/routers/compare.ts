@@ -56,24 +56,21 @@ export const compareRouter = {
               message: m.api_errors_compare_target_profile_not_found(),
             });
 
-          if (
+          const isProfileHidden =
             targetProfile.privateProfile &&
-            (!session?.user.id || session.user.id !== targetProfile.userId)
-          ) {
-            throw new ORPCError("FORBIDDEN", {
-              message: m.api_errors_compare_target_profile_private(),
-            });
+            (!session?.user.id || session.user.id !== targetProfile.userId);
+
+          if (!isProfileHidden) {
+            const ownedObjekts = await indexer
+              .select({
+                collection: getCollectionColumns(),
+              })
+              .from(objekts)
+              .innerJoin(collections, eq(collections.id, objekts.collectionId))
+              .where(eq(objekts.owner, targetProfile.address.toLowerCase()));
+
+            targetComparisonEntries = ownedObjekts.map((o) => o.collection);
           }
-
-          const ownedObjekts = await indexer
-            .select({
-              collection: getCollectionColumns(),
-            })
-            .from(objekts)
-            .innerJoin(collections, eq(collections.id, objekts.collectionId))
-            .where(eq(objekts.owner, targetProfile.address.toLowerCase()));
-
-          targetComparisonEntries = ownedObjekts.map((o) => o.collection);
         } else if (targetType === "list" && targetListId) {
           const targetList = await fetchListWithEntries(targetListId);
 
