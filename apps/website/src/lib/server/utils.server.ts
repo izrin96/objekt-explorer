@@ -1,10 +1,16 @@
 import type { ValidArtist } from "@repo/cosmo/types/common";
 
 export function escapeCSV(value: string) {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+  // Neutralize spreadsheet formula injection: a cell that begins with one of
+  // these characters is treated as a formula by Excel/Sheets. Prefix an
+  // apostrophe so it is rendered as literal text.
+  const needsFormulaGuard = /^[=+\-@\t\r]/.test(value);
+  const guarded = needsFormulaGuard ? `'${value}` : value;
+
+  if (/[",\n\r]/.test(guarded)) {
+    return `"${guarded.replace(/"/g, '""')}"`;
   }
-  return value;
+  return guarded;
 }
 
 export const classOrder: Record<ValidArtist, string[]> = {

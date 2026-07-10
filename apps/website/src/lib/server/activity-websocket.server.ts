@@ -94,7 +94,12 @@ export const websocketHandlers = {
     clients.add(ws);
   },
   message(ws: ServerWebSocket, message: string | Buffer) {
-    const data = JSON.parse(message as string) as { type: string; data?: any };
+    let data: { type: string; data?: unknown };
+    try {
+      data = JSON.parse(message as string) as { type: string; data?: unknown };
+    } catch {
+      return; // ignore malformed frames
+    }
     if (data.type === "request_history") {
       if (transferHistory.length > 0) {
         ws.send(JSON.stringify({ type: "history", data: transferHistory }));

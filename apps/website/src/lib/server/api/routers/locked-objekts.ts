@@ -4,6 +4,7 @@ import { isAddress } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
+import { isAddressHiddenFromCaller } from "../../privacy.server";
 import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
@@ -11,6 +12,7 @@ export const lockedObjektsRouter = {
   list: pub
     .input(z.string().refine((val) => isAddress(val)))
     .handler(async ({ input: address }) => {
+      if (await isAddressHiddenFromCaller(address)) return [];
       const result = await db.query.lockedObjekts.findMany({
         columns: {
           tokenId: true,

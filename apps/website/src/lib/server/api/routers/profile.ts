@@ -5,7 +5,7 @@ import { isAddress } from "@repo/lib";
 import { and, eq, sql } from "drizzle-orm";
 import * as z from "zod";
 
-import { acceptedFileMimeTypes, MAX_FILE_SIZE } from "@/lib/file";
+import { acceptedFileMimeTypes, mimeTypeToExtension, MAX_FILE_SIZE } from "@/lib/file";
 import { m } from "@/paraglide/messages";
 
 import {
@@ -72,10 +72,10 @@ export const profileRouter = {
         fileSize: z.number().int().min(1).max(MAX_FILE_SIZE),
       }),
     )
-    .handler(async ({ input: { address, fileName, mimeType, fileSize }, context: { session } }) => {
+    .handler(async ({ input: { address, mimeType, fileSize }, context: { session } }) => {
       await checkAddressOwned(address, session.user.id);
 
-      const ext = fileName.split(".").pop();
+      const ext = mimeTypeToExtension[mimeType as (typeof acceptedFileMimeTypes)[number]];
       const key = `${address.toLowerCase()}-${Date.now()}.${ext}`;
       const { url } = await createPresignedUploadUrl(
         S3_BUCKET,

@@ -6,6 +6,7 @@ import { isAddress } from "@repo/lib";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import * as z from "zod";
 
+import { isAddressHiddenFromCaller } from "../../privacy.server";
 import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
@@ -39,6 +40,7 @@ export const pinsRouter = {
   list: pub
     .input(z.string().refine((val) => isAddress(val)))
     .handler(async ({ input: address }) => {
+      if (await isAddressHiddenFromCaller(address)) return [];
       const validPins = await getValidPins(address);
       return validPins.map((a) => ({
         tokenId: a.tokenId.toString(),
