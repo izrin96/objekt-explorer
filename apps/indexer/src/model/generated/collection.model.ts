@@ -98,6 +98,9 @@ export class Collection {
   @Column({ type: "varchar", nullable: true, length: 32 })
   imageSyncHash!: string | null;
 
+  @Column({ type: "jsonb", nullable: true })
+  serialBatches!: { start: number; end: number }[] | null;
+
   @OneToMany(() => Transfer, (e) => e.collection)
   transfers!: Transfer[];
 
