@@ -105,13 +105,20 @@ async function processOne(t: { id: string; slug: string; cid: string }) {
     `[backfill] ${t.slug}: ${batches.length} batches, ${updates.length} serial(s) to fix`,
   );
 
+  // persist discovered ranges even when nothing needs fixing, so the cron reuses
+  // the cache instead of re-discovering from scratch
+  if (!DRY_RUN) {
+    await indexer
+      .update(collections)
+      .set({ serialBatches: batches })
+      .where(eq(collections.id, t.id));
+  }
+
   if (updates.length === 0) return;
   totalUpdated += updates.length;
   touchedCollections++;
 
   if (DRY_RUN) return;
-
-  await indexer.update(collections).set({ serialBatches: batches }).where(eq(collections.id, t.id));
 
   await indexer.transaction(async (tx) => {
     for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
