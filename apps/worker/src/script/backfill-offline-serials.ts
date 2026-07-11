@@ -18,7 +18,7 @@
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
-import { and, asc, eq, inArray, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, lte, ne, or, sql } from "drizzle-orm";
 
 import { computeOfflineSerials, discoverBatches, V1_CUTOFF_MS } from "@/job/populate-serial";
 
@@ -36,6 +36,9 @@ const excludeCollections = [
 const CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;
 const DRY_RUN = process.env.DRY_RUN === "1";
+// resume by default: skip collections that already have serial_batches stored
+// (already processed by a prior run or the cron). FORCE=1 reprocesses all.
+const FORCE = process.env.FORCE === "1";
 
 const targets = await indexer
   .selectDistinctOn([collections.id], {
@@ -46,14 +49,17 @@ const targets = await indexer
   .from(collections)
   .innerJoin(objekts, eq(objekts.collectionId, collections.id))
   .where(
-    or(
-      and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
-      inArray(collections.slug, excludeCollections),
+    and(
+      or(
+        and(eq(collections.onOffline, "offline"), ne(collections.slug, "empty-collection")),
+        inArray(collections.slug, excludeCollections),
+      ),
+      FORCE ? undefined : isNull(collections.serialBatches),
     ),
   );
 
 console.log(
-  `[backfill] ${DRY_RUN ? "DRY RUN — " : ""}reprocessing ${targets.length} offline collections`,
+  `[backfill] ${DRY_RUN ? "DRY RUN — " : ""}${FORCE ? "FORCE — all" : "resume — remaining"} ${targets.length} offline collections`,
 );
 
 let totalUpdated = 0;
@@ -101,8 +107,15 @@ async function processOne(t: { id: string; slug: string; cid: string }) {
     if (serial !== obj.serial) updates.push({ id, newSerial: serial });
   }
 
+  const SAMPLE = 50;
+  const sample = updates
+    .slice(0, SAMPLE)
+    .map((u) => `${u.id}: ${byId.get(u.id)!.serial}->${u.newSerial}`)
+    .join(", ");
+  const more = updates.length > SAMPLE ? ` (+${updates.length - SAMPLE} more)` : "";
   console.log(
-    `[backfill] ${t.slug}: ${batches.length} batches, ${updates.length} serial(s) to fix`,
+    `[backfill] ${t.slug}: ${batches.length} batches, ${updates.length} serial(s) to fix` +
+      (updates.length > 0 ? `\n           ${sample}${more}` : ""),
   );
 
   // persist discovered ranges even when nothing needs fixing, so the cron reuses

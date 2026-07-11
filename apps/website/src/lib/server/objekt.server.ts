@@ -2,7 +2,7 @@ import type { ValidArtist, ValidFourSeason } from "@repo/cosmo/types/common";
 import { validArtists, validFourSeason } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
-import { asc, getColumns, ne } from "drizzle-orm";
+import { asc, ne } from "drizzle-orm";
 
 import { classOrder } from "@/lib/server/utils.server";
 
@@ -118,14 +118,29 @@ export async function fetchFilterData() {
 }
 
 export function getCollectionColumns() {
-  const {
-    contract: _contract,
-    comoAmount: _comoAmount,
-    accentColor: _accentColor,
-    imageSyncHash: _imageSyncHash,
-    ...rest
-  } = getColumns(collections);
-  return rest;
+  return {
+    id: collections.id,
+    createdAt: collections.createdAt,
+    slug: collections.slug,
+    collectionId: collections.collectionId,
+    season: collections.season,
+    member: collections.member,
+    artist: collections.artist,
+    collectionNo: collections.collectionNo,
+    class: collections.class,
+    thumbnailImage: collections.thumbnailImage,
+    frontImage: collections.frontImage,
+    backImage: collections.backImage,
+    backgroundColor: collections.backgroundColor,
+    textColor: collections.textColor,
+    onOffline: collections.onOffline,
+    bandImageUrl: collections.bandImageUrl,
+    frontMedia: collections.frontMedia,
+    hasAudio: collections.hasAudio,
+    processedThumbnailImage: collections.processedThumbnailImage,
+    processedFrontImage: collections.processedFrontImage,
+    processedBackImage: collections.processedBackImage,
+  };
 }
 
 export function getPartialCollectionColumns() {
