@@ -12,6 +12,7 @@ import {
   uniqueIndex,
   unique,
   bigserial,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 export const collections = pgTable(
@@ -42,6 +43,8 @@ export const collections = pgTable(
     processedFrontImage: varchar("processed_front_image", { length: 512 }),
     processedBackImage: varchar("processed_back_image", { length: 512 }),
     imageSyncHash: varchar("image_sync_hash", { length: 32 }),
+    // ordered reserved tokenId ranges per offline batch (ascending, foreign gaps between)
+    serialBatches: jsonb("serial_batches").$type<{ start: number; end: number }[]>(),
   },
   (table) => [
     index("IDX_429351eac26f87942861266e48").using("btree", table.onOffline.asc().nullsLast()),

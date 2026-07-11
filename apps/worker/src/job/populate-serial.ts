@@ -6,8 +6,7 @@ import { and, eq, asc, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm
 import { FetchError } from "ofetch";
 
 // collection that already pre-assigned tokenId
-// this collection should calculate serial by tokenId instead
-// just like offline objekt
+// this collection should calculate serial just like offline objekt
 const excludeCollections = [
   "cream02-jiyeon-315z",
   "cream02-kotone-315z",
@@ -19,6 +18,28 @@ const excludeCollections = [
 
 const COLLECTION_CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;
+
+// v1 metadata (which carried the serial number) shut down at this instant.
+// Objekts minted before it have authoritative v1 serials that this job must
+// never overwrite; objekts minted at/after it have no serial from Cosmo and are
+// this job's responsibility to compute.
+export const V1_CUTOFF_MS = Date.parse("2026-06-04T08:07:02Z");
+
+// ===========================================================================
+// Online objekt serial numbering
+// ===========================================================================
+//
+// Online objekts are far simpler than offline ones: a collection's tokenIds are
+// contiguous and minted in order, so the serial is just the objekt's mint
+// position within the collection (1, 2, 3, ...) — no reserved batches, no
+// foreign gaps. New objekts (serial = 0) are appended after the current maximum
+// serial, in tokenId order.
+//
+// Exception — "pre-assigned" collections: a few collections marked online were
+// actually given reserved tokenIds up front (like offline objekts), so their
+// serial can't be derived from mint order. processCollection detects these and
+// skips them; they are routed through the offline path instead (see
+// excludeCollections and populateSerialOffline).
 
 export async function populateSerial() {
   const collectionDiscover = await indexer
@@ -49,6 +70,15 @@ export async function populateSerial() {
   console.log("[populateSerial] Done");
 }
 
+/**
+ * Populate serials for one online collection by mint order:
+ *  - load objekts sorted by tokenId; the serial is the mint position;
+ *  - if the collection is brand new, verify it isn't a pre-assigned collection
+ *    (the lowest tokenId must equal the collection's boundary base) and skip if
+ *    it is;
+ *  - assign the next serials (continuing after the current max) to objekts that
+ *    still have serial = 0.
+ */
 async function processCollection(collectionId: string) {
   const allObjekts = await indexer
     .select({ id: objekts.id, serial: objekts.serial })
@@ -104,12 +134,6 @@ async function processCollection(collectionId: string) {
     if (obj.serial === 0 && !(idx === 0 && !isNew)) {
       updates.push({ id: obj.id, newSerial: nextSerial++ });
     }
-
-    // overwrite serial
-    // const newSerial = idx + 1;
-    // if (obj.serial !== newSerial) {
-    //   updates.push({ id: obj.id, newSerial });
-    // }
   });
 
   if (updates.length === 0) {
@@ -140,6 +164,7 @@ export async function findBoundaryTokenId(
   targetCollectionId: string,
   startTokenId: number,
   direction: -1,
+  maxOffset?: number,
 ): Promise<number | null>;
 export async function findBoundaryTokenId(
   targetCollectionId: string,
@@ -149,14 +174,25 @@ export async function findBoundaryTokenId(
 export async function findBoundaryTokenId(
   targetCollectionId: string,
   startTokenId: number,
+  direction: 1,
+  maxOffset: number,
+): Promise<number | null>;
+export async function findBoundaryTokenId(
+  targetCollectionId: string,
+  startTokenId: number,
   direction: -1 | 1,
+  maxOffset?: number,
 ): Promise<number | null> {
   const targetSlug = slugifyObjekt(targetCollectionId);
 
   for (let offset = 0; ; offset += BATCH_SIZE) {
     const batch: number[] = [];
     for (let i = 0; i < BATCH_SIZE; i++) {
-      const tokenId = startTokenId + direction * (offset + i + 1);
+      const step = offset + i + 1;
+      // stop at the cap: never scan more than maxOffset tokens away from the
+      // start (bounds the scan to a known gap; null result = no boundary found)
+      if (maxOffset !== undefined && step > maxOffset) break;
+      const tokenId = startTokenId + direction * step;
       if (direction === -1 && tokenId < 1) break;
       batch.push(tokenId);
     }
@@ -187,6 +223,190 @@ export async function findBoundaryTokenId(
   }
 
   return null;
+}
+
+// ===========================================================================
+// Offline objekt serial numbering
+// ===========================================================================
+//
+// Cosmo's v1 metadata endpoint used to carry each objekt's serial number, but it
+// was shut down (see V1_CUTOFF_MS). v3 replaced it and has no serial, so for
+// objekts minted at/after the cutoff we must reconstruct the serial ourselves.
+//
+// How serials work for offline objekts:
+//  - Modhaus reserves contiguous tokenId ranges ("batches") per collection, and
+//    a collection can get several non-contiguous batches over time, e.g. 200-300
+//    then 500-600, with 301-499 belonging to a DIFFERENT collection ("foreign").
+//    binary02 301a members are heavily multi-batch (dozens of batches each,
+//    separated by 1-2 foreign tokens).
+//  - The serial is the objekt's 1-based position in the concatenation of its
+//    reserved ranges: foreign tokens are skipped, but UNMINTED tokenIds inside a
+//    reserved range still consume a serial (serial = tokenId - batchStart + 1
+//    within a batch, continuing across batches).
+//
+// Two-step reconstruction:
+//  1. discoverBatches() finds the reserved ranges by probing the Cosmo v3 API.
+//     Ranges are persisted in collection.serial_batches and reused.
+//  2. computeOfflineSerials() turns ranges + tokenIds into serials, ANCHORED on
+//     pre-cutoff v1 serials (which are ground truth). This is essential: the API
+//     cannot attribute unminted (404) tokens to a collection, so discovery alone
+//     mis-sizes batches and drifts serials — anchoring on v1 corrects it.
+//
+// See the JSDoc on discoverBatches / computeOfflineSerials for the details.
+
+// Safety cap for the initial backward scan to the first batch's base. Only
+// relevant when the first batch has NO v1 anchor (a collection whose first batch
+// was reserved entirely after the cutoff); anchored batches ignore batch0.start.
+// Measured max reserved "head" (unminted tokens below the first mint) across all
+// offline collections is ~6.3k, so 10k leaves margin for a future large drop.
+const INITIAL_BACKWARD_CAP = 10000;
+
+/**
+ * Discover the reserved tokenId ranges (batches) that make up an offline
+ * collection. Modhaus can reserve several non-contiguous ranges over time
+ * (e.g. 200-300 then 500-600, with 301-499 belonging to another collection).
+ *
+ * Only the gaps *between present tokens* are probed, each scan bounded by that
+ * gap's size, so unminted tails are never scanned unboundedly. A gap that turns
+ * out to be all-unminted (no foreign token) keeps the surrounding tokens in the
+ * same batch; a gap containing a foreign token splits the batch.
+ *
+ * Returns ordered ranges ascending by start. The trailing batch's `end` is
+ * provisional (max present token) since no token follows it yet.
+ *
+ * `resumeFromStart` enables incremental rediscovery: pass the known start of the
+ * (provisional) frontier batch to skip everything below it. Closed batches never
+ * change, so only the frontier region is re-probed. Caller prepends the stable
+ * closed batches to the result.
+ */
+export async function discoverBatches(
+  targetCollectionId: string,
+  presentTokenIds: number[],
+  resumeFromStart?: number,
+): Promise<{ start: number; end: number }[]> {
+  const all = [...new Set(presentTokenIds)].sort((a, b) => a - b);
+  const sorted = resumeFromStart === undefined ? all : all.filter((t) => t >= resumeFromStart);
+  if (sorted.length === 0) return [];
+
+  const batches: { start: number; end: number }[] = [];
+
+  // start of the first batch: use the known frontier start when resuming,
+  // otherwise walk back from the lowest present token to the foreign boundary
+  // (null = treat the lowest present token as the base)
+  let batchStart =
+    resumeFromStart ??
+    (await findBoundaryTokenId(targetCollectionId, sorted[0]!, -1, INITIAL_BACKWARD_CAP)) ??
+    sorted[0]!;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const cur = sorted[i]!;
+    const next = sorted[i + 1];
+
+    if (next === undefined) {
+      // frontier batch: nothing after it, end is provisional (max present)
+      batches.push({ start: batchStart, end: cur });
+      break;
+    }
+
+    const gap = next - cur;
+    if (gap <= 1) continue; // contiguous, same batch
+
+    // is there a foreign token inside the gap? bounded scan of the gap only
+    const scannedEnd = await findBoundaryTokenId(targetCollectionId, cur, 1, gap - 1);
+
+    if (scannedEnd === null) continue; // gap is all unminted, same batch
+
+    // foreign token found: current batch ends here, next batch starts higher up
+    // inside the same gap
+    batches.push({ start: batchStart, end: scannedEnd });
+    batchStart = (await findBoundaryTokenId(targetCollectionId, next, -1, gap - 1)) ?? next;
+  }
+
+  return batches;
+}
+
+/**
+ * Compute the serial of every objekt from the discovered batch ranges, anchored
+ * on pre-cutoff v1 serials.
+ *
+ * Within one reserved batch the serial increments by 1 per tokenId, so any
+ * objekt with a known v1 serial (minted before the cutoff) pins that whole
+ * batch's numbering: `serial(tid) = anchor.serial + (tid - anchor.tid)`. Using
+ * the nearest anchor by tokenId makes this robust to batch-boundary errors
+ * caused by unminted (404) tokens, which the Cosmo API cannot attribute to any
+ * collection — those errors only shift where an unminted boundary sits, never a
+ * minted objekt's position relative to an anchor in its own run.
+ *
+ * Batches with no v1 anchor (reserved entirely after the cutoff) fall back to a
+ * serial start chained from the previous batch — approximate, since it trusts
+ * the discovered range sizes, but it inherits the true (anchored) numbering of
+ * earlier batches instead of accumulating error from the very first batch.
+ */
+export function computeOfflineSerials(
+  objekts: { id: string; serial: number; mintedAt: string }[],
+  batches: { start: number; end: number }[],
+  cutoffMs: number,
+): { id: string; serial: number }[] {
+  const batchIndexOf = (tid: number) => batches.findIndex((b) => tid >= b.start && tid <= b.end);
+
+  // collect v1 anchors (pre-cutoff objekts with a real serial) per batch,
+  // tokenId ascending
+  const anchors: { tid: number; serial: number }[][] = batches.map(() => []);
+  for (const o of objekts) {
+    if (o.serial > 0 && Date.parse(o.mintedAt) < cutoffMs) {
+      const tid = parseInt(o.id);
+      const bi = batchIndexOf(tid);
+      if (bi !== -1) anchors[bi]!.push({ tid, serial: o.serial });
+    }
+  }
+  for (const list of anchors) list.sort((a, b) => a.tid - b.tid);
+
+  // serial at each batch's start: pinned by an anchor when the batch has one,
+  // otherwise chained from the previous batch's end (used only for anchorless,
+  // fully-post-cutoff batches)
+  const serialStart: number[] = [];
+  let prevEnd = 0;
+  for (let bi = 0; bi < batches.length; bi++) {
+    const b = batches[bi]!;
+    const list = anchors[bi]!;
+    const start = list.length > 0 ? list[0]!.serial - (list[0]!.tid - b.start) : prevEnd + 1;
+    serialStart.push(start);
+    prevEnd = start + (b.end - b.start);
+  }
+
+  // nearest anchor by tokenId within a batch (binary search on the sorted list)
+  const nearestAnchor = (list: { tid: number; serial: number }[], tid: number) => {
+    let lo = 0;
+    let hi = list.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (list[mid]!.tid < tid) lo = mid + 1;
+      else hi = mid;
+    }
+    const a = list[lo]!;
+    const b = list[lo - 1];
+    if (b && Math.abs(b.tid - tid) <= Math.abs(a.tid - tid)) return b;
+    return a;
+  };
+
+  const result: { id: string; serial: number }[] = [];
+  for (const o of objekts) {
+    const tid = parseInt(o.id);
+    const bi = batchIndexOf(tid);
+    if (bi === -1) continue;
+
+    const list = anchors[bi]!;
+    const serial =
+      list.length > 0
+        ? (() => {
+            const anchor = nearestAnchor(list, tid);
+            return anchor.serial + (tid - anchor.tid);
+          })()
+        : serialStart[bi]! + (tid - batches[bi]!.start);
+
+    if (serial > 0) result.push({ id: o.id, serial });
+  }
+  return result;
 }
 
 export async function populateSerialOffline() {
@@ -221,9 +441,18 @@ export async function populateSerialOffline() {
   console.log("[populateSerialOffline] Done");
 }
 
+/**
+ * Populate serials for one offline collection:
+ *  1. load its objekts (after a short mint delay) and the stored batch ranges;
+ *  2. (re)discover ranges if a tokenId falls outside them — incrementally from
+ *     the frontier when possible, else a full rescan — and persist;
+ *  3. recompute every post-cutoff objekt's serial via computeOfflineSerials and
+ *     write the ones that changed (heals serials shifted by a newly-discovered
+ *     batch). Pre-cutoff v1 serials are never overwritten.
+ */
 async function processCollectionOffline(collectionId: string) {
   const allObjekts = await indexer
-    .select({ id: objekts.id, serial: objekts.serial })
+    .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
     .where(
       and(
@@ -234,73 +463,92 @@ async function processCollectionOffline(collectionId: string) {
     )
     .orderBy(asc(objekts.id));
 
-  const knownObjekts = allObjekts.filter((o) => o.serial > 0);
   const zeroObjekts = allObjekts.filter((o) => o.serial === 0);
 
   if (zeroObjekts.length === 0) {
     return;
   }
 
-  const updates: { id: string; newSerial: number }[] = [];
+  const [collection] = await indexer
+    .select({
+      collectionId: collections.collectionId,
+      serialBatches: collections.serialBatches,
+    })
+    .from(collections)
+    .where(eq(collections.id, collectionId))
+    .limit(1);
 
-  if (knownObjekts.length === 0) {
-    const [collection] = await indexer
-      .select({ collectionId: collections.collectionId })
-      .from(collections)
-      .where(eq(collections.id, collectionId))
-      .limit(1);
+  if (!collection) {
+    console.log(`[populateSerialOffline] Collection ${collectionId}: Not found`);
+    return;
+  }
 
-    if (!collection) {
-      console.log(`[populateSerialOffline] Collection ${collectionId}: Not found`);
-      return;
-    }
+  const presentTokenIds = allObjekts.map((o) => parseInt(o.id));
 
-    const minTokenId = Math.min(...zeroObjekts.map((o) => parseInt(o.id)));
+  const isCovered = (ranges: { start: number; end: number }[], tokenId: number) =>
+    ranges.some((r) => tokenId >= r.start && tokenId <= r.end);
+
+  let batches = collection.serialBatches ?? [];
+
+  // (re)discover batches when unknown or a token falls outside known ranges
+  // (a new or extended batch appeared); otherwise reuse stored ranges without
+  // touching the Cosmo API
+  const uncovered =
+    batches.length === 0 ? presentTokenIds : presentTokenIds.filter((t) => !isCovered(batches, t));
+
+  if (uncovered.length > 0) {
+    // Incremental: closed batches (all but the last) ended at a real foreign
+    // boundary and never change; only the provisional frontier batch can extend
+    // or spawn new batches. Re-discover from the frontier start only. Fall back
+    // to a full rescan if any uncovered token sits below the frontier (rare:
+    // a late-indexed old mint).
+    const frontier = batches[batches.length - 1];
+    const canIncremental = frontier !== undefined && uncovered.every((t) => t >= frontier.start);
 
     try {
-      const baseTokenId = await findBoundaryTokenId(collection.collectionId, minTokenId, -1);
-
-      if (baseTokenId === null) {
-        console.log(
-          `[populateSerialOffline] Collection ${collectionId}: Could not determine base token ID`,
+      if (canIncremental) {
+        const rediscovered = await discoverBatches(
+          collection.collectionId,
+          presentTokenIds,
+          frontier.start,
         );
-        return;
-      }
-
-      for (const zeroObj of zeroObjekts) {
-        const newSerial = parseInt(zeroObj.id) - baseTokenId + 1;
-        if (newSerial > 0) {
-          updates.push({ id: zeroObj.id, newSerial });
-        }
+        batches = [...batches.slice(0, -1), ...rediscovered];
+      } else {
+        batches = await discoverBatches(collection.collectionId, presentTokenIds);
       }
     } catch {
       console.log(`[populateSerialOffline] Collection ${collectionId}: API error, skipping`);
       return;
     }
-  } else {
-    for (const zeroObj of zeroObjekts) {
-      const zeroId = parseInt(zeroObj.id);
 
-      let closest: { id: string; serial: number } | null = null;
-      let minDistance = Infinity;
+    if (batches.length === 0) {
+      console.log(`[populateSerialOffline] Collection ${collectionId}: No batches discovered`);
+      return;
+    }
 
-      for (const known of knownObjekts) {
-        const knownId = parseInt(known.id);
-        const distance = Math.abs(knownId - zeroId);
-        if (distance < minDistance) {
-          minDistance = distance;
-          closest = known;
-        }
-      }
+    await indexer
+      .update(collections)
+      .set({ serialBatches: batches })
+      .where(eq(collections.id, collectionId));
+  }
 
-      if (closest) {
-        const closestId = parseInt(closest.id);
-        const newSerial = closest.serial - (closestId - zeroId);
+  // Recompute the serial of every objekt from the batch ranges (anchored on
+  // pre-cutoff v1 serials) and update any that differ. This heals objekts whose
+  // serial was written before a new/intermediate batch was discovered (which
+  // shifts every later serial), not just newly-minted serial=0 objekts.
+  const computed = computeOfflineSerials(allObjekts, batches, V1_CUTOFF_MS);
+  const byId = new Map(allObjekts.map((o) => [o.id, o] as const));
 
-        if (newSerial > 0) {
-          updates.push({ id: zeroObj.id, newSerial });
-        }
-      }
+  const updates: { id: string; newSerial: number }[] = [];
+  for (const { id, serial } of computed) {
+    const obj = byId.get(id)!;
+    // objekts minted before the v1 cutoff keep their authoritative v1 serial
+    // and are never overwritten
+    if (obj.serial > 0 && Date.parse(obj.mintedAt) < V1_CUTOFF_MS) {
+      continue;
+    }
+    if (serial !== obj.serial) {
+      updates.push({ id, newSerial: serial });
     }
   }
 
