@@ -5,16 +5,7 @@ import { slugifyObjekt, chunk } from "@repo/lib";
 import { and, eq, asc, ne, notInArray, inArray, or, lte, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
-// collection that already pre-assigned tokenId
-// this collection should calculate serial just like offline objekt
-const excludeCollections = [
-  "cream02-jiyeon-315z",
-  "cream02-kotone-315z",
-  "cream02-hayeon-315z",
-  "cream02-jiwoo-315z",
-  "cream02-xinyu-315z",
-  "cream02-yeonji-315z",
-];
+import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 
 const COLLECTION_CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;
@@ -71,17 +62,67 @@ export async function populateSerial() {
 }
 
 /**
- * Populate serials for one online collection by mint order:
- *  - load objekts sorted by tokenId; the serial is the mint position;
- *  - if the collection is brand new, verify it isn't a pre-assigned collection
- *    (the lowest tokenId must equal the collection's boundary base) and skip if
- *    it is;
- *  - assign the next serials (continuing after the current max) to objekts that
- *    still have serial = 0.
+ * Assign serials to the POST-cutoff objekts of an ONLINE collection, continuing
+ * the numbering above the highest trusted pre-cutoff serial, and return the ones
+ * whose stored serial differs.
+ *
+ * `sortedByTokenId` MUST be ascending by tokenId. Rules:
+ *  - PRE-cutoff objekts are ground truth — their stored serial is trusted and
+ *    NEVER changed, even if it does not match tokenId order (Cosmo's own value).
+ *  - POST-cutoff objekts have no authoritative serial, so we number them in
+ *    tokenId order starting at `max(pre-cutoff serial) + 1`. Continuing from the
+ *    max (rather than restarting at a fresh rank) keeps the numbering collision-
+ *    free: a collection whose serials are sparse (e.g. reserved/unminted slots
+ *    consume serials, so max serial > objekt count) still gets correct post-cutoff
+ *    serials instead of low ranks that already belong to other objekts. For a
+ *    dense collection this equals the tokenId rank. This is what heals late-index
+ *    inversions: a low-tokenId objekt indexed late lands in tokenId order instead
+ *    of being appended at the very end.
+ *  - `headSkip`: when true, the lowest-tokenId objekt (idx 0) is an intentional
+ *    permanent serial 0 — preserved and consuming no serial.
+ */
+export function computeOnlineSerials(
+  sortedByTokenId: { id: string; serial: number; mintedAt: string }[],
+  cutoffMs: number,
+  headSkip: boolean,
+): { updates: { id: string; newSerial: number }[] } {
+  // highest serial among trusted pre-cutoff objekts; post-cutoff serials continue
+  // above it so a reassignment can never collide with an existing serial.
+  let maxPre = 0;
+  sortedByTokenId.forEach((o, idx) => {
+    if (headSkip && idx === 0) return;
+    if (Date.parse(o.mintedAt) < cutoffMs && o.serial > maxPre) maxPre = o.serial;
+  });
+
+  const updates: { id: string; newSerial: number }[] = [];
+  let next = maxPre + 1;
+  sortedByTokenId.forEach((o, idx) => {
+    // preserved head serial 0
+    if (headSkip && idx === 0) return;
+    // pre-cutoff: trust the stored serial, never change it
+    if (Date.parse(o.mintedAt) < cutoffMs) return;
+
+    const canonical = next++;
+    if (canonical !== o.serial) {
+      updates.push({ id: o.id, newSerial: canonical });
+    }
+  });
+
+  return { updates };
+}
+
+/**
+ * Populate + self-heal serials for one online collection:
+ *  - load objekts sorted by tokenId (after a short mint delay);
+ *  - if brand new, verify it isn't a pre-assigned collection (lowest tokenId must
+ *    equal the collection's boundary base) and skip if it is;
+ *  - assign post-cutoff serials from tokenId rank and write the diffs, healing
+ *    inversions from out-of-order indexing. Pre-cutoff serials are trusted and
+ *    never changed; an intentional head serial 0 is preserved.
  */
 async function processCollection(collectionId: string) {
   const allObjekts = await indexer
-    .select({ id: objekts.id, serial: objekts.serial })
+    .select({ id: objekts.id, serial: objekts.serial, mintedAt: objekts.mintedAt })
     .from(objekts)
     .where(
       and(
@@ -122,19 +163,16 @@ async function processCollection(collectionId: string) {
     }
   }
 
-  const maxSerial = Math.max(...sorted.map((a) => a.serial));
-  let nextSerial = maxSerial + 1;
-
-  const updates: { id: string; newSerial: number }[] = [];
-
-  sorted.forEach((obj, idx) => {
-    // old collection (already contain non-zero objekt)
-    // might start from serial zero, skip those serial zero objekt
-    // unless its a new collection
-    if (obj.serial === 0 && !(idx === 0 && !isNew)) {
-      updates.push({ id: obj.id, newSerial: nextSerial++ });
-    }
-  });
+  // Assign post-cutoff serials from tokenId rank and write the ones that differ;
+  // pre-cutoff serials are trusted and never touched. This SELF-HEALS inversions
+  // caused by out-of-order indexing: a low-tokenId objekt indexed late used to be
+  // appended as maxSerial+1 (a too-high serial); now it lands at its tokenId rank
+  // and the displaced objekts shift back, in the same run.
+  //
+  // An old collection may intentionally keep its lowest-tokenId objekt at serial
+  // 0 (headSkip) — that objekt is preserved and the rest number from 1 after it.
+  const headSkip = !isNew && sorted[0]!.serial === 0;
+  const { updates } = computeOnlineSerials(sorted, V1_CUTOFF_MS, headSkip);
 
   if (updates.length === 0) {
     console.log(`[populateSerial] Collection ${collectionId}: No updates needed`);

@@ -23,15 +23,7 @@ import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import { FetchError } from "ofetch";
 
 import { computeOfflineSerials, discoverBatches, V1_CUTOFF_MS } from "@/job/populate-serial";
-
-const excludeCollections = [
-  "cream02-jiyeon-315z",
-  "cream02-kotone-315z",
-  "cream02-hayeon-315z",
-  "cream02-jiwoo-315z",
-  "cream02-xinyu-315z",
-  "cream02-yeonji-315z",
-];
+import { preAssignedCollections as excludeCollections } from "@/lib/serial-constants";
 
 const CONCURRENCY = 5;
 const DB_BATCH_SIZE = 500;
