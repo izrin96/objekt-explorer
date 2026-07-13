@@ -112,6 +112,7 @@ const shortformMembers: Record<string, string> = {
   jb: "JooBin",
   jbn: "JooBin",
   hy: "HaYeon",
+  hayoi: "HaYeon",
   so: "ShiOn",
   sion: "ShiOn",
   cw: "ChaeWon",
