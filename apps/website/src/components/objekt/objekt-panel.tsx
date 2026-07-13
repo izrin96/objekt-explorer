@@ -15,8 +15,9 @@ import type { SortDescriptor } from "react-aria-components";
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
 import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useProfileTarget } from "@/hooks/use-profile-target";
-import { useProfileAuthed } from "@/hooks/use-user";
+import { useCurrentUser, useProfileAuthed } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
+import { type CurrentUser } from "@/lib/universal/current-user";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
@@ -106,6 +107,7 @@ function OwnedListPanel({
   const showPinLockActions = showPinLock && isProfileAuthed;
   const selectMode = useObjektSelect((a) => a.mode);
   const select = useObjektSelect((a) => a.select);
+  const { data: currentUser } = useCurrentUser();
 
   const openTrades = useCallback(
     (serial: number) => {
@@ -194,6 +196,7 @@ function OwnedListPanel({
                   showPinLockActions={showPinLockActions}
                   isProfile={isProfile}
                   profileAddress={profile?.address}
+                  currentUser={currentUser}
                 />
               ))}
             </TableBody>
@@ -237,6 +240,7 @@ function OwnedTableRow({
   showPinLockActions,
   isProfile,
   profileAddress,
+  currentUser,
 }: {
   item: OwnedObjekt;
   selectMode: boolean;
@@ -245,6 +249,7 @@ function OwnedTableRow({
   showPinLockActions: boolean | undefined;
   isProfile: boolean | undefined;
   profileAddress: string | undefined;
+  currentUser: CurrentUser;
 }) {
   const isSelected = useObjektSelect((state) => state.isSelected(item));
 
@@ -269,21 +274,25 @@ function OwnedTableRow({
         </Badge>
       </TableCell>
       <TableCell>
-        {showPinLockActions && (
+        {currentUser && (
           <Menu>
             <Button size="sq-xs" intent="plain" aria-label={m.objekt_menu_aria()}>
               <DotsThreeVerticalIcon size={16} weight="bold" />
             </Button>
             <MenuContent placement="bottom right" popover={{ offset: -2 }}>
-              <TogglePinMenuItem isPin={item.isPin ?? false} tokenId={item.tokenId} />
-              {item.isPin && (
+              {showPinLockActions && (
                 <>
-                  <MovePinMenuItem tokenId={item.tokenId} direction="up" />
-                  <MovePinMenuItem tokenId={item.tokenId} direction="down" />
+                  <TogglePinMenuItem isPin={item.isPin ?? false} tokenId={item.tokenId} />
+                  {item.isPin && (
+                    <>
+                      <MovePinMenuItem tokenId={item.tokenId} direction="up" />
+                      <MovePinMenuItem tokenId={item.tokenId} direction="down" />
+                    </>
+                  )}
+                  <ToggleLockMenuItem isLocked={item.isLocked ?? false} tokenId={item.tokenId} />
+                  <MenuSeparator />
                 </>
               )}
-              <ToggleLockMenuItem isLocked={item.isLocked ?? false} tokenId={item.tokenId} />
-              <MenuSeparator />
               <AddToListMenu objekts={[item]} address={isProfile ? profileAddress : undefined} />
             </MenuContent>
           </Menu>
