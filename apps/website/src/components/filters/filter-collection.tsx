@@ -5,6 +5,7 @@ import { Popover } from "react-aria-components/Popover";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { m } from "@/paraglide/messages";
 
 import { Dialog } from "../intentui/dialog";
@@ -17,6 +18,7 @@ export default function CollectionFilter() {
   const { collections } = useFilterData();
   const [filters, setFilters] = useFilters();
   const selected = filters.collection ?? [];
+  const isMobile = useIsMobile();
 
   const update = useCallback((value: Key[]) => {
     return setFilters({
@@ -38,7 +40,7 @@ export default function CollectionFilter() {
         <Dialog aria-label={m.filter_collection_no()}>
           <Autocomplete filter={contains}>
             <div className="border-b py-0.5">
-              <SearchField className="rounded-lg focus-within:ring-0" autoFocus>
+              <SearchField className="rounded-lg focus-within:ring-0" autoFocus={!isMobile}>
                 <SearchInput className="border-none ring-0 focus:ring-0" />
               </SearchField>
             </div>

@@ -158,7 +158,6 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
           }) => (
             <TextField
               isRequired
-              autoFocus
               name={name}
               value={value}
               onChange={onChange}

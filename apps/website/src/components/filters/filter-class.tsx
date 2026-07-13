@@ -5,6 +5,7 @@ import { Popover } from "react-aria-components/Popover";
 
 import { useFilterData } from "@/hooks/use-filter-data";
 import { useFilters } from "@/hooks/use-filters";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
@@ -22,6 +23,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
   const { classes } = useFilterData();
   const [filters, setFilters] = useFilters();
   const selected = filters.class ?? [];
+  const isMobile = useIsMobile();
 
   const update = useCallback((value: Key[]) => {
     return setFilters({
@@ -49,7 +51,7 @@ export default function ClassFilter({ hideEtc = false }: Props) {
         <Dialog aria-label={m.filter_class()}>
           <Autocomplete filter={contains}>
             <div className="border-b py-0.5">
-              <SearchField className="rounded-lg focus-within:ring-0" autoFocus>
+              <SearchField className="rounded-lg focus-within:ring-0" autoFocus={!isMobile}>
                 <SearchInput className="border-none ring-0 focus:ring-0" />
               </SearchField>
             </div>

@@ -5,6 +5,7 @@ import { Popover } from "react-aria-components/Popover";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
 import { useFilters } from "@/hooks/use-filters";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";
@@ -18,6 +19,7 @@ export default function MemberFilter() {
   const { selectedArtists } = useCosmoArtist();
   const [filters, setFilters] = useFilters();
   const selected = filters.member ?? [];
+  const isMobile = useIsMobile();
 
   const update = useCallback((value: Key[]) => {
     return setFilters({
@@ -42,7 +44,7 @@ export default function MemberFilter() {
         <Dialog aria-label={m.filter_member()}>
           <Autocomplete filter={contains}>
             <div className="border-b py-0.5">
-              <SearchField className="rounded-lg focus-within:ring-0" autoFocus>
+              <SearchField className="rounded-lg focus-within:ring-0" autoFocus={!isMobile}>
                 <SearchInput className="border-none ring-0 focus:ring-0" />
               </SearchField>
             </div>

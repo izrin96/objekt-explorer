@@ -173,7 +173,6 @@ function EditListForm({
           }) => (
             <TextField
               isRequired
-              autoFocus
               name={name}
               value={value}
               onChange={onChange}

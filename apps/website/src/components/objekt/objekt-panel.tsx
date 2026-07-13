@@ -13,6 +13,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { SortDescriptor } from "react-aria-components";
 
 import { useObjektModal, type ValidTab } from "@/hooks/use-objekt-modal";
+import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useProfileAuthed } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
@@ -103,6 +104,8 @@ function OwnedListPanel({
   const profile = useProfileTarget();
   const isProfileAuthed = useProfileAuthed();
   const showPinLockActions = showPinLock && isProfileAuthed;
+  const selectMode = useObjektSelect((a) => a.mode);
+  const select = useObjektSelect((a) => a.select);
 
   const openTrades = useCallback(
     (serial: number) => {
@@ -182,51 +185,16 @@ function OwnedListPanel({
             </TableHeader>
             <TableBody>
               {currentItems.map((item) => (
-                <TableRow key={item.id} id={item.id}>
-                  <TableCell className="cursor-pointer" onClick={() => openTrades(item.serial)}>
-                    <div className="inline-flex items-center gap-2">
-                      {item.serial}
-                      {item.isPin && <PushPinIcon weight="regular" className="size-3" />}
-                      {item.isLocked && <LockSimpleIcon weight="regular" className="size-3" />}
-                    </div>
-                  </TableCell>
-                  <TableCell>{item.tokenId}</TableCell>
-                  <TableCell>{format(item.receivedAt, "yyyy/MM/dd h:mm:ss a")}</TableCell>
-                  <TableCell>
-                    <Badge intent={item.transferable ? "info" : "danger"}>
-                      {item.transferable ? m.objekt_yes() : m.objekt_no()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Menu>
-                      <Button size="sq-xs" intent="plain" aria-label={m.objekt_menu_aria()}>
-                        <DotsThreeVerticalIcon size={16} weight="bold" />
-                      </Button>
-                      <MenuContent placement="bottom right" popover={{ offset: -2 }}>
-                        {showPinLockActions && (
-                          <>
-                            <TogglePinMenuItem isPin={item.isPin ?? false} tokenId={item.tokenId} />
-                            {item.isPin && (
-                              <>
-                                <MovePinMenuItem tokenId={item.tokenId} direction="up" />
-                                <MovePinMenuItem tokenId={item.tokenId} direction="down" />
-                              </>
-                            )}
-                            <ToggleLockMenuItem
-                              isLocked={item.isLocked ?? false}
-                              tokenId={item.tokenId}
-                            />
-                            <MenuSeparator />
-                          </>
-                        )}
-                        <AddToListMenu
-                          objekts={[item]}
-                          address={isProfile ? profile?.address : undefined}
-                        />
-                      </MenuContent>
-                    </Menu>
-                  </TableCell>
-                </TableRow>
+                <OwnedTableRow
+                  key={item.id}
+                  item={item}
+                  selectMode={selectMode}
+                  onSelect={() => select([item])}
+                  onOpenTrades={() => openTrades(item.serial)}
+                  showPinLockActions={showPinLockActions}
+                  isProfile={isProfile}
+                  profileAddress={profile?.address}
+                />
               ))}
             </TableBody>
           </Table>
@@ -258,5 +226,69 @@ function OwnedListPanel({
         </div>
       )}
     </div>
+  );
+}
+
+function OwnedTableRow({
+  item,
+  selectMode,
+  onSelect,
+  onOpenTrades,
+  showPinLockActions,
+  isProfile,
+  profileAddress,
+}: {
+  item: OwnedObjekt;
+  selectMode: boolean;
+  onSelect: () => void;
+  onOpenTrades: () => void;
+  showPinLockActions: boolean | undefined;
+  isProfile: boolean | undefined;
+  profileAddress: string | undefined;
+}) {
+  const isSelected = useObjektSelect((state) => state.isSelected(item));
+
+  return (
+    <TableRow
+      id={item.id}
+      onAction={selectMode ? onSelect : undefined}
+      className={isSelected ? "outline-primary rounded-md outline-2 -outline-offset-2" : ""}
+    >
+      <TableCell onClick={onOpenTrades} className="cursor-pointer">
+        <div className="inline-flex items-center gap-2">
+          {item.serial}
+          {item.isPin && <PushPinIcon weight="regular" className="size-3" />}
+          {item.isLocked && <LockSimpleIcon weight="regular" className="size-3" />}
+        </div>
+      </TableCell>
+      <TableCell>{item.tokenId}</TableCell>
+      <TableCell>{format(item.receivedAt, "yyyy/MM/dd h:mm:ss a")}</TableCell>
+      <TableCell>
+        <Badge intent={item.transferable ? "info" : "danger"}>
+          {item.transferable ? m.objekt_yes() : m.objekt_no()}
+        </Badge>
+      </TableCell>
+      <TableCell>
+        {showPinLockActions && (
+          <Menu>
+            <Button size="sq-xs" intent="plain" aria-label={m.objekt_menu_aria()}>
+              <DotsThreeVerticalIcon size={16} weight="bold" />
+            </Button>
+            <MenuContent placement="bottom right" popover={{ offset: -2 }}>
+              <TogglePinMenuItem isPin={item.isPin ?? false} tokenId={item.tokenId} />
+              {item.isPin && (
+                <>
+                  <MovePinMenuItem tokenId={item.tokenId} direction="up" />
+                  <MovePinMenuItem tokenId={item.tokenId} direction="down" />
+                </>
+              )}
+              <ToggleLockMenuItem isLocked={item.isLocked ?? false} tokenId={item.tokenId} />
+              <MenuSeparator />
+              <AddToListMenu objekts={[item]} address={isProfile ? profileAddress : undefined} />
+            </MenuContent>
+          </Menu>
+        )}
+      </TableCell>
+    </TableRow>
   );
 }
