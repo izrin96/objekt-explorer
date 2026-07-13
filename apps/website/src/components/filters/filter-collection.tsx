@@ -42,7 +42,10 @@ export default function CollectionFilter() {
                 <SearchInput className="border-none ring-0 focus:ring-0" />
               </SearchField>
             </div>
-            <ListBox className="max-h-[inherit] min-w-[inherit] rounded-t-none border-0 bg-transparent shadow-none">
+            <ListBox
+              shouldFocusWrap
+              className="max-h-[inherit] min-w-[inherit] rounded-t-none border-0 bg-transparent shadow-none"
+            >
               {collections.map((collection) => (
                 <SelectItem id={collection} key={collection} textValue={collection}>
                   {collection}

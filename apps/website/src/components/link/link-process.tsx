@@ -176,6 +176,7 @@ function NicknameStep({ onSuccess }: { onSuccess: (data: SearchData) => void }) 
           onSelectionChange={handleSelection}
           aria-label={m.link_enter_nickname()}
           className="w-full"
+          shouldFocusWrap
         >
           {(item: CosmoPublicUser) => (
             <ListBoxItem id={item.address} textValue={item.nickname}>
