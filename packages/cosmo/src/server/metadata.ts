@@ -97,6 +97,7 @@ export function normalizeV3(
 
   const thumbnail = metadata.image.replace(/\/(4x|3x|2x|original)/, "/thumbnail");
   const comoAmount = className === "Motion" ? 3 : ["Double", "Premier"].includes(className) ? 2 : 1;
+  const textColor = getTextColor(className, collection);
 
   return {
     name: metadata.name,
@@ -118,12 +119,25 @@ export function normalizeV3(
       // not possible to get from v3
       backImage: "",
       accentColor: "",
-      textColor: "#ffffff",
+      textColor: textColor,
       objektNo: 0,
       tokenAddress: "0x0000000000000000000000000000000000000000",
       transferable: true,
     },
   };
+}
+
+/**
+ * Get objekt text color
+ */
+function getTextColor(className: string, collection: string) {
+  if (["First", "Motion", "Special", "Basic", "Welcome"].includes(className)) {
+    return "#000000";
+  }
+  if (className === "Unit" && collection.includes("Z")) {
+    return "#000000";
+  }
+  return "#ffffff";
 }
 
 /**
