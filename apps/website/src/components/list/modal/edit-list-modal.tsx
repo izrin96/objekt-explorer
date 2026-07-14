@@ -1,5 +1,5 @@
 import { ParaglideMessage } from "@inlang/paraglide-js-react";
-import { QueryErrorResetBoundary, useMutation, useSuspenseQueries } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { Form } from "react-aria-components/Form";
@@ -82,17 +82,14 @@ function EditListForm({
   const router = useRouter();
   const profiles = useUserProfiles();
   const userLists = useUserLists();
-  const [{ data: currencies }, { data }] = useSuspenseQueries({
-    queries: [
-      orpc.meta.supportedCurrencies.queryOptions(),
-      orpc.list.find.queryOptions({
-        input: {
-          slug,
-        },
-        staleTime: 0,
-      }),
-    ],
-  });
+  const { data } = useSuspenseQuery(
+    orpc.list.find.queryOptions({
+      input: {
+        slug,
+      },
+      staleTime: 0,
+    }),
+  );
   const editList = useMutation(
     orpc.list.edit.mutationOptions({
       onSuccess: async (_, { slug }, _o, { client }) => {
@@ -210,17 +207,19 @@ function EditListForm({
             name="currency"
             rules={{
               required: m.common_validation_required(),
+              pattern: {
+                value: /^[A-Za-z]{3}$/,
+                message: m.list_create_currency_invalid(),
+              },
             }}
             render={({
               field: { name, value, onChange, onBlur },
               fieldState: { invalid, error },
             }) => (
-              <Select
-                aria-label={m.list_create_currency_label()}
-                placeholder={m.common_form_none()}
+              <TextField
                 name={name}
                 value={value}
-                onChange={onChange}
+                onChange={(v) => onChange(v.toUpperCase())}
                 onBlur={onBlur}
                 isInvalid={invalid}
                 validationBehavior="aria"
@@ -228,16 +227,9 @@ function EditListForm({
               >
                 <Label>{m.list_create_currency_label()}</Label>
                 <Description>{m.list_create_currency_desc()}</Description>
-                <SelectTrigger />
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency} id={currency} textValue={currency}>
-                      {currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <Input placeholder="USD" maxLength={3} className="uppercase" />
                 <FieldError>{error?.message}</FieldError>
-              </Select>
+              </TextField>
             )}
           />
         )}

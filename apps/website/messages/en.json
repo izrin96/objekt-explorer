@@ -207,6 +207,7 @@
   "list_create_description_placeholder": "Optional description for your list",
   "list_create_currency_label": "Currency",
   "list_create_currency_desc": "Currency for objekt prices in this list",
+  "list_create_currency_invalid": "Enter a valid 3-letter currency code",
   "list_create_list_type_label": "List Type",
   "list_create_list_type_desc": "Choose the purpose of your list",
   "list_create_general_list_label": "General",

@@ -207,6 +207,7 @@
   "list_create_description_placeholder": "설명 (선택 사항)",
   "list_create_currency_label": "통화",
   "list_create_currency_desc": "이 목록의 오브젝트 가격에 사용할 통화",
+  "list_create_currency_invalid": "올바른 3자리 통화 코드를 입력하세요",
   "list_create_list_type_label": "목록 유형",
   "list_create_list_type_desc": "목록의 용도를 선택하세요",
   "list_create_general_list_label": "일반",

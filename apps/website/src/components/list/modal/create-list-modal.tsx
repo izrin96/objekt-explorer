@@ -1,4 +1,4 @@
-import { QueryErrorResetBoundary, useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
@@ -68,7 +68,6 @@ export function CreateListModal({ open, setOpen }: CreateListModalProps) {
 function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
   const profiles = useUserProfiles();
   const userLists = useUserLists();
-  const { data: currencies } = useSuspenseQuery(orpc.meta.supportedCurrencies.queryOptions());
   const { handleSubmit, control, watch, setValue } = useForm({
     defaultValues: {
       name: "",
@@ -222,17 +221,19 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
             name="currency"
             rules={{
               required: m.common_validation_required(),
+              pattern: {
+                value: /^[A-Za-z]{3}$/,
+                message: m.list_create_currency_invalid(),
+              },
             }}
             render={({
               field: { name, value, onChange, onBlur },
               fieldState: { invalid, error },
             }) => (
-              <Select
-                aria-label={m.list_create_currency_label()}
-                placeholder={m.common_form_none()}
+              <TextField
                 name={name}
                 value={value}
-                onChange={onChange}
+                onChange={(v) => onChange(v.toUpperCase())}
                 onBlur={onBlur}
                 isInvalid={invalid}
                 validationBehavior="aria"
@@ -240,16 +241,9 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
               >
                 <Label>{m.list_create_currency_label()}</Label>
                 <Description>{m.list_create_currency_desc()}</Description>
-                <SelectTrigger />
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency} id={currency} textValue={currency}>
-                      {currency}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                <Input placeholder="USD" maxLength={3} className="uppercase" />
                 <FieldError>{error?.message}</FieldError>
-              </Select>
+              </TextField>
             )}
           />
         )}
