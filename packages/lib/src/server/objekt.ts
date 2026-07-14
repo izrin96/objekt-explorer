@@ -55,6 +55,9 @@ const collectionOverrides = {
 
   // Ever collections
   "ever01-seoyeon-338z": { textColor: "#07328D" },
+
+  // idntt
+  "summer26-id1-x-id10-402a": { backgroundColor: "#E6E3E8" },
 } as const satisfies Record<string, CollectionOverride>;
 
 /**
