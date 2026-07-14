@@ -68,7 +68,7 @@ function getBandImageUrl(objekt: CollectionInput) {
       return "https://media.objekt.top/band-image/86207a80d354439cada0ec6c45e076ee20250814061643330.png";
     }
 
-    if (objekt.class === "Unit") {
+    if (objekt.class === "Unit" && objekt.onOffline === "online") {
       return "https://media.objekt.top/band-image/e0e4fdd950bc4ca8ba49a98b053756f620250814065358420.png";
     }
 
