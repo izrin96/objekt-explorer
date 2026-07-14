@@ -113,11 +113,11 @@ export function normalizeV3(
       thumbnailImage: thumbnail,
       frontImage: metadata.image,
       backgroundColor: metadata.background_color,
+      accentColor: metadata.background_color,
       comoAmount: comoAmount,
       tokenId: tokenId,
       // not possible to get from v3
       backImage: "",
-      accentColor: "",
       textColor: "#ffffff",
       objektNo: 0,
       tokenAddress: "0x0000000000000000000000000000000000000000",
@@ -146,12 +146,12 @@ export function enrichUpdateMetadata(
     thumbnailImage: metadata.objekt.thumbnailImage,
     frontImage: metadata.objekt.frontImage,
     backgroundColor: metadata.objekt.backgroundColor,
+    accentColor: metadata.objekt.accentColor,
     ...(version === 1
       ? {
           // not possible to get from v3
           backImage: metadata.objekt.backImage,
           textColor: metadata.objekt.textColor,
-          accentColor: metadata.objekt.accentColor,
         }
       : {}),
   };
