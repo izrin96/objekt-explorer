@@ -22,22 +22,22 @@ type Props = PropsWithChildren;
 
 export function FilterDataProvider({ children }: Props) {
   const { data } = useSuspenseQuery(orpc.config.getFilterData.queryOptions());
-  const { selectedArtistIds } = useCosmoArtist();
+  const { selectedArtistIds, selectedArtistIdSet } = useCosmoArtist();
 
   const selectedSeasonMap = useMemo(
     () =>
       selectedArtistIds.length > 0
-        ? data.seasonsMap.filter((a) => selectedArtistIds.includes(a.artistId))
+        ? data.seasonsMap.filter((a) => selectedArtistIdSet.has(a.artistId))
         : data.seasonsMap,
-    [data.seasonsMap, selectedArtistIds],
+    [data.seasonsMap, selectedArtistIds, selectedArtistIdSet],
   );
 
   const selectedClassMap = useMemo(
     () =>
       selectedArtistIds.length > 0
-        ? data.classesMap.filter((a) => selectedArtistIds.includes(a.artistId))
+        ? data.classesMap.filter((a) => selectedArtistIdSet.has(a.artistId))
         : data.classesMap,
-    [data.classesMap, selectedArtistIds],
+    [data.classesMap, selectedArtistIds, selectedArtistIdSet],
   );
 
   const seasons = useMemo(

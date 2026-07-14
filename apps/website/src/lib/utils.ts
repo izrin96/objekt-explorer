@@ -7,7 +7,7 @@ import { twMerge } from "@/lib/tw-merge";
 
 import { clientEnv } from "./env/client";
 import type { PublicList } from "./universal/list";
-import { unobtainables } from "./unobtainables";
+import { unobtainableSlugs } from "./unobtainables";
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
 
@@ -86,7 +86,7 @@ export function getClientLocale() {
 }
 
 export function tradeableFilter(obj: ValidObjekt) {
-  return !unobtainables.includes(obj.slug) && !["Welcome", "Zero"].includes(obj.class);
+  return !unobtainableSlugs.has(obj.slug) && !["Welcome", "Zero"].includes(obj.class);
 }
 
 export function msToCountdown(ms: number) {

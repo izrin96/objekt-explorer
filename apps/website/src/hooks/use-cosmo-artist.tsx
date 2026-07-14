@@ -67,6 +67,7 @@ export function useCosmoArtist() {
   if (!ctx) throw new Error("useCosmoArtist must be used within CosmoArtistProvider");
 
   const { data: selectedArtistIds } = useSelectedArtists();
+  const selectedArtistIdSet = useMemo(() => new Set(selectedArtistIds), [selectedArtistIds]);
 
   const getArtist = useCallback(
     (artistName: string) => ctx.artistMap.get(artistName.toLowerCase()),
@@ -82,18 +83,18 @@ export function useCosmoArtist() {
     (artistIds: ValidArtist[] | null) =>
       selectedArtistIds.length > 0
         ? artistIds !== null
-          ? artistIds.filter((artist) => selectedArtistIds.includes(artist))
+          ? artistIds.filter((artist) => selectedArtistIdSet.has(artist))
           : selectedArtistIds
         : artistIds,
-    [selectedArtistIds],
+    [selectedArtistIds, selectedArtistIdSet],
   );
 
   const selectedArtists = useMemo(
     () =>
       selectedArtistIds.length > 0
-        ? ctx.artists.filter((a) => selectedArtistIds.includes(a.id))
+        ? ctx.artists.filter((a) => selectedArtistIdSet.has(a.id))
         : ctx.artists,
-    [ctx.artists, selectedArtistIds],
+    [ctx.artists, selectedArtistIds, selectedArtistIdSet],
   );
 
   const compareMember = useCallback(
@@ -125,6 +126,7 @@ export function useCosmoArtist() {
       getArtist,
       getMember,
       selectedArtistIds,
+      selectedArtistIdSet,
       selectedArtists,
       getSelectedArtistIds,
       compareMember,
@@ -135,6 +137,7 @@ export function useCosmoArtist() {
       getArtist,
       getMember,
       selectedArtistIds,
+      selectedArtistIdSet,
       selectedArtists,
       getSelectedArtistIds,
       compareMember,

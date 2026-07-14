@@ -1,7 +1,7 @@
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { Suspense, useCallback, useState } from "react";
 
-import { unobtainables } from "@/lib/unobtainables";
+import { unobtainableSlugs } from "@/lib/unobtainables";
 import { m } from "@/paraglide/messages";
 
 import { AttributePanel } from "./objekt-attribute";
@@ -32,7 +32,7 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
       <div className="relative flex min-h-screen flex-col gap-2 overflow-y-auto px-2 md:col-span-2 md:-me-2 md:min-h-full md:scrollbar-gutter-stable">
         <div className="text-sm font-semibold">{objekt.collectionId}</div>
         <Suspense>
-          <AttributePanel objekt={objekt} unobtainable={unobtainables.includes(objekt.slug)} />
+          <AttributePanel objekt={objekt} unobtainable={unobtainableSlugs.has(objekt.slug)} />
           <ObjektPanel objekts={objekts} />
         </Suspense>
         <div className="flex-1" aria-hidden />

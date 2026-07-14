@@ -36,7 +36,7 @@ import { useObjektColumn } from "@/hooks/use-objekt-column";
 import { useProgressObjekts } from "@/hooks/use-progress-objekt";
 import { useCurrentUser } from "@/hooks/use-user";
 import { EASE_IN_OUT } from "@/lib/ease";
-import { unobtainables } from "@/lib/unobtainables";
+import { unobtainableSlugs } from "@/lib/unobtainables";
 import { tradeableFilter, cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -131,7 +131,7 @@ function ProgressGroup(props: ProgressGroupProps) {
   const { percentage, owned, filtered } = useMemo(() => {
     const filtered = props.grouped
       .map(([objekt]) => objekt)
-      .filter((a): a is ValidObjekt => a !== undefined && !unobtainables.includes(a.slug));
+      .filter((a): a is ValidObjekt => a !== undefined && !unobtainableSlugs.has(a.slug));
 
     const owned = filtered.filter((a) => props.ownedSlugs.has(a.slug));
 
@@ -216,7 +216,7 @@ function ProgressCollapse(props: ProgressCollapseProps) {
                             hideLabel={hideLabel}
                             showCount={showCount}
                             isFade={!ownedSlugs.has(objekt.slug)}
-                            unobtainable={unobtainables.includes(objekt.slug)}
+                            unobtainable={unobtainableSlugs.has(objekt.slug)}
                             staticMenu={
                               user && (
                                 <ObjektStaticMenu>

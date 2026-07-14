@@ -420,12 +420,13 @@ async function initializeStaticRoutes(clientDirectory: string): Promise<PreloadR
     if (VERBOSE) {
       if (loaded.length > 0 || skipped.length > 0) {
         const allFiles = [...loaded, ...skipped].toSorted((a, b) => a.route.localeCompare(b.route));
+        const loadedSet = new Set(loaded);
         console.log("\n📊 Detailed file information:");
         console.log(
           "Status       │ Path                            │ MIME Type                    │ Reason",
         );
         allFiles.forEach((file) => {
-          const isPreloaded = loaded.includes(file);
+          const isPreloaded = loadedSet.has(file);
           const status = isPreloaded ? "MEMORY" : "ON-DEMAND";
           const reason =
             !isPreloaded && file.size > MAX_PRELOAD_BYTES

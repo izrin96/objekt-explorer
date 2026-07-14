@@ -3,7 +3,7 @@
 /**
  * List of objekt slugs that are unobtainable.
  */
-export const unobtainables = [
+const unobtainables = [
   // error in minting
   "binary01-xinyu-120a",
   "binary01-kotone-117a",
@@ -104,3 +104,5 @@ export const unobtainables = [
   // savior streaming event
   "divine01-heejin-340z",
 ];
+
+export const unobtainableSlugs = new Set(unobtainables);
