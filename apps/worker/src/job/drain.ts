@@ -7,6 +7,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 
 const BATCH_SIZE = 5000;
 const IN_CHUNK_SIZE = 500;
+const ADDRESS_CONCURRENCY = 10;
 
 export async function drainOutbox() {
   console.log("[Outbox Drain] Starting outbox drain");
@@ -22,19 +23,26 @@ export async function drainOutbox() {
     return;
   }
 
-  await processBatch(batch);
+  const failedAddresses = await processBatch(batch);
 
-  await indexer.delete(listEventOutbox).where(
-    inArray(
-      listEventOutbox.id,
-      batch.map((row) => row.id),
-    ),
+  // Keep events for failed addresses in the outbox so they retry next run
+  const idsToDelete = batch
+    .filter((row) => !failedAddresses.has(row.fromAddress.toLowerCase()))
+    .map((row) => row.id);
+
+  if (idsToDelete.length > 0) {
+    await indexer.delete(listEventOutbox).where(inArray(listEventOutbox.id, idsToDelete));
+  }
+
+  console.log(
+    `[Outbox Drain] Processed ${idsToDelete.length} events` +
+      (failedAddresses.size > 0
+        ? `, ${failedAddresses.size} addresses failed (kept for retry)`
+        : ""),
   );
-
-  console.log(`[Outbox Drain] Processed ${batch.length} events`);
 }
 
-async function processBatch(events: ListEventOutbox[]) {
+async function processBatch(events: ListEventOutbox[]): Promise<Set<string>> {
   // Group events by fromAddress for efficient batch processing
   const addressToTokenIds = new Map<string, Set<string>>();
 
@@ -48,16 +56,23 @@ async function processBatch(events: ListEventOutbox[]) {
     addressToTokenIds.get(from)!.add(tokenId);
   }
 
-  // Process each address
-  await Promise.all(
-    Array.from(addressToTokenIds.entries()).map(async ([address, tokenIdSet]) => {
-      try {
-        await cleanupAddress(address, Array.from(tokenIdSet));
-      } catch (error) {
-        console.error(`[Outbox Drain] Error cleaning up for ${address}:`, error);
-      }
-    }),
-  );
+  const failedAddresses = new Set<string>();
+
+  // Process addresses with bounded concurrency to avoid exhausting the DB pool
+  await chunk(Array.from(addressToTokenIds.entries()), ADDRESS_CONCURRENCY, async (entries) => {
+    await Promise.all(
+      entries.map(async ([address, tokenIdSet]) => {
+        try {
+          await cleanupAddress(address, Array.from(tokenIdSet));
+        } catch (error) {
+          console.error(`[Outbox Drain] Error cleaning up for ${address}:`, error);
+          failedAddresses.add(address);
+        }
+      }),
+    );
+  });
+
+  return failedAddresses;
 }
 
 async function cleanupAddress(fromAddress: string, tokenIds: string[]) {
@@ -82,69 +97,47 @@ async function cleanupProfileListEntries(fromAddress: string, tokenIds: string[]
 
   const listIds = profileLists.map((l) => l.id);
 
-  // Find matching list entries (objektId matches tokenIds)
-  const entriesToRemove = await db
-    .select({ id: listEntries.id })
-    .from(listEntries)
-    .where(and(inArray(listEntries.listId, listIds), inArray(listEntries.objektId, tokenIds)));
+  // Remove matching list entries (objektId matches tokenIds)
+  const removed = await db
+    .delete(listEntries)
+    .where(and(inArray(listEntries.listId, listIds), inArray(listEntries.objektId, tokenIds)))
+    .returning({ id: listEntries.id });
 
-  if (entriesToRemove.length > 0) {
-    await db.delete(listEntries).where(
-      inArray(
-        listEntries.id,
-        entriesToRemove.map((e) => e.id),
-      ),
-    );
-    console.log(`[Outbox Drain] Removed ${entriesToRemove.length} list entries for ${fromAddress}`);
+  if (removed.length > 0) {
+    console.log(`[Outbox Drain] Removed ${removed.length} list entries for ${fromAddress}`);
+  }
+}
+
+// pins and lockedObjekts share the same (id, address, tokenId) shape
+type TokenTable = typeof pins | typeof lockedObjekts;
+
+async function cleanupTokenRows(
+  table: TokenTable,
+  label: string,
+  fromAddress: string,
+  tokenIds: string[],
+) {
+  // tokenIds are objekt IDs (strings), but the table's tokenId is integer
+  const numericTokenIds = tokenIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id));
+
+  if (numericTokenIds.length === 0) return;
+
+  const removed = await db
+    .delete(table)
+    .where(and(eq(table.address, fromAddress), inArray(table.tokenId, numericTokenIds)))
+    .returning({ id: table.id });
+
+  if (removed.length > 0) {
+    console.log(`[Outbox Drain] Removed ${removed.length} ${label} for ${fromAddress}`);
   }
 }
 
 async function cleanupPins(fromAddress: string, tokenIds: string[]) {
-  // tokenIds are objekt IDs (strings), but pins.tokenId is integer
-  // We need to convert, but first check which ones exist
-  const numericTokenIds = tokenIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id));
-
-  if (numericTokenIds.length === 0) return;
-
-  const pinsToRemove = await db
-    .select({ id: pins.id })
-    .from(pins)
-    .where(and(eq(pins.address, fromAddress), inArray(pins.tokenId, numericTokenIds)));
-
-  if (pinsToRemove.length > 0) {
-    await db.delete(pins).where(
-      inArray(
-        pins.id,
-        pinsToRemove.map((p) => p.id),
-      ),
-    );
-    console.log(`[Outbox Drain] Removed ${pinsToRemove.length} pins for ${fromAddress}`);
-  }
+  await cleanupTokenRows(pins, "pins", fromAddress, tokenIds);
 }
 
 async function cleanupLockedObjekts(fromAddress: string, tokenIds: string[]) {
-  const numericTokenIds = tokenIds.map((id) => Number(id)).filter((id) => !Number.isNaN(id));
-
-  if (numericTokenIds.length === 0) return;
-
-  const lockedToRemove = await db
-    .select({ id: lockedObjekts.id })
-    .from(lockedObjekts)
-    .where(
-      and(eq(lockedObjekts.address, fromAddress), inArray(lockedObjekts.tokenId, numericTokenIds)),
-    );
-
-  if (lockedToRemove.length > 0) {
-    await db.delete(lockedObjekts).where(
-      inArray(
-        lockedObjekts.id,
-        lockedToRemove.map((l) => l.id),
-      ),
-    );
-    console.log(
-      `[Outbox Drain] Removed ${lockedToRemove.length} locked objekts for ${fromAddress}`,
-    );
-  }
+  await cleanupTokenRows(lockedObjekts, "locked objekts", fromAddress, tokenIds);
 }
 
 /**
@@ -221,62 +214,29 @@ async function cleanupStaleListEntries(): Promise<number> {
   return totalRemoved;
 }
 
-async function cleanupStalePins(): Promise<number> {
-  const allPins = await db
-    .select({ id: pins.id, address: pins.address, tokenId: pins.tokenId })
-    .from(pins);
+async function cleanupStaleTokenRows(table: TokenTable): Promise<number> {
+  const rows = await db
+    .select({ id: table.id, address: table.address, tokenId: table.tokenId })
+    .from(table);
 
-  if (allPins.length === 0) {
+  if (rows.length === 0) {
     return 0;
   }
 
-  const tokenIds = [...new Set(allPins.map((p) => String(p.tokenId)))];
+  const tokenIds = [...new Set(rows.map((r) => String(r.tokenId)))];
   const ownerMap = await fetchOwnerMap(tokenIds);
 
   const staleIds: number[] = [];
-  for (const pin of allPins) {
-    const owner = ownerMap.get(String(pin.tokenId));
-    if (!owner || owner !== pin.address.toLowerCase()) {
-      staleIds.push(pin.id);
+  for (const row of rows) {
+    const owner = ownerMap.get(String(row.tokenId));
+    if (!owner || owner !== row.address.toLowerCase()) {
+      staleIds.push(row.id);
     }
   }
 
   let totalRemoved = 0;
   await chunk(staleIds, BATCH_SIZE, async (idChunk) => {
-    await db.delete(pins).where(inArray(pins.id, idChunk));
-    totalRemoved += idChunk.length;
-  });
-
-  return totalRemoved;
-}
-
-async function cleanupStaleLocks(): Promise<number> {
-  const allLocks = await db
-    .select({
-      id: lockedObjekts.id,
-      address: lockedObjekts.address,
-      tokenId: lockedObjekts.tokenId,
-    })
-    .from(lockedObjekts);
-
-  if (allLocks.length === 0) {
-    return 0;
-  }
-
-  const tokenIds = [...new Set(allLocks.map((l) => String(l.tokenId)))];
-  const ownerMap = await fetchOwnerMap(tokenIds);
-
-  const staleIds: number[] = [];
-  for (const lock of allLocks) {
-    const owner = ownerMap.get(String(lock.tokenId));
-    if (!owner || owner !== lock.address.toLowerCase()) {
-      staleIds.push(lock.id);
-    }
-  }
-
-  let totalRemoved = 0;
-  await chunk(staleIds, BATCH_SIZE, async (idChunk) => {
-    await db.delete(lockedObjekts).where(inArray(lockedObjekts.id, idChunk));
+    await db.delete(table).where(inArray(table.id, idChunk));
     totalRemoved += idChunk.length;
   });
 
@@ -294,10 +254,10 @@ export async function cleanupStaleEntries() {
   const listEntriesRemoved = await cleanupStaleListEntries();
   console.log(`[Cleanup] List entries removed: ${listEntriesRemoved}`);
 
-  const pinsRemoved = await cleanupStalePins();
+  const pinsRemoved = await cleanupStaleTokenRows(pins);
   console.log(`[Cleanup] Pins removed: ${pinsRemoved}`);
 
-  const locksRemoved = await cleanupStaleLocks();
+  const locksRemoved = await cleanupStaleTokenRows(lockedObjekts);
   console.log(`[Cleanup] Locked objekts removed: ${locksRemoved}`);
 
   console.log(
