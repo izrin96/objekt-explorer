@@ -8,6 +8,7 @@ import { populateSerial, populateSerialOffline } from "./job/populate-serial";
 import { processCollectionImages } from "./job/process-collection-images";
 import { refreshAccessToken } from "./job/refresh-access-token";
 import { updateCurrencyRates } from "./job/update-currency-rates";
+import { verifyBatchBoundaries } from "./job/verify-batch-boundaries";
 
 const crons: CronJob[] = [];
 
@@ -57,6 +58,10 @@ crons.push(cron("0 * * * *", populateRarity));
 // update currency exchange rates daily at 1 AM
 await updateCurrencyRates();
 crons.push(cron("0 1 * * *", updateCurrencyRates));
+
+// weekly boundary-drift check for un-anchored offline serial batches
+// (no startup run: cheap but not needed on every deploy/restart)
+crons.push(cron("0 3 * * 1", () => verifyBatchBoundaries()));
 
 // process collection images - download, convert to WebP, upload to S3
 await processCollectionImages();

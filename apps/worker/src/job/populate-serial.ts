@@ -179,6 +179,16 @@ async function processCollection(collectionId: string) {
     return;
   }
 
+  await writeSerialUpdates(updates);
+
+  console.log(`[populateSerial] Collection ${collectionId}: Updated ${updates.length} objekts`);
+}
+
+/**
+ * Write serial updates in chunks inside one transaction, using a CASE-per-id
+ * expression so each chunk is a single UPDATE statement.
+ */
+export async function writeSerialUpdates(updates: { id: string; newSerial: number }[]) {
   await indexer.transaction(async (tx) => {
     for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
       const batch = updates.slice(i, i + DB_BATCH_SIZE);
@@ -192,8 +202,31 @@ async function processCollection(collectionId: string) {
         .where(inArray(objekts.id, ids));
     }
   });
+}
 
-  console.log(`[populateSerial] Collection ${collectionId}: Updated ${updates.length} objekts`);
+/**
+ * Recompute offline serials from batch ranges and diff against stored values.
+ * Pre-cutoff v1 serials are authoritative and never produce an update.
+ */
+export function computeOfflineSerialUpdates(
+  rows: { id: string; serial: number; mintedAt: string }[],
+  batches: { start: number; end: number }[],
+): { id: string; newSerial: number }[] {
+  const computed = computeOfflineSerials(rows, batches, V1_CUTOFF_MS);
+  const byId = new Map(rows.map((o) => [o.id, o] as const));
+  const updates: { id: string; newSerial: number }[] = [];
+  for (const { id, serial } of computed) {
+    const obj = byId.get(id)!;
+    // objekts minted before the v1 cutoff keep their authoritative v1 serial
+    // and are never overwritten
+    if (obj.serial > 0 && Date.parse(obj.mintedAt) < V1_CUTOFF_MS) {
+      continue;
+    }
+    if (serial !== obj.serial) {
+      updates.push({ id, newSerial: serial });
+    }
+  }
+  return updates;
 }
 
 const BATCH_SIZE = 20;
@@ -574,40 +607,14 @@ async function processCollectionOffline(collectionId: string) {
   // pre-cutoff v1 serials) and update any that differ. This heals objekts whose
   // serial was written before a new/intermediate batch was discovered (which
   // shifts every later serial), not just newly-minted serial=0 objekts.
-  const computed = computeOfflineSerials(allObjekts, batches, V1_CUTOFF_MS);
-  const byId = new Map(allObjekts.map((o) => [o.id, o] as const));
-
-  const updates: { id: string; newSerial: number }[] = [];
-  for (const { id, serial } of computed) {
-    const obj = byId.get(id)!;
-    // objekts minted before the v1 cutoff keep their authoritative v1 serial
-    // and are never overwritten
-    if (obj.serial > 0 && Date.parse(obj.mintedAt) < V1_CUTOFF_MS) {
-      continue;
-    }
-    if (serial !== obj.serial) {
-      updates.push({ id, newSerial: serial });
-    }
-  }
+  const updates = computeOfflineSerialUpdates(allObjekts, batches);
 
   if (updates.length === 0) {
     console.log(`[populateSerialOffline] Collection ${collectionId}: No valid updates`);
     return;
   }
 
-  await indexer.transaction(async (tx) => {
-    for (let i = 0; i < updates.length; i += DB_BATCH_SIZE) {
-      const batch = updates.slice(i, i + DB_BATCH_SIZE);
-      const ids = batch.map((u) => u.id);
-      const caseExpr = batch
-        .map((u) => sql`WHEN ${u.id} THEN ${u.newSerial}`)
-        .reduce((acc, curr) => sql`${acc} ${curr}`, sql``);
-      await tx
-        .update(objekts)
-        .set({ serial: sql`(CASE id ${caseExpr} END)::int` })
-        .where(inArray(objekts.id, ids));
-    }
-  });
+  await writeSerialUpdates(updates);
 
   console.log(
     `[populateSerialOffline] Collection ${collectionId}: Updated ${updates.length} objekts`,
