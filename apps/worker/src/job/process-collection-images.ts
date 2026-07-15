@@ -2,13 +2,20 @@ import { indexer } from "@repo/db/indexer";
 import type { Collection } from "@repo/db/indexer/schema";
 import { collections } from "@repo/db/indexer/schema";
 import { chunk } from "@repo/lib";
-import { eq, ne } from "drizzle-orm";
+import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { ofetch } from "ofetch";
 
 import { redis } from "@/lib/redis";
 import { uploadWebp, s3Url } from "@/lib/s3";
 
 const BATCH_SIZE = 5;
+
+const FETCH_OPTS = {
+  responseType: "arrayBuffer",
+  timeout: 30_000,
+  retry: 2,
+  retryDelay: 1000,
+} as const;
 
 function isWebp(buf: ArrayBuffer) {
   const u8 = new Uint8Array(buf);
@@ -40,10 +47,7 @@ async function convertToWebp(buf: ArrayBuffer, maxHeight?: number) {
       .toBuffer();
   }
 
-  if (sourceIsWebp) {
-    console.log("[process-images] Source is already WebP, skipping re-encode");
-    return buffer;
-  }
+  if (sourceIsWebp) return buffer;
 
   return await img.webp({ quality: 80 }).toBuffer();
 }
@@ -54,7 +58,19 @@ function computeHash(thumbnail: string, front: string, back: string) {
   return hasher.digest("hex");
 }
 
-function needsImageProcessing(c: Collection) {
+type CollectionRow = Pick<
+  Collection,
+  | "slug"
+  | "thumbnailImage"
+  | "frontImage"
+  | "backImage"
+  | "imageSyncHash"
+  | "processedFrontImage"
+  | "processedThumbnailImage"
+  | "processedBackImage"
+>;
+
+function needsImageProcessing(c: CollectionRow) {
   if (
     c.imageSyncHash === null ||
     c.processedFrontImage === null ||
@@ -73,9 +89,29 @@ function needsImageProcessing(c: Collection) {
 
 export async function processCollectionImages() {
   const cols = await indexer
-    .select()
+    .select({
+      slug: collections.slug,
+      thumbnailImage: collections.thumbnailImage,
+      frontImage: collections.frontImage,
+      backImage: collections.backImage,
+      imageSyncHash: collections.imageSyncHash,
+      processedFrontImage: collections.processedFrontImage,
+      processedThumbnailImage: collections.processedThumbnailImage,
+      processedBackImage: collections.processedBackImage,
+    })
     .from(collections)
-    .where(ne(collections.slug, "empty-collection"));
+    .where(
+      and(
+        ne(collections.slug, "empty-collection"),
+        or(
+          isNull(collections.imageSyncHash),
+          isNull(collections.processedFrontImage),
+          isNull(collections.processedThumbnailImage),
+          and(ne(collections.backImage, ""), isNull(collections.processedBackImage)),
+          sql`md5(${collections.thumbnailImage} || '|' || ${collections.frontImage} || '|' || ${collections.backImage}) != ${collections.imageSyncHash}`,
+        ),
+      ),
+    );
 
   const needsProcessing = cols.filter(needsImageProcessing);
 
@@ -88,17 +124,27 @@ export async function processCollectionImages() {
 
   let processed = 0;
   const total = needsProcessing.length;
+  let succeeded = 0;
+  let failed = 0;
 
   await chunk(needsProcessing, BATCH_SIZE, async (batch) => {
-    await Promise.all(batch.map((c) => processOne(c)));
+    const results = await Promise.all(batch.map((c) => processOne(c)));
+    for (const ok of results) {
+      if (ok) succeeded++;
+      else failed++;
+    }
     processed += batch.length;
     console.log(`[process-images] Progress: ${processed}/${total}`);
   });
 
-  console.log("[process-images] Done");
+  if (succeeded > 0) {
+    await redis.set("collection:modified-at", new Date().toISOString());
+  }
+
+  console.log(`[process-images] Done: ${succeeded} succeeded, ${failed} failed`);
 }
 
-async function processOne(c: Collection) {
+async function processOne(c: CollectionRow) {
   try {
     const slug = c.slug;
 
@@ -108,18 +154,20 @@ async function processOne(c: Collection) {
     const backKey = c.backImage ? `back/${slug}-${ts}.webp` : undefined;
 
     const images = await Promise.all([
-      ofetch(replaceUrlSize(c.frontImage, "original"), { responseType: "arrayBuffer" }).then(
-        (buf) => ({ key: frontKey, buf }),
-      ),
-      ofetch(replaceUrlSize(c.frontImage, "2x"), { responseType: "arrayBuffer" }).then((buf) => ({
+      ofetch(replaceUrlSize(c.frontImage, "original"), FETCH_OPTS).then((buf) => ({
+        key: frontKey,
+        buf,
+      })),
+      ofetch(replaceUrlSize(c.frontImage, "2x"), FETCH_OPTS).then((buf) => ({
         key: thumbKey,
         buf,
       })),
       ...(backKey
         ? [
-            ofetch(replaceUrlSize(c.backImage, "original"), {
-              responseType: "arrayBuffer",
-            }).then((buf) => ({ key: backKey, buf })),
+            ofetch(replaceUrlSize(c.backImage, "original"), FETCH_OPTS).then((buf) => ({
+              key: backKey,
+              buf,
+            })),
           ]
         : []),
     ]);
@@ -144,10 +192,10 @@ async function processOne(c: Collection) {
       })
       .where(eq(collections.slug, slug));
 
-    await redis.set("collection:modified-at", new Date().toISOString());
-
     console.log(`[process-images] Processed ${slug}`);
+    return true;
   } catch (err) {
     console.error(`[process-images] Failed for ${c.slug}:`, err);
+    return false;
   }
 }
