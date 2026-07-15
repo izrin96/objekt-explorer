@@ -17,7 +17,7 @@ export const useUserSearchStore = create<UserSearchState>()(
       add: (user: CosmoPublicUser) =>
         set((state) => {
           const existing = state.users.filter(
-            (a) => a.nickname.toLowerCase() !== user.nickname.toLowerCase(),
+            (a) => a?.nickname && a.nickname.toLowerCase() !== user.nickname.toLowerCase(),
           );
           return { users: [user, ...existing].slice(0, MAX_LENGTH) };
         }),

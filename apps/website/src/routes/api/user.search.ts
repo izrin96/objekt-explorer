@@ -37,10 +37,12 @@ export const Route = createFileRoute("/api/user/search")({
 
           const results = await search(accessToken.accessToken, query);
 
+          const validUsers = results.results.filter((u) => !!u.nickname);
+
           // caching user address (fire-and-forget)
-          if (results.results.length > 0) {
+          if (validUsers.length > 0) {
             void cacheUsers(
-              results.results.map((u) => ({
+              validUsers.map((u) => ({
                 nickname: u.nickname,
                 address: u.address,
                 cosmoId: u.id,
@@ -48,12 +50,14 @@ export const Route = createFileRoute("/api/user/search")({
             );
           }
 
-          return Response.json(results);
+          return Response.json({ ...results, results: validUsers });
         } catch (err) {
           console.error("Cosmo user search failed:", err);
         }
 
         // fallback to db
+        const escapedQuery = query.replace(/[\\%_]/g, "\\$&");
+
         const users = await db
           .selectDistinctOn([userAddress.nickname], {
             id: userAddress.id,
@@ -61,7 +65,7 @@ export const Route = createFileRoute("/api/user/search")({
             address: userAddress.address,
           })
           .from(userAddress)
-          .where(like(userAddress.nickname, `${query}%`))
+          .where(like(userAddress.nickname, `${escapedQuery}%`))
           .orderBy(userAddress.nickname, desc(userAddress.id))
           .limit(100);
 
