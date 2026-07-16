@@ -44,7 +44,7 @@ function makeCollectionTags(objekt: ValidObjekt) {
     objekt.season, // atom01, spring26
     ...(objekt.artist === "idntt"
       ? [
-          `${seasonShortNames[season.toLowerCase()] ?? objekt.season.slice(0, -2)}${seasonNumber}`, // Sp26
+          `${seasonShortNames[season.toLowerCase()] ?? season}${seasonNumber}`, // Sp26
         ]
       : [
           season + seasonInt, // atom1
