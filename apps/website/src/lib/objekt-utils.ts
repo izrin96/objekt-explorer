@@ -34,24 +34,36 @@ function makeCollectionTags(objekt: ValidObjekt) {
   const season = objekt.season.slice(0, -2);
 
   const tags = [
-    ...getMemberShortKeys(objekt.member),
-    objekt.artist,
+    // artist
+    objekt.artist, // triples
+    // member
+    objekt.member, // JiWoo
+    ...getMemberShortKeys(objekt.member), // jw
+    // season
+    season, // atom, spring
+    objekt.season, // atom01, spring26
+    ...(objekt.artist === "idntt"
+      ? [
+          `${seasonShortNames[season.toLowerCase()] ?? objekt.season.slice(0, -2)}${seasonNumber}`, // Sp26
+        ]
+      : [
+          season + seasonInt, // atom1
+          seasonCode + seasonNumber, // a01
+          seasonCode + seasonInt, // a1
+        ]),
+    // class
+    objekt.class, // special
+    `${objekt.class.charAt(0)}co`, // sco
+    // collection no.
     objekt.collectionNo, // 201z
+    collectionNoSlice, // 201
+    // season + collection no.
     ...(objekt.artist === "idntt"
       ? []
       : [
           `${seasonCodeRepeat}${objekt.collectionNo}`, // a201z, aa201z
           `${seasonCodeRepeat}${collectionNoSlice}`, // a201, aa201
         ]),
-    collectionNoSlice, // 201
-    objekt.member,
-    objekt.class, // special
-    `${objekt.class.charAt(0)}co`, // sco
-    objekt.season, // atom01
-    season, // atom
-    season + seasonInt, // atom1
-    seasonCode + seasonNumber, // a01
-    seasonCode + seasonInt, // a1
   ];
 
   // For combined members ("S8 X S12"), also index individual names
