@@ -9,6 +9,7 @@ import { isAddress } from "@repo/lib";
 import { and, eq, isNotNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
+import { serverEnv } from "@/lib/env/server";
 import { artistSchema } from "@/lib/universal/artist";
 import { m } from "@/paraglide/messages";
 
@@ -129,7 +130,12 @@ export const cosmoLinkRouter = {
 
       const { accessToken } = await getAccessToken();
 
-      const profile = await fetchUserProfile(accessToken, data.cosmoId, data.artistId);
+      const profile = await fetchUserProfile(
+        accessToken,
+        data.cosmoId,
+        data.artistId,
+        serverEnv.COSMO_KEY,
+      );
 
       // validate that the fetched profile matches claimed data
       if (profile.nickname.toLowerCase() !== data.nickname.toLowerCase()) {

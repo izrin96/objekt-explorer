@@ -1,5 +1,6 @@
 import type { ValidArtist } from "../types/common";
 import type { CosmoByNickname, CosmoSearchResult, CosmoUserProfile } from "../types/user";
+import { decrypt } from "./encryption";
 import { cosmo } from "./http";
 
 /**
@@ -28,10 +29,15 @@ export async function search(token: string, term: string) {
 }
 
 /**
- * Fetch a user's public profile.
+ * Fetch a user's public profile. Response body is AES-256-CBC encrypted (IV-prefixed, base64).
  */
-export async function fetchUserProfile(token: string, userId: number, artistId: ValidArtist) {
-  return await cosmo<CosmoUserProfile>(`/bff/v3/users/${userId}`, {
+export async function fetchUserProfile(
+  token: string,
+  userId: number,
+  artistId: ValidArtist,
+  encryptionKey: string,
+) {
+  const encrypted = await cosmo<string>(`/bff/v3/users/${userId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -39,4 +45,6 @@ export async function fetchUserProfile(token: string, userId: number, artistId: 
       artistId,
     },
   });
+
+  return JSON.parse(decrypt(encrypted, encryptionKey)) as CosmoUserProfile;
 }
