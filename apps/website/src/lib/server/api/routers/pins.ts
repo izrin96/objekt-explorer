@@ -132,4 +132,37 @@ export const pinsRouter = {
           .where(eq(pins.id, current.id));
       });
     }),
+
+  reorderPins: authed
+    .input(
+      z.object({
+        address: z.string().refine((val) => isAddress(val)),
+        tokenIds: z.number().array().max(50000),
+      }),
+    )
+    .handler(async ({ input: { address, tokenIds }, context: { session } }) => {
+      await checkAddressOwned(address, session.user.id);
+
+      const validPins = await getValidPins(address);
+
+      const validPinsByTokenId = new Map(validPins.map((p) => [p.tokenId, p]));
+      const orderedTokenIds = tokenIds.filter((tokenId) => validPinsByTokenId.has(tokenId));
+
+      if (orderedTokenIds.length < 2) return;
+
+      // pool of effective order values, descending — topmost input gets biggest value
+      const pool = orderedTokenIds
+        .map((tokenId) => validPinsByTokenId.get(tokenId)!)
+        .map((p) => p.order ?? p.id)
+        .toSorted((a, b) => b - a);
+
+      await db.transaction(async (tx) => {
+        for (let i = 0; i < orderedTokenIds.length; i++) {
+          const pin = validPinsByTokenId.get(orderedTokenIds[i]!)!;
+          const newOrder = pool[i]!;
+          if (newOrder === (pin.order ?? pin.id)) continue;
+          await tx.update(pins).set({ order: newOrder }).where(eq(pins.id, pin.id));
+        }
+      });
+    }),
 };

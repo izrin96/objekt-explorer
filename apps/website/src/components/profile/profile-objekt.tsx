@@ -1,10 +1,12 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { ErrorBoundary } from "react-error-boundary";
 
+import { useReorderPins } from "@/hooks/actions/reorder-pins";
 import { useConfigStore } from "@/hooks/use-config";
+import { isFiltering } from "@/hooks/use-filters";
 import { useProfileObjekts } from "@/hooks/use-profile-objekt";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useCurrentUser, useProfileAuthed } from "@/hooks/use-user";
@@ -23,6 +25,7 @@ import { LockObjekt, ToggleLockMenuItem, UnlockObjekt } from "../objekt/actions/
 import { MovePinMenuItem, PinObjekt, TogglePinMenuItem, UnpinObjekt } from "../objekt/actions/pin";
 import { SelectMenuItem } from "../objekt/actions/select";
 import { ObjektStaticMenu } from "../objekt/actions/static-menu";
+import { DraggablePin, PinDndProvider } from "../objekt/pin-dnd";
 import ErrorFallbackRender from "../router/error-boundary";
 import { GenerateDiscordButton } from "../shared/generate-discord-button";
 import CheckpointPicker from "./checkpoint-picker";
@@ -91,6 +94,49 @@ function ProfileObjekt({
   const { filtered, grouped, filters, rarityMap, hasNextPage, isPending } = useProfileObjekts();
   const isProfileAuthed = useProfileAuthed();
   const showActions = user && !filters.at;
+  const reorderPins = useReorderPins();
+
+  const dndEnabled = Boolean(
+    isProfileAuthed && showActions && !isFiltering(filters) && !filters.hidePin,
+  );
+
+  // Local override for pin order, applied instantly (same render/commit as
+  // dnd-kit's own drag-end cleanup) so the drop frame shows the final order
+  // without waiting on the mutation's cache update, which lands a tick later
+  // via React Query's async notify scheduler.
+  const [pinOrderOverride, setPinOrderOverride] = useState<Map<string, number> | null>(null);
+
+  const handlePinReorder = useCallback(
+    (tokenIds: string[]) => {
+      // values must stay truthy — build-virtual-data's sort guard is
+      // `a.pinOrder && b.pinOrder`, so a 0 would be treated as "no order".
+      setPinOrderOverride(new Map(tokenIds.map((id, i) => [id, tokenIds.length - i])));
+      reorderPins.mutate(
+        { address, tokenIds: tokenIds.map(Number) },
+        { onSettled: () => setPinOrderOverride(null) },
+      );
+    },
+    [address, reorderPins],
+  );
+
+  const displayObjekts = useMemo(() => {
+    if (!pinOrderOverride) return filtered;
+    return filtered.map((o) =>
+      isObjektOwned(o) && o.isPin && pinOrderOverride.has(o.tokenId)
+        ? Object.assign({}, o, { pinOrder: pinOrderOverride.get(o.tokenId)! })
+        : o,
+    );
+  }, [filtered, pinOrderOverride]);
+
+  const pinnedTokenIds = useMemo(
+    () =>
+      displayObjekts
+        .filter(isObjektOwned)
+        .filter((item) => item.isPin === true)
+        .toSorted((a, b) => (a.pinOrder && b.pinOrder ? b.pinOrder - a.pinOrder : 0))
+        .map((item) => item.tokenId),
+    [displayObjekts],
+  );
 
   const renderObjekt = useCallback(
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
@@ -99,7 +145,7 @@ function ProfileObjekt({
 
       const isOwned = isObjektOwned(objekt);
 
-      return (
+      const gridView = (
         <ObjektGridView
           objekts={item}
           hideLabel={hideLabel}
@@ -158,8 +204,14 @@ function ProfileObjekt({
           )}
         </ObjektGridView>
       );
+
+      if (dndEnabled && isOwned && objekt.isPin) {
+        return <DraggablePin tokenId={objekt.tokenId}>{gridView}</DraggablePin>;
+      }
+
+      return gridView;
     },
-    [showActions, hideLabel, isProfileAuthed, address, filters.grouped],
+    [showActions, hideLabel, isProfileAuthed, address, filters.grouped, dndEnabled],
   );
 
   if (isPending) {
@@ -210,13 +262,19 @@ function ProfileObjekt({
         grouped={filters.grouped ? grouped : undefined}
         hasNextPage={hasNextPage}
       />
-      <ObjektVirtualGrid
-        objekts={filtered}
-        filters={filters}
-        rarityMap={rarityMap}
-        isProfile
-        renderItem={renderObjekt}
-      />
+      <PinDndProvider
+        pinnedTokenIds={pinnedTokenIds}
+        onReorder={handlePinReorder}
+        disabled={!dndEnabled}
+      >
+        <ObjektVirtualGrid
+          objekts={displayObjekts}
+          filters={filters}
+          rarityMap={rarityMap}
+          isProfile
+          renderItem={renderObjekt}
+        />
+      </PinDndProvider>
     </>
   );
 }
