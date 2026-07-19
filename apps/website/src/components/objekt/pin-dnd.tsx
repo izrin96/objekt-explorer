@@ -56,7 +56,7 @@ function PinDndProviderInner({
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 15 } }),
   );
 
   function handleDragEnd(event: DragEndEvent) {
@@ -88,6 +88,7 @@ function PinDndProviderInner({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        autoScroll={{ threshold: { x: 0.2, y: 0.2 }, acceleration: 10, interval: 5 }}
         onDragStart={(event) => setActiveId(String(event.active.id))}
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveId(null)}
