@@ -137,7 +137,7 @@ export function DraggablePin({ tokenId, children }: DraggablePinProps) {
         transform: CSS.Transform.toString(transform),
         transition: transition ?? undefined,
       }}
-      className={cn("touch-manipulation", isDragging && "opacity-50")}
+      className={cn("touch-manipulation [-webkit-touch-callout:none]", isDragging && "opacity-50")}
     >
       {children}
     </div>
