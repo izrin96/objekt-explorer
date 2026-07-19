@@ -4,7 +4,7 @@ import {
   defaultDropAnimationSideEffects,
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -55,8 +55,8 @@ function PinDndProviderInner({
   const previewRegistry = useRef(new Map<string, ReactNode>());
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 15 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
   function handleDragEnd(event: DragEndEvent) {
@@ -88,7 +88,6 @@ function PinDndProviderInner({
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
-        autoScroll={{ threshold: { x: 0.2, y: 0.2 }, acceleration: 10, interval: 5 }}
         onDragStart={(event) => setActiveId(String(event.active.id))}
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveId(null)}
@@ -138,7 +137,7 @@ export function DraggablePin({ tokenId, children }: DraggablePinProps) {
         transform: CSS.Transform.toString(transform),
         transition: transition ?? undefined,
       }}
-      className={cn("touch-manipulation [-webkit-touch-callout:none]", isDragging && "opacity-50")}
+      className={cn("touch-manipulation", isDragging && "opacity-50")}
     >
       {children}
     </div>

@@ -84,7 +84,7 @@ const ObjektView = memo(function ObjektView({
             draggable={false}
             onClick={ctx.handleClick}
             className={cn(
-              "size-full object-cover transition-opacity -z-10",
+              "size-full object-cover transition-opacity -z-10 [-webkit-touch-callout:none]",
               !loaded && "opacity-0",
             )}
             src={objekt.thumbnailImage}
