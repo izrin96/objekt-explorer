@@ -117,19 +117,23 @@ export const pinsRouter = {
       const current = validPins[currentIdx]!;
       const adjacent = validPins[swapIdx]!;
 
-      // Use a temp order to avoid clobbering when current and adjacent share
-      // an order value, then commit the swap in a single transaction.
-      const tempOrder = -1;
+      // Assign brand-new order values derived purely from each row's target
+      // position (rank) in validPins, not from the old captured
+      // current.order/adjacent.order values. validPins is ascending by
+      // COALESCE(order, id), so index i maps to order value i + 1 (bigger =
+      // topmost). This mirrors reorderPins: even if current and adjacent
+      // happened to share the same order value (a tie), swapping their
+      // positions always produces two distinct values, so the tie cannot
+      // survive.
       await db.transaction(async (tx) => {
-        await tx.update(pins).set({ order: tempOrder }).where(eq(pins.id, current.id));
         await tx
           .update(pins)
-          .set({ order: current.order ?? current.id })
-          .where(eq(pins.id, adjacent.id));
-        await tx
-          .update(pins)
-          .set({ order: adjacent.order ?? adjacent.id })
+          .set({ order: swapIdx + 1 })
           .where(eq(pins.id, current.id));
+        await tx
+          .update(pins)
+          .set({ order: currentIdx + 1 })
+          .where(eq(pins.id, adjacent.id));
       });
     }),
 
@@ -150,16 +154,17 @@ export const pinsRouter = {
 
       if (orderedTokenIds.length < 2) return;
 
-      // pool of effective order values, descending — topmost input gets biggest value
-      const pool = orderedTokenIds
-        .map((tokenId) => validPinsByTokenId.get(tokenId)!)
-        .map((p) => p.order ?? p.id)
-        .toSorted((a, b) => b - a);
+      // Fresh, strictly distinct dense order values derived purely from target
+      // position — topmost input gets the biggest value. This is self-healing:
+      // even if two pins previously ended up sharing an order value (e.g. from
+      // a race between concurrent reorder calls), this always assigns brand-new
+      // unique values instead of permuting the pre-existing (possibly tied) pool.
+      const total = orderedTokenIds.length;
 
       await db.transaction(async (tx) => {
         for (let i = 0; i < orderedTokenIds.length; i++) {
           const pin = validPinsByTokenId.get(orderedTokenIds[i]!)!;
-          const newOrder = pool[i]!;
+          const newOrder = total - i;
           if (newOrder === (pin.order ?? pin.id)) continue;
           await tx.update(pins).set({ order: newOrder }).where(eq(pins.id, pin.id));
         }

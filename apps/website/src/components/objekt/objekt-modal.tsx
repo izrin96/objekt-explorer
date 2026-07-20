@@ -24,7 +24,13 @@ export default function ObjektModal({ children, objekts, menu }: Props) {
 
   return (
     <ObjektModalContext value={{ handleClick }}>
-      <ModalContent isOpen={open} onOpenChange={setOpen} size="5xl">
+      <ModalContent
+        isOpen={open}
+        onOpenChange={setOpen}
+        size="5xl"
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+      >
         <ModalHeader className="hidden">Objekt detail</ModalHeader>
         <ModalBody className="py-0 [--gutter:0]">
           {menu}

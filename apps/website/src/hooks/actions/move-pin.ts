@@ -21,12 +21,15 @@ export function useMovePin() {
           const swapIdx = direction === "down" ? idx - 1 : idx + 1;
           if (swapIdx < 0 || swapIdx >= sorted.length) return old;
 
-          const currentOrder = sorted[idx]!.order;
-          const adjacentOrder = sorted[swapIdx]!.order;
-
+          // Assign brand-new order values derived purely from each item's
+          // target position (rank) in `sorted`, not the old captured order
+          // values. `sorted` is ascending (index 0 = bottom-most), so index i
+          // maps to order value i + 1 (bigger = topmost) — mirrors the
+          // server's movePin fix and applyPinOrderToCache, so a tie between
+          // these two rows cannot survive the swap.
           return sorted.map((item, i) => {
-            if (i === idx) return Object.assign({}, item, { order: adjacentOrder });
-            if (i === swapIdx) return Object.assign({}, item, { order: currentOrder });
+            if (i === idx) return Object.assign({}, item, { order: swapIdx + 1 });
+            if (i === swapIdx) return Object.assign({}, item, { order: idx + 1 });
             return item;
           });
         });
