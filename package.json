@@ -7,16 +7,16 @@
       "packages/*"
     ],
     "catalog": {
-      "drizzle-orm": "^1.0.0-rc.4-5d5b77c",
+      "drizzle-orm": "^1.0.0-rc.4",
       "zod": "^4.4.3",
       "ofetch": "^1.5.1",
       "pg": "^8.22.0"
     },
     "catalogs": {
       "dev": {
-        "drizzle-kit": "^1.0.0-rc.4-5d5b77c",
+        "drizzle-kit": "^1.0.0-rc.4",
         "@types/bun": "^1.3.14",
-        "turbo": "^2.10.4",
+        "turbo": "^2.10.7",
         "typescript": "^7.0.2",
         "@types/pg": "^8.20.0"
       }
@@ -34,10 +34,10 @@
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0",
-    "oxlint-tsgolint": "^0.24.0",
-    "turbo": "^2.10.4",
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0",
+    "oxlint-tsgolint": "^7.0.2001",
+    "turbo": "catalog:dev",
     "typescript": "catalog:dev"
   },
   "packageManager": "bun@1.3.14",
