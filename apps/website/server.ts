@@ -524,13 +524,7 @@ async function initializeServer() {
         const response = await handler.fetch(req);
         const contentType = response.headers.get("content-type") ?? "";
         if (contentType.startsWith("text/html")) {
-          const newHeaders = new Headers(response.headers);
-          newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
-          return new Response(response.body, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: newHeaders,
-          });
+          response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
         }
         return response;
       } catch (error) {
