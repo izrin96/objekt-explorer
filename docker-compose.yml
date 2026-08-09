@@ -42,6 +42,10 @@ services:
       - ENABLE_GRAVITY=${INDEXER_ENABLE_GRAVITY}
       - COSMO_PARALLEL_COUNT=${INDEXER_COSMO_PARALLEL_COUNT}
       - REDIS_URL=redis://valkey:6379
+      # diagnostic-only, unset in production
+      - START_BLOCK=${INDEXER_START_BLOCK:-}
+      - SKIP_METADATA=${INDEXER_SKIP_METADATA:-}
+      - SKIP_OUTBOX=${INDEXER_SKIP_OUTBOX:-}
 
   # postgres database for indexer
   postgres-indexer:

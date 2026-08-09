@@ -13,10 +13,10 @@ import * as ABI_GRAVITY from "./abi/gravity";
 import * as ABI_OBJEKT from "./abi/objekt";
 import { env } from "./env";
 
-const COSMO_START_BLOCK = 6363806;
+const COSMO_START_BLOCK = env.START_BLOCK;
 
 console.log(
-  `[processor] Starting processor with objekts ${env.ENABLE_OBJEKTS} and gravity ${env.ENABLE_GRAVITY}`,
+  `[processor] Starting processor with objekts ${env.ENABLE_OBJEKTS} and gravity ${env.ENABLE_GRAVITY} from block ${COSMO_START_BLOCK}`,
 );
 
 const processor = new EvmBatchProcessor()
