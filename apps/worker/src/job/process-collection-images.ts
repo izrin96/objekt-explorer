@@ -6,9 +6,14 @@ import { and, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { ofetch } from "ofetch";
 
 import { redis } from "@/lib/redis";
-import { uploadWebp, s3Url } from "@/lib/s3";
+import { deleteObject, FOLDER, keyFromUrl, s3Url, uploadWebp } from "@/lib/s3";
 
 const BATCH_SIZE = 5;
+
+const LOCK_KEY = "lock:process-collection-images";
+// generous enough to cover a full backlog run, short enough that a crashed
+// worker does not wedge the job for long
+const LOCK_TTL_SECONDS = 1800;
 
 const FETCH_OPTS = {
   responseType: "arrayBuffer",
@@ -52,49 +57,56 @@ async function convertToWebp(buf: ArrayBuffer, maxHeight?: number) {
   return await img.webp({ quality: 80 }).toBuffer();
 }
 
-function computeHash(thumbnail: string, front: string, back: string) {
+// thumbnailImage is deliberately not part of the hash: the thumbnail is derived
+// from frontImage at 2x, so thumbnailImage is never a fetch source and a change
+// to it alone would queue a pointless reprocess. Must stay in sync with the md5
+// expression in the query below.
+function computeHash(front: string, back: string) {
   const hasher = new Bun.CryptoHasher("md5");
-  hasher.update(`${thumbnail}|${front}|${back}`);
+  hasher.update(`${front}|${back}`);
   return hasher.digest("hex");
 }
 
 type CollectionRow = Pick<
   Collection,
   | "slug"
-  | "thumbnailImage"
   | "frontImage"
   | "backImage"
-  | "imageSyncHash"
   | "processedFrontImage"
   | "processedThumbnailImage"
   | "processedBackImage"
 >;
 
-function needsImageProcessing(c: CollectionRow) {
-  if (
-    c.imageSyncHash === null ||
-    c.processedFrontImage === null ||
-    c.processedThumbnailImage === null
-  ) {
-    return true;
+export async function processCollectionImages() {
+  // the cron fires every 10 minutes but a backlog run can take longer; without
+  // a lock the overlapping run re-selects the same rows (their hash is still
+  // stale) and uploads every image twice
+  const token = crypto.randomUUID();
+  // variadic overload takes string args only
+  const acquired = await redis.set(LOCK_KEY, token, "NX", "EX", String(LOCK_TTL_SECONDS));
+
+  if (acquired === null) {
+    console.log("[process-images] Another run holds the lock, skipping");
+    return;
   }
 
-  if (c.backImage !== "" && c.processedBackImage === null) {
-    return true;
+  try {
+    await run();
+  } finally {
+    // only release our own lock: if it already expired mid-run, another worker
+    // may legitimately hold it now
+    if ((await redis.get(LOCK_KEY)) === token) {
+      await redis.del(LOCK_KEY);
+    }
   }
-
-  const hash = computeHash(c.thumbnailImage, c.frontImage, c.backImage);
-  return hash !== c.imageSyncHash;
 }
 
-export async function processCollectionImages() {
-  const cols = await indexer
+async function run() {
+  const needsProcessing = await indexer
     .select({
       slug: collections.slug,
-      thumbnailImage: collections.thumbnailImage,
       frontImage: collections.frontImage,
       backImage: collections.backImage,
-      imageSyncHash: collections.imageSyncHash,
       processedFrontImage: collections.processedFrontImage,
       processedThumbnailImage: collections.processedThumbnailImage,
       processedBackImage: collections.processedBackImage,
@@ -108,12 +120,10 @@ export async function processCollectionImages() {
           isNull(collections.processedFrontImage),
           isNull(collections.processedThumbnailImage),
           and(ne(collections.backImage, ""), isNull(collections.processedBackImage)),
-          sql`md5(${collections.thumbnailImage} || '|' || ${collections.frontImage} || '|' || ${collections.backImage}) != ${collections.imageSyncHash}`,
+          sql`md5(${collections.frontImage} || '|' || ${collections.backImage}) != ${collections.imageSyncHash}`,
         ),
       ),
     );
-
-  const needsProcessing = cols.filter(needsImageProcessing);
 
   if (needsProcessing.length === 0) {
     console.log("[process-images] All collections up to date");
@@ -144,7 +154,28 @@ export async function processCollectionImages() {
   console.log(`[process-images] Done: ${succeeded} succeeded, ${failed} failed`);
 }
 
+/**
+ * Best-effort delete. A failure here only leaves an orphan behind, which the
+ * cleanup-orphaned-collection-images script sweeps up, so it must never fail
+ * the collection it belongs to.
+ */
+async function deleteQuietly(keys: string[]) {
+  await Promise.all(
+    keys.map(async (key) => {
+      try {
+        await deleteObject(key);
+      } catch (err) {
+        console.error(`[process-images] Failed to delete ${key}:`, err);
+      }
+    }),
+  );
+}
+
 async function processOne(c: CollectionRow) {
+  // keys written during this attempt, so a mid-flight failure can roll them
+  // back instead of stranding objects no DB row points at
+  const uploaded: string[] = [];
+
   try {
     const slug = c.slug;
 
@@ -177,25 +208,44 @@ async function processOne(c: CollectionRow) {
         const maxHeight = key === thumbKey ? 900 : undefined;
         const webp = await convertToWebp(buf, maxHeight);
         await uploadWebp(key, webp);
+        uploaded.push(`${FOLDER}/${key}`);
       }),
     );
 
-    const hash = computeHash(c.thumbnailImage, c.frontImage, c.backImage);
+    const hash = computeHash(c.frontImage, c.backImage);
 
     await indexer
       .update(collections)
       .set({
         processedFrontImage: s3Url(frontKey),
         processedThumbnailImage: s3Url(thumbKey),
-        ...(backKey ? { processedBackImage: s3Url(backKey) } : {}),
+        // null when the collection no longer has a back image, so the column
+        // does not keep pointing at the object the cleanup below deletes
+        processedBackImage: backKey ? s3Url(backKey) : null,
         imageSyncHash: hash,
       })
       .where(eq(collections.slug, slug));
+
+    // the row no longer points at the previous upload, so drop it. Only after
+    // the update commits, otherwise a failed update would leave the live URLs
+    // pointing at deleted objects
+    const superseded = [c.processedFrontImage, c.processedThumbnailImage, c.processedBackImage]
+      .filter((url) => url !== null)
+      .map(keyFromUrl)
+      .filter((key) => key !== null)
+      .filter((key) => !uploaded.includes(key));
+
+    if (superseded.length > 0) {
+      await deleteQuietly(superseded);
+    }
 
     console.log(`[process-images] Processed ${slug}`);
     return true;
   } catch (err) {
     console.error(`[process-images] Failed for ${c.slug}:`, err);
+    // nothing references these yet, so removing them is safe and keeps a
+    // retry loop from piling up orphans
+    await deleteQuietly(uploaded);
     return false;
   }
 }

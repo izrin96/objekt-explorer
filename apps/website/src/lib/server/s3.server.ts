@@ -1,5 +1,6 @@
 import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { CACHE_CONTROL } from "@repo/lib/media";
 
 import { serverEnv } from "@/lib/env/server";
 
@@ -42,11 +43,14 @@ export async function createPresignedUploadUrl(
   try {
     const url = await getSignedUrl(
       s3Client,
+      // CacheControl becomes a SigV4-signed header, so the client PUT must send
+      // the exact same value or R2 rejects it with SignatureDoesNotMatch
       new PutObjectCommand({
         Bucket: bucketName,
         Key: key,
         ContentType: mimeType,
         ContentLength: contentLength,
+        CacheControl: CACHE_CONTROL,
       }),
       { expiresIn: 3600 },
     );

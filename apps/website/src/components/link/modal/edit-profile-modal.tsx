@@ -29,7 +29,7 @@ import {
 } from "@/components/intentui/sheet";
 import ErrorFallbackRender from "@/components/router/error-boundary";
 import Portal from "@/components/shared/portal";
-import { acceptedFileMimeTypes, MAX_FILE_SIZE } from "@/lib/file";
+import { acceptedFileMimeTypes, CACHE_CONTROL, MAX_FILE_SIZE } from "@/lib/file";
 import { orpc } from "@/lib/orpc/client";
 import { SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -200,6 +200,9 @@ function EditProfileForm({ address, setOpen }: EditProfileProps) {
         headers: {
           "Content-Type": file.type,
           "Content-Length": String(file.size),
+          // signed into the presigned URL by createPresignedUploadUrl; omitting
+          // it here fails the signature check
+          "Cache-Control": CACHE_CONTROL,
         },
       });
 
