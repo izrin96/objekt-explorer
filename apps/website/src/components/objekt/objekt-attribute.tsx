@@ -80,7 +80,9 @@ export function AttributePanel({
   return (
     <div className="flex flex-wrap gap-2">
       <Pill label={m.objekt_artist()} value={getArtist(objekt.artist)?.title ?? ""} />
-      <Pill label={m.objekt_member()} value={objekt.member} />
+      {(objekt.members.length > 0 ? objekt.members : [objekt.member]).map((member) => (
+        <Pill key={member} label={m.objekt_member()} value={member} />
+      ))}
       <Pill label={m.objekt_season()} value={objekt.season} />
       <Pill label={m.objekt_class()} value={objekt.class} />
       {objekt.edition && <Pill label={m.objekt_edition()} value={getEditionStr(objekt.edition)} />}

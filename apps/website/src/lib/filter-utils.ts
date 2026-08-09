@@ -119,7 +119,7 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
   const editionSet = filters.edition ? new Set(filters.edition) : null;
 
   return objekts.filter((a) => {
-    if (memberSet && !memberSet.has(a.member)) return false;
+    if (memberSet && !a.members.some((m) => memberSet.has(m))) return false;
 
     if (artistSet && !artistSet.has(a.artist.toLowerCase())) return false;
 

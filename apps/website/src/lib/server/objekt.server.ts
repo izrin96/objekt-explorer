@@ -125,6 +125,7 @@ export function getCollectionColumns() {
     collectionId: collections.collectionId,
     season: collections.season,
     member: collections.member,
+    members: collections.members,
     artist: collections.artist,
     collectionNo: collections.collectionNo,
     class: collections.class,

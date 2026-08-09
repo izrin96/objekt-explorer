@@ -5,7 +5,7 @@ import { Addresses } from "@repo/lib";
 import { mapOwnedObjekt, mapTransfer } from "@repo/lib/server/objekt";
 import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
-import { type SQL, and, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
+import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
 import * as z from "zod";
 
 import { getCollectionColumns } from "@/lib/server/objekt.server";
@@ -43,7 +43,7 @@ function getCollectionFilters(query: TransferParams): SQL[] {
         query.artist.map((a) => a.toLowerCase()),
       ),
     );
-  if (query.member.length) filters.push(inArray(collections.member, query.member));
+  if (query.member.length) filters.push(arrayOverlaps(collections.members, query.member));
   if (query.season.length) filters.push(inArray(collections.season, query.season));
   if (query.class.length) filters.push(inArray(collections.class, query.class));
   if (query.on_offline.length) filters.push(inArray(collections.onOffline, query.on_offline));

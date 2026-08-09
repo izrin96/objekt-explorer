@@ -2,7 +2,21 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
 import { createFileRoute } from "@tanstack/react-router";
-import { and, asc, count, desc, eq, getColumns, gt, inArray, lt, lte, ne, or } from "drizzle-orm";
+import {
+  and,
+  arrayOverlaps,
+  asc,
+  count,
+  desc,
+  eq,
+  getColumns,
+  gt,
+  inArray,
+  lt,
+  lte,
+  ne,
+  or,
+} from "drizzle-orm";
 
 import { getCollectionColumns } from "@/lib/server/objekt.server";
 import { isAddressHiddenFromCaller } from "@/lib/server/privacy.server";
@@ -24,7 +38,7 @@ function buildCollectionFilters(query: OwnedBySchema) {
   }
 
   if (query.member?.length) {
-    filters.push(inArray(collections.member, query.member));
+    filters.push(arrayOverlaps(collections.members, query.member));
   }
 
   if (query.class?.length) {
