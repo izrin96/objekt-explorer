@@ -13,6 +13,9 @@ WORKDIR /app
 # Copy lockfile and package.json's from pruned workspace
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
+# turbo prune keeps patchedDependencies in the pruned package.json but does not
+# copy patches/, so bun install fails on the missing patch file without this
+COPY --from=pruner /app/patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 
 # Build the project

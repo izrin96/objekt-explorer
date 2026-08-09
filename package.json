@@ -33,6 +33,7 @@
     "format": "turbo run format"
   },
   "devDependencies": {
+    "@socketsecurity/bun-security-scanner": "^1.1.2",
     "@types/node": "^26.1.1",
     "oxfmt": "^0.60.0",
     "oxlint": "^1.75.0",

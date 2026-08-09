@@ -9,6 +9,9 @@ FROM oven/bun:canary-slim AS installer
 WORKDIR /app
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
+# turbo prune keeps patchedDependencies in the pruned package.json but does not
+# copy patches/, so bun install fails on the missing patch file without this
+COPY --from=pruner /app/patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile --ignore-scripts
 COPY --from=pruner /app/out/full/ .
 
@@ -19,6 +22,7 @@ FROM oven/bun:canary-slim AS prod-deps
 WORKDIR /app
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
+COPY --from=pruner /app/patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile --production --ignore-scripts
 
 # stage 3: run with node due to the subsquid SDK not working in bun
