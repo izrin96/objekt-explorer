@@ -75,9 +75,8 @@ const SheetContent = ({
           className,
         )}
       >
-        {/* custom add overflow-clip */}
         <Dialog
-          className="overflow-clip sm:[--gutter:--spacing(6)]"
+          className="overflow-auto overflow-y-clip sm:[--gutter:--spacing(6)]"
           aria-label={props["aria-label"]}
           role={role}
         >
