@@ -224,7 +224,7 @@ async function handleCollection(
   // set and/or update metadata
   collection.season = metadata.objekt.season;
   collection.member = metadata.objekt.member;
-  collection.members = metadata.objekt.members;
+  collection.members = metadata.objekt.members ?? [metadata.objekt.member];
   collection.artist = metadata.objekt.artists[0]!.toLowerCase();
   collection.collectionNo = metadata.objekt.collectionNo;
   collection.class = metadata.objekt.class;

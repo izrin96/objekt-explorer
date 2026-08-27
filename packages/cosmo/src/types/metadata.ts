@@ -7,7 +7,7 @@ export type CosmoObjektMetadataV1 = {
     collectionId: string;
     season: string;
     member: string;
-    members: string[];
+    members?: string[];
     collectionNo: string;
     class: string;
     artists: string[];

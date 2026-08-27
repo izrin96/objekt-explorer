@@ -60,18 +60,28 @@ export function emptyMetadata(tokenId: string): CosmoObjektMetadataV1 {
   };
 }
 
+function isUnitMetadata(metadata: CosmoObjektMetadataV3) {
+  return metadata.attributes.some((a) => a.trait_type === "Class" && a.value === "Unit");
+}
+
+/**
+ * Unit collections carry a combined "Member" trait (e.g. "id4 X id8") alongside
+ * one trait per individual member.
+ */
+function isCombinedMember(value: string) {
+  return value.toLowerCase().includes(" x ");
+}
+
 /**
  * Get a trait from the metadata attributes array.
  */
 export function getTrait(metadata: CosmoObjektMetadataV3, tokenId: string, trait: string) {
-  const isUnit = metadata.attributes.some((a) => a.trait_type === "Class" && a.value === "Unit");
-
   let attr = metadata.attributes.findLast((a) => a.trait_type === trait);
 
-  if (trait === "Member" && isUnit) {
+  if (trait === "Member" && isUnitMetadata(metadata)) {
     // special case: find combined member (e.g. "id4 X id8")
     const newAttr = metadata.attributes.findLast(
-      (a) => a.trait_type === "Member" && a.value.toLowerCase().includes(" x "),
+      (a) => a.trait_type === "Member" && isCombinedMember(a.value),
     );
     if (newAttr) attr = newAttr;
   }
@@ -84,9 +94,10 @@ export function getTrait(metadata: CosmoObjektMetadataV3, tokenId: string, trait
 }
 
 /**
- * Get all individual member names from the metadata attributes array.
- * Unit-class collections have multiple "Member" traits (one per member)
- * plus a combined one (e.g. "id4 X id8") which is excluded here.
+ * Get every member name from the metadata attributes array.
+ * Unit collections carry one "Member" trait per individual member plus a
+ * combined one (e.g. "id4 X id8"); the combined name is kept so that filtering
+ * by it matches too.
  */
 export function getMembers(metadata: CosmoObjektMetadataV3): string[] {
   return metadata.attributes.filter((a) => a.trait_type === "Member").map((a) => a.value);
@@ -162,7 +173,7 @@ export function enrichUpdateMetadata(
   return {
     season: metadata.objekt.season,
     member: metadata.objekt.member,
-    members: metadata.objekt.members,
+    members: metadata.objekt.members ?? [metadata.objekt.member],
     artist: metadata.objekt.artists[0]!.toLowerCase(),
     collectionNo: metadata.objekt.collectionNo,
     class: metadata.objekt.class,
