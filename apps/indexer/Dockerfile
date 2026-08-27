@@ -1,11 +1,11 @@
 # stage 1: prune workspace with bun
-FROM oven/bun:canary-slim AS pruner
+FROM oven/bun:1.4-slim AS pruner
 WORKDIR /app
 COPY . .
-RUN bunx turbo@2.10.7 prune indexer --docker
+RUN bunx turbo@2.10.12 prune indexer --docker
 
 # stage 2: install dependencies with bun
-FROM oven/bun:canary-slim AS installer
+FROM oven/bun:1.4-slim AS installer
 WORKDIR /app
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .
@@ -18,7 +18,7 @@ COPY --from=pruner /app/out/full/ .
 RUN bun run --filter indexer build
 
 # stage 2b: runtime-only deps, no devDeps
-FROM oven/bun:canary-slim AS prod-deps
+FROM oven/bun:1.4-slim AS prod-deps
 WORKDIR /app
 COPY --from=pruner /app/out/bun.lock ./bun.lock
 COPY --from=pruner /app/out/json/ .

@@ -1,10 +1,10 @@
-FROM oven/bun:canary-slim AS base
+FROM oven/bun:1.4-slim AS base
 
 # Prune the monorepo to only include worker and its dependencies
 FROM base AS pruner
 WORKDIR /app
 COPY . .
-RUN bunx turbo@2.10.7 prune worker --docker
+RUN bunx turbo@2.10.12 prune worker --docker
 
 # Install dependencies only for pruned workspace
 FROM base AS installer

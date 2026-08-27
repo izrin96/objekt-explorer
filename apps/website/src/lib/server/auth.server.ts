@@ -155,10 +155,7 @@ export const auth = betterAuth({
           await db
             .update(authSchema.user)
             .set({
-              [account.providerId]:
-                account.providerId === "discord"
-                  ? info?.data?.username
-                  : info?.data?.data?.username,
+              [account.providerId]: getProviderUsername(account.providerId, info),
             })
             .where(eq(authSchema.user.id, account.userId));
         },
@@ -168,6 +165,14 @@ export const auth = betterAuth({
 });
 
 export type User = (typeof auth.$Infer.Session)["user"];
+
+export function getProviderUsername(
+  providerId: string,
+  info: { data?: unknown } | null | undefined,
+) {
+  const data = info?.data as { username?: string; data?: { username?: string } } | undefined;
+  return providerId === "discord" ? data?.username : data?.data?.username;
+}
 
 export async function getSession() {
   const session = await auth.api.getSession({

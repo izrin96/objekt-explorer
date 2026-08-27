@@ -7,7 +7,7 @@ import * as z from "zod";
 import { providersMap } from "@/lib/universal/user";
 import { m } from "@/paraglide/messages";
 
-import { auth, getCurrentUser } from "../../auth.server";
+import { auth, getCurrentUser, getProviderUsername } from "../../auth.server";
 import { authed, pub } from "../orpc";
 
 export const userRouter = {
@@ -61,7 +61,7 @@ export const userRouter = {
       await db
         .update(userSchema)
         .set({
-          [providerId]: providerId === "discord" ? info.data.username : info.data.data?.username,
+          [providerId]: getProviderUsername(providerId, info),
           image: info.user.image,
         })
         .where(eq(userSchema.id, user.id));
@@ -87,7 +87,6 @@ export const userRouter = {
         const result = await auth.api.unlinkAccount({
           headers: headers,
           body: {
-            providerId: providerId,
             accountId: accountId,
           },
         });

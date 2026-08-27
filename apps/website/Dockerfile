@@ -1,10 +1,10 @@
-FROM oven/bun:canary-slim AS base
+FROM oven/bun:1.4-slim AS base
 
 FROM base AS pruner
 WORKDIR /app
 COPY . .
 ENV TURBO_TELEMETRY_DISABLED=1
-RUN bunx turbo@2.10.7 prune website --docker
+RUN bunx turbo@2.10.12 prune website --docker
 
 FROM base AS builder
 WORKDIR /app
