@@ -6,6 +6,12 @@ function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
 }
 
+// unit collections carry a combined name ("id1 X id2") alongside the individual
+// members
+function isCombinedMember(value: string) {
+  return value.toLowerCase().includes(" x ");
+}
+
 const seasonShortNames: Record<string, string> = {
   spring: "Sp",
   summer: "Su",
@@ -33,12 +39,18 @@ function makeCollectionTags(objekt: ValidObjekt) {
   const collectionNoSlice = objekt.collectionNo.slice(0, -1);
   const season = objekt.season.slice(0, -2);
 
+  // the combined name is excluded: search terms split on spaces and tags match
+  // exactly, so a tag containing spaces can never be matched
+  const members = (objekt.members?.length ? objekt.members : [objekt.member]).filter(
+    (member) => !isCombinedMember(member),
+  );
+
   const tags = [
     // artist
     objekt.artist, // triples
     // member
-    objekt.member, // JiWoo
-    ...getMemberShortKeys(objekt.member), // jw
+    ...members, // JiWoo
+    ...members.flatMap(getMemberShortKeys), // jw
     // season
     season, // atom, spring
     objekt.season, // atom01, spring26
@@ -66,8 +78,9 @@ function makeCollectionTags(objekt: ValidObjekt) {
         ]),
   ];
 
-  // For combined members ("S8 X S12"), also index individual names
-  if (objekt.member.toLowerCase().includes(" x ")) {
+  // the combined name is built from member ids ("id1 X id2"), not the names in
+  // `members`, so index those ids and their concatenation ("id1xid2") too
+  if (isCombinedMember(objekt.member)) {
     const parts = objekt.member.split(" X ");
     tags.push(...parts);
     tags.push(parts.join("x"));

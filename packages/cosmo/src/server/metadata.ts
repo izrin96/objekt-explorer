@@ -98,9 +98,21 @@ export function getTrait(metadata: CosmoObjektMetadataV3, tokenId: string, trait
  * Unit collections carry one "Member" trait per individual member plus a
  * combined one (e.g. "id4 X id8"); the combined name is kept so that filtering
  * by it matches too.
+ *
+ * The canonical member — whichever trait `getTrait` resolves to — is placed
+ * first, so `members[0]` always matches the collection's `member`. Cosmo lists
+ * it last, after the individual names.
  */
 export function getMembers(metadata: CosmoObjektMetadataV3): string[] {
-  return metadata.attributes.filter((a) => a.trait_type === "Member").map((a) => a.value);
+  const members = metadata.attributes.filter((a) => a.trait_type === "Member").map((a) => a.value);
+
+  const canonical = isUnitMetadata(metadata)
+    ? members.findLastIndex(isCombinedMember)
+    : members.length - 1;
+
+  if (canonical < 0) return members;
+
+  return [members[canonical]!, ...members.filter((_, i) => i !== canonical)];
 }
 
 /**
