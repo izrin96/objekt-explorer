@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 import { citext } from "./custom-type";
 
@@ -46,6 +46,7 @@ export const account = pgTable(
   "account",
   {
     id: text("id").primaryKey(),
+    issuer: text("issuer").notNull(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
@@ -64,7 +65,10 @@ export const account = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [
+    index("account_userId_idx").on(table.userId),
+    uniqueIndex("account_issuer_accountId_idx").on(table.issuer, table.accountId),
+  ],
 );
 
 export const verification = pgTable(
