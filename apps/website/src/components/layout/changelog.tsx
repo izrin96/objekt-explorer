@@ -19,6 +19,13 @@ import { m } from "@/paraglide/messages";
 export function ChangelogContent() {
   const changelog = [
     {
+      date: "2026-08-27",
+      items: [
+        "Unit objekts are now recognized by each individual member, not just the combined name. Filtering and searching by a member includes the unit objekts that member appears in.",
+        "(Note: This affects Progress, as unit objekts now count toward each member's total.)",
+      ],
+    },
+    {
       date: "2026-06-02",
       items: [
         "Trade Matches now works with standalone Have or Want lists. No pairing required. Each list can independently find matches in one direction (Have→Want or Want→Have).",
