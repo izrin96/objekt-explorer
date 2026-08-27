@@ -25,6 +25,7 @@ export const collections = pgTable(
     collectionId: text("collection_id").notNull(),
     season: text().notNull(),
     member: text().notNull(),
+    members: text().array().notNull().default([]),
     artist: text().notNull(),
     collectionNo: text("collection_no").notNull(),
     class: text().notNull(),
@@ -51,6 +52,7 @@ export const collections = pgTable(
     index("IDX_6f89ec57ebbfd978e196751051").using("btree", table.artist.asc().nullsLast()),
     uniqueIndex("IDX_75a6fd6eedd7fa7378de400b0a").using("btree", table.slug.asc().nullsLast()),
     index("IDX_76242b6e82adf6f4ab4b388858").using("btree", table.member.asc().nullsLast()),
+    index("idx_collection_members").using("gin", table.members),
     index("IDX_81f585f60e03d2dc803d8a4945").using("btree", table.season.asc().nullsLast()),
     index("IDX_a8dbe2a49e54f73e2e7063dbb0").using("btree", table.collectionNo.asc().nullsLast()),
     index("idx_como_calendar").using(

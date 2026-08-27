@@ -40,6 +40,7 @@ export function emptyMetadata(tokenId: string): CosmoObjektMetadataV1 {
       collectionId: "empty-collection",
       season: "",
       member: "",
+      members: [],
       collectionNo: "",
       class: "",
       artists: [""],
@@ -83,6 +84,15 @@ export function getTrait(metadata: CosmoObjektMetadataV3, tokenId: string, trait
 }
 
 /**
+ * Get all individual member names from the metadata attributes array.
+ * Unit-class collections have multiple "Member" traits (one per member)
+ * plus a combined one (e.g. "id4 X id8") which is excluded here.
+ */
+export function getMembers(metadata: CosmoObjektMetadataV3): string[] {
+  return metadata.attributes.filter((a) => a.trait_type === "Member").map((a) => a.value);
+}
+
+/**
  * Attempt to convert v3 metadata to v1 metadata.
  */
 export function normalizeV3(
@@ -92,6 +102,7 @@ export function normalizeV3(
   const artist = getTrait(metadata, tokenId, "Artist");
   const className = getTrait(metadata, tokenId, "Class");
   const member = getTrait(metadata, tokenId, "Member");
+  const members = getMembers(metadata);
   const season = getTrait(metadata, tokenId, "Season");
   const collection = getTrait(metadata, tokenId, "Collection");
 
@@ -108,6 +119,7 @@ export function normalizeV3(
       collectionId: metadata.name.replace(/ #\d+$/, ""),
       season: season,
       member: member,
+      members: members,
       collectionNo: collection,
       class: className,
       artists: [artist],
@@ -150,6 +162,7 @@ export function enrichUpdateMetadata(
   return {
     season: metadata.objekt.season,
     member: metadata.objekt.member,
+    members: metadata.objekt.members,
     artist: metadata.objekt.artists[0]!.toLowerCase(),
     collectionNo: metadata.objekt.collectionNo,
     class: metadata.objekt.class,

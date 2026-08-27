@@ -16,6 +16,7 @@ export type IndexedObjekt = {
   collectionId: string;
   season: string;
   member: string;
+  members: string[];
   artist: string;
   collectionNo: string;
   class: string;
