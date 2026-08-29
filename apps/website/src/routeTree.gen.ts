@@ -9,107 +9,74 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$nickname}/route'
 import { Route as containerRouteRouteImport } from './routes/(container)/route'
-import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
+import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$nickname}/route'
 import { Route as containerIndexRouteImport } from './routes/(container)/index'
-import { Route as RpcSplatRouteImport } from './routes/rpc.$'
-import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
-import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
-import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
-import { Route as ApiCollectionRouteImport } from './routes/api/collection'
-import { Route as ApiActivityRouteImport } from './routes/api/activity'
-import { Route as AtChar123nicknameChar125TradesRouteImport } from './routes/@{$nickname}/trades'
-import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$nickname}/stats'
-import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@{$nickname}/progress'
-import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
-import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
-import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerActivityRouteImport } from './routes/(container)/activity'
-import { Route as containerLiveIndexRouteImport } from './routes/(container)/live/index'
-import { Route as containerListIndexRouteImport } from './routes/(container)/list/index'
-import { Route as containerLinkIndexRouteImport } from './routes/(container)/link/index'
-import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
-import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as containerLiveIdRouteImport } from './routes/(container)/live/$id'
-import { Route as containerListSlugRouteImport } from './routes/(container)/list/$slug'
-import { Route as containerLinkConnectRouteImport } from './routes/(container)/link/connect'
-import { Route as containerAuthVerifiedRouteImport } from './routes/(container)/auth/verified'
+import { Route as containerLoginRouteImport } from './routes/(container)/login'
+import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
+import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
+import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
+import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@{$nickname}/progress'
+import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$nickname}/stats'
+import { Route as AtChar123nicknameChar125TradesRouteImport } from './routes/@{$nickname}/trades'
+import { Route as ApiActivityRouteImport } from './routes/api/activity'
+import { Route as ApiCollectionRouteImport } from './routes/api/collection'
+import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
+import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
+import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
+import { Route as RpcSplatRouteImport } from './routes/rpc.$'
 import { Route as containerAuthResetPasswordRouteImport } from './routes/(container)/auth/reset-password'
-import { Route as ApiObjektsOwnedByAddressRouteImport } from './routes/api/objekts/owned-by.$address'
-import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
-import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
+import { Route as containerAuthVerifiedRouteImport } from './routes/(container)/auth/verified'
+import { Route as containerLinkIndexRouteImport } from './routes/(container)/link/index'
+import { Route as containerLinkConnectRouteImport } from './routes/(container)/link/connect'
+import { Route as containerListIndexRouteImport } from './routes/(container)/list/index'
+import { Route as containerListSlugRouteImport } from './routes/(container)/list/$slug'
+import { Route as containerLiveIndexRouteImport } from './routes/(container)/live/index'
+import { Route as containerLiveIdRouteImport } from './routes/(container)/live/$id'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
+import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 import { Route as containerAtChar123nicknameChar125ListSlugRouteImport } from './routes/(container)/@{$nickname}_/list.$slug'
+import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
+import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
+import { Route as ApiObjektsOwnedByAddressRouteImport } from './routes/api/objekts/owned-by.$address'
 import { Route as ApiObjektsTransfersCollectionSlugSerialRouteImport } from './routes/api/objekts/transfers.$collectionSlug.$serial'
 
+const containerRouteRoute = containerRouteRouteImport.update({
+  id: '/(container)',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AtChar123nicknameChar125RouteRoute =
   AtChar123nicknameChar125RouteRouteImport.update({
     id: '/@{$nickname}',
     path: '/@{$nickname}',
     getParentRoute: () => rootRouteImport,
   } as any)
-const containerRouteRoute = containerRouteRouteImport.update({
-  id: '/(container)',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AtChar123nicknameChar125IndexRoute =
-  AtChar123nicknameChar125IndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
-  } as any)
 const containerIndexRoute = containerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => containerRouteRoute,
 } as any)
-const RpcSplatRoute = RpcSplatRouteImport.update({
-  id: '/rpc/$',
-  path: '/rpc/$',
-  getParentRoute: () => rootRouteImport,
+const containerActivityRoute = containerActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => containerRouteRoute,
 } as any)
-const ApiOpenAppRoute = ApiOpenAppRouteImport.update({
-  id: '/api/open-app',
-  path: '/api/open-app',
-  getParentRoute: () => rootRouteImport,
+const containerLoginRoute = containerLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => containerRouteRoute,
 } as any)
-const ApiLiveSessionsRoute = ApiLiveSessionsRouteImport.update({
-  id: '/api/live-sessions',
-  path: '/api/live-sessions',
-  getParentRoute: () => rootRouteImport,
+const containerTermsPrivacyRoute = containerTermsPrivacyRouteImport.update({
+  id: '/terms-privacy',
+  path: '/terms-privacy',
+  getParentRoute: () => containerRouteRoute,
 } as any)
-const ApiHealthcheckRoute = ApiHealthcheckRouteImport.update({
-  id: '/api/healthcheck',
-  path: '/api/healthcheck',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCollectionRoute = ApiCollectionRouteImport.update({
-  id: '/api/collection',
-  path: '/api/collection',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiActivityRoute = ApiActivityRouteImport.update({
-  id: '/api/activity',
-  path: '/api/activity',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AtChar123nicknameChar125TradesRoute =
-  AtChar123nicknameChar125TradesRouteImport.update({
-    id: '/trades',
-    path: '/trades',
-    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
-  } as any)
-const AtChar123nicknameChar125StatsRoute =
-  AtChar123nicknameChar125StatsRouteImport.update({
-    id: '/stats',
-    path: '/stats',
-    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
-  } as any)
-const AtChar123nicknameChar125ProgressRoute =
-  AtChar123nicknameChar125ProgressRouteImport.update({
-    id: '/progress',
-    path: '/progress',
+const AtChar123nicknameChar125IndexRoute =
+  AtChar123nicknameChar125IndexRouteImport.update({
+    id: '/',
+    path: '/',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
 const AtChar123nicknameChar125ListRoute =
@@ -118,70 +85,53 @@ const AtChar123nicknameChar125ListRoute =
     path: '/list',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
-const containerTermsPrivacyRoute = containerTermsPrivacyRouteImport.update({
-  id: '/terms-privacy',
-  path: '/terms-privacy',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const containerLoginRoute = containerLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const containerActivityRoute = containerActivityRouteImport.update({
-  id: '/activity',
-  path: '/activity',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const containerLiveIndexRoute = containerLiveIndexRouteImport.update({
-  id: '/live/',
-  path: '/live/',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const containerListIndexRoute = containerListIndexRouteImport.update({
-  id: '/list/',
-  path: '/list/',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const containerLinkIndexRoute = containerLinkIndexRouteImport.update({
-  id: '/link/',
-  path: '/link/',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
-  id: '/api/user/search',
-  path: '/api/user/search',
+const AtChar123nicknameChar125ProgressRoute =
+  AtChar123nicknameChar125ProgressRouteImport.update({
+    id: '/progress',
+    path: '/progress',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125StatsRoute =
+  AtChar123nicknameChar125StatsRouteImport.update({
+    id: '/stats',
+    path: '/stats',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125TradesRoute =
+  AtChar123nicknameChar125TradesRouteImport.update({
+    id: '/trades',
+    path: '/trades',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const ApiActivityRoute = ApiActivityRouteImport.update({
+  id: '/api/activity',
+  path: '/api/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTransfersAddressRoute = ApiTransfersAddressRouteImport.update({
-  id: '/api/transfers/$address',
-  path: '/api/transfers/$address',
+const ApiCollectionRoute = ApiCollectionRouteImport.update({
+  id: '/api/collection',
+  path: '/api/collection',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
+const ApiHealthcheckRoute = ApiHealthcheckRouteImport.update({
+  id: '/api/healthcheck',
+  path: '/api/healthcheck',
   getParentRoute: () => rootRouteImport,
 } as any)
-const containerLiveIdRoute = containerLiveIdRouteImport.update({
-  id: '/live/$id',
-  path: '/live/$id',
-  getParentRoute: () => containerRouteRoute,
+const ApiLiveSessionsRoute = ApiLiveSessionsRouteImport.update({
+  id: '/api/live-sessions',
+  path: '/api/live-sessions',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const containerListSlugRoute = containerListSlugRouteImport.update({
-  id: '/list/$slug',
-  path: '/list/$slug',
-  getParentRoute: () => containerRouteRoute,
+const ApiOpenAppRoute = ApiOpenAppRouteImport.update({
+  id: '/api/open-app',
+  path: '/api/open-app',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const containerLinkConnectRoute = containerLinkConnectRouteImport.update({
-  id: '/link/connect',
-  path: '/link/connect',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const containerAuthVerifiedRoute = containerAuthVerifiedRouteImport.update({
-  id: '/auth/verified',
-  path: '/auth/verified',
-  getParentRoute: () => containerRouteRoute,
+const RpcSplatRoute = RpcSplatRouteImport.update({
+  id: '/rpc/$',
+  path: '/rpc/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const containerAuthResetPasswordRoute =
   containerAuthResetPasswordRouteImport.update({
@@ -189,10 +139,66 @@ const containerAuthResetPasswordRoute =
     path: '/auth/reset-password',
     getParentRoute: () => containerRouteRoute,
   } as any)
-const ApiObjektsOwnedByAddressRoute =
-  ApiObjektsOwnedByAddressRouteImport.update({
-    id: '/api/objekts/owned-by/$address',
-    path: '/api/objekts/owned-by/$address',
+const containerAuthVerifiedRoute = containerAuthVerifiedRouteImport.update({
+  id: '/auth/verified',
+  path: '/auth/verified',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLinkIndexRoute = containerLinkIndexRouteImport.update({
+  id: '/link/',
+  path: '/link/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLinkConnectRoute = containerLinkConnectRouteImport.update({
+  id: '/link/connect',
+  path: '/link/connect',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerListIndexRoute = containerListIndexRouteImport.update({
+  id: '/list/',
+  path: '/list/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerListSlugRoute = containerListSlugRouteImport.update({
+  id: '/list/$slug',
+  path: '/list/$slug',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLiveIndexRoute = containerLiveIndexRouteImport.update({
+  id: '/live/',
+  path: '/live/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLiveIdRoute = containerLiveIdRouteImport.update({
+  id: '/live/$id',
+  path: '/live/$id',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTransfersAddressRoute = ApiTransfersAddressRouteImport.update({
+  id: '/api/transfers/$address',
+  path: '/api/transfers/$address',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
+  id: '/api/user/search',
+  path: '/api/user/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const containerAtChar123nicknameChar125ListSlugRoute =
+  containerAtChar123nicknameChar125ListSlugRouteImport.update({
+    id: '/@{$nickname}_/list/$slug',
+    path: '/@{$nickname}/list/$slug',
+    getParentRoute: () => containerRouteRoute,
+  } as any)
+const ApiObjektsListCollectionSlugRoute =
+  ApiObjektsListCollectionSlugRouteImport.update({
+    id: '/api/objekts/list/$collectionSlug',
+    path: '/api/objekts/list/$collectionSlug',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiObjektsMetadataCollectionSlugRoute =
@@ -201,17 +207,11 @@ const ApiObjektsMetadataCollectionSlugRoute =
     path: '/api/objekts/metadata/$collectionSlug',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiObjektsListCollectionSlugRoute =
-  ApiObjektsListCollectionSlugRouteImport.update({
-    id: '/api/objekts/list/$collectionSlug',
-    path: '/api/objekts/list/$collectionSlug',
+const ApiObjektsOwnedByAddressRoute =
+  ApiObjektsOwnedByAddressRouteImport.update({
+    id: '/api/objekts/owned-by/$address',
+    path: '/api/objekts/owned-by/$address',
     getParentRoute: () => rootRouteImport,
-  } as any)
-const containerAtChar123nicknameChar125ListSlugRoute =
-  containerAtChar123nicknameChar125ListSlugRouteImport.update({
-    id: '/@{$nickname}_/list/$slug',
-    path: '/@{$nickname}/list/$slug',
-    getParentRoute: () => containerRouteRoute,
   } as any)
 const ApiObjektsTransfersCollectionSlugSerialRoute =
   ApiObjektsTransfersCollectionSlugSerialRouteImport.update({
@@ -448,13 +448,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/@{$nickname}': {
-      id: '/@{$nickname}'
-      path: '/@{$nickname}'
-      fullPath: '/@{$nickname}'
-      preLoaderRoute: typeof AtChar123nicknameChar125RouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/(container)': {
       id: '/(container)'
       path: ''
@@ -462,102 +455,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/@{$nickname}/': {
-      id: '/@{$nickname}/'
-      path: '/'
-      fullPath: '/@{$nickname}/'
-      preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
-      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    '/@{$nickname}': {
+      id: '/@{$nickname}'
+      path: '/@{$nickname}'
+      fullPath: '/@{$nickname}'
+      preLoaderRoute: typeof AtChar123nicknameChar125RouteRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/(container)/': {
       id: '/(container)/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof containerIndexRouteImport
-      parentRoute: typeof containerRouteRoute
-    }
-    '/rpc/$': {
-      id: '/rpc/$'
-      path: '/rpc/$'
-      fullPath: '/rpc/$'
-      preLoaderRoute: typeof RpcSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/open-app': {
-      id: '/api/open-app'
-      path: '/api/open-app'
-      fullPath: '/api/open-app'
-      preLoaderRoute: typeof ApiOpenAppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/live-sessions': {
-      id: '/api/live-sessions'
-      path: '/api/live-sessions'
-      fullPath: '/api/live-sessions'
-      preLoaderRoute: typeof ApiLiveSessionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/healthcheck': {
-      id: '/api/healthcheck'
-      path: '/api/healthcheck'
-      fullPath: '/api/healthcheck'
-      preLoaderRoute: typeof ApiHealthcheckRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/collection': {
-      id: '/api/collection'
-      path: '/api/collection'
-      fullPath: '/api/collection'
-      preLoaderRoute: typeof ApiCollectionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/activity': {
-      id: '/api/activity'
-      path: '/api/activity'
-      fullPath: '/api/activity'
-      preLoaderRoute: typeof ApiActivityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/@{$nickname}/trades': {
-      id: '/@{$nickname}/trades'
-      path: '/trades'
-      fullPath: '/@{$nickname}/trades'
-      preLoaderRoute: typeof AtChar123nicknameChar125TradesRouteImport
-      parentRoute: typeof AtChar123nicknameChar125RouteRoute
-    }
-    '/@{$nickname}/stats': {
-      id: '/@{$nickname}/stats'
-      path: '/stats'
-      fullPath: '/@{$nickname}/stats'
-      preLoaderRoute: typeof AtChar123nicknameChar125StatsRouteImport
-      parentRoute: typeof AtChar123nicknameChar125RouteRoute
-    }
-    '/@{$nickname}/progress': {
-      id: '/@{$nickname}/progress'
-      path: '/progress'
-      fullPath: '/@{$nickname}/progress'
-      preLoaderRoute: typeof AtChar123nicknameChar125ProgressRouteImport
-      parentRoute: typeof AtChar123nicknameChar125RouteRoute
-    }
-    '/@{$nickname}/list': {
-      id: '/@{$nickname}/list'
-      path: '/list'
-      fullPath: '/@{$nickname}/list'
-      preLoaderRoute: typeof AtChar123nicknameChar125ListRouteImport
-      parentRoute: typeof AtChar123nicknameChar125RouteRoute
-    }
-    '/(container)/terms-privacy': {
-      id: '/(container)/terms-privacy'
-      path: '/terms-privacy'
-      fullPath: '/terms-privacy'
-      preLoaderRoute: typeof containerTermsPrivacyRouteImport
-      parentRoute: typeof containerRouteRoute
-    }
-    '/(container)/login': {
-      id: '/(container)/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof containerLoginRouteImport
       parentRoute: typeof containerRouteRoute
     }
     '/(container)/activity': {
@@ -567,67 +476,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerActivityRouteImport
       parentRoute: typeof containerRouteRoute
     }
-    '/(container)/live/': {
-      id: '/(container)/live/'
-      path: '/live'
-      fullPath: '/live/'
-      preLoaderRoute: typeof containerLiveIndexRouteImport
+    '/(container)/login': {
+      id: '/(container)/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof containerLoginRouteImport
       parentRoute: typeof containerRouteRoute
     }
-    '/(container)/list/': {
-      id: '/(container)/list/'
+    '/(container)/terms-privacy': {
+      id: '/(container)/terms-privacy'
+      path: '/terms-privacy'
+      fullPath: '/terms-privacy'
+      preLoaderRoute: typeof containerTermsPrivacyRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/@{$nickname}/': {
+      id: '/@{$nickname}/'
+      path: '/'
+      fullPath: '/@{$nickname}/'
+      preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/@{$nickname}/list': {
+      id: '/@{$nickname}/list'
       path: '/list'
-      fullPath: '/list/'
-      preLoaderRoute: typeof containerListIndexRouteImport
-      parentRoute: typeof containerRouteRoute
+      fullPath: '/@{$nickname}/list'
+      preLoaderRoute: typeof AtChar123nicknameChar125ListRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
-    '/(container)/link/': {
-      id: '/(container)/link/'
-      path: '/link'
-      fullPath: '/link/'
-      preLoaderRoute: typeof containerLinkIndexRouteImport
-      parentRoute: typeof containerRouteRoute
+    '/@{$nickname}/progress': {
+      id: '/@{$nickname}/progress'
+      path: '/progress'
+      fullPath: '/@{$nickname}/progress'
+      preLoaderRoute: typeof AtChar123nicknameChar125ProgressRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
-    '/api/user/search': {
-      id: '/api/user/search'
-      path: '/api/user/search'
-      fullPath: '/api/user/search'
-      preLoaderRoute: typeof ApiUserSearchRouteImport
+    '/@{$nickname}/stats': {
+      id: '/@{$nickname}/stats'
+      path: '/stats'
+      fullPath: '/@{$nickname}/stats'
+      preLoaderRoute: typeof AtChar123nicknameChar125StatsRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/@{$nickname}/trades': {
+      id: '/@{$nickname}/trades'
+      path: '/trades'
+      fullPath: '/@{$nickname}/trades'
+      preLoaderRoute: typeof AtChar123nicknameChar125TradesRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/api/activity': {
+      id: '/api/activity'
+      path: '/api/activity'
+      fullPath: '/api/activity'
+      preLoaderRoute: typeof ApiActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/transfers/$address': {
-      id: '/api/transfers/$address'
-      path: '/api/transfers/$address'
-      fullPath: '/api/transfers/$address'
-      preLoaderRoute: typeof ApiTransfersAddressRouteImport
+    '/api/collection': {
+      id: '/api/collection'
+      path: '/api/collection'
+      fullPath: '/api/collection'
+      preLoaderRoute: typeof ApiCollectionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
+    '/api/healthcheck': {
+      id: '/api/healthcheck'
+      path: '/api/healthcheck'
+      fullPath: '/api/healthcheck'
+      preLoaderRoute: typeof ApiHealthcheckRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(container)/live/$id': {
-      id: '/(container)/live/$id'
-      path: '/live/$id'
-      fullPath: '/live/$id'
-      preLoaderRoute: typeof containerLiveIdRouteImport
-      parentRoute: typeof containerRouteRoute
+    '/api/live-sessions': {
+      id: '/api/live-sessions'
+      path: '/api/live-sessions'
+      fullPath: '/api/live-sessions'
+      preLoaderRoute: typeof ApiLiveSessionsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/(container)/list/$slug': {
-      id: '/(container)/list/$slug'
-      path: '/list/$slug'
-      fullPath: '/list/$slug'
-      preLoaderRoute: typeof containerListSlugRouteImport
-      parentRoute: typeof containerRouteRoute
+    '/api/open-app': {
+      id: '/api/open-app'
+      path: '/api/open-app'
+      fullPath: '/api/open-app'
+      preLoaderRoute: typeof ApiOpenAppRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/(container)/link/connect': {
-      id: '/(container)/link/connect'
-      path: '/link/connect'
-      fullPath: '/link/connect'
-      preLoaderRoute: typeof containerLinkConnectRouteImport
+    '/rpc/$': {
+      id: '/rpc/$'
+      path: '/rpc/$'
+      fullPath: '/rpc/$'
+      preLoaderRoute: typeof RpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(container)/auth/reset-password': {
+      id: '/(container)/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof containerAuthResetPasswordRouteImport
       parentRoute: typeof containerRouteRoute
     }
     '/(container)/auth/verified': {
@@ -637,18 +581,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerAuthVerifiedRouteImport
       parentRoute: typeof containerRouteRoute
     }
-    '/(container)/auth/reset-password': {
-      id: '/(container)/auth/reset-password'
-      path: '/auth/reset-password'
-      fullPath: '/auth/reset-password'
-      preLoaderRoute: typeof containerAuthResetPasswordRouteImport
+    '/(container)/link/': {
+      id: '/(container)/link/'
+      path: '/link'
+      fullPath: '/link/'
+      preLoaderRoute: typeof containerLinkIndexRouteImport
       parentRoute: typeof containerRouteRoute
     }
-    '/api/objekts/owned-by/$address': {
-      id: '/api/objekts/owned-by/$address'
-      path: '/api/objekts/owned-by/$address'
-      fullPath: '/api/objekts/owned-by/$address'
-      preLoaderRoute: typeof ApiObjektsOwnedByAddressRouteImport
+    '/(container)/link/connect': {
+      id: '/(container)/link/connect'
+      path: '/link/connect'
+      fullPath: '/link/connect'
+      preLoaderRoute: typeof containerLinkConnectRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/list/': {
+      id: '/(container)/list/'
+      path: '/list'
+      fullPath: '/list/'
+      preLoaderRoute: typeof containerListIndexRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/list/$slug': {
+      id: '/(container)/list/$slug'
+      path: '/list/$slug'
+      fullPath: '/list/$slug'
+      preLoaderRoute: typeof containerListSlugRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/live/': {
+      id: '/(container)/live/'
+      path: '/live'
+      fullPath: '/live/'
+      preLoaderRoute: typeof containerLiveIndexRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/live/$id': {
+      id: '/(container)/live/$id'
+      path: '/live/$id'
+      fullPath: '/live/$id'
+      preLoaderRoute: typeof containerLiveIdRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/transfers/$address': {
+      id: '/api/transfers/$address'
+      path: '/api/transfers/$address'
+      fullPath: '/api/transfers/$address'
+      preLoaderRoute: typeof ApiTransfersAddressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/search': {
+      id: '/api/user/search'
+      path: '/api/user/search'
+      fullPath: '/api/user/search'
+      preLoaderRoute: typeof ApiUserSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(container)/@{$nickname}_/list/$slug': {
+      id: '/(container)/@{$nickname}_/list/$slug'
+      path: '/@{$nickname}/list/$slug'
+      fullPath: '/@{$nickname}/list/$slug'
+      preLoaderRoute: typeof containerAtChar123nicknameChar125ListSlugRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/api/objekts/list/$collectionSlug': {
+      id: '/api/objekts/list/$collectionSlug'
+      path: '/api/objekts/list/$collectionSlug'
+      fullPath: '/api/objekts/list/$collectionSlug'
+      preLoaderRoute: typeof ApiObjektsListCollectionSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/objekts/metadata/$collectionSlug': {
@@ -658,19 +665,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiObjektsMetadataCollectionSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/objekts/list/$collectionSlug': {
-      id: '/api/objekts/list/$collectionSlug'
-      path: '/api/objekts/list/$collectionSlug'
-      fullPath: '/api/objekts/list/$collectionSlug'
-      preLoaderRoute: typeof ApiObjektsListCollectionSlugRouteImport
+    '/api/objekts/owned-by/$address': {
+      id: '/api/objekts/owned-by/$address'
+      path: '/api/objekts/owned-by/$address'
+      fullPath: '/api/objekts/owned-by/$address'
+      preLoaderRoute: typeof ApiObjektsOwnedByAddressRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/(container)/@{$nickname}_/list/$slug': {
-      id: '/(container)/@{$nickname}_/list/$slug'
-      path: '/@{$nickname}/list/$slug'
-      fullPath: '/@{$nickname}/list/$slug'
-      preLoaderRoute: typeof containerAtChar123nicknameChar125ListSlugRouteImport
-      parentRoute: typeof containerRouteRoute
     }
     '/api/objekts/transfers/$collectionSlug/$serial': {
       id: '/api/objekts/transfers/$collectionSlug/$serial'
