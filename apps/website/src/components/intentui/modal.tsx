@@ -94,12 +94,12 @@ const ModalContent = ({
           className,
         )}
       >
-        <Dialog className="overflow-auto" role={role}>
+        <Dialog role={role}>
           {(values) => (
-            <div>
+            <>
               {typeof children === "function" ? children(values) : children}
               {closeButton && <DialogCloseIcon isDismissable={isDismissable} />}
-            </div>
+            </>
           )}
         </Dialog>
       </ModalPrimitive>

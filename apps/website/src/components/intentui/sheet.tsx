@@ -75,18 +75,14 @@ const SheetContent = ({
           className,
         )}
       >
-        <Dialog
-          className="overflow-auto sm:[--gutter:--spacing(6)]"
-          aria-label={props["aria-label"]}
-          role={role}
-        >
+        <Dialog className="sm:[--gutter:--spacing(6)]" aria-label={props["aria-label"]} role={role}>
           {(values) => (
-            <div>
+            <>
               {typeof children === "function" ? children(values) : children}
               {closeButton && (
                 <DialogCloseIcon className="end-2.5 top-2.5" isDismissable={isDismissable} />
               )}
-            </div>
+            </>
           )}
         </Dialog>
       </Modal>
