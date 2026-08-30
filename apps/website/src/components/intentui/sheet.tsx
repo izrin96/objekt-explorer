@@ -75,7 +75,11 @@ const SheetContent = ({
           className,
         )}
       >
-        <Dialog className="sm:[--gutter:--spacing(6)]" aria-label={props["aria-label"]} role={role}>
+        <Dialog
+          className="min-w-0 overflow-clip sm:[--gutter:--spacing(6)]"
+          aria-label={props["aria-label"]}
+          role={role}
+        >
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}

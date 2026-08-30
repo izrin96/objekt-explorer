@@ -94,7 +94,7 @@ const ModalContent = ({
           className,
         )}
       >
-        <Dialog role={role}>
+        <Dialog className="min-w-0 overflow-clip" role={role}>
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}
