@@ -267,10 +267,10 @@ function MemberProgressChart({
     return members
       .map((member) => {
         const owned = grouped.filter(([objekt]) => {
-          return objekt?.member === member.name && tradeableFilter(objekt);
+          return objekt?.members.includes(member.name) && tradeableFilter(objekt);
         }).length;
         const total = collections.filter(
-          (a) => a.member === member.name && tradeableFilter(a),
+          (a) => a.members.includes(member.name) && tradeableFilter(a),
         ).length;
         const percentage = total > 0 ? (owned / total) * 100 : 0;
 

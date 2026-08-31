@@ -102,7 +102,7 @@ function BreakdownByMemberChart({ objekts }: { objekts: ValidObjekt[] }) {
     const data = members.map((a) => ({
       name: a.name,
       fill: a.color,
-      count: objekts.filter((obj) => obj.member === a.name).length,
+      count: objekts.filter((obj) => obj.members.includes(a.name)).length,
     }));
     const total = data.reduce((sum, d) => sum + d.count, 0);
     return data
@@ -291,10 +291,10 @@ function MemberProgressChart({
     return members
       .map((member) => {
         const owned = grouped.filter(([objekt]) => {
-          return objekt?.member === member.name && tradeableFilter(objekt);
+          return objekt?.members.includes(member.name) && tradeableFilter(objekt);
         }).length;
         const total = collections.filter(
-          (a) => a.member === member.name && tradeableFilter(a),
+          (a) => a.members.includes(member.name) && tradeableFilter(a),
         ).length;
         const percentage = total > 0 ? (owned / total) * 100 : 0;
 
