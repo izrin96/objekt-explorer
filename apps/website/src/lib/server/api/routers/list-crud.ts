@@ -163,6 +163,7 @@ export const listCrud = {
         hideSerial: z.boolean(),
         linkedListId: z.number().nullable(),
         discoverable: z.boolean(),
+        regenerateSlug: z.boolean().default(false),
       }),
     )
     .handler(
@@ -203,12 +204,16 @@ export const listCrud = {
           ? list.profileAddress
           : input.profileAddress;
         if (effectiveProfileAddress) {
-          profileSlug = await generateProfileSlug(
-            input.name,
-            list.slug,
-            effectiveProfileAddress.toLowerCase(),
-            list.id,
-          );
+          const address = effectiveProfileAddress.toLowerCase();
+          // Keep the existing slug unless the user opted to regenerate it or
+          // the list moved to a different profile (slug uniqueness is per address).
+          const keepSlug =
+            !input.regenerateSlug &&
+            list.profileSlug !== null &&
+            list.profileAddress?.toLowerCase() === address;
+          profileSlug = keepSlug
+            ? list.profileSlug
+            : await generateProfileSlug(input.name, list.slug, address, list.id);
         }
 
         await db.transaction(async (tx) => {

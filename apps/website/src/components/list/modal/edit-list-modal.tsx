@@ -4,7 +4,8 @@ import { useRouter } from "@tanstack/react-router";
 import { Suspense } from "react";
 import { Form } from "react-aria-components/Form";
 import { ErrorBoundary } from "react-error-boundary";
-import { Controller, useForm } from "react-hook-form";
+import { type Control, Controller, useForm, useWatch } from "react-hook-form";
+import slugify from "slugify";
 import { toast } from "sonner";
 
 import { Button } from "@/components/intentui/button";
@@ -29,8 +30,22 @@ import ErrorFallbackRender from "@/components/router/error-boundary";
 import Portal from "@/components/shared/portal";
 import { useUserProfiles, useUserLists } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
-import { parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
+import { getBaseURL, parseNickname, SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+type EditListFormValues = {
+  name: string;
+  description: string;
+  currency: string;
+  hideUser: boolean;
+  gridColumns: number;
+  profileAddress: string;
+  isProfileBind: boolean;
+  hideSerial: boolean;
+  discoverable: boolean;
+  linkedListId: string;
+  regenerateSlug: boolean;
+};
 
 type EditListModalProps = {
   slug: string;
@@ -115,7 +130,13 @@ function EditListForm({
     }),
   );
 
-  const values = {
+  const profileSlug = data.profileSlug;
+  const profile = profiles?.find(
+    (p) => p.address.toLowerCase() === data.profileAddress?.toLowerCase(),
+  );
+  const profileNickname = profile?.nickname || data.profileAddress?.toLowerCase() || "";
+
+  const values: EditListFormValues = {
     name: data.name,
     description: data.description ?? "",
     currency: data.currency ?? "",
@@ -126,9 +147,10 @@ function EditListForm({
     hideSerial: data.hideSerial,
     discoverable: data.discoverable ?? false,
     linkedListId: data.linkedListId ? String(data.linkedListId) : "",
+    regenerateSlug: false,
   };
 
-  const { handleSubmit, control } = useForm({
+  const { handleSubmit, control } = useForm<EditListFormValues>({
     defaultValues: values,
     values: values,
   });
@@ -152,6 +174,7 @@ function EditListForm({
       hideSerial: data.hideSerial,
       discoverable: data.discoverable,
       linkedListId: data.linkedListId ? Number(data.linkedListId) : null,
+      regenerateSlug: data.regenerateSlug,
     });
   });
 
@@ -183,6 +206,15 @@ function EditListForm({
             </TextField>
           )}
         />
+
+        {profileSlug && (
+          <ListUrlField
+            control={control}
+            currentSlug={profileSlug}
+            fallbackSlug={data.slug}
+            nickname={profileNickname}
+          />
+        )}
 
         <Controller
           control={control}
@@ -464,5 +496,50 @@ function EditListForm({
         </Portal>
       </div>
     </Form>
+  );
+}
+
+type ListUrlFieldProps = {
+  control: Control<EditListFormValues>;
+  currentSlug: string;
+  fallbackSlug: string;
+  nickname: string;
+};
+
+function ListUrlField({ control, currentSlug, fallbackSlug, nickname }: ListUrlFieldProps) {
+  const [name, regenerate] = useWatch({ control, name: ["name", "regenerateSlug"] });
+  const previewSlug = regenerate
+    ? slugify(name, { lower: true, strict: true }) || fallbackSlug
+    : currentSlug;
+  const prefix = `${new URL(getBaseURL()).host}/@${nickname}/list/`;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <TextField isReadOnly value={previewSlug}>
+        <Label>{m.list_edit_url_label()}</Label>
+        <div className="border-input flex overflow-hidden rounded-lg border">
+          <span className="bg-muted text-muted-fg border-input flex max-w-[60%] shrink-0 items-center border-e px-3 text-sm">
+            <span className="truncate">{prefix}</span>
+          </span>
+          <Input className="rounded-none border-0 focus:ring-0" />
+        </div>
+      </TextField>
+      <Controller
+        control={control}
+        name="regenerateSlug"
+        render={({ field: { name, value, onChange, onBlur } }) => (
+          <CheckboxField
+            name={name}
+            isSelected={value}
+            onChange={onChange}
+            onBlur={onBlur}
+            validationBehavior="aria"
+          >
+            <Checkbox>{m.list_edit_regenerate_slug_label()}</Checkbox>
+            <Description>{m.list_edit_regenerate_slug_desc()}</Description>
+          </CheckboxField>
+        )}
+      />
+    </div>
   );
 }
