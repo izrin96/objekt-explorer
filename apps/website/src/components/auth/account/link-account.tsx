@@ -42,6 +42,7 @@ export function ListAccounts() {
         <LinkedAccount
           key={a.id}
           provider={providersMap[a.providerId as ProviderId]}
+          id={a.id}
           accountId={a.accountId}
         />
       ))}
@@ -55,10 +56,11 @@ export function ListAccounts() {
 
 type LinkedAccountProps = {
   provider: Provider;
+  id: string;
   accountId: string;
 };
 
-function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
+function LinkedAccount({ provider, id, accountId }: LinkedAccountProps) {
   const [pullOpen, setPullOpen] = useState(false);
   const [unlinkOpen, setUnlinkOpen] = useState(false);
   const unlinkAccount = useMutation(
@@ -93,7 +95,7 @@ function LinkedAccount({ provider, accountId }: LinkedAccountProps) {
         onConfirm={() =>
           unlinkAccount.mutate({
             providerId: provider.id,
-            accountId: accountId,
+            accountId: id,
           })
         }
         isPending={unlinkAccount.isPending}
