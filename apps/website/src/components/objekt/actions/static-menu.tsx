@@ -9,7 +9,7 @@ export function ObjektStaticMenu({ children }: PropsWithChildren) {
   return (
     <Menu>
       <Button
-        className="absolute top-1 right-10 z-50 p-2 sm:top-2"
+        className="absolute top-2.5 right-10 z-50 p-2 sm:top-2"
         size="sq-xs"
         intent="outline"
         aria-label={m.objekt_menu_aria()}

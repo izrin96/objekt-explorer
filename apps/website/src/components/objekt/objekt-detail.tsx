@@ -18,7 +18,7 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
 
   return (
     <div
-      className="flex size-full flex-col gap-2 p-2 md:grid md:h-134 md:grid-cols-3 md:p-3"
+      className="flex w-full flex-col gap-2 p-2 md:grid md:h-134 md:grid-cols-3 md:p-3"
       style={
         {
           "--objekt-bg-color": objekt.backgroundColor,
@@ -29,7 +29,7 @@ export default function ObjektDetail({ objekts }: ObjektDetailProps) {
       <div className="flex h-84 self-center select-none md:h-fit">
         <ObjektCard objekts={objekts} />
       </div>
-      <div className="relative flex min-h-screen flex-col gap-2 overflow-y-auto px-2 md:col-span-2 md:-me-2 md:min-h-full md:scrollbar-gutter-stable">
+      <div className="relative flex flex-col gap-2 px-2 md:col-span-2 md:-me-2 md:min-h-full md:scrollbar-gutter-stable md:overflow-y-auto">
         <div className="text-sm font-semibold">{objekt.collectionId}</div>
         <Suspense>
           <AttributePanel objekt={objekt} unobtainable={unobtainableSlugs.has(objekt.slug)} />
