@@ -99,31 +99,37 @@ export default function MarketView({ collectionSlug, defaultSortBy, onOpenTrades
 }
 
 function MarketStatsBar({ collectionSlug }: { collectionSlug: string }) {
-  const { data: stats } = useQuery(
+  const { data: stats, isPending } = useQuery(
     orpc.market.stats.queryOptions({
       input: { collectionSlug },
       staleTime: 1000 * 60,
     }),
   );
 
-  if (!stats) return null;
+  if (!stats && !isPending) return null;
+
+  const values = stats
+    ? [
+        stats.floorPrice !== null ? formatPrice(stats.floorPrice, "USD") : "-",
+        stats.total.toLocaleString(),
+        stats.sellers.toLocaleString(),
+      ]
+    : null;
+  const labels = [m.objekt_market_floor(), m.objekt_market_listings(), m.objekt_market_sellers()];
 
   return (
     <div className="bg-muted grid grid-cols-3 gap-2 rounded-lg border p-3 text-sm">
-      <div className="flex flex-col">
-        <span className="text-muted-fg text-xxs">{m.objekt_market_floor()}</span>
-        <span className="font-mono font-medium tabular-nums">
-          {stats.floorPrice !== null ? formatPrice(stats.floorPrice, "USD") : "-"}
-        </span>
-      </div>
-      <div className="flex flex-col">
-        <span className="text-muted-fg text-xxs">{m.objekt_market_listings()}</span>
-        <span className="font-mono font-medium tabular-nums">{stats.total.toLocaleString()}</span>
-      </div>
-      <div className="flex flex-col">
-        <span className="text-muted-fg text-xxs">{m.objekt_market_sellers()}</span>
-        <span className="font-mono font-medium tabular-nums">{stats.sellers.toLocaleString()}</span>
-      </div>
+      {labels.map((label, i) => (
+        <div key={label} className="flex flex-col">
+          <span className="text-muted-fg text-xxs">{label}</span>
+          {values ? (
+            <span className="font-mono font-medium tabular-nums">{values[i]}</span>
+          ) : (
+            // matches the line height of the value row so the bar does not shift on load
+            <Skeleton className="my-1 h-3 w-12" soft />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
