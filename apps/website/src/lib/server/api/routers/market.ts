@@ -67,7 +67,8 @@ async function fetchMarketSummary(): Promise<MarketSummaryEntry[]> {
   const rows = await db
     .select({
       slug: sql<string>`${listEntries.collectionSlug}`,
-      count: sql<number>`count(*)::int`,
+      // same objekt may sit in several sale lists of one seller; count objekts, not rows
+      count: sql<number>`count(DISTINCT ${listEntries.objektId})::int`,
       minPrice: sql<
         number | null
       >`min(CASE WHEN ${listEntries.isQyop} OR ${listEntries.price} IS NULL THEN NULL ELSE ${usdPrice} END)`,
@@ -194,7 +195,7 @@ export const marketRouter = {
 
     const [row] = await db
       .select({
-        total: sql<number>`count(*)::int`,
+        total: sql<number>`count(DISTINCT ${listEntries.objektId})::int`,
         floorPrice: sql<
           number | null
         >`min(CASE WHEN ${listEntries.isQyop} OR ${listEntries.price} IS NULL THEN NULL ELSE ${usdPriceExpr(rates)} END)`,
