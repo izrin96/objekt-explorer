@@ -139,6 +139,16 @@ export function filterObjekts(filters: Filters, objekts: ValidObjekt[]): ValidOb
       return false;
     }
 
+    if (filters.priced === true && (a.floorPrice === null || a.floorPrice === undefined)) {
+      return false;
+    }
+
+    if (filters.floor_min !== null || filters.floor_max !== null) {
+      if (a.floorPrice === null || a.floorPrice === undefined) return false;
+      if (filters.floor_min !== null && a.floorPrice < filters.floor_min) return false;
+      if (filters.floor_max !== null && a.floorPrice > filters.floor_max) return false;
+    }
+
     if (queries.length > 0) {
       const matchesQuery = queries.some((group) =>
         group.every((term) =>
@@ -238,6 +248,27 @@ export function sortObjekts(
       if (priceA === null) return 1;
       if (priceB === null) return -1;
       return sortDir === "asc" ? priceA - priceB : priceB - priceA;
+    });
+  } else if (sort === "floor") {
+    objekts = objekts.toSorted((a, b) => {
+      const floorA = a.floorPrice ?? null;
+      const floorB = b.floorPrice ?? null;
+      if (floorA === null && floorB === null) return 0;
+      if (floorA === null) return 1;
+      if (floorB === null) return -1;
+      return sortDir === "asc" ? floorA - floorB : floorB - floorA;
+    });
+  } else if (sort === "listedAt") {
+    objekts = objekts.toSorted((a, b) => {
+      const listedA = a.listedAt ?? 0;
+      const listedB = b.listedAt ?? 0;
+      return sortDir === "asc" ? listedA - listedB : listedB - listedA;
+    });
+  } else if (sort === "supply") {
+    objekts = objekts.toSorted((a, b) => {
+      const countA = a.listingCount ?? 0;
+      const countB = b.listingCount ?? 0;
+      return sortDir === "asc" ? countA - countB : countB - countA;
     });
   }
 

@@ -63,6 +63,9 @@ export function useFilters() {
     collection: parseAsArrayOf(parseAsString),
     locked: parseAsBoolean,
     at: parseAsString,
+    floor_min: parseAsFloat,
+    floor_max: parseAsFloat,
+    priced: parseAsBoolean,
   });
 }
 
@@ -95,6 +98,9 @@ export function isFiltering(filters: Filters) {
     filters.colorSensitivity !== null ||
     filters.collection !== null ||
     filters.locked !== null ||
-    filters.at !== null
+    filters.at !== null ||
+    filters.floor_min !== null ||
+    filters.floor_max !== null ||
+    filters.priced !== null
   );
 }

@@ -36,11 +36,19 @@ import TradeView from "./trade-view";
 const ITEM_PAGE = 10;
 
 export function ObjektPanel({ objekts }: { objekts: ValidObjekt[] }) {
-  const { showOwned, currentTab, setCurrentTab } = useObjektModal();
+  const { showOwned, currentTab, setCurrentTab, initialTab } = useObjektModal();
   const [objekt] = objekts;
   const [serial, setSerial] = useState(() => {
     return objekt && isObjektOwned(objekt) ? objekt.serial : null;
   });
+
+  const openTrades = useCallback(
+    (value: number) => {
+      setSerial(value);
+      setCurrentTab("trades");
+    },
+    [setCurrentTab],
+  );
 
   if (!objekt) return null;
 
@@ -87,7 +95,11 @@ export function ObjektPanel({ objekts }: { objekts: ValidObjekt[] }) {
         <TradeView objekt={objekt} serial={serial} />
       </TabPanel>
       <TabPanel id="market">
-        <MarketView collectionSlug={objekt.slug} />
+        <MarketView
+          collectionSlug={objekt.slug}
+          defaultSortBy={initialTab === "market" ? "price" : "createdAt"}
+          onOpenTrades={openTrades}
+        />
       </TabPanel>
     </Tabs>
   );

@@ -14,6 +14,7 @@ import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$n
 import { Route as containerIndexRouteImport } from './routes/(container)/index'
 import { Route as containerActivityRouteImport } from './routes/(container)/activity'
 import { Route as containerLoginRouteImport } from './routes/(container)/login'
+import { Route as containerMarketRouteImport } from './routes/(container)/market'
 import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
 import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
 import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
@@ -66,6 +67,11 @@ const containerActivityRoute = containerActivityRouteImport.update({
 const containerLoginRoute = containerLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerMarketRoute = containerMarketRouteImport.update({
+  id: '/market',
+  path: '/market',
   getParentRoute: () => containerRouteRoute,
 } as any)
 const containerTermsPrivacyRoute = containerTermsPrivacyRouteImport.update({
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/activity': typeof containerActivityRoute
   '/login': typeof containerLoginRoute
+  '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/activity': typeof containerActivityRoute
   '/login': typeof containerLoginRoute
+  '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/(container)/activity': typeof containerActivityRoute
   '/(container)/login': typeof containerLoginRoute
+  '/(container)/market': typeof containerMarketRoute
   '/(container)/terms-privacy': typeof containerTermsPrivacyRoute
   '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
@@ -329,6 +338,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}'
     | '/activity'
     | '/login'
+    | '/market'
     | '/terms-privacy'
     | '/@{$nickname}/list'
     | '/@{$nickname}/progress'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
   to:
     | '/activity'
     | '/login'
+    | '/market'
     | '/terms-privacy'
     | '/@{$nickname}/list'
     | '/@{$nickname}/progress'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}'
     | '/(container)/activity'
     | '/(container)/login'
+    | '/(container)/market'
     | '/(container)/terms-privacy'
     | '/@{$nickname}/list'
     | '/@{$nickname}/progress'
@@ -481,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof containerLoginRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/market': {
+      id: '/(container)/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof containerMarketRouteImport
       parentRoute: typeof containerRouteRoute
     }
     '/(container)/terms-privacy': {
@@ -685,6 +704,7 @@ declare module '@tanstack/react-router' {
 interface containerRouteRouteChildren {
   containerActivityRoute: typeof containerActivityRoute
   containerLoginRoute: typeof containerLoginRoute
+  containerMarketRoute: typeof containerMarketRoute
   containerTermsPrivacyRoute: typeof containerTermsPrivacyRoute
   containerIndexRoute: typeof containerIndexRoute
   containerAuthResetPasswordRoute: typeof containerAuthResetPasswordRoute
@@ -701,6 +721,7 @@ interface containerRouteRouteChildren {
 const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerActivityRoute: containerActivityRoute,
   containerLoginRoute: containerLoginRoute,
+  containerMarketRoute: containerMarketRoute,
   containerTermsPrivacyRoute: containerTermsPrivacyRoute,
   containerIndexRoute: containerIndexRoute,
   containerAuthResetPasswordRoute: containerAuthResetPasswordRoute,

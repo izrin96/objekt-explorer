@@ -10,6 +10,7 @@ import {
 export type ValidTab = "owned" | "trades" | "market";
 
 interface ObjektModalState {
+  initialTab: ValidTab;
   currentTab: ValidTab;
   setCurrentTab: (tab: ValidTab) => void;
   showOwned?: boolean;
@@ -40,8 +41,8 @@ export function ObjektModalProvider({
   }, [initialTab]);
 
   const value = useMemo(
-    () => ({ currentTab, setCurrentTab, showOwned, showPinLock, isProfile }),
-    [currentTab, showOwned, showPinLock, isProfile],
+    () => ({ initialTab, currentTab, setCurrentTab, showOwned, showPinLock, isProfile }),
+    [initialTab, currentTab, showOwned, showPinLock, isProfile],
   );
 
   return <ObjektModalContext value={value}>{children}</ObjektModalContext>;

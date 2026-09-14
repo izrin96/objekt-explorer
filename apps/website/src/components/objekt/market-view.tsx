@@ -1,27 +1,30 @@
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
-import { StorefrontIcon } from "@phosphor-icons/react/dist/ssr";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { NoteIcon, StorefrontIcon } from "@phosphor-icons/react/dist/ssr";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useState } from "react";
 
 import { Button } from "@/components/intentui/button";
 import { Link } from "@/components/intentui/link";
+import { Popover, PopoverContent } from "@/components/intentui/popover";
 import { Skeleton } from "@/components/intentui/skeleton";
 import { orpc } from "@/lib/orpc/client";
 import type { PublicList } from "@/lib/universal/list";
 import type { MarketListing, SortBy, SortDir } from "@/lib/universal/market";
-import { getListLinkOption, parseNickname } from "@/lib/utils";
+import { formatPrice, formatRelativeTime, getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { InfiniteQueryNext } from "../shared/infinite-query-pending";
 
 type Props = {
   collectionSlug: string;
+  defaultSortBy?: SortBy;
+  onOpenTrades?: (serial: number) => void;
 };
 
-export default function MarketView({ collectionSlug }: Props) {
-  const [sortBy, setSortBy] = useState<SortBy>("createdAt");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+export default function MarketView({ collectionSlug, defaultSortBy, onOpenTrades }: Props) {
+  const [sortBy, setSortBy] = useState<SortBy>(defaultSortBy ?? "createdAt");
+  const [sortDir, setSortDir] = useState<SortDir>(defaultSortBy === "price" ? "asc" : "desc");
 
   const toggleSort = (field: SortBy) => {
     if (sortBy === field) {
@@ -45,6 +48,8 @@ export default function MarketView({ collectionSlug }: Props) {
         initialPageParam: 0,
         getNextPageParam: (lastPage) => lastPage.nextOffset,
         staleTime: 1000 * 60,
+        // keeps the current rows on screen while a re-sort is in flight
+        placeholderData: keepPreviousData,
       }),
     );
 
@@ -52,6 +57,8 @@ export default function MarketView({ collectionSlug }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
+      <MarketStatsBar collectionSlug={collectionSlug} />
+
       <div className="flex items-center gap-2">
         <SortButton active={sortBy === "price"} dir={sortDir} onClick={() => toggleSort("price")}>
           {m.list_manage_objekt_set_price_label()}
@@ -76,7 +83,7 @@ export default function MarketView({ collectionSlug }: Props) {
         <>
           <div className="flex flex-col gap-2">
             {items.map((item) => (
-              <MarketRow key={item.id} item={item} />
+              <MarketRow key={item.id} item={item} onOpenTrades={onOpenTrades} />
             ))}
           </div>
           <InfiniteQueryNext
@@ -87,6 +94,36 @@ export default function MarketView({ collectionSlug }: Props) {
           />
         </>
       )}
+    </div>
+  );
+}
+
+function MarketStatsBar({ collectionSlug }: { collectionSlug: string }) {
+  const { data: stats } = useQuery(
+    orpc.market.stats.queryOptions({
+      input: { collectionSlug },
+      staleTime: 1000 * 60,
+    }),
+  );
+
+  if (!stats) return null;
+
+  return (
+    <div className="bg-muted grid grid-cols-3 gap-2 rounded-lg border p-3 text-sm">
+      <div className="flex flex-col">
+        <span className="text-muted-fg text-xxs">{m.objekt_market_floor()}</span>
+        <span className="font-mono font-medium tabular-nums">
+          {stats.floorPrice !== null ? formatPrice(stats.floorPrice, "USD") : "-"}
+        </span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-muted-fg text-xxs">{m.objekt_market_listings()}</span>
+        <span className="font-mono font-medium tabular-nums">{stats.total.toLocaleString()}</span>
+      </div>
+      <div className="flex flex-col">
+        <span className="text-muted-fg text-xxs">{m.objekt_market_sellers()}</span>
+        <span className="font-mono font-medium tabular-nums">{stats.sellers.toLocaleString()}</span>
+      </div>
     </div>
   );
 }
@@ -115,66 +152,92 @@ function SortButton({
   );
 }
 
-function MarketRow({ item }: { item: MarketListing }) {
+function MarketRow({
+  item,
+  onOpenTrades,
+}: {
+  item: MarketListing;
+  onOpenTrades?: (serial: number) => void;
+}) {
+  const serial = item.serial;
+
   return (
-    <Link
-      {...getListLinkOption(item.list as PublicList)}
-      className="hover:bg-secondary bg-muted block overflow-hidden rounded-lg border transition-colors"
-    >
-      <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[5rem_8rem_8rem_1fr]">
+    <div className="bg-muted overflow-hidden rounded-lg border">
+      <div className="grid grid-cols-2 items-center gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[5rem_1fr_8rem_7rem_6rem]">
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_serial()}</span>
-          <div className="font-mono font-medium tabular-nums">#{item.serial ?? "-"}</div>
+          {onOpenTrades && serial !== null ? (
+            <button
+              type="button"
+              className="hover:text-primary w-fit cursor-pointer font-mono font-medium tabular-nums underline-offset-2 hover:underline"
+              onClick={() => onOpenTrades(serial)}
+            >
+              #{serial}
+            </button>
+          ) : (
+            <span className="font-mono font-medium tabular-nums">#{serial ?? "-"}</span>
+          )}
         </div>
 
-        {/* <div className="flex flex-col justify-center">
-          <span className="text-muted-fg text-xxs">{m.objekt_transferable()}</span>
-          <div>
-            {item.transferable === null ? (
-              "-"
-            ) : (
-              <Badge intent={item.transferable ? "info" : "danger"}>
-                {item.transferable ? m.objekt_yes() : m.objekt_no()}
-              </Badge>
-            )}
-          </div>
-        </div> */}
-
-        <div className="flex flex-col justify-center">
+        <div className="flex min-w-0 flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_owner()}</span>
-          <div className="truncate">
+          <span className="truncate">
             {item.list.profile
               ? parseNickname(item.list.profile.address, item.list.profile.nickname)
               : "-"}
-          </div>
+          </span>
         </div>
 
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.list_manage_objekt_set_price_label()}</span>
-          <div className="truncate font-medium">
-            {item.isQyop ? (
-              m.objekt_qyop()
-            ) : item.usdPrice !== null ? (
-              <>
-                ${item.usdPrice.toFixed(2)}
-                {item.currency && item.currency !== "USD" && (
-                  <span className="text-muted-fg text-xxs ml-1">
-                    ({item.price?.toLocaleString()} {item.currency})
-                  </span>
-                )}
-              </>
-            ) : (
-              "-"
+          <div className="flex items-center gap-1">
+            <span className="truncate font-medium">
+              {item.isQyop ? (
+                m.objekt_qyop()
+              ) : item.price !== null && item.currency ? (
+                <>
+                  {item.price.toLocaleString()} {item.currency}
+                  {item.currency !== "USD" && item.usdPrice !== null && (
+                    <span className="text-muted-fg text-xxs ml-1 font-mono tabular-nums">
+                      ≈{formatPrice(item.usdPrice, "USD")}
+                    </span>
+                  )}
+                </>
+              ) : (
+                "-"
+              )}
+            </span>
+            {item.note && (
+              <Popover>
+                <Button isCircle intent="plain" size="sq-sm" aria-label={m.objekt_note_aria()}>
+                  <NoteIcon />
+                </Button>
+                <PopoverContent arrow className="max-w-72">
+                  <div className="p-3 text-sm">
+                    <span className="text-muted-fg">{m.objekt_note()}: </span>
+                    <span className="text-fg">{item.note}</span>
+                  </div>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         </div>
 
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_date()}</span>
-          <div className="truncate text-xs">{format(item.createdAt, "yyyy/MM/dd h:mm:ss a")}</div>
+          <span className="truncate text-xs" title={format(item.createdAt, "yyyy/MM/dd h:mm:ss a")}>
+            {formatRelativeTime(item.createdAt)}
+          </span>
         </div>
+
+        <Link
+          {...getListLinkOption(item.list as PublicList)}
+          className="border-border hover:bg-secondary flex h-8 w-fit items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors lg:w-full"
+        >
+          {m.objekt_market_view_list()}
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }
 

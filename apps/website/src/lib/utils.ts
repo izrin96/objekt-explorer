@@ -1,9 +1,11 @@
+import { NumberFormatter } from "@internationalized/number";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { linkOptions } from "@tanstack/react-router";
 import { type ClassValue, clsx } from "clsx";
 
 import { twMerge } from "@/lib/tw-merge";
+import { getLocale } from "@/paraglide/runtime";
 
 import { clientEnv } from "./env/client";
 import type { PublicList } from "./universal/list";
@@ -11,7 +13,48 @@ import { unobtainableSlugs } from "./unobtainables";
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
 
+const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["year", 60 * 60 * 24 * 365],
+  ["month", 60 * 60 * 24 * 30],
+  ["day", 60 * 60 * 24],
+  ["hour", 60 * 60],
+  ["minute", 60],
+];
+
+/** "$2.50" in the client locale; falls back to "2.5 XYZ" for unknown currency codes */
+export function formatPrice(price: number, currency: string): string {
+  try {
+    return new NumberFormatter(getClientLocale(), { style: "currency", currency }).format(price);
+  } catch {
+    return `${price.toLocaleString()} ${currency}`;
+  }
+}
+
+/** "3 days ago" in the active locale */
+export function formatRelativeTime(value: string | number | Date) {
+  const seconds = (new Date(value).getTime() - Date.now()) / 1000;
+  const formatter = new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" });
+
+  for (const [unit, secondsPerUnit] of RELATIVE_UNITS) {
+    if (Math.abs(seconds) >= secondsPerUnit) {
+      return formatter.format(Math.round(seconds / secondsPerUnit), unit);
+    }
+  }
+
+  return formatter.format(Math.round(seconds), "second");
+}
+
 export const defaultSort: ValidCustomSort[] = ["date", "season", "collectionNo", "member", "rare"];
+export const marketSort: ValidCustomSort[] = [
+  "listedAt",
+  "floor",
+  "supply",
+  "date",
+  "season",
+  "collectionNo",
+  "member",
+  "rare",
+];
 export const defaultSortDuplicate: ValidCustomSort[] = [
   "date",
   "season",

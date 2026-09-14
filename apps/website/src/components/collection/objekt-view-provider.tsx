@@ -6,7 +6,7 @@ import { ObjektSelectProvider } from "@/hooks/use-objekt-select";
 
 interface ObjektViewProviderProps extends PropsWithChildren {
   initialColumn?: number;
-  modalTab: "owned" | "trades";
+  modalTab: "owned" | "trades" | "market";
   isProfile?: boolean;
   showPinLock?: boolean;
 }

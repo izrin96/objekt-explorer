@@ -1,10 +1,9 @@
-import { NumberFormatter } from "@internationalized/number";
 import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { memo, type CSSProperties, type PropsWithChildren, useState } from "react";
 
 import { getCollectionShortId, isObjektOwned } from "@/lib/objekt-utils";
-import { cn, getClientLocale } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";
@@ -12,17 +11,6 @@ import { Button } from "../intentui/button";
 import { Popover, PopoverContent } from "../intentui/popover";
 import { useObjektModal } from "./objekt-modal";
 import ObjektSidebar from "./objekt-sidebar";
-
-function formatPrice(price: number, currency: string): string {
-  try {
-    return new NumberFormatter(getClientLocale(), {
-      style: "currency",
-      currency,
-    }).format(price);
-  } catch {
-    return `${price.toLocaleString()} ${currency}`;
-  }
-}
 
 type Props = PropsWithChildren<{
   objekts: ValidObjekt[];
@@ -34,6 +22,8 @@ type Props = PropsWithChildren<{
   isSelected?: boolean;
   hideLabel?: boolean;
   listCurrency?: string | null;
+  /** replaces the computed price badge text */
+  priceLabel?: string;
   onSetPrice?: () => void;
 }>;
 
@@ -47,6 +37,7 @@ const ObjektView = memo(function ObjektView({
   hideLabel = false,
   isPriority = false,
   listCurrency,
+  priceLabel,
   children,
   onSetPrice,
 }: Props) {
@@ -62,12 +53,15 @@ const ObjektView = memo(function ObjektView({
   } as CSSProperties;
 
   const hasPrice = objekt.price !== undefined && objekt.price !== null;
-  const priceLabel = objekt.isQyop
-    ? m.objekt_qyop()
-    : hasPrice
-      ? formatPrice(objekt.price!, listCurrency!)
-      : onSetPrice && m.objekt_set_price();
-  const showPriceContent = listCurrency && (priceLabel || objekt.note);
+  const hasFloor = objekt.floorPrice !== undefined && objekt.floorPrice !== null;
+  const label =
+    priceLabel ??
+    (objekt.isQyop
+      ? m.objekt_qyop()
+      : hasPrice
+        ? formatPrice(objekt.price!, listCurrency!)
+        : onSetPrice && m.objekt_set_price());
+  const showPriceContent = (listCurrency || priceLabel) && (label || objekt.note);
   const showBottomContent = !hideLabel || unobtainable || showPriceContent;
 
   return (
@@ -110,17 +104,17 @@ const ObjektView = memo(function ObjektView({
         <div className="flex flex-col items-center justify-center gap-1 text-center">
           {showPriceContent && (
             <div className="flex flex-wrap items-center justify-center gap-0.5">
-              {priceLabel && (
+              {label && (
                 <Badge
                   intent="secondary"
                   className={cn(
                     "text-xxs sm:text-xs",
                     onSetPrice && "cursor-pointer",
-                    hasPrice && !objekt.isQyop && "bg-fg text-bg",
+                    (hasPrice || hasFloor) && !objekt.isQyop && "bg-fg text-bg",
                   )}
                   onClick={onSetPrice}
                 >
-                  {priceLabel}
+                  {label}
                 </Badge>
               )}
               {objekt.note && (

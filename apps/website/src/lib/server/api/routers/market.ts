@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { listEntries, lists, userAddress } from "@repo/db/schema";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import {
@@ -10,10 +10,15 @@ import {
   sortDirSchema,
   type MarketListing,
   type MarketResult,
+  type MarketStats,
+  type MarketSummaryEntry,
 } from "@/lib/universal/market";
 
 import { getUsdRates } from "../../currency-rates";
+import { getCache } from "../../redis.server";
 import { pub } from "../orpc";
+
+const SUMMARY_TTL = 60;
 
 async function fetchObjektMap(
   objektIds: string[],
@@ -47,7 +52,52 @@ function usdPriceExpr(rates: Record<string, number>) {
   return sql`CASE ${sql.join(whens, sql` `)} ELSE ${listEntries.price} END`;
 }
 
+function listingsWhere(collectionSlug: string) {
+  return and(
+    eq(listEntries.collectionSlug, collectionSlug),
+    eq(lists.listTypeNew, "sale"),
+    eq(lists.discoverable, true),
+  );
+}
+
+async function fetchMarketSummary(): Promise<MarketSummaryEntry[]> {
+  const rates = await getUsdRates();
+  const usdPrice = usdPriceExpr(rates);
+
+  const rows = await db
+    .select({
+      slug: sql<string>`${listEntries.collectionSlug}`,
+      count: sql<number>`count(*)::int`,
+      minPrice: sql<
+        number | null
+      >`min(CASE WHEN ${listEntries.isQyop} OR ${listEntries.price} IS NULL THEN NULL ELSE ${usdPrice} END)`,
+      hasQyop: sql<boolean>`bool_or(${listEntries.isQyop})`,
+      listedAt: sql<number>`extract(epoch from max(${listEntries.createdAt}))::int`,
+    })
+    .from(listEntries)
+    .innerJoin(lists, eq(listEntries.listId, lists.id))
+    .where(
+      and(
+        eq(lists.listTypeNew, "sale"),
+        eq(lists.discoverable, true),
+        isNotNull(listEntries.collectionSlug),
+      ),
+    )
+    .groupBy(listEntries.collectionSlug);
+
+  return rows;
+}
+
 export const marketRouter = {
+  summary: pub.handler(async () => {
+    try {
+      return await getCache("market:summary", SUMMARY_TTL, fetchMarketSummary);
+    } catch {
+      console.warn("[market] Redis unavailable, falling back to direct DB query");
+      return fetchMarketSummary();
+    }
+  }),
+
   marketListings: pub
     .input(
       z.object({
@@ -61,11 +111,7 @@ export const marketRouter = {
     .handler(async ({ input }) => {
       const rates = await getUsdRates();
 
-      const where = and(
-        eq(listEntries.collectionSlug, input.collectionSlug),
-        eq(lists.listTypeNew, "sale"),
-        eq(lists.discoverable, true),
-      );
+      const where = listingsWhere(input.collectionSlug);
 
       const baseQuery = () =>
         db
@@ -142,4 +188,23 @@ export const marketRouter = {
         nextOffset,
       } satisfies MarketResult;
     }),
+
+  stats: pub.input(z.object({ collectionSlug: z.string() })).handler(async ({ input }) => {
+    const rates = await getUsdRates();
+
+    const [row] = await db
+      .select({
+        total: sql<number>`count(*)::int`,
+        floorPrice: sql<
+          number | null
+        >`min(CASE WHEN ${listEntries.isQyop} OR ${listEntries.price} IS NULL THEN NULL ELSE ${usdPriceExpr(rates)} END)`,
+        sellers: sql<number>`count(DISTINCT ${lists.profileAddress})::int`,
+      })
+      .from(listEntries)
+      .innerJoin(lists, eq(listEntries.listId, lists.id))
+      .where(listingsWhere(input.collectionSlug));
+
+    // aggregate without GROUP BY always yields exactly one row
+    return row! satisfies MarketStats;
+  }),
 };

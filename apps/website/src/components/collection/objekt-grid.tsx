@@ -19,6 +19,7 @@ export interface ObjektGridViewProps {
   isFade?: boolean;
   unobtainable?: boolean;
   listCurrency?: string | null;
+  priceLabel?: string;
   onSetPrice?: () => void;
   staticMenu?: ReactNode;
   children?: ReactNode;
@@ -33,6 +34,7 @@ const ObjektGridView = memo(function ObjektGridView({
   isFade,
   unobtainable,
   listCurrency,
+  priceLabel,
   onSetPrice,
   staticMenu,
   children,
@@ -55,6 +57,7 @@ const ObjektGridView = memo(function ObjektGridView({
             isFade={isFade}
             unobtainable={unobtainable}
             listCurrency={listCurrency}
+            priceLabel={priceLabel}
             onSetPrice={onSetPrice}
           >
             {children}

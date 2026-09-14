@@ -36,6 +36,27 @@ export const marketListingSchema = z.object({
 
 export type MarketListing = z.infer<typeof marketListingSchema>;
 
+export const marketSummaryEntrySchema = z.object({
+  slug: z.string(),
+  count: z.number(),
+  /** cheapest listing in USD — null when every listing is QYOP or unpriced */
+  minPrice: z.number().nullable(),
+  hasQyop: z.boolean(),
+  /** unix seconds */
+  listedAt: z.number(),
+});
+
+export type MarketSummaryEntry = z.infer<typeof marketSummaryEntrySchema>;
+
+export const marketStatsSchema = z.object({
+  total: z.number(),
+  /** cheapest listing in USD — null when every listing is QYOP or unpriced */
+  floorPrice: z.number().nullable(),
+  sellers: z.number(),
+});
+
+export type MarketStats = z.infer<typeof marketStatsSchema>;
+
 export const marketResultSchema = z.object({
   items: z.array(marketListingSchema),
   hasMore: z.boolean(),

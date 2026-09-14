@@ -10,11 +10,12 @@ import { Menu, MenuContent, MenuDescription, MenuItem, MenuLabel } from "../inte
 
 type Props = {
   enabled?: ValidCustomSort[];
+  defaultValue?: ValidCustomSort;
 };
 
-export default function SortFilter({ enabled = defaultSort }: Props) {
+export default function SortFilter({ enabled = defaultSort, defaultValue = "date" }: Props) {
   const [filters, setFilters] = useFilters();
-  const selected = new Set(filters.sort ? [filters.sort] : ["date"]);
+  const selected = new Set([filters.sort ?? defaultValue]);
 
   const map: Record<ValidCustomSort, { label: string; desc: string }> = {
     date: { label: m.filter_sort_by_date_label(), desc: m.filter_sort_by_date_desc() },
@@ -28,14 +29,17 @@ export default function SortFilter({ enabled = defaultSort }: Props) {
     member: { label: m.filter_sort_by_member_label(), desc: m.filter_sort_by_member_desc() },
     rare: { label: m.filter_sort_by_rare_label(), desc: m.filter_sort_by_rare_desc() },
     price: { label: m.filter_sort_by_price_label(), desc: m.filter_sort_by_price_desc() },
+    floor: { label: m.filter_sort_by_floor_label(), desc: m.filter_sort_by_floor_desc() },
+    listedAt: { label: m.filter_sort_by_listed_label(), desc: m.filter_sort_by_listed_desc() },
+    supply: { label: m.filter_sort_by_supply_label(), desc: m.filter_sort_by_supply_desc() },
   };
 
   function update(key: Selection) {
-    const value = Array.from((key as Set<ValidCustomSort>).values()).at(0) ?? "date";
+    const value = Array.from((key as Set<ValidCustomSort>).values()).at(0) ?? defaultValue;
 
     return setFilters((current) => ({
-      sort: value === "date" ? null : value,
-      sort_dir: ["serial", "member", "rare"].includes(value) ? "asc" : null,
+      sort: value === defaultValue ? null : value,
+      sort_dir: ["serial", "member", "rare", "floor"].includes(value) ? "asc" : null,
       grouped: value === "duplicate" ? true : value === "serial" ? null : current.grouped,
     }));
   }

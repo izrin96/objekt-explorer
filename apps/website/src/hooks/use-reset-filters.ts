@@ -27,6 +27,9 @@ export function useResetFilters() {
         colorSensitivity: null,
         collection: null,
         locked: null,
+        floor_min: null,
+        floor_max: null,
+        priced: null,
       }),
     [setFilters],
   );

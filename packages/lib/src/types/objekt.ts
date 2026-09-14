@@ -6,6 +6,13 @@ type CollectionExtra = {
   price?: number | null;
   isQyop?: boolean;
   note?: string | null;
+  /** cheapest live sale listing, always USD — set by the marketplace only */
+  floorPrice?: number | null;
+  /** at least one live sale listing is QYOP — set by the marketplace only */
+  hasQyop?: boolean;
+  listingCount?: number;
+  /** unix seconds */
+  listedAt?: number;
 };
 
 // Indexed collection — base collection info without ownership

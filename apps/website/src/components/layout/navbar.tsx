@@ -5,6 +5,7 @@ import {
   XIcon,
   PulseIcon,
   NoteIcon,
+  StorefrontIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import {
   linkOptions,
@@ -47,6 +48,11 @@ import { SettingsButton } from "./settings-button";
 export function useNavMenuItems() {
   return linkOptions([
     {
+      to: "/market",
+      label: m.nav_market(),
+      icon: StorefrontIcon,
+    },
+    {
       to: "/activity",
       label: m.nav_activity(),
       icon: PaperPlaneTiltIcon,
@@ -71,7 +77,7 @@ export default function Navbar() {
           {/* Left: hamburger (mobile) + logo + nav links */}
           <div className="flex items-center gap-x-1.5 sm:gap-x-3">
             {/* Mobile hamburger */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <MenuTrigger>
                 <MobileMenuTrigger open={mobileOpen} setOpen={setMobileOpen} />
                 <MobileMenu open={mobileOpen} setOpen={setMobileOpen} />
@@ -80,7 +86,7 @@ export default function Navbar() {
             <AppLogo />
             <SystemStatusGroup />
             {/* Desktop nav links */}
-            <div className="hidden items-center gap-x-0.5 md:flex">
+            <div className="hidden items-center gap-x-0.5 lg:flex">
               {navMenuItems.map((menu) => (
                 <NavLink key={menu.to} to={menu.to}>
                   {menu.icon && <menu.icon className="size-4" weight="regular" />}
@@ -198,7 +204,7 @@ function MobileMenu({
       onOpenChange={setOpen}
       isOpen={open}
       className={cx(
-        "md:hidden",
+        "lg:hidden",
         "min-h-screen placement-bottom:entering:slide-in-from-top-1 -mt-1.5 w-full overflow-y-auto bg-bg px-2 outline-hidden entering:ease-out [--gap:--spacing(6)]",
         "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
         "slide-out-to-top-1 slide-in-from-top-1",
