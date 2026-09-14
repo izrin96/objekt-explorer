@@ -19,6 +19,14 @@ import { m } from "@/paraglide/messages";
 export function ChangelogContent() {
   const changelog = [
     {
+      date: "2026-09-14",
+      items: [
+        "Added a Marketplace page showing all objekts listed in discoverable Sale lists, with floor price and number of objekts listed.",
+        "Filter by priced only or floor price range, and sort by lowest price, recently listed, or most listed.",
+        "The Market tab in the Objekt view now shows floor price, objekts listed, and seller count.",
+      ],
+    },
+    {
       date: "2026-08-27",
       items: [
         "Unit objekts are now recognized by each individual member, not just the combined name. Filtering and searching by a member includes the unit objekts that member appears in.",
