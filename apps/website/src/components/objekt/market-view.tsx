@@ -184,7 +184,7 @@ function MarketRow({
 
   return (
     <div className="bg-muted overflow-hidden rounded-lg border">
-      <div className="grid grid-cols-2 items-center gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[4rem_1fr_11rem_6rem_5rem]">
+      <div className="grid grid-cols-2 items-center gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[4rem_7.5rem_1fr_6rem_5rem]">
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_serial()}</span>
           {onOpenTrades && serial !== null ? (
@@ -219,9 +219,7 @@ function MarketRow({
                 <>
                   {formatPrice(item.price, item.currency)}
                   {item.currency !== currency && item.usdPrice !== null && (
-                    <span className="text-muted-fg text-xxs ml-1 font-mono tabular-nums">
-                      ≈{formatUsd(item.usdPrice)}
-                    </span>
+                    <span className="text-muted-fg text-xxs ml-1">≈{formatUsd(item.usdPrice)}</span>
                   )}
                 </>
               ) : (
