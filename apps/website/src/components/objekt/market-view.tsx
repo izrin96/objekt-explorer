@@ -184,7 +184,7 @@ function MarketRow({
 
   return (
     <div className="bg-muted overflow-hidden rounded-lg border">
-      <div className="grid grid-cols-2 items-center gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[5rem_1fr_8rem_7rem_6rem]">
+      <div className="grid grid-cols-2 items-center gap-x-4 gap-y-2 p-3 text-sm lg:grid-cols-[4rem_1fr_11rem_6rem_5rem]">
         <div className="flex flex-col justify-center">
           <span className="text-muted-fg text-xxs">{m.objekt_serial()}</span>
           {onOpenTrades && serial !== null ? (
