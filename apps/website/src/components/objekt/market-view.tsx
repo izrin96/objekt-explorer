@@ -202,7 +202,7 @@ function MarketRow({
                 m.objekt_qyop()
               ) : item.price !== null && item.currency ? (
                 <>
-                  {item.price.toLocaleString()} {item.currency}
+                  {formatPrice(item.price, item.currency)}
                   {item.currency !== "USD" && item.usdPrice !== null && (
                     <span className="text-muted-fg text-xxs ml-1 font-mono tabular-nums">
                       ≈{formatPrice(item.usdPrice, "USD")}
