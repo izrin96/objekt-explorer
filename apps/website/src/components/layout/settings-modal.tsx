@@ -1,5 +1,6 @@
 import { useTransition } from "react";
 
+import { DropdownDescription, DropdownLabel } from "@/components/intentui/dropdown";
 import { Description, Label } from "@/components/intentui/field";
 import {
   ModalBody,
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/i
 import { Switch, SwitchField } from "@/components/intentui/switch";
 import { useTheme } from "@/components/shared/theme-provider";
 import { useConfigStore } from "@/hooks/use-config";
+import { currencyName, useCurrency } from "@/hooks/use-currency";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useWide } from "@/hooks/use-wide";
 import type { Locale } from "@/lib/locale";
@@ -87,6 +89,8 @@ export function SettingsModal({
           </div>
         </div>
 
+        <CurrencySetting />
+
         <div className="space-y-4">
           <h3 className="text-sm font-medium">{m.common_settings_filters_label()}</h3>
 
@@ -115,5 +119,40 @@ export function SettingsModal({
         <ModalClose>{m.common_modal_close()}</ModalClose>
       </ModalFooter>
     </ModalContent>
+  );
+}
+
+// own component so the rates query only runs while the modal is open
+function CurrencySetting() {
+  const preferred = useConfigStore((s) => s.currency);
+  const setCurrency = useConfigStore((s) => s.setCurrency);
+  const { codes } = useCurrency();
+  // keep the stored value selectable even before rates load
+  const options = codes.includes(preferred) ? codes : [...codes, preferred].sort();
+
+  return (
+    <div className="flex space-y-2">
+      <div className="grow">
+        <Label>{m.common_settings_currency_label()}</Label>
+        <Description>{m.common_settings_currency_desc()}</Description>
+      </div>
+      <div className="flex self-center">
+        <Select
+          value={preferred}
+          onChange={(key) => setCurrency(String(key))}
+          aria-label={m.common_settings_currency_label()}
+        >
+          <SelectTrigger />
+          <SelectContent>
+            {options.map((code) => (
+              <SelectItem key={code} id={code} textValue={code}>
+                <DropdownLabel>{code}</DropdownLabel>
+                <DropdownDescription>{currencyName(code)}</DropdownDescription>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
   );
 }

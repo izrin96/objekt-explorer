@@ -6,6 +6,9 @@ type ConfigState = {
   setHideLabel: (value: boolean) => void;
   wide: boolean;
   setWide: (value: boolean) => void;
+  /** ISO 4217 code that Marketplace prices are converted into */
+  currency: string;
+  setCurrency: (value: string) => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
 };
@@ -20,6 +23,8 @@ export const useConfigStore = create<ConfigState>()(
         }),
       wide: false,
       setWide: (value: boolean) => set({ wide: value }),
+      currency: "USD",
+      setCurrency: (value: string) => set({ currency: value }),
       _hasHydrated: false,
       setHasHydrated: (state) => {
         set({

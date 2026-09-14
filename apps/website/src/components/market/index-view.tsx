@@ -5,9 +5,9 @@ import { useCallback } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useConfigStore } from "@/hooks/use-config";
+import { useCurrency } from "@/hooks/use-currency";
 import { useMarketObjekts } from "@/hooks/use-market-objekts";
 import { useCurrentUser } from "@/hooks/use-user";
-import { formatPrice } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektCount } from "../collection/objekt-count";
@@ -45,9 +45,9 @@ export default function MarketRender() {
   );
 }
 
-function getPriceLabel(objekt: ValidObjekt) {
+function getPriceLabel(objekt: ValidObjekt, formatUsd: (usd: number) => string) {
   if (objekt.floorPrice !== null && objekt.floorPrice !== undefined) {
-    return m.market_floor_price({ price: formatPrice(objekt.floorPrice, "USD") });
+    return m.market_floor_price({ price: formatUsd(objekt.floorPrice) });
   }
   return objekt.hasQyop ? m.objekt_qyop() : m.market_price_ask();
 }
@@ -55,6 +55,7 @@ function getPriceLabel(objekt: ValidObjekt) {
 function MarketView() {
   const { data: user } = useCurrentUser();
   const hideLabel = useConfigStore((a) => a.hideLabel);
+  const { formatUsd } = useCurrency();
   const { filtered, filters, rarityMap, totalListings, isPending } = useMarketObjekts();
 
   const renderObjekt = useCallback(
@@ -66,7 +67,7 @@ function MarketView() {
           objekts={item}
           hideLabel={hideLabel}
           isPriority={rowIndex < 3}
-          priceLabel={getPriceLabel(objekt)}
+          priceLabel={getPriceLabel(objekt, formatUsd)}
           staticMenu={
             user && (
               <ObjektStaticMenu>
@@ -79,7 +80,7 @@ function MarketView() {
         </ObjektGridView>
       );
     },
-    [user, hideLabel],
+    [user, hideLabel, formatUsd],
   );
 
   if (isPending) {

@@ -1,3 +1,4 @@
+import { useCurrency } from "@/hooks/use-currency";
 import { useFilters } from "@/hooks/use-filters";
 import { m } from "@/paraglide/messages";
 
@@ -8,7 +9,14 @@ import { Popover, PopoverBody, PopoverContent } from "../intentui/popover";
 
 export default function FloorPriceFilter() {
   const [filters, setFilters] = useFilters();
+  const { currency, fromUsd, toUsd } = useCurrency();
   const isActive = filters.floor_min !== null || filters.floor_max !== null;
+
+  // URL params stay in USD so shared links mean the same for everyone;
+  // the inputs show and accept the preferred currency
+  const display = (usd: number | null) => (usd === null ? NaN : fromUsd(usd));
+  const store = (amount: number) =>
+    Number.isNaN(amount) ? null : Number(toUsd(amount).toPrecision(6));
 
   return (
     <Popover>
@@ -19,23 +27,21 @@ export default function FloorPriceFilter() {
         <PopoverBody className="flex w-64 flex-col gap-3 py-3 [--gutter:--spacing(4)]">
           <NumberField
             minValue={0}
-            step={0.5}
-            value={filters.floor_min ?? undefined}
-            onChange={(value) => setFilters({ floor_min: Number.isNaN(value) ? null : value })}
-            formatOptions={{ style: "currency", currency: "USD" }}
+            value={display(filters.floor_min)}
+            onChange={(value) => setFilters({ floor_min: store(value) })}
+            formatOptions={{ style: "currency", currency }}
           >
-            <Label>{m.filter_floor_min()}</Label>
+            <Label>{m.filter_floor_min({ currency })}</Label>
             <NumberInput />
           </NumberField>
 
           <NumberField
             minValue={0}
-            step={0.5}
-            value={filters.floor_max ?? undefined}
-            onChange={(value) => setFilters({ floor_max: Number.isNaN(value) ? null : value })}
-            formatOptions={{ style: "currency", currency: "USD" }}
+            value={display(filters.floor_max)}
+            onChange={(value) => setFilters({ floor_max: store(value) })}
+            formatOptions={{ style: "currency", currency }}
           >
-            <Label>{m.filter_floor_max()}</Label>
+            <Label>{m.filter_floor_max({ currency })}</Label>
             <NumberInput />
           </NumberField>
 

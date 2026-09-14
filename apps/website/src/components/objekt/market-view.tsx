@@ -8,6 +8,7 @@ import { Button } from "@/components/intentui/button";
 import { Link } from "@/components/intentui/link";
 import { Popover, PopoverContent } from "@/components/intentui/popover";
 import { Skeleton } from "@/components/intentui/skeleton";
+import { type Currency, useCurrency } from "@/hooks/use-currency";
 import { orpc } from "@/lib/orpc/client";
 import type { PublicList } from "@/lib/universal/list";
 import type { MarketListing, SortBy, SortDir } from "@/lib/universal/market";
@@ -54,10 +55,11 @@ export default function MarketView({ collectionSlug, defaultSortBy, onOpenTrades
     );
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
+  const currency = useCurrency();
 
   return (
     <div className="flex flex-col gap-2">
-      <MarketStatsBar collectionSlug={collectionSlug} />
+      <MarketStatsBar collectionSlug={collectionSlug} formatUsd={currency.formatUsd} />
 
       <div className="flex items-center gap-2">
         <SortButton active={sortBy === "price"} dir={sortDir} onClick={() => toggleSort("price")}>
@@ -83,7 +85,12 @@ export default function MarketView({ collectionSlug, defaultSortBy, onOpenTrades
         <>
           <div className="flex flex-col gap-2">
             {items.map((item) => (
-              <MarketRow key={item.id} item={item} onOpenTrades={onOpenTrades} />
+              <MarketRow
+                key={item.id}
+                item={item}
+                currency={currency}
+                onOpenTrades={onOpenTrades}
+              />
             ))}
           </div>
           <InfiniteQueryNext
@@ -98,7 +105,13 @@ export default function MarketView({ collectionSlug, defaultSortBy, onOpenTrades
   );
 }
 
-function MarketStatsBar({ collectionSlug }: { collectionSlug: string }) {
+function MarketStatsBar({
+  collectionSlug,
+  formatUsd,
+}: {
+  collectionSlug: string;
+  formatUsd: Currency["formatUsd"];
+}) {
   const { data: stats, isPending } = useQuery(
     orpc.market.stats.queryOptions({
       input: { collectionSlug },
@@ -110,7 +123,7 @@ function MarketStatsBar({ collectionSlug }: { collectionSlug: string }) {
 
   const values = stats
     ? [
-        stats.floorPrice !== null ? formatPrice(stats.floorPrice, "USD") : "-",
+        stats.floorPrice !== null ? formatUsd(stats.floorPrice) : "-",
         stats.total.toLocaleString(),
         stats.sellers.toLocaleString(),
       ]
@@ -160,9 +173,11 @@ function SortButton({
 
 function MarketRow({
   item,
+  currency: { currency, formatUsd },
   onOpenTrades,
 }: {
   item: MarketListing;
+  currency: Currency;
   onOpenTrades?: (serial: number) => void;
 }) {
   const serial = item.serial;
@@ -203,9 +218,9 @@ function MarketRow({
               ) : item.price !== null && item.currency ? (
                 <>
                   {formatPrice(item.price, item.currency)}
-                  {item.currency !== "USD" && item.usdPrice !== null && (
+                  {item.currency !== currency && item.usdPrice !== null && (
                     <span className="text-muted-fg text-xxs ml-1 font-mono tabular-nums">
-                      ≈{formatPrice(item.usdPrice, "USD")}
+                      ≈{formatUsd(item.usdPrice)}
                     </span>
                   )}
                 </>

@@ -190,6 +190,9 @@ export const marketRouter = {
       } satisfies MarketResult;
     }),
 
+  /** USD value of one unit of each known currency, keyed by ISO 4217 code */
+  rates: pub.handler(getUsdRates),
+
   stats: pub.input(z.object({ collectionSlug: z.string() })).handler(async ({ input }) => {
     const rates = await getUsdRates();
 

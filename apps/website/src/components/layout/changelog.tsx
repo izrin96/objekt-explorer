@@ -24,6 +24,7 @@ export function ChangelogContent() {
         "Added a Marketplace page showing all objekts listed in discoverable Sale lists, with floor price and number of objekts listed.",
         "Filter by priced only or floor price range, and sort by lowest price, recently listed, or most listed.",
         "The Market tab in the Objekt view now shows floor price, objekts listed, and seller count.",
+        "Pick a preferred currency in Settings. Marketplace prices are converted into it instead of USD.",
       ],
     },
     {
