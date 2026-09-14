@@ -22,17 +22,18 @@ export function ObjektCount({ filtered, grouped, hasNextPage, total }: ObjektCou
       className="flex items-center gap-1.5 font-medium"
       aria-label={`${m.common_count_total_prefix()}${displayCount.toLocaleString()}${m.common_count_total_suffix()}`}
     >
-      <span className="inline-flex items-baseline gap-1">
-        {m.common_count_total_prefix()}
+      {/* messages own the spacing around the number ("총 " / "개", "" / " total"); flex would strip it */}
+      <span className="inline-flex items-baseline">
+        <span className="whitespace-pre">{m.common_count_total_prefix()}</span>
         <SlotText text={displayCount.toLocaleString()} />
-        {m.common_count_total_suffix()}
+        <span className="whitespace-pre">{m.common_count_total_suffix()}</span>
       </span>
       {hasGrouped && <span className="text-muted-fg">·</span>}
       {hasGrouped && (
-        <span className="inline-flex items-baseline gap-1">
-          {m.common_count_types_prefix()}
+        <span className="inline-flex items-baseline">
+          <span className="whitespace-pre">{m.common_count_types_prefix()}</span>
           <SlotText text={displayGroupedCount.toLocaleString()} />
-          {m.common_count_types_suffix()}
+          <span className="whitespace-pre">{m.common_count_types_suffix()}</span>
         </span>
       )}
       {isLoading && <Loader variant="ring" />}
