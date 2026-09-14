@@ -217,6 +217,7 @@ async function handleCollection(
       slug: slug,
       textColor: metadata.objekt.textColor,
       backImage: metadata.objekt.backImage,
+      backgroundColor: metadata.objekt.backgroundColor,
       accentColor: metadata.objekt.accentColor,
     });
   }
@@ -232,7 +233,6 @@ async function handleCollection(
   collection.onOffline = metadata.objekt.collectionNo.includes("Z") ? "online" : "offline";
   collection.thumbnailImage = metadata.objekt.thumbnailImage;
   collection.frontImage = metadata.objekt.frontImage;
-  collection.backgroundColor = metadata.objekt.backgroundColor;
 
   return collection;
 }
