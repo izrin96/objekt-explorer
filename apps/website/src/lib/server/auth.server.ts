@@ -160,6 +160,22 @@ export const auth = betterAuth({
             .where(eq(authSchema.user.id, account.userId));
         },
       },
+      delete: {
+        // must be `before` — better-auth defers `after` past commit
+        before: async (account) => {
+          if (account.providerId === "credential") return;
+
+          const authContext = await auth.$context;
+          if (!authContext.socialProviders.some((p) => p.id === account.providerId)) return;
+
+          await db
+            .update(authSchema.user)
+            .set({
+              [account.providerId]: null,
+            })
+            .where(eq(authSchema.user.id, account.userId));
+        },
+      },
     },
   },
 });

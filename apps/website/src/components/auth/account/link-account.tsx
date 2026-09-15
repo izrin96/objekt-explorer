@@ -63,23 +63,26 @@ type LinkedAccountProps = {
 function LinkedAccount({ provider, id, accountId }: LinkedAccountProps) {
   const [pullOpen, setPullOpen] = useState(false);
   const [unlinkOpen, setUnlinkOpen] = useState(false);
-  const unlinkAccount = useMutation(
-    orpc.user.unlinkAccount.mutationOptions({
-      onSuccess: async (_, _v, _o, { client }) => {
-        setUnlinkOpen(false);
-        void client.invalidateQueries({
-          queryKey: orpc.user.currentUser.key(),
-        });
-        void client.invalidateQueries({
-          queryKey: ["accounts"],
-        });
-        toast.success(m.auth_account_link_accounts_unlinked({ provider: provider.label }));
-      },
-      onError: () => {
-        toast.error(m.auth_account_link_accounts_unlink_error({ provider: provider.label }));
-      },
-    }),
-  );
+  const unlinkAccount = useMutation({
+    mutationFn: async () => {
+      const result = await authClient.unlinkAccount({ accountId: id });
+      if (result.error) throw new Error(result.error.message);
+      return result.data;
+    },
+    onSuccess: async (_, _v, _o, { client }) => {
+      setUnlinkOpen(false);
+      void client.invalidateQueries({
+        queryKey: orpc.user.currentUser.key(),
+      });
+      void client.invalidateQueries({
+        queryKey: ["accounts"],
+      });
+      toast.success(m.auth_account_link_accounts_unlinked({ provider: provider.label }));
+    },
+    onError: () => {
+      toast.error(m.auth_account_link_accounts_unlink_error({ provider: provider.label }));
+    },
+  });
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -92,12 +95,7 @@ function LinkedAccount({ provider, id, accountId }: LinkedAccountProps) {
         provider={provider}
         open={unlinkOpen}
         setOpen={setUnlinkOpen}
-        onConfirm={() =>
-          unlinkAccount.mutate({
-            providerId: provider.id,
-            accountId: id,
-          })
-        }
+        onConfirm={() => unlinkAccount.mutate()}
         isPending={unlinkAccount.isPending}
       />
       <div className="flex gap-2">

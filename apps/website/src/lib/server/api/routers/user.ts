@@ -68,41 +68,6 @@ export const userRouter = {
     },
   ),
 
-  unlinkAccount: authed
-    .input(
-      z.object({
-        providerId: z.enum(["discord", "twitter"]),
-        accountId: z.string().min(1).max(64),
-      }),
-    )
-    .handler(
-      async ({
-        input: { providerId, accountId },
-        context: {
-          headers,
-          session: { user },
-        },
-      }) => {
-        // unlink using auth api
-        const result = await auth.api.unlinkAccount({
-          headers: headers,
-          body: {
-            accountId: accountId,
-          },
-        });
-
-        if (!result.status) throw new ORPCError("INTERNAL_SERVER_ERROR");
-
-        // remove username
-        await db
-          .update(userSchema)
-          .set({
-            [providerId]: null,
-          })
-          .where(eq(userSchema.id, user.id));
-      },
-    ),
-
   currentUser: pub.handler(getCurrentUser),
 
   updateAccount: authed
