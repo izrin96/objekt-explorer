@@ -158,7 +158,10 @@ export function SetPriceModal({ open, setOpen, objekts }: SetPriceModalProps) {
                   validationBehavior="aria"
                 >
                   <Label>{m.list_manage_objekt_set_price_note()}</Label>
-                  <Input placeholder={m.list_manage_objekt_set_price_note_placeholder()} />
+                  <Input
+                    maxLength={255}
+                    placeholder={m.list_manage_objekt_set_price_note_placeholder()}
+                  />
                 </TextField>
               )}
             />

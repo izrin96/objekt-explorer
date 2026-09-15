@@ -5,6 +5,7 @@ import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { lists, user, userAddress } from "@repo/db/schema";
 import type { ListEntry, UserAddress } from "@repo/db/schema";
+import { chunkMap } from "@repo/lib";
 import { mapOwnedObjekt, overrideCollection } from "@repo/lib/server/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { and, eq, inArray, ne } from "drizzle-orm";
@@ -13,6 +14,7 @@ import slugify from "slugify";
 import type { ListTypeNew, PublicList } from "../universal/list";
 import { toPublicUser } from "./auth.server";
 import { getCollectionColumns, getPartialCollectionColumns } from "./objekt.server";
+import { TOKEN_CHUNK_SIZE } from "./utils.server";
 
 export interface ListEntryTransformConfig {
   artists?: ValidArtist[];
@@ -54,26 +56,28 @@ async function buildProfileListEntries(
 
   if (objektIds.length === 0) return [];
 
-  const objektsData = await indexer
-    .select({
-      objekt: objekts,
-      collection: getCollectionColumns(),
-    })
-    .from(objekts)
-    .innerJoin(collections, eq(collections.id, objekts.collectionId))
-    .where(
-      and(
-        inArray(objekts.id, objektIds),
-        ...(config?.artists?.length
-          ? [
-              inArray(
-                collections.artist,
-                config.artists.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
+  const objektsData = await chunkMap(objektIds, TOKEN_CHUNK_SIZE, (batch) =>
+    indexer
+      .select({
+        objekt: objekts,
+        collection: getCollectionColumns(),
+      })
+      .from(objekts)
+      .innerJoin(collections, eq(collections.id, objekts.collectionId))
+      .where(
+        and(
+          inArray(objekts.id, batch),
+          ...(config?.artists?.length
+            ? [
+                inArray(
+                  collections.artist,
+                  config.artists.map((a) => a.toLowerCase()),
+                ),
+              ]
+            : []),
+        ),
       ),
-    );
+  );
 
   const objektMap = new Map(objektsData.map((o) => [o.objekt.id, o]));
 
@@ -317,7 +321,8 @@ export async function generateProfileSlug(
   profileAddress: string,
   excludeListId?: number,
 ): Promise<string> {
-  const baseSlug = slugify(name, { lower: true, strict: true });
+  // profile_slug is varchar(100); leave room for the "-<counter>" suffix
+  const baseSlug = slugify(name, { lower: true, strict: true }).slice(0, 90).replace(/-+$/, "");
   let slug = baseSlug || listSlug;
   let counter = 2;
 
@@ -376,16 +381,18 @@ export async function fetchPartialOwnedListCollections(slug: string, userId: str
 
     if (objektIds.length === 0) return [];
 
-    const objektsData = await indexer
-      .select({
-        id: objekts.id,
-        collection: {
-          ...getPartialCollectionColumns(),
-        },
-      })
-      .from(objekts)
-      .innerJoin(collections, eq(collections.id, objekts.collectionId))
-      .where(inArray(objekts.id, objektIds));
+    const objektsData = await chunkMap(objektIds, TOKEN_CHUNK_SIZE, (batch) =>
+      indexer
+        .select({
+          id: objekts.id,
+          collection: {
+            ...getPartialCollectionColumns(),
+          },
+        })
+        .from(objekts)
+        .innerJoin(collections, eq(collections.id, objekts.collectionId))
+        .where(inArray(objekts.id, batch)),
+    );
 
     const objektToCollection = new Map(objektsData.map((o) => [o.id, o.collection]));
 
@@ -398,7 +405,7 @@ export async function fetchPartialOwnedListCollections(slug: string, userId: str
       .filter((a) => a !== null);
   }
 
-  const slugs = list.entries.map((e) => e.collectionSlug).filter((a) => a !== null);
+  const slugs = [...new Set(list.entries.map((e) => e.collectionSlug).filter((a) => a !== null))];
 
   if (slugs.length === 0) return [];
 

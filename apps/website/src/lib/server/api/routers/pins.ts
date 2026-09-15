@@ -2,7 +2,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { pins } from "@repo/db/schema";
-import { chunk, isAddress } from "@repo/lib";
+import { chunk, chunkMap, isAddress } from "@repo/lib";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
@@ -20,18 +20,15 @@ async function getValidPins(address: string) {
 
   if (allPins.length === 0) return [];
 
-  const owned = await indexer
-    .select({ id: objekts.id })
-    .from(objekts)
-    .where(
-      and(
-        inArray(
-          objekts.id,
-          allPins.map((p) => String(p.tokenId)),
-        ),
-        eq(objekts.owner, address.toLowerCase()),
-      ),
-    );
+  const owned = await chunkMap(
+    allPins.map((p) => String(p.tokenId)),
+    TOKEN_CHUNK_SIZE,
+    (batch) =>
+      indexer
+        .select({ id: objekts.id })
+        .from(objekts)
+        .where(and(inArray(objekts.id, batch), eq(objekts.owner, address.toLowerCase()))),
+  );
 
   const ownedSet = new Set(owned.map((o) => o.id));
   return allPins.filter((p) => ownedSet.has(String(p.tokenId)));

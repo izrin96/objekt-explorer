@@ -39,6 +39,21 @@ export async function chunk<T>(
 }
 
 /**
+ * Chunk an array, collecting the rows each chunk returns.
+ */
+export async function chunkMap<T, R>(
+  arr: T[],
+  chunkSize: number,
+  callback: (chunk: T[]) => Promise<R[]>,
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    results.push(...(await callback(arr.slice(i, i + chunkSize))));
+  }
+  return results;
+}
+
+/**
  * Slugify a string for objekt collection IDs.
  */
 export function slugifyObjekt(collectionId: string): string {

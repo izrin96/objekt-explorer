@@ -24,7 +24,7 @@ export const listUtils = {
               entryId: z.number(),
               price: z.number().min(0).nullable(),
               isQyop: z.boolean(),
-              note: z.string().max(2000).optional().nullable(),
+              note: z.string().max(255).optional().nullable(),
             }),
           )
           .max(50000),
