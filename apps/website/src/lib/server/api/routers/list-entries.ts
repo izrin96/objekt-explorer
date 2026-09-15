@@ -3,6 +3,7 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts } from "@repo/db/indexer/schema";
 import { listEntries } from "@repo/db/schema";
+import { chunk } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
@@ -12,6 +13,7 @@ import {
   fetchOwnedLists,
   findOwnedList,
 } from "../../list.server";
+import { TOKEN_CHUNK_SIZE } from "../../utils.server";
 import { authed, optionalAuthed, pub, selectedArtistsMiddleware } from "../orpc";
 
 export const listEntriesRouter = {
@@ -104,11 +106,17 @@ export const listEntriesRouter = {
 
           if (values.length === 0) return [];
 
-          const result = await db
-            .insert(listEntries)
-            .values(values)
-            .onConflictDoNothing()
-            .returning();
+          const result: (typeof listEntries.$inferSelect)[] = [];
+          await db.transaction(async (tx) => {
+            await chunk(values, TOKEN_CHUNK_SIZE, async (batch) => {
+              const rows = await tx
+                .insert(listEntries)
+                .values(batch)
+                .onConflictDoNothing()
+                .returning();
+              result.push(...rows);
+            });
+          });
 
           if (result.length === 0) return [];
 
@@ -139,15 +147,21 @@ export const listEntriesRouter = {
 
           if (filteredSlugs.length === 0) return [];
 
-          const result = await db
-            .insert(listEntries)
-            .values(
-              filteredSlugs.map((collectionSlug) => ({
-                listId: list.id,
-                collectionSlug,
-              })),
-            )
-            .returning();
+          const result: (typeof listEntries.$inferSelect)[] = [];
+          await db.transaction(async (tx) => {
+            await chunk(filteredSlugs, TOKEN_CHUNK_SIZE, async (batch) => {
+              const rows = await tx
+                .insert(listEntries)
+                .values(
+                  batch.map((collectionSlug) => ({
+                    listId: list.id,
+                    collectionSlug,
+                  })),
+                )
+                .returning();
+              result.push(...rows);
+            });
+          });
 
           return buildListEntries(result, list.isProfileBind, {
             artists,
@@ -155,15 +169,21 @@ export const listEntriesRouter = {
           });
         }
 
-        const result = await db
-          .insert(listEntries)
-          .values(
-            collectionSlugs.map((collectionSlug) => ({
-              listId: list.id,
-              collectionSlug,
-            })),
-          )
-          .returning();
+        const result: (typeof listEntries.$inferSelect)[] = [];
+        await db.transaction(async (tx) => {
+          await chunk(collectionSlugs, TOKEN_CHUNK_SIZE, async (batch) => {
+            const rows = await tx
+              .insert(listEntries)
+              .values(
+                batch.map((collectionSlug) => ({
+                  listId: list.id,
+                  collectionSlug,
+                })),
+              )
+              .returning();
+            result.push(...rows);
+          });
+        });
 
         return buildListEntries(result, list.isProfileBind, {
           artists,

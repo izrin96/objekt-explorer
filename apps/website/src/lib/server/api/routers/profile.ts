@@ -46,14 +46,6 @@ export const profileRouter = {
     .handler(async ({ input: { address, ...rest }, context: { session } }) => {
       const profile = await fetchOwnedProfile(address, session.user.id);
 
-      // Delete previous banner if it exists and new banner is being set
-      if (profile.bannerImgUrl && rest.bannerImgUrl !== undefined) {
-        const fileName = profile.bannerImgUrl.split("/").pop();
-        if (fileName) {
-          await deleteFileFromBucket(S3_BUCKET, `profile-banner/${fileName}`);
-        }
-      }
-
       await db
         .update(userAddress)
         .set({
@@ -61,6 +53,15 @@ export const profileRouter = {
           bannerUpdatedAt: rest.bannerImgUrl !== undefined ? sql`'now'` : undefined,
         })
         .where(and(eq(userAddress.address, address), eq(userAddress.userId, session.user.id)));
+
+      // Delete the old banner only once the row no longer points at it, so a
+      // failed update cannot leave a dangling URL
+      if (profile.bannerImgUrl && rest.bannerImgUrl !== undefined) {
+        const fileName = profile.bannerImgUrl.split("/").pop();
+        if (fileName) {
+          await deleteFileFromBucket(S3_BUCKET, `profile-banner/${fileName}`);
+        }
+      }
     }),
 
   getPresignedPost: authed
