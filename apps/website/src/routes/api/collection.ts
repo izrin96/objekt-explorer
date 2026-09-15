@@ -57,18 +57,22 @@ export const Route = createFileRoute("/api/collection")({
         const ifModifiedSince = request.headers.get("if-modified-since");
         const ifModifiedSinceMs = ifModifiedSince ? new Date(ifModifiedSince).getTime() : 0;
 
-        const overrideStr = await redis.get("collection:modified-at");
-        const overrideMs = overrideStr ? new Date(overrideStr).getTime() : 0;
+        const overridePromise = redis.get("collection:modified-at");
 
         if (ifModifiedSinceMs > 0) {
-          const [singleResult] = await indexer
-            .select({
-              createdAt: collections.createdAt,
-            })
-            .from(collections)
-            .where(whereQuery)
-            .orderBy(desc(collections.id))
-            .limit(1);
+          const [overrideStr, [singleResult]] = await Promise.all([
+            overridePromise,
+            indexer
+              .select({
+                createdAt: collections.createdAt,
+              })
+              .from(collections)
+              .where(whereQuery)
+              .orderBy(desc(collections.id))
+              .limit(1),
+          ]);
+
+          const overrideMs = overrideStr ? new Date(overrideStr).getTime() : 0;
 
           if (!singleResult)
             return Response.json({
@@ -88,13 +92,18 @@ export const Route = createFileRoute("/api/collection")({
           }
         }
 
-        const result = await indexer
-          .select({
-            ...getCollectionColumns(),
-          })
-          .from(collections)
-          .where(whereQuery)
-          .orderBy(desc(collections.id));
+        const [overrideStr, result] = await Promise.all([
+          overridePromise,
+          indexer
+            .select({
+              ...getCollectionColumns(),
+            })
+            .from(collections)
+            .where(whereQuery)
+            .orderBy(desc(collections.id)),
+        ]);
+
+        const overrideMs = overrideStr ? new Date(overrideStr).getTime() : 0;
 
         const body = JSON.stringify({
           collections: result.map(overrideCollection),

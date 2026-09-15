@@ -2,11 +2,12 @@ import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { objekts } from "@repo/db/indexer/schema";
 import { pins } from "@repo/db/schema";
-import { isAddress } from "@repo/lib";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { chunk, isAddress } from "@repo/lib";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import * as z from "zod";
 
 import { isAddressHiddenFromCaller } from "../../privacy.server";
+import { TOKEN_CHUNK_SIZE } from "../../utils.server";
 import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
@@ -60,24 +61,29 @@ export const pinsRouter = {
 
       if (tokenIds.length === 0) return;
 
-      // unpin existing first then pin again
-      await db.delete(pins).where(and(inArray(pins.tokenId, tokenIds), eq(pins.address, address)));
+      await db.transaction(async (tx) => {
+        await chunk(tokenIds, TOKEN_CHUNK_SIZE, async (batch) => {
+          // unpin existing first then pin again
+          await tx.delete(pins).where(and(inArray(pins.tokenId, batch), eq(pins.address, address)));
 
-      const inserted = await db
-        .insert(pins)
-        .values(
-          tokenIds.map((tokenId) => ({
-            address,
-            tokenId,
-          })),
-        )
-        .returning({ id: pins.id })
-        .onConflictDoNothing();
+          await tx
+            .insert(pins)
+            .values(
+              batch.map((tokenId) => ({
+                address,
+                tokenId,
+              })),
+            )
+            .onConflictDoNothing();
+        });
 
-      // set order = id so pins can be reordered later
-      for (const row of inserted) {
-        await db.update(pins).set({ order: row.id }).where(eq(pins.id, row.id));
-      }
+        // set order = id so pins can be reordered later; the rows just inserted
+        // are the ones still holding a null order
+        await tx
+          .update(pins)
+          .set({ order: sql`${pins.id}` })
+          .where(and(eq(pins.address, address), isNull(pins.order)));
+      });
     }),
 
   batchUnpin: authed

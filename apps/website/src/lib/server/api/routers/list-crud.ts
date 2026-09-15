@@ -79,15 +79,17 @@ export const listCrud = {
           });
         }
 
-        // Validate: profile ownership
-        if (input.profileAddress) {
-          await checkProfileOwnership(input.profileAddress, user.id);
-        }
+        // Validate profile ownership and linked list ownership + type compatibility.
+        // allSettled keeps the profile error taking precedence over the linked one.
+        const [profileCheck, linkedCheck] = await Promise.allSettled([
+          input.profileAddress ? checkProfileOwnership(input.profileAddress, user.id) : undefined,
+          linkedListId !== null
+            ? checkLinkedList(input.listTypeNew, linkedListId, user.id)
+            : undefined,
+        ]);
 
-        // Validate: linked list ownership and type compatibility
-        if (linkedListId !== null) {
-          await checkLinkedList(input.listTypeNew, linkedListId, user.id);
-        }
+        if (profileCheck.status === "rejected") throw profileCheck.reason;
+        if (linkedCheck.status === "rejected") throw linkedCheck.reason;
 
         const slug = nanoid(9);
         let profileSlug: string | null = null;
@@ -186,15 +188,20 @@ export const listCrud = {
           });
         }
 
-        // Validate profile ownership (skip when isProfileBind — address changes are ignored)
-        if (input.profileAddress && !list.isProfileBind) {
-          await checkProfileOwnership(input.profileAddress, user.id);
-        }
+        // Validate profile ownership (skipped when isProfileBind — address changes are
+        // ignored) and linkedListId ownership + type compatibility.
+        // allSettled keeps the profile error taking precedence over the linked one.
+        const [profileCheck, linkedCheck] = await Promise.allSettled([
+          input.profileAddress && !list.isProfileBind
+            ? checkProfileOwnership(input.profileAddress, user.id)
+            : undefined,
+          linkedListId !== null
+            ? checkLinkedList(list.listTypeNew, linkedListId, user.id)
+            : undefined,
+        ]);
 
-        // Validate linkedListId ownership and type compatibility
-        if (linkedListId !== null) {
-          await checkLinkedList(list.listTypeNew, linkedListId, user.id);
-        }
+        if (profileCheck.status === "rejected") throw profileCheck.reason;
+        if (linkedCheck.status === "rejected") throw linkedCheck.reason;
 
         let profileSlug: string | null = null;
         // For isProfileBind lists, the profileAddress is locked to the

@@ -13,6 +13,9 @@ export function escapeCSV(value: string) {
   return guarded;
 }
 
+/** Keeps per-token-id statements under the 65535 bind parameter cap. */
+export const TOKEN_CHUNK_SIZE = 5000;
+
 export const classOrder: Record<ValidArtist, string[]> = {
   tripleS: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],
   artms: ["First", "Double", "Motion", "Unit", "Special", "Premier", "Welcome", "Zero"],

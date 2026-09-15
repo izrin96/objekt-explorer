@@ -196,8 +196,10 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   const session = await getSession();
   if (!session) return null;
 
-  const lists = await fetchOwnedLists("userId", session.user.id);
-  const profiles = await fetchUserProfiles(session.user.id);
+  const [lists, profiles] = await Promise.all([
+    fetchOwnedLists("userId", session.user.id),
+    fetchUserProfiles(session.user.id),
+  ]);
 
   return {
     user: session.user,

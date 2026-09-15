@@ -123,8 +123,7 @@ async function listAll() {
 }
 
 console.log(`[backfill] Listing bucket ${bucket}${prefix ? ` (prefix ${prefix})` : ""}...`);
-const allKeys = await listAll();
-const done = await loadDone();
+const [allKeys, done] = await Promise.all([listAll(), loadDone()]);
 
 const markers = allKeys.filter(isFolderMarker);
 const candidates = allKeys.filter((key) => !isFolderMarker(key));

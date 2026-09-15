@@ -1,10 +1,11 @@
 import { db } from "@repo/db";
 import { lockedObjekts } from "@repo/db/schema";
-import { isAddress } from "@repo/lib";
+import { chunk, isAddress } from "@repo/lib";
 import { and, eq, inArray } from "drizzle-orm";
 import * as z from "zod";
 
 import { isAddressHiddenFromCaller } from "../../privacy.server";
+import { TOKEN_CHUNK_SIZE } from "../../utils.server";
 import { authed, pub } from "../orpc";
 import { checkAddressOwned } from "./profile";
 
@@ -37,19 +38,23 @@ export const lockedObjektsRouter = {
 
       if (tokenIds.length === 0) return;
 
-      await db
-        .delete(lockedObjekts)
-        .where(and(inArray(lockedObjekts.tokenId, tokenIds), eq(lockedObjekts.address, address)));
+      await db.transaction(async (tx) => {
+        await chunk(tokenIds, TOKEN_CHUNK_SIZE, async (batch) => {
+          await tx
+            .delete(lockedObjekts)
+            .where(and(inArray(lockedObjekts.tokenId, batch), eq(lockedObjekts.address, address)));
 
-      await db
-        .insert(lockedObjekts)
-        .values(
-          tokenIds.map((tokenId) => ({
-            address,
-            tokenId,
-          })),
-        )
-        .onConflictDoNothing();
+          await tx
+            .insert(lockedObjekts)
+            .values(
+              batch.map((tokenId) => ({
+                address,
+                tokenId,
+              })),
+            )
+            .onConflictDoNothing();
+        });
+      });
     }),
 
   batchUnlock: authed

@@ -22,45 +22,46 @@ export const compareRouter = {
         context: { artists, session },
         input: { sourceId, targetType, mode, targetProfile: targetProfileId, targetListId },
       }) => {
-        const sourceList = await fetchListWithEntries(sourceId);
+        async function buildSourceEntries(): Promise<ValidObjekt[]> {
+          const sourceList = await fetchListWithEntries(sourceId);
 
-        if (!sourceList)
-          throw new ORPCError("NOT_FOUND", {
-            message: m.api_errors_compare_source_list_not_found(),
-          });
-
-        const sourceComparisonEntries = await buildListEntries(
-          sourceList.entries,
-          sourceList.isProfileBind,
-          { artists, hideSerial: sourceList.hideSerial },
-        );
-
-        let targetComparisonEntries: ValidObjekt[] = [];
-
-        if (targetType === "profile" && targetProfileId) {
-          const targetIsAddress = isAddress(targetProfileId);
-          const targetProfile = await db.query.userAddress.findFirst({
-            columns: {
-              address: true,
-              nickname: true,
-              privateProfile: true,
-              userId: true,
-            },
-            where: {
-              [targetIsAddress ? "address" : "nickname"]: targetProfileId,
-            },
-          });
-
-          if (!targetProfile)
+          if (!sourceList)
             throw new ORPCError("NOT_FOUND", {
-              message: m.api_errors_compare_target_profile_not_found(),
+              message: m.api_errors_compare_source_list_not_found(),
             });
 
-          const isProfileHidden =
-            targetProfile.privateProfile &&
-            (!session?.user.id || session.user.id !== targetProfile.userId);
+          return buildListEntries(sourceList.entries, sourceList.isProfileBind, {
+            artists,
+            hideSerial: sourceList.hideSerial,
+          });
+        }
 
-          if (!isProfileHidden) {
+        async function buildTargetEntries(): Promise<ValidObjekt[]> {
+          if (targetType === "profile" && targetProfileId) {
+            const targetIsAddress = isAddress(targetProfileId);
+            const targetProfile = await db.query.userAddress.findFirst({
+              columns: {
+                address: true,
+                nickname: true,
+                privateProfile: true,
+                userId: true,
+              },
+              where: {
+                [targetIsAddress ? "address" : "nickname"]: targetProfileId,
+              },
+            });
+
+            if (!targetProfile)
+              throw new ORPCError("NOT_FOUND", {
+                message: m.api_errors_compare_target_profile_not_found(),
+              });
+
+            const isProfileHidden =
+              targetProfile.privateProfile &&
+              (!session?.user.id || session.user.id !== targetProfile.userId);
+
+            if (isProfileHidden) return [];
+
             const ownedObjekts = await indexer
               .select({
                 collection: getCollectionColumns(),
@@ -69,24 +70,36 @@ export const compareRouter = {
               .innerJoin(collections, eq(collections.id, objekts.collectionId))
               .where(eq(objekts.owner, targetProfile.address.toLowerCase()));
 
-            targetComparisonEntries = ownedObjekts.map((o) => o.collection);
+            return ownedObjekts.map((o) => o.collection);
           }
-        } else if (targetType === "list" && targetListId) {
-          const targetList = await fetchListWithEntries(targetListId);
 
-          if (!targetList)
-            throw new ORPCError("NOT_FOUND", {
-              message: m.api_errors_compare_target_list_not_found(),
+          if (targetType === "list" && targetListId) {
+            const targetList = await fetchListWithEntries(targetListId);
+
+            if (!targetList)
+              throw new ORPCError("NOT_FOUND", {
+                message: m.api_errors_compare_target_list_not_found(),
+              });
+
+            return buildListEntries(targetList.entries, targetList.isProfileBind, {
+              artists,
+              hideSerial: targetList.hideSerial,
             });
+          }
 
-          targetComparisonEntries = await buildListEntries(
-            targetList.entries,
-            targetList.isProfileBind,
-            { artists, hideSerial: targetList.hideSerial },
-          );
+          return [];
         }
 
-        const result = performComparison(sourceComparisonEntries, targetComparisonEntries, mode);
+        // allSettled so a target failure never preempts the source NOT_FOUND
+        const [source, target] = await Promise.allSettled([
+          buildSourceEntries(),
+          buildTargetEntries(),
+        ]);
+
+        if (source.status === "rejected") throw source.reason;
+        if (target.status === "rejected") throw target.reason;
+
+        const result = performComparison(source.value, target.value, mode);
 
         return {
           objekts: result,

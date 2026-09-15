@@ -12,8 +12,6 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
   server: {
     handlers: {
       GET: async ({ params }) => {
-        const session = await getSession();
-
         const serial = parseInt(params.serial);
         if (Number.isNaN(serial)) {
           return Response.json({ message: "Invalid serial" }, { status: 422 });
@@ -24,20 +22,23 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
             transfers: [],
           });
 
-        const results = await indexer
-          .select({
-            tokenId: objekts.id,
-            id: transfers.id,
-            to: transfers.to,
-            timestamp: transfers.timestamp,
-            owner: objekts.owner,
-            transferable: objekts.transferable,
-          })
-          .from(transfers)
-          .innerJoin(objekts, eq(transfers.objektId, objekts.id))
-          .innerJoin(collections, eq(objekts.collectionId, collections.id))
-          .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
-          .orderBy(desc(transfers.timestamp), desc(transfers.id));
+        const [session, results] = await Promise.all([
+          getSession(),
+          indexer
+            .select({
+              tokenId: objekts.id,
+              id: transfers.id,
+              to: transfers.to,
+              timestamp: transfers.timestamp,
+              owner: objekts.owner,
+              transferable: objekts.transferable,
+            })
+            .from(transfers)
+            .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+            .innerJoin(collections, eq(objekts.collectionId, collections.id))
+            .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
+            .orderBy(desc(transfers.timestamp), desc(transfers.id)),
+        ]);
 
         const [result] = results;
         if (!result)
