@@ -26,24 +26,26 @@ export async function fetchCollectionsBySlug(slugs: string[], artists: ValidArti
 
   if (uniqueSlugs.size === 0) return [];
 
-  const result = await indexer
-    .select({
-      ...getCollectionColumns(),
-    })
-    .from(collections)
-    .where(
-      and(
-        inArray(collections.slug, Array.from(uniqueSlugs)),
-        ...(artists.length
-          ? [
-              inArray(
-                collections.artist,
-                artists.map((a) => a.toLowerCase()),
-              ),
-            ]
-          : []),
+  const result = await chunkMap(Array.from(uniqueSlugs), TOKEN_CHUNK_SIZE, (batch) =>
+    indexer
+      .select({
+        ...getCollectionColumns(),
+      })
+      .from(collections)
+      .where(
+        and(
+          inArray(collections.slug, batch),
+          ...(artists.length
+            ? [
+                inArray(
+                  collections.artist,
+                  artists.map((a) => a.toLowerCase()),
+                ),
+              ]
+            : []),
+        ),
       ),
-    );
+  );
 
   return result.map(overrideCollection);
 }
@@ -409,12 +411,14 @@ export async function fetchPartialOwnedListCollections(slug: string, userId: str
 
   if (slugs.length === 0) return [];
 
-  const foundCollections = await indexer
-    .select({
-      ...getPartialCollectionColumns(),
-    })
-    .from(collections)
-    .where(inArray(collections.slug, slugs));
+  const foundCollections = await chunkMap(slugs, TOKEN_CHUNK_SIZE, (batch) =>
+    indexer
+      .select({
+        ...getPartialCollectionColumns(),
+      })
+      .from(collections)
+      .where(inArray(collections.slug, batch)),
+  );
 
   const slugToCollection = new Map(foundCollections.map((c) => [c.slug, c]));
 
