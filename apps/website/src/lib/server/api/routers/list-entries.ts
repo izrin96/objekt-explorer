@@ -87,17 +87,22 @@ export const listEntriesRouter = {
             .innerJoin(collections, eq(collections.id, objekts.collectionId))
             .where(inArray(objekts.id, inputObjekts));
 
-          const validObjekts = objektsData.filter(
-            (o) => o.owner === list.profileAddress!.toLowerCase(),
+          const owned = new Map(
+            objektsData
+              .filter((o) => o.owner === list.profileAddress!.toLowerCase())
+              .map((o) => [o.id, o]),
           );
 
-          if (validObjekts.length === 0) return [];
+          const values = inputObjekts
+            .map((id) => owned.get(id))
+            .filter((objekt) => objekt !== undefined)
+            .map((objekt) => ({
+              listId: list.id,
+              objektId: objekt.id,
+              collectionSlug: objekt.slug,
+            }));
 
-          const values = validObjekts.map((objekt) => ({
-            listId: list.id,
-            objektId: objekt.id,
-            collectionSlug: objekt.slug,
-          }));
+          if (values.length === 0) return [];
 
           const result = await db
             .insert(listEntries)
