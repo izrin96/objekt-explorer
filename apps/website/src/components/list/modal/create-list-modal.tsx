@@ -73,7 +73,7 @@ function CreateListForm({ setOpen }: { setOpen: (val: boolean) => void }) {
       name: "",
       description: "",
       currency: "",
-      hideUser: true,
+      hideUser: false,
       listTypeNew: "general" as ListTypeNew,
       isProfileBind: false,
       hideSerial: false,
