@@ -20,7 +20,9 @@ export function ChangelogContent() {
   const changelog = [
     {
       date: "2026-09-16",
-      items: ["Added Japanese (日本語) language. Switch to it in Settings."],
+      items: [
+        "Added Japanese (日本語) language. Switch to it in Settings. Thanks to たろう (@iddnntt) from X.",
+      ],
     },
     {
       date: "2026-09-14",
