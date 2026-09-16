@@ -84,6 +84,7 @@ export function SettingsModal({
               <SelectContent>
                 <SelectItem id="en">{m.common_settings_language_en()}</SelectItem>
                 <SelectItem id="ko">{m.common_settings_language_ko()}</SelectItem>
+                <SelectItem id="ja">{m.common_settings_language_ja()}</SelectItem>
               </SelectContent>
             </Select>
           </div>

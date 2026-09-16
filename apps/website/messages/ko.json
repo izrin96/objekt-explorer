@@ -466,6 +466,7 @@
   "common_settings_language_desc": "표시 언어를 선택하세요",
   "common_settings_language_en": "English",
   "common_settings_language_ko": "한국어",
+  "common_settings_language_ja": "日本語",
   "common_settings_currency_label": "통화",
   "common_settings_currency_desc": "마켓 가격을 이 통화로 표시합니다",
   "common_changelog": "변경 사항",
