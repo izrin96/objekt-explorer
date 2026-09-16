@@ -19,6 +19,10 @@ import { m } from "@/paraglide/messages";
 export function ChangelogContent() {
   const changelog = [
     {
+      date: "2026-09-16",
+      items: ["Added Japanese (日本語) language. Switch to it in Settings."],
+    },
+    {
       date: "2026-09-14",
       items: [
         "Added a Marketplace page showing all objekts listed in discoverable Sale lists, with floor price and number of objekts listed.",
