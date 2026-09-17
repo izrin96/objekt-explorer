@@ -89,12 +89,18 @@ const ModalContent = ({
           "relative overflow-hidden bg-overlay text-overlay-fg",
           "inset-shadow-xs rounded-t-2xl ring ring-muted-fg/25 drop-shadow-xl sm:rounded-2xl dark:ring-border",
           sizes[size],
+          // custom duration-300 to duration-150
           "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-150 entering:ease-out",
           "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
           className,
         )}
       >
-        <Dialog className="min-w-0 overflow-clip" role={role}>
+        <Dialog
+          // custom add min-w-0 overflow-clip
+          className="min-w-0 overflow-clip"
+          role={role}
+          aria-label={props["aria-label"] ?? undefined}
+        >
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}

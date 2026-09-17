@@ -1,4 +1,5 @@
 import { CheckIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
+// custom — TanStack Router integration (see MenuItemLink below)
 import { Link as RouterLink, type LinkProps as RouterLinkProps } from "@tanstack/react-router";
 import { Button, type ButtonProps } from "react-aria-components/Button";
 import { Collection } from "react-aria-components/Collection";
@@ -158,6 +159,7 @@ export interface MenuHeaderProps extends React.ComponentProps<typeof Header> {
 const MenuHeader = ({ className, separator = false, ...props }: MenuHeaderProps) => (
   <Header
     className={twMerge(
+      // custom text-base to text-sm
       "col-span-full px-2.5 py-2 text-sm font-medium sm:text-sm",
       separator && "-mx-1 border-b sm:px-3 sm:pb-2.5",
       className,
@@ -253,6 +255,7 @@ export {
   MenuDescription,
   MenuHeader,
   MenuItem,
+  // custom
   MenuItemLink,
   MenuLabel,
   MenuSection,

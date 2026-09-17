@@ -111,6 +111,7 @@ const CommandMenu = ({
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
               "rounded-t-2xl md:rounded-xl",
               sizes[size],
+              // custom duration-300 to duration-150
               "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-150 entering:ease-out",
               "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
               className,
@@ -154,6 +155,7 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
       )}
       <Input
         placeholder={placeholder ?? "Search..."}
+        // custom text-base to text-sm
         className="text-fg placeholder-muted-fg w-full min-w-0 bg-transparent px-2.5 py-2 text-sm outline-hidden focus:outline-hidden sm:px-2 sm:py-1.5 sm:text-sm [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
       />
       {escapeButton && (

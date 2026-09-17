@@ -25,6 +25,7 @@ export function Note({ indicator = true, intent = "default", className, ...props
     <div
       data-slot="note"
       className={twMerge([
+        // custom text-base/6 to text-sm/6
         "grid w-full grid-cols-[auto_1fr] overflow-hidden rounded-lg border border-current/15 p-4 text-sm/6 backdrop-blur-2xl sm:text-sm/6",
         "*:[a]:hover:underline **:[strong]:font-medium",
         intent === "default" && "bg-muted/50 text-secondary-fg",

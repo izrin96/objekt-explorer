@@ -41,6 +41,7 @@ export function SliderOutput({
 }: ComponentProps<typeof PrimitiveSliderOutput>) {
   return (
     <PrimitiveSliderOutput
+      // custom text-base/6 to text-sm/6
       className={cx("font-medium text-sm/6 sm:text-sm/6", className)}
       {...props}
     />

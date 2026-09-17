@@ -54,6 +54,7 @@ export function ProgressBarValue({
   return (
     <span
       data-slot="progress-bar-value"
+      // custom text-base/6 to text-sm/6
       className={twMerge("text-sm/6 sm:text-sm/6", className)}
       {...props}
     >

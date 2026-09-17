@@ -1,3 +1,4 @@
+// custom — TanStack Router integration
 import { createLink } from "@tanstack/react-router";
 import {
   Link as LinkPrimitive,
@@ -10,6 +11,8 @@ export interface LinkProps extends LinkPrimitiveProps {
   ref?: React.RefObject<HTMLAnchorElement>;
 }
 
+// custom — upstream exports this as `Link`; renamed so `Link` can be the
+// createLink-wrapped router version below
 export function InternalLink({ className, ref, ...props }: LinkProps) {
   return (
     <LinkPrimitive

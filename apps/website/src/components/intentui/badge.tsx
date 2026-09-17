@@ -43,5 +43,7 @@ export interface BadgeProps extends React.ComponentProps<"span"> {
 }
 
 export function Badge({ intent, isCircle, className, ...props }: BadgeProps) {
+  // custom keep twMerge wrapper instead of badgeStyles({ className }) so
+  // @/lib/tw-merge extended font-size group (text-xxs) still applies
   return <span {...props} className={twMerge(badgeStyles({ intent, isCircle }), className)} />;
 }

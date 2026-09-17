@@ -10,6 +10,7 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p"
     <p
       data-slot="text"
       {...props}
+      // custom text-base/6 to text-sm/6
       className={twMerge("text-muted-fg text-sm/6 sm:text-sm/6", className)}
     />
   );

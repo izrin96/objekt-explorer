@@ -45,6 +45,7 @@ const EyeDropper = () => {
       intent="outline"
       onPress={() => {
         const eyeDropper = window.EyeDropper ? new window.EyeDropper() : null;
+        // custom add void (await-or-void lint rule)
         void eyeDropper?.open().then((result) => state.setColor(parseColor(result.sRGBHex)));
       }}
     >

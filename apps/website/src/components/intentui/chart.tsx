@@ -318,7 +318,7 @@ interface XAxisProps extends Omit<XAxisPropsPrimitive, "ref"> {
 }
 
 const tickHorizontal = {
-  transform: "translate(32, 6)",
+  transform: "translate(0, 6)",
 } as const;
 
 const XAxis = ({
@@ -373,11 +373,11 @@ const YAxis = ({
   return (
     <YAxisPrimitive
       className={twMerge("text-muted-fg **:[text]:fill-muted-fg text-xs", className)}
-      width={(width ?? layout === "horizontal") ? 40 : 80}
+      width={width ?? (layout === "horizontal" ? 48 : 80)}
       domain={domain}
       tick={tick}
       dataKey={layout === "horizontal" ? undefined : dataKey}
-      type={type || layout === "horizontal" ? "number" : "category"}
+      type={type ?? (layout === "horizontal" ? "number" : "category")}
       interval={layout === "horizontal" ? undefined : "equidistantPreserveStart"}
       axisLine={false}
       tickLine={false}

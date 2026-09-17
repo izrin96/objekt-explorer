@@ -2,7 +2,11 @@ import {
   FieldError as FieldErrorPrimitive,
   type FieldErrorProps,
 } from "react-aria-components/FieldError";
-import { Label as LabelPrimitive, type LabelProps } from "react-aria-components/Label";
+import {
+  LabelContext,
+  Label as LabelPrimitive,
+  type LabelProps,
+} from "react-aria-components/Label";
 import { Text, type TextProps } from "react-aria-components/Text";
 import { twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
@@ -11,6 +15,7 @@ import { cx } from "@/lib/primitive";
 
 export const labelStyles = tv({
   base: [
+    // custom text-base/6 to text-sm/6
     "text-fg text-sm/6 select-none in-data-required:not-data-[slot='control-label']:after:ml-1.5 sm:text-sm/6",
     "in-data-required:not-data-[slot='control-label']:after:text-danger-subtle-fg in-data-required:not-data-[slot='control-label']:after:content-['*']",
     "group-disabled:opacity-50 in-disabled:pointer-events-none in-disabled:opacity-50",
@@ -39,8 +44,22 @@ export const fieldStyles = tv({
   ],
 });
 
-export function Label({ className, ...props }: LabelProps) {
-  return <LabelPrimitive data-slot="label" {...props} className={labelStyles({ className })} />;
+export function Label({ className, htmlFor, slot, ...props }: LabelProps) {
+  const label = (
+    <LabelPrimitive
+      data-slot="label"
+      htmlFor={htmlFor}
+      slot={slot}
+      {...props}
+      className={labelStyles({ className })}
+    />
+  );
+
+  if (htmlFor && slot === undefined) {
+    return <LabelContext.Provider value={null}>{label}</LabelContext.Provider>;
+  }
+
+  return label;
 }
 
 export function Description({ className, ...props }: TextProps) {
@@ -69,6 +88,7 @@ export function Legend({ className, ...props }: React.ComponentProps<"legend">) 
     <legend
       data-slot="legend"
       {...props}
+      // custom text-base/6 to text-sm/6
       className={twMerge("text-sm/6 font-semibold data-disabled:opacity-50", className)}
     />
   );

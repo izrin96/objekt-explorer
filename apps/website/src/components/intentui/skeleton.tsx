@@ -1,5 +1,7 @@
 import { twMerge } from "tailwind-merge";
 
+// custom — forked from upstream: keeps the `soft` block-pulse API instead of
+// upstream's `isLoading` wrapper that pulses descendants
 export interface SkeletonProps extends React.ComponentProps<"div"> {
   soft?: boolean;
 }

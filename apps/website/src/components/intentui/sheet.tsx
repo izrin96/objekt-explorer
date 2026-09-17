@@ -76,8 +76,9 @@ const SheetContent = ({
         )}
       >
         <Dialog
+          // custom add min-w-0 overflow-clip
           className="min-w-0 overflow-clip sm:[--gutter:--spacing(6)]"
-          aria-label={props["aria-label"]}
+          aria-label={props["aria-label"] ?? undefined}
           role={role}
         >
           {(values) => (

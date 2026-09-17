@@ -1,3 +1,4 @@
+// custom — TanStack Router integration (see TabLink below)
 import { Link as RouterLink, type LinkProps as RouterLinkProps } from "@tanstack/react-router";
 import { createContext, use } from "react";
 import { composeRenderProps } from "react-aria-components/composeRenderProps";
@@ -134,6 +135,7 @@ const Tab = ({ className, ref, ...props }: TabProps) => {
             <SelectionIndicator
               data-slot="selected-indicator"
               className={twMerge(
+                // custom bg-primary-subtle-fg to bg-fg
                 "bg-fg absolute duration-200 will-change-transform",
                 orientation === "horizontal"
                   ? "start-(--tab-gutter-x) inset-e-(--tab-gutter-x) -bottom-[calc(var(--tab-gutter-y)+1px)] h-0.5 motion-safe:transition-[translate,width]"
@@ -210,4 +212,5 @@ const TabLink = ({ ref, ...props }: TabLinkProps) => {
 };
 
 export type { TabListProps, TabPanelProps, TabProps, TabsProps };
+// custom export: TabLink
 export { Tab, TabLink, TabList, TabPanel, TabPanels, Tabs };
