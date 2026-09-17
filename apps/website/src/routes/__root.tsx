@@ -100,15 +100,17 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         },
         ...links,
       ],
-      scripts: import.meta.env.DEV
-        ? []
-        : [
-            {
-              defer: true,
-              src: clientEnv.VITE_UMAMI_SCRIPT_URL,
-              "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
-            },
-          ],
+      scripts:
+        import.meta.env.DEV || !clientEnv.VITE_UMAMI_WEBSITE_ID
+          ? []
+          : [
+              {
+                defer: true,
+                src: "/m/s",
+                "data-host-url": "/m",
+                "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
+              },
+            ],
     };
   },
   shellComponent: RootDocument,
