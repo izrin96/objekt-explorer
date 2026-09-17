@@ -17,12 +17,12 @@
     },
     "lint": {
       "dependsOn": ["^lint"],
-      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts"],
+      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts", "oxlint.config.mts"],
       "outputs": [],
       "cache": true
     },
     "lint:fix": {
-      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts"],
+      "inputs": ["$TURBO_DEFAULT$", "oxlint.config.ts", "oxlint.config.mts"],
       "outputs": ["**/*.{ts,tsx,js,jsx}"],
       "cache": false
     },

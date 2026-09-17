@@ -17,9 +17,10 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "drizzle-orm": "catalog:",
-    "jose": "^6.2.10"
+    "jose": "^6.2.12"
   },
   "devDependencies": {
+    "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "@types/bun": "catalog:dev",
     "typescript": "catalog:dev"

@@ -17,6 +17,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@repo/lint": "workspace:*",
     "@repo/tsconfig": "workspace:*",
     "typescript": "catalog:dev"
   }
