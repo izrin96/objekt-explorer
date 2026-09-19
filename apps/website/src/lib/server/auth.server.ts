@@ -156,6 +156,7 @@ export const auth = betterAuth({
             .update(authSchema.user)
             .set({
               [account.providerId]: getProviderUsername(account.providerId, info),
+              showSocial: true,
             })
             .where(eq(authSchema.user.id, account.userId));
         },
