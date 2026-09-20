@@ -47,6 +47,7 @@ export const Route = createFileRoute("/api/user/search")({
                 address: u.address,
                 cosmoId: u.id,
               })),
+              { waitForLock: false },
             );
           }
 
