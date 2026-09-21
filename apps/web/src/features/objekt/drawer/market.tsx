@@ -9,19 +9,11 @@ import { Shimmer } from "@/components/shared/shimmer";
 import { TimeAgo } from "@/components/shared/time-ago";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
+import { useCurrency } from "@/features/settings/use-currency";
 import { truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
-import { getLocale } from "@/paraglide/runtime";
 
 import { marketListingsOptions, marketStatsOptions } from "../queries";
-
-function formatMoney(value: number, currency: string): string {
-  try {
-    return new Intl.NumberFormat(getLocale(), { style: "currency", currency }).format(value);
-  } catch {
-    return `${currency} ${value.toLocaleString()}`;
-  }
-}
 
 function SortButton({
   active,
@@ -51,6 +43,7 @@ export function MarketPanel({
 }) {
   const [sortBy, setSortBy] = useState<SortBy>("price");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const { formatUsd } = useCurrency();
 
   const stats = useQuery(marketStatsOptions(slug));
   const listings = useQuery(marketListingsOptions(slug, sortBy, sortDir));
@@ -71,7 +64,7 @@ export function MarketPanel({
       stats.data
         ? stats.data.floorPrice === null
           ? "—"
-          : formatMoney(stats.data.floorPrice, "USD")
+          : formatUsd(stats.data.floorPrice)
         : null,
     ],
     [m.objekt_market_listings(), stats.data ? stats.data.total.toLocaleString() : null],
@@ -122,7 +115,12 @@ export function MarketPanel({
       ) : (
         <div className="flex flex-col gap-1.5">
           {items.map((item) => (
-            <MarketRow key={item.id} item={item} onOpenSerial={onOpenSerial} />
+            <MarketRow
+              key={item.id}
+              item={item}
+              formatUsd={formatUsd}
+              onOpenSerial={onOpenSerial}
+            />
           ))}
         </div>
       )}
@@ -132,9 +130,11 @@ export function MarketPanel({
 
 function MarketRow({
   item,
+  formatUsd,
   onOpenSerial,
 }: {
   item: MarketListing;
+  formatUsd: (usd: number) => string;
   onOpenSerial: (serial: number) => void;
 }) {
   const nickname = item.list.profile?.nickname ?? null;
@@ -182,8 +182,8 @@ function MarketRow({
           <span className="font-mono font-medium tabular-nums">
             {item.isQyop
               ? m.objekt_qyop()
-              : item.price !== null && item.currency !== null
-                ? formatMoney(item.price, item.currency)
+              : item.usdPrice !== null
+                ? formatUsd(item.usdPrice)
                 : "—"}
           </span>
           {item.note && (

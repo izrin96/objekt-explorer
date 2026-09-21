@@ -18,6 +18,7 @@ import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
 import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
 import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
+import { Route as ApiActivityRouteImport } from './routes/api/activity'
 import { Route as ApiCollectionRouteImport } from './routes/api/collection'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
 import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
@@ -81,6 +82,11 @@ const AtChar123nicknameChar125IndexRoute =
     path: '/',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
+const ApiActivityRoute = ApiActivityRouteImport.update({
+  id: '/api/activity',
+  path: '/api/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCollectionRoute = ApiCollectionRouteImport.update({
   id: '/api/collection',
   path: '/api/collection',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
+  '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
+  '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -226,6 +234,7 @@ export interface FileRoutesById {
   '/(container)/login': typeof containerLoginRoute
   '/(container)/market': typeof containerMarketRoute
   '/(container)/terms-privacy': typeof containerTermsPrivacyRoute
+  '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/market'
     | '/terms-privacy'
+    | '/api/activity'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/market'
     | '/terms-privacy'
+    | '/api/activity'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/(container)/login'
     | '/(container)/market'
     | '/(container)/terms-privacy'
+    | '/api/activity'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -329,6 +341,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   containerRouteRoute: typeof containerRouteRouteWithChildren
   AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
+  ApiActivityRoute: typeof ApiActivityRoute
   ApiCollectionRoute: typeof ApiCollectionRoute
   ApiHealthcheckRoute: typeof ApiHealthcheckRoute
   ApiLiveSessionsRoute: typeof ApiLiveSessionsRoute
@@ -405,6 +418,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/@{$nickname}/'
       preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
       parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/api/activity': {
+      id: '/api/activity'
+      path: '/api/activity'
+      fullPath: '/api/activity'
+      preLoaderRoute: typeof ApiActivityRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/collection': {
       id: '/api/collection'
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   containerRouteRoute: containerRouteRouteWithChildren,
   AtChar123nicknameChar125RouteRoute:
     AtChar123nicknameChar125RouteRouteWithChildren,
+  ApiActivityRoute: ApiActivityRoute,
   ApiCollectionRoute: ApiCollectionRoute,
   ApiHealthcheckRoute: ApiHealthcheckRoute,
   ApiLiveSessionsRoute: ApiLiveSessionsRoute,

@@ -1,5 +1,6 @@
 import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort, ValidSortDirection } from "@repo/cosmo/types/common";
+import { useMemo } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -15,8 +16,11 @@ import { useColumns, useColumnStore } from "@/stores/columns";
 
 import { ActiveChips, useActiveChips } from "./active-chips";
 import {
+  type ExtraFacet,
+  ExtraFacetControls,
   FACET_KEYS,
   FacetControls,
+  NO_EXTRAS,
   useDeclaredFacets,
   useFacetParity,
   type FacetKey,
@@ -159,6 +163,8 @@ type FilterBarProps = {
   sorts?: readonly ValidCustomSort[];
   showPricedOnly?: boolean;
   showLock?: boolean;
+  /** toolbar controls this surface adds beside the five facets */
+  extras?: readonly ExtraFacet[];
 };
 
 export function FilterBar({
@@ -167,6 +173,7 @@ export function FilterBar({
   sorts = HOME_SORTS,
   showPricedOnly = false,
   showLock = false,
+  extras = NO_EXTRAS,
 }: FilterBarProps) {
   const filters = useCanonicalFilters();
   const setFilters = useSetFilters();
@@ -184,7 +191,11 @@ export function FilterBar({
     setFilters({ [key]: value.length > 0 ? value : undefined });
 
   const inlineKeys = FACET_KEYS;
-  useDeclaredFacets("inline", inlineKeys);
+  const declaredKeys = useMemo(
+    () => [...inlineKeys, ...extras.map((extra) => extra.key)],
+    [inlineKeys, extras],
+  );
+  useDeclaredFacets("inline", declaredKeys);
   useFacetParity();
 
   return (
@@ -202,6 +213,12 @@ export function FilterBar({
           controlClassName="max-md:hidden"
         />
 
+        <ExtraFacetControls
+          surface="inline"
+          extras={extras}
+          controlClassName="max-md:hidden"
+        />
+
         <FilterPopover
           showPricedOnly={showPricedOnly}
           showLock={showLock}
@@ -213,6 +230,7 @@ export function FilterBar({
           groups={groups}
           values={values}
           onChange={setFacet}
+          extras={extras}
           extraCount={longTailCount(filters)}
           onReset={reset}
         >

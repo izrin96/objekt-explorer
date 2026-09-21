@@ -755,5 +755,9 @@
   "link_open_cosmo": "Cosmo 열기",
   "link_no_cosmo_linked": "아직 연결된 Cosmo가 없습니다.",
   "link_profiles_linked": "Cosmo {count}개 연결됨.",
-  "link_step_artist": "아티스트"
+  "link_step_artist": "아티스트",
+  "market_description": "판매 중인 모든 컬렉션과 최저가",
+  "market_empty_hint": "현재 필터에 맞는 판매 등록이 없습니다. 필터를 넓히거나 모두 해제하세요.",
+  "activity_empty_hint": "현재 필터에 맞는 민팅, 전송, 스핀 기록이 없습니다.",
+  "activity_load_more": "더 보기"
 }

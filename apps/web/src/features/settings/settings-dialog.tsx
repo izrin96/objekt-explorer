@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ArtistsSection } from "@/features/settings/artists-menu";
+import { currencyName, useCurrency } from "@/features/settings/use-currency";
 import { m } from "@/paraglide/messages";
 import { getLocale, locales, setLocale } from "@/paraglide/runtime";
 import { THEMES, type Theme, useSettings } from "@/stores/settings";
@@ -104,6 +105,8 @@ export function SettingsDialog({
               </Select>
             </div>
 
+            <CurrencySetting />
+
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium">{m.common_settings_filters_label()}</span>
               {/* Base UI puts `id` on the Switch's hidden input and points the
@@ -133,6 +136,40 @@ export function SettingsDialog({
         </DialogFooter>
       </DialogPopup>
     </Dialog>
+  );
+}
+
+/** Its own component so the rates query only runs while the dialog is mounted. */
+function CurrencySetting() {
+  const preferred = useSettings((s) => s.currency);
+  const set = useSettings((s) => s.set);
+  const { codes } = useCurrency();
+  // the stored code stays selectable before the rates answer
+  const options = codes.includes(preferred) ? codes : [...codes, preferred].toSorted();
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label htmlFor="settings-currency">{m.common_settings_currency_label()}</Label>
+      <span className="text-muted-foreground -mt-1 text-xs">
+        {m.common_settings_currency_desc()}
+      </span>
+      <Select
+        value={preferred}
+        onValueChange={(v: string | null) => v !== null && set({ currency: v })}
+      >
+        <SelectTrigger id="settings-currency">
+          <SelectValue>{(v: string) => <span className="font-mono">{v}</span>}</SelectValue>
+        </SelectTrigger>
+        <SelectPopup alignItemWithTrigger={false} className="max-h-72">
+          {options.map((code) => (
+            <SelectItem key={code} value={code}>
+              <span className="font-mono">{code}</span>
+              <span className="text-muted-foreground ml-2">{currencyName(code)}</span>
+            </SelectItem>
+          ))}
+        </SelectPopup>
+      </Select>
+    </div>
   );
 }
 
