@@ -26,6 +26,11 @@ context: |
   ("round N", "the lab did X"), no JSDoc on obvious props. When porting lab code, drop its
   narrative comments; files kept verbatim by a gate (git-mv'd files, registry files under
   `components/ui`) are the exception.
+  The root `.env` points at the PRODUCTION database and services. Workers never delete, unlink,
+  remove or reset anything through the app or the API, never run `db:*` scripts, and never
+  create accounts or data without the user's explicit approval for that specific action.
+  Mutation flows are verified up to the request boundary (validation, the request that would
+  be sent) and recorded as "read-only verified"; read paths are exercised for real.
   There is no test framework: `bun run lint`, `bun run typecheck` and `bun run build` are the
   checks. Never git commit, push or run DB migrations without explicit approval.
 

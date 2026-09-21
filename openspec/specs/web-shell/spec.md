@@ -83,3 +83,11 @@ language SHALL set the locale cookie and re-render the page in that language.
 #### Scenario: Language change
 - **WHEN** the user selects 한국어
 - **THEN** the frame's strings are Korean and a reload keeps them Korean
+
+### Requirement: Account menu reaches Cosmo and account settings
+The account menu SHALL include a My Cosmo item opening `/link` and an Account item opening
+the account dialog.
+
+#### Scenario: My Cosmo
+- **WHEN** a signed-in user picks My Cosmo
+- **THEN** the URL is `/link`
