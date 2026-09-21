@@ -30,10 +30,13 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
-    "format": "turbo run format"
+    "format": "turbo run format",
+    "knip": "knip",
+    "check": "bun run lint && bun run typecheck"
   },
   "devDependencies": {
     "@types/node": "^26.6.1",
+    "knip": "^6.37.0",
     "oxfmt": "^0.68.0",
     "oxlint": "^1.83.0",
     "oxlint-tsgolint": "^7.0.2001",

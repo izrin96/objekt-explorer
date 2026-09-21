@@ -63,7 +63,30 @@ bun run --filter=@repo/db db:push       # Push schema directly (needs approval)
 bun run --filter=@repo/db db:studio     # Drizzle Studio
 ```
 
-There is no test framework in this repo — `lint` + `typecheck` are the checks.
+There is no test framework in this repo — `lint` + `typecheck` are the checks. `bun run check` runs both. `bun run knip` (config in `knip.json`) reports unused files, exports and dependencies; it is advisory today because `apps/website` carries pre-existing findings, and becomes a gate once `apps/website` and `intentui/` are deleted.
+
+## Skills and specs
+
+Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/skills/<name>` a relative symlink to them, pinned in `skills-lock.json`, all committed so a worktree or a Superset workspace carries them. Third-party skills are advice, not authority: where one contradicts this file or `design/lab-code-review.md`, the project document wins. Invoke the one for the layer being touched:
+
+| Layer or task                             | Skills                                                                                       |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Routes, loaders, `validateSearch`         | `router-core`, `tanstack-router-best-practices`                                              |
+| Server functions, SSR, entry points       | `start-core`, `tanstack-start-best-practices`                                                |
+| React components                          | `vercel-react-best-practices`, `vercel-composition-patterns`                                 |
+| Better Auth server and client             | `better-auth-best-practices`                                                                 |
+| Drizzle schema, raw SQL, indexes          | `supabase-postgres-best-practices` (Postgres anywhere)                                       |
+| Accessibility and UI review of a page     | `web-design-guidelines`; `fixing-accessibility` for a targeted fix                           |
+| Something broken, slow or throwing        | `diagnosing-bugs` first                                                                      |
+| Reviewing a branch or a change            | `code-review`                                                                                |
+| A merge conflict                          | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged) |
+| Editing this file, a skill or `openspec/` | `writing-for-agents`                                                                         |
+
+Install a new one with `npx skills@latest add <owner/repo> -s <skill> -a claude-code -y`, read the whole skill, move the directory to `.agents/skills/` and replace it with the symlink, then commit it with `skills-lock.json`.
+
+Specs use OpenSpec: `/opsx:propose` → review the change under `openspec/changes/` → `/opsx:apply` → `/opsx:archive`. `openspec/config.yaml` carries the project context every change is written against. The `openspec-*` skills and `opsx` commands under `.claude/` are `openspec init --tools claude` output — regenerate them, never edit or symlink them. The Base UI migration is worked as one change per slice.
+
+Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.env` from the main checkout and runs `bun install`, and `run` starts the lab dev server.
 
 ## Code Style
 

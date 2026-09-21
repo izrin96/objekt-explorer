@@ -1,0 +1,24 @@
+schema: spec-driven
+
+context: |
+  Objekt Explorer — Bun 1.4 + Turbo monorepo. Read AGENTS.md first; it is the authority on
+  structure, commands and code style (oxlint + oxfmt, TS strict, `import * as z from "zod"`,
+  no class/enum, theme spacing over arbitrary values, catalog: for shared deps).
+  Frontend: TanStack React Start + Vite + React 19 + Tailwind v4, ORPC + Zod, React Query,
+  Zustand (selectors only), Better Auth, Paraglide i18n. Database: PostgreSQL 18 + Drizzle.
+  Current programme: migrate the frontend off intentui / react-aria-components onto Base UI via
+  the cnippet registry, as a new app `apps/web`, using `apps/lab` as the visual and behavioural
+  reference. Read `design/base-ui-prototype-findings.md` and the seven port notes in
+  `design/lab-code-review.md` before proposing any frontend change. `apps/website` is the
+  read-only reference for behaviour until cutover.
+  There is no test framework: `bun run lint`, `bun run typecheck` and `bun run build` are the
+  checks. Never git commit, push or run DB migrations without explicit approval.
+
+rules:
+  proposal:
+    - Include a "Non-goals" section and name the website route(s) or lab surface(s) the change covers
+    - Keep proposals under 600 words
+  tasks:
+    - Each task ends with lint + typecheck + build passing for the touched package
+  design:
+    - Prefer the lab's existing component or store over a new one; say why when it does not fit
