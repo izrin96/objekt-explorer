@@ -1,9 +1,5 @@
+import { startActivityWebSocket, websocketHandlers } from "@repo/api/activity";
 import { serve } from "bun";
-
-import {
-  startActivityWebSocket,
-  websocketHandlers,
-} from "./src/lib/server/activity-websocket.server";
 
 void startActivityWebSocket();
 

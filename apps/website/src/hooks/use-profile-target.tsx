@@ -1,7 +1,6 @@
+import type { PublicProfile } from "@repo/api/schemas/user";
 import type { PropsWithChildren } from "react";
 import { createContext, useContext, useMemo } from "react";
-
-import type { PublicProfile } from "@/lib/universal/user";
 
 type ContextProps = {
   profile: PublicProfile;

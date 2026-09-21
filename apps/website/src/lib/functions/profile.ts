@@ -1,8 +1,8 @@
+import { fetchUserByIdentifier } from "@repo/api/services/auth";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
 
-import { fetchUserByIdentifier } from "../server/auth.server";
 import { optionalAuth } from "../server/middleware";
 
 export const profileInputSchema = z.object({ nickname: z.string() });

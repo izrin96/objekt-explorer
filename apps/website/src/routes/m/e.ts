@@ -1,6 +1,5 @@
+import { serverEnv } from "@repo/api/env";
 import { createFileRoute } from "@tanstack/react-router";
-
-import { serverEnv } from "@/lib/env/server";
 
 const FORWARDED_HEADERS = ["content-type", "user-agent", "accept-language"];
 const IP_HEADERS = ["x-client-ip", "cf-connecting-ip", "x-real-ip", "x-forwarded-for"];

@@ -69,7 +69,7 @@ import {
   closeWebSocketConnections,
   startActivityWebSocket,
   websocketHandlers,
-} from "./src/lib/server/activity-websocket.server";
+} from "@repo/api/activity";
 
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3000);

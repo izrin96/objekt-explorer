@@ -1,9 +1,9 @@
+import { type ValidType, validType } from "@repo/api/schemas/transfers";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import type { Selection } from "react-aria-components";
 
 import { Button } from "@/components/intentui/button";
 import { Menu, MenuContent, MenuItem, MenuLabel } from "@/components/intentui/menu";
-import { type ValidType, validType } from "@/lib/universal/transfers";
 import { m } from "@/paraglide/messages";
 
 export function useTypeFilter() {

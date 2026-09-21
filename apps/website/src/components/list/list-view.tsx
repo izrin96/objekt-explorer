@@ -1,3 +1,4 @@
+import type { PublicList } from "@repo/api/schemas/list";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import type { PropsWithChildren } from "react";
@@ -11,7 +12,6 @@ import { useConfigStore } from "@/hooks/use-config";
 import { useListObjekts } from "@/hooks/use-list-objekt";
 import { useListTarget } from "@/hooks/use-list-target";
 import { useCurrentUser, useListAuthed } from "@/hooks/use-user";
-import type { PublicList } from "@/lib/universal/list";
 import { m } from "@/paraglide/messages";
 
 import { ObjektCount } from "../collection/objekt-count";

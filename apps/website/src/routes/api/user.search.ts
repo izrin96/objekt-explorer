@@ -1,12 +1,11 @@
+import { cacheUsers } from "@repo/api/services/auth";
+import { rateLimit } from "@repo/api/services/redis";
+import { getAccessToken } from "@repo/api/services/token";
 import { search } from "@repo/cosmo/server/user";
 import { db } from "@repo/db";
 import { userAddress } from "@repo/db/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { desc, like } from "drizzle-orm";
-
-import { cacheUsers } from "@/lib/server/auth.server";
-import { rateLimit } from "@/lib/server/redis.server";
-import { getAccessToken } from "@/lib/server/token.server";
 
 const MAX_QUERY_LENGTH = 50;
 const RATE_LIMIT = 30; // requests

@@ -1,8 +1,6 @@
+import type { OwnedObjektsResult } from "@repo/api/schemas/objekt";
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { ofetch } from "ofetch";
-
-import type { OwnedObjektsResult } from "@/lib/universal/objekt";
-
-import type { OwnedBySchema } from "./universal/owned-by";
 
 export async function fetchOwnedObjektsByCursor(
   address: string,

@@ -1,0 +1,43 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/routers/index.ts",
+    "./*": "./src/*.ts",
+    "./services/*": "./src/services/*.ts",
+    "./schemas/*": "./src/schemas/*.ts"
+  },
+  "scripts": {
+    "lint": "oxlint --type-aware",
+    "lint:fix": "oxlint --type-aware --fix",
+    "typecheck": "tsc --noEmit",
+    "format": "oxfmt ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1134.0",
+    "@aws-sdk/client-sesv2": "^3.1134.0",
+    "@aws-sdk/s3-request-presigner": "^3.1134.0",
+    "@better-auth/i18n": "^1.7.5",
+    "@orpc/server": "^1.15.1",
+    "@repo/cosmo": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/lib": "workspace:*",
+    "@t3-oss/env-core": "^0.13.11",
+    "better-auth": "^1.7.5",
+    "drizzle-orm": "catalog:",
+    "nanoid": "^6.0.1",
+    "ofetch": "catalog:",
+    "slugify": "^1.6.9",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/lint": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@types/bun": "catalog:dev",
+    "typescript": "catalog:dev"
+  },
+  "peerDependencies": {
+    "@tanstack/react-start": "^1.168.56"
+  }
+}

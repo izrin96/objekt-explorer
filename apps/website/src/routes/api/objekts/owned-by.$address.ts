@@ -1,3 +1,6 @@
+import { ownedBySchema, type OwnedBySchema } from "@repo/api/schemas/owned-by";
+import { getCollectionColumns } from "@repo/api/services/objekt";
+import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
 import { mapOwnedObjekt } from "@repo/lib/server/objekt";
@@ -17,10 +20,6 @@ import {
   ne,
   or,
 } from "drizzle-orm";
-
-import { getCollectionColumns } from "@/lib/server/objekt.server";
-import { isAddressHiddenFromCaller } from "@/lib/server/privacy.server";
-import { ownedBySchema, type OwnedBySchema } from "@/lib/universal/owned-by";
 
 const PER_PAGE = 8000;
 const ENABLE_COUNT = false;

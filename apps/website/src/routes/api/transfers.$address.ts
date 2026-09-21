@@ -1,3 +1,7 @@
+import { artistsArraySchema } from "@repo/api/schemas/artist";
+import { validType } from "@repo/api/schemas/transfers";
+import { getCollectionColumns } from "@repo/api/services/objekt";
+import { isAddressHiddenFromCaller } from "@repo/api/services/privacy";
 import { validOnlineTypes } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
@@ -7,11 +11,6 @@ import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, lte, ne, or } from "drizzle-orm";
 import * as z from "zod";
-
-import { getCollectionColumns } from "@/lib/server/objekt.server";
-import { isAddressHiddenFromCaller } from "@/lib/server/privacy.server";
-import { artistsArraySchema } from "@/lib/universal/artist";
-import { validType } from "@/lib/universal/transfers";
 
 const PER_PAGE = 150;
 

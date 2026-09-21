@@ -1,9 +1,9 @@
 import { ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import type { PublicList } from "@repo/api/schemas/list";
 import { useState } from "react";
 
 import { Button } from "@/components/intentui/button";
 import { ExportListModal } from "@/components/list/modal/export-list-modal";
-import type { PublicList } from "@/lib/universal/list";
 import { m } from "@/paraglide/messages";
 
 export function ExportButton({ list }: { list: PublicList }) {

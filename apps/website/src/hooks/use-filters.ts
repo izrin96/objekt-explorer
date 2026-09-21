@@ -1,3 +1,4 @@
+import { toCanonicalArtist } from "@repo/api/schemas/artist";
 import type {
   ValidArtist,
   ValidEdition,
@@ -24,8 +25,6 @@ import {
   parseAsStringEnum,
   useQueryStates,
 } from "nuqs";
-
-import { toCanonicalArtist } from "@/lib/universal/artist";
 
 const parseAsArtist = parseAsArrayOf(
   createParser({

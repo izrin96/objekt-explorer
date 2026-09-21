@@ -1,6 +1,5 @@
+import { modeSchema, targetTypeSchema } from "@repo/api/schemas/compare";
 import { parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
-
-import { modeSchema, targetTypeSchema } from "@/lib/universal/compare";
 
 export function useCompareFilters() {
   return useQueryStates({

@@ -1,3 +1,4 @@
+import type { ListTypeNew } from "@repo/api/schemas/list";
 import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
 import { Suspense, useEffect } from "react";
 import { Form } from "react-aria-components/Form";
@@ -26,7 +27,6 @@ import ErrorFallbackRender from "@/components/router/error-boundary";
 import Portal from "@/components/shared/portal";
 import { useUserLists, useUserProfiles } from "@/hooks/use-user";
 import { orpc } from "@/lib/orpc/client";
-import type { ListTypeNew } from "@/lib/universal/list";
 import { parseNickname, SITE_NAME } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

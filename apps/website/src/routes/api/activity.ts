@@ -1,3 +1,6 @@
+import { validType } from "@repo/api/schemas/activity";
+import { artistsArraySchema } from "@repo/api/schemas/artist";
+import { getCollectionColumns } from "@repo/api/services/objekt";
 import { validOnlineTypes } from "@repo/cosmo/types/common";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
@@ -7,10 +10,6 @@ import { fetchKnownAddresses } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { type SQL, and, arrayOverlaps, desc, eq, inArray, lt, ne, or } from "drizzle-orm";
 import * as z from "zod";
-
-import { getCollectionColumns } from "@/lib/server/objekt.server";
-import { validType } from "@/lib/universal/activity";
-import { artistsArraySchema } from "@/lib/universal/artist";
 
 const PAGE_SIZE = 300;
 

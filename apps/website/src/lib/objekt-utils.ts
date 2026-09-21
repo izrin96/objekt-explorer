@@ -1,6 +1,5 @@
+import { getCollectionEdition } from "@repo/api/schemas/collection-grid";
 import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
-
-import { getCollectionEdition } from "./universal/collection-grid";
 
 function getMemberShortKeys(value: string) {
   return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);

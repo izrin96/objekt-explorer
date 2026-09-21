@@ -1,8 +1,7 @@
+import { fetchList } from "@repo/api/services/list";
 import { notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import * as z from "zod";
-
-import { fetchList } from "../server/list.server";
 
 export const listBySlugInputSchema = z.object({
   slug: z.string(),

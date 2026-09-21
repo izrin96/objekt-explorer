@@ -1,4 +1,5 @@
 import { NumberFormatter } from "@internationalized/number";
+import type { PublicList } from "@repo/api/schemas/list";
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { linkOptions } from "@tanstack/react-router";
@@ -8,7 +9,6 @@ import { twMerge } from "@/lib/tw-merge";
 import { getLocale } from "@/paraglide/runtime";
 
 import { clientEnv } from "./env/client";
-import type { PublicList } from "./universal/list";
 import { unobtainableSlugs } from "./unobtainables";
 
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(...inputs));
@@ -78,7 +78,7 @@ export const THEME_COLORS = {
   dark: "#09090B",
 };
 
-export const SITE_NAME = "Objekt Tracker";
+export { SITE_NAME } from "@repo/api/constants";
 
 export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_TABLET = 5;

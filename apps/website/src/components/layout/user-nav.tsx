@@ -10,6 +10,7 @@ import {
   UserIcon,
   XLogoIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import type { User } from "@repo/api/services/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -34,7 +35,6 @@ import { CreateListModal } from "@/components/list/modal/create-list-modal";
 import { GenerateDiscordFormatModal } from "@/components/list/modal/generate-discord";
 import { useUserLists, useUserProfiles } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
-import type { User } from "@/lib/server/auth.server";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

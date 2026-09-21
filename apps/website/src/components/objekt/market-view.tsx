@@ -1,5 +1,7 @@
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { NoteIcon, StorefrontIcon } from "@phosphor-icons/react/dist/ssr";
+import type { PublicList } from "@repo/api/schemas/list";
+import type { MarketListing, SortBy, SortDir } from "@repo/api/schemas/market";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useState } from "react";
@@ -10,8 +12,6 @@ import { Popover, PopoverContent } from "@/components/intentui/popover";
 import { Skeleton } from "@/components/intentui/skeleton";
 import { type Currency, useCurrency } from "@/hooks/use-currency";
 import { orpc } from "@/lib/orpc/client";
-import type { PublicList } from "@/lib/universal/list";
-import type { MarketListing, SortBy, SortDir } from "@/lib/universal/market";
 import { formatPrice, formatRelativeTime, getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

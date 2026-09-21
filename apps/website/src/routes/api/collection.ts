@@ -1,13 +1,12 @@
+import { artistsArraySchema } from "@repo/api/schemas/artist";
+import { getCollectionColumns } from "@repo/api/services/objekt";
+import { redis } from "@repo/api/services/redis";
 import { indexer } from "@repo/db/indexer";
 import { collections } from "@repo/db/indexer/schema";
 import { overrideCollection } from "@repo/lib/server/objekt";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, desc, inArray, lte, ne } from "drizzle-orm";
 import * as z from "zod";
-
-import { getCollectionColumns } from "@/lib/server/objekt.server";
-import { redis } from "@/lib/server/redis.server";
-import { artistsArraySchema } from "@/lib/universal/artist";
 
 const collectionSchema = z.object({
   artist: artistsArraySchema.default([]),

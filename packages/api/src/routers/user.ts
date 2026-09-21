@@ -1,0 +1,91 @@
+import { ORPCError } from "@orpc/server";
+import { db } from "@repo/db";
+import { user as userSchema } from "@repo/db/auth-schema";
+import { eq } from "drizzle-orm";
+import * as z from "zod";
+
+import { authed, pub } from "../orpc";
+import { providersMap } from "../schemas/user";
+import { auth, getCurrentUser, getProviderUsername } from "../services/auth";
+
+export const userRouter = {
+  refreshProfile: authed.input(z.enum(["discord", "twitter"])).handler(
+    async ({
+      input: providerId,
+      context: {
+        messages,
+        session: { user },
+      },
+    }) => {
+      // get accessToken from account
+      const account = await db.query.account.findFirst({
+        columns: {
+          idToken: true,
+          accessToken: true,
+          refreshToken: true,
+        },
+        where: { userId: user.id, providerId },
+      });
+
+      if (!account)
+        throw new ORPCError("BAD_REQUEST", {
+          message: messages.user_not_linked_provider(),
+        });
+
+      const authContext = await auth.$context;
+
+      const provider = authContext.socialProviders.find((p) => p.id === providerId);
+
+      if (!provider) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: messages.user_not_linked_provider(),
+        });
+      }
+
+      // fetch from provider
+      const info = await provider.getUserInfo({
+        idToken: account.idToken ?? undefined,
+        accessToken: account.accessToken ?? undefined,
+        refreshToken: account.refreshToken ?? undefined,
+      });
+
+      if (!info)
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: messages.user_failed_get_info({
+            provider: providersMap[providerId].label,
+          }),
+        });
+
+      // update user
+      await db
+        .update(userSchema)
+        .set({
+          [providerId]: getProviderUsername(providerId, info),
+          image: info.user.image,
+        })
+        .where(eq(userSchema.id, user.id));
+    },
+  ),
+
+  currentUser: pub.handler(getCurrentUser),
+
+  updateAccount: authed
+    .input(
+      z.object({
+        name: z.string().min(1).max(256),
+        showSocial: z.boolean(),
+        removePic: z.boolean(),
+      }),
+    )
+    .handler(async ({ input, context: { session } }) => {
+      await db
+        .update(userSchema)
+        .set({
+          name: input.name,
+          showSocial: input.showSocial,
+          image: input.removePic ? null : undefined,
+          removeImage: input.removePic,
+        })
+        .where(eq(userSchema.id, session.user.id));
+    }),
+};
