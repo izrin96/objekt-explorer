@@ -1,6 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { clientEnv } from "./env/client";
+
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
@@ -18,3 +20,8 @@ export const THEME_COLORS = {
   light: "#FBFBFB",
   dark: "#09090B",
 };
+
+/** Better Auth needs an absolute origin; the dev port differs from production. */
+export function getBaseURL(): string {
+  return clientEnv.VITE_SITE_URL;
+}

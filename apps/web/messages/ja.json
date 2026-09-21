@@ -700,5 +700,16 @@
   "status_cosmo_api_up": "稼働中",
   "status_cosmo_api_partial_hint": "Objektのシリアルは手動で計算されており、正確でない場合があります",
   "status_loading": "読み込み中...",
-  "status_error": "状態を取得できません"
+  "status_error": "状態を取得できません",
+  "nav_search_user_address_label": "アドレス",
+  "nav_search_user_open_address": "アドレスを開く",
+  "nav_search_user_hint": "ニックネームまたは0xアドレスで検索",
+  "nav_search_user_empty": "一致するユーザーがいません",
+  "nav_search_user_empty_hint": "“{query}” に一致するユーザーはいません。完全な0xアドレスは一覧になくてもプロフィールとして開けます。",
+  "nav_search_user_error": "検索できません",
+  "nav_search_kbd_move": "移動",
+  "nav_search_kbd_open": "開く",
+  "nav_search_kbd_close": "閉じる",
+  "settings_description": "このデバイスの外観と言語です。",
+  "settings_artists_hint": "すべてのページに適用されます。最低1組のArtistは選択されたままになります。"
 }

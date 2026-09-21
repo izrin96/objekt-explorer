@@ -3,27 +3,26 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const THEMES = ["System", "Light", "Dark"] as const;
-export const LANGUAGES = ["English", "한국어", "Bahasa Melayu"] as const;
 
 export type Theme = (typeof THEMES)[number];
-export type Language = (typeof LANGUAGES)[number];
 
 export const SETTINGS_STORAGE_KEY = "web:settings";
 
 type SettingsState = {
   theme: Theme;
-  language: Language;
   /** drop the container's max width */
   wide: boolean;
-  set: (patch: Partial<Pick<SettingsState, "theme" | "language" | "wide">>) => void;
+  /** hide collection labels on objekt cards */
+  hideLabel: boolean;
+  set: (patch: Partial<Pick<SettingsState, "theme" | "wide" | "hideLabel">>) => void;
 };
 
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
       theme: "System",
-      language: "English",
       wide: false,
+      hideLabel: false,
       set: (patch) => set(patch),
     }),
     { name: SETTINGS_STORAGE_KEY },

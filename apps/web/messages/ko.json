@@ -700,5 +700,16 @@
   "status_cosmo_api_up": "정상",
   "status_cosmo_api_partial_hint": "오브젝트 시리얼 번호는 수동으로 계산되어 정확하지 않을 수 있습니다",
   "status_loading": "불러오는 중...",
-  "status_error": "상태를 불러올 수 없습니다"
+  "status_error": "상태를 불러올 수 없습니다",
+  "nav_search_user_address_label": "주소",
+  "nav_search_user_open_address": "주소 열기",
+  "nav_search_user_hint": "닉네임 또는 0x 주소로 검색하세요",
+  "nav_search_user_empty": "일치하는 사용자가 없습니다",
+  "nav_search_user_empty_hint": "“{query}”(으)로 등록된 사용자가 없습니다. 전체 0x 주소는 목록에 없어도 프로필로 열립니다.",
+  "nav_search_user_error": "검색할 수 없습니다",
+  "nav_search_kbd_move": "이동",
+  "nav_search_kbd_open": "열기",
+  "nav_search_kbd_close": "닫기",
+  "settings_description": "이 기기의 모양과 언어입니다.",
+  "settings_artists_hint": "모든 페이지에 적용됩니다. 최소 한 명의 아티스트는 선택된 상태로 유지됩니다."
 }

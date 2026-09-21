@@ -9,9 +9,13 @@ import {
 } from "@tanstack/react-router";
 import { type ReactNode, useEffect } from "react";
 
+import { AppNav } from "@/components/layout/app-nav";
 import { ToastProvider } from "@/components/ui/toast";
+import { CosmoArtistProvider } from "@/features/artist/cosmo-artist-provider";
+import { currentUserOptions } from "@/features/user/queries";
 import { startOverflowGuard } from "@/lib/dev-overflow-guard";
 import { generateMetadata } from "@/lib/meta";
+import { orpc } from "@/lib/orpc";
 import { SITE_NAME, THEME_COLORS } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -33,6 +37,13 @@ const applySettingsScript = `(function(){try{var s=JSON.parse(localStorage.getIt
 )})||"{}").state||{};var d=document.documentElement;d.classList.toggle("dark",s.theme==="Dark"||(s.theme!=="Light"&&matchMedia("(prefers-color-scheme: dark)").matches));if(s.wide)d.dataset.wide="true";}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<RouterContext>()({
+  loader: async ({ context: { queryClient } }) => {
+    await Promise.all([
+      queryClient.ensureQueryData(orpc.config.getArtists.queryOptions()),
+      queryClient.ensureQueryData(orpc.config.getSelectedArtists.queryOptions()),
+      queryClient.ensureQueryData(currentUserOptions),
+    ]);
+  },
   head: () => {
     const { meta, links } = generateMetadata({
       charSet: "utf-8",
@@ -122,11 +133,14 @@ function RootComponent() {
 
   return (
     <ToastProvider position="bottom-right">
-      {/* `clip` rather than `hidden`: it creates no scroll container, so a
-          sticky nav still works, and no page can scroll sideways */}
-      <div className="min-h-svh overflow-x-clip">
-        <Outlet />
-      </div>
+      <CosmoArtistProvider>
+        <AppNav />
+        {/* `clip` rather than `hidden`: it creates no scroll container, so a
+            sticky nav still works, and no page can scroll sideways */}
+        <div className="min-h-svh overflow-x-clip">
+          <Outlet />
+        </div>
+      </CosmoArtistProvider>
       {import.meta.env.DEV && <OverflowGuard />}
     </ToastProvider>
   );

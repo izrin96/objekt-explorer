@@ -700,5 +700,16 @@
   "status_cosmo_api_up": "Up",
   "status_cosmo_api_partial_hint": "Objekt serial is manually calculated and may not be accurate",
   "status_loading": "Loading...",
-  "status_error": "Unable to fetch status"
+  "status_error": "Unable to fetch status",
+  "nav_search_user_address_label": "Address",
+  "nav_search_user_open_address": "Open address",
+  "nav_search_user_hint": "Search by nickname or 0x address",
+  "nav_search_user_empty": "No users match",
+  "nav_search_user_empty_hint": "Nothing is called “{query}”. A full 0x address opens as a profile even when it is not listed.",
+  "nav_search_user_error": "Search unavailable",
+  "nav_search_kbd_move": "to move",
+  "nav_search_kbd_open": "open",
+  "nav_search_kbd_close": "close",
+  "settings_description": "Appearance and language for this device.",
+  "settings_artists_hint": "Scopes every page. At least one artist stays on."
 }

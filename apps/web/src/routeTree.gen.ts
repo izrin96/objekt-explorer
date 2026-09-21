@@ -10,39 +10,181 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as containerRouteRouteImport } from './routes/(container)/route'
+import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$nickname}/route'
 import { Route as containerIndexRouteImport } from './routes/(container)/index'
+import { Route as containerActivityRouteImport } from './routes/(container)/activity'
+import { Route as containerLinkRouteImport } from './routes/(container)/link'
+import { Route as containerListRouteImport } from './routes/(container)/list'
+import { Route as containerLoginRouteImport } from './routes/(container)/login'
+import { Route as containerMarketRouteImport } from './routes/(container)/market'
+import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
+import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
+import { Route as RpcSplatRouteImport } from './routes/rpc.$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 
 const containerRouteRoute = containerRouteRouteImport.update({
   id: '/(container)',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtChar123nicknameChar125RouteRoute =
+  AtChar123nicknameChar125RouteRouteImport.update({
+    id: '/@{$nickname}',
+    path: '/@{$nickname}',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const containerIndexRoute = containerIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => containerRouteRoute,
 } as any)
+const containerActivityRoute = containerActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLinkRoute = containerLinkRouteImport.update({
+  id: '/link',
+  path: '/link',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerListRoute = containerListRouteImport.update({
+  id: '/list',
+  path: '/list',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLoginRoute = containerLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerMarketRoute = containerMarketRouteImport.update({
+  id: '/market',
+  path: '/market',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const AtChar123nicknameChar125IndexRoute =
+  AtChar123nicknameChar125IndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const ApiHealthcheckRoute = ApiHealthcheckRouteImport.update({
+  id: '/api/healthcheck',
+  path: '/api/healthcheck',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RpcSplatRoute = RpcSplatRouteImport.update({
+  id: '/rpc/$',
+  path: '/rpc/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
+  id: '/api/user/search',
+  path: '/api/user/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
+  '/activity': typeof containerActivityRoute
+  '/link': typeof containerLinkRoute
+  '/list': typeof containerListRoute
+  '/login': typeof containerLoginRoute
+  '/market': typeof containerMarketRoute
+  '/api/healthcheck': typeof ApiHealthcheckRoute
+  '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
+  '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/user/search': typeof ApiUserSearchRoute
 }
 export interface FileRoutesByTo {
+  '/activity': typeof containerActivityRoute
+  '/link': typeof containerLinkRoute
+  '/list': typeof containerListRoute
+  '/login': typeof containerLoginRoute
+  '/market': typeof containerMarketRoute
+  '/api/healthcheck': typeof ApiHealthcheckRoute
+  '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
+  '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/user/search': typeof ApiUserSearchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(container)': typeof containerRouteRouteWithChildren
+  '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
+  '/(container)/activity': typeof containerActivityRoute
+  '/(container)/link': typeof containerLinkRoute
+  '/(container)/list': typeof containerListRoute
+  '/(container)/login': typeof containerLoginRoute
+  '/(container)/market': typeof containerMarketRoute
+  '/api/healthcheck': typeof ApiHealthcheckRoute
+  '/rpc/$': typeof RpcSplatRoute
   '/(container)/': typeof containerIndexRoute
+  '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/user/search': typeof ApiUserSearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/@{$nickname}'
+    | '/activity'
+    | '/link'
+    | '/list'
+    | '/login'
+    | '/market'
+    | '/api/healthcheck'
+    | '/rpc/$'
+    | '/'
+    | '/@{$nickname}/'
+    | '/api/auth/$'
+    | '/api/user/search'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/(container)' | '/(container)/'
+  to:
+    | '/activity'
+    | '/link'
+    | '/list'
+    | '/login'
+    | '/market'
+    | '/api/healthcheck'
+    | '/rpc/$'
+    | '/'
+    | '/@{$nickname}'
+    | '/api/auth/$'
+    | '/api/user/search'
+  id:
+    | '__root__'
+    | '/(container)'
+    | '/@{$nickname}'
+    | '/(container)/activity'
+    | '/(container)/link'
+    | '/(container)/list'
+    | '/(container)/login'
+    | '/(container)/market'
+    | '/api/healthcheck'
+    | '/rpc/$'
+    | '/(container)/'
+    | '/@{$nickname}/'
+    | '/api/auth/$'
+    | '/api/user/search'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   containerRouteRoute: typeof containerRouteRouteWithChildren
+  AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
+  ApiHealthcheckRoute: typeof ApiHealthcheckRoute
+  RpcSplatRoute: typeof RpcSplatRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiUserSearchRoute: typeof ApiUserSearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -54,6 +196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/@{$nickname}': {
+      id: '/@{$nickname}'
+      path: '/@{$nickname}'
+      fullPath: '/@{$nickname}'
+      preLoaderRoute: typeof AtChar123nicknameChar125RouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(container)/': {
       id: '/(container)/'
       path: '/'
@@ -61,14 +210,94 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerIndexRouteImport
       parentRoute: typeof containerRouteRoute
     }
+    '/(container)/activity': {
+      id: '/(container)/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof containerActivityRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/link': {
+      id: '/(container)/link'
+      path: '/link'
+      fullPath: '/link'
+      preLoaderRoute: typeof containerLinkRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/list': {
+      id: '/(container)/list'
+      path: '/list'
+      fullPath: '/list'
+      preLoaderRoute: typeof containerListRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/login': {
+      id: '/(container)/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof containerLoginRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/market': {
+      id: '/(container)/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof containerMarketRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/@{$nickname}/': {
+      id: '/@{$nickname}/'
+      path: '/'
+      fullPath: '/@{$nickname}/'
+      preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/api/healthcheck': {
+      id: '/api/healthcheck'
+      path: '/api/healthcheck'
+      fullPath: '/api/healthcheck'
+      preLoaderRoute: typeof ApiHealthcheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rpc/$': {
+      id: '/rpc/$'
+      path: '/rpc/$'
+      fullPath: '/rpc/$'
+      preLoaderRoute: typeof RpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/search': {
+      id: '/api/user/search'
+      path: '/api/user/search'
+      fullPath: '/api/user/search'
+      preLoaderRoute: typeof ApiUserSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface containerRouteRouteChildren {
+  containerActivityRoute: typeof containerActivityRoute
+  containerLinkRoute: typeof containerLinkRoute
+  containerListRoute: typeof containerListRoute
+  containerLoginRoute: typeof containerLoginRoute
+  containerMarketRoute: typeof containerMarketRoute
   containerIndexRoute: typeof containerIndexRoute
 }
 
 const containerRouteRouteChildren: containerRouteRouteChildren = {
+  containerActivityRoute: containerActivityRoute,
+  containerLinkRoute: containerLinkRoute,
+  containerListRoute: containerListRoute,
+  containerLoginRoute: containerLoginRoute,
+  containerMarketRoute: containerMarketRoute,
   containerIndexRoute: containerIndexRoute,
 }
 
@@ -76,8 +305,28 @@ const containerRouteRouteWithChildren = containerRouteRoute._addFileChildren(
   containerRouteRouteChildren,
 )
 
+interface AtChar123nicknameChar125RouteRouteChildren {
+  AtChar123nicknameChar125IndexRoute: typeof AtChar123nicknameChar125IndexRoute
+}
+
+const AtChar123nicknameChar125RouteRouteChildren: AtChar123nicknameChar125RouteRouteChildren =
+  {
+    AtChar123nicknameChar125IndexRoute: AtChar123nicknameChar125IndexRoute,
+  }
+
+const AtChar123nicknameChar125RouteRouteWithChildren =
+  AtChar123nicknameChar125RouteRoute._addFileChildren(
+    AtChar123nicknameChar125RouteRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   containerRouteRoute: containerRouteRouteWithChildren,
+  AtChar123nicknameChar125RouteRoute:
+    AtChar123nicknameChar125RouteRouteWithChildren,
+  ApiHealthcheckRoute: ApiHealthcheckRoute,
+  RpcSplatRoute: RpcSplatRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiUserSearchRoute: ApiUserSearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

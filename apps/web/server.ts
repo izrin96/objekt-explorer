@@ -65,6 +65,12 @@
 
 import path from "node:path";
 
+import {
+  closeWebSocketConnections,
+  startActivityWebSocket,
+  websocketHandlers,
+} from "@repo/api/activity";
+
 // Configuration
 const SERVER_PORT = Number(process.env.PORT ?? 3200);
 const CLIENT_DIRECTORY = "./dist/client";
@@ -484,12 +490,30 @@ async function initializeServer() {
   // Build static routes with intelligent preloading
   const { routes: staticRoutes } = await initializeStaticRoutes(CLIENT_DIRECTORY);
 
+  // Start activity WebSocket pub/sub listener
+  void startActivityWebSocket();
+
   // Create Bun server
   const server = Bun.serve({
     port: SERVER_PORT,
 
-    async fetch(req) {
+    async fetch(req, server) {
       const url = new URL(req.url);
+
+      // WebSocket upgrade for activity feed
+      if (url.pathname === "/ws") {
+        const origin = req.headers.get("origin");
+        const allowedOrigin = process.env.VITE_SITE_URL;
+        // Reject only a *present* origin that isn't ours. A missing Origin
+        // (non-browser / same-origin clients) is allowed; cross-site browser
+        // pages always send an Origin, so this blocks the cross-origin case.
+        if (origin && allowedOrigin && origin !== new URL(allowedOrigin).origin) {
+          return new Response("Forbidden origin", { status: 403 });
+        }
+        const upgraded = server.upgrade(req);
+        if (upgraded) return undefined;
+        return new Response("Upgrade failed", { status: 500 });
+      }
 
       // Serve preloaded or on-demand static assets
       const staticHandler = staticRoutes[url.pathname];
@@ -509,6 +533,8 @@ async function initializeServer() {
       }
     },
 
+    websocket: websocketHandlers,
+
     // Global error handler
     error(error) {
       log.error(`Uncaught server error: ${error instanceof Error ? error.message : String(error)}`);
@@ -521,6 +547,7 @@ async function initializeServer() {
   // Graceful shutdown
   async function shutdown(signal: string) {
     log.info(`Received ${signal}, shutting down gracefully...`);
+    closeWebSocketConnections();
     await server.stop();
     process.exit(0);
   }
