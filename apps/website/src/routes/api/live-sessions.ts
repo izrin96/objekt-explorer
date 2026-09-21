@@ -1,10 +1,9 @@
+import { artistSchema } from "@repo/api/schemas/artist";
+import { rateLimit } from "@repo/api/services/redis";
+import { getAccessToken } from "@repo/api/services/token";
 import { fetchLiveSessions } from "@repo/cosmo/server/live";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
-
-import { rateLimit } from "@/lib/server/redis.server";
-import { getAccessToken } from "@/lib/server/token.server";
-import { artistSchema } from "@/lib/universal/artist";
 
 const querySchema = z.object({
   artistId: artistSchema,

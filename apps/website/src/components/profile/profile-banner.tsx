@@ -1,6 +1,6 @@
 import { useElementSize } from "@custom-react-hooks/use-element-size";
+import type { PublicProfile } from "@repo/api/schemas/user";
 
-import type { PublicProfile } from "@/lib/universal/user";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

@@ -1,8 +1,8 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import type { PublicProfile } from "@repo/api/schemas/user";
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { useProfileAuthed } from "@/hooks/use-user";
-import type { PublicProfile } from "@/lib/universal/user";
 import { parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

@@ -43,6 +43,14 @@
         "src/**/*.ts"
       ]
     },
+    "packages/api": {
+      "entry": [
+        "src/**/*.ts"
+      ],
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
     "packages/db": {
       "entry": [
         "src/**/*.ts",

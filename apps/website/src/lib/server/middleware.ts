@@ -1,7 +1,6 @@
+import { getSession } from "@repo/api/services/auth";
 import { redirect } from "@tanstack/react-router";
 import { createMiddleware } from "@tanstack/react-start";
-
-import { getSession } from "./auth.server";
 
 export const requireAuth = createMiddleware().server(async ({ next }) => {
   const session = await getSession();

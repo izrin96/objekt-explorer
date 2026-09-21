@@ -1,7 +1,7 @@
+import type { PublicProfile } from "@repo/api/schemas/user";
 import { Addresses } from "@repo/lib";
 import { linkOptions, useLocation, useRouter } from "@tanstack/react-router";
 
-import type { PublicProfile } from "@/lib/universal/user";
 import { m } from "@/paraglide/messages";
 
 import { TabLink, TabList, Tabs } from "../intentui/tabs";

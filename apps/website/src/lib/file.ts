@@ -1,3 +1,3 @@
 export { acceptedFileMimeTypes, CACHE_CONTROL, mimeTypeToExtension } from "@repo/lib/media";
 
-export const MAX_FILE_SIZE = 10 * 1024 * 1024;
+export { MAX_FILE_SIZE } from "@repo/api/constants";

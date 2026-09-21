@@ -1,12 +1,11 @@
+import type { CollectionResult, OwnedObjektsCursor } from "@repo/api/schemas/objekt";
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
-
-import type { CollectionResult, OwnedObjektsCursor } from "@/lib/universal/objekt";
 
 import { fetchOwnedObjektsByCursor } from "./fetching-util";
 import { mapObjektWithTag } from "./objekt-utils";
 import { orpc } from "./orpc/client";
-import type { OwnedBySchema } from "./universal/owned-by";
 
 export const collectionOptions = (filters?: OwnedBySchema, enable = true) =>
   queryOptions({

@@ -1,7 +1,7 @@
+import type { ValidType, ActivityData } from "@repo/api/schemas/activity";
 import { Addresses } from "@repo/lib";
 
 import type { Filters } from "@/hooks/use-filters";
-import type { ValidType, ActivityData } from "@/lib/universal/activity";
 
 export type EventType = "mint" | "spin" | "transfer";
 

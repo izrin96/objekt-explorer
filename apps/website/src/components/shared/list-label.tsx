@@ -1,6 +1,6 @@
 import { LinkIcon } from "@heroicons/react/24/outline";
+import type { PublicList } from "@repo/api/schemas/list";
 
-import type { PublicList } from "@/lib/universal/list";
 import { parseNickname } from "@/lib/utils";
 
 import { Badge } from "./badge";

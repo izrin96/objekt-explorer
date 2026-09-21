@@ -1,3 +1,4 @@
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import type { IndexedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useDeferredValue, useMemo } from "react";
@@ -5,7 +6,6 @@ import { useDeferredValue, useMemo } from "react";
 import { filterObjekts } from "@/lib/filter-utils";
 import { orpc } from "@/lib/orpc/client";
 import { collectionOptions } from "@/lib/query-options";
-import type { OwnedBySchema } from "@/lib/universal/owned-by";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";

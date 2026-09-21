@@ -1,8 +1,8 @@
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 import { ownedCollectionOptions } from "@/lib/query-options";
-import type { OwnedBySchema } from "@/lib/universal/owned-by";
 
 export function useOwnedCollections(address: string, filters?: OwnedBySchema) {
   const query = useInfiniteQuery(ownedCollectionOptions(address, filters));

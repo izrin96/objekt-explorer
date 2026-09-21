@@ -1,10 +1,10 @@
+import type { CollectionMetadata } from "@repo/api/schemas/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ofetch } from "ofetch";
 
 import { useCosmoArtist } from "@/hooks/use-cosmo-artist";
-import type { CollectionMetadata } from "@/lib/universal/objekt";
 import { getEditionStr } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

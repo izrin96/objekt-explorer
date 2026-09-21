@@ -1,3 +1,4 @@
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { type ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
@@ -28,7 +29,6 @@ import { useOwnedCollections } from "@/hooks/use-owned-collections";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
-import type { OwnedBySchema } from "@/lib/universal/owned-by";
 import { tradeableFilter, cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
