@@ -13,7 +13,6 @@ import { Route as containerRouteRouteImport } from './routes/(container)/route'
 import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$nickname}/route'
 import { Route as containerIndexRouteImport } from './routes/(container)/index'
 import { Route as containerActivityRouteImport } from './routes/(container)/activity'
-import { Route as containerListRouteImport } from './routes/(container)/list'
 import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
 import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
@@ -22,6 +21,7 @@ import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$ni
 import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@{$nickname}/progress'
 import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$nickname}/stats'
 import { Route as AtChar123nicknameChar125TradesRouteImport } from './routes/@{$nickname}/trades'
+import { Route as ApiActivityRouteImport } from './routes/api/activity'
 import { Route as ApiCollectionRouteImport } from './routes/api/collection'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
 import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
@@ -31,11 +31,14 @@ import { Route as containerAuthResetPasswordRouteImport } from './routes/(contai
 import { Route as containerAuthVerifiedRouteImport } from './routes/(container)/auth/verified'
 import { Route as containerLinkIndexRouteImport } from './routes/(container)/link/index'
 import { Route as containerLinkConnectRouteImport } from './routes/(container)/link/connect'
+import { Route as containerListIndexRouteImport } from './routes/(container)/list/index'
+import { Route as containerListSlugRouteImport } from './routes/(container)/list/$slug'
 import { Route as containerLiveIndexRouteImport } from './routes/(container)/live/index'
 import { Route as containerLiveIdRouteImport } from './routes/(container)/live/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
+import { Route as containerAtChar123nicknameChar125ListSlugRouteImport } from './routes/(container)/@{$nickname}_/list.$slug'
 import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
 import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
 import { Route as ApiObjektsOwnedByAddressRouteImport } from './routes/api/objekts/owned-by.$address'
@@ -59,11 +62,6 @@ const containerIndexRoute = containerIndexRouteImport.update({
 const containerActivityRoute = containerActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
-  getParentRoute: () => containerRouteRoute,
-} as any)
-const containerListRoute = containerListRouteImport.update({
-  id: '/list',
-  path: '/list',
   getParentRoute: () => containerRouteRoute,
 } as any)
 const containerLoginRoute = containerLoginRouteImport.update({
@@ -111,6 +109,11 @@ const AtChar123nicknameChar125TradesRoute =
     path: '/trades',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
+const ApiActivityRoute = ApiActivityRouteImport.update({
+  id: '/api/activity',
+  path: '/api/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCollectionRoute = ApiCollectionRouteImport.update({
   id: '/api/collection',
   path: '/api/collection',
@@ -157,6 +160,16 @@ const containerLinkConnectRoute = containerLinkConnectRouteImport.update({
   path: '/link/connect',
   getParentRoute: () => containerRouteRoute,
 } as any)
+const containerListIndexRoute = containerListIndexRouteImport.update({
+  id: '/list/',
+  path: '/list/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerListSlugRoute = containerListSlugRouteImport.update({
+  id: '/list/$slug',
+  path: '/list/$slug',
+  getParentRoute: () => containerRouteRoute,
+} as any)
 const containerLiveIndexRoute = containerLiveIndexRouteImport.update({
   id: '/live/',
   path: '/live/',
@@ -182,6 +195,12 @@ const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
   path: '/api/user/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const containerAtChar123nicknameChar125ListSlugRoute =
+  containerAtChar123nicknameChar125ListSlugRouteImport.update({
+    id: '/@{$nickname}_/list/$slug',
+    path: '/@{$nickname}/list/$slug',
+    getParentRoute: () => containerRouteRoute,
+  } as any)
 const ApiObjektsListCollectionSlugRoute =
   ApiObjektsListCollectionSlugRouteImport.update({
     id: '/api/objekts/list/$collectionSlug',
@@ -210,7 +229,6 @@ const ApiObjektsTransfersCollectionSlugSerialRoute =
 export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/activity': typeof containerActivityRoute
-  '/list': typeof containerListRoute
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
@@ -218,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
+  '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -228,12 +247,15 @@ export interface FileRoutesByFullPath {
   '/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/auth/verified': typeof containerAuthVerifiedRoute
   '/link/connect': typeof containerLinkConnectRoute
+  '/list/$slug': typeof containerListSlugRoute
   '/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/link/': typeof containerLinkIndexRoute
+  '/list/': typeof containerListIndexRoute
   '/live/': typeof containerLiveIndexRoute
+  '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
   '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
@@ -241,7 +263,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/activity': typeof containerActivityRoute
-  '/list': typeof containerListRoute
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
@@ -249,6 +270,7 @@ export interface FileRoutesByTo {
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
+  '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -259,12 +281,15 @@ export interface FileRoutesByTo {
   '/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/auth/verified': typeof containerAuthVerifiedRoute
   '/link/connect': typeof containerLinkConnectRoute
+  '/list/$slug': typeof containerListSlugRoute
   '/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/link': typeof containerLinkIndexRoute
+  '/list': typeof containerListIndexRoute
   '/live': typeof containerLiveIndexRoute
+  '/@{$nickname}/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
   '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
@@ -275,7 +300,6 @@ export interface FileRoutesById {
   '/(container)': typeof containerRouteRouteWithChildren
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/(container)/activity': typeof containerActivityRoute
-  '/(container)/list': typeof containerListRoute
   '/(container)/login': typeof containerLoginRoute
   '/(container)/market': typeof containerMarketRoute
   '/(container)/terms-privacy': typeof containerTermsPrivacyRoute
@@ -283,6 +307,7 @@ export interface FileRoutesById {
   '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
   '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
   '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
+  '/api/activity': typeof ApiActivityRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -293,12 +318,15 @@ export interface FileRoutesById {
   '/(container)/auth/reset-password': typeof containerAuthResetPasswordRoute
   '/(container)/auth/verified': typeof containerAuthVerifiedRoute
   '/(container)/link/connect': typeof containerLinkConnectRoute
+  '/(container)/list/$slug': typeof containerListSlugRoute
   '/(container)/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/(container)/link/': typeof containerLinkIndexRoute
+  '/(container)/list/': typeof containerListIndexRoute
   '/(container)/live/': typeof containerLiveIndexRoute
+  '/(container)/@{$nickname}_/list/$slug': typeof containerAtChar123nicknameChar125ListSlugRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
   '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
@@ -309,7 +337,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/@{$nickname}'
     | '/activity'
-    | '/list'
     | '/login'
     | '/market'
     | '/terms-privacy'
@@ -317,6 +344,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
     | '/@{$nickname}/trades'
+    | '/api/activity'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -327,12 +355,15 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
+    | '/list/$slug'
     | '/live/$id'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/link/'
+    | '/list/'
     | '/live/'
+    | '/@{$nickname}/list/$slug'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
     | '/api/objekts/owned-by/$address'
@@ -340,7 +371,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/activity'
-    | '/list'
     | '/login'
     | '/market'
     | '/terms-privacy'
@@ -348,6 +378,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
     | '/@{$nickname}/trades'
+    | '/api/activity'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -358,12 +389,15 @@ export interface FileRouteTypes {
     | '/auth/reset-password'
     | '/auth/verified'
     | '/link/connect'
+    | '/list/$slug'
     | '/live/$id'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/link'
+    | '/list'
     | '/live'
+    | '/@{$nickname}/list/$slug'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
     | '/api/objekts/owned-by/$address'
@@ -373,7 +407,6 @@ export interface FileRouteTypes {
     | '/(container)'
     | '/@{$nickname}'
     | '/(container)/activity'
-    | '/(container)/list'
     | '/(container)/login'
     | '/(container)/market'
     | '/(container)/terms-privacy'
@@ -381,6 +414,7 @@ export interface FileRouteTypes {
     | '/@{$nickname}/progress'
     | '/@{$nickname}/stats'
     | '/@{$nickname}/trades'
+    | '/api/activity'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -391,12 +425,15 @@ export interface FileRouteTypes {
     | '/(container)/auth/reset-password'
     | '/(container)/auth/verified'
     | '/(container)/link/connect'
+    | '/(container)/list/$slug'
     | '/(container)/live/$id'
     | '/api/auth/$'
     | '/api/transfers/$address'
     | '/api/user/search'
     | '/(container)/link/'
+    | '/(container)/list/'
     | '/(container)/live/'
+    | '/(container)/@{$nickname}_/list/$slug'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
     | '/api/objekts/owned-by/$address'
@@ -406,6 +443,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   containerRouteRoute: typeof containerRouteRouteWithChildren
   AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
+  ApiActivityRoute: typeof ApiActivityRoute
   ApiCollectionRoute: typeof ApiCollectionRoute
   ApiHealthcheckRoute: typeof ApiHealthcheckRoute
   ApiLiveSessionsRoute: typeof ApiLiveSessionsRoute
@@ -448,13 +486,6 @@ declare module '@tanstack/react-router' {
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof containerActivityRouteImport
-      parentRoute: typeof containerRouteRoute
-    }
-    '/(container)/list': {
-      id: '/(container)/list'
-      path: '/list'
-      fullPath: '/list'
-      preLoaderRoute: typeof containerListRouteImport
       parentRoute: typeof containerRouteRoute
     }
     '/(container)/login': {
@@ -512,6 +543,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/@{$nickname}/trades'
       preLoaderRoute: typeof AtChar123nicknameChar125TradesRouteImport
       parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/api/activity': {
+      id: '/api/activity'
+      path: '/api/activity'
+      fullPath: '/api/activity'
+      preLoaderRoute: typeof ApiActivityRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/collection': {
       id: '/api/collection'
@@ -576,6 +614,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerLinkConnectRouteImport
       parentRoute: typeof containerRouteRoute
     }
+    '/(container)/list/': {
+      id: '/(container)/list/'
+      path: '/list'
+      fullPath: '/list/'
+      preLoaderRoute: typeof containerListIndexRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/list/$slug': {
+      id: '/(container)/list/$slug'
+      path: '/list/$slug'
+      fullPath: '/list/$slug'
+      preLoaderRoute: typeof containerListSlugRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
     '/(container)/live/': {
       id: '/(container)/live/'
       path: '/live'
@@ -611,6 +663,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(container)/@{$nickname}_/list/$slug': {
+      id: '/(container)/@{$nickname}_/list/$slug'
+      path: '/@{$nickname}/list/$slug'
+      fullPath: '/@{$nickname}/list/$slug'
+      preLoaderRoute: typeof containerAtChar123nicknameChar125ListSlugRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
     '/api/objekts/list/$collectionSlug': {
       id: '/api/objekts/list/$collectionSlug'
       path: '/api/objekts/list/$collectionSlug'
@@ -644,7 +703,6 @@ declare module '@tanstack/react-router' {
 
 interface containerRouteRouteChildren {
   containerActivityRoute: typeof containerActivityRoute
-  containerListRoute: typeof containerListRoute
   containerLoginRoute: typeof containerLoginRoute
   containerMarketRoute: typeof containerMarketRoute
   containerTermsPrivacyRoute: typeof containerTermsPrivacyRoute
@@ -652,14 +710,16 @@ interface containerRouteRouteChildren {
   containerAuthResetPasswordRoute: typeof containerAuthResetPasswordRoute
   containerAuthVerifiedRoute: typeof containerAuthVerifiedRoute
   containerLinkConnectRoute: typeof containerLinkConnectRoute
+  containerListSlugRoute: typeof containerListSlugRoute
   containerLiveIdRoute: typeof containerLiveIdRoute
   containerLinkIndexRoute: typeof containerLinkIndexRoute
+  containerListIndexRoute: typeof containerListIndexRoute
   containerLiveIndexRoute: typeof containerLiveIndexRoute
+  containerAtChar123nicknameChar125ListSlugRoute: typeof containerAtChar123nicknameChar125ListSlugRoute
 }
 
 const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerActivityRoute: containerActivityRoute,
-  containerListRoute: containerListRoute,
   containerLoginRoute: containerLoginRoute,
   containerMarketRoute: containerMarketRoute,
   containerTermsPrivacyRoute: containerTermsPrivacyRoute,
@@ -667,9 +727,13 @@ const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerAuthResetPasswordRoute: containerAuthResetPasswordRoute,
   containerAuthVerifiedRoute: containerAuthVerifiedRoute,
   containerLinkConnectRoute: containerLinkConnectRoute,
+  containerListSlugRoute: containerListSlugRoute,
   containerLiveIdRoute: containerLiveIdRoute,
   containerLinkIndexRoute: containerLinkIndexRoute,
+  containerListIndexRoute: containerListIndexRoute,
   containerLiveIndexRoute: containerLiveIndexRoute,
+  containerAtChar123nicknameChar125ListSlugRoute:
+    containerAtChar123nicknameChar125ListSlugRoute,
 }
 
 const containerRouteRouteWithChildren = containerRouteRoute._addFileChildren(
@@ -703,6 +767,7 @@ const rootRouteChildren: RootRouteChildren = {
   containerRouteRoute: containerRouteRouteWithChildren,
   AtChar123nicknameChar125RouteRoute:
     AtChar123nicknameChar125RouteRouteWithChildren,
+  ApiActivityRoute: ApiActivityRoute,
   ApiCollectionRoute: ApiCollectionRoute,
   ApiHealthcheckRoute: ApiHealthcheckRoute,
   ApiLiveSessionsRoute: ApiLiveSessionsRoute,

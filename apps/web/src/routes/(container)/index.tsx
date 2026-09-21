@@ -12,12 +12,16 @@ import { FilterBar } from "@/features/filters/filter-bar";
 import { MemberChips } from "@/features/filters/member-chips";
 import { filterSearchSchema } from "@/features/filters/search-schema";
 import { useResetFilters } from "@/features/filters/use-filters";
+import { AddToListProvider } from "@/features/list/add-to-list-dialog";
+import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar } from "@/features/objekt/select-bar";
 import { useCollectionObjekts } from "@/features/objekt/use-collection-objekts";
+import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { useColumns } from "@/stores/columns";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -39,6 +43,7 @@ function ShimmerGrid() {
 }
 
 function HomePage() {
+  const { data: user } = useCurrentUser();
   const { facets, groups } = useScopedFacets();
   const { filtered, filters, isPending } = useCollectionObjekts();
   const reset = useResetFilters();
@@ -60,14 +65,20 @@ function HomePage() {
           onOpen={setActive}
           qty={item.length > 1 ? item.length : undefined}
           priority={rowIndex < 2}
-        />
+        >
+          {user ? (
+            <ObjektCardMenu>
+              <AddToListMenuItem objekts={[objekt]} />
+            </ObjektCardMenu>
+          ) : null}
+        </ObjektCard>
       );
     },
-    [ids, toggle],
+    [ids, toggle, user],
   );
 
   return (
-    <>
+    <AddToListProvider>
       <PageHeader title={m.home_title()} description={m.home_description()} />
 
       <MemberChips />
@@ -100,8 +111,10 @@ function HomePage() {
         <ObjektVirtualGrid objekts={filtered} filters={filters} renderItem={renderObjekt} />
       )}
 
-      <SelectBar visibleIds={filtered.map((objekt) => objekt.id)} />
+      <SelectBar visibleIds={filtered.map((objekt) => objekt.id)}>
+        {user ? <AddToListAction objekts={filtered} /> : null}
+      </SelectBar>
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
-    </>
+    </AddToListProvider>
   );
 }
