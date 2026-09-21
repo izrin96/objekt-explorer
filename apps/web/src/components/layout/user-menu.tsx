@@ -1,4 +1,13 @@
-import { GearIcon, LinkIcon, SignInIcon, SignOutIcon, UserIcon } from "@phosphor-icons/react";
+import {
+  CardsThreeIcon,
+  DiscordLogoIcon,
+  GearIcon,
+  LinkIcon,
+  PlusIcon,
+  SignInIcon,
+  SignOutIcon,
+  UserIcon,
+} from "@phosphor-icons/react";
 import type { User } from "@repo/api/services/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -12,12 +21,20 @@ import {
   MenuItem,
   MenuPopup,
   MenuSeparator,
+  MenuSub,
+  MenuSubPopup,
+  MenuSubTrigger,
   MenuTrigger,
 } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
 import { AccountDialog } from "@/features/account/account-dialog";
+import { DiscordFormatDialog } from "@/features/discord/discord-format-dialog";
+import { CreateListDialog } from "@/features/list/create-list-dialog";
+import { getListLinkOption } from "@/features/list/list-link";
+import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
+import { useUserLists } from "@/features/user/hooks";
 import { authClient } from "@/lib/auth-client";
 import { m } from "@/paraglide/messages";
 
@@ -43,6 +60,8 @@ export function useSignInSearch(): { redirect: string | undefined } {
 export function UserMenu({ user }: { user: User }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [createListOpen, setCreateListOpen] = useState(false);
+  const [discordOpen, setDiscordOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const signOut = async () => {
@@ -80,6 +99,11 @@ export function UserMenu({ user }: { user: User }) {
 
           <ArtistsSubmenu />
 
+          <MyListsSubmenu
+            onCreateList={() => setCreateListOpen(true)}
+            onDiscordFormat={() => setDiscordOpen(true)}
+          />
+
           <MenuItem render={<Link to="/link" />}>
             <LinkIcon />
             {m.nav_my_cosmo_link()}
@@ -105,7 +129,56 @@ export function UserMenu({ user }: { user: User }) {
       </Menu>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
+      <CreateListDialog open={createListOpen} onOpenChange={setCreateListOpen} />
+      <DiscordFormatDialog open={discordOpen} onOpenChange={setDiscordOpen} />
     </>
+  );
+}
+
+/** The dialogs live beside the menu: a menu takes its whole popup with it on click. */
+function MyListsSubmenu({
+  onCreateList,
+  onDiscordFormat,
+}: {
+  onCreateList: () => void;
+  onDiscordFormat: () => void;
+}) {
+  const lists = useUserLists();
+
+  return (
+    <MenuSub>
+      <MenuSubTrigger>
+        <CardsThreeIcon />
+        {m.nav_my_list()}
+      </MenuSubTrigger>
+      <MenuSubPopup className="min-w-52">
+        {lists.length === 0 ? (
+          <MenuItem disabled>{m.nav_no_list_found()}</MenuItem>
+        ) : (
+          lists.map((list) => (
+            <MenuItem key={list.slug} render={<Link {...getListLinkOption(list)} />}>
+              <span className="truncate">{list.name}</span>
+              <ListTypeBadge type={list.listTypeNew} className="ml-auto" />
+            </MenuItem>
+          ))
+        )}
+
+        <MenuSeparator />
+
+        <MenuItem onClick={onCreateList}>
+          <PlusIcon />
+          {m.nav_create_list()}
+        </MenuItem>
+        <MenuItem onClick={onDiscordFormat}>
+          <DiscordLogoIcon weight="fill" />
+          {m.nav_discord_format()}
+        </MenuItem>
+        <MenuItem render={<Link to="/list" />}>
+          <CardsThreeIcon />
+          {m.nav_manage_list()}
+        </MenuItem>
+      </MenuSubPopup>
+    </MenuSub>
   );
 }
 
