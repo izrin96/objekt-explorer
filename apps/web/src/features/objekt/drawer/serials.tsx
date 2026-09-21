@@ -1,0 +1,438 @@
+import {
+  ArrowRightIcon,
+  ArrowsClockwiseIcon,
+  CaretLeftIcon,
+  CaretLineLeftIcon,
+  CaretLineRightIcon,
+  CaretRightIcon,
+  CheckIcon,
+  type Icon,
+  LockIcon,
+  QuestionMarkIcon,
+  SparkleIcon,
+  WarningIcon,
+} from "@phosphor-icons/react";
+import type { ObjektTransfer, ObjektTransferResult } from "@repo/api/schemas/objekt";
+import { Addresses } from "@repo/lib";
+import type { UseQueryResult } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+import { CopyButton } from "@/components/shared/copy-button";
+import { Shimmer } from "@/components/shared/shimmer";
+import { TimeAgo } from "@/components/shared/time-ago";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
+import { Spinner } from "@/components/ui/spinner";
+import { truncateAddress } from "@/lib/address";
+import { m } from "@/paraglide/messages";
+
+export type EventKind = "mint" | "transfer" | "spin";
+
+/**
+ * `--success` / `--warning` are fills for a tinted chip, not ink: they are the
+ * same pale pastel in both themes, so a solid dot painted with them disappears
+ * on the light one.
+ */
+export const EVENT_COLOR: Record<EventKind, string> = {
+  mint: "var(--success-foreground)",
+  transfer: "var(--accent-solid)",
+  spin: "var(--warning-foreground)",
+};
+
+const EVENT_BADGE: Record<EventKind, { label: () => string; icon: Icon }> = {
+  mint: { label: m.objekt_event_minted, icon: SparkleIcon },
+  transfer: { label: m.objekt_event_transferred, icon: ArrowRightIcon },
+  spin: { label: m.objekt_event_spun, icon: ArrowsClockwiseIcon },
+};
+
+const CURRENT_BADGE = { label: m.objekt_event_current, icon: CheckIcon };
+
+export type TimelineEvent = {
+  id: string;
+  kind: EventKind;
+  owner: string;
+  /** render the owner in mono — it is a raw address, not a nickname */
+  mono: boolean;
+  at: Date;
+};
+
+/** the response is newest first, so the last row is the mint */
+export function toTimeline(rows: ObjektTransfer[]): TimelineEvent[] {
+  return rows.map((row, index) => {
+    const spun = row.to.toLowerCase() === Addresses.SPIN;
+    const kind: EventKind = spun ? "spin" : index === rows.length - 1 ? "mint" : "transfer";
+    return {
+      id: row.id,
+      kind,
+      owner: spun ? "COSMO" : (row.nickname ?? truncateAddress(row.to)),
+      mono: !spun && !row.nickname,
+      at: new Date(row.timestamp),
+    };
+  });
+}
+
+function EventPill({ badge }: { badge: { label: () => string; icon: Icon } }) {
+  return (
+    <Badge variant="outline" size="sm" className="flex-none gap-1 font-normal">
+      <badge.icon className="size-3" aria-hidden />
+      {badge.label()}
+    </Badge>
+  );
+}
+
+/** Previous and next snap to the nearest *existing* serial, never to `serial ± 1`. */
+export function SerialsPanel({
+  serial,
+  serials,
+  metadata,
+  loading,
+  onSerialChange,
+  children,
+}: {
+  serial: number | null;
+  serials: number[];
+  metadata: UseQueryResult<{ total: number; spin: number; transferable: number }>;
+  loading: boolean;
+  onSerialChange: (serial: number) => void;
+  children: ReactNode;
+}) {
+  const updateSerial = (mode: "first" | "prev" | "next" | "last") => {
+    if (serials.length === 0) return;
+    const current = serial ?? 0;
+    if (mode === "first") return onSerialChange(serials[0] ?? current);
+    if (mode === "last") return onSerialChange(serials[serials.length - 1] ?? current);
+    if (mode === "prev") {
+      const found = serials.findLast((value) => value < current);
+      return onSerialChange(found ?? (current > 1 ? current - 1 : 1));
+    }
+    const found = serials.find((value) => value > current);
+    return onSerialChange(found ?? current + 1);
+  };
+
+  if (loading) {
+    return (
+      <div className="text-muted-foreground flex items-center gap-2 py-6 text-sm">
+        <Spinner className="size-4" />
+        {m.objekt_serials_loading()}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* below `sm` the field takes the row and the four nav buttons drop to a
+          second line; together they need ~190px more than a phone drawer has */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <NumberField
+          value={serial}
+          // null is an empty input, not "no serial"; 0 keeps the field usable
+          onValueChange={(value) => onSerialChange(value ?? 0)}
+          min={0}
+          size="sm"
+          className="w-full grow sm:w-auto"
+        >
+          <NumberFieldGroup>
+            <NumberFieldInput
+              aria-label={m.objekt_serial_aria()}
+              className="font-mono"
+              placeholder={m.objekt_serial()}
+            />
+          </NumberFieldGroup>
+        </NumberField>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={m.trade_view_serial_first_aria()}
+          onClick={() => updateSerial("first")}
+        >
+          <CaretLineLeftIcon />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={m.trade_view_serial_previous_aria()}
+          onClick={() => updateSerial("prev")}
+        >
+          <CaretLeftIcon />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={m.trade_view_serial_next_aria()}
+          onClick={() => updateSerial("next")}
+        >
+          <CaretRightIcon />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={m.trade_view_serial_last_aria()}
+          onClick={() => updateSerial("last")}
+        >
+          <CaretLineRightIcon />
+        </Button>
+      </div>
+
+      <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
+        {metadata.isPending && <Spinner className="size-3.5" />}
+        {metadata.data && (
+          <>
+            <span>
+              {m.objekt_minted()}{" "}
+              <b className="text-foreground font-semibold">
+                {metadata.data.total.toLocaleString()}
+              </b>
+            </span>
+            <span>
+              {m.objekt_event_spun()}{" "}
+              <b className="text-foreground font-semibold">{metadata.data.spin.toLocaleString()}</b>
+            </span>
+            <span>
+              {m.objekt_transferable()}{" "}
+              <b className="text-foreground font-semibold">
+                {metadata.data.transferable.toLocaleString()}
+              </b>
+            </span>
+          </>
+        )}
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+type SerialView =
+  | { kind: "idle" }
+  | { kind: "loading" }
+  | { kind: "error" }
+  | { kind: "private" }
+  | { kind: "missing" }
+  | {
+      kind: "found";
+      /** a nickname, or a raw `0x…` address when Cosmo has no name for the holder */
+      owner: string;
+      ownerIsAddress: boolean;
+      tokenId: string | null;
+      transferable: boolean | null;
+      events: TimelineEvent[];
+    };
+
+function resolveSerial(
+  serial: number | null,
+  query: UseQueryResult<ObjektTransferResult>,
+): SerialView {
+  if (serial === null || serial <= 0) return { kind: "idle" };
+  if (query.isPending) return { kind: "loading" };
+  if (query.isError) return { kind: "error" };
+
+  const data = query.data;
+  if (data.hide === true) return { kind: "private" };
+
+  const owner = data.owner;
+  // a serial that was never minted still answers 200 — with no owner and no rows
+  if (!owner) return { kind: "missing" };
+
+  const nickname = data.transfers.find(
+    (row) => row.to.toLowerCase() === owner.toLowerCase(),
+  )?.nickname;
+
+  return {
+    kind: "found",
+    owner: nickname ?? owner,
+    ownerIsAddress: !nickname,
+    tokenId: data.tokenId ?? null,
+    transferable: data.transferable ?? null,
+    events: toTimeline(data.transfers),
+  };
+}
+
+function SerialNotice({ icon, title, hint }: { icon: ReactNode; title: string; hint?: string }) {
+  return (
+    <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
+      {icon}
+      <span className="text-foreground text-sm">{title}</span>
+      {hint !== undefined && <span className="text-xs">{hint}</span>}
+    </div>
+  );
+}
+
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="flex min-w-0 items-center gap-1.5">{children}</dd>
+    </>
+  );
+}
+
+/**
+ * Owner, token id and transferable keep their boxes as shimmer blocks while
+ * the request is in flight, so the timeline underneath does not jump when it
+ * lands.
+ */
+function OwnershipHead({
+  view,
+  onClose,
+}: {
+  view: Extract<SerialView, { kind: "loading" | "found" }>;
+  onClose: () => void;
+}) {
+  const found = view.kind === "found" ? view : null;
+
+  return (
+    <div className="flex flex-col gap-1.5 border-b pb-2.5">
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-1.5 text-sm">
+        <Fact label={m.objekt_owner()}>
+          {found === null ? (
+            <Shimmer className="h-4.5 w-28" />
+          ) : found.ownerIsAddress ? (
+            <span className="truncate font-mono text-xs">{truncateAddress(found.owner)}</span>
+          ) : (
+            <Link
+              to="/@{$nickname}"
+              params={{ nickname: found.owner }}
+              onClick={onClose}
+              className="truncate font-medium underline-offset-2 hover:underline"
+            >
+              {found.owner}
+            </Link>
+          )}
+        </Fact>
+        <Fact label={m.objekt_token_id()}>
+          {found === null ? (
+            <>
+              <Shimmer className="h-4.5 w-16" />
+              <Shimmer className="size-5.5" />
+            </>
+          ) : (
+            <>
+              <span className="truncate font-mono text-xs">{found.tokenId ?? "—"}</span>
+              {found.tokenId !== null && (
+                <CopyButton
+                  text={found.tokenId}
+                  label={m.copy_token_id_aria()}
+                  toastTitle={m.objekt_token_id_copied()}
+                />
+              )}
+            </>
+          )}
+        </Fact>
+        <Fact label={m.objekt_transferable()}>
+          {found === null ? (
+            <Shimmer className="h-5 w-11 rounded-full" />
+          ) : (
+            <Badge
+              variant={
+                found.transferable === null ? "outline" : found.transferable ? "success" : "warning"
+              }
+              size="sm"
+              className={found.transferable === null ? "font-normal" : undefined}
+            >
+              {found.transferable === null
+                ? "—"
+                : found.transferable
+                  ? m.objekt_yes()
+                  : m.objekt_no()}
+            </Badge>
+          )}
+        </Fact>
+      </dl>
+    </div>
+  );
+}
+
+export function Timeline({
+  serial,
+  query,
+  onClose,
+}: {
+  serial: number | null;
+  query: UseQueryResult<ObjektTransferResult>;
+  onClose: () => void;
+}) {
+  const view = resolveSerial(serial, query);
+
+  if (view.kind === "idle") {
+    return <p className="text-muted-foreground py-6 text-sm">{m.objekt_serial_pick()}</p>;
+  }
+
+  if (view.kind === "error") {
+    return (
+      <SerialNotice
+        icon={<WarningIcon size={56} weight="light" />}
+        title={m.common_error_loading_data()}
+      />
+    );
+  }
+
+  // a private holder gets no owner, no token id and no history — not a blank row
+  if (view.kind === "private") {
+    return (
+      <SerialNotice
+        icon={<LockIcon size={56} weight="light" />}
+        title={m.objekt_objekt_private()}
+        hint={m.objekt_serial_private_hint()}
+      />
+    );
+  }
+
+  if (view.kind === "missing") {
+    return (
+      <SerialNotice
+        icon={<QuestionMarkIcon size={56} weight="light" />}
+        title={m.objekt_not_found_objekt()}
+        hint={m.objekt_serial_missing_hint()}
+      />
+    );
+  }
+
+  const body =
+    view.kind === "loading" ? (
+      <Shimmer className="h-21 w-full rounded-lg" />
+    ) : view.events.length === 0 ? (
+      <p className="text-muted-foreground py-6 text-sm">{m.objekt_no_transfers()}</p>
+    ) : (
+      <ol className="flex flex-col divide-y text-sm">
+        {view.events.map((event, index) => {
+          const current = index === 0 && event.kind !== "spin";
+          return (
+            /* Wrapping, not shrinking: the owner is the only flexible item in
+               the row, so without this the two pills and the timestamp squeeze
+               it to nothing. */
+            <li key={event.id} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 py-2">
+              <i
+                className="size-1.5 shrink-0 rounded-full"
+                style={{ background: EVENT_COLOR[event.kind] }}
+              />
+              <span
+                className={
+                  event.mono
+                    ? "truncate font-mono text-xs"
+                    : current
+                      ? "truncate font-semibold"
+                      : "truncate"
+                }
+              >
+                {event.owner}
+              </span>
+              <EventPill badge={EVENT_BADGE[event.kind]} />
+              {current && <EventPill badge={CURRENT_BADGE} />}
+              <span className="text-muted-foreground ml-auto flex-none font-mono text-xs">
+                <TimeAgo date={event.at} />
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    );
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <OwnershipHead view={view} onClose={onClose} />
+      {body}
+    </div>
+  );
+}

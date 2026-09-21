@@ -25,3 +25,10 @@ export const THEME_COLORS = {
 export function getBaseURL(): string {
   return clientEnv.VITE_SITE_URL;
 }
+
+/** The column count each breakpoint opens on, until the user picks one. */
+export const GRID_COLUMNS = 7;
+export const GRID_COLUMNS_TABLET = 5;
+export const GRID_COLUMNS_MOBILE = 3;
+
+export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;

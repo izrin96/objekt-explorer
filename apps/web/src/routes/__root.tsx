@@ -12,6 +12,7 @@ import { type ReactNode, useEffect } from "react";
 import { AppNav } from "@/components/layout/app-nav";
 import { ToastProvider } from "@/components/ui/toast";
 import { CosmoArtistProvider } from "@/features/artist/cosmo-artist-provider";
+import { FilterDataProvider } from "@/features/filters/filter-data-provider";
 import { currentUserOptions } from "@/features/user/queries";
 import { startOverflowGuard } from "@/lib/dev-overflow-guard";
 import { generateMetadata } from "@/lib/meta";
@@ -41,6 +42,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     await Promise.all([
       queryClient.ensureQueryData(orpc.config.getArtists.queryOptions()),
       queryClient.ensureQueryData(orpc.config.getSelectedArtists.queryOptions()),
+      queryClient.ensureQueryData(orpc.config.getFilterData.queryOptions()),
       queryClient.ensureQueryData(currentUserOptions),
     ]);
   },
@@ -134,12 +136,14 @@ function RootComponent() {
   return (
     <ToastProvider position="bottom-right">
       <CosmoArtistProvider>
-        <AppNav />
-        {/* `clip` rather than `hidden`: it creates no scroll container, so a
-            sticky nav still works, and no page can scroll sideways */}
-        <div className="min-h-svh overflow-x-clip">
-          <Outlet />
-        </div>
+        <FilterDataProvider>
+          <AppNav />
+          {/* `clip` rather than `hidden`: it creates no scroll container, so a
+              sticky nav still works, and no page can scroll sideways */}
+          <div className="min-h-svh overflow-x-clip">
+            <Outlet />
+          </div>
+        </FilterDataProvider>
       </CosmoArtistProvider>
       {import.meta.env.DEV && <OverflowGuard />}
     </ToastProvider>

@@ -5,6 +5,7 @@ import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query
 import { ErrorComponent } from "./components/router/error-boundary";
 import { NotFoundComponent } from "./components/router/not-found";
 import { PendingComponent } from "./components/router/pending";
+import { parseSearch, stringifySearch } from "./features/filters/search-params";
 import { routeTree } from "./routeTree.gen";
 
 export function getRouter() {
@@ -22,6 +23,8 @@ export function getRouter() {
       queryClient,
     },
     defaultPreload: "intent",
+    parseSearch,
+    stringifySearch,
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
     defaultStaleTime: 0,

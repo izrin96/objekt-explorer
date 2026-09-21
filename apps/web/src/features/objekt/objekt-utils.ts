@@ -1,0 +1,201 @@
+import { getCollectionEdition } from "@repo/api/schemas/collection-grid";
+import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+
+function getMemberShortKeys(value: string) {
+  return Object.keys(shortformMembers).filter((key) => shortformMembers[key] === value);
+}
+
+// unit collections carry a combined name ("id1 X id2") alongside the individual
+// members
+function isCombinedMember(value: string) {
+  return value.toLowerCase().includes(" x ");
+}
+
+const seasonShortNames: Record<string, string> = {
+  spring: "Sp",
+  summer: "Su",
+  autumn: "A",
+  winter: "W",
+};
+
+export function getCollectionShortId(objekt: ValidObjekt) {
+  if (objekt.artist === "idntt") {
+    const prefix = objekt.season.slice(0, -2).toLowerCase();
+    const shortName = seasonShortNames[prefix] ?? objekt.season.slice(0, -2);
+    const year = objekt.season.slice(-2);
+    return `${objekt.member} ${shortName}${year} ${objekt.collectionNo}`;
+  }
+  const seasonNumber = Number(objekt.season.slice(-2));
+  if (seasonNumber < 2) return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
+  return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${objekt.collectionNo}`;
+}
+
+function makeCollectionTags(objekt: ValidObjekt) {
+  const seasonCode = objekt.season.charAt(0);
+  const seasonNumber = objekt.season.slice(-2);
+  const seasonInt = Number(seasonNumber);
+  const seasonCodeRepeat = seasonCode.repeat(seasonInt);
+  const collectionNoSlice = objekt.collectionNo.slice(0, -1);
+  const season = objekt.season.slice(0, -2);
+
+  // the combined name is excluded: search terms split on spaces and tags match
+  // exactly, so a tag containing spaces can never be matched
+  const members = (objekt.members?.length ? objekt.members : [objekt.member]).filter(
+    (member) => !isCombinedMember(member),
+  );
+
+  const tags = [
+    // artist
+    objekt.artist, // triples
+    // member
+    ...members, // JiWoo
+    ...members.flatMap(getMemberShortKeys), // jw
+    // season
+    season, // atom, spring
+    objekt.season, // atom01, spring26
+    ...(objekt.artist === "idntt"
+      ? [
+          `${seasonShortNames[season.toLowerCase()] ?? season}${seasonNumber}`, // Sp26
+        ]
+      : [
+          season + seasonInt, // atom1
+          seasonCode + seasonNumber, // a01
+          seasonCode + seasonInt, // a1
+        ]),
+    // class
+    objekt.class, // special
+    `${objekt.class.charAt(0)}co`, // sco
+    // collection no.
+    objekt.collectionNo, // 201z
+    collectionNoSlice, // 201
+    // season + collection no.
+    ...(objekt.artist === "idntt"
+      ? []
+      : [
+          `${seasonCodeRepeat}${objekt.collectionNo}`, // a201z, aa201z
+          `${seasonCodeRepeat}${collectionNoSlice}`, // a201, aa201
+        ]),
+  ];
+
+  // the combined name is built from member ids ("id1 X id2"), not the names in
+  // `members`, so index those ids and their concatenation ("id1xid2") too
+  if (isCombinedMember(objekt.member)) {
+    const parts = objekt.member.split(" X ");
+    tags.push(...parts);
+    tags.push(parts.join("x"));
+  }
+
+  return tags.map((t) => t.toLowerCase());
+}
+
+export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {
+  return {
+    ...objekt,
+    tags: makeCollectionTags(objekt),
+    edition: getCollectionEdition(objekt),
+  };
+}
+
+export function isObjektOwned(objekt: ValidObjekt): objekt is OwnedObjekt {
+  return "serial" in objekt;
+}
+
+// Member shortform aliases
+const shortformMembers: Record<string, string> = {
+  // triples
+  sy: "SeoYeon",
+  ham: "SeoYeon",
+  hr: "HyeRin",
+  jw: "JiWoo",
+  cy: "ChaeYeon",
+  yy: "YooYeon",
+  sm: "SooMin",
+  nk: "NaKyoung",
+  naky: "NaKyoung",
+  yb: "YuBin",
+  yubam: "YuBin",
+  k: "Kaede",
+  kd: "Kaede",
+  dh: "DaHyun",
+  soda: "DaHyun",
+  ktn: "Kotone",
+  tone: "Kotone",
+  yj: "YeonJi",
+  kwak: "YeonJi",
+  n: "Nien",
+  ni: "Nien",
+  sh: "SoHyun",
+  ssaem: "SoHyun",
+  park: "SoHyun",
+  x: "Xinyu",
+  xn: "Xinyu",
+  m: "Mayu",
+  my: "Mayu",
+  l: "Lynn",
+  ln: "Lynn",
+  jb: "JooBin",
+  jbn: "JooBin",
+  hy: "HaYeon",
+  hayoi: "HaYeon",
+  so: "ShiOn",
+  sion: "ShiOn",
+  cw: "ChaeWon",
+  s: "Sullin",
+  sl: "Sullin",
+  sulin: "Sullin",
+  sa: "SeoAh",
+  jy: "JiYeon",
+
+  // artms
+  hj: "HeeJin",
+  hs: "HaSeul",
+  kl: "KimLip",
+  js: "JinSoul",
+  c: "Choerry",
+  ch: "Choerry",
+  choery: "Choerry",
+
+  // idntt
+  dhn: "DoHun",
+  heju: "HeeJu",
+  mg: "MinGyeol",
+  ti: "TaeIn",
+  jae: "JaeYoung",
+  jyg: "JaeYoung",
+  jyoung: "JaeYoung",
+  jh: "JuHo",
+  jwn: "JiWoon",
+  jiwon: "JiWoon",
+  hh: "HwanHee",
+  cm: "CheongMyeong",
+  t: "Towa",
+  tw: "Towa",
+  kh: "KyuHyuk",
+  nr: "NuRi",
+  sj: "SeongJun",
+  yjn: "YeJoon",
+  yejon: "YeJoon",
+  gb: "GyeongBeen",
+  es: "EunSoo",
+  gw: "GiWoong",
+  jhn: "JooHeon",
+  joheon: "JooHeon",
+  gh: "GyungHo",
+  ec: "EunChan",
+  esg: "EunSung",
+};
+
+/**
+ * `getCollectionShortId` without the member name, for a card or a drawer that
+ * already shows the member in a slot of its own.
+ */
+export function getCollectionShortNo(objekt: ValidObjekt) {
+  if (objekt.artist === "idntt") {
+    const prefix = objekt.season.slice(0, -2).toLowerCase();
+    const shortName = seasonShortNames[prefix] ?? objekt.season.slice(0, -2);
+    return `${shortName}${objekt.season.slice(-2)} ${objekt.collectionNo}`;
+  }
+  const seasonNumber = Number(objekt.season.slice(-2));
+  if (seasonNumber < 2) return `${objekt.season.charAt(0)}${objekt.collectionNo}`;
+  return `${objekt.season.charAt(0)}${seasonNumber} ${objekt.collectionNo}`;
+}

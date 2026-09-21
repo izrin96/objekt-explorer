@@ -18,10 +18,14 @@ import { Route as containerListRouteImport } from './routes/(container)/list'
 import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
 import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
+import { Route as ApiCollectionRouteImport } from './routes/api/collection'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
 import { Route as RpcSplatRouteImport } from './routes/rpc.$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
+import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
+import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
+import { Route as ApiObjektsTransfersCollectionSlugSerialRouteImport } from './routes/api/objekts/transfers.$collectionSlug.$serial'
 
 const containerRouteRoute = containerRouteRouteImport.update({
   id: '/(container)',
@@ -69,6 +73,11 @@ const AtChar123nicknameChar125IndexRoute =
     path: '/',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
+const ApiCollectionRoute = ApiCollectionRouteImport.update({
+  id: '/api/collection',
+  path: '/api/collection',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiHealthcheckRoute = ApiHealthcheckRouteImport.update({
   id: '/api/healthcheck',
   path: '/api/healthcheck',
@@ -89,6 +98,24 @@ const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
   path: '/api/user/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiObjektsListCollectionSlugRoute =
+  ApiObjektsListCollectionSlugRouteImport.update({
+    id: '/api/objekts/list/$collectionSlug',
+    path: '/api/objekts/list/$collectionSlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiObjektsMetadataCollectionSlugRoute =
+  ApiObjektsMetadataCollectionSlugRouteImport.update({
+    id: '/api/objekts/metadata/$collectionSlug',
+    path: '/api/objekts/metadata/$collectionSlug',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiObjektsTransfersCollectionSlugSerialRoute =
+  ApiObjektsTransfersCollectionSlugSerialRouteImport.update({
+    id: '/api/objekts/transfers/$collectionSlug/$serial',
+    path: '/api/objekts/transfers/$collectionSlug/$serial',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
@@ -97,12 +124,16 @@ export interface FileRoutesByFullPath {
   '/list': typeof containerListRoute
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
+  '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
+  '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
+  '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRoutesByTo {
   '/activity': typeof containerActivityRoute
@@ -110,12 +141,16 @@ export interface FileRoutesByTo {
   '/list': typeof containerListRoute
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
+  '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
   '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
+  '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
+  '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,12 +161,16 @@ export interface FileRoutesById {
   '/(container)/list': typeof containerListRoute
   '/(container)/login': typeof containerLoginRoute
   '/(container)/market': typeof containerMarketRoute
+  '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/rpc/$': typeof RpcSplatRoute
   '/(container)/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
+  '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
+  '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -142,12 +181,16 @@ export interface FileRouteTypes {
     | '/list'
     | '/login'
     | '/market'
+    | '/api/collection'
     | '/api/healthcheck'
     | '/rpc/$'
     | '/'
     | '/@{$nickname}/'
     | '/api/auth/$'
     | '/api/user/search'
+    | '/api/objekts/list/$collectionSlug'
+    | '/api/objekts/metadata/$collectionSlug'
+    | '/api/objekts/transfers/$collectionSlug/$serial'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/activity'
@@ -155,12 +198,16 @@ export interface FileRouteTypes {
     | '/list'
     | '/login'
     | '/market'
+    | '/api/collection'
     | '/api/healthcheck'
     | '/rpc/$'
     | '/'
     | '/@{$nickname}'
     | '/api/auth/$'
     | '/api/user/search'
+    | '/api/objekts/list/$collectionSlug'
+    | '/api/objekts/metadata/$collectionSlug'
+    | '/api/objekts/transfers/$collectionSlug/$serial'
   id:
     | '__root__'
     | '/(container)'
@@ -170,21 +217,29 @@ export interface FileRouteTypes {
     | '/(container)/list'
     | '/(container)/login'
     | '/(container)/market'
+    | '/api/collection'
     | '/api/healthcheck'
     | '/rpc/$'
     | '/(container)/'
     | '/@{$nickname}/'
     | '/api/auth/$'
     | '/api/user/search'
+    | '/api/objekts/list/$collectionSlug'
+    | '/api/objekts/metadata/$collectionSlug'
+    | '/api/objekts/transfers/$collectionSlug/$serial'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   containerRouteRoute: typeof containerRouteRouteWithChildren
   AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
+  ApiCollectionRoute: typeof ApiCollectionRoute
   ApiHealthcheckRoute: typeof ApiHealthcheckRoute
   RpcSplatRoute: typeof RpcSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiUserSearchRoute: typeof ApiUserSearchRoute
+  ApiObjektsListCollectionSlugRoute: typeof ApiObjektsListCollectionSlugRoute
+  ApiObjektsMetadataCollectionSlugRoute: typeof ApiObjektsMetadataCollectionSlugRoute
+  ApiObjektsTransfersCollectionSlugSerialRoute: typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
       parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
+    '/api/collection': {
+      id: '/api/collection'
+      path: '/api/collection'
+      fullPath: '/api/collection'
+      preLoaderRoute: typeof ApiCollectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/healthcheck': {
       id: '/api/healthcheck'
       path: '/api/healthcheck'
@@ -278,6 +340,27 @@ declare module '@tanstack/react-router' {
       path: '/api/user/search'
       fullPath: '/api/user/search'
       preLoaderRoute: typeof ApiUserSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/objekts/list/$collectionSlug': {
+      id: '/api/objekts/list/$collectionSlug'
+      path: '/api/objekts/list/$collectionSlug'
+      fullPath: '/api/objekts/list/$collectionSlug'
+      preLoaderRoute: typeof ApiObjektsListCollectionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/objekts/metadata/$collectionSlug': {
+      id: '/api/objekts/metadata/$collectionSlug'
+      path: '/api/objekts/metadata/$collectionSlug'
+      fullPath: '/api/objekts/metadata/$collectionSlug'
+      preLoaderRoute: typeof ApiObjektsMetadataCollectionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/objekts/transfers/$collectionSlug/$serial': {
+      id: '/api/objekts/transfers/$collectionSlug/$serial'
+      path: '/api/objekts/transfers/$collectionSlug/$serial'
+      fullPath: '/api/objekts/transfers/$collectionSlug/$serial'
+      preLoaderRoute: typeof ApiObjektsTransfersCollectionSlugSerialRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -323,10 +406,15 @@ const rootRouteChildren: RootRouteChildren = {
   containerRouteRoute: containerRouteRouteWithChildren,
   AtChar123nicknameChar125RouteRoute:
     AtChar123nicknameChar125RouteRouteWithChildren,
+  ApiCollectionRoute: ApiCollectionRoute,
   ApiHealthcheckRoute: ApiHealthcheckRoute,
   RpcSplatRoute: RpcSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiUserSearchRoute: ApiUserSearchRoute,
+  ApiObjektsListCollectionSlugRoute: ApiObjektsListCollectionSlugRoute,
+  ApiObjektsMetadataCollectionSlugRoute: ApiObjektsMetadataCollectionSlugRoute,
+  ApiObjektsTransfersCollectionSlugSerialRoute:
+    ApiObjektsTransfersCollectionSlugSerialRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

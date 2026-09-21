@@ -1,12 +1,107 @@
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useState } from "react";
 
+import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { Shimmer } from "@/components/shared/shimmer";
+import { Button } from "@/components/ui/button";
+import { useScopedFacets } from "@/features/filters/facets";
+import { FilterBar } from "@/features/filters/filter-bar";
+import { MemberChips } from "@/features/filters/member-chips";
+import { filterSearchSchema } from "@/features/filters/search-schema";
+import { useResetFilters } from "@/features/filters/use-filters";
+import { ObjektDrawer } from "@/features/objekt/drawer";
+import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ObjektGrid } from "@/features/objekt/objekt-grid";
+import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
+import { SelectBar } from "@/features/objekt/select-bar";
+import { useCollectionObjekts } from "@/features/objekt/use-collection-objekts";
 import { m } from "@/paraglide/messages";
+import { useColumns } from "@/stores/columns";
+import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 export const Route = createFileRoute("/(container)/")({
+  validateSearch: filterSearchSchema,
   component: HomePage,
 });
 
+function ShimmerGrid() {
+  const columns = useColumns();
+  return (
+    <ObjektGrid columns={columns}>
+      {Array.from({ length: columns * 3 }).map((_, index) => (
+        <Shimmer key={index} className="aspect-photocard rounded-photocard w-full" />
+      ))}
+    </ObjektGrid>
+  );
+}
+
 function HomePage() {
-  return <PageHeader title={m.home_title()} description={m.home_description()} />;
+  const { facets, groups } = useScopedFacets();
+  const { filtered, filters, isPending } = useCollectionObjekts();
+  const reset = useResetFilters();
+  const ids = useSelection((s) => s.ids);
+  const toggle = useSelection((s) => s.toggle);
+  const [active, setActive] = useState<ValidObjekt | null>(null);
+
+  useClearSelectionOnNavigate();
+
+  const renderObjekt = useCallback(
+    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
+      const objekt = item[0];
+      if (!objekt) return null;
+      return (
+        <ObjektCard
+          objekt={objekt}
+          selected={ids.has(objekt.id)}
+          onToggleSelect={(value) => toggle(value.id)}
+          onOpen={setActive}
+          qty={item.length > 1 ? item.length : undefined}
+          priority={rowIndex < 2}
+        />
+      );
+    },
+    [ids, toggle],
+  );
+
+  return (
+    <>
+      <PageHeader title={m.home_title()} description={m.home_description()} />
+
+      <MemberChips />
+      <FilterBar facets={facets} groups={groups} />
+
+      {!isPending && (
+        <div className="text-muted-foreground font-mono text-[12.5px]">
+          <b className="text-foreground font-semibold tabular-nums">
+            {m.common_count_total_prefix()}
+            {filtered.length.toLocaleString()}
+          </b>
+          {m.common_count_total_suffix()}
+        </div>
+      )}
+
+      {isPending ? (
+        <ShimmerGrid />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={MagnifyingGlassIcon}
+          title={m.home_empty_title()}
+          hint={m.home_empty_hint()}
+          action={
+            <Button variant="outline" size="sm" onClick={reset}>
+              {m.filter_reset_filter()}
+            </Button>
+          }
+        />
+      ) : (
+        <ObjektVirtualGrid objekts={filtered} filters={filters} renderItem={renderObjekt} />
+      )}
+
+      <SelectBar visibleIds={filtered.map((objekt) => objekt.id)} />
+      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
+    </>
+  );
 }
