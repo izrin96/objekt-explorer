@@ -1,0 +1,324 @@
+import {
+  ImagesSquareIcon,
+  LockSimpleIcon,
+  LockSimpleOpenIcon,
+  MagnifyingGlassIcon,
+  PushPinIcon,
+  PushPinSlashIcon,
+} from "@phosphor-icons/react";
+import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
+import { format } from "date-fns";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
+
+import { EmptyState } from "@/components/shared/empty-state";
+import { Shimmer } from "@/components/shared/shimmer";
+import { Button } from "@/components/ui/button";
+import { MenuItem } from "@/components/ui/menu";
+import { isFiltering } from "@/features/filters/search-schema";
+import { useResetFilters } from "@/features/filters/use-filters";
+import { ObjektDrawer } from "@/features/objekt/drawer";
+import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
+import { ObjektGrid } from "@/features/objekt/objekt-grid";
+import { isObjektOwned } from "@/features/objekt/objekt-utils";
+import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
+import { SelectBar, type SelectBarAction } from "@/features/objekt/select-bar";
+import { useCurrentUser } from "@/features/user/hooks";
+import { m } from "@/paraglide/messages";
+import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
+
+import {
+  pinOrderFor,
+  useBatchLock,
+  useBatchPin,
+  useBatchUnlock,
+  useBatchUnpin,
+  useReorderPins,
+} from "./actions";
+import { CheckpointPopover, checkpointDate } from "./checkpoint-popover";
+import { PinnedShelf } from "./pinned-shelf";
+import { useProfileColumns, useProfileAuthed, useProfileTarget } from "./profile-provider";
+import { ProfileToolbar } from "./profile-toolbar";
+import { useProfileObjekts } from "./use-profile-objekts";
+
+function ShimmerGrid({ columns }: { columns: number }) {
+  return (
+    <ObjektGrid columns={columns}>
+      {Array.from({ length: columns * 3 }).map((_, index) => (
+        <Shimmer key={index} className="aspect-photocard rounded-photocard w-full" />
+      ))}
+    </ObjektGrid>
+  );
+}
+
+export function CollectionView() {
+  const profile = useProfileTarget()!;
+  const address = profile.address;
+  const { data: user } = useCurrentUser();
+  const isProfileAuthed = useProfileAuthed();
+  const columns = useProfileColumns();
+  const reset = useResetFilters();
+  const selected = useSelection((s) => s.ids);
+  const toggleSelect = useSelection((s) => s.toggle);
+  const clearSelection = useSelection((s) => s.clear);
+  const [active, setActive] = useState<ValidObjekt | null>(null);
+
+  const {
+    filtered,
+    filters,
+    rarityMap,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    isPending,
+  } = useProfileObjekts();
+
+  const batchPin = useBatchPin(address);
+  const batchUnpin = useBatchUnpin(address);
+  const batchLock = useBatchLock(address);
+  const batchUnlock = useBatchUnlock(address);
+  const reorderPins = useReorderPins(address);
+
+  useClearSelectionOnNavigate();
+
+  // a past state belongs to nobody to edit, and a signed-out visitor has
+  // nothing to act with
+  const showActions = Boolean(user) && filters.at === undefined;
+  const dndEnabled =
+    isProfileAuthed && showActions && !isFiltering(filters) && filters.hidePin !== true;
+
+  // applied in the same commit as dnd-kit's own drag-end cleanup, so the drop
+  // frame shows the final order without waiting on React Query's notify
+  // scheduler, which lands the optimistic cache write a tick later
+  const [pinOrderOverride, setPinOrderOverride] = useState<ReadonlyMap<string, number> | null>(
+    null,
+  );
+
+  const handleReorder = useCallback(
+    (tokenIds: string[]) => {
+      setPinOrderOverride(pinOrderFor(tokenIds));
+      reorderPins.mutate(
+        { address, tokenIds: tokenIds.map(Number) },
+        { onSettled: () => setPinOrderOverride(null) },
+      );
+    },
+    [address, reorderPins],
+  );
+
+  const objekts = useMemo(() => {
+    if (!pinOrderOverride) return filtered;
+    return filtered.map((objekt) => {
+      const order = pinOrderOverride.get(objekt.id);
+      return order === undefined ? objekt : Object.assign({}, objekt, { pinOrder: order });
+    });
+  }, [filtered, pinOrderOverride]);
+
+  const pinned = useMemo(
+    () =>
+      filters.hidePin === true
+        ? []
+        : objekts
+            .filter((objekt) => isObjektOwned(objekt) && objekt.isPin === true)
+            .toSorted((a, b) => pinOrder(b) - pinOrder(a)),
+    [objekts, filters.hidePin],
+  );
+
+  const renderCard = useCallback(
+    (objekt: ValidObjekt, handle?: ReactNode, qty?: number, priority = false) => {
+      const owned = isObjektOwned(objekt) ? objekt : null;
+      const canEdit = showActions && isProfileAuthed && owned !== null;
+      return (
+        <ObjektCard
+          objekt={objekt}
+          selected={selected.has(objekt.id)}
+          // a past state is read-only, so the cards carry no check control
+          onToggleSelect={showActions ? (item) => toggleSelect(item.id) : undefined}
+          onOpen={setActive}
+          pin={owned?.isPin === true}
+          lock={owned?.isLocked === true}
+          qty={qty}
+          priority={priority}
+        >
+          {handle}
+          {canEdit && owned && (
+            <ObjektCardMenu>
+              <MenuItem
+                onClick={() =>
+                  owned.isPin
+                    ? batchUnpin.mutate({ address, tokenIds: [Number(owned.id)] })
+                    : batchPin.mutate({ address, tokenIds: [Number(owned.id)] })
+                }
+              >
+                {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  owned.isLocked
+                    ? batchUnlock.mutate({ address, tokenIds: [Number(owned.id)] })
+                    : batchLock.mutate({ address, tokenIds: [Number(owned.id)] })
+                }
+              >
+                {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
+              </MenuItem>
+            </ObjektCardMenu>
+          )}
+        </ObjektCard>
+      );
+    },
+    [
+      address,
+      batchLock,
+      batchPin,
+      batchUnlock,
+      batchUnpin,
+      isProfileAuthed,
+      selected,
+      showActions,
+      toggleSelect,
+    ],
+  );
+
+  const renderItem = useCallback(
+    ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
+      const objekt = item[0];
+      if (!objekt) return null;
+      return renderCard(objekt, undefined, item.length > 1 ? item.length : undefined, rowIndex < 2);
+    },
+    [renderCard],
+  );
+
+  const at = checkpointDate(filters.at);
+  const uniqueCount = new Set(filtered.map((objekt) => objekt.collectionId)).size;
+
+  const selectedObjekts = filtered.filter((objekt) => selected.has(objekt.id));
+  const run = (mutate: (input: { address: string; tokenIds: number[] }) => void, ids: string[]) => {
+    mutate({ address, tokenIds: ids.map(Number) });
+    clearSelection();
+  };
+
+  const ownerActions: SelectBarAction[] = isProfileAuthed
+    ? [
+        ...pick(selectedObjekts, (objekt) => objekt.isPin !== true, {
+          label: m.objekt_menu_pin(),
+          icon: <PushPinIcon />,
+          run: (ids) => run(batchPin.mutate, ids),
+        }),
+        ...pick(selectedObjekts, (objekt) => objekt.isPin === true, {
+          label: m.objekt_menu_unpin(),
+          icon: <PushPinSlashIcon />,
+          run: (ids) => run(batchUnpin.mutate, ids),
+        }),
+        ...pick(selectedObjekts, (objekt) => objekt.isLocked !== true, {
+          label: m.objekt_menu_lock(),
+          icon: <LockSimpleIcon />,
+          run: (ids) => run(batchLock.mutate, ids),
+        }),
+        ...pick(selectedObjekts, (objekt) => objekt.isLocked === true, {
+          label: m.objekt_menu_unlock(),
+          icon: <LockSimpleOpenIcon />,
+          run: (ids) => run(batchUnlock.mutate, ids),
+        }),
+      ]
+    : [];
+
+  return (
+    <>
+      <ProfileToolbar showLock extra={<CheckpointPopover />} />
+
+      {at && (
+        <p className="text-muted-foreground text-[13px]">
+          {m.profile_checkpoint_notice({ date: format(at, "d MMM yyyy") })}
+        </p>
+      )}
+
+      {isPending ? (
+        <ShimmerGrid columns={columns} />
+      ) : (
+        <>
+          <PinnedShelf
+            objekts={pinned}
+            columns={columns}
+            reorderable={dndEnabled}
+            onReorder={handleReorder}
+            renderCard={(objekt, handle) => renderCard(objekt, handle)}
+          />
+
+          <p className="text-muted-foreground font-mono text-[12.5px] tabular-nums">
+            {m.profile_count_summary({
+              shown: filtered.length.toLocaleString(),
+              unique: uniqueCount.toLocaleString(),
+              owned: `${filtered.length.toLocaleString()}${hasNextPage ? "+" : ""}`,
+            })}
+          </p>
+
+          {filtered.length === 0 ? (
+            <EmptyState
+              icon={isFiltering(filters) ? MagnifyingGlassIcon : ImagesSquareIcon}
+              title={isFiltering(filters) ? m.home_empty_title() : m.profile_empty_title()}
+              hint={isFiltering(filters) ? m.profile_no_match_hint() : m.profile_empty_hint()}
+              action={
+                isFiltering(filters) ? (
+                  <Button variant="outline" size="sm" onClick={reset}>
+                    {m.filter_reset_filter()}
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <ObjektVirtualGrid
+              objekts={objekts}
+              filters={filters}
+              columns={columns}
+              rarityMap={rarityMap}
+              isProfile
+              renderItem={renderItem}
+              onLoadMore={fetchNextPage}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+            />
+          )}
+        </>
+      )}
+
+      {showActions && (
+        <SelectBar visibleIds={filtered.map((objekt) => objekt.id)} secondary={ownerActions} />
+      )}
+
+      <ObjektDrawer
+        objekt={active}
+        onClose={() => setActive(null)}
+        locked={active !== null && isObjektOwned(active) && active.isLocked === true}
+        onToggleLock={
+          showActions && isProfileAuthed && active !== null && isObjektOwned(active)
+            ? () =>
+                active.isLocked
+                  ? batchUnlock.mutate({ address, tokenIds: [Number(active.id)] })
+                  : batchLock.mutate({ address, tokenIds: [Number(active.id)] })
+            : undefined
+        }
+      />
+    </>
+  );
+}
+
+function pinOrder(objekt: ValidObjekt): number {
+  return isObjektOwned(objekt) ? (objekt.pinOrder ?? 0) : 0;
+}
+
+/**
+ * An action is offered while the selection holds anything it would change:
+ * Lock while something is unlocked, Unlock while something is locked, both on
+ * a mixed selection.
+ */
+function pick(
+  objekts: ValidObjekt[],
+  matches: (objekt: OwnedObjekt) => boolean,
+  action: { label: string; icon: ReactNode; run: (ids: string[]) => void },
+): SelectBarAction[] {
+  const ids: string[] = [];
+  for (const objekt of objekts) {
+    if (isObjektOwned(objekt) && matches(objekt)) ids.push(objekt.id);
+  }
+  if (ids.length === 0) return [];
+  return [{ label: action.label, icon: action.icon, onClick: () => action.run(ids) }];
+}
