@@ -18,6 +18,10 @@ import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
 import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
 import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
+import { Route as AtChar123nicknameChar125ListRouteImport } from './routes/@{$nickname}/list'
+import { Route as AtChar123nicknameChar125ProgressRouteImport } from './routes/@{$nickname}/progress'
+import { Route as AtChar123nicknameChar125StatsRouteImport } from './routes/@{$nickname}/stats'
+import { Route as AtChar123nicknameChar125TradesRouteImport } from './routes/@{$nickname}/trades'
 import { Route as ApiCollectionRouteImport } from './routes/api/collection'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
 import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
@@ -30,9 +34,11 @@ import { Route as containerLinkConnectRouteImport } from './routes/(container)/l
 import { Route as containerLiveIndexRouteImport } from './routes/(container)/live/index'
 import { Route as containerLiveIdRouteImport } from './routes/(container)/live/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
+import { Route as ApiTransfersAddressRouteImport } from './routes/api/transfers.$address'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 import { Route as ApiObjektsListCollectionSlugRouteImport } from './routes/api/objekts/list.$collectionSlug'
 import { Route as ApiObjektsMetadataCollectionSlugRouteImport } from './routes/api/objekts/metadata.$collectionSlug'
+import { Route as ApiObjektsOwnedByAddressRouteImport } from './routes/api/objekts/owned-by.$address'
 import { Route as ApiObjektsTransfersCollectionSlugSerialRouteImport } from './routes/api/objekts/transfers.$collectionSlug.$serial'
 
 const containerRouteRoute = containerRouteRouteImport.update({
@@ -79,6 +85,30 @@ const AtChar123nicknameChar125IndexRoute =
   AtChar123nicknameChar125IndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125ListRoute =
+  AtChar123nicknameChar125ListRouteImport.update({
+    id: '/list',
+    path: '/list',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125ProgressRoute =
+  AtChar123nicknameChar125ProgressRouteImport.update({
+    id: '/progress',
+    path: '/progress',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125StatsRoute =
+  AtChar123nicknameChar125StatsRouteImport.update({
+    id: '/stats',
+    path: '/stats',
+    getParentRoute: () => AtChar123nicknameChar125RouteRoute,
+  } as any)
+const AtChar123nicknameChar125TradesRoute =
+  AtChar123nicknameChar125TradesRouteImport.update({
+    id: '/trades',
+    path: '/trades',
     getParentRoute: () => AtChar123nicknameChar125RouteRoute,
   } as any)
 const ApiCollectionRoute = ApiCollectionRouteImport.update({
@@ -142,6 +172,11 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTransfersAddressRoute = ApiTransfersAddressRouteImport.update({
+  id: '/api/transfers/$address',
+  path: '/api/transfers/$address',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
   id: '/api/user/search',
   path: '/api/user/search',
@@ -159,6 +194,12 @@ const ApiObjektsMetadataCollectionSlugRoute =
     path: '/api/objekts/metadata/$collectionSlug',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiObjektsOwnedByAddressRoute =
+  ApiObjektsOwnedByAddressRouteImport.update({
+    id: '/api/objekts/owned-by/$address',
+    path: '/api/objekts/owned-by/$address',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiObjektsTransfersCollectionSlugSerialRoute =
   ApiObjektsTransfersCollectionSlugSerialRouteImport.update({
     id: '/api/objekts/transfers/$collectionSlug/$serial',
@@ -173,6 +214,10 @@ export interface FileRoutesByFullPath {
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
+  '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
+  '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
+  '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
+  '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -185,11 +230,13 @@ export interface FileRoutesByFullPath {
   '/link/connect': typeof containerLinkConnectRoute
   '/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/link/': typeof containerLinkIndexRoute
   '/live/': typeof containerLiveIndexRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
+  '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
   '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRoutesByTo {
@@ -198,6 +245,10 @@ export interface FileRoutesByTo {
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
   '/terms-privacy': typeof containerTermsPrivacyRoute
+  '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
+  '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
+  '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
+  '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -210,11 +261,13 @@ export interface FileRoutesByTo {
   '/link/connect': typeof containerLinkConnectRoute
   '/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/link': typeof containerLinkIndexRoute
   '/live': typeof containerLiveIndexRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
+  '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
   '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRoutesById {
@@ -226,6 +279,10 @@ export interface FileRoutesById {
   '/(container)/login': typeof containerLoginRoute
   '/(container)/market': typeof containerMarketRoute
   '/(container)/terms-privacy': typeof containerTermsPrivacyRoute
+  '/@{$nickname}/list': typeof AtChar123nicknameChar125ListRoute
+  '/@{$nickname}/progress': typeof AtChar123nicknameChar125ProgressRoute
+  '/@{$nickname}/stats': typeof AtChar123nicknameChar125StatsRoute
+  '/@{$nickname}/trades': typeof AtChar123nicknameChar125TradesRoute
   '/api/collection': typeof ApiCollectionRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
@@ -238,11 +295,13 @@ export interface FileRoutesById {
   '/(container)/link/connect': typeof containerLinkConnectRoute
   '/(container)/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/transfers/$address': typeof ApiTransfersAddressRoute
   '/api/user/search': typeof ApiUserSearchRoute
   '/(container)/link/': typeof containerLinkIndexRoute
   '/(container)/live/': typeof containerLiveIndexRoute
   '/api/objekts/list/$collectionSlug': typeof ApiObjektsListCollectionSlugRoute
   '/api/objekts/metadata/$collectionSlug': typeof ApiObjektsMetadataCollectionSlugRoute
+  '/api/objekts/owned-by/$address': typeof ApiObjektsOwnedByAddressRoute
   '/api/objekts/transfers/$collectionSlug/$serial': typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 export interface FileRouteTypes {
@@ -254,6 +313,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/market'
     | '/terms-privacy'
+    | '/@{$nickname}/list'
+    | '/@{$nickname}/progress'
+    | '/@{$nickname}/stats'
+    | '/@{$nickname}/trades'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -266,11 +329,13 @@ export interface FileRouteTypes {
     | '/link/connect'
     | '/live/$id'
     | '/api/auth/$'
+    | '/api/transfers/$address'
     | '/api/user/search'
     | '/link/'
     | '/live/'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
+    | '/api/objekts/owned-by/$address'
     | '/api/objekts/transfers/$collectionSlug/$serial'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -279,6 +344,10 @@ export interface FileRouteTypes {
     | '/login'
     | '/market'
     | '/terms-privacy'
+    | '/@{$nickname}/list'
+    | '/@{$nickname}/progress'
+    | '/@{$nickname}/stats'
+    | '/@{$nickname}/trades'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -291,11 +360,13 @@ export interface FileRouteTypes {
     | '/link/connect'
     | '/live/$id'
     | '/api/auth/$'
+    | '/api/transfers/$address'
     | '/api/user/search'
     | '/link'
     | '/live'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
+    | '/api/objekts/owned-by/$address'
     | '/api/objekts/transfers/$collectionSlug/$serial'
   id:
     | '__root__'
@@ -306,6 +377,10 @@ export interface FileRouteTypes {
     | '/(container)/login'
     | '/(container)/market'
     | '/(container)/terms-privacy'
+    | '/@{$nickname}/list'
+    | '/@{$nickname}/progress'
+    | '/@{$nickname}/stats'
+    | '/@{$nickname}/trades'
     | '/api/collection'
     | '/api/healthcheck'
     | '/api/live-sessions'
@@ -318,11 +393,13 @@ export interface FileRouteTypes {
     | '/(container)/link/connect'
     | '/(container)/live/$id'
     | '/api/auth/$'
+    | '/api/transfers/$address'
     | '/api/user/search'
     | '/(container)/link/'
     | '/(container)/live/'
     | '/api/objekts/list/$collectionSlug'
     | '/api/objekts/metadata/$collectionSlug'
+    | '/api/objekts/owned-by/$address'
     | '/api/objekts/transfers/$collectionSlug/$serial'
   fileRoutesById: FileRoutesById
 }
@@ -335,9 +412,11 @@ export interface RootRouteChildren {
   ApiOpenAppRoute: typeof ApiOpenAppRoute
   RpcSplatRoute: typeof RpcSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiTransfersAddressRoute: typeof ApiTransfersAddressRoute
   ApiUserSearchRoute: typeof ApiUserSearchRoute
   ApiObjektsListCollectionSlugRoute: typeof ApiObjektsListCollectionSlugRoute
   ApiObjektsMetadataCollectionSlugRoute: typeof ApiObjektsMetadataCollectionSlugRoute
+  ApiObjektsOwnedByAddressRoute: typeof ApiObjektsOwnedByAddressRoute
   ApiObjektsTransfersCollectionSlugSerialRoute: typeof ApiObjektsTransfersCollectionSlugSerialRoute
 }
 
@@ -404,6 +483,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/@{$nickname}/'
       preLoaderRoute: typeof AtChar123nicknameChar125IndexRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/@{$nickname}/list': {
+      id: '/@{$nickname}/list'
+      path: '/list'
+      fullPath: '/@{$nickname}/list'
+      preLoaderRoute: typeof AtChar123nicknameChar125ListRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/@{$nickname}/progress': {
+      id: '/@{$nickname}/progress'
+      path: '/progress'
+      fullPath: '/@{$nickname}/progress'
+      preLoaderRoute: typeof AtChar123nicknameChar125ProgressRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/@{$nickname}/stats': {
+      id: '/@{$nickname}/stats'
+      path: '/stats'
+      fullPath: '/@{$nickname}/stats'
+      preLoaderRoute: typeof AtChar123nicknameChar125StatsRouteImport
+      parentRoute: typeof AtChar123nicknameChar125RouteRoute
+    }
+    '/@{$nickname}/trades': {
+      id: '/@{$nickname}/trades'
+      path: '/trades'
+      fullPath: '/@{$nickname}/trades'
+      preLoaderRoute: typeof AtChar123nicknameChar125TradesRouteImport
       parentRoute: typeof AtChar123nicknameChar125RouteRoute
     }
     '/api/collection': {
@@ -490,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/transfers/$address': {
+      id: '/api/transfers/$address'
+      path: '/api/transfers/$address'
+      fullPath: '/api/transfers/$address'
+      preLoaderRoute: typeof ApiTransfersAddressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/user/search': {
       id: '/api/user/search'
       path: '/api/user/search'
@@ -509,6 +623,13 @@ declare module '@tanstack/react-router' {
       path: '/api/objekts/metadata/$collectionSlug'
       fullPath: '/api/objekts/metadata/$collectionSlug'
       preLoaderRoute: typeof ApiObjektsMetadataCollectionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/objekts/owned-by/$address': {
+      id: '/api/objekts/owned-by/$address'
+      path: '/api/objekts/owned-by/$address'
+      fullPath: '/api/objekts/owned-by/$address'
+      preLoaderRoute: typeof ApiObjektsOwnedByAddressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/objekts/transfers/$collectionSlug/$serial': {
@@ -556,11 +677,20 @@ const containerRouteRouteWithChildren = containerRouteRoute._addFileChildren(
 )
 
 interface AtChar123nicknameChar125RouteRouteChildren {
+  AtChar123nicknameChar125ListRoute: typeof AtChar123nicknameChar125ListRoute
+  AtChar123nicknameChar125ProgressRoute: typeof AtChar123nicknameChar125ProgressRoute
+  AtChar123nicknameChar125StatsRoute: typeof AtChar123nicknameChar125StatsRoute
+  AtChar123nicknameChar125TradesRoute: typeof AtChar123nicknameChar125TradesRoute
   AtChar123nicknameChar125IndexRoute: typeof AtChar123nicknameChar125IndexRoute
 }
 
 const AtChar123nicknameChar125RouteRouteChildren: AtChar123nicknameChar125RouteRouteChildren =
   {
+    AtChar123nicknameChar125ListRoute: AtChar123nicknameChar125ListRoute,
+    AtChar123nicknameChar125ProgressRoute:
+      AtChar123nicknameChar125ProgressRoute,
+    AtChar123nicknameChar125StatsRoute: AtChar123nicknameChar125StatsRoute,
+    AtChar123nicknameChar125TradesRoute: AtChar123nicknameChar125TradesRoute,
     AtChar123nicknameChar125IndexRoute: AtChar123nicknameChar125IndexRoute,
   }
 
@@ -579,9 +709,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiOpenAppRoute: ApiOpenAppRoute,
   RpcSplatRoute: RpcSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiTransfersAddressRoute: ApiTransfersAddressRoute,
   ApiUserSearchRoute: ApiUserSearchRoute,
   ApiObjektsListCollectionSlugRoute: ApiObjektsListCollectionSlugRoute,
   ApiObjektsMetadataCollectionSlugRoute: ApiObjektsMetadataCollectionSlugRoute,
+  ApiObjektsOwnedByAddressRoute: ApiObjektsOwnedByAddressRoute,
   ApiObjektsTransfersCollectionSlugSerialRoute:
     ApiObjektsTransfersCollectionSlugSerialRoute,
 }

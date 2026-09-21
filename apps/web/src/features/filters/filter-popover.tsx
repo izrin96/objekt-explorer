@@ -1,4 +1,10 @@
-import { FunnelSimpleIcon, XIcon } from "@phosphor-icons/react";
+import {
+  ArrowsClockwiseIcon,
+  FunnelSimpleIcon,
+  LockSimpleIcon,
+  LockSimpleOpenIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { validEdition, validOnlineTypes } from "@repo/cosmo/types/common";
 import type { ValidEdition, ValidOnlineType } from "@repo/cosmo/types/common";
 import { useId, type ReactNode } from "react";
@@ -9,13 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Select,
-  SelectItem,
-  SelectPopup,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
@@ -63,8 +62,8 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 
 /**
  * `Row`'s sibling for a control that must not be wrapped in a `<label>`: a
- * Select trigger nested in one receives the label's forwarded click on top of
- * its own and opens and closes its popup in the same gesture.
+ * button nested in one receives the label's forwarded click on top of its own
+ * and fires twice.
  */
 function ControlRow({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -140,6 +139,51 @@ function ColorField() {
   );
 }
 
+/** the three states the `locked` parameter has, in the order the control walks */
+const LOCK_CYCLE = [undefined, true, false] as const;
+
+/**
+ * Tri-state on one control: absent is every objekt, `true` only locked, `false`
+ * only unlocked. Activating steps to the next state and the button's text is
+ * the state it is in, so there is no hidden mode.
+ */
+function LockCycle() {
+  const locked = useFilters((f) => f.locked);
+  const setFilters = useSetFilters();
+
+  const label =
+    locked === undefined
+      ? m.filter_all()
+      : locked
+        ? m.filter_only_locked()
+        : m.filter_only_unlocked();
+
+  return (
+    <ControlRow label={m.filter_lock_unlocked()}>
+      <Button
+        variant="outline"
+        size="sm"
+        aria-label={`${m.filter_lock_unlocked()}: ${label}`}
+        className="w-32 justify-between text-[13px] font-normal"
+        onClick={() =>
+          setFilters({ locked: LOCK_CYCLE[(LOCK_CYCLE.indexOf(locked) + 1) % LOCK_CYCLE.length] })
+        }
+      >
+        <span className="flex items-center gap-1.5">
+          {locked === undefined ? (
+            <ArrowsClockwiseIcon />
+          ) : locked ? (
+            <LockSimpleIcon weight="fill" />
+          ) : (
+            <LockSimpleOpenIcon />
+          )}
+          {label}
+        </span>
+      </Button>
+    </ControlRow>
+  );
+}
+
 /** One set of controls for the desktop popover and the mobile sheet both. */
 export function LongTailFields({
   showPricedOnly = false,
@@ -188,35 +232,7 @@ export function LongTailFields({
           onCheckedChange={(value) => setFilters({ hidePin: value || undefined })}
         />
       </Row>
-      {showLock && (
-        <ControlRow label={m.filter_lock_unlocked()}>
-          {/* three-way: "any" is the absent parameter, and the two picks are the
-              boolean the filter compares */}
-          <Select
-            value={filters.locked ?? null}
-            onValueChange={(value: boolean | null) => setFilters({ locked: value ?? undefined })}
-          >
-            <SelectTrigger size="sm" aria-label={m.filter_lock_unlocked()} className="w-32">
-              {/* a boolean renders as nothing on its own, so the trigger reads
-                  the value through a render child rather than a placeholder */}
-              <SelectValue>
-                {(value: boolean | null) =>
-                  value === null
-                    ? m.filter_all()
-                    : value
-                      ? m.filter_only_locked()
-                      : m.filter_only_unlocked()
-                }
-              </SelectValue>
-            </SelectTrigger>
-            <SelectPopup>
-              <SelectItem value={null}>{m.filter_all()}</SelectItem>
-              <SelectItem value={true}>{m.filter_only_locked()}</SelectItem>
-              <SelectItem value={false}>{m.filter_only_unlocked()}</SelectItem>
-            </SelectPopup>
-          </Select>
-        </ControlRow>
-      )}
+      {showLock && <LockCycle />}
       {showPricedOnly && (
         <Row label={m.filter_priced_only()}>
           <Switch

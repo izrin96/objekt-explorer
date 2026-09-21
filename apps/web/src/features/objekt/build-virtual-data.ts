@@ -1,7 +1,9 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
 import { sortObjekts } from "@/features/filters/filter-utils";
-import type { FilterSearch } from "@/features/filters/search-schema";
+import { isFiltering, type FilterSearch } from "@/features/filters/search-schema";
+
+import { isObjektOwned } from "./objekt-utils";
 
 export type VirtualItem =
   | { type: "label"; title: string }
@@ -15,6 +17,8 @@ export type BuildVirtualDataConfig = {
   compareMember: (a: string, b: string) => number;
   compareSeason: (a: string, b: string) => number;
   compareClass: (a: string, b: string) => number;
+  /** pinned objekts lead their group, in the owner's order */
+  isProfile?: boolean;
   rarityMap?: Map<string, number>;
 };
 
@@ -33,6 +37,10 @@ function groupKey(
   }
 }
 
+function pinOrder(objekt: ValidObjekt): number {
+  return isObjektOwned(objekt) ? (objekt.pinOrder ?? 0) : 0;
+}
+
 export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] {
   const {
     objekts,
@@ -42,8 +50,13 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
     compareMember,
     compareSeason,
     compareClass,
+    isProfile = false,
     rarityMap,
   } = config;
+
+  // a filtered or pin-hidden grid is ordered by the sort alone: the shelf is
+  // gone, so leading with pins would only scatter the sort
+  const pinFirst = isProfile && !filters.hidePin && !isFiltering(filters);
 
   const groupBy = filters.group_by;
   const groups: Record<string, ValidObjekt[]> = groupBy
@@ -67,7 +80,17 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
   for (const [key, items] of ordered) {
     if (key) result.push({ type: "label", title: key });
 
-    const sorted = sortObjekts(items, filters, compareMember, compareSeason, rarityMap);
+    let sorted = sortObjekts(items, filters, compareMember, compareSeason, rarityMap);
+
+    if (pinFirst) {
+      const pinned = sorted.filter((objekt) => isObjektOwned(objekt) && objekt.isPin === true);
+      if (pinned.length > 0) {
+        sorted = [
+          ...pinned.toSorted((a, b) => pinOrder(b) - pinOrder(a)),
+          ...sorted.filter((objekt) => !(isObjektOwned(objekt) && objekt.isPin === true)),
+        ];
+      }
+    }
 
     let cells: ValidObjekt[][];
     if (filters.grouped) {
