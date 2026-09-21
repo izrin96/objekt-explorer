@@ -744,5 +744,16 @@
   "home_empty_hint": "현재 필터에 맞는 오브젝트가 없습니다. 조건을 넓히거나 모두 지워보세요.",
   "selection_toolbar_aria": "선택",
   "selection_more_actions": "추가 작업",
-  "selection_clear": "선택 해제"
+  "selection_clear": "선택 해제",
+  "auth_password_show": "비밀번호 표시",
+  "auth_password_hide": "비밀번호 숨기기",
+  "auth_sign_up_terms": "계정을 만들면 이용약관 및 개인정보처리방침에 동의하는 것으로 간주됩니다.",
+  "auth_account_danger_zone": "위험 구역",
+  "auth_account_confirm_password_label": "새 비밀번호 확인",
+  "auth_account_password_mismatch": "비밀번호가 일치하지 않습니다.",
+  "profile_edit_file_unsupported": "\"{name}\" 파일은 지원되지 않는 이미지 또는 영상 형식입니다.",
+  "link_open_cosmo": "Cosmo 열기",
+  "link_no_cosmo_linked": "아직 연결된 Cosmo가 없습니다.",
+  "link_profiles_linked": "Cosmo {count}개 연결됨.",
+  "link_step_artist": "아티스트"
 }

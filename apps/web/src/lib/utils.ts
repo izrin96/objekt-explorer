@@ -31,4 +31,13 @@ export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_TABLET = 5;
 export const GRID_COLUMNS_MOBILE = 3;
 
-export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
+/**
+ * A `redirect` search value is only followed when it is a same-origin path:
+ * `//evil.example` is a protocol-relative URL the browser resolves off-site.
+ */
+export function isSafeRedirect(value: string): boolean {
+  return /^\/(?!\/)/.test(value);
+}
+
+/** the column counts `profile.edit` accepts */
+export const validColumns = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18] as const;

@@ -744,5 +744,16 @@
   "home_empty_hint": "現在のフィルターに合うObjektはありません。条件を広げるか、すべてクリアしてください。",
   "selection_toolbar_aria": "選択",
   "selection_more_actions": "その他の操作",
-  "selection_clear": "選択を解除"
+  "selection_clear": "選択を解除",
+  "auth_password_show": "パスワードを表示",
+  "auth_password_hide": "パスワードを非表示",
+  "auth_sign_up_terms": "アカウントを作成すると、利用規約とプライバシーに同意したものとみなされます。",
+  "auth_account_danger_zone": "危険な操作",
+  "auth_account_confirm_password_label": "新しいパスワードの確認",
+  "auth_account_password_mismatch": "パスワードが一致しません。",
+  "profile_edit_file_unsupported": "ファイル「{name}」は対応していない画像・動画形式です。",
+  "link_open_cosmo": "Cosmoを開く",
+  "link_no_cosmo_linked": "まだ連携されたCosmoはありません。",
+  "link_profiles_linked": "Cosmoを{count}件連携済み。",
+  "link_step_artist": "アーティスト"
 }
