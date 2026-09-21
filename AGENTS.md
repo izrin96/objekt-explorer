@@ -76,11 +76,15 @@ Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/ski
 | React components                          | `vercel-react-best-practices`, `vercel-composition-patterns`                                 |
 | Better Auth server and client             | `better-auth-best-practices`                                                                 |
 | Drizzle schema, raw SQL, indexes          | `supabase-postgres-best-practices` (Postgres anywhere)                                       |
-| Accessibility and UI review of a page     | `web-design-guidelines`; `fixing-accessibility` for a targeted fix                           |
+| Reviewing or polishing a screen or flow   | `better-interface`, which loads the six `better-*` domain skills itself                      |
+| One UI domain, or a targeted fix          | that domain's `better-*` skill alone; `fixing-accessibility` or `web-design-guidelines`      |
+| Writing new UI code                       | `baseline-ui`                                                                                |
 | Something broken, slow or throwing        | `diagnosing-bugs` first                                                                      |
 | Reviewing a branch or a change            | `code-review`                                                                                |
 | A merge conflict                          | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged) |
 | Editing this file, a skill or `openspec/` | `writing-for-agents`                                                                         |
+
+`better-interface` loads `better-accessibility`, `better-layout`, `better-writing`, `better-typography`, `better-colors` and `better-ui` itself, so invoke it on its own; it reports without editing unless you also ask for the fixes. `better-accessibility` owns the accessibility rules the review applies, and `fixing-accessibility` stays the one-file fixer.
 
 Install a new one with `npx skills@latest add <owner/repo> -s <skill> -a claude-code -y`, read the whole skill, move the directory to `.agents/skills/` and replace it with the symlink, then commit it with `skills-lock.json`.
 

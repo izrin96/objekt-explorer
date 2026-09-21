@@ -183,7 +183,9 @@ function MarketRow({
         </div>
       </div>
 
-      <div className="col-span-full -mt-1 flex items-center gap-2">
+      {/* same rule as the timeline row: the list name wraps rather than losing
+          itself to the button beside it */}
+      <div className="col-span-full -mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="text-muted-foreground min-w-0 truncate font-mono text-[11px]">
           listed <TimeAgo date={listing.listedAt} /> · {listing.list.name}
         </span>

@@ -397,7 +397,11 @@ export function Timeline({
         {view.events.map((event, i) => {
           const current = i === 0 && event.kind !== "spin";
           return (
-            <li key={event.id} className="flex items-center gap-2.5 py-2">
+            /* Wrapping, not shrinking: the owner is the only flexible item in the
+               row, so without this the two pills and the timestamp squeeze it to
+               nothing. Wrapping lets the chrome move to a second line and the
+               nickname keep its width; `truncate` stays as the backstop. */
+            <li key={event.id} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 py-2">
               <i
                 className="size-1.5 shrink-0 rounded-full"
                 style={{ background: EVENT_COLOR[event.kind] }}

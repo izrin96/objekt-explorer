@@ -186,11 +186,15 @@ export function ObjektCard({
       </div>
 
       {!hideLabel && (
-        <div className="flex min-w-0 items-baseline justify-between gap-1.5 text-xs leading-tight">
+        /* The card is an `@container`, so the break is on card width rather than
+           viewport: a 3-up phone grid and a 10-column desktop grid both land near
+           144px, where "GyeongBeen" + "Su26 229Z" stop fitting on one line. Below
+           that the two stack, so neither value is truncated away. */
+        <div className="flex min-w-0 flex-col gap-0.5 text-xs leading-tight @[9rem]:flex-row @[9rem]:items-baseline @[9rem]:justify-between @[9rem]:gap-1.5">
           <span className="truncate font-medium">{objekt.member}</span>
           {/* the collection no. is an identifier people read off the card, not
               a caption — it stays at full contrast next to the member */}
-          <span className="flex-none font-mono text-[11.5px]">
+          <span className="truncate font-mono text-[11.5px] @[9rem]:flex-none">
             {collectionShortNo(objekt)}
             {objekt.serial !== undefined && <b className="ml-1 font-semibold">#{objekt.serial}</b>}
           </span>

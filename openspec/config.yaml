@@ -11,6 +11,16 @@ context: |
   reference. Read `design/base-ui-prototype-findings.md` and the seven port notes in
   `design/lab-code-review.md` before proposing any frontend change. `apps/website` is the
   read-only reference for behaviour until cutover.
+  The programme is planned in `design/web-migration-plan.md` (changes C0–C8); every change
+  names the skills its implementer invokes first and the files it may touch — stay inside them.
+  Rules for code under `apps/web`: Zustand reads are selectors only; URL state is route
+  `validateSearch` with zod, never nuqs; every user-facing string is `m.*` from Paraglide,
+  reusing the website's key when the string is the same; server data goes through React Query
+  with `@orpc/tanstack-query` utils and route loaders `ensureQueryData` the first paint; no
+  import from `apps/website`, `apps/lab`, `intentui` or `react-aria-components` — copy the
+  file into `web`; Phosphor icons; cnippet token names only; `virtua` grids; the seven port
+  notes in `design/lab-code-review.md` are requirements. `packages/api` is the shared server
+  layer once change `extract-api-package` lands.
   There is no test framework: `bun run lint`, `bun run typecheck` and `bun run build` are the
   checks. Never git commit, push or run DB migrations without explicit approval.
 
