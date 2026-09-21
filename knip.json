@@ -13,6 +13,15 @@
         "src/**/*.{ts,tsx,css}"
       ]
     },
+    "apps/web": {
+      "entry": [
+        "src/routes/**/*.{ts,tsx}",
+        "src/{client,server,router}.tsx"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx,css}"
+      ]
+    },
     "apps/lab": {
       "entry": [
         "scripts/*.ts"
