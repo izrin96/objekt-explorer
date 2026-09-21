@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Objekt Lab</title>
+    <!--
+      The theme has to be on <html> before the first paint, or a Light setting
+      flashes the dark page while the bundle boots. Same rule as
+      `applyTheme` in `src/store/settings.ts`, read straight off the zustand
+      persist key rather than through the store.
+    -->
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem("lab:settings");
+          var theme = raw ? JSON.parse(raw).state.theme : "System";
+          var dark =
+            theme === "Dark" ||
+            (theme !== "Light" && matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+        } catch (e) {
+          // blocked storage / half-written value: the class already on <html> stands
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,293 @@
+@import "tailwindcss";
+@import "@fontsource-variable/google-sans-flex/wght.css";
+@import "@fontsource-variable/space-grotesk/wght.css";
+@import "@fontsource-variable/fira-code/wght.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * One token vocabulary: the names cnippet's own theme ships
+ * (`https://ui.cnippet.dev/r/registry.json`, item `style`). Nothing here
+ * aliases anything — a name resolves to a colour and that is the whole chain.
+ *
+ * The semantics are cnippet's too, and the feedback pairs are the half that is
+ * easy to get wrong: `--destructive` / `--success` / `--warning` / `--info`
+ * are the *fill*, and their `*-foreground` is the ink for a **tinted chip**
+ * (`bg-destructive/8`), not for a solid fill. Text on a solid fill is
+ * `text-white`, the way cnippet's own `Button` / `Badge` destructive variants
+ * write it. There is no `*-subtle` background token: a tint is an opacity
+ * modifier on the fill.
+ */
+
+@theme inline {
+  --font-sans:
+    "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Space Grotesk Variable", var(--font-sans);
+  --font-mono:
+    "Fira Code Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+
+  --font-sans--font-feature-settings: "cv02", "cv03", "cv04", "cv05", "cv11";
+  --font-mono--font-feature-settings: "ss02", "zero";
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* custom */
+  --color-mint-50: oklch(98.37% 0.029 119.36);
+  --color-mint-100: oklch(96.93% 0.06 121.58);
+  --color-mint-200: oklch(94.21% 0.118 122.27);
+  --color-mint-300: oklch(91.71% 0.168 123.78);
+  --color-mint-400: oklch(89.58% 0.205 125.3);
+  --color-mint-500: oklch(87.67% 0.226 127.6);
+  --color-mint-600: oklch(74.22% 0.19 127.34);
+  --color-mint-700: oklch(60.07% 0.153 127.25);
+  --color-mint-800: oklch(45.08% 0.113 126.61);
+  --color-mint-900: oklch(28.62% 0.069 125.78);
+  --color-mint-950: oklch(23.4% 0.055 124.86);
+
+  --text-xxs: 0.6rem;
+  --aspect-photocard: 1083 / 1673;
+  --aspect-banner: 2.4;
+  --radius-photocard: 5.4cqi;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+
+  --animate-live-animation-bg: live-animation-bg 1s var(--ease-out-cubic) 0s 1;
+
+  @keyframes live-animation-bg {
+    0% {
+      background-color: var(--muted);
+    }
+    to {
+      background-color: initial;
+    }
+  }
+
+  /* `--accent` is a 10-15% wash; this is the same hue at full strength, for
+     the places that need a solid mark rather than a hover surface */
+  --color-accent-solid: var(--accent-solid);
+  --color-discord: #5865f2;
+}
+
+:root {
+  --background: oklch(0.987 0 0);
+  --foreground: oklch(0.21 0.006 285.885);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.006 285.885);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.141 0.005 285.823);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.92 0.004 286.32);
+  --secondary-foreground: oklch(0.141 0.005 285.823);
+  --accent: oklch(0.585 0.233 277.117 / 0.15);
+  --accent-foreground: oklch(0.457 0.24 277.023);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  /*
+   * Feedback pairs, light theme. The dark theme's `--success` / `--warning`
+   * are near-white pastels that only ever appear behind an 8-16% tint; reused
+   * verbatim on a white page they make the chip invisible and the ink too
+   * light, which is why the "Verified" badge and the status dot read as blank.
+   * Light gets its own, darker halves: the fill drops enough lightness for the
+   * tint to register, and each `*-foreground` clears 4.5:1 on that tint.
+   */
+  --success: oklch(0.72 0.175 131);
+  --success-foreground: oklch(0.45 0.125 131);
+  --info: oklch(0.63 0.17 237.323);
+  --info-foreground: oklch(0.45 0.13 242.749);
+  --warning: oklch(0.8 0.17 85);
+  --warning-foreground: oklch(0.47 0.12 66.442);
+  --destructive: oklch(0.55 0.235 17.585);
+  --destructive-foreground: oklch(0.47 0.205 16.935);
+  --border: oklch(0.911 0.006 286.286);
+  --input: oklch(0.871 0.006 286.286);
+  --ring: oklch(0.141 0.005 285.823);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.442 0.017 285.786 / 0.1);
+  --sidebar-primary-foreground: oklch(0.37 0.013 285.805);
+  --sidebar-accent: oklch(0.585 0.233 277.117);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.901 0.006 286.286);
+  --sidebar-ring: oklch(0.141 0.005 285.823);
+  --chart-1: oklch(0.274 0.006 286.033);
+  --chart-2: oklch(0.37 0.013 285.805);
+  --chart-3: oklch(0.442 0.017 285.786);
+  --chart-4: oklch(0.552 0.016 285.938);
+  --chart-5: oklch(0.705 0.015 286.067);
+
+  --radius: 0.5rem;
+
+  /* custom */
+  --accent-solid: oklch(0.585 0.233 277.117);
+  --season-atom: #ffdd00;
+  --season-binary: #75fb4c;
+  --season-cream: #ff7477;
+  --season-divine: #b400ff;
+  --season-ever: #33ecfd;
+  --season-spring: #ffe527;
+  --season-summer: #619aff;
+  --season-autumn: #b5315a;
+  --season-winter: #c6c6c6;
+
+  /* transitions-dev — icon swap */
+  --icon-swap-dur: 200ms;
+  --icon-swap-blur: 2px;
+  --icon-swap-start-scale: 0.25;
+  --icon-swap-ease: ease-in-out;
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  /* the page background shows through a card; only the popover surfaces
+     (`--popover`) lift off it */
+  --card: transparent;
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.19 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.141 0.005 285.823);
+  --secondary: oklch(0.244 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --accent: oklch(0.585 0.233 277.117 / 0.1);
+  --accent-foreground: oklch(0.673 0.182 276.935);
+  --muted: oklch(0.21 0.006 285.885);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --success: oklch(0.897 0.196 126.665);
+  --success-foreground: oklch(0.897 0.196 126.665);
+  --info: oklch(0.685 0.169 237.323);
+  --info-foreground: oklch(0.828 0.111 230.318);
+  --warning: oklch(0.905 0.182 98.111);
+  --warning-foreground: oklch(0.905 0.182 98.111);
+  --destructive: oklch(0.586 0.253 17.585);
+  --destructive-foreground: oklch(0.712 0.194 13.428);
+  --border: oklch(0.27 0.013 285.805);
+  --input: oklch(0.31 0.013 285.805);
+  --ring: oklch(0.985 0 0);
+  --sidebar: oklch(0.18 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.442 0.017 285.786 / 0.1);
+  --sidebar-primary-foreground: oklch(0.705 0.015 286.067);
+  --sidebar-accent: oklch(0.585 0.233 277.117);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: oklch(0.274 0.006 286.033);
+  --sidebar-ring: oklch(0.985 0 0);
+  --chart-1: oklch(0.985 0 0);
+  --chart-2: oklch(0.92 0.004 286.32);
+  --chart-3: oklch(0.871 0.006 286.286);
+  --chart-4: oklch(0.705 0.015 286.067);
+  --chart-5: oklch(0.552 0.016 285.938);
+
+  /* custom */
+  --accent-solid: oklch(0.585 0.233 277.117);
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--border, currentColor);
+  }
+}
+
+@layer base {
+  * {
+    text-rendering: optimizeLegibility;
+    /*
+     * Scrollbar
+     */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .calendar-button {
+    @apply text-foreground not-in-data-selected:hover:bg-accent relative flex size-(--cell-size) items-center justify-center rounded-lg text-base disabled:pointer-events-none disabled:opacity-64 sm:text-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='opacity-'])]:opacity-80 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4;
+  }
+  .calendar-day-button {
+    @apply text-foreground not-in-data-selected:hover:bg-accent in-[.range-middle]:in-data-selected:bg-accent in-data-selected:bg-primary in-[.range-middle]:in-data-selected:text-foreground in-data-disabled:text-muted-foreground/72 in-data-outside:text-muted-foreground/72 in-data-selected:in-data-outside:text-primary-foreground in-data-selected:text-primary-foreground focus-visible:ring-ring/50 relative flex size-(--cell-size) items-center justify-center rounded-lg text-base outline-none focus-visible:z-1 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-64 in-data-disabled:pointer-events-none in-data-disabled:line-through in-[.range-end:not(.range-start)]:rounded-s-none in-[.range-middle]:rounded-none in-[.range-start:not(.range-end)]:rounded-e-none in-[[data-selected]:not(.range-middle)]:transition-[color,background-color,border-radius,box-shadow] sm:text-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='opacity-'])]:opacity-80 [&_svg:not([class*='size-'])]:size-4.5 sm:[&_svg:not([class*='size-'])]:size-4;
+  }
+}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- the nav's cube mark: a light plate on dark, inverted for a light UA -->
+  <style>
+    .plate { fill: #0e0e11 }
+    .mark  { fill: #fafafa }
+    @media (prefers-color-scheme: light) {
+      .plate { fill: #fafafa }
+      .mark  { fill: #0e0e11 }
+    }
+  </style>
+  <rect class="plate" width="32" height="32" rx="8" />
+  <path class="mark" d="M16 5.5 26 11v10L16 26.5 6 21V11L16 5.5Zm0 3.2L9 12.5v7L16 23.3l7-3.8v-7L16 8.7Z" />
+  <path class="mark" d="M16 13.2 21 16v5.2L16 24l-5-2.8V16l5-2.8Z" opacity=".55" />
+</svg>
