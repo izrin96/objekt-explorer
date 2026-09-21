@@ -1,4 +1,4 @@
-import { GearIcon, SignInIcon, SignOutIcon } from "@phosphor-icons/react";
+import { GearIcon, LinkIcon, SignInIcon, SignOutIcon, UserIcon } from "@phosphor-icons/react";
 import type { User } from "@repo/api/services/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -15,6 +15,7 @@ import {
   MenuTrigger,
 } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
+import { AccountDialog } from "@/features/account/account-dialog";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
 import { authClient } from "@/lib/auth-client";
@@ -41,6 +42,7 @@ export function useSignInSearch(): { redirect: string | undefined } {
 
 export function UserMenu({ user }: { user: User }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const signOut = async () => {
@@ -78,6 +80,16 @@ export function UserMenu({ user }: { user: User }) {
 
           <ArtistsSubmenu />
 
+          <MenuItem render={<Link to="/link" />}>
+            <LinkIcon />
+            {m.nav_my_cosmo_link()}
+          </MenuItem>
+
+          <MenuItem onClick={() => setAccountOpen(true)}>
+            <UserIcon />
+            {m.nav_account()}
+          </MenuItem>
+
           <MenuItem onClick={() => setSettingsOpen(true)}>
             <GearIcon />
             {m.nav_setting()}
@@ -92,6 +104,7 @@ export function UserMenu({ user }: { user: User }) {
         </MenuPopup>
       </Menu>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
     </>
   );
 }

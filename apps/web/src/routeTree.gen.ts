@@ -13,13 +13,21 @@ import { Route as containerRouteRouteImport } from './routes/(container)/route'
 import { Route as AtChar123nicknameChar125RouteRouteImport } from './routes/@{$nickname}/route'
 import { Route as containerIndexRouteImport } from './routes/(container)/index'
 import { Route as containerActivityRouteImport } from './routes/(container)/activity'
-import { Route as containerLinkRouteImport } from './routes/(container)/link'
 import { Route as containerListRouteImport } from './routes/(container)/list'
 import { Route as containerLoginRouteImport } from './routes/(container)/login'
 import { Route as containerMarketRouteImport } from './routes/(container)/market'
+import { Route as containerTermsPrivacyRouteImport } from './routes/(container)/terms-privacy'
 import { Route as AtChar123nicknameChar125IndexRouteImport } from './routes/@{$nickname}/index'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
+import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
+import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
 import { Route as RpcSplatRouteImport } from './routes/rpc.$'
+import { Route as containerAuthResetPasswordRouteImport } from './routes/(container)/auth/reset-password'
+import { Route as containerAuthVerifiedRouteImport } from './routes/(container)/auth/verified'
+import { Route as containerLinkIndexRouteImport } from './routes/(container)/link/index'
+import { Route as containerLinkConnectRouteImport } from './routes/(container)/link/connect'
+import { Route as containerLiveIndexRouteImport } from './routes/(container)/live/index'
+import { Route as containerLiveIdRouteImport } from './routes/(container)/live/$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as ApiUserSearchRouteImport } from './routes/api/user.search'
 
@@ -43,11 +51,6 @@ const containerActivityRoute = containerActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => containerRouteRoute,
 } as any)
-const containerLinkRoute = containerLinkRouteImport.update({
-  id: '/link',
-  path: '/link',
-  getParentRoute: () => containerRouteRoute,
-} as any)
 const containerListRoute = containerListRouteImport.update({
   id: '/list',
   path: '/list',
@@ -63,6 +66,11 @@ const containerMarketRoute = containerMarketRouteImport.update({
   path: '/market',
   getParentRoute: () => containerRouteRoute,
 } as any)
+const containerTermsPrivacyRoute = containerTermsPrivacyRouteImport.update({
+  id: '/terms-privacy',
+  path: '/terms-privacy',
+  getParentRoute: () => containerRouteRoute,
+} as any)
 const AtChar123nicknameChar125IndexRoute =
   AtChar123nicknameChar125IndexRouteImport.update({
     id: '/',
@@ -74,10 +82,51 @@ const ApiHealthcheckRoute = ApiHealthcheckRouteImport.update({
   path: '/api/healthcheck',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLiveSessionsRoute = ApiLiveSessionsRouteImport.update({
+  id: '/api/live-sessions',
+  path: '/api/live-sessions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOpenAppRoute = ApiOpenAppRouteImport.update({
+  id: '/api/open-app',
+  path: '/api/open-app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RpcSplatRoute = RpcSplatRouteImport.update({
   id: '/rpc/$',
   path: '/rpc/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const containerAuthResetPasswordRoute =
+  containerAuthResetPasswordRouteImport.update({
+    id: '/auth/reset-password',
+    path: '/auth/reset-password',
+    getParentRoute: () => containerRouteRoute,
+  } as any)
+const containerAuthVerifiedRoute = containerAuthVerifiedRouteImport.update({
+  id: '/auth/verified',
+  path: '/auth/verified',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLinkIndexRoute = containerLinkIndexRouteImport.update({
+  id: '/link/',
+  path: '/link/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLinkConnectRoute = containerLinkConnectRouteImport.update({
+  id: '/link/connect',
+  path: '/link/connect',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLiveIndexRoute = containerLiveIndexRouteImport.update({
+  id: '/live/',
+  path: '/live/',
+  getParentRoute: () => containerRouteRoute,
+} as any)
+const containerLiveIdRoute = containerLiveIdRouteImport.update({
+  id: '/live/$id',
+  path: '/live/$id',
+  getParentRoute: () => containerRouteRoute,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -93,95 +142,145 @@ const ApiUserSearchRoute = ApiUserSearchRouteImport.update({
 export interface FileRoutesByFullPath {
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/activity': typeof containerActivityRoute
-  '/link': typeof containerLinkRoute
   '/list': typeof containerListRoute
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
+  '/terms-privacy': typeof containerTermsPrivacyRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
+  '/api/live-sessions': typeof ApiLiveSessionsRoute
+  '/api/open-app': typeof ApiOpenAppRoute
   '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
+  '/auth/reset-password': typeof containerAuthResetPasswordRoute
+  '/auth/verified': typeof containerAuthVerifiedRoute
+  '/link/connect': typeof containerLinkConnectRoute
+  '/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/link/': typeof containerLinkIndexRoute
+  '/live/': typeof containerLiveIndexRoute
 }
 export interface FileRoutesByTo {
   '/activity': typeof containerActivityRoute
-  '/link': typeof containerLinkRoute
   '/list': typeof containerListRoute
   '/login': typeof containerLoginRoute
   '/market': typeof containerMarketRoute
+  '/terms-privacy': typeof containerTermsPrivacyRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
+  '/api/live-sessions': typeof ApiLiveSessionsRoute
+  '/api/open-app': typeof ApiOpenAppRoute
   '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
   '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
+  '/auth/reset-password': typeof containerAuthResetPasswordRoute
+  '/auth/verified': typeof containerAuthVerifiedRoute
+  '/link/connect': typeof containerLinkConnectRoute
+  '/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/link': typeof containerLinkIndexRoute
+  '/live': typeof containerLiveIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/(container)': typeof containerRouteRouteWithChildren
   '/@{$nickname}': typeof AtChar123nicknameChar125RouteRouteWithChildren
   '/(container)/activity': typeof containerActivityRoute
-  '/(container)/link': typeof containerLinkRoute
   '/(container)/list': typeof containerListRoute
   '/(container)/login': typeof containerLoginRoute
   '/(container)/market': typeof containerMarketRoute
+  '/(container)/terms-privacy': typeof containerTermsPrivacyRoute
   '/api/healthcheck': typeof ApiHealthcheckRoute
+  '/api/live-sessions': typeof ApiLiveSessionsRoute
+  '/api/open-app': typeof ApiOpenAppRoute
   '/rpc/$': typeof RpcSplatRoute
   '/(container)/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
+  '/(container)/auth/reset-password': typeof containerAuthResetPasswordRoute
+  '/(container)/auth/verified': typeof containerAuthVerifiedRoute
+  '/(container)/link/connect': typeof containerLinkConnectRoute
+  '/(container)/live/$id': typeof containerLiveIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/user/search': typeof ApiUserSearchRoute
+  '/(container)/link/': typeof containerLinkIndexRoute
+  '/(container)/live/': typeof containerLiveIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/@{$nickname}'
     | '/activity'
-    | '/link'
     | '/list'
     | '/login'
     | '/market'
+    | '/terms-privacy'
     | '/api/healthcheck'
+    | '/api/live-sessions'
+    | '/api/open-app'
     | '/rpc/$'
     | '/'
     | '/@{$nickname}/'
+    | '/auth/reset-password'
+    | '/auth/verified'
+    | '/link/connect'
+    | '/live/$id'
     | '/api/auth/$'
     | '/api/user/search'
+    | '/link/'
+    | '/live/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/activity'
-    | '/link'
     | '/list'
     | '/login'
     | '/market'
+    | '/terms-privacy'
     | '/api/healthcheck'
+    | '/api/live-sessions'
+    | '/api/open-app'
     | '/rpc/$'
     | '/'
     | '/@{$nickname}'
+    | '/auth/reset-password'
+    | '/auth/verified'
+    | '/link/connect'
+    | '/live/$id'
     | '/api/auth/$'
     | '/api/user/search'
+    | '/link'
+    | '/live'
   id:
     | '__root__'
     | '/(container)'
     | '/@{$nickname}'
     | '/(container)/activity'
-    | '/(container)/link'
     | '/(container)/list'
     | '/(container)/login'
     | '/(container)/market'
+    | '/(container)/terms-privacy'
     | '/api/healthcheck'
+    | '/api/live-sessions'
+    | '/api/open-app'
     | '/rpc/$'
     | '/(container)/'
     | '/@{$nickname}/'
+    | '/(container)/auth/reset-password'
+    | '/(container)/auth/verified'
+    | '/(container)/link/connect'
+    | '/(container)/live/$id'
     | '/api/auth/$'
     | '/api/user/search'
+    | '/(container)/link/'
+    | '/(container)/live/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   containerRouteRoute: typeof containerRouteRouteWithChildren
   AtChar123nicknameChar125RouteRoute: typeof AtChar123nicknameChar125RouteRouteWithChildren
   ApiHealthcheckRoute: typeof ApiHealthcheckRoute
+  ApiLiveSessionsRoute: typeof ApiLiveSessionsRoute
+  ApiOpenAppRoute: typeof ApiOpenAppRoute
   RpcSplatRoute: typeof RpcSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiUserSearchRoute: typeof ApiUserSearchRoute
@@ -217,13 +316,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerActivityRouteImport
       parentRoute: typeof containerRouteRoute
     }
-    '/(container)/link': {
-      id: '/(container)/link'
-      path: '/link'
-      fullPath: '/link'
-      preLoaderRoute: typeof containerLinkRouteImport
-      parentRoute: typeof containerRouteRoute
-    }
     '/(container)/list': {
       id: '/(container)/list'
       path: '/list'
@@ -245,6 +337,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof containerMarketRouteImport
       parentRoute: typeof containerRouteRoute
     }
+    '/(container)/terms-privacy': {
+      id: '/(container)/terms-privacy'
+      path: '/terms-privacy'
+      fullPath: '/terms-privacy'
+      preLoaderRoute: typeof containerTermsPrivacyRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
     '/@{$nickname}/': {
       id: '/@{$nickname}/'
       path: '/'
@@ -259,12 +358,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthcheckRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/live-sessions': {
+      id: '/api/live-sessions'
+      path: '/api/live-sessions'
+      fullPath: '/api/live-sessions'
+      preLoaderRoute: typeof ApiLiveSessionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/open-app': {
+      id: '/api/open-app'
+      path: '/api/open-app'
+      fullPath: '/api/open-app'
+      preLoaderRoute: typeof ApiOpenAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rpc/$': {
       id: '/rpc/$'
       path: '/rpc/$'
       fullPath: '/rpc/$'
       preLoaderRoute: typeof RpcSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/(container)/auth/reset-password': {
+      id: '/(container)/auth/reset-password'
+      path: '/auth/reset-password'
+      fullPath: '/auth/reset-password'
+      preLoaderRoute: typeof containerAuthResetPasswordRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/auth/verified': {
+      id: '/(container)/auth/verified'
+      path: '/auth/verified'
+      fullPath: '/auth/verified'
+      preLoaderRoute: typeof containerAuthVerifiedRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/link/': {
+      id: '/(container)/link/'
+      path: '/link'
+      fullPath: '/link/'
+      preLoaderRoute: typeof containerLinkIndexRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/link/connect': {
+      id: '/(container)/link/connect'
+      path: '/link/connect'
+      fullPath: '/link/connect'
+      preLoaderRoute: typeof containerLinkConnectRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/live/': {
+      id: '/(container)/live/'
+      path: '/live'
+      fullPath: '/live/'
+      preLoaderRoute: typeof containerLiveIndexRouteImport
+      parentRoute: typeof containerRouteRoute
+    }
+    '/(container)/live/$id': {
+      id: '/(container)/live/$id'
+      path: '/live/$id'
+      fullPath: '/live/$id'
+      preLoaderRoute: typeof containerLiveIdRouteImport
+      parentRoute: typeof containerRouteRoute
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -285,20 +440,32 @@ declare module '@tanstack/react-router' {
 
 interface containerRouteRouteChildren {
   containerActivityRoute: typeof containerActivityRoute
-  containerLinkRoute: typeof containerLinkRoute
   containerListRoute: typeof containerListRoute
   containerLoginRoute: typeof containerLoginRoute
   containerMarketRoute: typeof containerMarketRoute
+  containerTermsPrivacyRoute: typeof containerTermsPrivacyRoute
   containerIndexRoute: typeof containerIndexRoute
+  containerAuthResetPasswordRoute: typeof containerAuthResetPasswordRoute
+  containerAuthVerifiedRoute: typeof containerAuthVerifiedRoute
+  containerLinkConnectRoute: typeof containerLinkConnectRoute
+  containerLiveIdRoute: typeof containerLiveIdRoute
+  containerLinkIndexRoute: typeof containerLinkIndexRoute
+  containerLiveIndexRoute: typeof containerLiveIndexRoute
 }
 
 const containerRouteRouteChildren: containerRouteRouteChildren = {
   containerActivityRoute: containerActivityRoute,
-  containerLinkRoute: containerLinkRoute,
   containerListRoute: containerListRoute,
   containerLoginRoute: containerLoginRoute,
   containerMarketRoute: containerMarketRoute,
+  containerTermsPrivacyRoute: containerTermsPrivacyRoute,
   containerIndexRoute: containerIndexRoute,
+  containerAuthResetPasswordRoute: containerAuthResetPasswordRoute,
+  containerAuthVerifiedRoute: containerAuthVerifiedRoute,
+  containerLinkConnectRoute: containerLinkConnectRoute,
+  containerLiveIdRoute: containerLiveIdRoute,
+  containerLinkIndexRoute: containerLinkIndexRoute,
+  containerLiveIndexRoute: containerLiveIndexRoute,
 }
 
 const containerRouteRouteWithChildren = containerRouteRoute._addFileChildren(
@@ -324,6 +491,8 @@ const rootRouteChildren: RootRouteChildren = {
   AtChar123nicknameChar125RouteRoute:
     AtChar123nicknameChar125RouteRouteWithChildren,
   ApiHealthcheckRoute: ApiHealthcheckRoute,
+  ApiLiveSessionsRoute: ApiLiveSessionsRoute,
+  ApiOpenAppRoute: ApiOpenAppRoute,
   RpcSplatRoute: RpcSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiUserSearchRoute: ApiUserSearchRoute,
