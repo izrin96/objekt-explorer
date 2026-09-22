@@ -6,58 +6,58 @@ import {
   WarningIcon,
 } from "@phosphor-icons/react";
 import type { PartnerListMatch, TradePartner } from "@repo/api/schemas/list";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ObjektDrawer } from "@/features/objekt/drawer";
+import { ObjektCard } from "@/features/objekt/objekt-card";
 import { truncateAddress } from "@/lib/address";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { getListLinkOption } from "../list-link";
 import { type TradeMode, tradePartnersOptions } from "./queries";
 
-/** the response carries the indexer's collection rows keyed by slug */
-type TradeCollections = Record<
-  string,
-  { collectionId: string; thumbnailImage: string } | undefined
->;
+/** the response carries the indexer's full collection rows, keyed by slug */
+type TradeCollections = Record<string, ValidObjekt | undefined>;
 
 /** a partner can match on hundreds of collections; the rest are counted, not drawn */
-const MAX_THUMBNAILS = 50;
+const MAX_CARDS = 50;
 
-/** one entry per direction, so a partner's badge and its column cannot disagree */
-const DIRECTION = {
+/** theirs first in both places, so the row's summary and the panel read in one order */
+const DIRECTIONS = ["theyHaveIWant", "iHaveTheyWant"] as const;
+
+type Direction = (typeof DIRECTIONS)[number];
+
+type CountMessage = (inputs: { count: number }) => string;
+
+const DIRECTION: Record<Direction, { summary: CountMessage; section: CountMessage }> = {
   theyHaveIWant: {
-    badge: "warning",
-    rule: "border-l-warning/60",
-    title: m.list_trade_matches_they_have_you_want,
-    short: m.list_trade_matches_have_label,
+    summary: m.list_trade_partner_they_have,
+    section: m.list_trade_section_they_have,
   },
   iHaveTheyWant: {
-    badge: "success",
-    rule: "border-l-success/60",
-    title: m.list_trade_matches_you_have_they_want,
-    short: m.list_trade_matches_want_label,
+    summary: m.list_trade_partner_you_have,
+    section: m.list_trade_section_you_have,
   },
-} as const;
-
-type Direction = keyof typeof DIRECTION;
+};
 
 export function TradeMatchesContent({ slug, mode }: { slug: string; mode: TradeMode }) {
   const query = useQuery(tradePartnersOptions(slug, mode));
+  const [active, setActive] = useState<ValidObjekt | null>(null);
 
   if (query.isPending) {
     return (
       <div className="flex flex-col gap-1.5">
-        <Shimmer className="h-13 rounded-lg" />
-        <Shimmer className="h-13 rounded-lg" />
-        <Shimmer className="h-13 rounded-lg" />
+        <Shimmer className="h-17 rounded-lg" />
+        <Shimmer className="h-17 rounded-lg" />
+        <Shimmer className="h-17 rounded-lg" />
       </div>
     );
   }
@@ -86,71 +86,50 @@ export function TradeMatchesContent({ slug, mode }: { slug: string; mode: TradeM
 
   return (
     <div className="flex flex-col gap-2.5">
-      <p className="text-muted-foreground text-xs">
+      <p className="text-muted-foreground text-[13px] tabular-nums">
         {m.list_trade_matches_count_label({ count: partners.length })}
       </p>
       <div className="flex flex-col divide-y rounded-lg border">
-        {partners.map((partner, index) => (
+        {partners.map((partner) => (
           <PartnerDisclosure
             key={partner.userId}
             partner={partner}
-            rank={index + 1}
             collections={collections}
+            onOpen={setActive}
           />
         ))}
       </div>
+
+      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
     </div>
   );
 }
 
 function PartnerDisclosure({
   partner,
-  rank,
   collections,
+  onOpen,
 }: {
   partner: TradePartner;
-  rank: number;
   collections: TradeCollections;
+  onOpen: (objekt: ValidObjekt) => void;
 }) {
-  const socials = partner.user.discord !== null || partner.user.twitter !== null;
-
   return (
     /* `<details>` rather than a rebuilt disclosure: it already toggles on Enter
        and Space and announces its expanded state */
-    <details className="group px-3 py-2.5">
-      <summary className="focus-visible:ring-ring flex cursor-pointer items-center gap-2.5 rounded-sm outline-none focus-visible:ring-2">
-        <span className="text-muted-foreground w-5 shrink-0 text-center font-mono text-xs tabular-nums">
-          {String(rank).padStart(2, "0")}
-        </span>
-        <Avatar className="size-7 shrink-0">
+    <details className="group">
+      {/* the padding rides on the summary so the whole row is one touch target */}
+      <summary className="focus-visible:ring-ring flex cursor-pointer touch-manipulation items-center gap-3 rounded-sm px-4 py-3 outline-none focus-visible:ring-2">
+        <Avatar className="size-9 shrink-0">
           {partner.user.image ? <AvatarImage src={partner.user.image} alt="" /> : null}
           <AvatarFallback>{(partner.user.name ?? "?").slice(0, 1).toUpperCase()}</AvatarFallback>
         </Avatar>
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{partner.username}</span>
-        {(["theyHaveIWant", "iHaveTheyWant"] as const).map((direction) => {
-          const count = new Set(partner.matches.flatMap((match) => match[direction])).size;
-          if (count === 0) return null;
-          const { badge, short, title } = DIRECTION[direction];
-          return (
-            <Badge
-              key={direction}
-              variant={badge}
-              title={title()}
-              className="shrink-0 font-mono tabular-nums"
-            >
-              {count} {short()}
-            </Badge>
-          );
-        })}
-        <CaretRightIcon
-          aria-hidden
-          className="text-muted-foreground size-3.5 shrink-0 transition-transform group-open:rotate-90"
-        />
-      </summary>
 
-      <div className="mt-3 flex flex-col gap-4 sm:pl-7.5">
-        {socials ? (
-          <div className="flex flex-wrap items-center gap-1.5 border-b pb-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="truncate text-[15px] leading-snug font-semibold">
+              {partner.username}
+            </span>
             {partner.user.discord ? (
               <SocialBadge platform="discord" username={partner.user.discord} />
             ) : null}
@@ -158,9 +137,26 @@ function PartnerDisclosure({
               <SocialBadge platform="twitter" username={partner.user.twitter} />
             ) : null}
           </div>
-        ) : null}
+
+          {/* each count is a whole sentence, so its accessible name needs no `title` */}
+          <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 text-[13px] tabular-nums sm:shrink-0 sm:justify-end">
+            {DIRECTIONS.map((direction) => {
+              const count = new Set(partner.matches.flatMap((match) => match[direction])).size;
+              if (count === 0) return null;
+              return <span key={direction}>{DIRECTION[direction].summary({ count })}</span>;
+            })}
+          </div>
+        </div>
+
+        <CaretRightIcon
+          aria-hidden
+          className="text-muted-foreground size-4 shrink-0 transition-transform group-open:rotate-90"
+        />
+      </summary>
+
+      <div className="flex flex-col gap-6 px-4 pt-1 pb-4">
         {partner.matches.map((match) => (
-          <MatchBlock key={match.listId} match={match} collections={collections} />
+          <MatchBlock key={match.listId} match={match} collections={collections} onOpen={onOpen} />
         ))}
       </div>
     </details>
@@ -170,109 +166,110 @@ function PartnerDisclosure({
 function MatchBlock({
   match,
   collections,
+  onOpen,
 }: {
   match: PartnerListMatch;
   collections: TradeCollections;
+  onOpen: (objekt: ValidObjekt) => void;
 }) {
   const cosmoHandle = match.profileNickname ?? match.profileAddress?.toLowerCase() ?? null;
 
   return (
-    <div className="flex flex-col gap-2">
-      <Link
-        {...getListLinkOption({
-          slug: match.listSlug,
-          profileSlug: match.profileSlug,
-          profileAddress: match.profileAddress,
-          profile: match.profileAddress
-            ? { address: match.profileAddress, nickname: match.profileNickname }
-            : null,
-        })}
-        className="w-fit text-sm font-medium underline-offset-2 hover:underline"
-      >
-        {match.listName}
-        <ArrowUpRightIcon aria-hidden className="text-muted-foreground ml-0.5 inline size-3.5" />
-      </Link>
+    <div className="flex flex-col gap-4">
+      <h3 className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <Link
+          {...getListLinkOption({
+            slug: match.listSlug,
+            profileSlug: match.profileSlug,
+            profileAddress: match.profileAddress,
+            profile: match.profileAddress
+              ? { address: match.profileAddress, nickname: match.profileNickname }
+              : null,
+          })}
+          className="min-w-0 text-[15px] leading-snug font-medium break-words underline-offset-2 hover:underline"
+        >
+          {match.listName}
+          <ArrowUpRightIcon aria-hidden className="text-muted-foreground ml-0.5 inline size-3.5" />
+        </Link>
 
-      {cosmoHandle === null ? null : (
-        <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
-          <span>{m.list_cosmo_id_label()}</span>
-          <Link
-            to="/@{$nickname}"
-            params={{ nickname: cosmoHandle }}
-            className="text-foreground font-medium underline-offset-2 hover:underline"
-          >
-            {match.profileNickname ?? truncateAddress(cosmoHandle)}
-          </Link>
-        </div>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(["iHaveTheyWant", "theyHaveIWant"] as const).map((direction) =>
-          match[direction].length > 0 ? (
-            <DirectionColumn
-              key={direction}
-              direction={direction}
-              slugs={match[direction]}
-              collections={collections}
-            />
-          ) : null,
+        {cosmoHandle === null ? null : (
+          <span className="text-muted-foreground min-w-0 text-[13px] font-normal">
+            {"· "}
+            {m.list_trade_cosmo_id()}{" "}
+            <Link
+              to="/@{$nickname}"
+              params={{ nickname: cosmoHandle }}
+              className="text-foreground font-medium underline-offset-2 hover:underline"
+            >
+              {match.profileNickname ?? truncateAddress(cosmoHandle)}
+            </Link>
+          </span>
         )}
-      </div>
+      </h3>
+
+      {DIRECTIONS.map((direction) =>
+        match[direction].length > 0 ? (
+          <DirectionSection
+            key={direction}
+            direction={direction}
+            slugs={match[direction]}
+            collections={collections}
+            onOpen={onOpen}
+          />
+        ) : null,
+      )}
     </div>
   );
 }
 
-function DirectionColumn({
+function DirectionSection({
   direction,
   slugs,
   collections,
+  onOpen,
 }: {
   direction: Direction;
   slugs: string[];
   collections: TradeCollections;
+  onOpen: (objekt: ValidObjekt) => void;
 }) {
-  const overflow = slugs.length - MAX_THUMBNAILS;
+  const overflow = slugs.length - MAX_CARDS;
 
   return (
-    <div className={cn("flex flex-col gap-1.5 border-l-2 pl-3", DIRECTION[direction].rule)}>
-      <div className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs font-semibold">
-        <span className="tabular-nums">{slugs.length}</span>
-        <span className="flex-1 truncate">{DIRECTION[direction].title()}</span>
-      </div>
-      <div className="flex flex-wrap items-start gap-1.5">
-        {slugs.slice(0, MAX_THUMBNAILS).map((slug) => (
-          <CollectionThumbnail key={slug} collection={collections[slug]} />
+    <section className="flex flex-col gap-2">
+      <h4 className="text-muted-foreground text-[13px] font-medium tabular-nums">
+        {DIRECTION[direction].section({ count: slugs.length })}
+      </h4>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
+        {slugs.slice(0, MAX_CARDS).map((slug) => (
+          <MatchObjekt key={slug} slug={slug} collection={collections[slug]} onOpen={onOpen} />
         ))}
         {overflow > 0 ? (
-          <span className="bg-muted text-muted-foreground aspect-photocard flex w-14 items-center justify-center rounded-sm font-mono text-xs tabular-nums">
+          <div className="bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center self-start font-mono text-sm tabular-nums">
             +{overflow}
-          </span>
+          </div>
         ) : null}
       </div>
-    </div>
+    </section>
   );
 }
 
-function CollectionThumbnail({ collection }: { collection: TradeCollections[string] }) {
+function MatchObjekt({
+  slug,
+  collection,
+  onOpen,
+}: {
+  slug: string;
+  collection: ValidObjekt | undefined;
+  onOpen: (objekt: ValidObjekt) => void;
+}) {
   if (!collection) {
     return (
-      <span className="bg-muted text-muted-foreground aspect-photocard flex w-14 items-center justify-center rounded-sm font-mono text-xs">
-        N/A
-      </span>
+      <div className="bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center self-start p-2 text-center font-mono text-[11px] leading-snug break-all">
+        {slug}
+      </div>
     );
   }
 
-  return (
-    <div className="flex w-14 flex-col gap-0.5">
-      <div className="bg-muted aspect-photocard relative overflow-hidden rounded-sm border">
-        <img
-          src={collection.thumbnailImage}
-          alt=""
-          loading="lazy"
-          className="absolute inset-0 size-full object-cover"
-        />
-      </div>
-      <span className="font-mono text-xs leading-tight font-medium">{collection.collectionId}</span>
-    </div>
-  );
+  return <ObjektCard objekt={collection} image="thumbnail" onOpen={() => onOpen(collection)} />;
 }
