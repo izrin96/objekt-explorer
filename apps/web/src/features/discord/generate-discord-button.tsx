@@ -64,7 +64,7 @@ const EMPTY_OPTIONS = {
 /**
  * Formats whatever is on screen right now — the filtered set, not a saved list
  * — so any visitor can export the collection they are looking at. The owner's
- * have/want generator is `DiscordFormatButton` in `discord-format-dialog.tsx`.
+ * have/want generator is `DiscordFormatDialog` in `discord-format-dialog.tsx`.
  */
 export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
   const [open, setOpen] = useState(false);

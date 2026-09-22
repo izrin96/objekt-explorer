@@ -1,10 +1,9 @@
-import { DiscordLogoIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { CopyButton } from "@/components/shared/copy-button";
-import { Button, type ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -79,25 +78,7 @@ const EMPTY_OPTIONS = {
   style: "default" as FormatStyle,
 };
 
-/**
- * The owner's generator: it builds from saved have/want lists. The button that
- * formats the filtered set on screen is `GenerateDiscordButton`, and the two
- * sit on the same profile, so the label says which is which.
- */
-export function DiscordFormatButton({ size = "sm" }: { size?: ButtonProps["size"] }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button variant="outline" size={size} onClick={() => setOpen(true)}>
-        <DiscordLogoIcon weight="fill" />
-        {m.discord_format_lists_button()}
-      </Button>
-      <DiscordFormatDialog open={open} onOpenChange={setOpen} />
-    </>
-  );
-}
-
+/** The owner's generator: it builds from saved have/want lists, opened from the user menu and `/list`. */
 export function DiscordFormatDialog({
   open,
   onOpenChange,
