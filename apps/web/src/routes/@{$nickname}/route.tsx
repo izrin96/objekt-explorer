@@ -2,9 +2,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
 import { PageMain } from "@/components/layout/page-main";
-import { NotFoundComponent } from "@/components/router/not-found";
 import { PrivateProfileGuard } from "@/features/profile/profile-guard";
 import { ProfileHeader } from "@/features/profile/profile-header";
+import { ProfileNotFound } from "@/features/profile/profile-not-found";
 import { ProfileProvider } from "@/features/profile/profile-provider";
 import { ProfileStats } from "@/features/profile/profile-stats";
 import { ProfileTabs } from "@/features/profile/profile-tabs";
@@ -15,7 +15,7 @@ import { m } from "@/paraglide/messages";
 export const Route = createFileRoute("/@{$nickname}")({
   loader: ({ params, context: { queryClient } }) =>
     queryClient.ensureQueryData(profileQuery({ nickname: params.nickname })),
-  notFoundComponent: NotFoundComponent,
+  notFoundComponent: ProfileNotFound,
   component: ProfileLayout,
 });
 

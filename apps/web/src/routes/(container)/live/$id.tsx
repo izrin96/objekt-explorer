@@ -1,7 +1,7 @@
 import { createFileRoute, lazyRouteComponent, redirect } from "@tanstack/react-router";
 import * as z from "zod";
 
-import { NotFoundComponent } from "@/components/router/not-found";
+import { LiveNotFound } from "@/features/live/live-not-found";
 import { checkAccess, getLiveSessionById } from "@/lib/functions/live";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/(container)/live/$id")({
       twitter: { card: "summary_large_image", title, description, images },
     });
   },
-  notFoundComponent: NotFoundComponent,
+  notFoundComponent: LiveNotFound,
   // keeps the Stream SDK out of every other route's bundle
   component: lazyRouteComponent(() => import("@/features/live/player")),
 });
