@@ -1,11 +1,13 @@
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 
+import { isMeasuredClass, tradeableFilter } from "@/lib/unobtainables";
+
 /** owned / total for one node of the breakdown */
 export type Tally = { owned: number; total: number; pct: number };
 
 export type MemberProgress = Tally & { member: string; color: string };
 
-type ProgressItem = { objekt: ValidObjekt; owned: boolean };
+type ProgressItem = { objekt: ValidObjekt; owned: boolean; unobtainable: boolean };
 
 export type ClassGroup = Tally & { class: string; items: ProgressItem[] };
 
@@ -17,9 +19,6 @@ export type MemberSeason = {
   color: string;
   classes: ClassGroup[];
 };
-
-/** the classes the progress breakdown does not measure against */
-const EXCLUDED_CLASSES = new Set(["Welcome", "Zero"]);
 
 function pct(owned: number, total: number): number {
   return total > 0 ? (owned / total) * 100 : 0;
@@ -50,7 +49,7 @@ export function memberProgress(
   const tallies = new Map<string, { owned: number; total: number }>();
 
   for (const objekt of catalogue) {
-    if (EXCLUDED_CLASSES.has(objekt.class)) continue;
+    if (!tradeableFilter(objekt)) continue;
     const owned = ownedSlugs.has(objekt.slug);
 
     for (const name of objekt.members) {
@@ -82,7 +81,7 @@ export function catalogueTotals(
   let total = 0;
 
   for (const objekt of catalogue) {
-    if (EXCLUDED_CLASSES.has(objekt.class)) continue;
+    if (!tradeableFilter(objekt)) continue;
     total += 1;
     if (ownedSlugs.has(objekt.slug)) owned += 1;
   }
@@ -107,7 +106,7 @@ export function shapeProgress(
   const sections = new Map<string, Map<string, ValidObjekt[]>>();
 
   for (const objekt of catalogue) {
-    if (EXCLUDED_CLASSES.has(objekt.class)) continue;
+    if (!isMeasuredClass(objekt)) continue;
 
     const matched = selectedMembers?.length
       ? objekt.members.filter((member) => selectedMembers.includes(member))
@@ -138,10 +137,22 @@ export function shapeProgress(
         }
         const items = [...byCollection.values()]
           .toSorted((a, b) => a.collectionNo.localeCompare(b.collectionNo))
-          .map((objekt) => ({ objekt, owned: ownedSlugs.has(objekt.slug) }));
-        const owned = items.filter((item) => item.owned).length;
+          .map((objekt) => ({
+            objekt,
+            owned: ownedSlugs.has(objekt.slug),
+            unobtainable: !tradeableFilter(objekt),
+          }));
+        // an unobtainable is still shown, but it can never be completed
+        const counted = items.filter((item) => !item.unobtainable);
+        const owned = counted.filter((item) => item.owned).length;
 
-        return { class: name, items, owned, total: items.length, pct: pct(owned, items.length) };
+        return {
+          class: name,
+          items,
+          owned,
+          total: counted.length,
+          pct: pct(owned, counted.length),
+        };
       })
       .sort((a, b) => compareClass(a.class, b.class));
 

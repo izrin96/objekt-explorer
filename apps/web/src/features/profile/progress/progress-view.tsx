@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
@@ -101,9 +102,11 @@ function Region({
 /** `ObjektCard`'s box for a collection the profile does not hold, so the two sit in one grid without a seam. */
 function MissingCard({
   objekt,
+  unobtainable,
   onOpen,
 }: {
   objekt: ValidObjekt;
+  unobtainable: boolean;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
   const shortNo = getCollectionShortNo(objekt);
@@ -133,6 +136,11 @@ function MissingCard({
         <span className="truncate font-medium">{objekt.member}</span>
         <span className="flex-none font-mono text-[11.5px]">{shortNo}</span>
       </div>
+      {unobtainable && (
+        <Badge variant="error" size="sm" className="self-start">
+          {m.objekt_unobtainable()}
+        </Badge>
+      )}
     </div>
   );
 }
@@ -218,9 +226,19 @@ function ClassCard({
           {group.items.map((item) => {
             const owned = ownedBySlug.get(item.objekt.slug);
             return owned ? (
-              <ObjektCard key={item.objekt.slug} objekt={owned} onOpen={onOpen} />
+              <ObjektCard
+                key={item.objekt.slug}
+                objekt={owned}
+                unobtainable={item.unobtainable}
+                onOpen={onOpen}
+              />
             ) : (
-              <MissingCard key={item.objekt.slug} objekt={item.objekt} onOpen={onOpen} />
+              <MissingCard
+                key={item.objekt.slug}
+                objekt={item.objekt}
+                unobtainable={item.unobtainable}
+                onOpen={onOpen}
+              />
             );
           })}
         </ObjektGrid>

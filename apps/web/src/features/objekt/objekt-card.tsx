@@ -2,6 +2,7 @@ import { CheckIcon, LockSimpleIcon, PushPinIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { useLongPress } from "@/hooks/use-long-press";
 import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,8 @@ type ObjektCardProps = {
   priceMuted?: boolean;
   /** overrides the hide-label setting; the drawer's big card always hides it */
   hideLabel?: boolean;
+  /** the collection can no longer be minted, so no total counts it */
+  unobtainable?: boolean;
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
@@ -56,6 +59,7 @@ export function ObjektCard({
   price,
   priceMuted,
   hideLabel,
+  unobtainable = false,
   image = "thumbnail",
   priority = false,
   children,
@@ -181,6 +185,13 @@ export function ObjektCard({
             {serial !== undefined && <b className="ml-1 font-semibold">#{serial}</b>}
           </span>
         </div>
+      )}
+
+      {/* shown whether or not labels are: it is a warning, not a caption */}
+      {unobtainable && (
+        <Badge variant="error" size="sm" className="self-start">
+          {m.objekt_unobtainable()}
+        </Badge>
       )}
 
       {price !== undefined && (

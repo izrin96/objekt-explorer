@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/drawer";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { absoluteTime } from "@/lib/time";
+import { unobtainableSlugs } from "@/lib/unobtainables";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
@@ -115,6 +116,11 @@ function DrawerBody({
             {getCollectionShortNo(objekt)}
             {owned && ` #${objekt.serial}`}
           </span>
+          {unobtainableSlugs.has(objekt.slug) && (
+            <Badge variant="error" size="sm">
+              {m.objekt_unobtainable()}
+            </Badge>
+          )}
         </DrawerTitle>
         {/* artist / season / class are the first rows of the attribute list a
             few pixels below, so the line is only for a screen reader */}
