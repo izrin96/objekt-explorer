@@ -23,7 +23,7 @@ export function ObjektCardMenu({ children }: { children: ReactNode }) {
         >
           <DotsThreeIcon weight="bold" />
         </MenuTrigger>
-        <MenuPopup align="start" className="min-w-44">
+        <MenuPopup align="end" className="min-w-44">
           {children}
         </MenuPopup>
       </Menu>

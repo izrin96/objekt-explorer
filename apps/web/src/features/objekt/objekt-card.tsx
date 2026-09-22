@@ -16,7 +16,7 @@ import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 type ObjektCardProps = {
   objekt: ValidObjekt;
   selected?: boolean;
-  /** renders the round check control in the top-left; omit to make the card unselectable */
+  /** renders the round check control in the top-right; omit to make the card unselectable */
   onToggleSelect?: (objekt: ValidObjekt) => void;
   onOpen?: (objekt: ValidObjekt) => void;
   pin?: boolean;
@@ -34,7 +34,7 @@ type ObjektCardProps = {
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
-  /** extra hover controls, rendered after the badges and the check control */
+  /** extra hover controls, rendered after the check control in the top-right */
   children?: ReactNode;
   className?: string;
 };
@@ -74,7 +74,6 @@ export function ObjektCard({
 
   const labelHidden = hideLabel ?? hideLabelSetting;
   const openable = onOpen !== undefined;
-  const hasOverlay = onToggleSelect !== undefined || pin || lock || children;
   const selectMode = onToggleSelect !== undefined && anySelected;
   const showCheck = selected || selectMode;
   const shortNo = getCollectionShortNo(objekt);
@@ -130,21 +129,21 @@ export function ObjektCard({
 
         <ObjektSidebar objekt={objekt} hideSerial={serialHidden} />
 
-        {/* Pin and lock are always visible, so they lead; the hover-only
-            controls follow, which keeps their reserved space at the right edge
-            where an invisible slot reads as nothing rather than as a gap. */}
-        {hasOverlay && (
-          <div className="absolute top-[4cqw] left-[4cqw] flex gap-[3cqw]">
-            {pin && (
-              <span className={controlClass}>
-                <PushPinIcon weight="fill" />
-              </span>
-            )}
-            {lock && (
-              <span className={controlClass}>
-                <LockSimpleIcon weight="fill" />
-              </span>
-            )}
+        {(pin || lock) && (
+          /* paints over the band and the image by DOM order, under the `z-10`
+             check control */
+          <div
+            aria-hidden="true"
+            className="rounded-br-photocard pointer-events-none absolute top-0 left-0 flex items-start gap-x-[3cqi] overflow-hidden p-[4cqi]"
+            style={{ backgroundColor: objekt.backgroundColor, color: objekt.textColor }}
+          >
+            {pin && <PushPinIcon weight="bold" className="size-[8cqi]" />}
+            {lock && <LockSimpleIcon weight="bold" className="size-[8cqi]" />}
+          </div>
+        )}
+
+        {(onToggleSelect || children) && (
+          <div className="absolute top-[4cqw] right-[4cqw] flex gap-[3cqw]">
             {onToggleSelect && (
               <button
                 type="button"
