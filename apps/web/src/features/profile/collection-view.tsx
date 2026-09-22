@@ -47,7 +47,7 @@ import {
   useReorderPins,
 } from "./actions";
 import { CheckpointPopover, checkpointDate } from "./checkpoint-popover";
-import { PinnedShelf } from "./pinned-shelf";
+import { PinDnd, SortablePin } from "./pin-dnd";
 import { useProfileColumns, useProfileAuthed, useProfileTarget } from "./profile-provider";
 import { ProfileToolbar } from "./profile-toolbar";
 import { useProfileObjekts } from "./use-profile-objekts";
@@ -147,7 +147,7 @@ export function CollectionView() {
     (objekt: ValidObjekt, qty?: number, priority = false) => {
       const owned = isObjektOwned(objekt) ? objekt : null;
       const canEdit = showActions && isProfileAuthed && owned !== null;
-      // the shelf is ordered topmost-first, so "up" is one index earlier
+      // the pins lead the grid topmost-first, so "up" is one index earlier
       const pinIndex = owned?.isPin === true ? pinnedIds.indexOf(owned.id) : -1;
       const move = (to: number) => handleReorder(arrayMove(pinnedIds, pinIndex, to), true);
       return (
@@ -229,9 +229,24 @@ export function CollectionView() {
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
-      return renderCard(objekt, item.length > 1 ? item.length : undefined, rowIndex < 2);
+      const card = renderCard(objekt, item.length > 1 ? item.length : undefined, rowIndex < 2);
+      // only the grid cell is sortable: the drag overlay renders the same card
+      // and a second `useSortable` on its id would own the droppable instead
+      return dndEnabled && isObjektOwned(objekt) && objekt.isPin === true ? (
+        <SortablePin id={objekt.id}>{card}</SortablePin>
+      ) : (
+        card
+      );
     },
-    [renderCard],
+    [dndEnabled, renderCard],
+  );
+
+  const renderOverlay = useCallback(
+    (id: string) => {
+      const objekt = pinned.find((item) => item.id === id);
+      return objekt ? renderCard(objekt) : null;
+    },
+    [pinned, renderCard],
   );
 
   const ownedCopies = useMemo(() => ownedCopiesOf(filtered, active), [active, filtered]);
@@ -327,14 +342,6 @@ export function CollectionView() {
         <ShimmerGrid columns={columns} />
       ) : (
         <>
-          <PinnedShelf
-            objekts={pinned}
-            columns={columns}
-            reorderable={dndEnabled}
-            onReorder={handleReorder}
-            renderCard={renderCard}
-          />
-
           <p className="text-muted-foreground font-mono text-xs tabular-nums">
             {m.profile_count_summary({
               shown: filtered.length.toLocaleString(),
@@ -357,17 +364,24 @@ export function CollectionView() {
               }
             />
           ) : (
-            <ObjektVirtualGrid
-              objekts={objekts}
-              filters={filters}
-              columns={columns}
-              rarityMap={rarityMap}
-              isProfile
-              renderItem={renderItem}
-              onLoadMore={fetchNextPage}
-              hasNextPage={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-            />
+            <PinDnd
+              ids={pinnedIds}
+              onReorder={handleReorder}
+              renderOverlay={renderOverlay}
+              disabled={!dndEnabled}
+            >
+              <ObjektVirtualGrid
+                objekts={objekts}
+                filters={filters}
+                columns={columns}
+                rarityMap={rarityMap}
+                isProfile
+                renderItem={renderItem}
+                onLoadMore={fetchNextPage}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+              />
+            </PinDnd>
           )}
         </>
       )}
