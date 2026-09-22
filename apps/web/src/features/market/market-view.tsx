@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
+import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { useFilters, useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
@@ -68,14 +69,7 @@ export function MarketView() {
   const floorActive = floorMin !== undefined || floorMax !== undefined;
   // a fresh array each render would re-run the facet parity effect forever
   const extras = useMemo<ExtraFacet[]>(
-    () => [
-      {
-        key: "floor",
-        label: m.filter_floor_price(),
-        active: floorActive,
-        Control: FloorPriceFilter,
-      },
-    ],
+    () => [{ key: "floor", active: floorActive, Control: FloorPriceFilter }],
     [floorActive],
   );
 
@@ -113,7 +107,7 @@ export function MarketView() {
         facets={facets}
         groups={groups}
         sorts={MARKET_SORTS}
-        showPricedOnly
+        longTail={LONG_TAIL.market}
         extras={extras}
       />
 

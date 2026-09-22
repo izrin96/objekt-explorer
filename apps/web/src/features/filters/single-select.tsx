@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Select, SelectItem, SelectPopup, SelectPrimitive } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-export type SingleOption<T extends string> = { value: T; label: string };
+type SingleOption<T extends string> = { value: T; label: string };
 
 type SingleSelectProps<T extends string> = {
   label: string;

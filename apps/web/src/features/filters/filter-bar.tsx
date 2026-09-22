@@ -1,5 +1,6 @@
-import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon } from "@phosphor-icons/react";
-import type { ValidCustomSort, ValidSortDirection } from "@repo/cosmo/types/common";
+import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon, XIcon } from "@phosphor-icons/react";
+import type { ValidCustomSort, ValidGroupBy, ValidSortDirection } from "@repo/cosmo/types/common";
+import { validGroupBy } from "@repo/cosmo/types/common";
 import { useMemo } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -26,30 +27,23 @@ import {
   type FacetKey,
 } from "./facet-controls";
 import type { Facets, MemberGroup } from "./facets";
-import { FilterPopover, LongTailFields, longTailCount } from "./filter-popover";
-import { FilterSearch } from "./filter-search";
+import {
+  FilterPopover,
+  LONG_TAIL,
+  LongTailFields,
+  longTailCount,
+  type LongTailField,
+} from "./filter-popover";
+import { FilterSearchField } from "./filter-search";
 import { FilterSheet } from "./filter-sheet";
-import { DEFAULT_SORT_DIR } from "./search-schema";
+import { GROUP_BY_LABEL, SORT_LABEL } from "./labels";
+import { DEFAULT_SORT_DIR, isFiltering } from "./search-schema";
 import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";
 
 const toolbarTrigger = cn(
   buttonVariants({ variant: "outline", size: "sm" }),
   "gap-1.5 text-[13px]",
 );
-
-export const SORT_LABEL: Record<ValidCustomSort, () => string> = {
-  date: m.filter_sort_by_date_label,
-  season: m.filter_sort_by_season_label,
-  collectionNo: m.filter_sort_by_collection_no_label,
-  member: m.filter_sort_by_member_label,
-  serial: m.filter_sort_by_serial_label,
-  duplicate: m.filter_sort_by_dups_label,
-  rare: m.filter_sort_by_rare_label,
-  price: m.filter_sort_by_price_label,
-  floor: m.filter_sort_by_floor_label,
-  listedAt: m.filter_sort_by_listed_label,
-  supply: m.filter_sort_by_supply_label,
-};
 
 /**
  * Picking a sort resets the direction to the one that sort is normally read
@@ -70,7 +64,10 @@ const SORT_DEFAULT_DIR: Record<ValidCustomSort, ValidSortDirection> = {
 };
 
 /** a collection row has no serial, no price and no listing, so neither has its sort */
-export const HOME_SORTS: readonly ValidCustomSort[] = ["date", "season", "collectionNo", "member"];
+const HOME_SORTS: readonly ValidCustomSort[] = ["date", "season", "collectionNo", "member"];
+
+/** the absence of `group_by`, spelled as a value so the select has a "None" item */
+const NO_GROUP = "none";
 
 export function ColumnsSelect({
   className,
@@ -128,7 +125,7 @@ export function SortSelect({
         }
       >
         <SelectPrimitive.Trigger aria-label={m.filter_sort_by_label()} className={toolbarTrigger}>
-          <SortAscendingIcon />
+          {descending ? <SortDescendingIcon /> : <SortAscendingIcon />}
           <SelectValue>{(value: ValidCustomSort) => SORT_LABEL[value]()}</SelectValue>
         </SelectPrimitive.Trigger>
         <SelectPopup alignItemWithTrigger={false} align="end">
@@ -142,7 +139,7 @@ export function SortSelect({
       <Button
         variant="outline"
         size="icon-sm"
-        aria-label={descending ? m.filter_asc() : m.filter_desc()}
+        aria-label={descending ? m.filter_desc() : m.filter_asc()}
         onClick={() =>
           setFilters({
             sort: current,
@@ -156,13 +153,135 @@ export function SortSelect({
   );
 }
 
+/**
+ * Grouping splits the grid into labelled sections; the direction button is only
+ * meaningful once there are sections, so it joins the row with the grouping.
+ */
+export function GroupBySelect({
+  className,
+  stacked = false,
+}: {
+  className?: string;
+  stacked?: boolean;
+}) {
+  const groupBy = useFilters((f) => f.group_by);
+  const groupDir = useFilters((f) => f.group_dir);
+  const setFilters = useSetFilters();
+
+  const ascending = groupDir === "asc";
+
+  return (
+    <div className={cn("flex items-center gap-1.5", stacked && "w-full", className)}>
+      <Select
+        value={groupBy ?? NO_GROUP}
+        onValueChange={(value: string | null) =>
+          setFilters({
+            group_by: value === null || value === NO_GROUP ? undefined : (value as ValidGroupBy),
+            // member and class read best low-to-high; every other grouping is
+            // already in the order its labels sort
+            group_dir: value === "member" || value === "class" ? "asc" : undefined,
+          })
+        }
+      >
+        <SelectPrimitive.Trigger
+          aria-label={m.filter_group_by_label()}
+          data-active={groupBy !== undefined || undefined}
+          className={cn(
+            toolbarTrigger,
+            "data-active:border-foreground",
+            stacked && "w-full justify-between",
+          )}
+        >
+          <span>
+            {m.filter_group_by_label()}
+            {groupBy !== undefined && (
+              <span className="text-muted-foreground"> · {GROUP_BY_LABEL[groupBy]()}</span>
+            )}
+          </span>
+        </SelectPrimitive.Trigger>
+        <SelectPopup alignItemWithTrigger={false} align="end" className="min-w-44">
+          <SelectItem value={NO_GROUP}>{m.common_form_none()}</SelectItem>
+          {validGroupBy.map((option) => (
+            <SelectItem key={option} value={option}>
+              {GROUP_BY_LABEL[option]()}
+            </SelectItem>
+          ))}
+        </SelectPopup>
+      </Select>
+      {groupBy !== undefined && (
+        <Button
+          variant="outline"
+          size="icon-sm"
+          aria-label={ascending ? m.filter_asc() : m.filter_desc()}
+          onClick={() => setFilters({ group_dir: ascending ? undefined : "asc" })}
+        >
+          {ascending ? <SortAscendingIcon /> : <SortDescendingIcon />}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/** Always on the toolbar and only ever disabled, so its place never moves. */
+export function ResetButton({
+  onReset,
+  disabled,
+  className,
+}: {
+  onReset: () => void;
+  disabled: boolean;
+  className?: string;
+}) {
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className={cn("gap-1.5 text-[13px]", className)}
+      disabled={disabled}
+      onClick={onReset}
+    >
+      <XIcon />
+      {m.filter_reset_filter()}
+    </Button>
+  );
+}
+
+/** The sheet block for the toolbar controls the inline row hides below `md`. */
+export function StackedToolbarFields({
+  showGroupBy = false,
+  showColumns = false,
+}: {
+  showGroupBy?: boolean;
+  showColumns?: boolean;
+}) {
+  return (
+    <>
+      {showGroupBy && (
+        <>
+          <div className="my-1 border-t" />
+          <GroupBySelect stacked />
+        </>
+      )}
+      {showColumns && (
+        <>
+          <div className="my-1 border-t" />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-muted-foreground text-xs font-medium">{m.filter_column()}</span>
+            <ColumnsSelect stacked />
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 type FilterBarProps = {
   facets: Facets;
   /** members grouped by artist; the Member dropdown groups when more than one is in scope */
   groups?: readonly MemberGroup[];
   sorts?: readonly ValidCustomSort[];
-  showPricedOnly?: boolean;
-  showLock?: boolean;
+  /** the surface's column of the long-tail matrix, from `LONG_TAIL` */
+  longTail?: readonly LongTailField[];
   /** toolbar controls this surface adds beside the five facets */
   extras?: readonly ExtraFacet[];
 };
@@ -171,8 +290,7 @@ export function FilterBar({
   facets,
   groups,
   sorts = HOME_SORTS,
-  showPricedOnly = false,
-  showLock = false,
+  longTail = LONG_TAIL.home,
   extras = NO_EXTRAS,
 }: FilterBarProps) {
   const filters = useCanonicalFilters();
@@ -201,7 +319,7 @@ export function FilterBar({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <FilterSearch />
+        <FilterSearchField />
 
         <FacetControls
           surface="inline"
@@ -215,11 +333,7 @@ export function FilterBar({
 
         <ExtraFacetControls surface="inline" extras={extras} controlClassName="max-md:hidden" />
 
-        <FilterPopover
-          showPricedOnly={showPricedOnly}
-          showLock={showLock}
-          className="max-md:hidden"
-        />
+        <FilterPopover fields={longTail} className="max-md:hidden" />
 
         <FilterSheet
           facets={facets}
@@ -227,21 +341,19 @@ export function FilterBar({
           values={values}
           onChange={setFacet}
           extras={extras}
-          extraCount={longTailCount(filters)}
+          extraCount={longTailCount(filters, longTail)}
           onReset={reset}
         >
           <div className="my-1 border-t" />
-          <LongTailFields showPricedOnly={showPricedOnly} showLock={showLock} />
-          <div className="my-1 border-t" />
-          <div className="flex flex-col gap-1.5">
-            <span className="text-muted-foreground text-xs font-medium">{m.filter_column()}</span>
-            <ColumnsSelect stacked />
-          </div>
+          <LongTailFields fields={longTail} />
+          <StackedToolbarFields showGroupBy showColumns />
         </FilterSheet>
 
         <div className="flex items-center gap-1.5 md:ml-auto">
           <SortSelect sorts={sorts} />
+          <GroupBySelect className="max-md:hidden" />
           <ColumnsSelect className="max-md:hidden" />
+          <ResetButton onReset={reset} disabled={!isFiltering(filters)} className="max-md:hidden" />
         </div>
       </div>
 

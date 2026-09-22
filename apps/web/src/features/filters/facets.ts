@@ -16,6 +16,9 @@ export type Facets = {
 
 export type MemberGroup = { artist: CosmoArtistWithMembersBFF; members: string[] };
 
+/** neither class is minted as part of a set, so a completion view leaves them out */
+export const ETC_CLASSES: readonly string[] = ["Welcome", "Zero"];
+
 /** the eight background colours the catalogue uses most */
 export const COLOR_SWATCHES: readonly string[] = [
   "#f7f7f7",

@@ -18,6 +18,7 @@ import { isComparing } from "@/features/compare/search-schema";
 import { useCompareQuery, useCompareSearch, useSetCompare } from "@/features/compare/use-compare";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
+import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -161,7 +162,7 @@ function ListEntries() {
 
   return (
     <>
-      <FilterBar facets={facets} groups={groups} />
+      <FilterBar facets={facets} groups={groups} longTail={LONG_TAIL.list} />
 
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
 

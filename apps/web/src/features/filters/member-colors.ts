@@ -7,7 +7,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
  * a member the artist payload does not carry — a unit or an event in the
  * member column has no entry there.
  */
-export const MEMBER_COLORS: Record<string, string> = {
+const MEMBER_COLORS: Record<string, string> = {
   // tripleS
   SeoYeon: "#22AEFF",
   HyeRin: "#9200FF",

@@ -1,4 +1,4 @@
-import { type ComponentType, type ReactNode, useEffect } from "react";
+import { type ComponentType, useEffect } from "react";
 
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -8,7 +8,7 @@ import { FilterCollection } from "./filter-collection";
 import { MultiSelect } from "./multi-select";
 
 /** every facet control takes the same props, so the table below can drive both surfaces */
-export type FacetControlProps = {
+type FacetControlProps = {
   label: string;
   options: readonly string[];
   groups?: readonly MemberGroup[];
@@ -36,7 +36,7 @@ type FacetDef = {
  * this array twice — inline on `md+` and stacked in the mobile Filters sheet —
  * so a facet added here shows up in both places and on every page.
  */
-export const FACETS: readonly FacetDef[] = [
+const FACETS: readonly FacetDef[] = [
   { key: "artist", label: m.filter_artist, options: (f) => f.artists, Control: MultiSelect },
   {
     key: "member",
@@ -67,7 +67,6 @@ export type FacetSurface = "inline" | "stacked";
  */
 export type ExtraFacet = {
   key: string;
-  label: string;
   active: boolean;
   Control: ComponentType<{ className?: string }>;
 };
@@ -79,16 +78,6 @@ export type ExtraFacet = {
  */
 export const NO_EXTRAS: readonly ExtraFacet[] = [];
 
-function forSurface(surface: FacetSurface, key: string, label: string, control: ReactNode) {
-  if (surface === "inline") return control;
-  return (
-    <div key={key} className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-muted-foreground text-xs font-medium">{label}</span>
-      {control}
-    </div>
-  );
-}
-
 export function ExtraFacetControls({
   surface,
   extras,
@@ -98,17 +87,12 @@ export function ExtraFacetControls({
   extras: readonly ExtraFacet[];
   controlClassName?: string;
 }) {
-  return extras.map(({ key, label, Control }) =>
-    forSurface(
-      surface,
-      key,
-      label,
-      <Control
-        key={key}
-        className={cn(surface === "stacked" && "w-full justify-between", controlClassName)}
-      />,
-    ),
-  );
+  return extras.map(({ key, Control }) => (
+    <Control
+      key={key}
+      className={cn(surface === "stacked" && "w-full justify-between", controlClassName)}
+    />
+  ));
 }
 
 type FacetControlsProps = {
@@ -133,21 +117,17 @@ export function FacetControls({
   controlClassName,
 }: FacetControlsProps) {
   return FACETS.filter((def) => keys.includes(def.key)).map(
-    ({ key, label, options, grouped, Control }) =>
-      forSurface(
-        surface,
-        key,
-        label(),
-        <Control
-          key={key}
-          label={label()}
-          options={options(facets)}
-          groups={grouped ? groups : undefined}
-          value={values[key]}
-          onChange={(value) => onChange(key, value)}
-          className={cn(surface === "stacked" && "w-full justify-between", controlClassName)}
-        />,
-      ),
+    ({ key, label, options, grouped, Control }) => (
+      <Control
+        key={key}
+        label={label()}
+        options={options(facets)}
+        groups={grouped ? groups : undefined}
+        value={values[key]}
+        onChange={(value) => onChange(key, value)}
+        className={cn(surface === "stacked" && "w-full justify-between", controlClassName)}
+      />
+    ),
   );
 }
 

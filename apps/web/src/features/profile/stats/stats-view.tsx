@@ -8,6 +8,7 @@ import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Chart, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
@@ -155,6 +156,7 @@ export function StatsView() {
   return (
     <>
       <ProfileToolbar
+        longTail={LONG_TAIL.stats}
         showSearch={false}
         showSort={false}
         showColumns={false}

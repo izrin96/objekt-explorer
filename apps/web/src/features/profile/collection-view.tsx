@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
+import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
@@ -230,7 +231,7 @@ export function CollectionView() {
 
   return (
     <AddToListProvider address={address}>
-      <ProfileToolbar showLock extra={<CheckpointPopover />} />
+      <ProfileToolbar longTail={LONG_TAIL.collection} extra={<CheckpointPopover />} />
 
       {at && (
         <p className="text-muted-foreground text-[13px]">

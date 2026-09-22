@@ -81,9 +81,9 @@ export const filterSearchSchema = z.object({
 
 export type FilterSearch = z.infer<typeof filterSearchSchema>;
 
-export type FilterKey = keyof FilterSearch;
+type FilterKey = keyof FilterSearch;
 
-export const FILTER_KEYS = Object.keys(filterSearchSchema.shape) as FilterKey[];
+const FILTER_KEYS = Object.keys(filterSearchSchema.shape) as FilterKey[];
 
 /** No filter set: also the patch `useResetFilters` writes, minus `at`. */
 export const defaultFilters: FilterSearch = Object.fromEntries(

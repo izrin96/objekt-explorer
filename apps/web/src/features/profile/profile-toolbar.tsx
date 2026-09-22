@@ -1,5 +1,6 @@
 import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ReactNode } from "react";
+import { useMemo } from "react";
 
 import { ActiveChips, useActiveChips } from "@/features/filters/active-chips";
 import {
@@ -9,17 +10,28 @@ import {
   useFacetParity,
   type FacetKey,
 } from "@/features/filters/facet-controls";
-import { useScopedFacets } from "@/features/filters/facets";
-import { ColumnsSelect, SortSelect } from "@/features/filters/filter-bar";
-import { FilterPopover, LongTailFields, longTailCount } from "@/features/filters/filter-popover";
-import { FilterSearch } from "@/features/filters/filter-search";
+import { ETC_CLASSES, useScopedFacets } from "@/features/filters/facets";
+import {
+  ColumnsSelect,
+  GroupBySelect,
+  ResetButton,
+  SortSelect,
+  StackedToolbarFields,
+} from "@/features/filters/filter-bar";
+import {
+  FilterPopover,
+  LongTailFields,
+  longTailCount,
+  type LongTailField,
+} from "@/features/filters/filter-popover";
+import { FilterSearchField } from "@/features/filters/filter-search";
 import { FilterSheet } from "@/features/filters/filter-sheet";
+import { isFiltering } from "@/features/filters/search-schema";
 import {
   useCanonicalFilters,
   useResetFilters,
   useSetFilters,
 } from "@/features/filters/use-filters";
-import { m } from "@/paraglide/messages";
 
 /** an owned row carries a serial and a received date, so the profile sorts by them */
 const PROFILE_SORTS: readonly ValidCustomSort[] = [
@@ -33,28 +45,39 @@ const PROFILE_SORTS: readonly ValidCustomSort[] = [
 ];
 
 type ProfileToolbarProps = {
+  /** the tab's column of the long-tail matrix, from `LONG_TAIL` */
+  longTail: readonly LongTailField[];
   /** trailing controls this surface alone carries — the checkpoint popover */
   extra?: ReactNode;
   showSearch?: boolean;
   /** Statistics measures a set rather than ordering one, so it shows neither */
   showSort?: boolean;
   showColumns?: boolean;
-  /** only the owner of a live collection has locks to filter on */
-  showLock?: boolean;
+  /** Progress measures completion, which Welcome and Zero are not part of */
+  hideEtcClasses?: boolean;
 };
 
 export function ProfileToolbar({
+  longTail,
   extra,
   showSearch = true,
   showSort = true,
   showColumns = true,
-  showLock = false,
+  hideEtcClasses = false,
 }: ProfileToolbarProps) {
   const { facets, groups } = useScopedFacets();
   const filters = useCanonicalFilters();
   const setFilters = useSetFilters();
   const reset = useResetFilters();
   const chips = useActiveChips();
+
+  const scoped = useMemo(
+    () =>
+      hideEtcClasses
+        ? { ...facets, classes: facets.classes.filter((name) => !ETC_CLASSES.includes(name)) }
+        : facets,
+    [facets, hideEtcClasses],
+  );
 
   const values = {
     artist: filters.artist ?? [],
@@ -72,11 +95,11 @@ export function ProfileToolbar({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        {showSearch && <FilterSearch />}
+        {showSearch && <FilterSearchField />}
 
         <FacetControls
           surface="inline"
-          facets={facets}
+          facets={scoped}
           groups={groups}
           values={values}
           onChange={setFacet}
@@ -84,39 +107,33 @@ export function ProfileToolbar({
           controlClassName="max-md:hidden"
         />
 
-        <FilterPopover showLock={showLock} className="max-md:hidden" />
+        <FilterPopover fields={longTail} className="max-md:hidden" />
 
         <FilterSheet
-          facets={facets}
+          facets={scoped}
           groups={groups}
           values={values}
           onChange={setFacet}
-          extraCount={longTailCount(filters)}
+          extraCount={longTailCount(filters, longTail)}
           onReset={reset}
         >
           <div className="my-1 border-t" />
-          <LongTailFields showLock={showLock} />
-          {showColumns && (
-            <>
-              <div className="my-1 border-t" />
-              <div className="flex flex-col gap-1.5">
-                <span className="text-muted-foreground text-xs font-medium">
-                  {m.filter_column()}
-                </span>
-                <ColumnsSelect stacked />
-              </div>
-            </>
-          )}
+          <LongTailFields fields={longTail} />
+          <StackedToolbarFields showGroupBy={showSort} showColumns={showColumns} />
         </FilterSheet>
 
         {extra}
 
-        {(showSort || showColumns) && (
-          <div className="flex items-center gap-1.5 md:ml-auto">
-            {showSort && <SortSelect sorts={PROFILE_SORTS} />}
-            {showColumns && <ColumnsSelect className="max-md:hidden" />}
-          </div>
-        )}
+        <div className="flex items-center gap-1.5 md:ml-auto">
+          {showSort && (
+            <>
+              <SortSelect sorts={PROFILE_SORTS} />
+              <GroupBySelect className="max-md:hidden" />
+            </>
+          )}
+          {showColumns && <ColumnsSelect className="max-md:hidden" />}
+          <ResetButton onReset={reset} disabled={!isFiltering(filters)} className="max-md:hidden" />
+        </div>
       </div>
 
       <ActiveChips chips={chips} onRemove={(chip) => setFilters(chip.remove)} onReset={reset} />

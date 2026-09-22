@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
@@ -132,6 +133,7 @@ export function TradesView() {
 
   const toolbar = (
     <ProfileToolbar
+      longTail={LONG_TAIL.trades}
       showSearch={false}
       showSort={false}
       showColumns={false}

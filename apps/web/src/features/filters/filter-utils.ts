@@ -43,15 +43,18 @@ function toSeasonKey(seasonCode: string, seasonNumber: number) {
   return String(seasonNumber).padStart(2, "0") + seasonCode;
 }
 
+/**
+ * The grammar a term accepts: `#n` / `#n-m` is a serial or serial range,
+ * `a201z-aa204z` a collection range with optional season codes on either end,
+ * and anything else is matched against the objekt's tags.
+ */
 function searchFilter(keyword: string, objekt: ValidObjekt) {
-  // Handle serial search (e.g. #1-20)
   if (keyword.startsWith("#") && isObjektOwned(objekt)) {
     const [start, end] = keyword.split("-").map(parseSerial);
     if (!start) return false;
     return objekt.serial >= start && objekt.serial <= (end ?? start);
   }
 
-  // Handle collection range search (e.g. 301z-302z, aa201z-204z, a201z-aa204z)
   if (!keyword.startsWith("#") && keyword.includes("-")) {
     const [start, end] = keyword.split("-").map(parseCollectionNo);
     if (!start || !end) return false;
@@ -73,7 +76,6 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
       if (objectSeasonKey < startSeasonKey || objectSeasonKey > endSeasonKey) return false;
     }
 
-    // collectionNo + type range
     return (
       breakdown.collectionNo >= start.collectionNo &&
       breakdown.collectionNo <= end.collectionNo &&
@@ -85,7 +87,7 @@ function searchFilter(keyword: string, objekt: ValidObjekt) {
   return objekt.tags?.some((value) => value === keyword);
 }
 
-export function getSortDate(obj: ValidObjekt) {
+function getSortDate(obj: ValidObjekt) {
   return obj.order
     ? obj.order
     : isObjektOwned(obj)
@@ -106,7 +108,6 @@ export function filterObjekts(filters: FilterSearch, objekts: ValidObjekt[]): Va
     )
     .filter((group) => group.length > 0);
 
-  // Parse target color once outside the filter loop
   let targetColor: chroma.Color | null = null;
   if (filters.color) {
     try {

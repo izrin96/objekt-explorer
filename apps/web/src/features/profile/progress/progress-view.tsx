@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
+import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { useResetFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -23,6 +24,7 @@ import { useProfileColumns } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { useProfileCatalogue } from "../use-profile-objekts";
 import { MemberProgressChart, useChartMembers } from "./member-progress-chart";
+import { useSetShowCount, useShowCount } from "./search-schema";
 import {
   catalogueTotals,
   memberProgress,
@@ -158,6 +160,7 @@ function ClassCard({
   onToggle,
   onOpen,
   ownedBySlug,
+  showCount,
 }: {
   group: ClassGroup;
   section: MemberSeason;
@@ -165,7 +168,8 @@ function ClassCard({
   open: boolean;
   onToggle: () => void;
   onOpen: (objekt: ValidObjekt) => void;
-  ownedBySlug: ReadonlyMap<string, ValidObjekt>;
+  ownedBySlug: ReadonlyMap<string, ValidObjekt[]>;
+  showCount: boolean;
 }) {
   const id = nodeId(section.key, group.class);
   const complete = group.pct >= 100;
@@ -224,11 +228,13 @@ function ClassCard({
       >
         <ObjektGrid columns={columns} className="mt-3">
           {group.items.map((item) => {
-            const owned = ownedBySlug.get(item.objekt.slug);
+            const copies = ownedBySlug.get(item.objekt.slug);
+            const owned = copies?.[0];
             return owned ? (
               <ObjektCard
                 key={item.objekt.slug}
                 objekt={owned}
+                qty={showCount && copies.length > 1 ? copies.length : undefined}
                 unobtainable={item.unobtainable}
                 onOpen={onOpen}
               />
@@ -255,11 +261,13 @@ export function ProgressView() {
   const columns = useProfileColumns();
   const setFilters = useSetFilters();
   const reset = useResetFilters();
+  const showCount = useShowCount();
+  const setShowCount = useSetShowCount();
   const [open, setOpen] = useState<readonly string[]>([]);
   const [active, setActive] = useState<ValidObjekt | null>(null);
 
   const ownedSlugs = useMemo(() => new Set(owned.map((objekt) => objekt.slug)), [owned]);
-  const ownedBySlug = useMemo(() => new Map(owned.map((objekt) => [objekt.slug, objekt])), [owned]);
+  const ownedBySlug = useMemo(() => Map.groupBy(owned, (objekt) => objekt.slug), [owned]);
 
   const members = useChartMembers();
   const rows = useMemo(
@@ -293,7 +301,27 @@ export function ProgressView() {
   const closest = measured.toSorted((a, b) => a.total - a.owned - (b.total - b.owned)).slice(0, 3);
 
   const toolbar = (
-    <ProfileToolbar showSearch={false} showSort={false} extra={<CheckpointPopover />} />
+    <ProfileToolbar
+      longTail={LONG_TAIL.progress}
+      showSearch={false}
+      showSort={false}
+      hideEtcClasses
+      extra={
+        <>
+          <Button
+            variant="outline"
+            size="sm"
+            aria-pressed={showCount}
+            data-active={showCount || undefined}
+            className="data-active:border-foreground text-[13px]"
+            onClick={() => setShowCount(!showCount)}
+          >
+            {m.filter_show_count()}
+          </Button>
+          <CheckpointPopover />
+        </>
+      }
+    />
   );
 
   if (isPending) {
@@ -401,6 +429,7 @@ export function ProgressView() {
                       }
                       onOpen={setActive}
                       ownedBySlug={ownedBySlug}
+                      showCount={showCount}
                     />
                   );
                 })}

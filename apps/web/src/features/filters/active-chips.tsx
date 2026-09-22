@@ -5,7 +5,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
-import { EDITION_LABEL, ONLINE_TYPE_LABEL } from "./filter-popover";
+import { EDITION_LABEL, GROUP_BY_LABEL, ONLINE_TYPE_LABEL, SORT_LABEL } from "./labels";
 import { useMemberColor } from "./member-colors";
 import type { FilterSearch } from "./search-schema";
 import { useCanonicalFilters, type FilterPatch } from "./use-filters";
@@ -112,6 +112,13 @@ function buildChips(filters: FilterSearch, memberColor: (name: string) => string
   if (filters.priced === true) {
     chips.push({ key: "priced", label: m.filter_priced_only(), remove: { priced: undefined } });
   }
+  if (filters.missing === true || filters.unowned === true) {
+    chips.push({
+      key: "missing",
+      label: m.filter_show_missing(),
+      remove: { missing: undefined, unowned: undefined },
+    });
+  }
   if (filters.color !== undefined) {
     chips.push({
       key: `color:${filters.color}`,
@@ -121,6 +128,36 @@ function buildChips(filters: FilterSearch, memberColor: (name: string) => string
       mono: true,
       // the sensitivity has no meaning without a colour, so one chip drops both
       remove: { color: undefined, colorSensitivity: undefined },
+    });
+  }
+  if (filters.floor_min !== undefined || filters.floor_max !== undefined) {
+    chips.push({
+      key: "floor",
+      label: `${m.filter_floor_price()}: ${filters.floor_min ?? "…"}–${filters.floor_max ?? "…"}`,
+      mono: true,
+      remove: { floor_min: undefined, floor_max: undefined },
+    });
+  }
+  if (filters.search !== undefined) {
+    chips.push({
+      key: "search",
+      label: `${m.common_search_aria()}: ${filters.search}`,
+      remove: { search: undefined },
+    });
+  }
+  if (filters.sort !== undefined) {
+    chips.push({
+      key: "sort",
+      label: `${m.filter_sort_by_label()}: ${SORT_LABEL[filters.sort]()}`,
+      // the direction is a property of the sort, so it leaves with it
+      remove: { sort: undefined, sort_dir: undefined },
+    });
+  }
+  if (filters.group_by !== undefined) {
+    chips.push({
+      key: "group_by",
+      label: `${m.filter_group_by_label()}: ${GROUP_BY_LABEL[filters.group_by]()}`,
+      remove: { group_by: undefined, group_dir: undefined },
     });
   }
 

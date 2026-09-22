@@ -1,6 +1,7 @@
 import { PulseIcon } from "@phosphor-icons/react";
 import type { ActivityData, ValidType } from "@repo/api/schemas/activity";
 import { validType } from "@repo/api/schemas/activity";
+import { validOnlineTypes, type ValidOnlineType } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -21,9 +22,12 @@ import {
   type FacetKey,
 } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
+import { ResetButton } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
+import { ONLINE_TYPE_LABEL } from "@/features/filters/labels";
+import { isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
-import { useCanonicalFilters, useSetFilters } from "@/features/filters/use-filters";
+import { useCanonicalFilters, useFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { m } from "@/paraglide/messages";
 
@@ -70,6 +74,34 @@ function EventFilter({ className }: { className?: string }) {
       value={type}
       onChange={setType}
       defaultValue="all"
+      className={className}
+    />
+  );
+}
+
+/** `all` is the absence of `on_offline`, spelled as a value the select can hold */
+const ALL_TYPES = "all";
+
+const ONLINE_OPTIONS = [
+  { value: ALL_TYPES, label: m.filter_all() },
+  ...validOnlineTypes.map((value) => ({ value, label: ONLINE_TYPE_LABEL[value]() })),
+];
+
+function OnlineFilter({ className }: { className?: string }) {
+  const onOffline = useFilters((f) => f.on_offline);
+  const setFilters = useSetFilters();
+
+  return (
+    <SingleSelect
+      label={m.filter_type()}
+      options={ONLINE_OPTIONS}
+      value={onOffline?.[0] ?? ALL_TYPES}
+      defaultValue={ALL_TYPES}
+      onChange={(value) =>
+        setFilters({
+          on_offline: value === ALL_TYPES ? undefined : [value as ValidOnlineType],
+        })
+      }
       className={className}
     />
   );
@@ -221,9 +253,10 @@ export function ActivityView() {
 
   const extras = useMemo<ExtraFacet[]>(
     () => [
-      { key: "type", label: m.filter_event_label(), active: type !== "all", Control: EventFilter },
+      { key: "type", active: type !== "all", Control: EventFilter },
+      { key: "on_offline", active: (filters.on_offline?.length ?? 0) > 0, Control: OnlineFilter },
     ],
-    [type],
+    [type, filters.on_offline],
   );
 
   const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((e) => e.key)], [extras]);
@@ -256,6 +289,11 @@ export function ActivityView() {
           onChange={setFacet}
           extras={extras}
           onReset={reset}
+        />
+        <ResetButton
+          onReset={reset}
+          disabled={!isFiltering(filters) && type === "all"}
+          className="max-md:hidden"
         />
       </div>
 
