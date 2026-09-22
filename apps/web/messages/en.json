@@ -765,7 +765,6 @@
   "auth_account_confirm_password_label": "Confirm New Password",
   "auth_account_password_mismatch": "Passwords do not match.",
   "profile_edit_file_unsupported": "File \"{name}\" is not a supported image or video.",
-  "link_open_cosmo": "Open Cosmo",
   "link_no_cosmo_linked": "No Cosmo linked yet.",
   "link_profiles_linked": "{count} Cosmo linked.",
   "link_step_artist": "Artist",

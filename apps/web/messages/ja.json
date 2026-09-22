@@ -765,7 +765,6 @@
   "auth_account_confirm_password_label": "新しいパスワードの確認",
   "auth_account_password_mismatch": "パスワードが一致しません。",
   "profile_edit_file_unsupported": "ファイル「{name}」は対応していない画像・動画形式です。",
-  "link_open_cosmo": "Cosmoを開く",
   "link_no_cosmo_linked": "まだ連携されたCosmoはありません。",
   "link_profiles_linked": "Cosmoを{count}件連携済み。",
   "link_step_artist": "アーティスト",

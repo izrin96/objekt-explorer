@@ -765,7 +765,6 @@
   "auth_account_confirm_password_label": "새 비밀번호 확인",
   "auth_account_password_mismatch": "비밀번호가 일치하지 않습니다.",
   "profile_edit_file_unsupported": "\"{name}\" 파일은 지원되지 않는 이미지 또는 영상 형식입니다.",
-  "link_open_cosmo": "Cosmo 열기",
   "link_no_cosmo_linked": "아직 연결된 Cosmo가 없습니다.",
   "link_profiles_linked": "Cosmo {count}개 연결됨.",
   "link_step_artist": "아티스트",

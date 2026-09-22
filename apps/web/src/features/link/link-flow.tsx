@@ -325,14 +325,6 @@ function VerifyStep({
       <Countdown expiresInMs={code.expiresInMs} onExpire={() => setExpired(true)} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          variant="outline"
-          render={
-            <a href={`/api/open-app?artist=${artistId}&to=${encodeURIComponent(found.nickname)}`} />
-          }
-        >
-          {m.link_open_cosmo()}
-        </Button>
         <Button loading={verify.isPending} onClick={() => verify.mutate(found.address)}>
           {m.link_verify()}
         </Button>
