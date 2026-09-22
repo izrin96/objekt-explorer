@@ -3,6 +3,7 @@
   "discord_format_modal_description": "objektの一覧は現在のフィルターに基づいています。",
   "discord_format_modal_button": "Discord形式",
   "discord_format_modal_generate": "生成",
+  "discord_format_lists_button": "リストからDiscord形式",
   "progress_loading_objekts": "Objektを読み込み中",
   "progress_progress_bar_label": "進行状況バー",
   "actions_pin_success_single": "objektをピン留めしました",

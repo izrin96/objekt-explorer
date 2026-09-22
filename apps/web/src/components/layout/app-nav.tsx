@@ -2,6 +2,7 @@ import { CubeIcon } from "@phosphor-icons/react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { ChangelogButton } from "@/components/layout/changelog";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavSearch } from "@/components/layout/nav-search";
 import { SystemStatus, statusDotClass, useOverallStatus } from "@/components/layout/system-status";
@@ -68,6 +69,8 @@ export function AppNav() {
         <SystemStatus className="max-md:hidden" />
 
         <span className="flex-1" />
+
+        <ChangelogButton />
 
         <NavSearch open={searchOpen} onOpenChange={setSearchOpen} />
 

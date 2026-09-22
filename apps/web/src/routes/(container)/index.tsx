@@ -5,7 +5,6 @@ import { useCallback, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
@@ -17,30 +16,18 @@ import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar } from "@/features/objekt/select-bar";
+import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCollectionObjekts } from "@/features/objekt/use-collection-objekts";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
-import { useColumns } from "@/stores/columns";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 export const Route = createFileRoute("/(container)/")({
   validateSearch: filterSearchSchema,
   component: HomePage,
 });
-
-function ShimmerGrid() {
-  const columns = useColumns();
-  return (
-    <ObjektGrid columns={columns}>
-      {Array.from({ length: columns * 3 }).map((_, index) => (
-        <Shimmer key={index} className="aspect-photocard rounded-photocard w-full" />
-      ))}
-    </ObjektGrid>
-  );
-}
 
 function HomePage() {
   const { data: user } = useCurrentUser();

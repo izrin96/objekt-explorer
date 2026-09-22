@@ -1,14 +1,14 @@
 import { DiscordLogoIcon } from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useState } from "react";
 
 import { CopyButton } from "@/components/shared/copy-button";
-import { Button, type ButtonProps } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogPanel,
@@ -24,31 +24,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { toastManager } from "@/components/ui/toast";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
-import { getListLinkOption } from "@/features/list/list-link";
-import { LIST_TYPE_LABEL } from "@/features/list/list-type-badge";
-import { useUserLists } from "@/features/user/hooks";
-import { orpc } from "@/lib/orpc";
-import { getBaseURL } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { type FormatStyle, type GroupByMode, format } from "./format";
 
-const NONE = "__none__";
-
-type Flag =
-  | "showCount"
-  | "includeLink"
-  | "lowercaseCollection"
-  | "bullet"
-  | "showMemberEmoji"
-  | "hideType";
+type Flag = "showCount" | "lowercaseCollection" | "bullet" | "showMemberEmoji" | "hideType";
 
 const FLAGS: { key: Flag; label: () => string }[] = [
   { key: "showCount", label: m.generate_discord_show_count },
-  { key: "includeLink", label: m.generate_discord_include_link },
   { key: "lowercaseCollection", label: m.generate_discord_lower_case },
   { key: "bullet", label: m.generate_discord_bulleted_list },
   { key: "showMemberEmoji", label: m.generate_discord_show_member_emoji },
@@ -67,10 +52,7 @@ const STYLES: { value: FormatStyle; label: () => string }[] = [
 ];
 
 const EMPTY_OPTIONS = {
-  haveList: NONE,
-  wantList: NONE,
   showCount: false,
-  includeLink: false,
   lowercaseCollection: false,
   bullet: false,
   showMemberEmoji: false,
@@ -80,131 +62,77 @@ const EMPTY_OPTIONS = {
 };
 
 /**
- * The owner's generator: it builds from saved have/want lists. The button that
- * formats the filtered set on screen is `GenerateDiscordButton`, and the two
- * sit side by side on a list, so the label says which is which.
+ * Formats whatever is on screen right now — the filtered set, not a saved list
+ * — so any visitor can export the collection they are looking at. The owner's
+ * have/want generator is `DiscordFormatButton` in `discord-format-dialog.tsx`.
  */
-export function DiscordFormatButton({ size = "sm" }: { size?: ButtonProps["size"] }) {
+export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Button variant="outline" size={size} onClick={() => setOpen(true)}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5 text-[13px]"
+        onClick={() => setOpen(true)}
+      >
         <DiscordLogoIcon weight="fill" />
-        {m.discord_format_lists_button()}
+        {m.discord_format_modal_button()}
       </Button>
-      <DiscordFormatDialog open={open} onOpenChange={setOpen} />
+      <GenerateDiscordDialog objekts={objekts} open={open} onOpenChange={setOpen} />
     </>
   );
 }
 
-export function DiscordFormatDialog({
+function GenerateDiscordDialog({
+  objekts,
   open,
   onOpenChange,
 }: {
+  objekts: ValidObjekt[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const lists = useUserLists();
-  const router = useRouter();
   const { compareArtistMember } = useCosmoArtist();
   const { compareSeason } = useFilterData();
   const [options, setOptions] = useState(EMPTY_OPTIONS);
   const [text, setText] = useState("");
 
-  const generate = useMutation(
-    orpc.list.generateDiscordFormat.mutationOptions({
-      onError: ({ message }) => {
-        toastManager.add({
-          type: "error",
-          title: m.generate_discord_error(),
-          description: message,
-        });
-      },
-    }),
-  );
-
   const set = (patch: Partial<typeof EMPTY_OPTIONS>) => setOptions({ ...options, ...patch });
 
-  const listUrl = (slug: string) => {
-    const list = lists.find((entry) => entry.slug === slug);
-    if (!list) return null;
-    return new URL(router.buildLocation(getListLinkOption(list)).href, getBaseURL()).toString();
-  };
-
-  const submit = () => {
-    const haveListSlug = options.haveList === NONE ? undefined : options.haveList;
-    const wantListSlug = options.wantList === NONE ? undefined : options.wantList;
-
-    if (!haveListSlug && !wantListSlug) {
-      toastManager.add({ type: "error", title: m.generate_discord_select_at_least_one() });
-      return;
-    }
-
-    generate.mutate(
-      { haveListSlug, wantListSlug },
-      {
-        onSuccess: ({ have, want }) => {
-          const formatOptions = {
-            showQuantity: options.showCount,
-            lowercaseCollection: options.lowercaseCollection,
-            bullet: options.bullet,
-            showMemberEmoji: options.showMemberEmoji,
-            hideType: options.hideType,
-            groupByMode: options.groupBy,
-            style: options.style,
-            compareArtistMember,
-            compareSeason,
-          };
-          const output: string[] = [];
-
-          const section = (heading: string, rows: typeof have, slug: string | undefined) => {
-            if (!slug || rows.length === 0) return;
-            if (output.length > 0) output.push("");
-            output.push(heading, "", format(rows, formatOptions));
-            const url = options.includeLink ? listUrl(slug) : null;
-            if (url) output.push("", `[${m.list_share()}](<${url}>)`);
-          };
-
-          section("## Have", have, haveListSlug);
-          section("## Want", want, wantListSlug);
-          setText(output.join("\n"));
-        },
-      },
-    );
+  const generate = () => {
+    const formatted = format(objekts, {
+      showQuantity: options.showCount,
+      lowercaseCollection: options.lowercaseCollection,
+      bullet: options.bullet,
+      showMemberEmoji: options.showMemberEmoji,
+      hideType: options.hideType,
+      groupByMode: options.groupBy,
+      style: options.style,
+      compareArtistMember,
+      compareSeason,
+    });
+    setText(["## Have", "", formatted].join("\n"));
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogPopup className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display">{m.generate_discord_title()}</DialogTitle>
+          <DialogTitle className="font-display">{m.discord_format_modal_title()}</DialogTitle>
+          <DialogDescription>{m.discord_format_modal_description()}</DialogDescription>
         </DialogHeader>
         <DialogPanel className="flex flex-col gap-4">
-          <ListPicker
-            id="discord-have"
-            label={m.generate_discord_have_list_label()}
-            value={options.haveList}
-            lists={lists}
-            onValueChange={(next) => set({ haveList: next })}
-          />
-          <ListPicker
-            id="discord-want"
-            label={m.generate_discord_want_list_label()}
-            value={options.wantList}
-            lists={lists}
-            onValueChange={(next) => set({ wantList: next })}
-          />
-
           <div className="grid grid-cols-2 gap-x-3 gap-y-2">
             {FLAGS.map((flag) => (
               <Label
                 key={flag.key}
-                htmlFor={`discord-${flag.key}`}
+                htmlFor={`generate-discord-${flag.key}`}
                 className="flex items-center gap-2 text-sm font-normal"
               >
                 <Checkbox
-                  id={`discord-${flag.key}`}
+                  id={`generate-discord-${flag.key}`}
                   checked={options[flag.key]}
                   onCheckedChange={(checked) => set({ [flag.key]: checked })}
                 />
@@ -215,7 +143,9 @@ export function DiscordFormatDialog({
 
           <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="flex min-w-0 flex-col gap-1.5">
-              <Label htmlFor="discord-group-by">{m.generate_discord_group_by_label()}</Label>
+              <Label htmlFor="generate-discord-group-by">
+                {m.generate_discord_group_by_label()}
+              </Label>
               <Select
                 value={options.groupBy}
                 onValueChange={(next: GroupByMode | null) =>
@@ -226,7 +156,7 @@ export function DiscordFormatDialog({
                   })
                 }
               >
-                <SelectTrigger id="discord-group-by" className="min-w-0">
+                <SelectTrigger id="generate-discord-group-by" className="min-w-0">
                   <SelectValue>
                     {(value: GroupByMode) =>
                       GROUP_BY.find((entry) => entry.value === value)?.label() ?? value
@@ -244,13 +174,13 @@ export function DiscordFormatDialog({
             </div>
 
             <div className="flex min-w-0 flex-col gap-1.5">
-              <Label htmlFor="discord-style">{m.generate_discord_style_label()}</Label>
+              <Label htmlFor="generate-discord-style">{m.generate_discord_style_label()}</Label>
               <Select
                 value={options.style}
                 disabled={options.groupBy === "none"}
                 onValueChange={(next: FormatStyle | null) => set({ style: next ?? "default" })}
               >
-                <SelectTrigger id="discord-style" className="min-w-0">
+                <SelectTrigger id="generate-discord-style" className="min-w-0">
                   <SelectValue>
                     {(value: FormatStyle) =>
                       STYLES.find((entry) => entry.value === value)?.label() ?? value
@@ -270,7 +200,9 @@ export function DiscordFormatDialog({
 
           <div className="flex min-w-0 flex-col gap-1.5">
             <div className="flex items-center justify-between gap-2">
-              <Label htmlFor="discord-output">{m.generate_discord_formatted_text_label()}</Label>
+              <Label htmlFor="generate-discord-output">
+                {m.generate_discord_formatted_text_label()}
+              </Label>
               <CopyButton
                 text={text}
                 label={m.common_copy_button()}
@@ -278,7 +210,7 @@ export function DiscordFormatDialog({
               />
             </div>
             <Textarea
-              id="discord-output"
+              id="generate-discord-output"
               value={text}
               rows={8}
               className="max-h-64 font-mono text-xs"
@@ -297,53 +229,9 @@ export function DiscordFormatDialog({
           >
             {m.generate_discord_reset_button()}
           </Button>
-          <Button loading={generate.isPending} onClick={submit}>
-            {m.generate_discord_generate_button()}
-          </Button>
+          <Button onClick={generate}>{m.discord_format_modal_generate()}</Button>
         </DialogFooter>
       </DialogPopup>
     </Dialog>
-  );
-}
-
-function ListPicker({
-  id,
-  label,
-  value,
-  lists,
-  onValueChange,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  lists: ReturnType<typeof useUserLists>;
-  onValueChange: (next: string) => void;
-}) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
-      <Select value={value} onValueChange={(next: string | null) => onValueChange(next ?? NONE)}>
-        <SelectTrigger id={id} className="min-w-0">
-          <SelectValue>
-            {(next: string) =>
-              next === NONE
-                ? m.generate_discord_list_placeholder()
-                : (lists.find((list) => list.slug === next)?.name ?? next)
-            }
-          </SelectValue>
-        </SelectTrigger>
-        <SelectPopup>
-          <SelectItem value={NONE}>{m.generate_discord_list_placeholder()}</SelectItem>
-          {lists.map((list) => (
-            <SelectItem key={list.slug} value={list.slug}>
-              <span className="truncate">{list.name}</span>
-              <span className="text-muted-foreground ml-1.5 text-xs">
-                {LIST_TYPE_LABEL[list.listTypeNew]()}
-              </span>
-            </SelectItem>
-          ))}
-        </SelectPopup>
-      </Select>
-    </div>
   );
 }

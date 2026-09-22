@@ -2,6 +2,7 @@ import {
   CardsThreeIcon,
   DiscordLogoIcon,
   GearIcon,
+  InfoIcon,
   LinkIcon,
   PlusIcon,
   SignInIcon,
@@ -13,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { AboutDialog } from "@/components/layout/about";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -62,6 +64,7 @@ export function UserMenu({ user }: { user: User }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const [createListOpen, setCreateListOpen] = useState(false);
   const [discordOpen, setDiscordOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const signOut = async () => {
@@ -121,6 +124,13 @@ export function UserMenu({ user }: { user: User }) {
 
           <MenuSeparator />
 
+          <MenuItem onClick={() => setAboutOpen(true)}>
+            <InfoIcon />
+            {m.nav_about()}
+          </MenuItem>
+
+          <MenuSeparator />
+
           <MenuItem variant="destructive" onClick={() => void signOut()}>
             <SignOutIcon />
             {m.nav_sign_out()}
@@ -131,6 +141,7 @@ export function UserMenu({ user }: { user: User }) {
       <AccountDialog open={accountOpen} onOpenChange={setAccountOpen} />
       <CreateListDialog open={createListOpen} onOpenChange={setCreateListOpen} />
       <DiscordFormatDialog open={discordOpen} onOpenChange={setDiscordOpen} />
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
     </>
   );
 }

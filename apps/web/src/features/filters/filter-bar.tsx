@@ -1,7 +1,7 @@
 import { ColumnsIcon, SortAscendingIcon, SortDescendingIcon, XIcon } from "@phosphor-icons/react";
 import type { ValidCustomSort, ValidGroupBy, ValidSortDirection } from "@repo/cosmo/types/common";
 import { validGroupBy } from "@repo/cosmo/types/common";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -284,6 +284,8 @@ type FilterBarProps = {
   longTail?: readonly LongTailField[];
   /** toolbar controls this surface adds beside the five facets */
   extras?: readonly ExtraFacet[];
+  /** trailing controls this surface alone carries, as `ProfileToolbar` takes them */
+  extra?: ReactNode;
 };
 
 export function FilterBar({
@@ -292,6 +294,7 @@ export function FilterBar({
   sorts = HOME_SORTS,
   longTail = LONG_TAIL.home,
   extras = NO_EXTRAS,
+  extra,
 }: FilterBarProps) {
   const filters = useCanonicalFilters();
   const setFilters = useSetFilters();
@@ -348,6 +351,8 @@ export function FilterBar({
           <LongTailFields fields={longTail} />
           <StackedToolbarFields showGroupBy showColumns />
         </FilterSheet>
+
+        {extra}
 
         <div className="flex items-center gap-1.5 md:ml-auto">
           <SortSelect sorts={sorts} />

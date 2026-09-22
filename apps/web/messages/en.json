@@ -3,6 +3,7 @@
   "discord_format_modal_description": "List of objekt is based on current filter.",
   "discord_format_modal_button": "Discord format",
   "discord_format_modal_generate": "Generate",
+  "discord_format_lists_button": "Discord format from lists",
   "progress_loading_objekts": "Loading objekts",
   "progress_progress_bar_label": "Progress Bar",
   "actions_pin_success_single": "Objekt pinned",

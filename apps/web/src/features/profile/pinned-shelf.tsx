@@ -1,6 +1,6 @@
 import { PushPinIcon } from "@phosphor-icons/react";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { m } from "@/paraglide/messages";
@@ -44,7 +44,7 @@ export function PinnedShelf({
               {(handle) => renderCard(objekt, handle)}
             </SortablePin>
           ))
-        : objekts.map((objekt) => renderCard(objekt))}
+        : objekts.map((objekt) => <Fragment key={objekt.id}>{renderCard(objekt)}</Fragment>)}
     </ObjektGrid>
   );
 

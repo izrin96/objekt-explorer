@@ -26,6 +26,8 @@ import { Route as ApiCollectionRouteImport } from './routes/api/collection'
 import { Route as ApiHealthcheckRouteImport } from './routes/api/healthcheck'
 import { Route as ApiLiveSessionsRouteImport } from './routes/api/live-sessions'
 import { Route as ApiOpenAppRouteImport } from './routes/api/open-app'
+import { Route as MERouteImport } from './routes/m/e'
+import { Route as MSRouteImport } from './routes/m/s'
 import { Route as RpcSplatRouteImport } from './routes/rpc.$'
 import { Route as containerAuthResetPasswordRouteImport } from './routes/(container)/auth/reset-password'
 import { Route as containerAuthVerifiedRouteImport } from './routes/(container)/auth/verified'
@@ -132,6 +134,16 @@ const ApiLiveSessionsRoute = ApiLiveSessionsRouteImport.update({
 const ApiOpenAppRoute = ApiOpenAppRouteImport.update({
   id: '/api/open-app',
   path: '/api/open-app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MERoute = MERouteImport.update({
+  id: '/m/e',
+  path: '/m/e',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MSRoute = MSRouteImport.update({
+  id: '/m/s',
+  path: '/m/s',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RpcSplatRoute = RpcSplatRouteImport.update({
@@ -241,6 +253,8 @@ export interface FileRoutesByFullPath {
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
+  '/m/e': typeof MERoute
+  '/m/s': typeof MSRoute
   '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
@@ -275,6 +289,8 @@ export interface FileRoutesByTo {
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
+  '/m/e': typeof MERoute
+  '/m/s': typeof MSRoute
   '/rpc/$': typeof RpcSplatRoute
   '/': typeof containerIndexRoute
   '/@{$nickname}': typeof AtChar123nicknameChar125IndexRoute
@@ -312,6 +328,8 @@ export interface FileRoutesById {
   '/api/healthcheck': typeof ApiHealthcheckRoute
   '/api/live-sessions': typeof ApiLiveSessionsRoute
   '/api/open-app': typeof ApiOpenAppRoute
+  '/m/e': typeof MERoute
+  '/m/s': typeof MSRoute
   '/rpc/$': typeof RpcSplatRoute
   '/(container)/': typeof containerIndexRoute
   '/@{$nickname}/': typeof AtChar123nicknameChar125IndexRoute
@@ -349,6 +367,8 @@ export interface FileRouteTypes {
     | '/api/healthcheck'
     | '/api/live-sessions'
     | '/api/open-app'
+    | '/m/e'
+    | '/m/s'
     | '/rpc/$'
     | '/'
     | '/@{$nickname}/'
@@ -383,6 +403,8 @@ export interface FileRouteTypes {
     | '/api/healthcheck'
     | '/api/live-sessions'
     | '/api/open-app'
+    | '/m/e'
+    | '/m/s'
     | '/rpc/$'
     | '/'
     | '/@{$nickname}'
@@ -419,6 +441,8 @@ export interface FileRouteTypes {
     | '/api/healthcheck'
     | '/api/live-sessions'
     | '/api/open-app'
+    | '/m/e'
+    | '/m/s'
     | '/rpc/$'
     | '/(container)/'
     | '/@{$nickname}/'
@@ -448,6 +472,8 @@ export interface RootRouteChildren {
   ApiHealthcheckRoute: typeof ApiHealthcheckRoute
   ApiLiveSessionsRoute: typeof ApiLiveSessionsRoute
   ApiOpenAppRoute: typeof ApiOpenAppRoute
+  MERoute: typeof MERoute
+  MSRoute: typeof MSRoute
   RpcSplatRoute: typeof RpcSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTransfersAddressRoute: typeof ApiTransfersAddressRoute
@@ -577,6 +603,20 @@ declare module '@tanstack/react-router' {
       path: '/api/open-app'
       fullPath: '/api/open-app'
       preLoaderRoute: typeof ApiOpenAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m/e': {
+      id: '/m/e'
+      path: '/m/e'
+      fullPath: '/m/e'
+      preLoaderRoute: typeof MERouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m/s': {
+      id: '/m/s'
+      path: '/m/s'
+      fullPath: '/m/s'
+      preLoaderRoute: typeof MSRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/rpc/$': {
@@ -772,6 +812,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHealthcheckRoute: ApiHealthcheckRoute,
   ApiLiveSessionsRoute: ApiLiveSessionsRoute,
   ApiOpenAppRoute: ApiOpenAppRoute,
+  MERoute: MERoute,
+  MSRoute: MSRoute,
   RpcSplatRoute: RpcSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTransfersAddressRoute: ApiTransfersAddressRoute,

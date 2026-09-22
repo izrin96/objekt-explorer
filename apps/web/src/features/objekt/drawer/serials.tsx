@@ -192,8 +192,9 @@ export function SerialsPanel({
             <span>
               {m.objekt_transferable()}{" "}
               <b className="text-foreground font-semibold">
-                {metadata.data.transferable.toLocaleString()}
-              </b>
+                {((metadata.data.transferable / metadata.data.total) * 100).toFixed(2)}%
+              </b>{" "}
+              ({metadata.data.transferable.toLocaleString()})
             </span>
           </>
         )}

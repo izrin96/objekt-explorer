@@ -18,18 +18,6 @@ const seasonShortNames: Record<string, string> = {
   winter: "W",
 };
 
-export function getCollectionShortId(objekt: ValidObjekt) {
-  if (objekt.artist === "idntt") {
-    const prefix = objekt.season.slice(0, -2).toLowerCase();
-    const shortName = seasonShortNames[prefix] ?? objekt.season.slice(0, -2);
-    const year = objekt.season.slice(-2);
-    return `${objekt.member} ${shortName}${year} ${objekt.collectionNo}`;
-  }
-  const seasonNumber = Number(objekt.season.slice(-2));
-  if (seasonNumber < 2) return `${objekt.member} ${objekt.season.charAt(0)}${objekt.collectionNo}`;
-  return `${objekt.member} ${objekt.season.charAt(0)}${seasonNumber} ${objekt.collectionNo}`;
-}
-
 function makeCollectionTags(objekt: ValidObjekt) {
   const seasonCode = objekt.season.charAt(0);
   const seasonNumber = objekt.season.slice(-2);
@@ -186,8 +174,8 @@ const shortformMembers: Record<string, string> = {
 };
 
 /**
- * `getCollectionShortId` without the member name, for a card or a drawer that
- * already shows the member in a slot of its own.
+ * The season and collection no. as one short label ("A2 201Z"), for a card or a
+ * drawer that already shows the member in a slot of its own.
  */
 export function getCollectionShortNo(objekt: ValidObjekt) {
   if (objekt.artist === "idntt") {

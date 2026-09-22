@@ -41,24 +41,27 @@ export function AccountDialog({
           <DialogTitle className="font-display">{m.auth_account_title()}</DialogTitle>
           <DialogDescription>{m.auth_account_description()}</DialogDescription>
         </DialogHeader>
-        <DialogPanel>
-          {user ? (
-            <Tabs defaultValue="general">
-              {/* four labels do not fit a phone; the strip scrolls rather than
-                  widening the dialog's panel */}
-              <TabsList
-                variant="underline"
-                data-scroll-x
-                className="mb-4 w-full justify-start overflow-x-auto border-b"
-              >
-                <TabsTab value="general">{m.auth_account_general()}</TabsTab>
-                <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>
-                {hasPassword && (
-                  <TabsTab value="password">{m.auth_account_change_password()}</TabsTab>
-                )}
-                <TabsTab value="danger">{m.auth_account_danger_zone()}</TabsTab>
-              </TabsList>
+        {user ? (
+          /* the strip is a sibling of the scrolling panel, not inside it: in
+             the panel it scrolls out of the dialog and there is no way back to
+             another section */
+          <Tabs defaultValue="general" className="min-h-0 gap-0">
+            {/* four labels do not fit a phone; the strip scrolls rather than
+                widening the dialog's panel */}
+            <TabsList
+              variant="underline"
+              data-scroll-x
+              className="mx-6 w-auto justify-start overflow-x-auto border-b"
+            >
+              <TabsTab value="general">{m.auth_account_general()}</TabsTab>
+              <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>
+              {hasPassword && (
+                <TabsTab value="password">{m.auth_account_change_password()}</TabsTab>
+              )}
+              <TabsTab value="danger">{m.auth_account_danger_zone()}</TabsTab>
+            </TabsList>
 
+            <DialogPanel className="pt-4!">
               <TabsPanel value="general">
                 <GeneralSection user={user} />
               </TabsPanel>
@@ -80,9 +83,9 @@ export function AccountDialog({
               <TabsPanel value="danger">
                 <DangerSection />
               </TabsPanel>
-            </Tabs>
-          ) : null}
-        </DialogPanel>
+            </DialogPanel>
+          </Tabs>
+        ) : null}
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
         </DialogFooter>

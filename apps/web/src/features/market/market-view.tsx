@@ -5,7 +5,6 @@ import { useCallback, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
@@ -17,13 +16,12 @@ import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar } from "@/features/objekt/select-bar";
+import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCurrency } from "@/features/settings/use-currency";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
-import { useColumns } from "@/stores/columns";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { FloorPriceFilter } from "./filter-floor-price";
@@ -40,17 +38,6 @@ const MARKET_SORTS: readonly ValidCustomSort[] = [
   "collectionNo",
   "member",
 ];
-
-function ShimmerGrid() {
-  const columns = useColumns();
-  return (
-    <ObjektGrid columns={columns}>
-      {Array.from({ length: columns * 3 }).map((_, index) => (
-        <Shimmer key={index} className="aspect-photocard rounded-photocard w-full" />
-      ))}
-    </ObjektGrid>
-  );
-}
 
 export function MarketView() {
   const { data: user } = useCurrentUser();

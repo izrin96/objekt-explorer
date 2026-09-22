@@ -33,14 +33,18 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <h1 className="font-display flex items-center gap-2 text-[22px] font-semibold tracking-tight">
-              <span className="truncate">{nickname}</span>
+            {/* the badge sits beside the heading, not inside it: in the
+                heading it joins the accessible name as "<nickname> Verified" */}
+            <div className="flex items-center gap-2">
+              <h1 className="font-display truncate text-[22px] font-semibold tracking-tight">
+                {nickname}
+              </h1>
               {profile.verified === true && (
                 <Badge variant="success" className="font-semibold tracking-wide">
                   {m.profile_header_verified()}
                 </Badge>
               )}
-            </h1>
+            </div>
             <div className="text-muted-foreground flex items-center gap-1.5 font-mono text-xs">
               <Tooltip>
                 <TooltipTrigger render={<span className="max-w-[26ch] truncate" />}>

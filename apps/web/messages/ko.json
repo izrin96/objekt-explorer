@@ -3,6 +3,7 @@
   "discord_format_modal_description": "오브젝트 목록은 현재 필터를 기반으로 합니다.",
   "discord_format_modal_button": "Discord 형식",
   "discord_format_modal_generate": "생성",
+  "discord_format_lists_button": "목록에서 Discord 형식",
   "progress_loading_objekts": "오브젝트 로딩 중",
   "progress_progress_bar_label": "진행률 표시줄",
   "actions_pin_success_single": "오브젝트가 고정되었습니다",

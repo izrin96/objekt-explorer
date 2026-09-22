@@ -11,9 +11,9 @@ import { format } from "date-fns";
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
+import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
 import { useResetFilters } from "@/features/filters/use-filters";
@@ -22,10 +22,10 @@ import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction } from "@/features/objekt/select-bar";
+import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -43,16 +43,6 @@ import { PinnedShelf } from "./pinned-shelf";
 import { useProfileColumns, useProfileAuthed, useProfileTarget } from "./profile-provider";
 import { ProfileToolbar } from "./profile-toolbar";
 import { useProfileObjekts } from "./use-profile-objekts";
-
-function ShimmerGrid({ columns }: { columns: number }) {
-  return (
-    <ObjektGrid columns={columns}>
-      {Array.from({ length: columns * 3 }).map((_, index) => (
-        <Shimmer key={index} className="aspect-photocard rounded-photocard w-full" />
-      ))}
-    </ObjektGrid>
-  );
-}
 
 export function CollectionView() {
   const profile = useProfileTarget()!;
@@ -231,7 +221,15 @@ export function CollectionView() {
 
   return (
     <AddToListProvider address={address}>
-      <ProfileToolbar longTail={LONG_TAIL.collection} extra={<CheckpointPopover />} />
+      <ProfileToolbar
+        longTail={LONG_TAIL.collection}
+        extra={
+          <>
+            <CheckpointPopover />
+            <GenerateDiscordButton objekts={filtered} />
+          </>
+        }
+      />
 
       {at && (
         <p className="text-muted-foreground text-[13px]">

@@ -15,6 +15,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { absoluteTime } from "@/lib/time";
 import { unobtainableSlugs } from "@/lib/unobtainables";
 import { m } from "@/paraglide/messages";
@@ -73,6 +74,7 @@ function DrawerBody({
 }) {
   const owned = isObjektOwned(objekt);
   const ownSerial = owned ? objekt.serial : null;
+  const { getArtist } = useCosmoArtist();
   const [tab, setTab] = useState("serials");
   const [serial, setSerial] = useState<number | null>(ownSerial);
 
@@ -95,8 +97,10 @@ function DrawerBody({
     return mint?.kind === "mint" ? mint.at : null;
   }, [ownSerial, own.data]);
 
+  const artistName = getArtist(objekt.artist)?.title ?? objekt.artist;
+
   const attributes: [string, string][] = [
-    [m.objekt_artist(), objekt.artist],
+    [m.objekt_artist(), artistName],
     [m.objekt_member(), objekt.member],
     [m.objekt_season(), objekt.season],
     [m.objekt_class(), objekt.class],
@@ -125,7 +129,7 @@ function DrawerBody({
         {/* artist / season / class are the first rows of the attribute list a
             few pixels below, so the line is only for a screen reader */}
         <DrawerDescription className="sr-only">
-          {objekt.artist} · {objekt.season} · {objekt.class}
+          {artistName} · {objekt.season} · {objekt.class}
         </DrawerDescription>
       </DrawerHeader>
       <DrawerPanel className="flex flex-col gap-5">

@@ -2,6 +2,7 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { absoluteTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
@@ -40,6 +41,7 @@ export function MetadataPanel({
   mintedAt: Date | null;
 }) {
   const owned = isObjektOwned(objekt);
+  const { getArtist } = useCosmoArtist();
 
   return (
     /* `minmax(0,1fr)`: a bare `1fr` is floored at the value's min-content, and
@@ -47,7 +49,9 @@ export function MetadataPanel({
     <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
       <MetaRow label={m.objekt_slug()}>{objekt.slug}</MetaRow>
       <MetaRow label={m.objekt_collection_id()}>{objekt.collectionId}</MetaRow>
-      <MetaRow label={m.objekt_artist()}>{objekt.artist}</MetaRow>
+      <MetaRow label={m.objekt_artist()}>
+        {getArtist(objekt.artist)?.title ?? objekt.artist}
+      </MetaRow>
       <MetaRow label={m.objekt_member()}>{objekt.member}</MetaRow>
       <MetaRow label={m.objekt_season()}>{objekt.season}</MetaRow>
       <MetaRow label={m.objekt_class()}>{objekt.class}</MetaRow>

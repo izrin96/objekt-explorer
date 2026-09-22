@@ -15,6 +15,7 @@ import { CosmoArtistProvider } from "@/features/artist/cosmo-artist-provider";
 import { FilterDataProvider } from "@/features/filters/filter-data-provider";
 import { currentUserOptions } from "@/features/user/queries";
 import { startOverflowGuard } from "@/lib/dev-overflow-guard";
+import { clientEnv } from "@/lib/env/client";
 import { generateMetadata } from "@/lib/meta";
 import { orpc } from "@/lib/orpc";
 import { SITE_NAME, THEME_COLORS } from "@/lib/utils";
@@ -116,6 +117,17 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         },
         ...links,
       ],
+      scripts:
+        import.meta.env.DEV || !clientEnv.VITE_UMAMI_WEBSITE_ID
+          ? []
+          : [
+              {
+                defer: true,
+                src: "/m/s",
+                "data-host-url": "/m",
+                "data-website-id": clientEnv.VITE_UMAMI_WEBSITE_ID,
+              },
+            ],
     };
   },
   shellComponent: RootDocument,

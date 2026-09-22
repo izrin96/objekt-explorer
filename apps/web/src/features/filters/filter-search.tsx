@@ -98,7 +98,10 @@ export function FilterSearchField() {
 
   return (
     <div className="relative min-w-55 flex-1 md:flex-none">
-      <MagnifyingGlassIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+      {/* z-10 like the kit's own `startAddon`: the Input's wrapper is
+          `relative bg-background`, so in light mode it paints over an icon
+          that comes before it — dark only escapes it by being translucent */}
+      <MagnifyingGlassIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 z-10 size-4 -translate-y-1/2" />
       <Input
         ref={ref}
         size="sm"

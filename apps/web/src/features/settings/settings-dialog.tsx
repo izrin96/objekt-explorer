@@ -1,3 +1,7 @@
+import { InfoIcon } from "@phosphor-icons/react";
+import { useState } from "react";
+
+import { AboutDialog } from "@/components/layout/about";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,6 +59,9 @@ export function SettingsDialog({
   const hideLabel = useSettings((s) => s.hideLabel);
   const set = useSettings((s) => s.set);
   const locale = getLocale();
+  // a signed-out visitor has no avatar menu, so this dialog is also where
+  // About is reached from
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,6 +74,9 @@ export function SettingsDialog({
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <Label htmlFor="settings-theme">{m.common_settings_theme_label()}</Label>
+              <span className="text-muted-foreground -mt-1 text-xs">
+                {m.common_settings_theme_desc()}
+              </span>
               <Select
                 value={theme}
                 onValueChange={(v: Theme | null) => v !== null && set({ theme: v })}
@@ -86,6 +96,9 @@ export function SettingsDialog({
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="settings-language">{m.common_settings_language_label()}</Label>
+              <span className="text-muted-foreground -mt-1 text-xs">
+                {m.common_settings_language_desc()}
+              </span>
               <Select
                 value={locale}
                 // sets the cookie and reloads, so the server re-renders in the
@@ -132,9 +145,14 @@ export function SettingsDialog({
           </div>
         </DialogPanel>
         <DialogFooter>
+          <Button variant="outline" className="sm:mr-auto" onClick={() => setAboutOpen(true)}>
+            <InfoIcon />
+            {m.nav_about()}
+          </Button>
           <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
         </DialogFooter>
       </DialogPopup>
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
     </Dialog>
   );
 }

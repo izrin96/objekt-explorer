@@ -10,12 +10,12 @@ import { Link } from "@tanstack/react-router";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
 import { CompareBanner } from "@/features/compare/compare-banner";
 import { isComparing } from "@/features/compare/search-schema";
 import { useCompareQuery, useCompareSearch, useSetCompare } from "@/features/compare/use-compare";
+import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
@@ -24,12 +24,11 @@ import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-fil
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, selectBarActionClass, selectBarFillClass } from "@/features/objekt/select-bar";
+import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
-import { useColumns } from "@/stores/columns";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
 
 import { AddToListProvider } from "./add-to-list-dialog";
@@ -162,7 +161,12 @@ function ListEntries() {
 
   return (
     <>
-      <FilterBar facets={facets} groups={groups} longTail={LONG_TAIL.list} />
+      <FilterBar
+        facets={facets}
+        groups={groups}
+        longTail={LONG_TAIL.list}
+        extra={<GenerateDiscordButton objekts={filtered} />}
+      />
 
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
 
@@ -266,18 +270,5 @@ function ListEntries() {
         />
       ) : null}
     </>
-  );
-}
-
-function ShimmerGrid({ columns }: { columns?: number }) {
-  const responsive = useColumns();
-  const count = columns ?? responsive;
-
-  return (
-    <ObjektGrid columns={count}>
-      {Array.from({ length: count * 3 }).map((_, index) => (
-        <Shimmer key={index} className="aspect-photocard rounded-photocard w-full" />
-      ))}
-    </ObjektGrid>
   );
 }
