@@ -1,15 +1,17 @@
-import { PulseIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, FlagBannerFoldIcon, PulseIcon } from "@phosphor-icons/react";
 import type { ActivityData, ValidType } from "@repo/api/schemas/activity";
 import { validType } from "@repo/api/schemas/activity";
 import { validOnlineTypes, type ValidOnlineType } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { ActiveChips, useActiveChips } from "@/features/filters/active-chips";
 import {
@@ -331,16 +333,34 @@ export function ActivityView() {
             onPointerLeave={onPointerLeave}
           />
 
-          <div className="flex justify-center">
-            {query.hasNextPage && (
-              <Button
-                variant="outline"
-                size="sm"
+          {/* the feed pages itself well before the last row reaches the
+              viewport; the button is what a keyboard or a blocked observer
+              still has */}
+          <div className="text-muted-foreground flex justify-center py-4">
+            {query.hasNextPage ? (
+              <InView
+                as="button"
+                type="button"
+                aria-label={m.activity_load_more()}
+                rootMargin="0px 0px 900px 0px"
+                className="cursor-pointer p-1"
                 disabled={query.isFetchingNextPage}
+                onChange={(inView) => {
+                  if (inView && !query.isFetchingNextPage) void query.fetchNextPage();
+                }}
                 onClick={() => void query.fetchNextPage()}
               >
-                {m.activity_load_more()}
-              </Button>
+                {query.isFetchingNextPage ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  <CaretDownIcon className="size-4" />
+                )}
+              </InView>
+            ) : (
+              <p className="flex items-center gap-1.5 font-mono text-xs">
+                <FlagBannerFoldIcon className="size-4" aria-hidden />
+                {m.activity_end()}
+              </p>
             )}
           </div>
         </>

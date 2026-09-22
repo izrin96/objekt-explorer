@@ -771,6 +771,7 @@
   "market_empty_hint": "Nothing is listed for sale under the current filters. Widen one, or clear them all.",
   "activity_empty_hint": "No mint, transfer or spin fits the current filters.",
   "activity_load_more": "Load more",
+  "activity_end": "End of activity",
   "profile_profile_private_hint": "Only its owner can see this profile.",
   "profile_stats_owned": "objekts owned",
   "profile_stats_unique": "unique",
