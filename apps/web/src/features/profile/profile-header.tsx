@@ -1,3 +1,4 @@
+import { EyeIcon, EyeSlashIcon } from "@phosphor-icons/react";
 import type { PublicProfile } from "@repo/api/schemas/user";
 
 import { ApolloIcon } from "@/components/shared/apollo-icon";
@@ -11,6 +12,7 @@ import { DiscordFormatButton } from "@/features/discord/discord-format-dialog";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
 import { truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
+import { useSettings } from "@/stores/settings";
 
 import { ProfileBanner } from "./profile-banner";
 import { useProfileAuthed } from "./profile-provider";
@@ -19,9 +21,12 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();
   const nickname = profile.nickname ?? truncateAddress(profile.address);
   const hasBanner = Boolean(profile.bannerImgUrl && profile.bannerImgType);
+  const bannerHidden = useSettings((s) => s.hideBanner);
+  const set = useSettings((s) => s.set);
+  const bannerToggleLabel = bannerHidden ? m.profile_banner_show() : m.profile_banner_hide();
 
   return (
-    <div className={hasBanner ? "relative" : "relative max-md:pt-5"}>
+    <div className={hasBanner && !bannerHidden ? "relative" : "relative max-md:pt-5"}>
       <ProfileBanner profile={profile} />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -75,6 +80,26 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
         {/* below `md` this wraps onto its own line under the identity rather
             than competing with it for the row */}
         <div className="flex flex-wrap gap-1.5 max-md:w-full">
+          {/* sits beside the identity block, not on the banner, so it stays
+              reachable once the banner is collapsed */}
+          {hasBanner && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="icon-sm"
+                    aria-label={bannerToggleLabel}
+                    onClick={() => set({ hideBanner: !bannerHidden })}
+                  />
+                }
+              >
+                {bannerHidden ? <EyeIcon /> : <EyeSlashIcon />}
+              </TooltipTrigger>
+              <TooltipPopup>{bannerToggleLabel}</TooltipPopup>
+            </Tooltip>
+          )}
+
           <Tooltip>
             <TooltipTrigger
               render={

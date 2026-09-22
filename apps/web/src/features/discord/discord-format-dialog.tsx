@@ -82,7 +82,7 @@ const EMPTY_OPTIONS = {
 /**
  * The owner's generator: it builds from saved have/want lists. The button that
  * formats the filtered set on screen is `GenerateDiscordButton`, and the two
- * sit side by side on a list, so the label says which is which.
+ * sit on the same profile, so the label says which is which.
  */
 export function DiscordFormatButton({ size = "sm" }: { size?: ButtonProps["size"] }) {
   const [open, setOpen] = useState(false);
@@ -287,7 +287,7 @@ export function DiscordFormatDialog({
           </div>
         </DialogPanel>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
           <Button
             variant="outline"
             onClick={() => {

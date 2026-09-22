@@ -109,7 +109,7 @@ export function UserMenu({ user }: { user: User }) {
 
           <MenuItem render={<Link to="/link" />}>
             <LinkIcon />
-            {m.nav_my_cosmo_link()}
+            {m.link_my_cosmo()}
           </MenuItem>
 
           <MenuItem onClick={() => setAccountOpen(true)}>

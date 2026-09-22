@@ -14,9 +14,13 @@ type SettingsState = {
   wide: boolean;
   /** hide collection labels on objekt cards */
   hideLabel: boolean;
+  /** collapse every profile banner to a hint strip */
+  hideBanner: boolean;
   /** ISO 4217 code every marketplace price is converted into */
   currency: string;
-  set: (patch: Partial<Pick<SettingsState, "theme" | "wide" | "hideLabel" | "currency">>) => void;
+  set: (
+    patch: Partial<Pick<SettingsState, "theme" | "wide" | "hideLabel" | "hideBanner" | "currency">>,
+  ) => void;
 };
 
 export const useSettings = create<SettingsState>()(
@@ -25,6 +29,7 @@ export const useSettings = create<SettingsState>()(
       theme: "System",
       wide: false,
       hideLabel: false,
+      hideBanner: false,
       currency: "USD",
       set: (patch) => set(patch),
     }),

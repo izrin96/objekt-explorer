@@ -45,7 +45,7 @@ export function ArtistsSubmenu() {
     <MenuSub>
       <MenuSubTrigger>
         <UsersThreeIcon />
-        {m.filter_selected_artist_aria()}
+        {m.settings_artists()}
         <span className="ml-auto flex items-center -space-x-2">
           {artists
             .filter((a) => selected.has(a.id))
@@ -79,7 +79,7 @@ export function ArtistsSection() {
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium">{m.filter_selected_artist_aria()}</span>
+      <span className="text-sm font-medium">{m.settings_artists()}</span>
       <div className="flex flex-col gap-0.5">
         {artists.map((artist) => (
           <Label

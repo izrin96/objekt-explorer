@@ -12,12 +12,15 @@ import { SITE_NAME, cn, containerClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 function useNavLinks() {
-  return [
+  const { data: user } = useCurrentUser();
+  const links = [
     { key: "home", label: m.home_title(), to: "/" },
     { key: "market", label: m.nav_market(), to: "/market" },
     { key: "activity", label: m.nav_activity(), to: "/activity" },
     { key: "list", label: m.nav_my_list(), to: "/list" },
   ] as const;
+  // `/list` is the signed-in user's own lists; signed out it only bounces to /login
+  return user ? links : links.filter((link) => link.key !== "list");
 }
 
 export type NavLink = ReturnType<typeof useNavLinks>[number];

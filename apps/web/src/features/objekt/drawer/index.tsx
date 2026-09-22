@@ -21,7 +21,7 @@ import { unobtainableSlugs } from "@/lib/unobtainables";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
-import { getCollectionShortNo, isObjektOwned } from "../objekt-utils";
+import { isObjektOwned } from "../objekt-utils";
 import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
 import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
@@ -104,7 +104,7 @@ function DrawerBody({
     [m.objekt_member(), objekt.member],
     [m.objekt_season(), objekt.season],
     [m.objekt_class(), objekt.class],
-    [m.objekt_collection_no(), getCollectionShortNo(objekt)],
+    [m.objekt_collection_no(), objekt.collectionNo],
     [m.objekt_type(), objekt.onOffline === "offline" ? m.objekt_physical() : m.objekt_digital()],
   ];
   if (owned) attributes.push([m.objekt_serial(), `#${objekt.serial}`]);
@@ -117,7 +117,7 @@ function DrawerBody({
           {/* the collection no. and serial are what name this objekt — full
               contrast, not a caption */}
           <span className="font-mono text-base font-medium">
-            {getCollectionShortNo(objekt)}
+            {objekt.collectionNo}
             {owned && ` #${objekt.serial}`}
           </span>
           {unobtainableSlugs.has(objekt.slug) && (

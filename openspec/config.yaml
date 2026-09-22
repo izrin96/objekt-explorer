@@ -19,8 +19,10 @@ context: |
   with `@orpc/tanstack-query` utils and route loaders `ensureQueryData` the first paint; no
   import from `apps/website`, `apps/lab`, `intentui` or `react-aria-components` — copy the
   file into `web`; Phosphor icons; cnippet token names only; `virtua` grids; the seven port
-  notes in `design/lab-code-review.md` are requirements. `packages/api` is the shared server
-  layer once change `extract-api-package` lands.
+  notes in `design/lab-code-review.md` are requirements. A dialog's dismiss button is
+  `m.common_modal_cancel()` only when the dialog has a primary action that commits something,
+  and `m.common_modal_close()` when it is informational or only produces output to copy.
+  `packages/api` is the shared server layer once change `extract-api-package` lands.
   Comments: as few as possible. Comment only a non-obvious why (workaround, invariant, trap)
   the code cannot express; never narrate what the next line does, never record history
   ("round N", "the lab did X"), no JSDoc on obvious props. When porting lab code, drop its

@@ -46,12 +46,14 @@ export function AccountDialog({
              the panel it scrolls out of the dialog and there is no way back to
              another section */
           <Tabs defaultValue="general" className="min-h-0 gap-0">
-            {/* four labels do not fit a phone; the strip scrolls rather than
-                widening the dialog's panel */}
+            {/* four labels do not fit a phone, so the strip scrolls sideways rather
+                than widening the dialog's panel; `overflow-y-clip` is load-bearing —
+                a bare `overflow-x-auto` computes the y axis to `auto` too, and the
+                indicator's 2px overhang then makes the strip swallow the wheel */}
             <TabsList
               variant="underline"
               data-scroll-x
-              className="mx-6 w-auto justify-start overflow-x-auto border-b"
+              className="mx-6 w-auto justify-start overflow-x-auto overflow-y-clip border-b"
             >
               <TabsTab value="general">{m.auth_account_general()}</TabsTab>
               <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>

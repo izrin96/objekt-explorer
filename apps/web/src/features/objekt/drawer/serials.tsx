@@ -1,5 +1,4 @@
 import {
-  ArrowRightIcon,
   ArrowsClockwiseIcon,
   CaretLeftIcon,
   CaretLineLeftIcon,
@@ -26,24 +25,25 @@ import { Button } from "@/components/ui/button";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
 import { Spinner } from "@/components/ui/spinner";
 import { truncateAddress } from "@/lib/address";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 export type EventKind = "mint" | "transfer" | "spin";
 
 /**
- * `--success` / `--warning` are fills for a tinted chip, not ink: they are the
- * same pale pastel in both themes, so a solid dot painted with them disappears
- * on the light one.
+ * `--success` / `--destructive` are fills for a tinted chip, not ink: they are
+ * the same pale pastel in both themes, so a solid dot painted with them
+ * disappears on the light one.
  */
 export const EVENT_COLOR: Record<EventKind, string> = {
   mint: "var(--success-foreground)",
-  transfer: "var(--accent-solid)",
-  spin: "var(--warning-foreground)",
+  transfer: "var(--muted-foreground)",
+  spin: "var(--destructive-foreground)",
 };
 
-const EVENT_BADGE: Record<EventKind, { label: () => string; icon: Icon }> = {
+/** a transfer is the ordinary event and carries no pill, so it has no badge */
+const EVENT_BADGE: Record<Exclude<EventKind, "transfer">, { label: () => string; icon: Icon }> = {
   mint: { label: m.objekt_event_minted, icon: SparkleIcon },
-  transfer: { label: m.objekt_event_transferred, icon: ArrowRightIcon },
   spin: { label: m.objekt_event_spun, icon: ArrowsClockwiseIcon },
 };
 
@@ -52,6 +52,7 @@ const CURRENT_BADGE = { label: m.objekt_event_current, icon: CheckIcon };
 export type TimelineEvent = {
   id: string;
   kind: EventKind;
+  /** a nickname, or a raw `0x…` address when Cosmo has no name for the holder */
   owner: string;
   /** render the owner in mono — it is a raw address, not a nickname */
   mono: boolean;
@@ -66,7 +67,7 @@ export function toTimeline(rows: ObjektTransfer[]): TimelineEvent[] {
     return {
       id: row.id,
       kind,
-      owner: spun ? "COSMO" : (row.nickname ?? truncateAddress(row.to)),
+      owner: spun ? "COSMO" : (row.nickname ?? row.to),
       mono: !spun && !row.nickname,
       at: new Date(row.timestamp),
     };
@@ -408,18 +409,23 @@ export function Timeline({
                 className="size-1.5 shrink-0 rounded-full"
                 style={{ background: EVENT_COLOR[event.kind] }}
               />
-              <span
-                className={
-                  event.mono
-                    ? "truncate font-mono text-xs"
-                    : current
-                      ? "truncate font-semibold"
-                      : "truncate"
-                }
-              >
-                {event.owner}
-              </span>
-              <EventPill badge={EVENT_BADGE[event.kind]} />
+              {/* the spin address is Cosmo's burn wallet, so it has no profile */}
+              {event.kind === "spin" ? (
+                <span className="truncate">{event.owner}</span>
+              ) : (
+                <Link
+                  to="/@{$nickname}"
+                  params={{ nickname: event.owner }}
+                  onClick={onClose}
+                  className={cn(
+                    "truncate underline-offset-2 hover:underline",
+                    event.mono ? "font-mono text-xs" : current && "font-semibold",
+                  )}
+                >
+                  {event.mono ? truncateAddress(event.owner) : event.owner}
+                </Link>
+              )}
+              {event.kind !== "transfer" && <EventPill badge={EVENT_BADGE[event.kind]} />}
               {current && <EventPill badge={CURRENT_BADGE} />}
               <span className="text-muted-foreground ml-auto flex-none font-mono text-xs">
                 <TimeAgo date={event.at} />

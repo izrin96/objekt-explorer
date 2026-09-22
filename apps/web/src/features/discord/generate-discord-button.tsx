@@ -219,7 +219,7 @@ function GenerateDiscordDialog({
           </div>
         </DialogPanel>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>{m.common_modal_cancel()}</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{m.common_modal_close()}</DialogClose>
           <Button
             variant="outline"
             onClick={() => {

@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CompareButton } from "@/features/compare/compare-button";
-import { DiscordFormatButton } from "@/features/discord/discord-format-dialog";
 import { m } from "@/paraglide/messages";
 
 import { DeleteListDialog } from "./delete-list-dialog";
@@ -87,7 +86,6 @@ export function ListHeader() {
           ) : null}
           <ShareListButton list={list} />
           <CompareButton sourceName={list.name} sourceId={list.slug} />
-          <DiscordFormatButton />
           <ExportButton slug={list.slug} />
           {isOwner ? (
             <>
