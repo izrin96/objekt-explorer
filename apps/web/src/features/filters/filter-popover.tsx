@@ -38,7 +38,6 @@ import { useFilters, useSetFilters } from "./use-filters";
 export type LongTailField =
   | "transferable"
   | "grouped"
-  | "hidePin"
   | "locked"
   | "missing"
   | "priced"
@@ -53,7 +52,7 @@ export const LONG_TAIL = {
   home: ["edition", "color"],
   market: ["priced", "edition", "color"],
   list: ["grouped", "edition", "color"],
-  collection: ["transferable", "grouped", "hidePin", "locked", "missing", "edition", "color"],
+  collection: ["locked", "missing", "edition", "color"],
   trades: [],
   progress: ["transferable", "edition"],
   stats: ["edition"],
@@ -65,7 +64,6 @@ export function longTailCount(filters: FilterSearch, fields: readonly LongTailFi
   return (
     set("transferable", filters.transferable === true) +
     set("grouped", filters.grouped === true) +
-    set("hidePin", filters.hidePin === true) +
     set("locked", filters.locked !== undefined) +
     set("missing", filters.missing === true || filters.unowned === true) +
     set("priced", filters.priced === true) +
@@ -299,12 +297,7 @@ export function LongTailFields({ fields }: { fields: readonly LongTailField[] })
   const setFilters = useSetFilters();
   const has = (field: LongTailField) => fields.includes(field);
   const switches =
-    has("transferable") ||
-    has("grouped") ||
-    has("hidePin") ||
-    has("locked") ||
-    has("missing") ||
-    has("priced");
+    has("transferable") || has("grouped") || has("locked") || has("missing") || has("priced");
 
   return (
     <div className="flex flex-col gap-1">
@@ -320,13 +313,6 @@ export function LongTailFields({ fields }: { fields: readonly LongTailField[] })
           label={m.filter_combine_dups()}
           checked={filters.grouped === true}
           onChange={(value) => setFilters({ grouped: value || undefined })}
-        />
-      )}
-      {has("hidePin") && (
-        <SwitchRow
-          label={m.filter_disable_pin()}
-          checked={filters.hidePin === true}
-          onChange={(value) => setFilters({ hidePin: value || undefined })}
         />
       )}
       {has("locked") && <LockCycle />}

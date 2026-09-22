@@ -79,7 +79,6 @@ export const filterSearchSchema = z.object({
   colorSensitivity: num(),
   transferable: flag(),
   grouped: flag(),
-  hidePin: flag(),
   locked: flag(),
   priced: flag(),
   unowned: flag(),

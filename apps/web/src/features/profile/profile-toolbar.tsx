@@ -4,8 +4,11 @@ import { useMemo } from "react";
 
 import { ActiveChips, useActiveChips } from "@/features/filters/active-chips";
 import {
+  type ExtraFacet,
+  ExtraFacetControls,
   FACET_KEYS,
   FacetControls,
+  NO_EXTRAS,
   useDeclaredFacets,
   useFacetParity,
   type FacetKey,
@@ -47,6 +50,8 @@ const PROFILE_SORTS: readonly ValidCustomSort[] = [
 type ProfileToolbarProps = {
   /** the tab's column of the long-tail matrix, from `LONG_TAIL` */
   longTail: readonly LongTailField[];
+  /** toolbar controls this tab adds beside the five facets */
+  extras?: readonly ExtraFacet[];
   /** trailing controls this surface alone carries — the checkpoint popover */
   extra?: ReactNode;
   showSearch?: boolean;
@@ -59,6 +64,7 @@ type ProfileToolbarProps = {
 
 export function ProfileToolbar({
   longTail,
+  extras = NO_EXTRAS,
   extra,
   showSearch = true,
   showSort = true,
@@ -89,7 +95,8 @@ export function ProfileToolbar({
   const setFacet = (key: FacetKey, value: string[]) =>
     setFilters({ [key]: value.length > 0 ? value : undefined });
 
-  useDeclaredFacets("inline", FACET_KEYS);
+  const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((item) => item.key)], [extras]);
+  useDeclaredFacets("inline", declaredKeys);
   useFacetParity();
 
   return (
@@ -107,6 +114,8 @@ export function ProfileToolbar({
           controlClassName="max-md:hidden"
         />
 
+        <ExtraFacetControls surface="inline" extras={extras} controlClassName="max-md:hidden" />
+
         <FilterPopover fields={longTail} className="max-md:hidden" />
 
         <FilterSheet
@@ -114,6 +123,7 @@ export function ProfileToolbar({
           groups={groups}
           values={values}
           onChange={setFacet}
+          extras={extras}
           extraCount={longTailCount(filters, longTail)}
           onReset={reset}
         >

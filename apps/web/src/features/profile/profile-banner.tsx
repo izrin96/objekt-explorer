@@ -80,7 +80,10 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
       >
         {media}
         <GradientBanner className={hidden ? "from-0% backdrop-blur-2xl" : "backdrop-blur-xl"} />
-        {hidden && <div className="absolute inset-0 bg-black/35" />}
+        {/* the identity block reads in `text-foreground`, so the wash pulls the
+            strip toward the page rather than always darkening it — a black
+            scrim leaves near-black text on a dark banner in the light theme */}
+        {hidden && <div className="bg-background/85 absolute inset-0 dark:bg-black/35" />}
       </div>
 
       {/* the overlap steps with the banner's height: the gradient only fades its

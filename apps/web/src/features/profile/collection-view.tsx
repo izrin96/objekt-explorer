@@ -19,9 +19,11 @@ import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { toastManager } from "@/components/ui/toast";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
+import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
+import { CombineDupsToggle, TransferableToggle } from "@/features/filters/filter-toggle";
 import { isFiltering } from "@/features/filters/search-schema";
-import { useResetFilters } from "@/features/filters/use-filters";
+import { useFilters, useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -57,6 +59,8 @@ export function CollectionView() {
   const isProfileAuthed = useProfileAuthed();
   const columns = useProfileColumns();
   const reset = useResetFilters();
+  const transferable = useFilters((f) => f.transferable);
+  const grouped = useFilters((f) => f.grouped);
   const selected = useSelection((s) => s.ids);
   const toggleSelect = useSelection((s) => s.toggle);
   const clearSelection = useSelection((s) => s.clear);
@@ -80,11 +84,19 @@ export function CollectionView() {
 
   useClearSelectionOnNavigate();
 
+  // a fresh array each render would re-run the facet parity effect forever
+  const extras = useMemo<ExtraFacet[]>(
+    () => [
+      { key: "transferable", active: transferable === true, Control: TransferableToggle },
+      { key: "grouped", active: grouped === true, Control: CombineDupsToggle },
+    ],
+    [transferable, grouped],
+  );
+
   // a past state belongs to nobody to edit, and a signed-out visitor has
   // nothing to act with
   const showActions = Boolean(user) && filters.at === undefined;
-  const dndEnabled =
-    isProfileAuthed && showActions && !isFiltering(filters) && filters.hidePin !== true;
+  const dndEnabled = isProfileAuthed && showActions && !isFiltering(filters);
 
   // applied in the same commit as dnd-kit's own drag-end cleanup, so the drop
   // frame shows the final order without waiting on React Query's notify
@@ -120,12 +132,10 @@ export function CollectionView() {
 
   const pinned = useMemo(
     () =>
-      filters.hidePin === true
-        ? []
-        : objekts
-            .filter((objekt) => isObjektOwned(objekt) && objekt.isPin === true)
-            .toSorted((a, b) => pinOrder(b) - pinOrder(a)),
-    [objekts, filters.hidePin],
+      objekts
+        .filter((objekt) => isObjektOwned(objekt) && objekt.isPin === true)
+        .toSorted((a, b) => pinOrder(b) - pinOrder(a)),
+    [objekts],
   );
 
   const pinnedIds = useMemo(() => pinned.map((objekt) => objekt.id), [pinned]);
@@ -295,6 +305,7 @@ export function CollectionView() {
     <AddToListProvider address={address}>
       <ProfileToolbar
         longTail={LONG_TAIL.collection}
+        extras={extras}
         extra={
           <>
             <CheckpointPopover />

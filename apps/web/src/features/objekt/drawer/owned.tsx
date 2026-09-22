@@ -5,8 +5,6 @@ import {
   DotsThreeIcon,
   LockSimpleIcon,
   PushPinIcon,
-  SortAscendingIcon,
-  SortDescendingIcon,
 } from "@phosphor-icons/react";
 import type { OwnedObjekt } from "@repo/lib/types/objekt";
 import { type ReactNode, useMemo, useState } from "react";
@@ -16,13 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { absoluteTime } from "@/lib/time";
-import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+import { SortableHeader, type SortState } from "./sortable-header";
 
 const PAGE_SIZE = 10;
 
 type SortKey = "serial" | "receivedAt";
-type Sort = { key: SortKey; dir: "asc" | "desc" };
+type Sort = SortState<SortKey>;
 
 /** The items only; the panel supplies the trigger and the popup. */
 export type OwnedRowMenu = (objekt: OwnedObjekt) => ReactNode;
@@ -178,44 +177,5 @@ export function OwnedPanel({
         </div>
       )}
     </div>
-  );
-}
-
-function SortableHeader({
-  sort,
-  column,
-  onToggle,
-  children,
-}: {
-  sort: Sort;
-  column: SortKey;
-  onToggle: (key: SortKey) => void;
-  children: ReactNode;
-}) {
-  const active = sort.key === column;
-
-  return (
-    <th
-      scope="col"
-      aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
-      className="px-3 py-2 text-left font-medium"
-    >
-      <button
-        type="button"
-        onClick={() => onToggle(column)}
-        className={cn(
-          "focus-visible:ring-ring inline-flex cursor-pointer items-center gap-1 rounded-sm uppercase outline-none focus-visible:ring-2",
-          active && "text-foreground",
-        )}
-      >
-        {children}
-        {active &&
-          (sort.dir === "asc" ? (
-            <SortAscendingIcon className="size-3.5" aria-hidden />
-          ) : (
-            <SortDescendingIcon className="size-3.5" aria-hidden />
-          ))}
-      </button>
-    </th>
   );
 }

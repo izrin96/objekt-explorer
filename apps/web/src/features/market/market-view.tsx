@@ -69,7 +69,7 @@ export function MarketView() {
         <ObjektCard
           objekt={objekt}
           selected={ids.has(objekt.id)}
-          onToggleSelect={(value) => toggle(value.id)}
+          onToggleSelect={user ? (value) => toggle(value.id) : undefined}
           onOpen={setActive}
           qty={objekt.listingCount}
           price={getPriceLabel(objekt, formatUsd)}
@@ -133,9 +133,11 @@ export function MarketView() {
         />
       )}
 
-      <SelectBar objekts={filtered}>
-        {user ? <AddToListAction objekts={filtered} /> : null}
-      </SelectBar>
+      {user && (
+        <SelectBar objekts={filtered}>
+          <AddToListAction objekts={filtered} />
+        </SelectBar>
+      )}
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} defaultTab="market" />
     </AddToListProvider>
   );

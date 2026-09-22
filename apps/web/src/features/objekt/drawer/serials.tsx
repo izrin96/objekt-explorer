@@ -17,7 +17,7 @@ import type { ObjektTransfer, ObjektTransferResult } from "@repo/api/schemas/obj
 import { Addresses } from "@repo/lib";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import { CopyButton } from "@/components/shared/copy-button";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -29,6 +29,8 @@ import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
+
+import { SortableHeader, type SortState } from "./sortable-header";
 
 export type EventKind = "mint" | "transfer" | "spin";
 
@@ -142,7 +144,7 @@ export function SerialsPanel({
           <NumberFieldGroup>
             <NumberFieldInput
               aria-label={m.objekt_serial_aria()}
-              className="font-mono"
+              className="text-left font-mono"
               placeholder={m.objekt_serial()}
             />
           </NumberFieldGroup>
@@ -194,6 +196,12 @@ export function SerialsPanel({
             <span>
               {m.objekt_event_spun()}{" "}
               <b className="text-foreground font-semibold">{metadata.data.spin.toLocaleString()}</b>
+            </span>
+            <span>
+              {m.objekt_non_spin()}{" "}
+              <b className="text-foreground font-semibold">
+                {(metadata.data.total - metadata.data.spin).toLocaleString()}
+              </b>
             </span>
             <span>
               {m.objekt_transferable()}{" "}
@@ -391,46 +399,113 @@ export function Timeline({
     ) : view.events.length === 0 ? (
       <EmptyState icon={ArrowsLeftRightIcon} title={m.objekt_no_transfers()} bordered={false} />
     ) : (
-      <ol className="flex flex-col divide-y text-sm">
-        {view.events.map((event, index) => {
-          const current = index === 0 && event.kind !== "spin";
-          return (
-            /* Wrapping, not shrinking: the owner is the only flexible item in
-               the row, so without this the two pills and the timestamp squeeze
-               it to nothing. */
-            <li key={event.id} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 py-2">
-              <i className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[event.kind])} />
-              {/* the spin address is Cosmo's burn wallet, so it has no profile */}
-              {event.kind === "spin" ? (
-                <span className="truncate">{event.owner}</span>
-              ) : (
-                <Link
-                  to="/@{$nickname}"
-                  params={{ nickname: event.owner }}
-                  onClick={onClose}
-                  className={cn(
-                    "truncate underline-offset-2 hover:underline",
-                    event.mono ? "font-mono text-xs" : current && "font-semibold",
-                  )}
-                >
-                  {event.mono ? truncateAddress(event.owner) : event.owner}
-                </Link>
-              )}
-              {event.kind !== "transfer" && <EventPill badge={EVENT_BADGE[event.kind]} />}
-              {current && <EventPill badge={CURRENT_BADGE} />}
-              <span className="text-muted-foreground ml-auto flex-none font-mono text-xs">
-                <TimeAgo date={event.at} />
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      <OwnershipTable events={view.events} onClose={onClose} />
     );
 
   return (
     <div className="flex flex-col gap-1.5">
       <OwnershipHead view={view} onClose={onClose} />
       {body}
+    </div>
+  );
+}
+
+type TimelineSortKey = "at";
+
+function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose: () => void }) {
+  const [sort, setSort] = useState<SortState<TimelineSortKey>>({ key: "at", dir: "desc" });
+
+  // the newest event names the holder whichever way the column is sorted, so
+  // it is resolved before the rows are reordered rather than read off row one
+  const currentId = useMemo(() => {
+    let newest: TimelineEvent | undefined;
+    for (const event of events) {
+      if (newest === undefined || event.at > newest.at) newest = event;
+    }
+    return newest !== undefined && newest.kind !== "spin" ? newest.id : null;
+  }, [events]);
+
+  const rows = useMemo(() => {
+    const sign = sort.dir === "desc" ? -1 : 1;
+    return events.toSorted((a, b) => sign * (a.at.getTime() - b.at.getTime()));
+  }, [events, sort]);
+
+  return (
+    /* the owner names run long, so the table keeps its own scroller rather
+       than squeezing them; the region takes focus so the columns past the
+       fold are reachable without a pointer */
+    <div
+      data-scroll-x
+      tabIndex={0}
+      role="region"
+      aria-label={m.objekt_serial_table_aria()}
+      className="bg-card focus-visible:ring-ring overflow-x-auto rounded-lg border outline-none focus-visible:ring-2"
+    >
+      <table className="w-full min-w-96 border-collapse text-sm">
+        <caption className="sr-only">{m.objekt_serial_table_aria()}</caption>
+        <thead>
+          <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
+            <th scope="col" className="px-3 py-2 text-left font-medium">
+              {m.objekt_owner()}
+            </th>
+            <th scope="col" className="px-3 py-2 text-left font-medium">
+              {m.activity_table_event()}
+            </th>
+            <SortableHeader
+              sort={sort}
+              column="at"
+              onToggle={() =>
+                setSort((prev) => ({ ...prev, dir: prev.dir === "asc" ? "desc" : "asc" }))
+              }
+            >
+              {m.objekt_date()}
+            </SortableHeader>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((event) => {
+            const current = event.id === currentId;
+            return (
+              <tr key={event.id} className="border-t">
+                <th scope="row" className="px-3 py-1.5 text-left font-normal">
+                  <span className="flex items-center gap-2">
+                    <i className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[event.kind])} />
+                    {/* the spin address is Cosmo's burn wallet, so it has no profile */}
+                    {event.kind === "spin" ? (
+                      <span className="truncate">{event.owner}</span>
+                    ) : (
+                      <Link
+                        to="/@{$nickname}"
+                        params={{ nickname: event.owner }}
+                        onClick={onClose}
+                        className={cn(
+                          "truncate underline-offset-2 hover:underline",
+                          event.mono ? "font-mono text-xs" : current && "font-semibold",
+                        )}
+                      >
+                        {event.mono ? truncateAddress(event.owner) : event.owner}
+                      </Link>
+                    )}
+                  </span>
+                </th>
+                <td className="px-3 py-1.5">
+                  {event.kind === "transfer" && !current ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      {event.kind !== "transfer" && <EventPill badge={EVENT_BADGE[event.kind]} />}
+                      {current && <EventPill badge={CURRENT_BADGE} />}
+                    </span>
+                  )}
+                </td>
+                <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap">
+                  <TimeAgo date={event.at} />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

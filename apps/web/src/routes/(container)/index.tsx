@@ -48,7 +48,7 @@ function HomePage() {
         <ObjektCard
           objekt={objekt}
           selected={ids.has(objekt.id)}
-          onToggleSelect={(value) => toggle(value.id)}
+          onToggleSelect={user ? (value) => toggle(value.id) : undefined}
           onOpen={setActive}
           qty={item.length > 1 ? item.length : undefined}
           priority={rowIndex < 2}
@@ -103,9 +103,11 @@ function HomePage() {
         />
       )}
 
-      <SelectBar objekts={filtered}>
-        {user ? <AddToListAction objekts={filtered} /> : null}
-      </SelectBar>
+      {user && (
+        <SelectBar objekts={filtered}>
+          <AddToListAction objekts={filtered} />
+        </SelectBar>
+      )}
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
     </AddToListProvider>
   );
