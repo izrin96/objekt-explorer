@@ -21,6 +21,7 @@ import { orpc } from "@/lib/orpc";
 import { SITE_NAME, THEME_COLORS } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
+import { LEGACY_CONFIG_KEY, LEGACY_THEME_KEY } from "@/stores/legacy-storage";
 import { SETTINGS_STORAGE_KEY, useApplySettings } from "@/stores/settings";
 
 import appCss from "@/styles/app.css?url";
@@ -32,11 +33,17 @@ export interface RouterContext {
 /**
  * Runs before the first paint, so a persisted Dark setting never flashes the
  * light page. `useApplySettings` keeps the same two attributes in sync
- * afterwards; the two rules have to agree.
+ * afterwards; the two rules have to agree. It reads the website's keys as a
+ * fallback for the same reason `seededStorage` does — the store seeds itself
+ * from them, but only once this script has already painted.
  */
 const applySettingsScript = `(function(){try{var s=JSON.parse(localStorage.getItem(${JSON.stringify(
   SETTINGS_STORAGE_KEY,
-)})||"{}").state||{};var d=document.documentElement;d.classList.toggle("dark",s.theme==="Dark"||(s.theme!=="Light"&&matchMedia("(prefers-color-scheme: dark)").matches));if(s.wide)d.dataset.wide="true";}catch(e){}})();`;
+)})||"{}").state;if(!s){var t=localStorage.getItem(${JSON.stringify(
+  LEGACY_THEME_KEY,
+)});s={theme:t==="dark"?"Dark":t==="light"?"Light":"System",wide:JSON.parse(localStorage.getItem(${JSON.stringify(
+  LEGACY_CONFIG_KEY,
+)})||"{}").state?.wide};}var d=document.documentElement;d.classList.toggle("dark",s.theme==="Dark"||(s.theme!=="Light"&&matchMedia("(prefers-color-scheme: dark)").matches));if(s.wide)d.dataset.wide="true";}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 
+import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { orpc } from "@/lib/orpc";
 
 import { type ActiveCompare, type CompareSearch, compareSearchSchema } from "./search-schema";
@@ -42,6 +43,8 @@ export function useCompareQuery(sourceId: string, compare: ActiveCompare | null)
         targetListId: compare?.cmp_type === "list" ? compare.cmp_to : undefined,
         mode: compare?.cmp_mode ?? "missing",
       },
+      // search and the edition facet read fields the endpoint does not carry
+      select: (data) => ({ objekts: data.objekts.map(mapObjektWithTag) }),
       staleTime: 0,
       enabled: compare !== null,
       retry: false,

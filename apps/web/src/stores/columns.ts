@@ -4,12 +4,20 @@ import { persist } from "zustand/middleware";
 
 import { GRID_COLUMNS, GRID_COLUMNS_MOBILE, GRID_COLUMNS_TABLET } from "@/lib/utils";
 
+import { legacyState, seededStorage } from "./legacy-storage";
+
 type ColumnState = {
   columns: number;
   /** still following the viewport, i.e. the user has not picked a count yet */
   initial: boolean;
   setColumns: (value: number) => void;
 };
+
+function seedColumns(): Partial<ColumnState> | undefined {
+  const legacy = legacyState("columns");
+  if (typeof legacy?.columns !== "number") return undefined;
+  return { columns: legacy.columns, initial: legacy.initial === true };
+}
 
 export const useColumnStore = create<ColumnState>()(
   persist(
@@ -18,7 +26,7 @@ export const useColumnStore = create<ColumnState>()(
       initial: true,
       setColumns: (value) => set({ columns: value, initial: false }),
     }),
-    { name: "web:columns" },
+    { name: "web:columns", storage: seededStorage(seedColumns) },
   ),
 );
 

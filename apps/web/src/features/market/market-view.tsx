@@ -37,12 +37,13 @@ const MARKET_SORTS: readonly ValidCustomSort[] = [
   "season",
   "collectionNo",
   "member",
+  "rare",
 ];
 
 export function MarketView() {
   const { data: user } = useCurrentUser();
   const { facets, groups } = useScopedFacets();
-  const { filtered, filters, totalListings, isPending } = useMarketObjekts();
+  const { filtered, filters, rarityMap, totalListings, isPending } = useMarketObjekts();
   const { formatUsd } = useCurrency();
   const reset = useResetFilters();
   const floorMin = useFilters((f) => f.floor_min);
@@ -124,7 +125,12 @@ export function MarketView() {
           }
         />
       ) : (
-        <ObjektVirtualGrid objekts={filtered} filters={filters} renderItem={renderObjekt} />
+        <ObjektVirtualGrid
+          objekts={filtered}
+          filters={filters}
+          rarityMap={rarityMap}
+          renderItem={renderObjekt}
+        />
       )}
 
       <SelectBar visibleIds={filtered.map((objekt) => objekt.id)}>

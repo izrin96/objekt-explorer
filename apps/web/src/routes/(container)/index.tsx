@@ -32,7 +32,7 @@ export const Route = createFileRoute("/(container)/")({
 function HomePage() {
   const { data: user } = useCurrentUser();
   const { facets, groups } = useScopedFacets();
-  const { filtered, filters, isPending } = useCollectionObjekts();
+  const { filtered, filters, rarityMap, isPending } = useCollectionObjekts();
   const reset = useResetFilters();
   const ids = useSelection((s) => s.ids);
   const toggle = useSelection((s) => s.toggle);
@@ -95,7 +95,12 @@ function HomePage() {
           }
         />
       ) : (
-        <ObjektVirtualGrid objekts={filtered} filters={filters} renderItem={renderObjekt} />
+        <ObjektVirtualGrid
+          objekts={filtered}
+          filters={filters}
+          rarityMap={rarityMap}
+          renderItem={renderObjekt}
+        />
       )}
 
       <SelectBar visibleIds={filtered.map((objekt) => objekt.id)}>

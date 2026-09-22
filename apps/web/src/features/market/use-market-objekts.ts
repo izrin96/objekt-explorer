@@ -7,6 +7,7 @@ import { filterObjekts } from "@/features/filters/filter-utils";
 import type { FilterSearch } from "@/features/filters/search-schema";
 import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { collectionOptions } from "@/features/objekt/queries";
+import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { orpc } from "@/lib/orpc";
 
 /** matches the server's summary cache */
@@ -26,6 +27,7 @@ export function useMarketObjekts() {
   const filters = useCanonicalFilters();
   const deferredFilters = useDeferredValue(filters);
 
+  const { rarityMap, isLoading: rarityLoading } = useCollectionRarity();
   const collectionQuery = useQuery(collectionOptions({ artist: selectedArtistIds }));
   const summaryQuery = useQuery(
     orpc.market.summary.queryOptions({
@@ -70,8 +72,9 @@ export function useMarketObjekts() {
   return {
     filtered,
     filters: marketFilters,
+    rarityMap,
     totalListings: filtered.reduce((total, objekt) => total + (objekt.listingCount ?? 0), 0),
     isStale: filters !== deferredFilters,
-    isPending: collectionQuery.isPending || summaryQuery.isPending,
+    isPending: collectionQuery.isPending || summaryQuery.isPending || rarityLoading,
   };
 }

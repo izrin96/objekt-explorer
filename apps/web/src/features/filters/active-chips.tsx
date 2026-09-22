@@ -1,5 +1,6 @@
 import { XIcon } from "@phosphor-icons/react";
 
+import { Button } from "@/components/ui/button";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
@@ -205,13 +206,14 @@ export function ActiveChips({
           </button>
         );
       })}
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="xs"
         onClick={onReset}
-        className="text-muted-foreground hover:text-foreground h-6.5 flex-none cursor-pointer px-1 text-[12.5px]"
+        className="h-6.5 flex-none text-[12.5px] sm:h-6.5 sm:text-[12.5px]"
       >
         {m.filter_clear_all()}
-      </button>
+      </Button>
     </div>
   );
 }

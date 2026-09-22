@@ -7,9 +7,10 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import { useCanonicalFilters, useFilters } from "@/features/filters/use-filters";
 import { collectionOptions } from "@/features/objekt/queries";
+import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 
 import { useProfileTarget } from "./profile-provider";
-import { locksOptions, ownedCollectionOptions, pinsOptions, rarityOptions } from "./queries";
+import { locksOptions, ownedCollectionOptions, pinsOptions } from "./queries";
 
 const NO_PINS: ReadonlyMap<string, number> = new Map();
 const NO_LOCKS: ReadonlySet<string> = new Set();
@@ -44,7 +45,7 @@ export function useProfileObjekts() {
   const serverFilters: OwnedBySchema = { artist: selectedArtistIds, at: filters.at };
   const { query, objekts } = useOwnedPages(profile.address, serverFilters);
   const { pins, locks } = usePinsAndLocks(profile.address);
-  const rarity = useQuery(rarityOptions(filters.sort === "rare"));
+  const { rarityMap, isLoading: rarityLoading } = useCollectionRarity();
   // the catalogue is only worth fetching once every owned page is in, or the
   // missing set would be measured against a partial collection
   const collections = useQuery({
@@ -82,12 +83,12 @@ export function useProfileObjekts() {
   return {
     ...derived,
     filters: deferredFilters,
-    rarityMap: rarity.data,
+    rarityMap,
     status: query.status,
     hasNextPage: query.hasNextPage,
     isFetchingNextPage: query.isFetchingNextPage,
     fetchNextPage,
-    isPending: query.isPending,
+    isPending: query.isPending || rarityLoading,
   };
 }
 

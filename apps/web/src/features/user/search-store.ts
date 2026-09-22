@@ -2,6 +2,8 @@ import type { CosmoPublicUser } from "@repo/cosmo/types/user";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { legacyState, seededStorage } from "@/stores/legacy-storage";
+
 const MAX_LENGTH = 7;
 
 type UserSearchState = {
@@ -9,6 +11,12 @@ type UserSearchState = {
   add: (user: CosmoPublicUser) => void;
   clearAll: () => void;
 };
+
+function seedUsers(): Partial<UserSearchState> | undefined {
+  const legacy = legacyState("user-searches");
+  if (!Array.isArray(legacy?.users)) return undefined;
+  return { users: legacy.users as CosmoPublicUser[] };
+}
 
 export const useUserSearchStore = create<UserSearchState>()(
   persist(
@@ -23,6 +31,6 @@ export const useUserSearchStore = create<UserSearchState>()(
         }),
       clearAll: () => set({ users: [] }),
     }),
-    { name: "web:recent-users" },
+    { name: "web:recent-users", storage: seededStorage(seedUsers) },
   ),
 );

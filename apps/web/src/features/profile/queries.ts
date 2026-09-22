@@ -49,10 +49,3 @@ export const locksOptions = (address: string) =>
     staleTime: 1000 * 60 * 5,
     select: (data) => new Set(data.map((lock) => lock.tokenId)),
   });
-
-export const rarityOptions = (enabled: boolean) =>
-  orpc.collections.rarity.queryOptions({
-    staleTime: 1000 * 60 * 60,
-    enabled,
-    select: (data) => new Map(data.map((row) => [row.slug, row.count])),
-  });

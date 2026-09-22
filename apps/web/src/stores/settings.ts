@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { LEGACY_CONFIG_KEY, LEGACY_THEME_KEY, legacyState, seededStorage } from "./legacy-storage";
+
 export const THEMES = ["System", "Light", "Dark"] as const;
 
 export type Theme = (typeof THEMES)[number];
@@ -23,6 +25,23 @@ type SettingsState = {
   ) => void;
 };
 
+/** the website's theme key is a bare string, written by tanstack-theme-kit */
+const LEGACY_THEME: Record<string, Theme> = { light: "Light", dark: "Dark", system: "System" };
+
+/** the website spread these over its `config` store and the theme kit's key */
+function seedSettings(): Partial<SettingsState> | undefined {
+  const config = legacyState(LEGACY_CONFIG_KEY);
+  const theme = LEGACY_THEME[window.localStorage.getItem(LEGACY_THEME_KEY) ?? ""];
+  if (config === undefined && theme === undefined) return undefined;
+
+  const seed: Partial<SettingsState> = {};
+  if (theme !== undefined) seed.theme = theme;
+  if (typeof config?.wide === "boolean") seed.wide = config.wide;
+  if (typeof config?.hideLabel === "boolean") seed.hideLabel = config.hideLabel;
+  if (typeof config?.currency === "string") seed.currency = config.currency;
+  return seed;
+}
+
 export const useSettings = create<SettingsState>()(
   persist(
     (set) => ({
@@ -33,7 +52,7 @@ export const useSettings = create<SettingsState>()(
       currency: "USD",
       set: (patch) => set(patch),
     }),
-    { name: SETTINGS_STORAGE_KEY },
+    { name: SETTINGS_STORAGE_KEY, storage: seededStorage(seedSettings) },
   ),
 );
 

@@ -56,7 +56,7 @@ const SORT_DEFAULT_DIR: Record<ValidCustomSort, ValidSortDirection> = {
   member: "asc",
   serial: "asc",
   duplicate: "desc",
-  rare: "desc",
+  rare: "asc",
   price: "asc",
   floor: "asc",
   listedAt: "desc",
@@ -64,7 +64,7 @@ const SORT_DEFAULT_DIR: Record<ValidCustomSort, ValidSortDirection> = {
 };
 
 /** a collection row has no serial, no price and no listing, so neither has its sort */
-const HOME_SORTS: readonly ValidCustomSort[] = ["date", "season", "collectionNo", "member"];
+const HOME_SORTS: readonly ValidCustomSort[] = ["date", "season", "collectionNo", "member", "rare"];
 
 /** the absence of `group_by`, spelled as a value so the select has a "None" item */
 const NO_GROUP = "none";
@@ -125,7 +125,7 @@ export function SortSelect({
         }
       >
         <SelectPrimitive.Trigger aria-label={m.filter_sort_by_label()} className={toolbarTrigger}>
-          {descending ? <SortDescendingIcon /> : <SortAscendingIcon />}
+          {descending ? <SortAscendingIcon /> : <SortDescendingIcon />}
           <SelectValue>{(value: ValidCustomSort) => SORT_LABEL[value]()}</SelectValue>
         </SelectPrimitive.Trigger>
         <SelectPopup alignItemWithTrigger={false} align="end">
@@ -147,7 +147,7 @@ export function SortSelect({
           })
         }
       >
-        {descending ? <SortDescendingIcon /> : <SortAscendingIcon />}
+        {descending ? <SortAscendingIcon /> : <SortDescendingIcon />}
       </Button>
     </div>
   );
@@ -215,7 +215,7 @@ export function GroupBySelect({
           aria-label={ascending ? m.filter_asc() : m.filter_desc()}
           onClick={() => setFilters({ group_dir: ascending ? undefined : "asc" })}
         >
-          {ascending ? <SortAscendingIcon /> : <SortDescendingIcon />}
+          {ascending ? <SortDescendingIcon /> : <SortAscendingIcon />}
         </Button>
       )}
     </div>

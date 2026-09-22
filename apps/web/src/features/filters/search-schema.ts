@@ -10,16 +10,30 @@ import {
 import * as z from "zod";
 
 /**
- * A repeated URL key (`?member=a&member=b`) reaches the schema as `string[]`, a
- * single one as `string`, and a programmatic patch as the parsed value already.
- * Every field also `.catch`es, so one unreadable parameter drops instead of
- * failing the whole navigation.
+ * Both URL spellings have to parse: the comma-joined `?member=a,b` a shared
+ * link carries, and the repeated `?member=a&member=b`. No facet value contains
+ * a comma, so splitting is lossless.
+ */
+function toList(value: unknown): unknown[] {
+  const entries = Array.isArray(value) ? value : [value];
+  const items: unknown[] = [];
+  for (const entry of entries) {
+    for (const part of typeof entry === "string" ? entry.split(",") : [entry]) {
+      const item = typeof part === "string" ? part.trim() : part;
+      if (item === "" || items.includes(item)) continue;
+      items.push(item);
+    }
+  }
+  return items;
+}
+
+/**
+ * A programmatic patch arrives as the parsed value already. Every field also
+ * `.catch`es, so one unreadable parameter drops instead of failing the whole
+ * navigation — including an array that splits down to nothing.
  */
 function list<T extends z.ZodType>(item: T) {
-  return z
-    .preprocess((value) => (Array.isArray(value) ? value : [value]), z.array(item).min(1))
-    .optional()
-    .catch(undefined);
+  return z.preprocess(toList, z.array(item).min(1)).optional().catch(undefined);
 }
 
 function flag() {

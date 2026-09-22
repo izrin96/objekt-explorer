@@ -27,6 +27,7 @@ import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, selectBarActionClass, selectBarFillClass } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
+import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -80,6 +81,7 @@ function ListEntries() {
   );
 
   const { facets, groups } = useScopedFacets();
+  const { rarityMap, isLoading: rarityLoading } = useCollectionRarity();
   const filters = useCanonicalFilters();
   const deferredFilters = useDeferredValue(filters);
   const reset = useResetFilters();
@@ -183,7 +185,7 @@ function ListEntries() {
 
       {compare !== null ? <CompareBanner compare={compare} onClear={clearCompare} /> : null}
 
-      {query.isPending ? (
+      {query.isPending || rarityLoading ? (
         <ShimmerGrid columns={columns} />
       ) : objekts.length === 0 ? (
         compare !== null ? (
@@ -231,6 +233,7 @@ function ListEntries() {
             objekts={filtered}
             filters={deferredFilters}
             columns={columns}
+            rarityMap={rarityMap}
             renderItem={renderObjekt}
           />
         </>

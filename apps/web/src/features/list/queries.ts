@@ -1,6 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import type * as z from "zod";
 
+import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import type { listBySlugInputSchema } from "@/lib/functions/list";
 import { getListBySlug } from "@/lib/functions/list";
 import { orpc } from "@/lib/orpc";
@@ -17,7 +18,12 @@ export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
   });
 
 export const listEntriesOptions = (slug: string) =>
-  orpc.list.listEntries.queryOptions({ input: { slug }, staleTime: 0 });
+  orpc.list.listEntries.queryOptions({
+    input: { slug },
+    // search and the edition facet read fields the endpoint does not carry
+    select: (data) => data.map(mapObjektWithTag),
+    staleTime: 0,
+  });
 
 export const listFindOptions = (slug: string, enabled: boolean) =>
   orpc.list.find.queryOptions({ input: { slug }, staleTime: 0, enabled });
