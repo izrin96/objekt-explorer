@@ -51,18 +51,27 @@ const useDragSensors = () =>
 /** true once the live drag has actually travelled; see `useDragSensors` */
 const PinDragStateContext = createContext(false);
 
-export function PinDnd({
-  ids,
-  onReorder,
-  renderOverlay,
-  children,
-}: {
+type PinDndProps = {
   /** the pinned token ids in display order; the reorder is committed against these */
   ids: string[];
   onReorder: (ids: string[]) => void;
   renderOverlay: (id: string) => ReactNode;
+  /** a grid nobody may reorder renders its children with no drag context at all */
+  disabled?: boolean;
   children: ReactNode;
-}) {
+};
+
+export function PinDnd({ disabled, ...props }: PinDndProps) {
+  if (disabled) return props.children;
+  return <PinDragProvider {...props} />;
+}
+
+function PinDragProvider({
+  ids,
+  onReorder,
+  renderOverlay,
+  children,
+}: Omit<PinDndProps, "disabled">) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [moved, setMoved] = useState(false);
   // dnd-kit calls the announcements mid-gesture, so they read the live value

@@ -54,8 +54,8 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
     rarityMap,
   } = config;
 
-  // a filtered or pin-hidden grid is ordered by the sort alone: the shelf is
-  // gone, so leading with pins would only scatter the sort
+  // a filtered or pin-hidden grid is ordered by the sort alone: leading with
+  // pins there would only scatter the sort the user asked for
   const pinFirst = isProfile && !filters.hidePin && !isFiltering(filters);
 
   const groupBy = filters.group_by;
