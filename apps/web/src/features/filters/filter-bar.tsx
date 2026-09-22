@@ -121,7 +121,18 @@ export function SortSelect({
       <Select
         value={current}
         onValueChange={(value: ValidCustomSort | null) =>
-          value && setFilters({ sort: value, sort_dir: SORT_DEFAULT_DIR[value] })
+          value &&
+          setFilters({
+            sort: value,
+            sort_dir: SORT_DEFAULT_DIR[value],
+            // a duplicate count only exists once copies share a card, and a
+            // serial only belongs to a card standing for one copy
+            ...(value === "duplicate"
+              ? { grouped: true }
+              : value === "serial"
+                ? { grouped: undefined }
+                : {}),
+          })
         }
       >
         <SelectPrimitive.Trigger aria-label={m.filter_sort_by_label()} className={toolbarTrigger}>

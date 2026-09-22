@@ -22,6 +22,7 @@ import { DotsSixIcon } from "@phosphor-icons/react";
 import { createContext, use, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 
+import { objektControlClass } from "@/features/objekt/objekt-card";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -184,7 +185,7 @@ export function SortablePin({
       // one before dnd-kit's document listener sees the arrow keys
       onKeyDown={(event: ReactKeyboardEvent<HTMLButtonElement>) => listeners?.onKeyDown?.(event)}
       onClick={(event) => event.stopPropagation()}
-      className="relative z-10 grid size-[15cqi] cursor-grab place-items-center rounded-full bg-[rgba(10,12,16,.72)] text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white active:cursor-grabbing [&>svg]:size-[8.5cqi]"
+      className={cn(objektControlClass, "cursor-grab active:cursor-grabbing")}
     >
       <DotsSixIcon weight="bold" />
     </button>

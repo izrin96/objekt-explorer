@@ -8,7 +8,8 @@ import { useSettings } from "@/stores/settings";
 /** The rate table changes slowly and the server caches it for an hour too. */
 const RATES_STALE_TIME = 1000 * 60 * 60;
 
-function formatAmount(amount: number, currency: string): string {
+/** An amount in the currency it was set in — a seller's own price, not the viewer's. */
+export function formatCurrency(amount: number, currency: string): string {
   try {
     return new Intl.NumberFormat(getLocale(), { style: "currency", currency }).format(amount);
   } catch {
@@ -50,8 +51,8 @@ export function useCurrency() {
       fromUsd: (usd: number) => usd / rate,
       toUsd: (amount: number) => amount * rate,
       /** an amount already in `currency` */
-      format: (amount: number) => formatAmount(amount, currency),
-      formatUsd: (usd: number) => formatAmount(usd / rate, currency),
+      format: (amount: number) => formatCurrency(amount, currency),
+      formatUsd: (usd: number) => formatCurrency(usd / rate, currency),
     }),
     [currency, rate, rates],
   );

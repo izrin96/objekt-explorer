@@ -5,7 +5,7 @@ import type {
   ObjektTransferResult,
 } from "@repo/api/schemas/objekt";
 import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
-import { queryOptions } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions } from "@tanstack/react-query";
 import { ofetch } from "ofetch";
 
 import { orpc } from "@/lib/orpc";
@@ -54,9 +54,13 @@ export const transfersOptions = (slug: string, serial: number | null) =>
   });
 
 export const marketListingsOptions = (slug: string, sortBy: SortBy, sortDir: SortDir) =>
-  orpc.market.marketListings.queryOptions({
-    input: { collectionSlug: slug, sortBy, sortDir, offset: 0, limit: 100 },
+  orpc.market.marketListings.infiniteOptions({
+    input: (offset: number) => ({ collectionSlug: slug, sortBy, sortDir, offset, limit: 20 }),
+    initialPageParam: 0,
+    getNextPageParam: (page) => page.nextOffset,
     staleTime: 1000 * 60,
+    // keeps the rows on screen while a re-sort is in flight
+    placeholderData: keepPreviousData,
   });
 
 export const marketStatsOptions = (slug: string) =>

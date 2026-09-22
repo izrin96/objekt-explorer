@@ -4,6 +4,7 @@ import {
   SelectionPlusIcon,
   TrashIcon,
 } from "@phosphor-icons/react";
+import type { ValidCustomSort } from "@repo/cosmo/types/common";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -24,6 +25,7 @@ import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-fil
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
+import { ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, selectBarActionClass, selectBarFillClass } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
@@ -104,6 +106,22 @@ function ListEntries() {
   const canPrice = isOwner && isSale;
   const currency = list.currency ?? "";
 
+  // a list card can stand for several copies, so it always sorts by duplicate
+  // count; by serial only where the cards carry one, by price only on a sale list
+  const sorts = useMemo<readonly ValidCustomSort[]>(
+    () => [
+      "date",
+      "season",
+      "collectionNo",
+      "member",
+      ...(list.isProfileBind && list.hideSerial !== true ? (["serial"] as const) : []),
+      "duplicate",
+      "rare",
+      ...(list.listTypeNew === "sale" ? (["price"] as const) : []),
+    ],
+    [list.isProfileBind, list.hideSerial, list.listTypeNew],
+  );
+
   const openPrice = useCallback((objekts: ValidObjekt[]) => {
     setPriceTarget(objekts);
     setPriceOpen(true);
@@ -129,6 +147,7 @@ function ListEntries() {
           hideSerial={list.hideSerial === true}
           price={isSale ? formatPrice(currency, objekt) : undefined}
           priceMuted={isSale && (objekt.price ?? null) === null && objekt.isQyop !== true}
+          note={isSale ? objekt.note : undefined}
           priority={rowIndex < 2}
         >
           {user ? (
@@ -168,6 +187,14 @@ function ListEntries() {
 
   const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
 
+  // a bound list hiding serials is a list of collections as far as the drawer
+  // is concerned, exactly as the website decides its default tab
+  const showOwned = list.isProfileBind && list.hideSerial !== true;
+  const ownedCopies = useMemo(
+    () => (showOwned ? ownedCopiesOf(filtered, active) : []),
+    [active, filtered, showOwned],
+  );
+
   if (compare !== null && compareQuery.isError) {
     return (
       <CompareBanner compare={compare} onClear={clearCompare} error={compareQuery.error.message} />
@@ -179,6 +206,7 @@ function ListEntries() {
       <FilterBar
         facets={facets}
         groups={groups}
+        sorts={sorts}
         longTail={LONG_TAIL.list}
         extra={<GenerateDiscordButton objekts={filtered} />}
       />
@@ -266,7 +294,12 @@ function ListEntries() {
         ) : null}
       </SelectBar>
 
-      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
+      <ObjektDrawer
+        objekt={active}
+        onClose={() => setActive(null)}
+        owned={showOwned ? ownedCopies : undefined}
+        ownedMenu={user ? (item) => <AddToListMenuItem objekts={[item]} /> : undefined}
+      />
 
       {canPrice ? (
         <SetPriceDialog

@@ -10,13 +10,14 @@ import { m } from "@/paraglide/messages";
 import { useSelection } from "@/stores/selection";
 import { useSettings } from "@/stores/settings";
 
+import { ObjektNote } from "./objekt-note";
 import { ObjektSidebar } from "./objekt-sidebar";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 
 type ObjektCardProps = {
   objekt: ValidObjekt;
   selected?: boolean;
-  /** renders the round check control in the top-right; omit to make the card unselectable */
+  /** renders the check control in the top-right block; omit to make the card unselectable */
   onToggleSelect?: (objekt: ValidObjekt) => void;
   onOpen?: (objekt: ValidObjekt) => void;
   pin?: boolean;
@@ -25,29 +26,37 @@ type ObjektCardProps = {
   /** already formatted and localised by the caller */
   price?: string;
   priceMuted?: boolean;
+  note?: string | null;
   /** overrides the hide-label setting; the drawer's big card always hides it */
   hideLabel?: boolean;
   /** the collection can no longer be minted, so no total counts it */
   unobtainable?: boolean;
+  /** the profile does not hold this collection; dimmed, never desaturated */
+  faded?: boolean;
   /** drops the serial from the band and the caption; a grouped card drops it anyway */
   hideSerial?: boolean;
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
-  /** extra hover controls, rendered after the check control in the top-right */
+  /** extra controls, rendered after the check in the top-right block */
   children?: ReactNode;
   className?: string;
 };
 
-const controlClass =
-  "grid size-[15cqi] place-items-center rounded-full bg-[rgba(10,12,16,.72)] text-white backdrop-blur-sm outline-none focus-visible:ring-2 focus-visible:ring-white [&>svg]:size-[8.5cqi]";
+/**
+ * The check, the card menu trigger and the pin drag handle are one control.
+ * The box is container-relative so it tracks the card, with a floor that keeps
+ * it at the 24px hit area a 3-column phone grid would otherwise take it under.
+ */
+export const objektControlClass =
+  "grid size-[15cqi] min-h-6 min-w-6 cursor-pointer place-items-center rounded-[3cqi] text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-inset [&>svg]:size-[9cqi] [&>svg]:min-h-3 [&>svg]:min-w-3";
 
 /** With no hover the control stays faintly visible, or the long press is undiscoverable. */
 const hoverOnlyClass =
   "opacity-0 transition-opacity pointer-coarse:opacity-55 group-focus-within:opacity-100 group-hover:opacity-100";
 
 /**
- * The card body opens the drawer and the round check toggles selection. Touch
+ * The card body opens the drawer and the check toggles selection. Touch
  * adds the iOS Photos model on top with no "select mode" button: a long press
  * selects, and while anything is selected a tap toggles instead of opening.
  */
@@ -61,8 +70,10 @@ export function ObjektCard({
   qty,
   price,
   priceMuted,
+  note,
   hideLabel,
   unobtainable = false,
+  faded = false,
   hideSerial = false,
   image = "thumbnail",
   priority = false,
@@ -96,7 +107,13 @@ export function ObjektCard({
   // `isolate`: the overlay controls use `z-10`, and without a stacking context
   // of their own they paint over the sticky nav as the card scrolls under it
   return (
-    <div className={cn("group isolate flex min-w-0 flex-col gap-1.5 @container", className)}>
+    <div
+      className={cn(
+        "group isolate flex min-w-0 flex-col gap-1.5 @container",
+        faded && "opacity-35",
+        className,
+      )}
+    >
       <div
         role={interactive ? "button" : undefined}
         tabIndex={interactive ? 0 : undefined}
@@ -143,7 +160,15 @@ export function ObjektCard({
         )}
 
         {(onToggleSelect || children) && (
-          <div className="absolute top-[4cqw] right-[4cqw] flex gap-[3cqw]">
+          /* one block hugging the corner, mirroring the pin/lock tag: the card
+             is `overflow-hidden` with a radius, so a pill inset from the corner
+             both wastes the corner and leaves too small a target to hit */
+          <div
+            className={cn(
+              "rounded-bl-photocard absolute top-0 right-0 z-10 flex items-center overflow-hidden bg-[rgba(10,12,16,.72)] backdrop-blur-sm",
+              showCheck ? "opacity-100 transition-opacity" : hoverOnlyClass,
+            )}
+          >
             {onToggleSelect && (
               <button
                 type="button"
@@ -154,17 +179,15 @@ export function ObjektCard({
                   onToggleSelect(objekt);
                 }}
                 onKeyDown={(event) => event.stopPropagation()}
-                className={cn(
-                  controlClass,
-                  showCheck ? "opacity-100 transition-opacity" : hoverOnlyClass,
-                  "relative z-10 cursor-pointer focus-visible:opacity-100",
-                  selected && "bg-accent-solid",
-                )}
+                className={cn(objektControlClass, selected && "bg-accent-solid")}
               >
                 <CheckIcon weight="bold" />
               </button>
             )}
-            {children && <div className={cn("flex gap-[3cqw]", hoverOnlyClass)}>{children}</div>}
+            {/* the block is already hover-gated unless the check pins it open */}
+            {children && (
+              <div className={cn("flex items-center", showCheck && hoverOnlyClass)}>{children}</div>
+            )}
           </div>
         )}
 
@@ -202,13 +225,16 @@ export function ObjektCard({
       )}
 
       {price !== undefined && (
-        <div
-          className={cn(
-            "font-mono text-[11.5px] font-semibold tabular-nums",
-            priceMuted ? "text-muted-foreground" : "text-foreground",
-          )}
-        >
-          {price}
+        <div className="flex min-w-0 items-center gap-1">
+          <span
+            className={cn(
+              "truncate font-mono text-[11.5px] font-semibold tabular-nums",
+              priceMuted ? "text-muted-foreground" : "text-foreground",
+            )}
+          >
+            {price}
+          </span>
+          {note ? <ObjektNote note={note} /> : null}
         </div>
       )}
     </div>

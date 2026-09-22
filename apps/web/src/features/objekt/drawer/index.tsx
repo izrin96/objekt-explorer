@@ -1,5 +1,6 @@
 import { LockSimpleIcon, LockSimpleOpenIcon } from "@phosphor-icons/react";
-import type { ValidObjekt } from "@repo/lib/types/objekt";
+import type { SortBy } from "@repo/api/schemas/market";
+import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 
@@ -25,9 +26,10 @@ import { getCollectionShortNo, isObjektOwned } from "../objekt-utils";
 import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
 import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
+import { OwnedPanel, type OwnedRowMenu } from "./owned";
 import { SerialsPanel, Timeline, toTimeline } from "./serials";
 
-type DrawerTab = "serials" | "market" | "metadata";
+type DrawerTab = "owned" | "serials" | "market" | "metadata";
 
 type Props = {
   objekt: ValidObjekt | null;
@@ -36,6 +38,13 @@ type Props = {
   locked?: boolean;
   onToggleLock?: () => void;
   defaultTab?: Extract<DrawerTab, "serials" | "market">;
+  /**
+   * Every copy of the open collection the surface's profile holds. Passing it
+   * at all marks the surface an owned view, so an unowned collection still gets
+   * the tab — empty — rather than the tab appearing and vanishing per card.
+   */
+  owned?: OwnedObjekt[];
+  ownedMenu?: OwnedRowMenu;
 };
 
 export function ObjektDrawer({
@@ -44,10 +53,13 @@ export function ObjektDrawer({
   locked,
   onToggleLock,
   defaultTab = "serials",
+  owned,
+  ownedMenu,
 }: Props) {
+  const showOwned = owned !== undefined;
   // the body unmounts on close, so the chosen tab is held here instead: one
   // mount per page, so reopening keeps it and navigating away resets it
-  const [tab, setTab] = useState<DrawerTab>(defaultTab);
+  const [tab, setTab] = useState<DrawerTab>(showOwned ? "owned" : defaultTab);
 
   return (
     <Drawer
@@ -69,6 +81,9 @@ export function ObjektDrawer({
             onToggleLock={onToggleLock}
             tab={tab}
             onTabChange={setTab}
+            owned={owned}
+            ownedMenu={ownedMenu}
+            marketSort={defaultTab === "market" ? "price" : "createdAt"}
           />
         )}
       </DrawerPopup>
@@ -83,6 +98,9 @@ function DrawerBody({
   onToggleLock,
   tab,
   onTabChange,
+  owned: ownedCopies,
+  ownedMenu,
+  marketSort,
 }: {
   objekt: ValidObjekt;
   onClose: () => void;
@@ -90,6 +108,9 @@ function DrawerBody({
   onToggleLock?: () => void;
   tab: DrawerTab;
   onTabChange: (tab: DrawerTab) => void;
+  owned?: OwnedObjekt[];
+  ownedMenu?: OwnedRowMenu;
+  marketSort: SortBy;
 }) {
   const owned = isObjektOwned(objekt);
   const ownSerial = owned ? objekt.serial : null;
@@ -209,10 +230,28 @@ function DrawerBody({
             aria-label={m.objekt_tab_aria()}
             className="bg-popover sticky top-0 z-10 w-full justify-start border-b"
           >
+            {ownedCopies && (
+              <TabsTab value="owned">
+                {m.objekt_owned()}
+                {ownedCopies.length > 1 ? ` (${ownedCopies.length.toLocaleString()})` : ""}
+              </TabsTab>
+            )}
             <TabsTab value="serials">{m.objekt_trades()}</TabsTab>
             <TabsTab value="market">{m.objekt_market()}</TabsTab>
             <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
           </TabsList>
+          {ownedCopies && (
+            <TabsPanel value="owned">
+              <OwnedPanel
+                objekts={ownedCopies}
+                menu={ownedMenu}
+                onOpenSerial={(value) => {
+                  setSerial(value);
+                  onTabChange("serials");
+                }}
+              />
+            </TabsPanel>
+          )}
           <TabsPanel value="serials">
             <SerialsPanel
               serial={selected}
@@ -227,6 +266,7 @@ function DrawerBody({
           <TabsPanel value="market">
             <MarketPanel
               slug={objekt.slug}
+              defaultSortBy={marketSort}
               onOpenSerial={(value) => {
                 setSerial(value);
                 onTabChange("serials");

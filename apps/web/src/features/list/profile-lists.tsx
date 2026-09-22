@@ -9,14 +9,9 @@ import { getListLinkOption } from "./list-link";
 import { ListTypeBadge } from "./list-type-badge";
 import { profileListsOptions } from "./queries";
 
-/**
- * A profile's Lists tab shows the lists filed under that Cosmo **and** marked
- * for display on it. `list.profileLists` only applies the first half, so the
- * display flag is applied here.
- */
+/** Every list filed under that Cosmo, bound to it or only displayed on it. */
 export function ProfileLists({ address }: { address: string }) {
-  const { data } = useSuspenseQuery(profileListsOptions(address));
-  const lists = data.filter((list) => list.isProfileBind);
+  const { data: lists } = useSuspenseQuery(profileListsOptions(address));
 
   if (lists.length === 0) {
     return <EmptyState icon={RectangleDashedIcon} title={m.list_no_lists_found()} />;

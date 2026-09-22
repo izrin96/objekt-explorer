@@ -88,6 +88,12 @@ export function isObjektOwned(objekt: ValidObjekt): objekt is OwnedObjekt {
   return "serial" in objekt;
 }
 
+/** The copies of `objekt`'s collection held in `objekts` — what the drawer's Owned tab lists. */
+export function ownedCopiesOf(objekts: ValidObjekt[], objekt: ValidObjekt | null): OwnedObjekt[] {
+  if (objekt === null) return [];
+  return objekts.filter(isObjektOwned).filter((copy) => copy.slug === objekt.slug);
+}
+
 // Member shortform aliases
 const shortformMembers: Record<string, string> = {
   // triples

@@ -14,7 +14,7 @@ import { useResetFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektGrid } from "@/features/objekt/objekt-grid";
-import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
+import { getCollectionShortNo, isObjektOwned } from "@/features/objekt/objekt-utils";
 import { activateOnKey } from "@/lib/a11y";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -269,6 +269,11 @@ export function ProgressView() {
   const ownedSlugs = useMemo(() => new Set(owned.map((objekt) => objekt.slug)), [owned]);
   const ownedBySlug = useMemo(() => Map.groupBy(owned, (objekt) => objekt.slug), [owned]);
 
+  const activeOwned = useMemo(
+    () => (active === null ? [] : (ownedBySlug.get(active.slug) ?? []).filter(isObjektOwned)),
+    [active, ownedBySlug],
+  );
+
   const members = useChartMembers();
   const rows = useMemo(
     () => memberProgress(catalogue, ownedSlugs, members),
@@ -456,7 +461,7 @@ export function ProgressView() {
         </div>
       )}
 
-      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
+      <ObjektDrawer objekt={active} onClose={() => setActive(null)} owned={activeOwned} />
     </>
   );
 }

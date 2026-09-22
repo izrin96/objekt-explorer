@@ -1,18 +1,21 @@
-import { CaretDownIcon, NoteIcon, StorefrontIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, StorefrontIcon } from "@phosphor-icons/react";
 import type { MarketListing, SortBy, SortDir } from "@repo/api/schemas/market";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
+import { InView } from "react-intersection-observer";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
 import { TimeAgo } from "@/components/shared/time-ago";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
-import { useCurrency } from "@/features/settings/use-currency";
+import { Spinner } from "@/components/ui/spinner";
+import { getListLinkOption } from "@/features/list/list-link";
+import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
+import { ObjektNote } from "../objekt-note";
 import { marketListingsOptions, marketStatsOptions } from "../queries";
 
 function SortButton({
@@ -27,7 +30,12 @@ function SortButton({
   children: ReactNode;
 }) {
   return (
-    <Button variant={active ? "default" : "outline"} size="xs" onClick={onClick}>
+    <Button
+      variant={active ? "default" : "outline"}
+      size="xs"
+      aria-pressed={active}
+      onClick={onClick}
+    >
       {children}
       {active && <CaretDownIcon className={descending ? undefined : "rotate-180"} />}
     </Button>
@@ -36,17 +44,20 @@ function SortButton({
 
 export function MarketPanel({
   slug,
+  defaultSortBy = "createdAt",
   onOpenSerial,
 }: {
   slug: string;
+  /** the market sends the viewer here to compare prices; everywhere else, to see the latest */
+  defaultSortBy?: SortBy;
   onOpenSerial: (serial: number) => void;
 }) {
-  const [sortBy, setSortBy] = useState<SortBy>("price");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const { formatUsd } = useCurrency();
+  const [sortBy, setSortBy] = useState<SortBy>(defaultSortBy);
+  const [sortDir, setSortDir] = useState<SortDir>(defaultSortBy === "price" ? "asc" : "desc");
+  const { currency, formatUsd } = useCurrency();
 
   const stats = useQuery(marketStatsOptions(slug));
-  const listings = useQuery(marketListingsOptions(slug, sortBy, sortDir));
+  const listings = useInfiniteQuery(marketListingsOptions(slug, sortBy, sortDir));
 
   const toggleSort = (field: SortBy) => {
     if (sortBy === field) {
@@ -67,7 +78,7 @@ export function MarketPanel({
     [m.objekt_market_sellers(), stats.data ? stats.data.sellers.toLocaleString() : null],
   ];
 
-  const items = listings.data?.items ?? [];
+  const items = listings.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -114,10 +125,27 @@ export function MarketPanel({
             <MarketRow
               key={item.id}
               item={item}
+              currency={currency}
               formatUsd={formatUsd}
               onOpenSerial={onOpenSerial}
             />
           ))}
+
+          {listings.hasNextPage && (
+            <InView
+              as="div"
+              className="flex justify-center py-3"
+              onChange={(inView) => {
+                if (inView && !listings.isFetchingNextPage) void listings.fetchNextPage();
+              }}
+            >
+              {listings.isFetchingNextPage ? (
+                <Spinner className="size-4" />
+              ) : (
+                <CaretDownIcon className="text-muted-foreground size-4" aria-hidden />
+              )}
+            </InView>
+          )}
         </div>
       )}
     </div>
@@ -126,15 +154,19 @@ export function MarketPanel({
 
 function MarketRow({
   item,
+  currency,
   formatUsd,
   onOpenSerial,
 }: {
   item: MarketListing;
+  /** the viewer's code; the conversion is only worth showing when the seller's differs */
+  currency: string;
   formatUsd: (usd: number) => string;
   onOpenSerial: (serial: number) => void;
 }) {
   const nickname = item.list.profile?.nickname ?? null;
   const address = item.list.profile?.address ?? null;
+  const { price, currency: listed, usdPrice } = item;
 
   return (
     <div className="bg-card grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2 text-sm">
@@ -175,31 +207,30 @@ function MarketRow({
           {m.list_manage_objekt_set_price_label()}
         </span>
         <div className="flex items-center gap-1">
+          {/* a listing is set in the seller's currency, not the viewer's */}
           <span className="font-mono font-medium tabular-nums">
             {item.isQyop
               ? m.objekt_qyop()
-              : item.usdPrice !== null
-                ? formatUsd(item.usdPrice)
+              : price !== null && listed !== null
+                ? formatCurrency(price, listed)
                 : "—"}
           </span>
-          {item.note && (
-            <Popover>
-              <PopoverTrigger
-                render={<Button variant="ghost" size="icon-xs" aria-label={m.objekt_note_aria()} />}
-              >
-                <NoteIcon />
-              </PopoverTrigger>
-              <PopoverPopup padding="sm" className="max-w-64 text-sm">
-                <span className="text-muted-foreground">{m.objekt_note()}: </span>
-                {item.note}
-              </PopoverPopup>
-            </Popover>
-          )}
+          {item.note && <ObjektNote note={item.note} />}
         </div>
+        {!item.isQyop && listed !== null && listed !== currency && usdPrice !== null && (
+          <span className="text-muted-foreground font-mono text-[11px] tabular-nums">
+            ≈{formatUsd(usdPrice)}
+          </span>
+        )}
       </div>
 
-      <div className="text-muted-foreground col-span-full -mt-1 truncate font-mono text-[11px]">
-        <TimeAgo date={new Date(item.createdAt)} />
+      <div className="col-span-full -mt-1 flex items-center justify-between gap-2">
+        <span className="text-muted-foreground truncate font-mono text-[11px]">
+          <TimeAgo date={new Date(item.createdAt)} />
+        </span>
+        <Button variant="outline" size="xs" render={<Link {...getListLinkOption(item.list)} />}>
+          {m.objekt_market_view_list()}
+        </Button>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
-import { MenuItem } from "@/components/ui/menu";
+import { MenuItem, MenuSeparator } from "@/components/ui/menu";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
@@ -20,9 +20,10 @@ import { useResetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
 import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
+import type { OwnedRowMenu } from "@/features/objekt/drawer/owned";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
-import { isObjektOwned } from "@/features/objekt/objekt-utils";
+import { isObjektOwned, ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar, type SelectBarAction } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
@@ -129,6 +130,7 @@ export function CollectionView() {
           onOpen={setActive}
           pin={owned?.isPin === true}
           lock={owned?.isLocked === true}
+          faded={owned === null}
           qty={qty}
           priority={priority}
         >
@@ -183,6 +185,42 @@ export function CollectionView() {
       return renderCard(objekt, undefined, item.length > 1 ? item.length : undefined, rowIndex < 2);
     },
     [renderCard],
+  );
+
+  const ownedCopies = useMemo(() => ownedCopiesOf(filtered, active), [active, filtered]);
+
+  const ownedMenu = useCallback<OwnedRowMenu>(
+    (item) => (
+      <>
+        {isProfileAuthed && (
+          <>
+            <MenuItem
+              onClick={() =>
+                item.isPin
+                  ? batchUnpin.mutate({ address, tokenIds: [Number(item.id)] })
+                  : batchPin.mutate({ address, tokenIds: [Number(item.id)] })
+              }
+            >
+              {item.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
+              {item.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
+            </MenuItem>
+            <MenuItem
+              onClick={() =>
+                item.isLocked
+                  ? batchUnlock.mutate({ address, tokenIds: [Number(item.id)] })
+                  : batchLock.mutate({ address, tokenIds: [Number(item.id)] })
+              }
+            >
+              {item.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
+              {item.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
+            </MenuItem>
+            <MenuSeparator />
+          </>
+        )}
+        <AddToListMenuItem objekts={[item]} />
+      </>
+    ),
+    [address, batchLock, batchPin, batchUnlock, batchUnpin, isProfileAuthed],
   );
 
   const at = checkpointDate(filters.at);
@@ -295,6 +333,8 @@ export function CollectionView() {
       <ObjektDrawer
         objekt={active}
         onClose={() => setActive(null)}
+        owned={ownedCopies}
+        ownedMenu={showActions ? ownedMenu : undefined}
         locked={active !== null && isObjektOwned(active) && active.isLocked === true}
         onToggleLock={
           showActions && isProfileAuthed && active !== null && isObjektOwned(active)

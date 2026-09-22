@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { validColumns } from "@/lib/utils";
+import { SITE_NAME, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { LIST_TYPE_LABEL } from "./list-type-badge";
@@ -41,10 +41,6 @@ export type ListDraft = {
   isProfileBind: boolean;
   discoverable: boolean;
   gridColumns: number | null;
-  /**
-   * `list.create` and `list.edit` both take these, but the form collects
-   * neither: they ride along so an edit does not silently reset them.
-   */
   hideSerial: boolean;
   hideUser: boolean;
 };
@@ -319,6 +315,26 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode }: L
           onCheckedChange={(checked) => set({ discoverable: checked })}
         />
       ) : null}
+
+      {/* a serial only exists on an entry the bound profile owns */}
+      {isSale || value.listTypeNew === "have" ? (
+        <SwitchRow
+          id={id("hide-serial")}
+          label={m.list_create_hide_serial_label()}
+          description={m.list_create_hide_serial_desc()}
+          checked={value.hideSerial}
+          disabled={!value.isProfileBind}
+          onCheckedChange={(checked) => set({ hideSerial: checked })}
+        />
+      ) : null}
+
+      <SwitchRow
+        id={id("hide-user")}
+        label={m.list_create_hide_user_label()}
+        description={m.list_create_hide_user_desc({ siteName: SITE_NAME })}
+        checked={value.hideUser}
+        onCheckedChange={(checked) => set({ hideUser: checked })}
+      />
 
       {isEdit ? (
         <div className="flex min-w-0 flex-col gap-1.5">
