@@ -12,7 +12,7 @@ import { profileQuery } from "@/features/profile/queries";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
-import { ListNotFound } from "../list/$slug";
+import { ListNotFound } from "@/features/list/list-not-found";
 
 export const Route = createFileRoute("/(container)/@{$nickname}_/list/$slug")({
   validateSearch: filterSearchSchema.extend(compareSearchSchema.shape),

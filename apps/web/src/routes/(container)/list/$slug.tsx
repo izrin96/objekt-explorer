@@ -1,12 +1,10 @@
-import { ArrowLeftIcon, FileDashedIcon } from "@phosphor-icons/react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Link, createFileRoute, notFound, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 
-import { EmptyState } from "@/components/shared/empty-state";
-import { Button } from "@/components/ui/button";
 import { compareSearchSchema } from "@/features/compare/search-schema";
 import { filterSearchSchema } from "@/features/filters/search-schema";
 import { ListHeader } from "@/features/list/list-header";
+import { ListNotFound } from "@/features/list/list-not-found";
 import { ListProvider } from "@/features/list/list-provider";
 import { ListView } from "@/features/list/list-view";
 import { listBySlugQuery } from "@/features/list/queries";
@@ -49,20 +47,5 @@ function ListDetailPage() {
       {/* remounted per list, so the drawer and the selection never leak across slugs */}
       <ListView key={list.slug} />
     </ListProvider>
-  );
-}
-
-export function ListNotFound() {
-  return (
-    <EmptyState
-      icon={FileDashedIcon}
-      title={m.not_found_list()}
-      action={
-        <Button variant="outline" size="sm" render={<Link to="/list" />}>
-          <ArrowLeftIcon />
-          {m.list_back_to_lists()}
-        </Button>
-      }
-    />
   );
 }

@@ -32,6 +32,7 @@ export function useSetActivityType(): (type: ValidType) => void {
     (type: ValidType) => {
       void navigate({
         replace: true,
+        resetScroll: false,
         search: ((prev: ActivitySearch) => ({
           ...prev,
           type: type === "all" ? undefined : type,
@@ -46,6 +47,6 @@ export function useSetActivityType(): (type: ValidType) => void {
 export function useResetActivity(): () => void {
   const navigate = useNavigate();
   return useCallback(() => {
-    void navigate({ replace: true, search: (() => resetPatch) as never });
+    void navigate({ replace: true, resetScroll: false, search: (() => resetPatch) as never });
   }, [navigate]);
 }

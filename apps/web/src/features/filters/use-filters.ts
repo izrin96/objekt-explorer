@@ -57,6 +57,8 @@ export function useSetFilters(): (patch: FilterPatch) => void {
       void navigate({
         // `replace`: a filter is a view of one page, not a place to go back to
         replace: true,
+        // the grid the user is looking at should not jump to the top on every filter
+        resetScroll: false,
         // every filtering route declares `filterSearchSchema`, but `navigate`
         // with no `to` types the search against all routes at once and lands on
         // `never`; the schema re-validates whatever is written here

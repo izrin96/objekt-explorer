@@ -30,6 +30,7 @@ export function useSetShowCount(): (showCount: boolean) => void {
     (showCount: boolean) => {
       void navigate({
         replace: true,
+        resetScroll: false,
         search: ((prev: ProgressSearch) => ({
           ...prev,
           showCount: showCount || undefined,

@@ -24,6 +24,7 @@ export function useSetCompare(): (next: ActiveCompare | null) => void {
     (next: ActiveCompare | null) => {
       void navigate({
         replace: next === null,
+        resetScroll: false,
         // the detail routes declare the schema; `navigate` with no `to` types
         // the search against every route at once and lands on `never`
         search: ((prev: CompareSearch) => ({ ...prev, ...CLEARED, ...next })) as never,
