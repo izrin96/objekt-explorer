@@ -145,7 +145,7 @@
   "stats_member_progress_description": "멤버별 진행률",
   "stats_member_progress_percentage_label": "퍼센트",
   "home_title": "오브젝트",
-  "home_description": "모든 Cosmo 오브젝트를 둘러보고 멤버, 시즌, 클래스로 필터링하며 각 시리얼의 소유자를 확인하세요.",
+  "home_description": "모든 Cosmo 오브젝트를 둘러보고 소유자를 확인하세요.",
   "nav_activity": "활동",
   "nav_market": "마켓",
   "market_title": "마켓",

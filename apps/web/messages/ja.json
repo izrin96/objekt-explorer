@@ -145,7 +145,7 @@
   "stats_member_progress_description": "メンバー別の進行状況",
   "stats_member_progress_percentage_label": "割合",
   "home_title": "Objekt",
-  "home_description": "CosmoのすべてのObjektを閲覧し、メンバー・Season・Classで絞り込み、各シリアルの所有者を確認できます。",
+  "home_description": "CosmoのすべてのObjektと、その所有者を確認できます。",
   "nav_activity": "アクティビティ",
   "nav_market": "マーケットプレイス",
   "market_title": "マーケットプレイス",
