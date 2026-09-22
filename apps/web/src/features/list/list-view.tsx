@@ -267,7 +267,7 @@ function ListEntries() {
         </>
       )}
 
-      <SelectBar visibleIds={filtered.map((objekt) => objekt.id)}>
+      <SelectBar objekts={filtered}>
         {user ? <AddToListAction objekts={filtered} /> : null}
         {/* the list's own writes stay on while comparing: the bar acts on the
             entries behind the result, which are still this list's */}

@@ -66,6 +66,12 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
 
+  /* Transfer-event categories. Not feedback: an objekt being spun is not an
+     error, so these are their own hues rather than borrowed status tokens. */
+  --color-event-mint: var(--event-mint);
+  --color-event-spin: var(--event-spin);
+  --color-event-transfer: var(--event-transfer);
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -147,21 +153,41 @@
   --muted: oklch(0.967 0.001 286.375);
   --muted-foreground: oklch(0.512 0.016 285.938);
   /*
-   * Feedback pairs, light theme. The dark theme's `--success` / `--warning`
-   * are near-white pastels that only ever appear behind an 8-16% tint; reused
-   * verbatim on a white page they make the chip invisible and the ink too
-   * light, which is why the "Verified" badge and the status dot read as blank.
-   * Light gets its own, darker halves: the fill drops enough lightness for the
-   * tint to register, and each `*-foreground` clears 4.5:1 on that tint.
+   * Feedback pairs, light theme. Dark's halves are near-white pastels that
+   * only ever appear behind an 8-16% tint; on a white page they leave the chip
+   * blank, so light gets its own, much darker ones. The registry's 8% fill and
+   * 30% border are the whole budget, and their ceiling on this page is 1.20:1
+   * and 2.12:1 whatever colour goes in, so the chip is carried by its ink.
+   *
+   * Both halves sit as high as their job allows, because the sRGB gamut widens
+   * with lightness and chroma is what reads as colour here: the ink at L .52,
+   * the last step that still clears 4.5:1 on the 8% tint, and the fill one
+   * step above it. One hue per role (warning aside, below), and every chroma
+   * is the sRGB maximum for its own L and hue — above it the browser clamps
+   * and the declared lightness stops being the rendered one.
    */
-  --success: oklch(0.72 0.175 131);
-  --success-foreground: oklch(0.45 0.125 131);
-  --info: oklch(0.63 0.17 237.323);
-  --info-foreground: oklch(0.45 0.13 242.749);
-  --warning: oklch(0.8 0.17 85);
-  --warning-foreground: oklch(0.47 0.12 66.442);
-  --destructive: oklch(0.55 0.235 17.585);
-  --destructive-foreground: oklch(0.47 0.205 16.935);
+  --success: oklch(0.58 0.158 131);
+  --success-foreground: oklch(0.52 0.142 131);
+  --info: oklch(0.58 0.127 237.323);
+  --info-foreground: oklch(0.52 0.114 237.323);
+  --warning: oklch(0.58 0.118 85);
+  --warning-foreground: oklch(0.52 0.106 85);
+  --destructive: oklch(0.58 0.232 17.585);
+  --destructive-foreground: oklch(0.52 0.208 17.585);
+  /*
+   * The three transfer events, as solid dots rather than tints. One L per
+   * theme so no event outweighs another. A dot is a solid mark with nothing
+   * to soften it, so light takes each hue to its own sRGB ceiling rather than
+   * a shared fraction of it — equal lightness already holds the weight even,
+   * and orange's ceiling here is little over half of indigo's.
+   *
+   * Transfer is orange rather than yellow so it cannot be read as `--warning`,
+   * which owns the yellow end at hue 85: 30 degrees is the gap where the two
+   * stop trading places at a glance.
+   */
+  --event-mint: oklch(0.58 0.158 131);
+  --event-spin: oklch(0.58 0.232 277.117);
+  --event-transfer: oklch(0.58 0.143 55);
   --border: oklch(0.911 0.006 286.286);
   --input: oklch(0.871 0.006 286.286);
   --ring: oklch(0.141 0.005 285.823);
@@ -217,14 +243,24 @@
   --accent-foreground: oklch(0.673 0.182 276.935);
   --muted: oklch(0.21 0.006 285.885);
   --muted-foreground: oklch(0.705 0.015 286.067);
-  --success: oklch(0.897 0.196 126.665);
-  --success-foreground: oklch(0.897 0.196 126.665);
-  --info: oklch(0.685 0.169 237.323);
-  --info-foreground: oklch(0.828 0.111 230.318);
-  --warning: oklch(0.905 0.182 98.111);
-  --warning-foreground: oklch(0.905 0.182 98.111);
-  --destructive: oklch(0.586 0.253 17.585);
-  --destructive-foreground: oklch(0.712 0.194 13.428);
+  /*
+   * Same roles, same hues, chroma clamped to the sRGB maximum for each L —
+   * warning excepted: yellow holds no chroma at hue 85 this close to white
+   * (.102 against .177 at 98), so dark keeps the hue its lightness can carry.
+   */
+  --success: oklch(0.897 0.196 131);
+  --success-foreground: oklch(0.897 0.196 131);
+  --info: oklch(0.74 0.15 237.323);
+  --info-foreground: oklch(0.828 0.098 237.323);
+  --warning: oklch(0.905 0.177 98.111);
+  --warning-foreground: oklch(0.905 0.177 98.111);
+  --destructive: oklch(0.586 0.234 17.585);
+  --destructive-foreground: oklch(0.712 0.18 17.585);
+  /* same hues and the same 80% of max, lifted to the one L a near-black page
+     needs; indigo is the hue that decides it, since its gamut thins fastest */
+  --event-mint: oklch(0.72 0.157 131);
+  --event-spin: oklch(0.72 0.118 277.117);
+  --event-transfer: oklch(0.72 0.142 55);
   --border: oklch(0.27 0.013 285.805);
   --input: oklch(0.31 0.013 285.805);
   --ring: oklch(0.985 0 0);

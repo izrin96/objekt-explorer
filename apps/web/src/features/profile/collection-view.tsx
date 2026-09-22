@@ -1,4 +1,7 @@
+import { arrayMove } from "@dnd-kit/sortable";
 import {
+  CaretDownIcon,
+  CaretUpIcon,
   ImagesSquareIcon,
   LockSimpleIcon,
   LockSimpleOpenIcon,
@@ -8,11 +11,13 @@ import {
 } from "@phosphor-icons/react";
 import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { MenuItem, MenuSeparator } from "@/components/ui/menu";
+import { toastManager } from "@/components/ui/toast";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
@@ -88,12 +93,18 @@ export function CollectionView() {
     null,
   );
 
+  // a drop shows its own result, so only the menu route confirms in words
   const handleReorder = useCallback(
-    (tokenIds: string[]) => {
+    (tokenIds: string[], notify = false) => {
       setPinOrderOverride(pinOrderFor(tokenIds));
       reorderPins.mutate(
         { address, tokenIds: tokenIds.map(Number) },
-        { onSettled: () => setPinOrderOverride(null) },
+        {
+          onSuccess: notify
+            ? () => toastManager.add({ type: "success", title: m.actions_move_pin_success() })
+            : undefined,
+          onSettled: () => setPinOrderOverride(null),
+        },
       );
     },
     [address, reorderPins],
@@ -117,10 +128,15 @@ export function CollectionView() {
     [objekts, filters.hidePin],
   );
 
+  const pinnedIds = useMemo(() => pinned.map((objekt) => objekt.id), [pinned]);
+
   const renderCard = useCallback(
-    (objekt: ValidObjekt, handle?: ReactNode, qty?: number, priority = false) => {
+    (objekt: ValidObjekt, qty?: number, priority = false) => {
       const owned = isObjektOwned(objekt) ? objekt : null;
       const canEdit = showActions && isProfileAuthed && owned !== null;
+      // the shelf is ordered topmost-first, so "up" is one index earlier
+      const pinIndex = owned?.isPin === true ? pinnedIds.indexOf(owned.id) : -1;
+      const move = (to: number) => handleReorder(arrayMove(pinnedIds, pinIndex, to), true);
       return (
         <ObjektCard
           objekt={objekt}
@@ -134,7 +150,6 @@ export function CollectionView() {
           qty={qty}
           priority={priority}
         >
-          {handle}
           {showActions && (
             <ObjektCardMenu>
               {canEdit && owned && (
@@ -146,8 +161,24 @@ export function CollectionView() {
                         : batchPin.mutate({ address, tokenIds: [Number(owned.id)] })
                     }
                   >
+                    {owned.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
                     {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
                   </MenuItem>
+                  {pinIndex !== -1 && (
+                    <>
+                      <MenuItem disabled={pinIndex === 0} onClick={() => move(pinIndex - 1)}>
+                        <CaretUpIcon />
+                        {m.objekt_menu_move_up()}
+                      </MenuItem>
+                      <MenuItem
+                        disabled={pinIndex === pinnedIds.length - 1}
+                        onClick={() => move(pinIndex + 1)}
+                      >
+                        <CaretDownIcon />
+                        {m.objekt_menu_move_down()}
+                      </MenuItem>
+                    </>
+                  )}
                   <MenuItem
                     onClick={() =>
                       owned.isLocked
@@ -155,6 +186,7 @@ export function CollectionView() {
                         : batchLock.mutate({ address, tokenIds: [Number(owned.id)] })
                     }
                   >
+                    {owned.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
                     {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
                   </MenuItem>
                 </>
@@ -171,7 +203,9 @@ export function CollectionView() {
       batchPin,
       batchUnlock,
       batchUnpin,
+      handleReorder,
       isProfileAuthed,
+      pinnedIds,
       selected,
       showActions,
       toggleSelect,
@@ -182,7 +216,7 @@ export function CollectionView() {
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
-      return renderCard(objekt, undefined, item.length > 1 ? item.length : undefined, rowIndex < 2);
+      return renderCard(objekt, item.length > 1 ? item.length : undefined, rowIndex < 2);
     },
     [renderCard],
   );
@@ -284,7 +318,7 @@ export function CollectionView() {
             columns={columns}
             reorderable={dndEnabled}
             onReorder={handleReorder}
-            renderCard={(objekt, handle) => renderCard(objekt, handle)}
+            renderCard={renderCard}
           />
 
           <p className="text-muted-foreground font-mono text-[12.5px] tabular-nums">
@@ -325,7 +359,7 @@ export function CollectionView() {
       )}
 
       {showActions && (
-        <SelectBar visibleIds={filtered.map((objekt) => objekt.id)} secondary={ownerActions}>
+        <SelectBar objekts={filtered} secondary={ownerActions}>
           <AddToListAction objekts={filtered} />
         </SelectBar>
       )}

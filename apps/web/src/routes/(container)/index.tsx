@@ -103,7 +103,7 @@ function HomePage() {
         />
       )}
 
-      <SelectBar visibleIds={filtered.map((objekt) => objekt.id)}>
+      <SelectBar objekts={filtered}>
         {user ? <AddToListAction objekts={filtered} /> : null}
       </SelectBar>
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />

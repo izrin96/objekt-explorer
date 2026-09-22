@@ -50,9 +50,16 @@ Raw counts: P1 7 · P2 23 · P3 46. After de-duplication and removing decisions 
 
 Skipped by the user, recorded here so they are not re-raised: PR-4 stacked mobile trade rows, PR-9 full wallet address, SH-13 artist scope in settings, SH-21 home description, BR-25 grouped serial per card, SH-4 is new.
 
-## P3 — after cutover (46)
+## P3 — after cutover (45)
 
-All in the three reports. Themes: sort descriptions and side-effects (BR-13..15), drawer summary labels / unit members / edition ordinal (BR-16..18), counts and formatting (BR-19..22), select bar always visible (BR-23), Market default sort (BR-24), Set-price on the badge (BR-26); profile column toast (PR-11), pin move menu (PR-12), checkpoint time (PR-13, spec says date-only), live not-found (PR-15), loading markers on progress/stats (PR-16), absolute dates (PR-17, SH-18), trades virtualisation (PR-18), wide switch hidden below 1560 (PR-20/SH-19), banner auto-scroll (PR-21), Apollo label (PR-22), zero entries in pies (PR-23); duplicate "Open Menu" names (SH-9), theme-color meta (SH-10), scrollbar gutter (SH-11), status/search in mobile header (SH-12), `/link/connect` title (SH-14), `fetchPriority`/intrinsic size (SH-15), `ListNotFound` code-split warning (SH-16), 117 dead message keys (SH-17), ⌘K `aria-activedescendant` (SH-20), 3 untranslated ko/ja keys (SH-22), skip link (SH-23), search trigger name (SH-24), 20px gutter (SH-25), wide mode on the nav (SH-26).
+**PR-12 fixed.** The card menu now carries Move up / Move down on a pinned
+objekt, disabled at the ends, committing through the same `handleReorder` the
+drop uses. The pin drag handle is gone by the user's decision, and with it the
+`TouchSensor` and `KeyboardSensor`: drag is mouse-only on the card body, and
+the keyboard route `openspec/specs/web-profile/spec.md:23` requires is now
+these two menu items.
+
+The rest are in the three reports. Themes: sort descriptions and side-effects (BR-13..15), drawer summary labels / unit members / edition ordinal (BR-16..18), counts and formatting (BR-19..22), select bar always visible (BR-23), Market default sort (BR-24), Set-price on the badge (BR-26); profile column toast (PR-11), checkpoint time (PR-13, spec says date-only), live not-found (PR-15), loading markers on progress/stats (PR-16), absolute dates (PR-17, SH-18), trades virtualisation (PR-18), wide switch hidden below 1560 (PR-20/SH-19), banner auto-scroll (PR-21), Apollo label (PR-22), zero entries in pies (PR-23); duplicate "Open Menu" names (SH-9), theme-color meta (SH-10), scrollbar gutter (SH-11), status/search in mobile header (SH-12), `/link/connect` title (SH-14), `fetchPriority`/intrinsic size (SH-15), `ListNotFound` code-split warning (SH-16), 117 dead message keys (SH-17), ⌘K `aria-activedescendant` (SH-20), 3 untranslated ko/ja keys (SH-22), skip link (SH-23), search trigger name (SH-24), 20px gutter (SH-25), wide mode on the nav (SH-26).
 
 ## Verified equal
 

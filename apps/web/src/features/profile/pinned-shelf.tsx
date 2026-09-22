@@ -13,7 +13,7 @@ type PinnedShelfProps = {
   /** false leaves the shelf a plain grid: no handles, no drag context */
   reorderable: boolean;
   onReorder: (tokenIds: string[]) => void;
-  renderCard: (objekt: ValidObjekt, handle?: ReactNode) => ReactNode;
+  renderCard: (objekt: ValidObjekt) => ReactNode;
 };
 
 /**
@@ -41,7 +41,7 @@ export function PinnedShelf({
       {canDrag
         ? objekts.map((objekt) => (
             <SortablePin key={objekt.id} id={objekt.id}>
-              {(handle) => renderCard(objekt, handle)}
+              {renderCard(objekt)}
             </SortablePin>
           ))
         : objekts.map((objekt) => <Fragment key={objekt.id}>{renderCard(objekt)}</Fragment>)}

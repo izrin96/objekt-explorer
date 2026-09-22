@@ -33,14 +33,14 @@ import { m } from "@/paraglide/messages";
 export type EventKind = "mint" | "transfer" | "spin";
 
 /**
- * `--success` / `--destructive` are fills for a tinted chip, not ink: they are
- * the same pale pastel in both themes, so a solid dot painted with them
- * disappears on the light one.
+ * The events are categories, not states, so they own three hues of their own
+ * rather than borrowing the feedback tokens — which are chip fills that vanish
+ * on a light page. `app.css` holds the pair per theme.
  */
 export const EVENT_COLOR: Record<EventKind, string> = {
-  mint: "var(--success-foreground)",
-  transfer: "var(--muted-foreground)",
-  spin: "var(--destructive-foreground)",
+  mint: "bg-event-mint",
+  transfer: "bg-event-transfer",
+  spin: "bg-event-spin",
 };
 
 /** a transfer is the ordinary event and carries no pill, so it has no badge */
@@ -399,10 +399,7 @@ export function Timeline({
                the row, so without this the two pills and the timestamp squeeze
                it to nothing. */
             <li key={event.id} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 py-2">
-              <i
-                className="size-1.5 shrink-0 rounded-full"
-                style={{ background: EVENT_COLOR[event.kind] }}
-              />
+              <i className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[event.kind])} />
               {/* the spin address is Cosmo's burn wallet, so it has no profile */}
               {event.kind === "spin" ? (
                 <span className="truncate">{event.owner}</span>

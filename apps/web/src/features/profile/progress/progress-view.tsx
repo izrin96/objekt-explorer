@@ -4,7 +4,6 @@ import { useMemo, useState, type ReactNode } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useFilterData } from "@/features/filters/filter-data-provider";
@@ -14,8 +13,7 @@ import { useResetFilters, useSetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektGrid } from "@/features/objekt/objekt-grid";
-import { getCollectionShortNo, isObjektOwned } from "@/features/objekt/objekt-utils";
-import { activateOnKey } from "@/lib/a11y";
+import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -97,52 +95,6 @@ function Region({
       )}
     >
       <div className="overflow-hidden">{children}</div>
-    </div>
-  );
-}
-
-/** `ObjektCard`'s box for a collection the profile does not hold, so the two sit in one grid without a seam. */
-function MissingCard({
-  objekt,
-  unobtainable,
-  onOpen,
-}: {
-  objekt: ValidObjekt;
-  unobtainable: boolean;
-  onOpen: (objekt: ValidObjekt) => void;
-}) {
-  const shortNo = getCollectionShortNo(objekt);
-
-  return (
-    <div className="group @container isolate flex min-w-0 flex-col gap-1.5">
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => onOpen(objekt)}
-        onKeyDown={(event) => activateOnKey(event, () => onOpen(objekt))}
-        className="rounded-photocard aspect-photocard bg-secondary focus-visible:ring-ring relative w-full cursor-pointer overflow-hidden outline-none select-none focus-visible:ring-2"
-      >
-        <img
-          src={objekt.thumbnailImage}
-          alt={m.progress_not_owned_alt({ name: `${objekt.member} ${shortNo}` })}
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-          className="absolute inset-0 size-full object-cover opacity-35"
-        />
-        <span className="absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] place-items-center rounded-full bg-[rgba(10,12,16,.82)] px-[5cqw] font-mono text-[7cqw] font-semibold tracking-wide text-white">
-          {m.progress_missing_badge()}
-        </span>
-      </div>
-      <div className="text-muted-foreground flex min-w-0 items-baseline justify-between gap-1.5 text-xs leading-tight">
-        <span className="truncate font-medium">{objekt.member}</span>
-        <span className="flex-none font-mono text-[11.5px]">{shortNo}</span>
-      </div>
-      {unobtainable && (
-        <Badge variant="error" size="sm" className="self-start">
-          {m.objekt_unobtainable()}
-        </Badge>
-      )}
     </div>
   );
 }
@@ -239,10 +191,12 @@ function ClassCard({
                 onOpen={onOpen}
               />
             ) : (
-              <MissingCard
+              <ObjektCard
                 key={item.objekt.slug}
                 objekt={item.objekt}
+                faded
                 unobtainable={item.unobtainable}
+                hideSerial
                 onOpen={onOpen}
               />
             );

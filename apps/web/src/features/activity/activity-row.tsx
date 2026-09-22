@@ -66,7 +66,7 @@ export const ActivityRow = memo(function ActivityRow({
   return (
     <DataTableRow className={cn(isNew && "motion-safe:animate-live-animation-bg")}>
       <span className="flex items-center gap-1.5 text-xs font-medium">
-        <i className="size-1.5 shrink-0 rounded-full" style={{ background: EVENT_COLOR[kind] }} />
+        <i className={cn("size-1.5 shrink-0 rounded-full", EVENT_COLOR[kind])} />
         {EVENT_LABEL[kind]()}
       </span>
 

@@ -2,7 +2,6 @@ import type { Announcements, DragStartEvent, DropAnimation } from "@dnd-kit/core
 import {
   DndContext,
   DragOverlay,
-  KeyboardSensor,
   MouseSensor,
   TouchSensor,
   closestCenter,
@@ -10,19 +9,11 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  rectSortingStrategy,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from "@dnd-kit/sortable";
+import { SortableContext, arrayMove, rectSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { DotsSixIcon } from "@phosphor-icons/react";
 import { createContext, use, useRef, useState } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import { objektControlClass } from "@/features/objekt/objekt-card";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -34,7 +25,8 @@ const dropAnimation: DropAnimation = {
 
 /**
  * Mouse: 8px of travel, so a click still opens the drawer and the hover check
- * still selects. Keyboard: Space/Enter on the handle, arrows to move.
+ * still selects. The keyboard reorders through the card menu's Move up / Move
+ * down instead of a drag.
  *
  * Touch is the awkward one, because the long press is already spent on
  * "select" (`useLongPress`, cancelled by 8px of movement). dnd-kit only offers
@@ -54,7 +46,6 @@ const useDragSensors = () =>
   useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
 /** true once the live drag has actually travelled; see `useDragSensors` */
@@ -122,10 +113,7 @@ export function PinDnd({
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      accessibility={{
-        announcements,
-        screenReaderInstructions: { draggable: m.profile_reorder_instructions() },
-      }}
+      accessibility={{ announcements }}
       onDragStart={start}
       onDragMove={() => setMovedNow(true)}
       onDragEnd={(event) => {
@@ -155,41 +143,12 @@ export function PinDnd({
   );
 }
 
-export function SortablePin({
-  id,
-  children,
-}: {
-  id: string;
-  /** takes the grab handle to render into `ObjektCard`'s overlay slot */
-  children: (handle: ReactNode) => ReactNode;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    isDragging,
-    transform,
-    transition,
-  } = useSortable({ id, animateLayoutChanges: () => false });
+export function SortablePin({ id, children }: { id: string; children: ReactNode }) {
+  const { listeners, setNodeRef, isDragging, transform, transition } = useSortable({
+    id,
+    animateLayoutChanges: () => false,
+  });
   const moved = use(PinDragStateContext);
-
-  const handle = (
-    <button
-      type="button"
-      ref={setActivatorNodeRef}
-      {...attributes}
-      aria-label={m.profile_pinned_reorder_aria()}
-      // no `stopPropagation` here: the card body ignores keys whose target is
-      // not itself, and stopping the synthetic event would also stop the native
-      // one before dnd-kit's document listener sees the arrow keys
-      onKeyDown={(event: ReactKeyboardEvent<HTMLButtonElement>) => listeners?.onKeyDown?.(event)}
-      onClick={(event) => event.stopPropagation()}
-      className={cn(objektControlClass, "cursor-grab active:cursor-grabbing")}
-    >
-      <DotsSixIcon weight="bold" />
-    </button>
-  );
 
   return (
     <div
@@ -201,7 +160,7 @@ export function SortablePin({
       }}
       className={cn("touch-manipulation", isDragging && moved && "opacity-50")}
     >
-      {children(handle)}
+      {children}
     </div>
   );
 }

@@ -44,16 +44,28 @@ type ObjektCardProps = {
 };
 
 /**
- * The check, the card menu trigger and the pin drag handle are one control.
- * The box is container-relative so it tracks the card, with a floor that keeps
- * it at the 24px hit area a 3-column phone grid would otherwise take it under.
+ * The check and the card menu trigger are one control: a square tile the size
+ * of the pin/lock tag at the other corner (16cqi box, 8cqi glyph), with a
+ * floor that keeps it at the 24px hit area a 3-column phone grid would
+ * otherwise take it under. The tile carries its own surface rather than
+ * sitting on a shared scrim, so light and dark each get a tile in their own
+ * theme instead of one fixed dark slab.
+ *
+ * Opacity alone, no `backdrop-filter`: a blur behind every tile in a grid of
+ * a few hundred cards is a repaint the scroll cannot afford.
  */
 export const objektControlClass =
-  "grid size-[15cqi] min-h-6 min-w-6 cursor-pointer place-items-center rounded-[3cqi] text-white outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-inset [&>svg]:size-[9cqi] [&>svg]:min-h-3 [&>svg]:min-w-3";
+  "bg-background/85 text-foreground grid size-[16cqi] min-h-6 min-w-6 cursor-pointer place-items-center p-[max(4cqi,4px)] outline-none focus-visible:ring-2 focus-visible:ring-inset [&>svg]:size-full";
 
-/** With no hover the control stays faintly visible, or the long press is undiscoverable. */
+/**
+ * Hidden until the card is hovered or holds focus. The rule lives on the row,
+ * never on a tile: a selected card shows the whole row, because a tick on its
+ * own reads as a mark floating over the artwork rather than one of a pair of
+ * controls. No `pointer-coarse` rule — a coarse pointer has no hover to spend,
+ * and reaches selection through the long press instead.
+ */
 const hoverOnlyClass =
-  "opacity-0 transition-opacity pointer-coarse:opacity-55 group-focus-within:opacity-100 group-hover:opacity-100";
+  "opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100";
 
 /**
  * The card body opens the drawer and the check toggles selection. Touch
@@ -86,11 +98,11 @@ export function ObjektCard({
   const labelHidden = hideLabel ?? hideLabelSetting;
   const openable = onOpen !== undefined;
   const selectMode = onToggleSelect !== undefined && anySelected;
-  const showCheck = selected || selectMode;
   const shortNo = getCollectionShortNo(objekt);
   // a grouped card stands for several tokens, so no single serial belongs to it
   const serialHidden = hideSerial || (qty !== undefined && qty > 1);
   const serial = !serialHidden && isObjektOwned(objekt) ? objekt.serial : undefined;
+  const caption = !labelHidden || unobtainable || price !== undefined;
 
   const { handlers, consumeClick } = useLongPress({
     disabled: onToggleSelect === undefined,
@@ -107,13 +119,7 @@ export function ObjektCard({
   // `isolate`: the overlay controls use `z-10`, and without a stacking context
   // of their own they paint over the sticky nav as the card scrolls under it
   return (
-    <div
-      className={cn(
-        "group isolate flex min-w-0 flex-col gap-1.5 @container",
-        faded && "opacity-35",
-        className,
-      )}
-    >
+    <div className={cn("group isolate flex min-w-0 flex-col gap-1.5 @container", className)}>
       <div
         role={interactive ? "button" : undefined}
         tabIndex={interactive ? 0 : undefined}
@@ -159,14 +165,23 @@ export function ObjektCard({
           </div>
         )}
 
+        {faded && (
+          <div
+            aria-hidden="true"
+            className="bg-background/65 pointer-events-none absolute inset-0"
+          />
+        )}
+
         {(onToggleSelect || children) && (
-          /* one block hugging the corner, mirroring the pin/lock tag: the card
-             is `overflow-hidden` with a radius, so a pill inset from the corner
-             both wastes the corner and leaves too small a target to hit */
+          /* A flush row in the corner, the mirror of the pin/lock tag: the
+             card's own radius clips the outer corner and `rounded-bl` curves
+             the inner one, so both corners of the card are cut the same way.
+             A pill inset from the corner would waste it and leave too small a
+             target to hit. */
           <div
             className={cn(
-              "rounded-bl-photocard absolute top-0 right-0 z-10 flex items-center overflow-hidden bg-[rgba(10,12,16,.72)] backdrop-blur-sm",
-              showCheck ? "opacity-100 transition-opacity" : hoverOnlyClass,
+              "rounded-bl-photocard absolute top-0 right-0 z-10 flex items-center overflow-hidden",
+              !selected && hoverOnlyClass,
             )}
           >
             {onToggleSelect && (
@@ -179,15 +194,12 @@ export function ObjektCard({
                   onToggleSelect(objekt);
                 }}
                 onKeyDown={(event) => event.stopPropagation()}
-                className={cn(objektControlClass, selected && "bg-accent-solid")}
+                className={cn(objektControlClass, selected && "bg-foreground text-background")}
               >
                 <CheckIcon weight="bold" />
               </button>
             )}
-            {/* the block is already hover-gated unless the check pins it open */}
-            {children && (
-              <div className={cn("flex items-center", showCheck && hoverOnlyClass)}>{children}</div>
-            )}
+            {children}
           </div>
         )}
 
@@ -202,39 +214,46 @@ export function ObjektCard({
         )}
       </div>
 
-      {!labelHidden && (
-        /* The card is an `@container`, so the break is on card width rather
-           than viewport: a 3-up phone grid and a 10-column desktop grid both
-           land near 144px, where "GyeongBeen" + "Su26 229Z" stop fitting on one
-           line. Below that the two stack, so neither value is truncated away. */
-        <div className="flex min-w-0 flex-col gap-0.5 text-xs leading-tight @[9rem]:flex-row @[9rem]:items-baseline @[9rem]:justify-between @[9rem]:gap-1.5">
-          <span className="truncate font-medium">{objekt.member}</span>
-          {/* an identifier people read off the card, not a caption — full contrast */}
-          <span className="truncate font-mono text-[11.5px] @[9rem]:flex-none">
-            {shortNo}
-            {serial !== undefined && <b className="ml-1 font-semibold">#{serial}</b>}
-          </span>
-        </div>
-      )}
+      {caption && (
+        /* below the artwork the fade is plain opacity, the way the website
+           writes it: there is only the page behind it */
+        <div className={cn("flex min-w-0 flex-col gap-1.5", faded && "opacity-35")}>
+          {!labelHidden && (
+            /* The card is an `@container`, so the break is on card width rather
+               than viewport: a 3-up phone grid and a 10-column desktop grid both
+               land near 144px, where "GyeongBeen" + "Su26 229Z" stop fitting on
+               one line. Below that the two stack, so neither value is truncated
+               away. */
+            <div className="flex min-w-0 flex-col gap-0.5 text-xs leading-tight @[9rem]:flex-row @[9rem]:items-baseline @[9rem]:justify-between @[9rem]:gap-1.5">
+              <span className="truncate font-medium">{objekt.member}</span>
+              {/* an identifier people read off the card, not a caption — full contrast */}
+              <span className="truncate font-mono text-[11.5px] @[9rem]:flex-none">
+                {shortNo}
+                {serial !== undefined && <b className="ml-1 font-semibold">#{serial}</b>}
+              </span>
+            </div>
+          )}
 
-      {/* shown whether or not labels are: it is a warning, not a caption */}
-      {unobtainable && (
-        <Badge variant="error" size="sm" className="self-start">
-          {m.objekt_unobtainable()}
-        </Badge>
-      )}
+          {/* shown whether or not labels are: it is a warning, not a caption */}
+          {unobtainable && (
+            <Badge variant="error" size="sm" className="self-start">
+              {m.objekt_unobtainable()}
+            </Badge>
+          )}
 
-      {price !== undefined && (
-        <div className="flex min-w-0 items-center gap-1">
-          <span
-            className={cn(
-              "truncate font-mono text-[11.5px] font-semibold tabular-nums",
-              priceMuted ? "text-muted-foreground" : "text-foreground",
-            )}
-          >
-            {price}
-          </span>
-          {note ? <ObjektNote note={note} /> : null}
+          {price !== undefined && (
+            <div className="flex min-w-0 items-center gap-1">
+              <span
+                className={cn(
+                  "truncate font-mono text-[11.5px] font-semibold tabular-nums",
+                  priceMuted ? "text-muted-foreground" : "text-foreground",
+                )}
+              >
+                {price}
+              </span>
+              {note ? <ObjektNote note={note} /> : null}
+            </div>
+          )}
         </div>
       )}
     </div>
