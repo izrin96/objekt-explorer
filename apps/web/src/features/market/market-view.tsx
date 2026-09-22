@@ -130,7 +130,7 @@ export function MarketView() {
       <SelectBar visibleIds={filtered.map((objekt) => objekt.id)}>
         {user ? <AddToListAction objekts={filtered} /> : null}
       </SelectBar>
-      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
+      <ObjektDrawer objekt={active} onClose={() => setActive(null)} defaultTab="market" />
     </AddToListProvider>
   );
 }

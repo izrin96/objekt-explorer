@@ -46,14 +46,9 @@ export function AccountDialog({
              the panel it scrolls out of the dialog and there is no way back to
              another section */
           <Tabs defaultValue="general" className="min-h-0 gap-0">
-            {/* `shrink-0` so the flex column cannot squeeze the strip below the
-                list, and `pb-px` to house the indicator's 1px overhang: together
-                they keep the scroller from gaining a y axis and clipping the rule */}
-            <div
-              data-scroll-x
-              className="mx-6 shrink-0 [scrollbar-width:none] overflow-x-auto border-b pb-px"
-            >
-              <TabsList variant="underline" className="w-max justify-start">
+            {/* `shrink-0` so the flex column cannot squeeze the strip below the list */}
+            <div data-scroll-x className="mx-6 shrink-0 [scrollbar-width:none] overflow-x-auto">
+              <TabsList variant="underline" className="w-max min-w-full justify-start border-b">
                 <TabsTab value="general">{m.auth_account_general()}</TabsTab>
                 <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>
                 {hasPassword && (

@@ -27,15 +27,28 @@ import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
 import { SerialsPanel, Timeline, toTimeline } from "./serials";
 
+type DrawerTab = "serials" | "market" | "metadata";
+
 type Props = {
   objekt: ValidObjekt | null;
   onClose: () => void;
   /** the drawer does not know whose collection it is looking at; the surface does */
   locked?: boolean;
   onToggleLock?: () => void;
+  defaultTab?: Extract<DrawerTab, "serials" | "market">;
 };
 
-export function ObjektDrawer({ objekt, onClose, locked, onToggleLock }: Props) {
+export function ObjektDrawer({
+  objekt,
+  onClose,
+  locked,
+  onToggleLock,
+  defaultTab = "serials",
+}: Props) {
+  // the body unmounts on close, so the chosen tab is held here instead: one
+  // mount per page, so reopening keeps it and navigating away resets it
+  const [tab, setTab] = useState<DrawerTab>(defaultTab);
+
   return (
     <Drawer
       position="right"
@@ -54,6 +67,8 @@ export function ObjektDrawer({ objekt, onClose, locked, onToggleLock }: Props) {
             onClose={onClose}
             locked={locked}
             onToggleLock={onToggleLock}
+            tab={tab}
+            onTabChange={setTab}
           />
         )}
       </DrawerPopup>
@@ -66,16 +81,19 @@ function DrawerBody({
   onClose,
   locked,
   onToggleLock,
+  tab,
+  onTabChange,
 }: {
   objekt: ValidObjekt;
   onClose: () => void;
   locked?: boolean;
   onToggleLock?: () => void;
+  tab: DrawerTab;
+  onTabChange: (tab: DrawerTab) => void;
 }) {
   const owned = isObjektOwned(objekt);
   const ownSerial = owned ? objekt.serial : null;
   const { getArtist } = useCosmoArtist();
-  const [tab, setTab] = useState("serials");
   const [serial, setSerial] = useState<number | null>(ownSerial);
 
   const metadata = useQuery(collectionMetadataOptions(objekt.slug));
@@ -185,7 +203,7 @@ function DrawerBody({
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={(value) => setTab(String(value))}>
+        <Tabs value={tab} onValueChange={(value) => onTabChange(value as DrawerTab)}>
           <TabsList
             variant="underline"
             aria-label={m.objekt_tab_aria()}
@@ -211,7 +229,7 @@ function DrawerBody({
               slug={objekt.slug}
               onOpenSerial={(value) => {
                 setSerial(value);
-                setTab("serials");
+                onTabChange("serials");
               }}
             />
           </TabsPanel>

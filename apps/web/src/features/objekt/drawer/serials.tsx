@@ -1,11 +1,13 @@
 import {
   ArrowsClockwiseIcon,
+  ArrowsLeftRightIcon,
   CaretLeftIcon,
   CaretLineLeftIcon,
   CaretLineRightIcon,
   CaretRightIcon,
   CheckIcon,
   type Icon,
+  ListMagnifyingGlassIcon,
   LockIcon,
   QuestionMarkIcon,
   SparkleIcon,
@@ -18,12 +20,12 @@ import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 
 import { CopyButton } from "@/components/shared/copy-button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
 import { TimeAgo } from "@/components/shared/time-ago";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
-import { Spinner } from "@/components/ui/spinner";
 import { truncateAddress } from "@/lib/address";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -114,9 +116,12 @@ export function SerialsPanel({
 
   if (loading) {
     return (
-      <div className="text-muted-foreground flex items-center gap-2 py-6 text-sm">
-        <Spinner className="size-4" />
-        {m.objekt_serials_loading()}
+      <div className="flex flex-col gap-3" role="status">
+        {/* a live region announces its content, so the label has to be in it */}
+        <span className="sr-only">{m.objekt_serials_loading()}</span>
+        <Shimmer className="h-8 w-full rounded-md" />
+        <Shimmer className="h-3.5 w-52" />
+        <Shimmer className="h-21 w-full rounded-lg" />
       </div>
     );
   }
@@ -177,7 +182,7 @@ export function SerialsPanel({
       </div>
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
-        {metadata.isPending && <Spinner className="size-3.5" />}
+        {metadata.isPending && <Shimmer className="h-3.5 w-52" />}
         {metadata.data && (
           <>
             <span>
@@ -249,16 +254,6 @@ function resolveSerial(
     transferable: data.transferable ?? null,
     events: toTimeline(data.transfers),
   };
-}
-
-function SerialNotice({ icon, title, hint }: { icon: ReactNode; title: string; hint?: string }) {
-  return (
-    <div className="text-muted-foreground flex flex-col items-center justify-center gap-2 py-8 text-center">
-      {icon}
-      <span className="text-foreground text-sm">{title}</span>
-      {hint !== undefined && <span className="text-xs">{hint}</span>}
-    </div>
-  );
 }
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
@@ -358,35 +353,34 @@ export function Timeline({
   const view = resolveSerial(serial, query);
 
   if (view.kind === "idle") {
-    return <p className="text-muted-foreground py-6 text-sm">{m.objekt_serial_pick()}</p>;
+    return (
+      <EmptyState icon={ListMagnifyingGlassIcon} title={m.objekt_serial_pick()} bordered={false} />
+    );
   }
 
   if (view.kind === "error") {
-    return (
-      <SerialNotice
-        icon={<WarningIcon size={56} weight="light" />}
-        title={m.common_error_loading_data()}
-      />
-    );
+    return <EmptyState icon={WarningIcon} title={m.common_error_loading_data()} bordered={false} />;
   }
 
   // a private holder gets no owner, no token id and no history — not a blank row
   if (view.kind === "private") {
     return (
-      <SerialNotice
-        icon={<LockIcon size={56} weight="light" />}
+      <EmptyState
+        icon={LockIcon}
         title={m.objekt_objekt_private()}
         hint={m.objekt_serial_private_hint()}
+        bordered={false}
       />
     );
   }
 
   if (view.kind === "missing") {
     return (
-      <SerialNotice
-        icon={<QuestionMarkIcon size={56} weight="light" />}
+      <EmptyState
+        icon={QuestionMarkIcon}
         title={m.objekt_not_found_objekt()}
         hint={m.objekt_serial_missing_hint()}
+        bordered={false}
       />
     );
   }
@@ -395,7 +389,7 @@ export function Timeline({
     view.kind === "loading" ? (
       <Shimmer className="h-21 w-full rounded-lg" />
     ) : view.events.length === 0 ? (
-      <p className="text-muted-foreground py-6 text-sm">{m.objekt_no_transfers()}</p>
+      <EmptyState icon={ArrowsLeftRightIcon} title={m.objekt_no_transfers()} bordered={false} />
     ) : (
       <ol className="flex flex-col divide-y text-sm">
         {view.events.map((event, index) => {
