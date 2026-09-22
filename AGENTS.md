@@ -79,6 +79,7 @@ Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/ski
 | Reviewing or polishing a screen or flow   | `better-interface`, which loads the six `better-*` domain skills itself                      |
 | One UI domain, or a targeted fix          | that domain's `better-*` skill alone; `fixing-accessibility` or `web-design-guidelines`      |
 | Writing new UI code                       | `baseline-ui`                                                                                |
+| Colour tokens, contrast, light/dark tints | `oklch-skill`                                                                                |
 | Something broken, slow or throwing        | `diagnosing-bugs` first                                                                      |
 | Reviewing a branch or a change            | `code-review`                                                                                |
 | A merge conflict                          | `resolving-merge-conflicts` (`routeTree.gen.ts`, `paraglide/` are regenerated, never merged) |
