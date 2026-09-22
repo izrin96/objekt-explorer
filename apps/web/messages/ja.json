@@ -647,6 +647,7 @@
   "filter_set_price": "価格を設定",
   "filter_reset_filter": "フィルターをリセット",
   "filter_quick_search": "クイック検索",
+  "filter_disable_pin": "ピン留めを無効化",
   "filter_only_locked": "ロック済みのみ",
   "filter_only_unlocked": "未ロックのみ",
   "filter_lock_unlocked": "ロック/未ロック",

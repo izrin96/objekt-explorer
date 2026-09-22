@@ -647,6 +647,7 @@
   "filter_set_price": "가격 설정",
   "filter_reset_filter": "필터 초기화",
   "filter_quick_search": "빠른 검색",
+  "filter_disable_pin": "고정 해제",
   "filter_only_locked": "잠긴 항목만",
   "filter_only_unlocked": "잠기지 않은 항목만",
   "filter_lock_unlocked": "잠김/미잠김",

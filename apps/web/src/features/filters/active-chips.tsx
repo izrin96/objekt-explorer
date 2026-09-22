@@ -100,6 +100,9 @@ function buildChips(filters: FilterSearch, memberColor: (name: string) => string
   if (filters.grouped === true) {
     chips.push({ key: "grouped", label: m.filter_combine_dups(), remove: { grouped: undefined } });
   }
+  if (filters.hidePin === true) {
+    chips.push({ key: "hidePin", label: m.filter_disable_pin(), remove: { hidePin: undefined } });
+  }
   if (filters.locked !== undefined) {
     chips.push({
       key: "locked",

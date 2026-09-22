@@ -54,9 +54,9 @@ export function buildVirtualData(config: BuildVirtualDataConfig): VirtualItem[] 
     rarityMap,
   } = config;
 
-  // a filtered grid is ordered by the sort alone: the shelf is gone, so
-  // leading with pins would only scatter the sort
-  const pinFirst = isProfile && !isFiltering(filters);
+  // a filtered or pin-hidden grid is ordered by the sort alone: the shelf is
+  // gone, so leading with pins would only scatter the sort
+  const pinFirst = isProfile && !filters.hidePin && !isFiltering(filters);
 
   const groupBy = filters.group_by;
   const groups: Record<string, ValidObjekt[]> = groupBy

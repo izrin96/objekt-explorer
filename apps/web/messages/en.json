@@ -647,6 +647,7 @@
   "filter_set_price": "Set price",
   "filter_reset_filter": "Reset filter",
   "filter_quick_search": "Quick search",
+  "filter_disable_pin": "Disable pin",
   "filter_only_locked": "Only locked",
   "filter_only_unlocked": "Only unlocked",
   "filter_lock_unlocked": "Lock/unlocked",
