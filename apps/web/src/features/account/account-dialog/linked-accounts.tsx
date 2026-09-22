@@ -127,15 +127,34 @@ function LinkedRow({
         <span className="text-muted-foreground truncate font-mono text-xs">{handle}</span>
       </span>
       <div className="flex gap-1.5">
-        <Button
-          variant="outline"
-          size="xs"
-          loading={refresh.isPending}
-          onClick={() => refresh.mutate(provider.id)}
-        >
-          <ArrowsClockwiseIcon />
-          {m.auth_account_link_accounts_refresh()}
-        </Button>
+        {/* the mutation overwrites the stored name and avatar from the
+            provider and has no undo, so it is asked for first */}
+        <AlertDialog>
+          <AlertDialogTrigger
+            render={<Button variant="outline" size="xs" loading={refresh.isPending} />}
+          >
+            <ArrowsClockwiseIcon />
+            {m.auth_account_link_accounts_refresh()}
+          </AlertDialogTrigger>
+          <AlertDialogPopup className="max-w-sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="font-display">
+                {m.auth_account_link_accounts_update_profile_title({ provider: provider.label })}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {m.auth_account_link_accounts_update_profile_desc({ provider: provider.label })}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogClose render={<Button variant="outline" />}>
+                {m.common_modal_cancel()}
+              </AlertDialogClose>
+              <AlertDialogClose render={<Button />} onClick={() => refresh.mutate(provider.id)}>
+                {m.auth_account_link_accounts_refresh()}
+              </AlertDialogClose>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialog>
         <AlertDialog>
           <AlertDialogTrigger render={<Button variant="destructive-outline" size="xs" />}>
             <LinkBreakIcon />
