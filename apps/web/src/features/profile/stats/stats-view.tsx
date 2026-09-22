@@ -8,6 +8,7 @@ import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Chart, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { useFilterData } from "@/features/filters/filter-data-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { useResetFilters } from "@/features/filters/use-filters";
@@ -26,23 +27,34 @@ function seasonFill(season: string): string {
   return `var(--season-${season.replace(/\d+$/, "").toLowerCase()})`;
 }
 
-function toSlices(counts: ReadonlyMap<string, number>, fill: (name: string) => string): Slice[] {
-  const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
-  return [...counts.entries()]
-    .map(([name, count]) => ({
-      name,
-      count,
-      percentage: total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0,
-      fill: fill(name),
-    }))
+/**
+ * One slice per name the roster declares, so a member or a season the profile
+ * holds nothing of still reads as an explicit zero rather than going missing.
+ */
+function toSlices(
+  names: readonly string[],
+  counts: ReadonlyMap<string, number>,
+  fill: (name: string) => string,
+): Slice[] {
+  const total = names.reduce((sum, name) => sum + (counts.get(name) ?? 0), 0);
+  return names
+    .map((name) => {
+      const count = counts.get(name) ?? 0;
+      return {
+        name,
+        count,
+        percentage: total > 0 ? Number(((count / total) * 100).toFixed(1)) : 0,
+        fill: fill(name),
+      };
+    })
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
-function tally(objekts: readonly ValidObjekt[], key: (objekt: ValidObjekt) => string) {
+/** A unit objekt lists every member it carries and counts towards each of them. */
+function tally(objekts: readonly ValidObjekt[], keys: (objekt: ValidObjekt) => readonly string[]) {
   const counts = new Map<string, number>();
   for (const objekt of objekts) {
-    const value = key(objekt);
-    counts.set(value, (counts.get(value) ?? 0) + 1);
+    for (const key of keys(objekt)) counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return counts;
 }
@@ -128,23 +140,26 @@ export function StatsView() {
   const { owned, catalogue, isPending } = useProfileCatalogue();
   const memberColor = useMemberColor();
   const members = useChartMembers();
+  const { seasons } = useFilterData();
   const reset = useResetFilters();
 
   const byMember = useMemo(
     () =>
       toSlices(
-        tally(owned, (objekt) => objekt.member),
+        members.map((member) => member.name),
+        tally(owned, (objekt) => objekt.members),
         memberColor,
       ),
-    [owned, memberColor],
+    [owned, members, memberColor],
   );
   const bySeason = useMemo(
     () =>
       toSlices(
-        tally(owned, (objekt) => objekt.season),
+        seasons,
+        tally(owned, (objekt) => [objekt.season]),
         seasonFill,
       ),
-    [owned],
+    [owned, seasons],
   );
   const progress = useMemo(() => {
     const ownedSlugs = new Set(owned.map((objekt) => objekt.slug));

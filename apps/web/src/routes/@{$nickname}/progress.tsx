@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ProgressView } from "@/features/profile/progress/progress-view";
 import { progressSearchSchema } from "@/features/profile/progress/search-schema";
 import { profileQuery } from "@/features/profile/queries";
+import { displayNickname } from "@/lib/address";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/@{$nickname}/progress")({
     loaderData
       ? generateMetadata({
           title: m.page_titles_profile_progress({
-            nickname: loaderData.nickname ?? loaderData.address,
+            nickname: displayNickname(loaderData.address, loaderData.nickname),
           }),
         })
       : {},

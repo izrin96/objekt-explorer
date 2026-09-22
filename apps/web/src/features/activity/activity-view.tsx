@@ -7,6 +7,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
+import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { PageHeader } from "@/components/shared/page-header";
 import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
@@ -331,18 +332,13 @@ export function ActivityView() {
             onPointerLeave={onPointerLeave}
           />
 
-          <div className="flex justify-center">
-            {query.hasNextPage && (
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={query.isFetchingNextPage}
-                onClick={() => void query.fetchNextPage()}
-              >
-                {m.activity_load_more()}
-              </Button>
-            )}
-          </div>
+          <InfiniteSentinel
+            label={m.infinite_query_load_more_aria()}
+            endLabel={m.activity_end()}
+            hasNextPage={query.hasNextPage}
+            isFetchingNextPage={query.isFetchingNextPage}
+            fetchNextPage={() => void query.fetchNextPage()}
+          />
         </>
       )}
 

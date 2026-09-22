@@ -128,7 +128,7 @@ function MissingCard({
           loading="lazy"
           decoding="async"
           draggable={false}
-          className="absolute inset-0 size-full object-cover opacity-35 grayscale"
+          className="absolute inset-0 size-full object-cover opacity-35"
         />
         <span className="absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] place-items-center rounded-full bg-[rgba(10,12,16,.82)] px-[5cqw] font-mono text-[7cqw] font-semibold tracking-wide text-white">
           {m.progress_missing_badge()}
@@ -383,7 +383,9 @@ export function ProgressView() {
 
       {toolbar}
 
-      {(filters.member?.length ?? 0) === 0 ? (
+      {/* the chart is the overview of the whole roster; narrowing to an artist
+          is already a request for that artist's members one by one */}
+      {(filters.member?.length ?? 0) === 0 && (filters.artist?.length ?? 0) === 0 ? (
         measured.length > 0 ? (
           <MemberProgressChart
             rows={rows.toSorted((a, b) => b.pct - a.pct || b.total - a.total)}

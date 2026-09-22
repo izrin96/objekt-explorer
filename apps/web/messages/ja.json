@@ -770,7 +770,7 @@
   "market_description": "出品中のすべてのコレクションと最低価格",
   "market_empty_hint": "現在のフィルターに合う出品はありません。条件を広げるか、すべて解除してください。",
   "activity_empty_hint": "現在のフィルターに合うミント・転送・スピンはありません。",
-  "activity_load_more": "もっと見る",
+  "activity_end": "アクティビティはここまでです",
   "profile_profile_private_hint": "このプロフィールは所有者のみが閲覧できます。",
   "profile_stats_owned": "所有オブジェクト",
   "profile_stats_unique": "ユニーク",

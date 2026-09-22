@@ -1,5 +1,6 @@
 import {
   CardsThreeIcon,
+  DeviceMobileIcon,
   DiscordLogoIcon,
   GearIcon,
   InfoIcon,
@@ -8,7 +9,9 @@ import {
   SignInIcon,
   SignOutIcon,
   UserIcon,
+  XLogoIcon,
 } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
 import type { User } from "@repo/api/services/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
@@ -36,7 +39,8 @@ import { getListLinkOption } from "@/features/list/list-link";
 import { ListTypeBadge } from "@/features/list/list-type-badge";
 import { ArtistsSubmenu } from "@/features/settings/artists-menu";
 import { SettingsDialog } from "@/features/settings/settings-dialog";
-import { useUserLists } from "@/features/user/hooks";
+import { useUserLists, useUserProfiles } from "@/features/user/hooks";
+import { displayNickname } from "@/lib/address";
 import { authClient } from "@/lib/auth-client";
 import { m } from "@/paraglide/messages";
 
@@ -95,6 +99,12 @@ export function UserMenu({ user }: { user: User }) {
             <UserAvatar user={user} className="size-7.5" />
             <div className="flex min-w-0 flex-col">
               <span className="truncate text-sm font-medium">{user.name}</span>
+              {(user.discord || user.twitter) && (
+                <div className="text-muted-foreground flex min-w-0 flex-wrap items-center gap-x-2 text-xs">
+                  {user.discord && <SocialHandle icon={DiscordLogoIcon} handle={user.discord} />}
+                  {user.twitter && <SocialHandle icon={XLogoIcon} handle={user.twitter} />}
+                </div>
+              )}
             </div>
           </MenuGroup>
 
@@ -107,10 +117,7 @@ export function UserMenu({ user }: { user: User }) {
             onDiscordFormat={() => setDiscordOpen(true)}
           />
 
-          <MenuItem render={<Link to="/link" />}>
-            <LinkIcon />
-            {m.link_my_cosmo()}
-          </MenuItem>
+          <MyCosmoSubmenu />
 
           <MenuItem onClick={() => setAccountOpen(true)}>
             <UserIcon />
@@ -143,6 +150,54 @@ export function UserMenu({ user }: { user: User }) {
       <DiscordFormatDialog open={discordOpen} onOpenChange={setDiscordOpen} />
       <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
     </>
+  );
+}
+
+function SocialHandle({ icon: Glyph, handle }: { icon: Icon; handle: string }) {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-1">
+      <Glyph weight="fill" className="size-3.5 shrink-0" aria-hidden />
+      <span className="truncate">{handle}</span>
+    </span>
+  );
+}
+
+function MyCosmoSubmenu() {
+  const profiles = useUserProfiles();
+
+  return (
+    <MenuSub>
+      <MenuSubTrigger>
+        <DeviceMobileIcon />
+        {m.nav_my_cosmo_link()}
+      </MenuSubTrigger>
+      <MenuSubPopup className="min-w-52">
+        {profiles.length === 0 ? (
+          <MenuItem disabled>{m.nav_no_cosmo_found()}</MenuItem>
+        ) : (
+          profiles.map((profile) => (
+            <MenuItem
+              key={profile.address}
+              render={
+                <Link
+                  to="/@{$nickname}"
+                  params={{ nickname: profile.nickname || profile.address.toLowerCase() }}
+                />
+              }
+            >
+              <span className="truncate">{displayNickname(profile.address, profile.nickname)}</span>
+            </MenuItem>
+          ))
+        )}
+
+        <MenuSeparator />
+
+        <MenuItem render={<Link to="/link" />}>
+          <LinkIcon />
+          {m.nav_manage_cosmo_link()}
+        </MenuItem>
+      </MenuSubPopup>
+    </MenuSub>
   );
 }
 

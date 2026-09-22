@@ -5,20 +5,19 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { InView } from "react-intersection-observer";
 
 import { DataTable, DataTableHead, DataTableRow } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Shimmer } from "@/components/shared/shimmer";
 import { TimeAgo } from "@/components/shared/time-ago";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
-import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
+import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
 import { truncateAddress } from "@/lib/address";
@@ -28,6 +27,7 @@ import { CheckpointPopover } from "../checkpoint-popover";
 import { useProfileTarget } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { transfersOptions } from "./queries";
+import { useResetTrades, useSetTradesType, useTradesType } from "./search-schema";
 
 const TYPE_LABEL: Record<ValidType, () => string> = {
   all: m.trades_filter_type_all,
@@ -111,8 +111,9 @@ export function TradesView() {
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useCanonicalFilters();
-  const reset = useResetFilters();
-  const [type, setType] = useState<ValidType>("all");
+  const reset = useResetTrades();
+  const type = useTradesType();
+  const setType = useSetTradesType();
   const [active, setActive] = useState<ValidObjekt | null>(null);
 
   const query = useInfiniteQuery(
@@ -174,14 +175,7 @@ export function TradesView() {
           hint={m.trades_empty_hint()}
           action={
             isFiltering(filters) || type !== "all" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setType("all");
-                  reset();
-                }}
-              >
+              <Button variant="outline" size="sm" onClick={reset}>
                 {m.filter_reset_filter()}
               </Button>
             ) : undefined
@@ -212,17 +206,12 @@ export function TradesView() {
             ))}
           </DataTable>
 
-          {query.hasNextPage && (
-            <InView
-              as="div"
-              className="flex justify-center py-4"
-              onChange={(inView) => {
-                if (inView && !query.isFetchingNextPage) void query.fetchNextPage();
-              }}
-            >
-              {query.isFetchingNextPage && <Spinner className="size-4" />}
-            </InView>
-          )}
+          <InfiniteSentinel
+            label={m.infinite_query_load_more_aria()}
+            hasNextPage={query.hasNextPage}
+            isFetchingNextPage={query.isFetchingNextPage}
+            fetchNextPage={() => void query.fetchNextPage()}
+          />
         </>
       )}
 
