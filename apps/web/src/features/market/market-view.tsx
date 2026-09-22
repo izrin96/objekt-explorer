@@ -11,12 +11,16 @@ import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
 import { useFilters, useResetFilters } from "@/features/filters/use-filters";
+import { AddToListProvider } from "@/features/list/add-to-list-dialog";
+import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
 import { SelectBar } from "@/features/objekt/select-bar";
 import { useCurrency } from "@/features/settings/use-currency";
+import { useCurrentUser } from "@/features/user/hooks";
 import { m } from "@/paraglide/messages";
 import { useColumns } from "@/stores/columns";
 import { useClearSelectionOnNavigate, useSelection } from "@/stores/selection";
@@ -48,6 +52,7 @@ function ShimmerGrid() {
 }
 
 export function MarketView() {
+  const { data: user } = useCurrentUser();
   const { facets, groups } = useScopedFacets();
   const { filtered, filters, totalListings, isPending } = useMarketObjekts();
   const { formatUsd } = useCurrency();
@@ -88,14 +93,20 @@ export function MarketView() {
           price={getPriceLabel(objekt, formatUsd)}
           priceMuted={!hasFloorPrice(objekt)}
           priority={rowIndex < 2}
-        />
+        >
+          {user ? (
+            <ObjektCardMenu>
+              <AddToListMenuItem objekts={[objekt]} />
+            </ObjektCardMenu>
+          ) : null}
+        </ObjektCard>
       );
     },
-    [ids, toggle, formatUsd],
+    [ids, toggle, formatUsd, user],
   );
 
   return (
-    <>
+    <AddToListProvider>
       <PageHeader title={m.market_title()} description={m.market_description()} />
 
       <FilterBar
@@ -135,8 +146,10 @@ export function MarketView() {
         <ObjektVirtualGrid objekts={filtered} filters={filters} renderItem={renderObjekt} />
       )}
 
-      <SelectBar visibleIds={filtered.map((objekt) => objekt.id)} />
+      <SelectBar visibleIds={filtered.map((objekt) => objekt.id)}>
+        {user ? <AddToListAction objekts={filtered} /> : null}
+      </SelectBar>
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
-    </>
+    </AddToListProvider>
   );
 }

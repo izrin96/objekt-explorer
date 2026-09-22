@@ -14,9 +14,7 @@ const RECONNECT_MAX = 30_000;
 function isActivityMessage(value: unknown): value is ActivityMessage {
   if (typeof value !== "object" || value === null) return false;
   const message = value as Partial<ActivityMessage>;
-  return (
-    (message.type === "transfer" || message.type === "history") && Array.isArray(message.data)
-  );
+  return (message.type === "transfer" || message.type === "history") && Array.isArray(message.data);
 }
 
 /**

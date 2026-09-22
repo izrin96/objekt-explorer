@@ -21,8 +21,9 @@ import { CheckpointPopover } from "../checkpoint-popover";
 import { useProfileColumns } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { useProfileCatalogue } from "../use-profile-objekts";
-import { MemberProgressChart } from "./member-progress-chart";
+import { MemberProgressChart, useChartMembers } from "./member-progress-chart";
 import {
+  catalogueTotals,
   memberProgress,
   shapeProgress,
   type ClassGroup,
@@ -242,9 +243,10 @@ export function ProgressView() {
   const ownedSlugs = useMemo(() => new Set(owned.map((objekt) => objekt.slug)), [owned]);
   const ownedBySlug = useMemo(() => new Map(owned.map((objekt) => [objekt.slug, objekt])), [owned]);
 
+  const members = useChartMembers();
   const rows = useMemo(
-    () => memberProgress(catalogue, ownedSlugs, { compareMember, memberColor }),
-    [catalogue, ownedSlugs, compareMember, memberColor],
+    () => memberProgress(catalogue, ownedSlugs, members),
+    [catalogue, ownedSlugs, members],
   );
   const sections = useMemo(
     () =>
@@ -265,13 +267,12 @@ export function ProgressView() {
     ],
   );
 
-  const totals = rows.reduce(
-    (acc, row) => ({ owned: acc.owned + row.owned, total: acc.total + row.total }),
-    { owned: 0, total: 0 },
-  );
-  const overall = totals.total > 0 ? (totals.owned / totals.total) * 100 : 0;
-  const best = rows.toSorted((a, b) => b.pct - a.pct || b.total - a.total)[0];
-  const closest = rows.toSorted((a, b) => a.total - a.owned - (b.total - b.owned)).slice(0, 3);
+  const totals = catalogueTotals(catalogue, ownedSlugs);
+  // a member the catalogue holds nothing for under the current facets is still
+  // a bar, but it is neither the best nor the closest to done
+  const measured = rows.filter((row) => row.total > 0);
+  const best = measured.toSorted((a, b) => b.pct - a.pct || b.total - a.total)[0];
+  const closest = measured.toSorted((a, b) => a.total - a.owned - (b.total - b.owned)).slice(0, 3);
 
   const toolbar = (
     <ProfileToolbar showSearch={false} showSort={false} extra={<CheckpointPopover />} />
@@ -291,12 +292,12 @@ export function ProgressView() {
       <div className="grid gap-3 md:grid-cols-[1.4fr_1fr]">
         <Panel title={m.progress_overall()}>
           <div className="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums">
-            {overall.toFixed(1)}
+            {totals.pct.toFixed(1)}
             <small className="text-muted-foreground text-[13px] font-medium tracking-normal">
               % · {totals.owned.toLocaleString()} / {totals.total.toLocaleString()}
             </small>
           </div>
-          <Meter pct={overall} />
+          <Meter pct={totals.pct} />
           {best && (
             <p className="text-muted-foreground mt-2 text-xs">
               {m.progress_best_member()}: <b className="text-foreground font-mono">{best.member}</b>{" "}
@@ -332,7 +333,7 @@ export function ProgressView() {
       {toolbar}
 
       {(filters.member?.length ?? 0) === 0 ? (
-        rows.length > 0 ? (
+        measured.length > 0 ? (
           <MemberProgressChart
             rows={rows.toSorted((a, b) => b.pct - a.pct || b.total - a.total)}
             onSelect={(member) => setFilters({ member: [member] })}
@@ -352,7 +353,7 @@ export function ProgressView() {
       ) : (
         <div className="flex flex-col gap-8">
           <p className="font-mono text-[13px] font-semibold tabular-nums">
-            <Value row={{ ...totals, pct: overall }} />
+            <Value row={totals} />
           </p>
 
           {sections.map((section) => (

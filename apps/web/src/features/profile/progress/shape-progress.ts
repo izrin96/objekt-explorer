@@ -32,32 +32,62 @@ type Comparators = {
   memberColor: (name: string) => string;
 };
 
+/** one bar of the chart, named and coloured by the artist payload */
+export type ChartMember = { name: string; color: string };
+
+/**
+ * One row per member of the selected artists, in the payload's own order.
+ *
+ * A unit objekt lists every member it carries and counts towards each of them;
+ * the catalogue's `member` column is not a member name for a unit (`S7 X S15`)
+ * or an event (`sun`), so it cannot be what the bars are grouped by.
+ */
 export function memberProgress(
   catalogue: readonly ValidObjekt[],
   ownedSlugs: ReadonlySet<string>,
-  { compareMember, memberColor }: Pick<Comparators, "compareMember" | "memberColor">,
+  members: readonly ChartMember[],
 ): MemberProgress[] {
   const tallies = new Map<string, { owned: number; total: number }>();
 
   for (const objekt of catalogue) {
-    let tally = tallies.get(objekt.member);
-    if (!tally) {
-      tally = { owned: 0, total: 0 };
-      tallies.set(objekt.member, tally);
+    if (EXCLUDED_CLASSES.has(objekt.class)) continue;
+    const owned = ownedSlugs.has(objekt.slug);
+
+    for (const name of objekt.members) {
+      let tally = tallies.get(name);
+      if (!tally) {
+        tally = { owned: 0, total: 0 };
+        tallies.set(name, tally);
+      }
+      tally.total += 1;
+      if (owned) tally.owned += 1;
     }
-    tally.total += 1;
-    if (ownedSlugs.has(objekt.slug)) tally.owned += 1;
   }
 
-  return [...tallies.entries()]
-    .map(([member, tally]) => ({
-      member,
-      color: memberColor(member),
-      owned: tally.owned,
-      total: tally.total,
-      pct: pct(tally.owned, tally.total),
-    }))
-    .sort((a, b) => compareMember(a.member, b.member));
+  return members.map(({ name, color }) => {
+    const tally = tallies.get(name);
+    const owned = tally?.owned ?? 0;
+    const total = tally?.total ?? 0;
+
+    return { member: name, color, owned, total, pct: pct(owned, total) };
+  });
+}
+
+/** The overall bar: one collection counted once, however many members it lists. */
+export function catalogueTotals(
+  catalogue: readonly ValidObjekt[],
+  ownedSlugs: ReadonlySet<string>,
+): Tally {
+  let owned = 0;
+  let total = 0;
+
+  for (const objekt of catalogue) {
+    if (EXCLUDED_CLASSES.has(objekt.class)) continue;
+    total += 1;
+    if (ownedSlugs.has(objekt.slug)) owned += 1;
+  }
+
+  return { owned, total, pct: pct(owned, total) };
 }
 
 /**

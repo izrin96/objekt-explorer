@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
+import { DiscordFormatButton } from "@/features/discord/discord-format-dialog";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
 import { truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
@@ -93,9 +94,12 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
           </Tooltip>
 
           {isProfileAuthed && (
-            <EditCosmoDialog address={profile.address}>
-              <Button size="sm">{m.profile_header_edit_profile()}</Button>
-            </EditCosmoDialog>
+            <>
+              <DiscordFormatButton />
+              <EditCosmoDialog address={profile.address}>
+                <Button size="sm">{m.profile_header_edit_profile()}</Button>
+              </EditCosmoDialog>
+            </>
           )}
         </div>
       </div>

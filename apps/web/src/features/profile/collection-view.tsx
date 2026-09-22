@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { MenuItem } from "@/components/ui/menu";
 import { isFiltering } from "@/features/filters/search-schema";
 import { useResetFilters } from "@/features/filters/use-filters";
+import { AddToListProvider } from "@/features/list/add-to-list-dialog";
+import { AddToListAction, AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
@@ -140,26 +142,31 @@ export function CollectionView() {
           priority={priority}
         >
           {handle}
-          {canEdit && owned && (
+          {showActions && (
             <ObjektCardMenu>
-              <MenuItem
-                onClick={() =>
-                  owned.isPin
-                    ? batchUnpin.mutate({ address, tokenIds: [Number(owned.id)] })
-                    : batchPin.mutate({ address, tokenIds: [Number(owned.id)] })
-                }
-              >
-                {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
-              </MenuItem>
-              <MenuItem
-                onClick={() =>
-                  owned.isLocked
-                    ? batchUnlock.mutate({ address, tokenIds: [Number(owned.id)] })
-                    : batchLock.mutate({ address, tokenIds: [Number(owned.id)] })
-                }
-              >
-                {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
-              </MenuItem>
+              {canEdit && owned && (
+                <>
+                  <MenuItem
+                    onClick={() =>
+                      owned.isPin
+                        ? batchUnpin.mutate({ address, tokenIds: [Number(owned.id)] })
+                        : batchPin.mutate({ address, tokenIds: [Number(owned.id)] })
+                    }
+                  >
+                    {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() =>
+                      owned.isLocked
+                        ? batchUnlock.mutate({ address, tokenIds: [Number(owned.id)] })
+                        : batchLock.mutate({ address, tokenIds: [Number(owned.id)] })
+                    }
+                  >
+                    {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
+                  </MenuItem>
+                </>
+              )}
+              <AddToListMenuItem objekts={[objekt]} />
             </ObjektCardMenu>
           )}
         </ObjektCard>
@@ -222,7 +229,7 @@ export function CollectionView() {
     : [];
 
   return (
-    <>
+    <AddToListProvider address={address}>
       <ProfileToolbar showLock extra={<CheckpointPopover />} />
 
       {at && (
@@ -281,7 +288,9 @@ export function CollectionView() {
       )}
 
       {showActions && (
-        <SelectBar visibleIds={filtered.map((objekt) => objekt.id)} secondary={ownerActions} />
+        <SelectBar visibleIds={filtered.map((objekt) => objekt.id)} secondary={ownerActions}>
+          <AddToListAction objekts={filtered} />
+        </SelectBar>
       )}
 
       <ObjektDrawer
@@ -297,7 +306,7 @@ export function CollectionView() {
             : undefined
         }
       />
-    </>
+    </AddToListProvider>
   );
 }
 

@@ -1,6 +1,7 @@
 import { ArrowsLeftRightIcon, LockSimpleIcon } from "@phosphor-icons/react";
 import { validType, type AggregatedTransfer, type ValidType } from "@repo/api/schemas/transfers";
 import { Addresses } from "@repo/lib";
+import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -17,6 +18,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
+import { ObjektDrawer } from "@/features/objekt/drawer";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
 import { truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
@@ -62,7 +64,17 @@ function Counterparty({ row, isReceiver }: { row: AggregatedTransfer; isReceiver
   );
 }
 
-function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }) {
+/** The row carries a counterparty link, so the objekt cell is the control that
+ *  opens the drawer rather than the row itself. */
+function TradeRow({
+  row,
+  address,
+  onOpen,
+}: {
+  row: AggregatedTransfer;
+  address: string;
+  onOpen: (objekt: ValidObjekt) => void;
+}) {
   const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
 
   return (
@@ -70,12 +82,18 @@ function TradeRow({ row, address }: { row: AggregatedTransfer; address: string }
       <span className="text-muted-foreground font-mono text-xs">
         <TimeAgo date={new Date(row.transfer.timestamp)} />
       </span>
-      <span className="min-w-0 truncate">
-        {row.objekt.member}
-        <span className="ml-1.5 font-mono text-xs">
-          {getCollectionShortNo(row.objekt)} <b className="font-semibold">#{row.objekt.serial}</b>
+      <button
+        type="button"
+        onClick={() => onOpen(row.objekt)}
+        className="focus-visible:ring-ring flex min-w-0 cursor-pointer items-center rounded-sm text-left outline-none focus-visible:ring-2"
+      >
+        <span className="truncate">
+          {row.objekt.member}
+          <span className="ml-1.5 font-mono text-xs">
+            {getCollectionShortNo(row.objekt)} <b className="font-semibold">#{row.objekt.serial}</b>
+          </span>
         </span>
-      </span>
+      </button>
       <span>
         <Badge variant={isReceiver ? "info" : "error"} size="sm">
           {isReceiver ? m.trades_actions_received_from() : m.trades_actions_sent_to()}
@@ -94,6 +112,7 @@ export function TradesView() {
   const filters = useCanonicalFilters();
   const reset = useResetFilters();
   const [type, setType] = useState<ValidType>("all");
+  const [active, setActive] = useState<ValidObjekt | null>(null);
 
   const query = useInfiniteQuery(
     transfersOptions(profile.address, {
@@ -182,7 +201,12 @@ export function TradesView() {
               <span>{m.trades_table_headers_user()}</span>
             </DataTableHead>
             {rows.map((row) => (
-              <TradeRow key={row.transfer.id} row={row} address={profile.address} />
+              <TradeRow
+                key={row.transfer.id}
+                row={row}
+                address={profile.address}
+                onOpen={setActive}
+              />
             ))}
           </DataTable>
 
@@ -199,6 +223,8 @@ export function TradesView() {
           )}
         </>
       )}
+
+      <ObjektDrawer objekt={active} onClose={() => setActive(null)} />
     </>
   );
 }

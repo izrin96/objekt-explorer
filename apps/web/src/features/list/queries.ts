@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import type * as z from "zod";
 
 import type { listBySlugInputSchema } from "@/lib/functions/list";
-import { getListBySlug, getListProfile } from "@/lib/functions/list";
+import { getListBySlug } from "@/lib/functions/list";
 import { orpc } from "@/lib/orpc";
 
 /** the prefix every list read shares, so one edit invalidates both of a list's addresses */
@@ -13,13 +13,6 @@ export const listBySlugQuery = (data: z.infer<typeof listBySlugInputSchema>) =>
     queryKey: [...LIST_QUERY_KEY, data],
     queryFn: () => getListBySlug({ data }),
     // the header renders straight off this, so a rename shows on the next visit
-    staleTime: 0,
-  });
-
-export const listProfileQuery = (nickname: string) =>
-  queryOptions({
-    queryKey: ["profile", nickname],
-    queryFn: () => getListProfile({ data: { nickname } }),
     staleTime: 0,
   });
 

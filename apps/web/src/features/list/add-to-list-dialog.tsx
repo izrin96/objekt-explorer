@@ -4,6 +4,7 @@ import { createContext, type ReactNode, use, useCallback, useMemo, useState } fr
 
 import { Note } from "@/components/shared/note";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -69,10 +70,10 @@ export function useOpenAddToList(): (objekts: ValidObjekt[]) => void {
 }
 
 /** A bound list only takes objekts that profile owns; every other list takes collections. */
-function toAddInput(list: PublicList, objekts: ValidObjekt[]) {
+function toAddInput(list: PublicList, objekts: ValidObjekt[], skipDups: boolean) {
   return {
     slug: list.slug,
-    skipDups: true,
+    skipDups,
     objekts: list.isProfileBind ? objekts.filter(isObjektOwned).map((o) => o.tokenId) : undefined,
     collectionSlugs: list.isProfileBind ? undefined : objekts.map((o) => o.slug),
   };
@@ -92,6 +93,7 @@ function AddToListDialog({
   const lists = useUserLists();
   const addToList = useAddObjektsToList();
   const [slug, setSlug] = useState<string | null>(null);
+  const [skipDups, setSkipDups] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
 
   const available = useMemo(
@@ -108,7 +110,7 @@ function AddToListDialog({
 
   const submit = () => {
     if (!selected) return;
-    const input = toAddInput(selected, objekts);
+    const input = toAddInput(selected, objekts, skipDups);
     const requested = (input.objekts ?? input.collectionSlugs ?? []).length;
 
     addToList.mutate(input, {
@@ -139,7 +141,10 @@ function AddToListDialog({
       <Dialog
         open={open}
         onOpenChange={(next) => {
-          if (!next) setSlug(null);
+          if (!next) {
+            setSlug(null);
+            setSkipDups(true);
+          }
           onOpenChange(next);
         }}
       >
@@ -164,32 +169,45 @@ function AddToListDialog({
                 </Button>
               </Note>
             ) : (
-              <div className="flex min-w-0 flex-col gap-1.5">
-                <Label htmlFor="add-to-list">{m.list_manage_objekt_list_label()}</Label>
-                <Select value={slug} onValueChange={setSlug}>
-                  <SelectTrigger id="add-to-list" className="min-w-0">
-                    <SelectValue placeholder={m.list_manage_objekt_list_placeholder()}>
-                      {(value: string | null) =>
-                        value === null
-                          ? m.list_manage_objekt_list_placeholder()
-                          : (available.find((list) => list.slug === value)?.name ?? value)
-                      }
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectPopup>
-                    {available.map((list) => (
-                      <SelectItem key={list.slug} value={list.slug}>
-                        <span className="truncate">{list.name}</span>
-                        <span className="text-muted-foreground ml-1.5 text-xs">
-                          {LIST_TYPE_LABEL[list.listTypeNew]()}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectPopup>
-                </Select>
-                <span className="text-muted-foreground text-xs text-pretty">
-                  {m.list_manage_objekt_skip_dups_desc()}
-                </span>
+              <div className="flex min-w-0 flex-col gap-4">
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <Label htmlFor="add-to-list">{m.list_manage_objekt_list_label()}</Label>
+                  <Select value={slug} onValueChange={setSlug}>
+                    <SelectTrigger id="add-to-list" className="min-w-0">
+                      <SelectValue placeholder={m.list_manage_objekt_list_placeholder()}>
+                        {(value: string | null) =>
+                          value === null
+                            ? m.list_manage_objekt_list_placeholder()
+                            : (available.find((list) => list.slug === value)?.name ?? value)
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectPopup>
+                      {available.map((list) => (
+                        <SelectItem key={list.slug} value={list.slug}>
+                          <span className="truncate">{list.name}</span>
+                          <span className="text-muted-foreground ml-1.5 text-xs">
+                            {LIST_TYPE_LABEL[list.listTypeNew]()}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectPopup>
+                  </Select>
+                </div>
+
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <Label htmlFor="add-to-list-skip-dups" className="font-normal">
+                    <Checkbox
+                      id="add-to-list-skip-dups"
+                      checked={skipDups}
+                      onCheckedChange={(checked) => setSkipDups(checked)}
+                    />
+                    {m.list_manage_objekt_skip_dups_label()}
+                  </Label>
+                  <span className="text-muted-foreground ps-6.5 text-xs text-pretty sm:ps-6">
+                    {m.list_manage_objekt_skip_dups_desc()}
+                  </span>
+                </div>
               </div>
             )}
           </DialogPanel>

@@ -16,9 +16,7 @@ type SettingsState = {
   hideLabel: boolean;
   /** ISO 4217 code every marketplace price is converted into */
   currency: string;
-  set: (
-    patch: Partial<Pick<SettingsState, "theme" | "wide" | "hideLabel" | "currency">>,
-  ) => void;
+  set: (patch: Partial<Pick<SettingsState, "theme" | "wide" | "hideLabel" | "currency">>) => void;
 };
 
 export const useSettings = create<SettingsState>()(

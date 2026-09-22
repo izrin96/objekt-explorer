@@ -86,7 +86,10 @@ function matchesFilters(
   filters: ReturnType<typeof useCanonicalFilters>,
 ): boolean {
   if (type !== "all" && getEventKind(item.transfer.from, item.transfer.to) !== type) return false;
-  if (artist.length > 0 && !artist.some((a) => a.toLowerCase() === item.objekt.artist.toLowerCase()))
+  if (
+    artist.length > 0 &&
+    !artist.some((a) => a.toLowerCase() === item.objekt.artist.toLowerCase())
+  )
     return false;
   if (filters.member !== undefined && !filters.member.includes(item.objekt.member)) return false;
   if (filters.season !== undefined && !filters.season.includes(item.objekt.season)) return false;
@@ -128,7 +131,15 @@ export function ActivityView() {
       on_offline: filters.on_offline ?? [],
       collection: filters.collection ?? [],
     }),
-    [type, artist, filters.member, filters.season, filters.class, filters.on_offline, filters.collection],
+    [
+      type,
+      artist,
+      filters.member,
+      filters.season,
+      filters.class,
+      filters.on_offline,
+      filters.collection,
+    ],
   );
 
   const query = useInfiniteQuery(activityInfiniteOptions(params));
@@ -163,9 +174,7 @@ export function ActivityView() {
               key: prev.key,
               rows: held ? prev.rows : [...added, ...prev.rows],
               queued: held ? [...added, ...prev.queued] : prev.queued,
-              newIds: held
-                ? prev.newIds
-                : new Set(added.map((item) => item.transfer.id)),
+              newIds: held ? prev.newIds : new Set(added.map((item) => item.transfer.id)),
             },
       );
     },

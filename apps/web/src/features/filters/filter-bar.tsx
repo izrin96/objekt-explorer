@@ -213,11 +213,7 @@ export function FilterBar({
           controlClassName="max-md:hidden"
         />
 
-        <ExtraFacetControls
-          surface="inline"
-          extras={extras}
-          controlClassName="max-md:hidden"
-        />
+        <ExtraFacetControls surface="inline" extras={extras} controlClassName="max-md:hidden" />
 
         <FilterPopover
           showPricedOnly={showPricedOnly}

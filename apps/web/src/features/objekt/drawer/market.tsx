@@ -61,11 +61,7 @@ export function MarketPanel({
   const cells: [string, string | null][] = [
     [
       m.objekt_market_floor(),
-      stats.data
-        ? stats.data.floorPrice === null
-          ? "—"
-          : formatUsd(stats.data.floorPrice)
-        : null,
+      stats.data ? (stats.data.floorPrice === null ? "—" : formatUsd(stats.data.floorPrice)) : null,
     ],
     [m.objekt_market_listings(), stats.data ? stats.data.total.toLocaleString() : null],
     [m.objekt_market_sellers(), stats.data ? stats.data.sellers.toLocaleString() : null],

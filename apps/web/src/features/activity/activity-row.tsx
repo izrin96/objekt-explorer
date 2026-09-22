@@ -27,7 +27,11 @@ export function getEventKind(from: string, to: string): EventKind {
 /** A nickname the owner hides never reaches the client, so the address stands in. */
 function Who({ address, nickname }: { address: string; nickname: string | undefined }) {
   if (nickname === undefined) {
-    return <span className="text-muted-foreground truncate font-mono text-xs">{truncateAddress(address)}</span>;
+    return (
+      <span className="text-muted-foreground truncate font-mono text-xs">
+        {truncateAddress(address)}
+      </span>
+    );
   }
   return (
     <Link

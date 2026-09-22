@@ -8,14 +8,13 @@ import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Chart, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { useResetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
 import { ProfileToolbar } from "../profile-toolbar";
-import { MemberProgressChart } from "../progress/member-progress-chart";
+import { MemberProgressChart, useChartMembers } from "../progress/member-progress-chart";
 import { memberProgress } from "../progress/shape-progress";
 import { useProfileCatalogue } from "../use-profile-objekts";
 
@@ -126,8 +125,8 @@ function StatsCard({
 
 export function StatsView() {
   const { owned, catalogue, isPending } = useProfileCatalogue();
-  const { compareMember } = useCosmoArtist();
   const memberColor = useMemberColor();
+  const members = useChartMembers();
   const reset = useResetFilters();
 
   const byMember = useMemo(
@@ -148,10 +147,10 @@ export function StatsView() {
   );
   const progress = useMemo(() => {
     const ownedSlugs = new Set(owned.map((objekt) => objekt.slug));
-    return memberProgress(catalogue, ownedSlugs, { compareMember, memberColor }).toSorted(
+    return memberProgress(catalogue, ownedSlugs, members).toSorted(
       (a, b) => b.pct - a.pct || b.total - a.total,
     );
-  }, [owned, catalogue, compareMember, memberColor]);
+  }, [owned, catalogue, members]);
 
   return (
     <>

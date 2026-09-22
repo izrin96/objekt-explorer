@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Outlet, createFileRoute } from "@tanstack/react-router";
 
+import { PageMain } from "@/components/layout/page-main";
 import { NotFoundComponent } from "@/components/router/not-found";
 import { PrivateProfileGuard } from "@/features/profile/profile-guard";
 import { ProfileHeader } from "@/features/profile/profile-header";
@@ -9,7 +10,6 @@ import { ProfileStats } from "@/features/profile/profile-stats";
 import { ProfileTabs } from "@/features/profile/profile-tabs";
 import { profileQuery } from "@/features/profile/queries";
 import { useProfileSummary } from "@/features/profile/use-profile-objekts";
-import { cn, containerClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}")({
@@ -24,10 +24,7 @@ function ProfileLayout() {
   const { data: profile } = useSuspenseQuery(profileQuery({ nickname }));
 
   return (
-    <main
-      data-overflow-guard
-      className={cn(containerClass, "flex flex-col gap-4.5 px-5 pt-5 pb-10")}
-    >
+    <PageMain>
       {profile.isGuard === true ? (
         <PrivateProfileGuard />
       ) : (
@@ -38,7 +35,7 @@ function ProfileLayout() {
           <Outlet />
         </ProfileProvider>
       )}
-    </main>
+    </PageMain>
   );
 }
 

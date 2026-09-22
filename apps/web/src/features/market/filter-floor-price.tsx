@@ -2,11 +2,7 @@ import { CurrencyDollarIcon } from "@phosphor-icons/react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  NumberField,
-  NumberFieldGroup,
-  NumberFieldInput,
-} from "@/components/ui/number-field";
+import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { useFilters, useSetFilters } from "@/features/filters/use-filters";
 import { useCurrency } from "@/features/settings/use-currency";

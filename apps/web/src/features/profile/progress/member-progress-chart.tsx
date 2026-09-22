@@ -3,10 +3,29 @@ import { Bar, BarChart, Rectangle, XAxis, YAxis } from "recharts";
 import type { BarShapeProps } from "recharts/types/cartesian/Bar";
 
 import { Chart, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import { useMemberColor } from "@/features/filters/member-colors";
 import { inkOn } from "@/lib/color";
 import { m } from "@/paraglide/messages";
 
-import type { MemberProgress } from "./shape-progress";
+import type { ChartMember, MemberProgress } from "./shape-progress";
+
+/** The roster the bars are drawn for: the selected artists' own members. */
+export function useChartMembers(): ChartMember[] {
+  const { selectedArtists } = useCosmoArtist();
+  const memberColor = useMemberColor();
+
+  return useMemo(
+    () =>
+      selectedArtists.flatMap((artist) =>
+        artist.artistMembers.map((member) => ({
+          name: member.name,
+          color: memberColor(member.name),
+        })),
+      ),
+    [selectedArtists, memberColor],
+  );
+}
 
 type ChartRow = { name: string; count: number; total: number; percentage: number; fill: string };
 
