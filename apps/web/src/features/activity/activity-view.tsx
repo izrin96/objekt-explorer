@@ -63,15 +63,16 @@ const TYPE_LABEL: Record<ValidType, () => string> = {
   spin: m.filter_event_spin,
 };
 
-const TYPE_OPTIONS = validType.map((value) => ({ value, label: TYPE_LABEL[value]() }));
-
 function EventFilter({ className }: { className?: string }) {
   const type = useActivityType();
   const setType = useSetActivityType();
+  // built per render: the map callback runs at module load, where a message
+  // resolves once in the base locale on the server
+  const options = validType.map((value) => ({ value, label: TYPE_LABEL[value]() }));
   return (
     <SingleSelect
       label={m.filter_event_label()}
-      options={TYPE_OPTIONS}
+      options={options}
       value={type}
       onChange={setType}
       defaultValue="all"
