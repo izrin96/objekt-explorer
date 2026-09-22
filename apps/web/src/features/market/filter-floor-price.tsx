@@ -32,7 +32,7 @@ export function FloorPriceFilter({ className }: { className?: string }) {
         data-active={active || undefined}
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
-          "data-active:border-foreground gap-1.5 text-[13px]",
+          "data-active:border-foreground gap-1.5",
           className,
         )}
       >

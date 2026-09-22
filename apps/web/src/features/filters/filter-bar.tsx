@@ -40,10 +40,7 @@ import { GROUP_BY_LABEL, SORT_LABEL } from "./labels";
 import { DEFAULT_SORT_DIR, isFiltering } from "./search-schema";
 import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";
 
-const toolbarTrigger = cn(
-  buttonVariants({ variant: "outline", size: "sm" }),
-  "gap-1.5 text-[13px]",
-);
+const toolbarTrigger = cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5");
 
 /**
  * Picking a sort resets the direction to the one that sort is normally read
@@ -247,7 +244,7 @@ export function ResetButton({
     <Button
       variant="outline"
       size="sm"
-      className={cn("gap-1.5 text-[13px]", className)}
+      className={cn("gap-1.5", className)}
       disabled={disabled}
       onClick={onReset}
     >

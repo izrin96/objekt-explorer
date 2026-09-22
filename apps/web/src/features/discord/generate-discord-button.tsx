@@ -71,12 +71,7 @@ export function GenerateDiscordButton({ objekts }: { objekts: ValidObjekt[] }) {
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="gap-1.5 text-[13px]"
-        onClick={() => setOpen(true)}
-      >
+      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
         <DiscordLogoIcon weight="fill" />
         {m.discord_format_modal_button()}
       </Button>

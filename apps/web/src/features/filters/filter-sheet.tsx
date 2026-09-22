@@ -66,9 +66,7 @@ export function FilterSheet({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={<Button variant="outline" size="sm" className="gap-1.5 text-[13px] md:hidden" />}
-      >
+      <SheetTrigger render={<Button variant="outline" size="sm" className="gap-1.5 md:hidden" />}>
         <FunnelSimpleIcon />
         {m.filter_filters()}
         {count > 0 && (

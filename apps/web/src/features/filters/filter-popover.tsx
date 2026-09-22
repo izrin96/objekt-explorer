@@ -159,7 +159,6 @@ function ColorField() {
           <Button
             variant="outline"
             size="sm"
-            className="text-[13px]"
             onClick={() => setFilters({ color: undefined, colorSensitivity: undefined })}
           >
             <XIcon />
@@ -196,7 +195,7 @@ function LockCycle() {
         variant="outline"
         size="sm"
         aria-label={`${m.filter_lock_state()}: ${label}`}
-        className="w-fit justify-between text-[13px] font-normal"
+        className="w-fit justify-between font-normal"
         onClick={() =>
           setFilters({ locked: LOCK_CYCLE[(LOCK_CYCLE.indexOf(locked) + 1) % LOCK_CYCLE.length] })
         }
@@ -384,9 +383,7 @@ export function FilterPopover({
   return (
     <Popover>
       <PopoverTrigger
-        render={
-          <Button variant="outline" size="sm" className={cn("gap-1.5 text-[13px]", className)} />
-        }
+        render={<Button variant="outline" size="sm" className={cn("gap-1.5", className)} />}
       >
         <FunnelSimpleIcon />
         {m.filter_filters()}

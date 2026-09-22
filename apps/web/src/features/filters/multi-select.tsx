@@ -41,7 +41,7 @@ export function MultiSelect({
         data-active={value.length > 0 || undefined}
         className={cn(
           buttonVariants({ variant: "outline", size: "sm" }),
-          "data-active:border-foreground gap-1.5 text-[13px]",
+          "data-active:border-foreground gap-1.5",
           className,
         )}
       >

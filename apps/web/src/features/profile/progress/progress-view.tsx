@@ -318,7 +318,7 @@ export function ProgressView() {
             size="sm"
             aria-pressed={showCount}
             data-active={showCount || undefined}
-            className="data-active:border-foreground text-[13px]"
+            className="data-active:border-foreground"
             onClick={() => setShowCount(!showCount)}
           >
             {m.filter_show_count()}
