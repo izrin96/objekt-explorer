@@ -63,6 +63,7 @@ function Stepper({ step }: { step: Step }) {
 }
 
 const CARD = "bg-card flex max-w-md flex-col items-start gap-3 rounded-lg border p-5";
+const MAX_NICKNAME_RESULTS = 5;
 
 export function LinkFlow() {
   const [step, setStep] = useState<Step>("intro");
@@ -165,7 +166,8 @@ function NicknameStep({ onFound }: { onFound: (found: Found) => void }) {
     });
   };
 
-  const results = search.data ?? [];
+  // the search fans out on a prefix, and only the first few can be the user's own
+  const results = (search.data ?? []).slice(0, MAX_NICKNAME_RESULTS);
 
   return (
     <div className={cn(CARD, "w-full")}>
