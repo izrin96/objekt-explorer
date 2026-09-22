@@ -141,7 +141,7 @@ function ListEntries() {
         <ObjektCard
           objekt={objekt}
           selected={ids.has(objekt.id)}
-          onToggleSelect={(value) => toggle(value.id)}
+          onToggleSelect={user ? (value) => toggle(value.id) : undefined}
           onOpen={setActive}
           qty={item.length > 1 ? item.length : undefined}
           hideSerial={list.hideSerial === true}
@@ -267,32 +267,34 @@ function ListEntries() {
         </>
       )}
 
-      <SelectBar objekts={filtered}>
-        {user ? <AddToListAction objekts={filtered} /> : null}
-        {/* the list's own writes stay on while comparing: the bar acts on the
-            entries behind the result, which are still this list's */}
-        {isOwner ? (
-          <Button
-            size="sm"
-            className={`${selectBarFillClass} shrink-0`}
-            onClick={() => openRemove(selected)}
-          >
-            <TrashIcon />
-            {m.filter_remove_from_list()}
-          </Button>
-        ) : null}
-        {canPrice ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className={`${selectBarActionClass} shrink-0`}
-            onClick={() => openPrice(selected)}
-          >
-            <CurrencyDollarIcon />
-            {m.filter_set_price()}
-          </Button>
-        ) : null}
-      </SelectBar>
+      {user && (
+        <SelectBar objekts={filtered}>
+          <AddToListAction objekts={filtered} />
+          {/* the list's own writes stay on while comparing: the bar acts on the
+              entries behind the result, which are still this list's */}
+          {isOwner ? (
+            <Button
+              size="sm"
+              className={`${selectBarFillClass} shrink-0`}
+              onClick={() => openRemove(selected)}
+            >
+              <TrashIcon />
+              {m.filter_remove_from_list()}
+            </Button>
+          ) : null}
+          {canPrice ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className={`${selectBarActionClass} shrink-0`}
+              onClick={() => openPrice(selected)}
+            >
+              <CurrencyDollarIcon />
+              {m.filter_set_price()}
+            </Button>
+          ) : null}
+        </SelectBar>
+      )}
 
       <ObjektDrawer
         objekt={active}
