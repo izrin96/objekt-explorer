@@ -82,19 +82,20 @@ function EventFilter({ className }: { className?: string }) {
 /** `all` is the absence of `on_offline`, spelled as a value the select can hold */
 const ALL_TYPES = "all";
 
-const ONLINE_OPTIONS = [
-  { value: ALL_TYPES, label: m.filter_all() },
-  ...validOnlineTypes.map((value) => ({ value, label: ONLINE_TYPE_LABEL[value]() })),
-];
-
 function OnlineFilter({ className }: { className?: string }) {
   const onOffline = useFilters((f) => f.on_offline);
   const setFilters = useSetFilters();
+  // built per render, not at module load: a message read at module scope is
+  // resolved once in the base locale on the server and mismatches on hydration
+  const options = [
+    { value: ALL_TYPES, label: m.filter_all() },
+    ...validOnlineTypes.map((value) => ({ value, label: ONLINE_TYPE_LABEL[value]() })),
+  ];
 
   return (
     <SingleSelect
       label={m.filter_type()}
-      options={ONLINE_OPTIONS}
+      options={options}
       value={onOffline?.[0] ?? ALL_TYPES}
       defaultValue={ALL_TYPES}
       onChange={(value) =>

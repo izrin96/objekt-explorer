@@ -29,10 +29,6 @@ export function useChartMembers(): ChartMember[] {
 
 type ChartRow = { name: string; count: number; total: number; percentage: number; fill: string };
 
-const CHART_CONFIG = {
-  percentage: { label: m.stats_member_progress_percentage_label() },
-} satisfies ChartConfig;
-
 /**
  * Rough advance width of one character at the chart's 12px type. The value
  * label is SVG text with no box to measure, and the only question it answers is
@@ -59,13 +55,18 @@ export function MemberProgressChart({
       })),
     [rows],
   );
+  // a message read at module scope resolves once in the base locale on the
+  // server and mismatches on hydration
+  const config = {
+    percentage: { label: m.stats_member_progress_percentage_label() },
+  } satisfies ChartConfig;
 
   return (
     <Chart
       layout="vertical"
       data={data}
       dataKey="percentage"
-      config={CHART_CONFIG}
+      config={config}
       containerHeight={data.length * 40}
       className="w-full"
     >
