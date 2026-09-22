@@ -1,9 +1,4 @@
-import {
-  DeviceMobileIcon,
-  LinkSimpleIcon,
-  PencilSimpleIcon,
-  TrashIcon,
-} from "@phosphor-icons/react";
+import { LinkIcon, LinkSimpleIcon, PencilSimpleIcon, TrashIcon } from "@phosphor-icons/react";
 import type { PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
@@ -57,7 +52,7 @@ export function ListCard({ list }: { list: PublicList }) {
                 params={{ nickname: list.profile?.nickname || list.profileAddress.toLowerCase() }}
                 className={chipClass}
               >
-                <DeviceMobileIcon className="size-3 opacity-60" />
+                <LinkIcon className="size-3 opacity-60" />
                 <span className="sr-only">{m.list_profile_chip_aria()}</span>
                 <span className="truncate">
                   {list.profile?.nickname ?? list.profileAddress.toLowerCase()}

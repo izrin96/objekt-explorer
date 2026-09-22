@@ -1,6 +1,5 @@
 import {
   CardsThreeIcon,
-  DeviceMobileIcon,
   DiscordLogoIcon,
   GearIcon,
   InfoIcon,
@@ -168,7 +167,7 @@ function MyCosmoSubmenu() {
   return (
     <MenuSub>
       <MenuSubTrigger>
-        <DeviceMobileIcon />
+        <LinkIcon />
         {m.nav_my_cosmo_link()}
       </MenuSubTrigger>
       <MenuSubPopup className="min-w-52">
