@@ -16,6 +16,7 @@ import { getListLinkOption } from "./list-link";
 import { useListTarget } from "./list-provider";
 import { ListTypeBadge } from "./list-type-badge";
 import { ShareListButton } from "./share-list-button";
+import { TradeMatchesButton } from "./trade-matches";
 import { useListOwned } from "./use-list-owned";
 
 export function ListHeader() {
@@ -87,6 +88,7 @@ export function ListHeader() {
           <ShareListButton list={list} />
           <CompareButton sourceName={list.name} sourceId={list.slug} />
           <ExportButton slug={list.slug} />
+          <TradeMatchesButton />
           {isOwner ? (
             <>
               <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
