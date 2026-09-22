@@ -188,10 +188,14 @@ function NicknameStep({ onFound }: { onFound: (found: Found) => void }) {
           <Spinner className="size-5" />
         </div>
       ) : results.length > 0 ? (
-        <ul className="flex w-full flex-col gap-1">
+        <ul className="bg-background w-full divide-y overflow-hidden rounded-md border">
           {results.map((user) => (
             <li key={user.address}>
-              <Button variant="ghost" className="w-full justify-start" onClick={() => pick(user)}>
+              <Button
+                variant="ghost"
+                className="w-full justify-start rounded-none"
+                onClick={() => pick(user)}
+              >
                 {user.nickname}
               </Button>
             </li>
