@@ -96,8 +96,6 @@ export function CollectionView() {
   // a past state belongs to nobody to edit, and a signed-out visitor has
   // nothing to act with
   const showActions = Boolean(user) && filters.at === undefined;
-  const dndEnabled =
-    isProfileAuthed && showActions && !isFiltering(filters) && filters.hidePin !== true;
 
   // applied in the same commit as dnd-kit's own drag-end cleanup, so the drop
   // frame shows the final order without waiting on React Query's notify
@@ -142,6 +140,14 @@ export function CollectionView() {
   );
 
   const pinnedIds = useMemo(() => pinned.map((objekt) => objekt.id), [pinned]);
+
+  // one pin has nowhere to go, and an armed drag would only fight the long press
+  const dndEnabled =
+    isProfileAuthed &&
+    showActions &&
+    !isFiltering(filters) &&
+    filters.hidePin !== true &&
+    pinnedIds.length > 1;
 
   const renderCard = useCallback(
     (objekt: ValidObjekt, qty?: number, priority = false) => {
