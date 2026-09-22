@@ -46,22 +46,22 @@ export function AccountDialog({
              the panel it scrolls out of the dialog and there is no way back to
              another section */
           <Tabs defaultValue="general" className="min-h-0 gap-0">
-            {/* four labels do not fit a phone, so the strip scrolls sideways rather
-                than widening the dialog's panel; `overflow-y-clip` is load-bearing —
-                a bare `overflow-x-auto` computes the y axis to `auto` too, and the
-                indicator's 2px overhang then makes the strip swallow the wheel */}
-            <TabsList
-              variant="underline"
+            {/* `shrink-0` so the flex column cannot squeeze the strip below the
+                list, and `pb-px` to house the indicator's 1px overhang: together
+                they keep the scroller from gaining a y axis and clipping the rule */}
+            <div
               data-scroll-x
-              className="mx-6 w-auto justify-start overflow-x-auto overflow-y-clip border-b"
+              className="mx-6 shrink-0 [scrollbar-width:none] overflow-x-auto border-b pb-px"
             >
-              <TabsTab value="general">{m.auth_account_general()}</TabsTab>
-              <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>
-              {hasPassword && (
-                <TabsTab value="password">{m.auth_account_change_password()}</TabsTab>
-              )}
-              <TabsTab value="danger">{m.auth_account_danger_zone()}</TabsTab>
-            </TabsList>
+              <TabsList variant="underline" className="w-max justify-start">
+                <TabsTab value="general">{m.auth_account_general()}</TabsTab>
+                <TabsTab value="linked">{m.auth_account_social_link()}</TabsTab>
+                {hasPassword && (
+                  <TabsTab value="password">{m.auth_account_change_password()}</TabsTab>
+                )}
+                <TabsTab value="danger">{m.auth_account_danger_zone()}</TabsTab>
+              </TabsList>
+            </div>
 
             <DialogPanel className="pt-4!">
               <TabsPanel value="general">

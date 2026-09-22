@@ -124,6 +124,7 @@ function ListEntries() {
           onToggleSelect={(value) => toggle(value.id)}
           onOpen={setActive}
           qty={item.length > 1 ? item.length : undefined}
+          hideSerial={list.hideSerial === true}
           price={isSale ? formatPrice(currency, objekt) : undefined}
           priceMuted={isSale && (objekt.price ?? null) === null && objekt.isQyop !== true}
           priority={rowIndex < 2}
@@ -148,7 +149,19 @@ function ListEntries() {
         </ObjektCard>
       );
     },
-    [ids, toggle, user, isOwner, canPrice, compare, currency, isSale, openPrice, openRemove],
+    [
+      ids,
+      toggle,
+      user,
+      isOwner,
+      canPrice,
+      compare,
+      currency,
+      isSale,
+      list.hideSerial,
+      openPrice,
+      openRemove,
+    ],
   );
 
   const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);

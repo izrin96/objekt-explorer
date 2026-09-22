@@ -21,7 +21,7 @@ import { unobtainableSlugs } from "@/lib/unobtainables";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
-import { isObjektOwned } from "../objekt-utils";
+import { getCollectionShortNo, isObjektOwned } from "../objekt-utils";
 import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
 import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
@@ -114,12 +114,8 @@ function DrawerBody({
       <DrawerHeader>
         <DrawerTitle className="font-display flex flex-wrap items-center gap-2">
           {objekt.member}
-          {/* the collection no. and serial are what name this objekt — full
-              contrast, not a caption */}
-          <span className="font-mono text-base font-medium">
-            {objekt.collectionNo}
-            {owned && ` #${objekt.serial}`}
-          </span>
+          {/* the season and collection no. are what name this objekt — full contrast, not a caption */}
+          <span className="font-mono text-base font-medium">{getCollectionShortNo(objekt)}</span>
           {unobtainableSlugs.has(objekt.slug) && (
             <Badge variant="error" size="sm">
               {m.objekt_unobtainable()}

@@ -26,6 +26,12 @@ export function getBaseURL(): string {
   return clientEnv.VITE_SITE_URL;
 }
 
+/** The objekt artwork's intrinsic pixel size; the band's SVG viewBox. */
+export const OBJEKT_SIZE = {
+  height: 1673,
+  width: 1083,
+};
+
 /** The column count each breakpoint opens on, until the user picks one. */
 export const GRID_COLUMNS = 7;
 export const GRID_COLUMNS_TABLET = 5;

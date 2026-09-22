@@ -10,6 +10,7 @@ import { m } from "@/paraglide/messages";
 import { useSelection } from "@/stores/selection";
 import { useSettings } from "@/stores/settings";
 
+import { ObjektSidebar } from "./objekt-sidebar";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 
 type ObjektCardProps = {
@@ -28,6 +29,8 @@ type ObjektCardProps = {
   hideLabel?: boolean;
   /** the collection can no longer be minted, so no total counts it */
   unobtainable?: boolean;
+  /** drops the serial from the band and the caption; a grouped card drops it anyway */
+  hideSerial?: boolean;
   image?: "thumbnail" | "front";
   /** load eagerly — the first rows are above the fold */
   priority?: boolean;
@@ -60,6 +63,7 @@ export function ObjektCard({
   priceMuted,
   hideLabel,
   unobtainable = false,
+  hideSerial = false,
   image = "thumbnail",
   priority = false,
   children,
@@ -74,7 +78,9 @@ export function ObjektCard({
   const selectMode = onToggleSelect !== undefined && anySelected;
   const showCheck = selected || selectMode;
   const shortNo = getCollectionShortNo(objekt);
-  const serial = isObjektOwned(objekt) ? objekt.serial : undefined;
+  // a grouped card stands for several tokens, so no single serial belongs to it
+  const serialHidden = hideSerial || (qty !== undefined && qty > 1);
+  const serial = !serialHidden && isObjektOwned(objekt) ? objekt.serial : undefined;
 
   const { handlers, consumeClick } = useLongPress({
     disabled: onToggleSelect === undefined,
@@ -121,6 +127,8 @@ export function ObjektCard({
           draggable={false}
           className="absolute inset-0 size-full object-cover"
         />
+
+        <ObjektSidebar objekt={objekt} hideSerial={serialHidden} />
 
         {/* Pin and lock are always visible, so they lead; the hover-only
             controls follow, which keeps their reserved space at the right edge

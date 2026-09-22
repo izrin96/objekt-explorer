@@ -83,10 +83,12 @@ export function ProfileBanner({ profile }: { profile: PublicProfile }) {
         {hidden && <div className="absolute inset-0 bg-black/35" />}
       </div>
 
-      {/* the banner is only ~163px tall at 390px, so the desktop overlap would
-          put the avatar across its bottom edge with no banner left above the
-          nickname */}
-      {!hidden && <div className="aspect-banner pointer-events-none -mt-5 -mb-4 md:-mb-14" />}
+      {/* the overlap steps with the banner's height: the gradient only fades its
+          bottom 30%, so a fixed desktop overlap puts the nickname over unfaded
+          image on a short banner */}
+      {!hidden && (
+        <div className="aspect-banner pointer-events-none -mt-5 -mb-4 md:-mb-8 lg:-mb-10 xl:-mb-14" />
+      )}
     </>
   );
 }
