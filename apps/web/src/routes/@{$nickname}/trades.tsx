@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { profileQuery } from "@/features/profile/queries";
 import { tradesSearchSchema } from "@/features/profile/trades/search-schema";
 import { TradesView } from "@/features/profile/trades/trades-view";
+import { displayNickname } from "@/lib/address";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/@{$nickname}/trades")({
     loaderData
       ? generateMetadata({
           title: m.page_titles_profile_trades({
-            nickname: loaderData.nickname ?? loaderData.address,
+            nickname: displayNickname(loaderData.address, loaderData.nickname),
           }),
         })
       : {},

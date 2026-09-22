@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { EditCosmoDialog } from "@/features/link/edit-cosmo-dialog";
-import { truncateAddress } from "@/lib/address";
+import { displayNickname, truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 import { useSettings } from "@/stores/settings";
 
@@ -18,7 +18,7 @@ import { useProfileAuthed } from "./profile-provider";
 
 export function ProfileHeader({ profile }: { profile: PublicProfile }) {
   const isProfileAuthed = useProfileAuthed();
-  const nickname = profile.nickname ?? truncateAddress(profile.address);
+  const nickname = displayNickname(profile.address, profile.nickname);
   const hasBanner = Boolean(profile.bannerImgUrl && profile.bannerImgType);
   const bannerHidden = useSettings((s) => s.hideBanner);
   const set = useSettings((s) => s.set);
