@@ -19,11 +19,11 @@ An unknown nickname SHALL show the not-found surface.
 
 ### Requirement: Owned collection with pins and locks
 The Collection tab SHALL list owned objekts with serials, loading more as the user scrolls,
-in the profile's configured column count when set. Pinned objekts SHALL appear first in a
-shelf in the owner's order; the owner SHALL reorder them by drag and by keyboard, and pin,
-unpin, lock and unlock objekts singly and in batch from the selection bar. Locked objekts
-SHALL carry a lock mark; the lock filter SHALL cycle all, only locked, only unlocked.
-Visitors SHALL see pins and locks but no actions.
+in the profile's configured column count when set. Pinned objekts SHALL appear first in the
+grid in the owner's order; the owner SHALL reorder them by drag in place and by Move up /
+Move down in the card menu, and pin, unpin, lock and unlock objekts singly and in batch from
+the selection bar. Locked objekts SHALL carry a lock mark; the lock filter SHALL cycle all,
+only locked, only unlocked. Visitors SHALL see pins and locks but no actions.
 
 #### Scenario: Reorder persists
 - **WHEN** the owner drags the third pin to the first position and reloads
@@ -40,7 +40,7 @@ and lock mark, and keep the date across filter changes until cleared.
 
 #### Scenario: Checkpoint hides actions
 - **WHEN** the owner sets a checkpoint
-- **THEN** the pinned shelf is gone, cards carry no pin or lock marks, and selecting cards offers no actions
+- **THEN** pins no longer lead the grid, cards carry no pin or lock marks, and selecting cards offers no actions
 
 ### Requirement: Trades, progress and statistics
 The Trades tab SHALL list the profile's transfers by type (all, mint, received, sent, spin)
