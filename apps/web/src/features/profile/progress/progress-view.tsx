@@ -378,7 +378,9 @@ export function ProgressView() {
 
       {toolbar}
 
-      {(filters.member?.length ?? 0) === 0 ? (
+      {/* the chart is the overview of the whole roster; narrowing to an artist
+          is already a request for that artist's members one by one */}
+      {(filters.member?.length ?? 0) === 0 && (filters.artist?.length ?? 0) === 0 ? (
         measured.length > 0 ? (
           <MemberProgressChart
             rows={rows.toSorted((a, b) => b.pct - a.pct || b.total - a.total)}
