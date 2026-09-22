@@ -18,7 +18,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
-import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
+import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
 import { truncateAddress } from "@/lib/address";
@@ -28,6 +28,7 @@ import { CheckpointPopover } from "../checkpoint-popover";
 import { useProfileTarget } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { transfersOptions } from "./queries";
+import { useResetTrades, useSetTradesType, useTradesType } from "./search-schema";
 
 const TYPE_LABEL: Record<ValidType, () => string> = {
   all: m.trades_filter_type_all,
@@ -111,8 +112,9 @@ export function TradesView() {
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useCanonicalFilters();
-  const reset = useResetFilters();
-  const [type, setType] = useState<ValidType>("all");
+  const reset = useResetTrades();
+  const type = useTradesType();
+  const setType = useSetTradesType();
   const [active, setActive] = useState<ValidObjekt | null>(null);
 
   const query = useInfiniteQuery(
@@ -174,14 +176,7 @@ export function TradesView() {
           hint={m.trades_empty_hint()}
           action={
             isFiltering(filters) || type !== "all" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setType("all");
-                  reset();
-                }}
-              >
+              <Button variant="outline" size="sm" onClick={reset}>
                 {m.filter_reset_filter()}
               </Button>
             ) : undefined
