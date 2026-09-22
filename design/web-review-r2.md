@@ -8,6 +8,8 @@ Date: 2026-09-22. Reviewed at `157b09c7` (+ FIX6 working tree). Three read-only 
 
 Raw counts: P1 7 · P2 23 · P3 46. After de-duplication and removing decisions the user already took, the actionable list is below.
 
+**Status (2026-09-22, after the P1 round):** BR-1, BR-2, BR-3, BR-4/PR-10 and SH-4 fixed (`78d36352`, `13fbeb0a`). PR-1 decided by the user: web treats the Spin address as a normal client-loaded profile; the API's server-paginated path stays. SH-1, SH-2, SH-3, SH-6 move to the C8 cutover change. Also fixed in the same round from user testing: sort-direction glyphs now follow the website's mapping, Clear all is an outline button, pin/lock are the website's corner tag and check/menu sit top-right (`990414dc`).
+
 ## P1 — blocks cutover
 
 | ID | Gap | Fix shape |
