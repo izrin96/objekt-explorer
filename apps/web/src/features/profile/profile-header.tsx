@@ -25,7 +25,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
   const bannerToggleLabel = bannerHidden ? m.profile_banner_show() : m.profile_banner_hide();
 
   return (
-    <div className={hasBanner && !bannerHidden ? "relative" : "relative max-md:pt-5"}>
+    <div className="relative">
       <ProfileBanner profile={profile} />
 
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -44,7 +44,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
                 {nickname}
               </h1>
               {profile.verified === true && (
-                <Badge variant="success" className="font-semibold tracking-wide">
+                <Badge variant="success" size="sm" className="font-semibold tracking-wide">
                   {m.profile_header_verified()}
                 </Badge>
               )}
