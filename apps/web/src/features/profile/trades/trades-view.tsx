@@ -5,15 +5,14 @@ import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { InView } from "react-intersection-observer";
 
 import { DataTable, DataTableHead, DataTableRow } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
+import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Shimmer } from "@/components/shared/shimmer";
 import { TimeAgo } from "@/components/shared/time-ago";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
@@ -207,17 +206,12 @@ export function TradesView() {
             ))}
           </DataTable>
 
-          {query.hasNextPage && (
-            <InView
-              as="div"
-              className="flex justify-center py-4"
-              onChange={(inView) => {
-                if (inView && !query.isFetchingNextPage) void query.fetchNextPage();
-              }}
-            >
-              {query.isFetchingNextPage && <Spinner className="size-4" />}
-            </InView>
-          )}
+          <InfiniteSentinel
+            label={m.infinite_query_load_more_aria()}
+            hasNextPage={query.hasNextPage}
+            isFetchingNextPage={query.isFetchingNextPage}
+            fetchNextPage={() => void query.fetchNextPage()}
+          />
         </>
       )}
 

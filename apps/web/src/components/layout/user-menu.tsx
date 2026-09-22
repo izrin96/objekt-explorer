@@ -153,7 +153,6 @@ export function UserMenu({ user }: { user: User }) {
   );
 }
 
-/** the account's own linked identities, as the menu header's second line */
 function SocialHandle({ icon: Glyph, handle }: { icon: Icon; handle: string }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-1">
@@ -163,7 +162,6 @@ function SocialHandle({ icon: Glyph, handle }: { icon: Icon; handle: string }) {
   );
 }
 
-/** Every Cosmo the account has linked, each a direct link to its profile. */
 function MyCosmoSubmenu() {
   const profiles = useUserProfiles();
 
