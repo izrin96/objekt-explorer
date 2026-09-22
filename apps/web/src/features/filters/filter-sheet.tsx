@@ -77,7 +77,7 @@ export function FilterSheet({
       </SheetTrigger>
       <SheetPopup side="right" className="flex max-w-80 flex-col">
         <SheetHeader>
-          <SheetTitle className="font-display text-[15px]">{m.filter_filters()}</SheetTitle>
+          <SheetTitle className="font-display text-base">{m.filter_filters()}</SheetTitle>
           <SheetDescription className="sr-only">{m.filter_sheet_description()}</SheetDescription>
         </SheetHeader>
         <SheetPanel className="flex flex-col gap-4">

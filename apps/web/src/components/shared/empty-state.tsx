@@ -31,8 +31,8 @@ export function EmptyState({
       )}
     >
       <Glyph size={40} weight="light" className="text-muted-foreground mb-1" aria-hidden />
-      <p className="font-display text-[15px] font-semibold">{title}</p>
-      {hint !== undefined && <p className="text-muted-foreground max-w-80 text-[13px]">{hint}</p>}
+      <p className="font-display text-base font-semibold">{title}</p>
+      {hint !== undefined && <p className="text-muted-foreground max-w-80 text-sm">{hint}</p>}
       {action !== undefined && <div className="mt-2.5">{action}</div>}
     </div>
   );

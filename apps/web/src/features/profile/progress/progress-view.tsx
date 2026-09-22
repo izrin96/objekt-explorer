@@ -40,7 +40,7 @@ const nodeId = (...parts: string[]) =>
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="bg-popover rounded-lg border px-4 py-3.5">
-      <h2 className="font-display text-foreground/80 mb-2.5 text-[13px] font-semibold">{title}</h2>
+      <h2 className="font-display text-foreground/80 mb-2.5 text-sm font-semibold">{title}</h2>
       {children}
     </section>
   );
@@ -135,7 +135,7 @@ function ClassCard({
         /* below `sm` the title takes the whole row and the bar shares the next
            one with the value: three fixed tracks do not fit a phone */
         className={cn(
-          "bg-popover hover:bg-secondary/60 grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border px-3.5 py-3 text-left text-[13px] transition-colors",
+          "bg-popover hover:bg-secondary/60 grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border px-3.5 py-3 text-left text-sm transition-colors",
           "sm:grid-cols-[7.5rem_minmax(0,1fr)_auto]",
           open && "bg-secondary/40",
         )}
@@ -298,7 +298,7 @@ export function ProgressView() {
         <Panel title={m.progress_overall()}>
           <div className="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums">
             {totals.pct.toFixed(1)}
-            <small className="text-muted-foreground text-[13px] font-medium tracking-normal">
+            <small className="text-muted-foreground text-sm font-medium tracking-normal">
               % · {totals.owned.toLocaleString()} / {totals.total.toLocaleString()}
             </small>
           </div>
@@ -318,7 +318,7 @@ export function ProgressView() {
                 <button
                   type="button"
                   onClick={() => setFilters({ member: [row.member] })}
-                  className="hover:bg-secondary/60 -mx-1.5 flex w-[calc(100%+--spacing(3))] cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 text-left text-[13px]"
+                  className="hover:bg-secondary/60 -mx-1.5 flex w-[calc(100%+--spacing(3))] cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 text-left text-sm"
                 >
                   <span
                     className="ring-foreground/15 size-2.5 flex-none rounded-[3px] ring-1"
@@ -359,7 +359,7 @@ export function ProgressView() {
         )
       ) : (
         <div className="flex flex-col gap-8">
-          <p className="font-mono text-[13px] font-semibold tabular-nums">
+          <p className="font-mono text-sm font-semibold tabular-nums">
             <Value row={totals} />
           </p>
 

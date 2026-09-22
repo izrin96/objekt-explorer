@@ -304,7 +304,7 @@ export function CollectionView() {
       />
 
       {at && (
-        <p className="text-muted-foreground text-[13px]">
+        <p className="text-muted-foreground text-sm">
           {m.profile_checkpoint_notice({ date: format(at, "d MMM yyyy") })}
         </p>
       )}
@@ -321,7 +321,7 @@ export function CollectionView() {
             renderCard={renderCard}
           />
 
-          <p className="text-muted-foreground font-mono text-[12.5px] tabular-nums">
+          <p className="text-muted-foreground font-mono text-xs tabular-nums">
             {m.profile_count_summary({
               shown: filtered.length.toLocaleString(),
               unique: uniqueCount.toLocaleString(),

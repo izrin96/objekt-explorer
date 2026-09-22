@@ -38,7 +38,7 @@ function SearchHelp() {
       >
         <QuestionMarkIcon />
       </PopoverTrigger>
-      <PopoverPopup align="start" className="max-w-sm text-[13px]">
+      <PopoverPopup align="start" className="max-w-sm text-sm">
         <div className="flex flex-col gap-2">
           <span>{m.filter_search_help_intro()}</span>
           <ul className="list-inside list-disc leading-6">
@@ -113,7 +113,7 @@ export function FilterSearchField() {
           setDraft(event.target.value);
           commit(event.target.value);
         }}
-        className="pr-8! pl-6! text-[13px]"
+        className="pr-8! pl-6!"
       />
       {draft.length === 0 && <SearchHelp />}
     </div>

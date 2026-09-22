@@ -59,7 +59,7 @@ export function ProfileTabs({ nickname }: { nickname: string }) {
                nickname outside ASCII reaches `pathname` percent-encoded */
             value={router.buildLocation({ to: item.to, params: { nickname } }).pathname}
             nativeButton={false}
-            className="hover:text-foreground data-active:text-foreground h-9 grow-0 rounded-none px-3 text-[13.5px]"
+            className="hover:text-foreground data-active:text-foreground h-9 grow-0 rounded-none px-3"
             render={
               <Link to={item.to} params={{ nickname }} preload="intent" resetScroll={false} />
             }

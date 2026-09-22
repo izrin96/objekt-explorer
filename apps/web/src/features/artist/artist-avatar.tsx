@@ -13,7 +13,7 @@ export function ArtistAvatar({
   return (
     <Avatar className={cn("ring-background size-5 ring-2", className)}>
       <AvatarImage src={artist.logoImageUrl} alt="" className="bg-black object-contain" />
-      <AvatarFallback className="text-[10px] font-bold text-white">
+      <AvatarFallback className="font-bold text-white">
         {artist.title.slice(0, 1).toUpperCase()}
       </AvatarFallback>
     </Avatar>

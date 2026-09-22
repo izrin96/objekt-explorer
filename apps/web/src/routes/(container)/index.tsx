@@ -72,7 +72,7 @@ function HomePage() {
       <FilterBar facets={facets} groups={groups} />
 
       {!isPending && (
-        <div className="text-muted-foreground font-mono text-[12.5px]">
+        <div className="text-muted-foreground font-mono text-xs">
           <b className="text-foreground font-semibold tabular-nums">
             {m.common_count_total_prefix()}
             {filtered.length.toLocaleString()}

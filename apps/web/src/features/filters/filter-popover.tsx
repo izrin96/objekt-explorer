@@ -77,7 +77,7 @@ export function longTailCount(filters: FilterSearch, fields: readonly LongTailFi
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <Label className="flex h-8 items-center justify-between gap-3 text-[13px] font-medium">
+    <Label className="flex h-8 items-center justify-between gap-3 font-medium">
       {label}
       {children}
     </Label>
@@ -91,7 +91,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  */
 function ControlRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex h-8 items-center justify-between gap-3 text-[13px] font-medium">
+    <div className="flex h-8 items-center justify-between gap-3 text-base font-medium sm:text-sm">
       <span>{label}</span>
       {children}
     </div>
@@ -131,7 +131,7 @@ function ColorField() {
       {color !== undefined && (
         <>
           <div className="flex h-6 items-center justify-between gap-3">
-            <Label id={sensitivityId} render={<span />} className="text-[13px] font-medium">
+            <Label id={sensitivityId} render={<span />} className="font-medium">
               {m.filter_color_sensitivity()}
             </Label>
             <span className="text-muted-foreground font-mono text-xs tabular-nums">

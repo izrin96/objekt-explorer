@@ -100,7 +100,7 @@ export function MarketView() {
       />
 
       {!isPending && (
-        <div className="text-muted-foreground font-mono text-[12.5px]">
+        <div className="text-muted-foreground font-mono text-xs">
           <b className="text-foreground font-semibold tabular-nums">
             {filtered.length.toLocaleString()}
           </b>

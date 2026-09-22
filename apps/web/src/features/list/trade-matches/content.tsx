@@ -86,7 +86,7 @@ export function TradeMatchesContent({ slug, mode }: { slug: string; mode: TradeM
 
   return (
     <div className="flex flex-col gap-2.5">
-      <p className="text-muted-foreground text-[13px] tabular-nums">
+      <p className="text-muted-foreground text-sm tabular-nums">
         {m.list_trade_matches_count_label({ count: partners.length })}
       </p>
       <div className="flex flex-col divide-y rounded-lg border">
@@ -127,7 +127,7 @@ function PartnerDisclosure({
 
         <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="truncate text-[15px] leading-snug font-semibold">
+            <span className="truncate text-base leading-snug font-semibold">
               {partner.username}
             </span>
             {partner.user.discord ? (
@@ -139,7 +139,7 @@ function PartnerDisclosure({
           </div>
 
           {/* each count is a whole sentence, so its accessible name needs no `title` */}
-          <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 text-[13px] tabular-nums sm:shrink-0 sm:justify-end">
+          <div className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-0.5 text-sm tabular-nums sm:shrink-0 sm:justify-end">
             {DIRECTIONS.map((direction) => {
               const count = new Set(partner.matches.flatMap((match) => match[direction])).size;
               if (count === 0) return null;
@@ -186,14 +186,14 @@ function MatchBlock({
               ? { address: match.profileAddress, nickname: match.profileNickname }
               : null,
           })}
-          className="min-w-0 text-[15px] leading-snug font-medium break-words underline-offset-2 hover:underline"
+          className="min-w-0 text-base leading-snug font-medium break-words underline-offset-2 hover:underline"
         >
           {match.listName}
           <ArrowUpRightIcon aria-hidden className="text-muted-foreground ml-0.5 inline size-3.5" />
         </Link>
 
         {cosmoHandle === null ? null : (
-          <span className="text-muted-foreground min-w-0 text-[13px] font-normal">
+          <span className="text-muted-foreground min-w-0 text-sm font-normal">
             {"· "}
             {m.list_trade_cosmo_id()}{" "}
             <Link
@@ -237,7 +237,7 @@ function DirectionSection({
 
   return (
     <section className="flex flex-col gap-2">
-      <h4 className="text-muted-foreground text-[13px] font-medium tabular-nums">
+      <h4 className="text-muted-foreground text-sm font-medium tabular-nums">
         {DIRECTION[direction].section({ count: slugs.length })}
       </h4>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
@@ -265,7 +265,7 @@ function MatchObjekt({
 }) {
   if (!collection) {
     return (
-      <div className="bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center self-start p-2 text-center font-mono text-[11px] leading-snug break-all">
+      <div className="bg-muted text-muted-foreground rounded-photocard aspect-photocard grid place-items-center self-start p-2 text-center font-mono text-xs leading-snug break-all">
         {slug}
       </div>
     );

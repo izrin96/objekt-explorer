@@ -138,7 +138,7 @@ function ChangelogDialog({
               /* `<details>` rather than a rebuilt disclosure: it already
                   toggles on Enter and Space and announces its expanded state */
               <details key={entry.date} open={index === 0} className="group px-3 py-2.5">
-                <summary className="focus-visible:ring-ring flex cursor-pointer items-center gap-2 rounded-sm font-mono text-[13px] outline-none focus-visible:ring-2">
+                <summary className="focus-visible:ring-ring flex cursor-pointer items-center gap-2 rounded-sm font-mono text-sm outline-none focus-visible:ring-2">
                   <CaretRightIcon
                     aria-hidden
                     className="size-3.5 shrink-0 transition-transform group-open:rotate-90"

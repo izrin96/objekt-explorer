@@ -83,10 +83,10 @@ export function OwnedPanel({
         aria-label={m.objekt_owned_table_aria()}
         className="bg-card focus-visible:ring-ring overflow-x-auto rounded-lg border outline-none focus-visible:ring-2"
       >
-        <table className="w-full min-w-96 border-collapse text-[13px]">
+        <table className="w-full min-w-96 border-collapse text-sm">
           <caption className="sr-only">{m.objekt_owned_table_aria()}</caption>
           <thead>
-            <tr className="text-muted-foreground bg-secondary/60 text-[11.5px] tracking-wide uppercase">
+            <tr className="text-muted-foreground bg-secondary/60 text-xs tracking-wide uppercase">
               <SortableHeader sort={sort} column="serial" onToggle={toggle}>
                 {m.objekt_serial()}
               </SortableHeader>
@@ -163,7 +163,7 @@ export function OwnedPanel({
             <CaretLeftIcon />
           </Button>
           {/* the buttons disable at the ends, so the count is what announces the move */}
-          <span role="status" className="font-mono text-[13px] tabular-nums">
+          <span role="status" className="font-mono text-sm tabular-nums">
             {current} / {totalPages}
           </span>
           <Button

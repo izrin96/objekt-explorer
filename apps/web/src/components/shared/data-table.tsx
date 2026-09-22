@@ -44,7 +44,7 @@ export function DataTableHead({ children }: { children: ReactNode }) {
   return (
     <div
       className={cn(
-        "text-muted-foreground bg-secondary/60 grid h-9 items-center gap-3 border-b px-3.5 text-[11.5px] tracking-wide uppercase",
+        "text-muted-foreground bg-secondary/60 grid h-9 items-center gap-3 border-b px-3.5 text-xs tracking-wide uppercase",
         columns,
         minWidth,
       )}
@@ -69,7 +69,7 @@ export function DataTableRow({
 }) {
   const { columns, minWidth } = useTableShape();
   const shared = cn(
-    "grid h-11 items-center gap-3 border-t px-3.5 text-[13px] first:border-t-0",
+    "grid h-11 items-center gap-3 border-t px-3.5 text-sm first:border-t-0",
     columns,
     minWidth,
     className,

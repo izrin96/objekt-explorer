@@ -85,7 +85,7 @@ export function MarketPanel({
       <div className="bg-secondary grid grid-cols-3 gap-2 rounded-lg border p-3">
         {cells.map(([label, value]) => (
           <div key={label} className="flex flex-col">
-            <span className="text-muted-foreground text-[11px]">{label}</span>
+            <span className="text-muted-foreground text-xs">{label}</span>
             {value === null ? (
               <Shimmer className="my-1 h-3 w-12" />
             ) : (
@@ -171,7 +171,7 @@ function MarketRow({
   return (
     <div className="bg-card grid grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 rounded-lg border px-3 py-2 text-sm">
       <div className="flex flex-col">
-        <span className="text-muted-foreground text-[11px]">{m.objekt_serial()}</span>
+        <span className="text-muted-foreground text-xs">{m.objekt_serial()}</span>
         {item.serial === null ? (
           <span className="font-mono font-medium tabular-nums">—</span>
         ) : (
@@ -186,7 +186,7 @@ function MarketRow({
       </div>
 
       <div className="flex min-w-0 flex-col">
-        <span className="text-muted-foreground text-[11px]">{m.objekt_owner()}</span>
+        <span className="text-muted-foreground text-xs">{m.objekt_owner()}</span>
         {nickname !== null ? (
           <Link
             to="/@{$nickname}"
@@ -203,7 +203,7 @@ function MarketRow({
       </div>
 
       <div className="flex flex-col items-end">
-        <span className="text-muted-foreground text-[11px]">
+        <span className="text-muted-foreground text-xs">
           {m.list_manage_objekt_set_price_label()}
         </span>
         <div className="flex items-center gap-1">
@@ -218,14 +218,14 @@ function MarketRow({
           {item.note && <ObjektNote note={item.note} />}
         </div>
         {!item.isQyop && listed !== null && listed !== currency && usdPrice !== null && (
-          <span className="text-muted-foreground font-mono text-[11px] tabular-nums">
+          <span className="text-muted-foreground font-mono text-xs tabular-nums">
             ≈{formatUsd(usdPrice)}
           </span>
         )}
       </div>
 
       <div className="col-span-full -mt-1 flex items-center justify-between gap-2">
-        <span className="text-muted-foreground truncate font-mono text-[11px]">
+        <span className="text-muted-foreground truncate font-mono text-xs">
           <TimeAgo date={new Date(item.createdAt)} />
         </span>
         <Button variant="outline" size="xs" render={<Link {...getListLinkOption(item.list)} />}>

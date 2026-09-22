@@ -77,7 +77,7 @@ export function FilterCollection({
           <ComboboxPrimitive.Input
             ref={inputRef}
             placeholder={m.filter_collection_search()}
-            className="h-9 w-full bg-transparent pr-2.5 pl-8 text-[13px] outline-none"
+            className="h-9 w-full bg-transparent pr-2.5 pl-8 text-base outline-none sm:text-sm"
           />
         </div>
 
@@ -86,14 +86,14 @@ export function FilterCollection({
         <ComboboxEmpty>{m.filter_collection_empty()}</ComboboxEmpty>
         <ComboboxList>
           {(no: string) => (
-            <ComboboxItem key={no} value={no} className="font-mono text-[13px]">
+            <ComboboxItem key={no} value={no} className="font-mono">
               {no}
             </ComboboxItem>
           )}
         </ComboboxList>
 
         {value.length > 0 && (
-          <div className="text-muted-foreground flex items-center justify-between border-t px-2.5 py-1.5 text-[12px]">
+          <div className="text-muted-foreground flex items-center justify-between border-t px-2.5 py-1.5 text-xs">
             <span>{m.filter_picked_count({ count: value.length })}</span>
             <button
               type="button"

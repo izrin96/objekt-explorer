@@ -43,7 +43,7 @@ export function AppNav() {
         {/* never wraps or squashes; the search field absorbs the shortfall */}
         <Link
           to="/"
-          className="font-display flex shrink-0 items-center gap-2 text-[15px] font-bold tracking-tight whitespace-nowrap"
+          className="font-display flex shrink-0 items-center gap-2 text-base font-bold tracking-tight whitespace-nowrap"
         >
           <span
             className={cn(
@@ -62,7 +62,7 @@ export function AppNav() {
               key={l.key}
               to={l.to}
               activeOptions={{ exact: l.to === "/" }}
-              className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-[7px] px-2.5 py-1.5 text-[13.5px] font-medium whitespace-nowrap"
+              className="text-muted-foreground hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground rounded-[7px] px-2.5 py-1.5 text-sm font-medium whitespace-nowrap"
             >
               {l.label}
             </Link>

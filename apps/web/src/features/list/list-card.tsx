@@ -28,7 +28,7 @@ export function ListCard({ list }: { list: PublicList }) {
   return (
     <div className="bg-card flex flex-col gap-2.5 rounded-lg border px-3.5 pt-3.5 pb-3">
       <div className="flex min-w-0 flex-col gap-1">
-        <div className="font-display flex flex-wrap items-center gap-2 text-[15px] font-semibold">
+        <div className="font-display flex flex-wrap items-center gap-2 text-base font-semibold">
           <Link
             {...getListLinkOption(list)}
             className="truncate underline-offset-2 hover:underline"
@@ -44,7 +44,7 @@ export function ListCard({ list }: { list: PublicList }) {
         {/* The chip is "which Cosmo owns this list", so it keys off the address;
             `isProfileBind` only decides whether that profile displays it. */}
         {list.profileAddress || linked ? (
-          <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-[12px]">
+          <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
             {linked ? (
               <Link {...getListLinkOption(linked)} className={chipClass}>
                 <LinkSimpleIcon className="size-3 opacity-60" />

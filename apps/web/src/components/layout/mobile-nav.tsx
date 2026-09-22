@@ -53,7 +53,7 @@ export function MobileNav({
       </SheetTrigger>
       <SheetPopup side="left" className="flex max-w-72 flex-col">
         <SheetHeader>
-          <SheetTitle className="font-display flex items-center gap-2 text-[15px]">
+          <SheetTitle className="font-display flex items-center gap-2 text-base">
             <span className="bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-[7px]">
               <CubeIcon weight="bold" className="size-3.5" />
             </span>

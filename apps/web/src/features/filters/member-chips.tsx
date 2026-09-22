@@ -189,7 +189,7 @@ export function MemberChips() {
             onClick={() => pickArtist(cosmoArtist.id as ValidArtist)}
             {...artistRoving.chipProps(index, groups.length)}
             className={cn(
-              "h-8 cursor-pointer rounded-full px-3 text-[13px] font-medium whitespace-nowrap",
+              "h-8 cursor-pointer rounded-full px-3 text-sm font-medium whitespace-nowrap",
               current === cosmoArtist.id
                 ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
@@ -205,7 +205,7 @@ export function MemberChips() {
           {shown.map((group) => (
             <Fragment key={group.artist.id}>
               {shown.length > 1 && (
-                <span className="text-muted-foreground flex h-8 flex-none items-center pr-0.5 pl-2 font-mono text-[11px] tracking-wide">
+                <span className="text-muted-foreground flex h-8 flex-none items-center pr-0.5 pl-2 font-mono text-xs tracking-wide">
                   {group.artist.title}
                 </span>
               )}
@@ -219,7 +219,7 @@ export function MemberChips() {
                     onClick={() => toggleMember(name)}
                     {...memberRoving.chipProps(allMembers.indexOf(name), allMembers.length)}
                     className={cn(
-                      "bg-popover flex h-8 flex-none cursor-pointer items-center gap-1.75 rounded-full border pr-3 pl-1.25 text-[13px] font-medium",
+                      "bg-popover flex h-8 flex-none cursor-pointer items-center gap-1.75 rounded-full border pr-3 pl-1.25 text-sm font-medium",
                       on
                         ? "bg-foreground text-background border-foreground"
                         : "hover:border-foreground/30",

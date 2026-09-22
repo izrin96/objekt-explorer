@@ -183,7 +183,7 @@ export function TradesView() {
         />
       ) : (
         <>
-          <p className="text-muted-foreground font-mono text-[12.5px] tabular-nums">
+          <p className="text-muted-foreground font-mono text-xs tabular-nums">
             {m.trades_count({
               count: `${rows.length.toLocaleString()}${query.hasNextPage ? "+" : ""}`,
             })}

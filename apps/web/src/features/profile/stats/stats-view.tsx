@@ -128,8 +128,8 @@ function StatsCard({
   return (
     <Card className="bg-popover rounded-lg">
       <CardHeader className="gap-1 p-4 pb-0">
-        <CardTitle className="font-display text-[15px]">{title}</CardTitle>
-        <CardDescription className="text-[13px]">{description}</CardDescription>
+        <CardTitle className="font-display text-base">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="p-4">{children}</CardContent>
     </Card>

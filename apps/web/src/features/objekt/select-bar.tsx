@@ -28,10 +28,10 @@ const SELECTED_PREVIEW_MAX = 50;
 
 /** filled action on the inverted bar */
 export const selectBarFillClass =
-  "bg-background text-foreground border-background hover:bg-background/90 dark:hover:bg-background/90 dark:data-pressed:bg-background/90 h-7 text-[13px]";
+  "bg-background text-foreground border-background hover:bg-background/90 dark:hover:bg-background/90 dark:data-pressed:bg-background/90 h-7";
 /** outlined action on the inverted bar */
 export const selectBarActionClass =
-  "border-background/25 text-background hover:bg-background/10 hover:text-background data-pressed:bg-background/10 dark:hover:bg-background/10 dark:data-pressed:bg-background/10 h-7 bg-transparent text-[13px] dark:bg-transparent";
+  "border-background/25 text-background hover:bg-background/10 hover:text-background data-pressed:bg-background/10 dark:hover:bg-background/10 dark:data-pressed:bg-background/10 h-7 bg-transparent dark:bg-transparent";
 
 /** Data rather than a node: the button copy and the menu-item copy are one description. */
 export type SelectBarAction = {
@@ -74,7 +74,7 @@ export function SelectBar({ objekts, children, secondary = [] }: SelectBarProps)
     <div
       role="toolbar"
       aria-label={m.selection_toolbar_aria()}
-      className="bg-foreground text-background sticky bottom-4 z-5 mx-auto mt-1.5 flex w-full max-w-full min-w-0 items-center gap-1.5 rounded-xl py-1.5 pr-1.5 pl-3.5 text-[13px] shadow-lg sm:w-max"
+      className="bg-foreground text-background sticky bottom-4 z-5 mx-auto mt-1.5 flex w-full max-w-full min-w-0 items-center gap-1.5 rounded-xl py-1.5 pr-1.5 pl-3.5 text-base shadow-lg sm:w-max sm:text-sm"
     >
       <SelectedPopover objekts={selected} count={ids.size} />
       <span className="bg-background/25 mx-1 h-5 w-px shrink-0" />

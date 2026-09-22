@@ -40,7 +40,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
             {/* the badge sits beside the heading, not inside it: in the
                 heading it joins the accessible name as "<nickname> Verified" */}
             <div className="flex items-center gap-2">
-              <h1 className="font-display truncate text-[22px] font-semibold tracking-tight">
+              <h1 className="font-display truncate text-xl font-semibold tracking-tight">
                 {nickname}
               </h1>
               {profile.verified === true && (

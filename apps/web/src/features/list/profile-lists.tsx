@@ -26,7 +26,7 @@ export function ProfileLists({ address }: { address: string }) {
           className="bg-popover hover:bg-secondary/60 flex flex-col gap-1.5 rounded-lg border p-4 transition-colors"
         >
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-[15px] font-semibold">{list.name}</h3>
+            <h3 className="font-display text-base font-semibold">{list.name}</h3>
             {list.listTypeNew !== "general" ? <ListTypeBadge type={list.listTypeNew} /> : null}
             {list.listTypeNew === "sale" && list.currency ? (
               <span className="text-muted-foreground font-mono text-xs">({list.currency})</span>

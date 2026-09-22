@@ -21,7 +21,7 @@ export function AuthShell({
       <div className="flex w-full max-w-sm min-w-0 flex-col gap-5">
         <Link
           to="/"
-          className="font-display mx-auto flex items-center gap-2 text-[15px] font-bold tracking-tight whitespace-nowrap"
+          className="font-display mx-auto flex items-center gap-2 text-base font-bold tracking-tight whitespace-nowrap"
         >
           <span className="bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-[7px]">
             <CubeIcon weight="bold" className="size-3.5" />

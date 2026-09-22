@@ -189,7 +189,7 @@ export function ActiveChips({
             aria-label={m.filter_remove_chip({ label: chip.label })}
             onClick={() => onRemove(chip)}
             className={cn(
-              "bg-secondary hover:bg-muted inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-[12.5px] whitespace-nowrap data-swatched:pl-1",
+              "bg-secondary hover:bg-muted inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-xs whitespace-nowrap data-swatched:pl-1",
               chip.mono && "font-mono",
             )}
             data-swatched={swatched || undefined}
@@ -206,12 +206,7 @@ export function ActiveChips({
           </button>
         );
       })}
-      <Button
-        variant="outline"
-        size="xs"
-        onClick={onReset}
-        className="h-6.5 flex-none text-[12.5px] sm:h-6.5 sm:text-[12.5px]"
-      >
+      <Button variant="outline" size="xs" onClick={onReset} className="h-6.5 flex-none sm:h-6.5">
         {m.filter_clear_all()}
       </Button>
     </div>

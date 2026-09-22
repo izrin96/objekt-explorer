@@ -217,7 +217,7 @@ export function NavSearch({
       <button
         type="button"
         onClick={() => onOpenChange(true)}
-        className="bg-popover text-muted-foreground hover:border-foreground/30 hidden h-8 w-60 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-[13px] md:flex"
+        className="bg-popover text-muted-foreground hover:border-foreground/30 hidden h-8 w-60 min-w-0 items-center gap-2 rounded-lg border px-2.5 text-sm md:flex"
       >
         <MagnifyingGlassIcon className="size-4 shrink-0" />
         <span className="truncate">{m.nav_search_user_label()}</span>
@@ -253,7 +253,7 @@ export function NavSearch({
           <div className="border-t" />
           {/* three different empties: nothing typed yet, the server refusing,
               and nothing found. Only the last is a result. */}
-          <ComboboxEmpty className="text-muted-foreground text-center text-[13px]">
+          <ComboboxEmpty className="text-muted-foreground text-center">
             {query.trim() === "" ? (
               <p className="px-3 py-8">{m.nav_search_user_hint()}</p>
             ) : serverError !== null ? (
@@ -295,7 +295,7 @@ export function NavSearch({
               </ComboboxGroup>
             )}
           </ComboboxList>
-          <div className="text-muted-foreground bg-muted/40 flex items-center gap-3 border-t px-3 py-2 text-[11.5px]">
+          <div className="text-muted-foreground bg-muted/40 flex items-center gap-3 border-t px-3 py-2 text-xs">
             <KbdGroup>
               <Kbd>↑</Kbd>
               <Kbd>↓</Kbd>

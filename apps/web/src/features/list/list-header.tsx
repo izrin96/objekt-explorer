@@ -32,7 +32,7 @@ export function ListHeader() {
       <div className="grid gap-4 md:grid-cols-[1fr_auto]">
         <div className="flex min-w-0 flex-col justify-center gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-display text-[22px] font-semibold tracking-tight text-balance">
+            <h1 className="font-display text-xl font-semibold tracking-tight text-balance">
               {list.name}
             </h1>
             {list.isProfileBind ? (
@@ -51,7 +51,7 @@ export function ListHeader() {
             <Link
               to="/@{$nickname}"
               params={{ nickname: list.profile?.nickname || list.profileAddress.toLowerCase() }}
-              className="font-display text-foreground max-w-full truncate text-[15px] font-semibold underline-offset-2 hover:underline"
+              className="font-display text-foreground max-w-full truncate text-base font-semibold underline-offset-2 hover:underline"
             >
               {list.profile?.nickname ?? list.profileAddress.toLowerCase()}
             </Link>
