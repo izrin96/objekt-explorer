@@ -130,16 +130,14 @@ export function SerialsPanel({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* below `sm` the field takes the row and the four nav buttons drop to a
-          second line; together they need ~190px more than a phone drawer has */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div className="flex items-center gap-1.5">
         <NumberField
           value={serial}
           // null is an empty input, not "no serial"; 0 keeps the field usable
           onValueChange={(value) => onSerialChange(value ?? 0)}
           min={0}
           size="sm"
-          className="w-full grow sm:w-auto"
+          className="min-w-0 grow"
         >
           <NumberFieldGroup>
             <NumberFieldInput
@@ -288,7 +286,7 @@ function OwnershipHead({
   const found = view.kind === "found" ? view : null;
 
   return (
-    <div className="flex flex-col gap-1.5 border-b pb-2.5">
+    <div className="flex flex-col gap-1.5">
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-1.5 text-sm">
         <Fact label={m.objekt_owner()}>
           {found === null ? (
