@@ -1,6 +1,7 @@
 import { XIcon } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArtistAvatar } from "@/features/artist/artist-avatar";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
@@ -13,11 +14,13 @@ import { useCanonicalFilters, type FilterPatch } from "./use-filters";
 
 export type ActiveChip = {
   key: string;
-  /** accessible name; the chip itself shows `value` when it carries a swatch */
+  /** accessible name; the chip shows `value` instead, after `name` when there is one */
   label: string;
   value?: string;
+  name?: string;
   dot?: string;
   artistId?: string;
+  /** sets `value` in mono: objekt data, not prose */
   mono?: boolean;
   remove: FilterPatch;
 };
@@ -72,6 +75,8 @@ function buildChips(filters: FilterSearch, memberColor: (name: string) => string
     chips.push({
       key: `collection:${value}`,
       label: `${m.filter_collection_no()}: ${value}`,
+      name: m.filter_collection_no(),
+      value,
       mono: true,
       remove: { collection: without(filters.collection ?? [], value) },
     });
@@ -132,9 +137,12 @@ function buildChips(filters: FilterSearch, memberColor: (name: string) => string
     });
   }
   if (filters.floor_min !== undefined || filters.floor_max !== undefined) {
+    const floor = `${filters.floor_min ?? "…"}–${filters.floor_max ?? "…"}`;
     chips.push({
       key: "floor",
-      label: `${m.filter_floor_price()}: ${filters.floor_min ?? "…"}–${filters.floor_max ?? "…"}`,
+      label: `${m.filter_floor_price()}: ${floor}`,
+      name: m.filter_floor_price(),
+      value: floor,
       mono: true,
       remove: { floor_min: undefined, floor_max: undefined },
     });
@@ -178,37 +186,43 @@ export function ActiveChips({
   if (chips.length === 0) return null;
 
   return (
-    <div data-scroll-x className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-      {chips.map((chip) => {
-        const artist = chip.artistId !== undefined ? getArtist(chip.artistId) : undefined;
-        const swatched = artist !== undefined || chip.dot !== undefined;
-        return (
-          <button
-            key={chip.key}
-            type="button"
-            aria-label={m.filter_remove_chip({ label: chip.label })}
-            onClick={() => onRemove(chip)}
-            className={cn(
-              "bg-secondary hover:bg-muted inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-xs whitespace-nowrap data-swatched:pl-1",
-              chip.mono && "font-mono",
-            )}
-            data-swatched={swatched || undefined}
-          >
-            {artist !== undefined && <ArtistAvatar artist={artist} className="size-4 ring-0" />}
-            {chip.dot !== undefined && (
-              <span
-                className="ring-foreground/15 size-4.5 rounded-full ring-1"
-                style={{ background: chip.dot }}
-              />
-            )}
-            {chip.value ?? chip.label}
-            <XIcon className="size-3 opacity-50" />
-          </button>
-        );
-      })}
-      <Button variant="outline" size="xs" onClick={onReset} className="h-6.5 flex-none sm:h-6.5">
-        {m.filter_clear_all()}
-      </Button>
-    </div>
+    <ScrollArea data-scroll-x scrollFade>
+      <div className="flex w-max items-center gap-1.5 pb-0.5">
+        {chips.map((chip) => {
+          const artist = chip.artistId !== undefined ? getArtist(chip.artistId) : undefined;
+          const swatched = artist !== undefined || chip.dot !== undefined;
+          return (
+            <button
+              key={chip.key}
+              type="button"
+              aria-label={m.filter_remove_chip({ label: chip.label })}
+              onClick={() => onRemove(chip)}
+              className="bg-secondary hover:bg-muted inline-flex h-6.5 flex-none cursor-pointer items-center gap-1.5 rounded-full pr-2 pl-2.5 text-xs whitespace-nowrap data-swatched:pl-1"
+              data-swatched={swatched || undefined}
+            >
+              {artist !== undefined && <ArtistAvatar artist={artist} className="size-4 ring-0" />}
+              {chip.dot !== undefined && (
+                <span
+                  className="ring-foreground/15 size-4.5 rounded-full ring-1"
+                  style={{ background: chip.dot }}
+                />
+              )}
+              {chip.value === undefined ? (
+                chip.label
+              ) : (
+                <span>
+                  {chip.name !== undefined && `${chip.name}: `}
+                  <span className={cn(chip.mono && "font-mono")}>{chip.value}</span>
+                </span>
+              )}
+              <XIcon className="size-3 opacity-50" />
+            </button>
+          );
+        })}
+        <Button variant="outline" size="xs" onClick={onReset} className="h-6.5 flex-none sm:h-6.5">
+          {m.filter_clear_all()}
+        </Button>
+      </div>
+    </ScrollArea>
   );
 }
