@@ -29,7 +29,9 @@ export function ListHeader() {
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div className="grid gap-4 md:grid-cols-[1fr_auto]">
+      {/* the actions' own width would otherwise starve the title column: an
+          `auto` track sizes to max-content, and six buttons are wider than the page */}
+      <div className="grid gap-4 md:grid-cols-[minmax(16rem,1fr)_auto]">
         <div className="flex min-w-0 flex-col justify-center gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-display text-xl font-semibold tracking-tight text-balance">
@@ -74,7 +76,7 @@ export function ListHeader() {
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center gap-1.5 md:items-end">
+        <div className="flex flex-wrap items-center gap-1.5 md:items-end md:justify-end">
           {swappable ? (
             <Button
               variant="outline"
