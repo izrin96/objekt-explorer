@@ -302,9 +302,23 @@
     scrollbar-color: var(--border) transparent;
   }
 
+  /* the app's theme, not the OS's, decides the canvas iOS Safari tints its bars
+     from, and the native controls' scheme */
+  html {
+    color-scheme: light;
+    background-color: var(--background);
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
+    /* Safari 26+ lays the registry drawer's backdrop out \`absolute\` so it runs
+       under the toolbar; without a positioned body it only covers the first
+       screen of a scrolled page (Base UI quick start) */
+    position: relative;
   }
 
   ::-webkit-scrollbar {

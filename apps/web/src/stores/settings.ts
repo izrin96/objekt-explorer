@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import { THEME_COLORS } from "@/lib/utils";
+
 import { LEGACY_CONFIG_KEY, LEGACY_THEME_KEY, legacyState, seededStorage } from "./legacy-storage";
 
 export const THEMES = ["System", "Light", "Dark"] as const;
@@ -62,6 +64,10 @@ function applyTheme(theme: Theme): void {
     theme === "Dark" ||
     (theme === "System" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", dark);
+  // the status bar follows this, not the class
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", dark ? THEME_COLORS.dark : THEME_COLORS.light);
 }
 
 /**

@@ -52,6 +52,8 @@ export function CheckpointPopover() {
   const date = checkpointDate(at);
   const [draft, setDraft] = useState<Date | undefined>(date);
   const [time, setTime] = useState(() => timeOf(date));
+  // the calendar shows the draft's month, so a typed or restored date is in view
+  const [month, setMonth] = useState<Date>(() => date ?? new Date());
   const [open, setOpen] = useState(false);
 
   const today = new Date();
@@ -66,6 +68,7 @@ export function CheckpointPopover() {
           if (next) {
             setDraft(date);
             setTime(timeOf(date));
+            setMonth(date ?? new Date());
           }
           setOpen(next);
         }}
@@ -85,13 +88,19 @@ export function CheckpointPopover() {
             value={draft ? format(draft, "yyyy-MM-dd") : ""}
             min={format(EARLIEST, "yyyy-MM-dd")}
             max={format(today, "yyyy-MM-dd")}
-            onChange={(event) => setDraft(event.target.valueAsDate ?? undefined)}
-            className="bg-background focus-visible:ring-ring mb-2 h-8 w-full rounded-lg border px-2.5 font-mono text-sm outline-none focus-visible:ring-2"
+            onChange={(event) => {
+              const next = event.target.valueAsDate ?? undefined;
+              setDraft(next);
+              if (next) setMonth(next);
+            }}
+            className="bg-background focus-visible:ring-ring mb-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
           />
           <Calendar
             mode="single"
             selected={draft}
             onSelect={setDraft}
+            month={month}
+            onMonthChange={setMonth}
             disabled={[{ before: EARLIEST }, { after: today }]}
             startMonth={EARLIEST}
             className="p-0"
@@ -102,7 +111,7 @@ export function CheckpointPopover() {
             aria-label={m.profile_checkpoint_time_label()}
             value={time}
             onChange={(event) => setTime(event.target.value)}
-            className="bg-background focus-visible:ring-ring mt-2 h-8 w-full rounded-lg border px-2.5 font-mono text-sm outline-none focus-visible:ring-2"
+            className="bg-background focus-visible:ring-ring mt-2 block h-8 w-full min-w-0 appearance-none rounded-lg border px-2.5 text-left font-mono text-base outline-none focus-visible:ring-2 sm:text-sm [&::-webkit-date-and-time-value]:text-left"
           />
           <div className="mt-2 flex justify-end gap-1.5">
             <Button variant="ghost" size="xs" disabled={!draft} onClick={() => setDraft(undefined)}>

@@ -32,7 +32,8 @@ export interface RouterContext {
 
 /**
  * Runs before the first paint, so a persisted Dark setting never flashes the
- * light page. `useApplySettings` keeps the same two attributes in sync
+ * light page, and points `theme-color` at the same theme for the status bar.
+ * `useApplySettings` keeps the same attributes in sync
  * afterwards; the two rules have to agree. It reads the website's keys as a
  * fallback for the same reason `seededStorage` does — the store seeds itself
  * from them, but only once this script has already painted.
@@ -43,7 +44,9 @@ const applySettingsScript = `(function(){try{var s=JSON.parse(localStorage.getIt
   LEGACY_THEME_KEY,
 )});s={theme:t==="dark"?"Dark":t==="light"?"Light":"System",wide:JSON.parse(localStorage.getItem(${JSON.stringify(
   LEGACY_CONFIG_KEY,
-)})||"{}").state?.wide};}var d=document.documentElement;d.classList.toggle("dark",s.theme==="Dark"||(s.theme!=="Light"&&matchMedia("(prefers-color-scheme: dark)").matches));if(s.wide)d.dataset.wide="true";}catch(e){}})();`;
+)})||"{}").state?.wide};}var d=document.documentElement,k=s.theme==="Dark"||(s.theme!=="Light"&&matchMedia("(prefers-color-scheme: dark)").matches),c=document.querySelector('meta[name="theme-color"]');d.classList.toggle("dark",k);if(c)c.setAttribute("content",k?${JSON.stringify(
+  THEME_COLORS.dark,
+)}:${JSON.stringify(THEME_COLORS.light)});if(s.wide)d.dataset.wide="true";}catch(e){}})();`;
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   loader: async ({ context: { queryClient } }) => {
