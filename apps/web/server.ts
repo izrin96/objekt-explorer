@@ -14,7 +14,7 @@
  *
  * PORT (number)
  *   - Server port number
- *   - Default: 3200
+ *   - Default: 3000
  *
  * ASSET_PRELOAD_MAX_SIZE (number)
  *   - Maximum file size in bytes to preload into memory
@@ -72,7 +72,7 @@ import {
 } from "@repo/api/activity";
 
 // Configuration
-const SERVER_PORT = Number(process.env.PORT ?? 3200);
+const SERVER_PORT = Number(process.env.PORT ?? 3000);
 const CLIENT_DIRECTORY = "./dist/client";
 const SERVER_ENTRY_POINT = "./dist/server/server.js";
 

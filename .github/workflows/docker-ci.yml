@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       web: ${{ steps.filter.outputs.web }}
+      website: ${{ steps.filter.outputs.website }}
       worker: ${{ steps.filter.outputs.worker }}
       indexer: ${{ steps.filter.outputs.indexer }}
       packages: ${{ steps.filter.outputs.packages }}
@@ -42,11 +43,14 @@ jobs:
         with:
           filters: |
             web:
-              - 'apps/website/**'
+              - 'apps/web/**'
               - 'packages/**'
               - 'turbo.json'
               - 'package.json'
               - 'bun.lock'
+            # kept as the legacy reference until its removal; lint and typecheck only
+            website:
+              - 'apps/website/**'
             worker:
               - 'apps/worker/**'
               - 'packages/**'
@@ -68,6 +72,7 @@ jobs:
     # Only run validation if there are code changes
     if: |
       needs.detect-changes.outputs.web == 'true' ||
+      needs.detect-changes.outputs.website == 'true' ||
       needs.detect-changes.outputs.worker == 'true' ||
       needs.detect-changes.outputs.indexer == 'true' ||
       needs.detect-changes.outputs.packages == 'true'
@@ -111,7 +116,7 @@ jobs:
       matrix:
         include:
           - app: web
-            dockerfile: ./apps/website/Dockerfile
+            dockerfile: ./apps/web/Dockerfile
           - app: worker
             dockerfile: ./apps/worker/Dockerfile
           - app: indexer

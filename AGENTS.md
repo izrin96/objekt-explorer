@@ -6,18 +6,19 @@
 
 ## Monorepo Structure
 
-| Path                | Name             | Purpose                                                                             |
-| ------------------- | ---------------- | ----------------------------------------------------------------------------------- |
-| `apps/website`      | `website`        | Main frontend (TanStack React Start + Vite) with embedded WebSocket activity server |
-| `apps/worker`       | `worker`         | Background job worker (Croner)                                                      |
-| `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)                                                     |
-| `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                          |
-| `packages/lib`      | `@repo/lib`      | Shared utilities                                                                    |
-| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                                                           |
-| `packages/lint`     | `@repo/lint`     | Shared oxlint config                                                                |
-| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                                                           |
+| Path                | Name             | Purpose                                                                                      |
+| ------------------- | ---------------- | -------------------------------------------------------------------------------------------- |
+| `apps/web`          | `web`            | Main frontend (TanStack React Start + Vite, Base UI) with embedded WebSocket activity server |
+| `apps/website`      | `website`        | Legacy frontend, kept read-only as the behaviour reference until its removal; not deployed   |
+| `apps/worker`       | `worker`         | Background job worker (Croner)                                                               |
+| `apps/indexer`      | `indexer`        | NFT metadata indexer (Subsquid)                                                              |
+| `packages/db`       | `@repo/db`       | Database schema (Drizzle ORM + PostgreSQL)                                                   |
+| `packages/lib`      | `@repo/lib`      | Shared utilities                                                                             |
+| `packages/cosmo`    | `@repo/cosmo`    | Cosmo SDK                                                                                    |
+| `packages/lint`     | `@repo/lint`     | Shared oxlint config                                                                         |
+| `packages/tsconfig` | `@repo/tsconfig` | Shared TypeScript configs                                                                    |
 
-**Workspace manager:** Bun workspaces + Turbo. Package names match directory names (e.g. filter with `--filter=website`).
+**Workspace manager:** Bun workspaces + Turbo. Package names match directory names (e.g. filter with `--filter=web`).
 
 ## Tech Stack
 
@@ -45,9 +46,9 @@ All run from monorepo root via Turbo. Filters use package name:
 
 ```bash
 bun run dev                        # Start all dev servers
-bun run dev --filter=website       # Start specific app
+bun run dev --filter=web           # Start specific app
 bun run build                      # Build all
-bun run build --filter=website     # Build specific app
+bun run build --filter=web         # Build specific app
 bun run lint                       # Lint all (oxlint)
 bun run lint:fix                   # Lint and auto-fix
 bun run typecheck                  # Type-check all
@@ -91,7 +92,7 @@ Install a new one with `npx skills@latest add <owner/repo> -s <skill> -a claude-
 
 Specs use OpenSpec: `/opsx:propose` → review the change under `openspec/changes/` → `/opsx:apply` → `/opsx:archive`. `openspec/config.yaml` carries the project context every change is written against. The `openspec-*` skills and `opsx` commands under `.claude/` are `openspec init --tools claude` output — regenerate them, never edit or symlink them. The Base UI migration is worked as one change per slice.
 
-Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.env` from the main checkout and runs `bun install`, and `run` starts the lab dev server.
+Superset workspaces are git worktrees; `.superset/setup.sh` copies the root `.env` from the main checkout and runs `bun install`, and `run` starts the lab and web dev servers.
 
 ## Code Style
 
@@ -120,15 +121,15 @@ A single root `.env`, copied from `.env.example`, is shared by every app — pac
 
 Full list in `.env.example`.
 
-`apps/website` compiles Paraglide messages before type-checking (`typecheck` runs `paraglide:compile` first), so `src/paraglide` is generated output — never edit it by hand. Same for `src/routeTree.gen.ts`.
+`apps/web` (and `apps/website`) compile Paraglide messages before type-checking (`typecheck` runs `paraglide:compile` first), so `src/paraglide` is generated output — never edit it by hand. Same for `src/routeTree.gen.ts`.
 
 ## Docker
 
-`docker-compose.yml` provides the full stack: website (port 3000), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, and Valkey. S3 storage and mail are external services configured through `.env`.
+`docker-compose.yml` provides the full stack: web (port 3000, built from `apps/web/Dockerfile`), worker, indexer processor, two PostgreSQL instances each behind pgbouncer, and Valkey. S3 storage and mail are external services configured through `.env`. `apps/website` has no service or image.
 
 ## CI/CD
 
-`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs lint+typecheck, builds Docker images for affected services.
+`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs lint+typecheck, builds Docker images for affected services. The `web` image is built from `apps/web`; a change under `apps/website` only triggers lint and typecheck.
 
 ## Behavior
 

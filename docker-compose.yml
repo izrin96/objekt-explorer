@@ -87,14 +87,14 @@ services:
     healthcheck:
       test: ["CMD", "pg_isready", "-h", "localhost"]
 
-  # website
-  website:
+  # web
+  web:
     restart: always
     ports:
       - "3000:3000"
     build:
       context: .
-      dockerfile: ./apps/website/Dockerfile
+      dockerfile: ./apps/web/Dockerfile
       secrets:
         - VITE_UMAMI_SCRIPT_URL
         - VITE_UMAMI_WEBSITE_ID
