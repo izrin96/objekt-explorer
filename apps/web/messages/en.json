@@ -685,6 +685,7 @@
   "objekt_serial_missing_hint": "Nothing has been minted at this serial",
   "objekt_no_transfers": "No transfers yet",
   "objekt_event_minted": "Minted",
+  "objekt_event_transferred": "Transferred",
   "objekt_event_spun": "Spun",
   "objekt_event_current": "Current",
   "objekt_slug": "Slug",

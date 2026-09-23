@@ -685,6 +685,7 @@
   "objekt_serial_missing_hint": "이 시리얼로 민팅된 오브젝트가 없습니다",
   "objekt_no_transfers": "아직 전송 내역이 없습니다",
   "objekt_event_minted": "민팅",
+  "objekt_event_transferred": "전송",
   "objekt_event_spun": "스핀",
   "objekt_event_current": "현재",
   "objekt_slug": "슬러그",

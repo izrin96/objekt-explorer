@@ -45,9 +45,9 @@ export const EVENT_COLOR: Record<EventKind, string> = {
   spin: "bg-event-spin",
 };
 
-/** a transfer is the ordinary event and carries no pill, so it has no badge */
-const EVENT_BADGE: Record<Exclude<EventKind, "transfer">, { label: () => string; icon: Icon }> = {
+const EVENT_BADGE: Record<EventKind, { label: () => string; icon: Icon }> = {
   mint: { label: m.objekt_event_minted, icon: SparkleIcon },
+  transfer: { label: m.objekt_event_transferred, icon: ArrowsLeftRightIcon },
   spin: { label: m.objekt_event_spun, icon: ArrowsClockwiseIcon },
 };
 
@@ -487,14 +487,10 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
                   </span>
                 </th>
                 <td className="px-3 py-1.5">
-                  {event.kind === "transfer" && !current ? (
-                    <span className="text-muted-foreground">—</span>
-                  ) : (
-                    <span className="flex flex-wrap items-center gap-1.5">
-                      {event.kind !== "transfer" && <EventPill badge={EVENT_BADGE[event.kind]} />}
-                      {current && <EventPill badge={CURRENT_BADGE} />}
-                    </span>
-                  )}
+                  <span className="flex flex-wrap items-center gap-1.5">
+                    <EventPill badge={EVENT_BADGE[event.kind]} />
+                    {current && <EventPill badge={CURRENT_BADGE} />}
+                  </span>
                 </td>
                 <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap">
                   <TimeAgo date={event.at} />
