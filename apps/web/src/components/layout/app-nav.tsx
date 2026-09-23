@@ -51,8 +51,9 @@ export function AppNav() {
           >
             <CubeIcon weight="bold" className="size-3.5" />
           </span>
-          {/* on a phone the search field needs the room; the logo still reads as home */}
-          <span className="max-sm:sr-only">{SITE_NAME}</span>
+          {/* on a phone the search field needs the room, and between `md` and `lg`
+              the nav links do; the logo still reads as home */}
+          <span className="max-sm:sr-only md:max-lg:sr-only">{SITE_NAME}</span>
         </Link>
 
         <nav className="ml-1.5 hidden shrink-0 gap-0.5 md:flex">

@@ -238,12 +238,14 @@ export function NavSearch({
       <button
         type="button"
         onClick={() => onOpenChange(true)}
-        /* below `md` it takes the room the nav links leave; a phone has no ⌘K */
-        className="bg-popover text-muted-foreground hover:border-foreground/30 flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 text-sm md:w-60 md:flex-none"
+        /* below `md` it takes the room the nav links leave; from `md` it is 240px
+           but gives way before the links do; a phone has no ⌘K, and a narrow
+           desktop row has no room for it */
+        className="bg-popover text-muted-foreground hover:border-foreground/30 flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 text-sm md:w-60 md:flex-initial"
       >
         <MagnifyingGlassIcon className="size-4 shrink-0" />
         <span className="truncate">{m.nav_search_user_label()}</span>
-        <Kbd className="ml-auto shrink-0 max-md:hidden">⌘K</Kbd>
+        <Kbd className="ml-auto shrink-0 max-lg:hidden">⌘K</Kbd>
       </button>
       <DialogPopup
         showCloseButton={false}
