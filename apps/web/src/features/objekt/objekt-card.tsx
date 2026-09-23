@@ -139,6 +139,8 @@ export function ObjektCard({
           // no double-tap zoom delay, no iOS callout or drag on a long press
           "touch-manipulation [-webkit-touch-callout:none]",
           interactive && "focus-visible:ring-ring cursor-pointer focus-visible:ring-2",
+          // drawn outside the box so the artwork stays whole
+          selected && "ring-accent-solid ring-[3cqw]",
         )}
       >
         <img
@@ -207,10 +209,6 @@ export function ObjektCard({
           <div className="absolute bottom-[4cqw] left-[4cqw] grid h-[14cqw] min-w-[16cqw] place-items-center rounded-full bg-[rgba(10,12,16,.82)] px-[5cqw] font-mono text-[7.5cqw] font-semibold text-white">
             {qty}
           </div>
-        )}
-
-        {selected && (
-          <div className="border-accent-solid pointer-events-none absolute inset-0 rounded-[inherit] border-[3cqw]" />
         )}
       </div>
 
