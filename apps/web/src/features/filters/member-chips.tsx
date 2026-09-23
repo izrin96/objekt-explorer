@@ -6,10 +6,13 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -135,6 +138,28 @@ function ScrollButton({ direction, onClick }: { direction: -1 | 1; onClick: () =
 }
 
 /**
+ * 22px overall: the member colour is a border rather than a ring, so the outline
+ * stays inside the dot's old footprint and the chip keeps its spacing.
+ */
+function MemberAvatar({ src, color }: { src: string | undefined; color: string }) {
+  return (
+    <Avatar
+      className="size-5.5 border-2 border-(--member)"
+      style={{ "--member": color } as CSSProperties}
+    >
+      {src ? (
+        <AvatarImage src={src} alt="" loading="lazy" decoding="async" draggable={false} />
+      ) : null}
+      {/* the fallback is the old colour dot, and a near-white one has no edge of its own on light */}
+      <AvatarFallback
+        className="inset-ring-foreground/15 inset-ring-1"
+        style={{ background: color }}
+      />
+    </Avatar>
+  );
+}
+
+/**
  * Neither control carries an "All": an absent `artist` / `member` parameter
  * already means "everything", and a chip for it would be a second spelling of
  * the empty filter — one the active-chip row could not remove and Reset could
@@ -145,6 +170,7 @@ export function MemberChips() {
   const member = useCanonicalFilters().member;
   const setFilters = useSetFilters();
   const memberColor = useMemberColor();
+  const { getMember } = useCosmoArtist();
   const { groups } = useScopedFacets();
   const artistRoving = useRovingChips();
   const memberRoving = useRovingChips();
@@ -225,9 +251,9 @@ export function MemberChips() {
                         : "hover:border-foreground/30",
                     )}
                   >
-                    <span
-                      className="ring-foreground/15 size-5.5 rounded-full ring-1"
-                      style={{ background: memberColor(name) }}
+                    <MemberAvatar
+                      src={getMember(name)?.profileImageUrl}
+                      color={memberColor(name)}
                     />
                     {name}
                   </button>
