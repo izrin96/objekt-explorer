@@ -29,6 +29,20 @@ export const SORT_LABEL: Record<ValidCustomSort, () => string> = {
   supply: m.filter_sort_by_supply_label,
 };
 
+export const SORT_DESC: Record<ValidCustomSort, () => string> = {
+  date: m.filter_sort_by_date_desc,
+  season: m.filter_sort_by_season_desc,
+  collectionNo: m.filter_sort_by_collection_no_desc,
+  member: m.filter_sort_by_member_desc,
+  serial: m.filter_sort_by_serial_desc,
+  duplicate: m.filter_sort_by_dups_desc,
+  rare: m.filter_sort_by_rare_desc,
+  price: m.filter_sort_by_price_desc,
+  floor: m.filter_sort_by_floor_desc,
+  listedAt: m.filter_sort_by_listed_desc,
+  supply: m.filter_sort_by_supply_desc,
+};
+
 export const GROUP_BY_LABEL: Record<ValidGroupBy, () => string> = {
   artist: m.filter_group_by_artist,
   class: m.filter_group_by_class,

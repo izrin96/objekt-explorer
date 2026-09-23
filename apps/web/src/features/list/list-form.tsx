@@ -1,6 +1,8 @@
 import type { ListTypeNew, PublicList } from "@repo/api/schemas/list";
+import slugify from "slugify";
 import * as z from "zod";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { SITE_NAME, validColumns } from "@/lib/utils";
+import { SITE_NAME, getBaseURL, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { LIST_TYPE_LABEL } from "./list-type-badge";
@@ -43,6 +45,7 @@ export type ListDraft = {
   gridColumns: number | null;
   hideSerial: boolean;
   hideUser: boolean;
+  regenerateSlug: boolean;
 };
 
 export const EMPTY_DRAFT: ListDraft = {
@@ -57,6 +60,7 @@ export const EMPTY_DRAFT: ListDraft = {
   gridColumns: null,
   hideSerial: false,
   hideUser: false,
+  regenerateSlug: false,
 };
 
 /** Built per submit: the message functions read the request's locale. */
@@ -111,7 +115,7 @@ export function toCreateInput(draft: ListDraft) {
 
 export function toEditInput(slug: string, draft: ListDraft) {
   const { listTypeNew: _type, isProfileBind: _bind, ...rest } = toCreateInput(draft);
-  return { slug, ...rest, gridColumns: draft.gridColumns };
+  return { slug, ...rest, gridColumns: draft.gridColumns, regenerateSlug: draft.regenerateSlug };
 }
 
 type ListFormProps = {
@@ -124,9 +128,13 @@ type ListFormProps = {
   profiles: { address: string; nickname: string | null }[];
   /** `list.edit` takes neither the type nor the binding, so edit locks both */
   mode: "create" | "edit";
+  /** the profile-scoped address a bound list lives at; only edit has one to show */
+  url?: ListUrl;
 };
 
-export function ListForm({ idPrefix, value, onChange, lists, profiles, mode }: ListFormProps) {
+export type ListUrl = { nickname: string; profileSlug: string; fallbackSlug: string };
+
+export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url }: ListFormProps) {
   const id = (field: string) => `${idPrefix}-${field}`;
   const set = (patch: Partial<ListDraft>) => onChange({ ...value, ...patch });
 
@@ -335,6 +343,47 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode }: L
         checked={value.hideUser}
         onCheckedChange={(checked) => set({ hideUser: checked })}
       />
+
+      {isEdit && url ? (
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Label htmlFor={id("url")}>{m.list_edit_url_label()}</Label>
+            <div className="border-input flex min-w-0 overflow-hidden rounded-md border">
+              <span className="bg-muted text-muted-foreground border-input flex max-w-[60%] shrink-0 items-center border-e px-3 text-sm">
+                <span className="truncate">{`${new URL(getBaseURL()).host}/@${url.nickname}/list/`}</span>
+              </span>
+              <Input
+                id={id("url")}
+                readOnly
+                unstyled
+                className="grow px-3 text-sm"
+                value={
+                  value.regenerateSlug
+                    ? slugify(value.name, { lower: true, strict: true }) || url.fallbackSlug
+                    : url.profileSlug
+                }
+              />
+            </div>
+          </div>
+          <Label
+            htmlFor={id("regenerate-slug")}
+            className="flex min-w-0 items-start gap-2 font-normal"
+          >
+            <Checkbox
+              id={id("regenerate-slug")}
+              className="mt-0.5"
+              checked={value.regenerateSlug}
+              onCheckedChange={(checked) => set({ regenerateSlug: checked })}
+            />
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-sm font-medium">{m.list_edit_regenerate_slug_label()}</span>
+              <span className="text-muted-foreground text-xs text-pretty">
+                {m.list_edit_regenerate_slug_desc()}
+              </span>
+            </span>
+          </Label>
+        </div>
+      ) : null}
 
       {isEdit ? (
         <div className="flex min-w-0 flex-col gap-1.5">

@@ -28,7 +28,7 @@
     "drizzle-orm": "catalog:",
     "nanoid": "^6.0.1",
     "ofetch": "catalog:",
-    "slugify": "^1.6.9",
+    "slugify": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

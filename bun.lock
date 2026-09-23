@@ -130,6 +130,7 @@
         "react-dom": "^19.3.0",
         "react-intersection-observer": "^11.0.1",
         "recharts": "^3.10.1",
+        "slugify": "catalog:",
         "tailwind-merge": "^3.7.0",
         "tanstack-meta": "^0.6.1",
         "virtua": "^0.51.3",
@@ -281,7 +282,7 @@
         "drizzle-orm": "catalog:",
         "nanoid": "^6.0.1",
         "ofetch": "catalog:",
-        "slugify": "^1.6.9",
+        "slugify": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -354,6 +355,7 @@
     "drizzle-orm": "^1.0.0-rc.5-ab785fc",
     "ofetch": "^1.5.1",
     "pg": "^8.23.0",
+    "slugify": "^1.6.9",
     "zod": "^4.6.5",
   },
   "catalogs": {

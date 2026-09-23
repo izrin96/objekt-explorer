@@ -36,7 +36,7 @@ import {
 } from "./filter-popover";
 import { FilterSearchField } from "./filter-search";
 import { FilterSheet } from "./filter-sheet";
-import { GROUP_BY_LABEL, SORT_LABEL } from "./labels";
+import { GROUP_BY_LABEL, SORT_DESC, SORT_LABEL } from "./labels";
 import { DEFAULT_SORT_DIR, isFiltering } from "./search-schema";
 import { useCanonicalFilters, useFilters, useResetFilters, useSetFilters } from "./use-filters";
 
@@ -138,8 +138,11 @@ export function SortSelect({
         </SelectPrimitive.Trigger>
         <SelectPopup alignItemWithTrigger={false} align="end">
           {options.map((option) => (
-            <SelectItem key={option} value={option}>
-              {SORT_LABEL[option]()}
+            <SelectItem key={option} value={option} className="py-1.5">
+              <span className="flex flex-col">
+                {SORT_LABEL[option]()}
+                <span className="text-muted-foreground text-xs">{SORT_DESC[option]()}</span>
+              </span>
             </SelectItem>
           ))}
         </SelectPopup>

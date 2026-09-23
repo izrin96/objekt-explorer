@@ -42,10 +42,11 @@ import { RemoveFromListDialog } from "./remove-from-list-dialog";
 import { SetPriceDialog } from "./set-price-dialog";
 import { useListOwned } from "./use-list-owned";
 
-/** the list's own currency, not the viewer's */
-function formatPrice(currency: string, objekt: ValidObjekt): string {
+/** the list's own currency, not the viewer's; an unpriced card nudges the owner to set one */
+function formatPrice(currency: string, objekt: ValidObjekt, canPrice: boolean): string {
   if (objekt.isQyop) return m.list_manage_objekt_set_price_qyop();
-  if (objekt.price === undefined || objekt.price === null) return m.list_price_none();
+  if (objekt.price === undefined || objekt.price === null)
+    return canPrice ? m.objekt_set_price() : m.list_price_none();
   return `${currency} ${objekt.price.toFixed(2)}`;
 }
 
@@ -172,7 +173,7 @@ function ListEntries() {
           onOpen={() => setActiveGroup(item)}
           qty={item.length > 1 ? item.length : undefined}
           hideSerial={list.hideSerial === true}
-          price={isSale ? formatPrice(currency, objekt) : undefined}
+          price={isSale ? formatPrice(currency, objekt, canPrice) : undefined}
           priceMuted={isSale && (objekt.price ?? null) === null && objekt.isQyop !== true}
           note={isSale ? objekt.note : undefined}
           priority={rowIndex < 2}

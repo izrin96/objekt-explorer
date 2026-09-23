@@ -20,7 +20,7 @@ import type { client } from "@/lib/orpc";
 import { m } from "@/paraglide/messages";
 
 import { useEditList } from "./actions";
-import { type ListDraft, ListForm, listDraftSchema, toEditInput } from "./list-form";
+import { type ListDraft, ListForm, type ListUrl, listDraftSchema, toEditInput } from "./list-form";
 import { listFindOptions } from "./queries";
 
 type StoredList = Awaited<ReturnType<typeof client.list.find>>;
@@ -82,6 +82,22 @@ function toDraft(list: StoredList): ListDraft {
     gridColumns: list.gridColumns,
     hideSerial: list.hideSerial,
     hideUser: list.hideUser,
+    regenerateSlug: false,
+  };
+}
+
+/** mirrors `getListLinkOption`: the nickname when the profile has one, else the address */
+function toListUrl(
+  list: StoredList,
+  profiles: { address: string; nickname: string | null }[],
+): ListUrl | undefined {
+  const address = list.profileAddress?.toLowerCase();
+  if (!address || !list.profileSlug) return undefined;
+  const profile = profiles.find((entry) => entry.address.toLowerCase() === address);
+  return {
+    nickname: profile?.nickname || address,
+    profileSlug: list.profileSlug,
+    fallbackSlug: list.slug,
   };
 }
 
@@ -115,6 +131,7 @@ function EditListForm({ list, onDone }: { list: StoredList; onDone: () => void }
           onChange={setDraft}
           lists={lists.filter((entry) => entry.slug !== list.slug)}
           profiles={profiles}
+          url={toListUrl(list, profiles)}
         />
       </DialogPanel>
       <DialogFooter>

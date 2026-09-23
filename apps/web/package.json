@@ -57,6 +57,7 @@
     "react-dom": "^19.3.0",
     "react-intersection-observer": "^11.0.1",
     "recharts": "^3.10.1",
+    "slugify": "catalog:",
     "tailwind-merge": "^3.7.0",
     "tanstack-meta": "^0.6.1",
     "virtua": "^0.51.3",

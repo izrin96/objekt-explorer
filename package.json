@@ -10,7 +10,8 @@
       "drizzle-orm": "^1.0.0-rc.5-ab785fc",
       "zod": "^4.6.5",
       "ofetch": "^1.5.1",
-      "pg": "^8.23.0"
+      "pg": "^8.23.0",
+      "slugify": "^1.6.9"
     },
     "catalogs": {
       "dev": {
