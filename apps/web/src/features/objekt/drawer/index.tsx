@@ -312,6 +312,7 @@ function DrawerBody({
               serial={selected}
               serials={serials.data ?? []}
               metadata={metadata}
+              physical={objekt.onOffline === "offline"}
               loading={serials.isPending}
               onSerialChange={setSerial}
             >

@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ProfileLists } from "@/features/list/profile-lists";
 import { profileListsOptions } from "@/features/list/queries";
 import { profileQuery } from "@/features/profile/queries";
+import { displayNickname } from "@/lib/address";
 import { generateMetadata } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
 
@@ -11,10 +12,16 @@ export const Route = createFileRoute("/@{$nickname}/list")({
   loader: async ({ params, context: { queryClient } }) => {
     const profile = await queryClient.ensureQueryData(profileQuery({ nickname: params.nickname }));
     await queryClient.ensureQueryData(profileListsOptions(profile.address));
-    return { nickname: params.nickname };
+    return profile;
   },
-  head: ({ params }) =>
-    generateMetadata({ title: m.page_titles_profile_lists({ nickname: params.nickname }) }),
+  head: ({ loaderData }) =>
+    loaderData
+      ? generateMetadata({
+          title: m.page_titles_profile_lists({
+            nickname: displayNickname(loaderData.address, loaderData.nickname),
+          }),
+        })
+      : {},
   component: ProfileListsPage,
 });
 

@@ -1,5 +1,5 @@
 import { CaretDownIcon, ClockCounterClockwiseIcon, XIcon } from "@phosphor-icons/react";
-import { endOfDay, format } from "date-fns";
+import { endOfDay, format, isEqual, parse } from "date-fns";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,11 +8,35 @@ import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/component
 import { useFilters, useSetFilters } from "@/features/filters/use-filters";
 import { m } from "@/paraglide/messages";
 
-/** the `at` parameter is an instant; a checkpoint means "the end of that day" */
+/** the `at` parameter is an instant; a checkpoint defaults to "the end of that day" */
 export function checkpointDate(at: string | undefined): Date | undefined {
   if (at === undefined) return undefined;
   const parsed = new Date(at);
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
+/** Cosmo's chain history starts here, so an earlier snapshot is always empty */
+const EARLIEST = new Date(2022, 7, 1);
+const END_OF_DAY_TIME = "23:59:59";
+
+/** the day alone for the default end-of-day instant, the time as well when one was picked */
+export function formatCheckpoint(date: Date): string {
+  return isEqual(date, endOfDay(date))
+    ? format(date, "d MMM yyyy")
+    : format(date, "d MMM yyyy, HH:mm:ss");
+}
+
+function timeOf(date: Date | undefined): string {
+  return date === undefined || isEqual(date, endOfDay(date))
+    ? END_OF_DAY_TIME
+    : format(date, "HH:mm:ss");
+}
+
+/** a cleared or end-of-day time keeps the whole day; any other time is the instant itself */
+function toInstant(day: Date, time: string): Date {
+  if (time === "" || time === END_OF_DAY_TIME) return endOfDay(day);
+  const parsed = parse(time, time.length === 5 ? "HH:mm" : "HH:mm:ss", day);
+  return Number.isNaN(parsed.getTime()) ? endOfDay(day) : parsed;
 }
 
 /**
@@ -27,6 +51,7 @@ export function CheckpointPopover() {
   const setFilters = useSetFilters();
   const date = checkpointDate(at);
   const [draft, setDraft] = useState<Date | undefined>(date);
+  const [time, setTime] = useState(() => timeOf(date));
   const [open, setOpen] = useState(false);
 
   const today = new Date();
@@ -38,13 +63,16 @@ export function CheckpointPopover() {
         onOpenChange={(next) => {
           // reopening on last session's draft would show a date the page is
           // not actually filtered by
-          if (next) setDraft(date);
+          if (next) {
+            setDraft(date);
+            setTime(timeOf(date));
+          }
           setOpen(next);
         }}
       >
         <PopoverTrigger render={<Button variant={date ? "secondary" : "outline"} size="sm" />}>
           <ClockCounterClockwiseIcon />
-          {date ? format(date, "d MMM yyyy") : m.checkpoint_title()}
+          {date ? formatCheckpoint(date) : m.checkpoint_title()}
           <CaretDownIcon className="size-3 opacity-60" />
         </PopoverTrigger>
         <PopoverPopup align="start" className="w-auto">
@@ -55,6 +83,7 @@ export function CheckpointPopover() {
             type="date"
             aria-label={m.profile_checkpoint_date_label()}
             value={draft ? format(draft, "yyyy-MM-dd") : ""}
+            min={format(EARLIEST, "yyyy-MM-dd")}
             max={format(today, "yyyy-MM-dd")}
             onChange={(event) => setDraft(event.target.valueAsDate ?? undefined)}
             className="bg-background focus-visible:ring-ring mb-2 h-8 w-full rounded-lg border px-2.5 font-mono text-sm outline-none focus-visible:ring-2"
@@ -63,8 +92,17 @@ export function CheckpointPopover() {
             mode="single"
             selected={draft}
             onSelect={setDraft}
-            disabled={{ after: today }}
+            disabled={[{ before: EARLIEST }, { after: today }]}
+            startMonth={EARLIEST}
             className="p-0"
+          />
+          <input
+            type="time"
+            step={1}
+            aria-label={m.profile_checkpoint_time_label()}
+            value={time}
+            onChange={(event) => setTime(event.target.value)}
+            className="bg-background focus-visible:ring-ring mt-2 h-8 w-full rounded-lg border px-2.5 font-mono text-sm outline-none focus-visible:ring-2"
           />
           <div className="mt-2 flex justify-end gap-1.5">
             <Button variant="ghost" size="xs" disabled={!draft} onClick={() => setDraft(undefined)}>
@@ -74,7 +112,7 @@ export function CheckpointPopover() {
               size="xs"
               disabled={!draft}
               onClick={() => {
-                if (draft) setFilters({ at: endOfDay(draft).toISOString() });
+                if (draft) setFilters({ at: toInstant(draft, time).toISOString() });
                 setOpen(false);
               }}
             >

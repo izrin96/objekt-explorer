@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { m } from "@/paraglide/messages";
+import { useSelection } from "@/stores/selection";
 
 import { useRemoveObjektsFromList } from "./actions";
 
@@ -25,6 +26,7 @@ export function RemoveFromListDialog({
   slug: string;
 }) {
   const remove = useRemoveObjektsFromList();
+  const clearSelection = useSelection((s) => s.clear);
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -47,7 +49,13 @@ export function RemoveFromListDialog({
             onClick={() =>
               remove.mutate(
                 { slug, entryIds: objekts.map((objekt) => Number(objekt.id)) },
-                { onSuccess: () => onOpenChange(false) },
+                {
+                  // the removed entries are gone from the grid, so a selection of them would linger unseen
+                  onSuccess: () => {
+                    clearSelection();
+                    onOpenChange(false);
+                  },
+                },
               )
             }
           >

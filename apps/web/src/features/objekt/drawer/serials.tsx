@@ -89,6 +89,7 @@ export function SerialsPanel({
   serial,
   serials,
   metadata,
+  physical,
   loading,
   onSerialChange,
   children,
@@ -96,6 +97,8 @@ export function SerialsPanel({
   serial: number | null;
   serials: number[];
   metadata: UseQueryResult<{ total: number; spin: number; transferable: number }>;
+  /** a physical objekt's copies only exist once scanned, so its total counts scans */
+  physical: boolean;
   loading: boolean;
   onSerialChange: (serial: number) => void;
   children: ReactNode;
@@ -180,10 +183,15 @@ export function SerialsPanel({
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs">
         {metadata.isPending && <Shimmer className="h-3.5 w-52" />}
+        {metadata.isError && (
+          <Badge variant="error" size="sm" className="font-sans">
+            {m.objekt_error_fetching_metadata()}
+          </Badge>
+        )}
         {metadata.data && (
           <>
             <span>
-              {m.objekt_minted()}{" "}
+              {physical ? m.objekt_scanned_copies() : m.objekt_copies()}{" "}
               <b className="text-foreground font-semibold">
                 {metadata.data.total.toLocaleString()}
               </b>

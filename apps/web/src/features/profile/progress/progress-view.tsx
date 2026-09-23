@@ -10,15 +10,19 @@ import { useFilterData } from "@/features/filters/filter-data-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { useResetFilters, useSetFilters } from "@/features/filters/use-filters";
+import { AddToListProvider } from "@/features/list/add-to-list-dialog";
+import { AddToListMenuItem } from "@/features/list/add-to-list-menu-item";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { ObjektCard } from "@/features/objekt/objekt-card";
+import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ObjektGrid } from "@/features/objekt/objekt-grid";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
+import { useCurrentUser } from "@/features/user/hooks";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
-import { useProfileColumns } from "../profile-provider";
+import { useProfileColumns, useProfileTarget } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { useProfileCatalogue } from "../use-profile-objekts";
 import { MemberProgressChart, useChartMembers } from "./member-progress-chart";
@@ -111,6 +115,7 @@ function ClassCard({
   onToggle,
   onOpen,
   ownedBySlug,
+  showActions,
 }: {
   group: ClassGroup;
   section: MemberSeason;
@@ -119,6 +124,8 @@ function ClassCard({
   onToggle: () => void;
   onOpen: (objekt: ValidObjekt) => void;
   ownedBySlug: ReadonlyMap<string, ValidObjekt[]>;
+  /** a missing objekt is as addable as an owned one: it is how a want list is built */
+  showActions: boolean;
 }) {
   const id = nodeId(section.key, group.class);
   const complete = group.pct >= 100;
@@ -179,6 +186,11 @@ function ClassCard({
           {group.items.map((item) => {
             const copies = ownedBySlug.get(item.objekt.slug);
             const owned = copies?.[0];
+            const menu = showActions ? (
+              <ObjektCardMenu>
+                <AddToListMenuItem objekts={[owned ?? item.objekt]} />
+              </ObjektCardMenu>
+            ) : null;
             return owned ? (
               <ObjektCard
                 key={item.objekt.slug}
@@ -186,7 +198,9 @@ function ClassCard({
                 qty={copies.length > 1 ? copies.length : undefined}
                 unobtainable={item.unobtainable}
                 onOpen={onOpen}
-              />
+              >
+                {menu}
+              </ObjektCard>
             ) : (
               <ObjektCard
                 key={item.objekt.slug}
@@ -195,7 +209,9 @@ function ClassCard({
                 unobtainable={item.unobtainable}
                 hideSerial
                 onOpen={onOpen}
-              />
+              >
+                {menu}
+              </ObjektCard>
             );
           })}
         </ObjektGrid>
@@ -206,6 +222,10 @@ function ClassCard({
 
 export function ProgressView() {
   const { owned, catalogue, filters, isPending } = useProfileCatalogue();
+  const profile = useProfileTarget()!;
+  const { data: user } = useCurrentUser();
+  // a past state belongs to nobody to edit, and a signed-out visitor has nothing to act with
+  const showActions = Boolean(user) && filters.at === undefined;
   const { compareMember } = useCosmoArtist();
   const { compareSeason, compareClass } = useFilterData();
   const memberColor = useMemberColor();
@@ -282,7 +302,7 @@ export function ProgressView() {
   }
 
   return (
-    <>
+    <AddToListProvider address={profile.address}>
       <div className="grid gap-3 md:grid-cols-[1.4fr_1fr]">
         <Panel title={m.progress_overall()}>
           <div className="font-mono text-3xl leading-none font-semibold tracking-tight tabular-nums">
@@ -379,6 +399,7 @@ export function ProgressView() {
                       }
                       onOpen={setActive}
                       ownedBySlug={ownedBySlug}
+                      showActions={showActions}
                     />
                   );
                 })}
@@ -406,6 +427,6 @@ export function ProgressView() {
       )}
 
       <ObjektDrawer objekt={active} onClose={() => setActive(null)} owned={activeOwned} />
-    </>
+    </AddToListProvider>
   );
 }

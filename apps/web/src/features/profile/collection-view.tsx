@@ -10,7 +10,6 @@ import {
   PushPinSlashIcon,
 } from "@phosphor-icons/react";
 import type { OwnedObjekt, ValidObjekt } from "@repo/lib/types/objekt";
-import { format } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -46,7 +45,7 @@ import {
   useBatchUnpin,
   useReorderPins,
 } from "./actions";
-import { CheckpointPopover, checkpointDate } from "./checkpoint-popover";
+import { CheckpointPopover, checkpointDate, formatCheckpoint } from "./checkpoint-popover";
 import { PinDnd, SortablePin } from "./pin-dnd";
 import { useProfileColumns, useProfileAuthed, useProfileTarget } from "./profile-provider";
 import { ProfileToolbar } from "./profile-toolbar";
@@ -353,7 +352,7 @@ export function CollectionView() {
 
       {at && (
         <p className="text-muted-foreground text-sm">
-          {m.profile_checkpoint_notice({ date: format(at, "d MMM yyyy") })}
+          {m.profile_checkpoint_notice({ date: formatCheckpoint(at) })}
         </p>
       )}
 
