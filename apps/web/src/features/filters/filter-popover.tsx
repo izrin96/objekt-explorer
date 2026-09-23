@@ -317,7 +317,7 @@ export function LongTailFields({ fields }: { fields: readonly LongTailField[] })
       )}
       {has("grouped") && (
         <SwitchRow
-          label={m.filter_combine_dups()}
+          label={m.filter_combine()}
           checked={filters.grouped === true}
           onChange={(value) => setFilters({ grouped: value || undefined })}
         />
