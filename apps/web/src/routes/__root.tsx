@@ -1,4 +1,4 @@
-import spaceGroteskLatin from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
+import instrumentSansLatin from "@fontsource-variable/instrument-sans/files/instrument-sans-latin-wght-normal.woff2?url";
 import { type QueryClient } from "@tanstack/react-query";
 import {
   HeadContent,
@@ -117,7 +117,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         { rel: "preconnect", href: "https://media.objekt.top" },
         {
           rel: "preload",
-          href: spaceGroteskLatin,
+          href: instrumentSansLatin,
           as: "font",
           type: "font/woff2",
           crossOrigin: "anonymous",
