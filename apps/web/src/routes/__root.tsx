@@ -179,7 +179,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: applySettingsScript }} />
         <HeadContent />
       </head>
-      <body className="bg-background text-foreground font-sans antialiased">
+      <body className="text-foreground font-sans antialiased">
         {children}
         <Scripts />
       </body>

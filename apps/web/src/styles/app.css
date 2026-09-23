@@ -304,6 +304,8 @@
 
   /* the app's theme, not the OS's, decides the canvas iOS Safari tints its bars
      from, and the native controls' scheme */
+  /* the page colour lives on html alone: a body background paints above the
+     profile banner's negative z-index, where the canvas paints below it */
   html {
     color-scheme: light;
     background-color: var(--background);
@@ -313,7 +315,6 @@
   }
 
   body {
-    background-color: var(--background);
     color: var(--foreground);
     /* Safari 26+ lays the registry drawer's backdrop out \`absolute\` so it runs
        under the toolbar; without a positioned body it only covers the first
