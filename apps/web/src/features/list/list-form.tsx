@@ -259,7 +259,11 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
       ) : null}
 
       <Field name="profileAddress" className="min-w-0 gap-1.5">
-        <FieldLabel htmlFor={id("profile")}>{m.list_create_profile_label()}</FieldLabel>
+        <FieldLabel htmlFor={id("profile")}>
+          {value.isProfileBind
+            ? m.list_create_profile_tracked_label()
+            : m.list_create_profile_display_label()}
+        </FieldLabel>
         <Select
           value={value.profileAddress ?? NONE}
           isItemEqualToValue={(item, next) => item === next || isSameAddress(item, next)}
@@ -299,13 +303,16 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         <FieldError />
       </Field>
 
-      {bindable && !isEdit ? (
+      {/* shown locked in edit: it is the reason the switches below are off */}
+      {bindable ? (
         <SwitchRow
           id={id("bind")}
           label={m.list_create_profile_bind_label()}
-          description={m.list_create_profile_bind_desc()}
+          description={
+            isEdit ? m.list_create_profile_bind_locked_desc() : m.list_create_profile_bind_desc()
+          }
           checked={value.isProfileBind}
-          disabled={value.profileAddress === null}
+          disabled={isEdit || value.profileAddress === null}
           onCheckedChange={(checked) => set({ isProfileBind: checked })}
         />
       ) : null}
@@ -315,11 +322,13 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
           id={id("discoverable")}
           label={m.list_create_discoverable_label()}
           description={
-            value.listTypeNew === "want"
-              ? m.list_create_discoverable_want_desc()
-              : isSale
-                ? m.list_create_discoverable_sale_desc()
-                : m.list_create_discoverable_have_desc()
+            discoverableDisabled
+              ? m.list_create_requires_bind_desc()
+              : value.listTypeNew === "want"
+                ? m.list_create_discoverable_want_desc()
+                : isSale
+                  ? m.list_create_discoverable_sale_desc()
+                  : m.list_create_discoverable_have_desc()
           }
           checked={value.discoverable}
           disabled={discoverableDisabled}
@@ -332,7 +341,11 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         <SwitchRow
           id={id("hide-serial")}
           label={m.list_create_hide_serial_label()}
-          description={m.list_create_hide_serial_desc()}
+          description={
+            value.isProfileBind
+              ? m.list_create_hide_serial_desc()
+              : m.list_create_requires_bind_desc()
+          }
           checked={value.hideSerial}
           disabled={!value.isProfileBind}
           onCheckedChange={(checked) => set({ hideSerial: checked })}
