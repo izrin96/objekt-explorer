@@ -33,7 +33,8 @@ export function AddToListAction({ objekts }: { objekts: ValidObjekt[] }) {
       onClick={() => openAddToList(objekts.filter((objekt) => ids.has(objekt.id)))}
     >
       <PlusIcon />
-      {m.filter_add_to_list()}
+      {/* a 320px phone has no room for the label beside the count, ⋯ and clear */}
+      <span className="max-[22.5rem]:sr-only">{m.filter_add_to_list()}</span>
     </Button>
   );
 }

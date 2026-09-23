@@ -27,7 +27,7 @@ import { ObjektCard } from "@/features/objekt/objekt-card";
 import { ObjektCardMenu } from "@/features/objekt/objekt-card-menu";
 import { ownedCopiesOf } from "@/features/objekt/objekt-utils";
 import { ObjektVirtualGrid } from "@/features/objekt/objekt-virtual-grid";
-import { SelectBar, selectBarActionClass, selectBarFillClass } from "@/features/objekt/select-bar";
+import { SelectBar, type SelectBarAction } from "@/features/objekt/select-bar";
 import { ShimmerGrid } from "@/features/objekt/shimmer-grid";
 import { useCollectionRarity } from "@/features/objekt/use-collection-rarity";
 import { useCurrentUser } from "@/features/user/hooks";
@@ -206,6 +206,30 @@ function ListEntries() {
     );
   }
 
+  // below `sm` these fold into the bar's "⋯" menu, so the bar fits a phone;
+  // the list's own writes stay on while comparing: the bar acts on the entries
+  // behind the result, which are still this list's
+  const ownerActions: SelectBarAction[] = [
+    ...(isOwner
+      ? [
+          {
+            label: m.filter_remove_from_list(),
+            icon: <TrashIcon />,
+            onClick: () => openRemove(selected),
+          },
+        ]
+      : []),
+    ...(canPrice
+      ? [
+          {
+            label: m.filter_set_price(),
+            icon: <CurrencyDollarIcon />,
+            onClick: () => openPrice(selected),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <>
       <FilterBar
@@ -273,31 +297,8 @@ function ListEntries() {
       )}
 
       {user && (
-        <SelectBar objekts={filtered}>
+        <SelectBar objekts={filtered} secondary={ownerActions}>
           <AddToListAction objekts={filtered} />
-          {/* the list's own writes stay on while comparing: the bar acts on the
-              entries behind the result, which are still this list's */}
-          {isOwner ? (
-            <Button
-              size="sm"
-              className={`${selectBarFillClass} shrink-0`}
-              onClick={() => openRemove(selected)}
-            >
-              <TrashIcon />
-              {m.filter_remove_from_list()}
-            </Button>
-          ) : null}
-          {canPrice ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className={`${selectBarActionClass} shrink-0`}
-              onClick={() => openPrice(selected)}
-            >
-              <CurrencyDollarIcon />
-              {m.filter_set_price()}
-            </Button>
-          ) : null}
         </SelectBar>
       )}
 

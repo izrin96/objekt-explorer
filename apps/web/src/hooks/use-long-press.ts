@@ -63,6 +63,10 @@ export function useLongPress({
     if (disabled || (event.pointerType !== "touch" && event.pointerType !== "pen")) return;
     // a press starting on a nested control belongs to that control
     if (event.target instanceof Element && event.target.closest("button, a, input")) return;
+    // React bubbles a portal's events to the card: a tap on a menu's outside-press
+    // backdrop lands here, and the backdrop unmounting takes the pointerup that
+    // would cancel the timer with it
+    if (!(event.target instanceof Node) || !event.currentTarget.contains(event.target)) return;
 
     origin.current = { x: event.clientX, y: event.clientY };
     setPending(true);
