@@ -74,13 +74,14 @@ export function OwnedPanel({
       {/* five columns do not fit a phone-width drawer, so the table keeps its
           own scroller rather than squeezing the received date. A visitor's row
           has one focusable cell, so without `tabIndex` the columns past the
-          fold are pointer-only. */}
+          fold are pointer-only. The row menu's 44px touch target pokes past
+          the last row, so the vertical axis is clipped rather than scrolled. */}
       <div
         data-scroll-x
         tabIndex={0}
         role="region"
         aria-label={m.objekt_owned_table_aria()}
-        className="bg-card focus-visible:ring-ring overflow-x-auto rounded-lg border outline-none focus-visible:ring-2"
+        className="bg-card focus-visible:ring-ring overflow-x-auto overflow-y-hidden rounded-lg border outline-none focus-visible:ring-2"
       >
         <table className="w-full min-w-96 border-collapse text-sm">
           <caption className="sr-only">{m.objekt_owned_table_aria()}</caption>
