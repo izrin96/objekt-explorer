@@ -19,5 +19,6 @@ export default defineConfig({
   sortImports: {
     type: "natural",
   },
-  ignorePatterns: ["node_modules", "*.gen.ts"],
+  // third-party skills, OpenSpec artifacts and design notes are prose, not code
+  ignorePatterns: ["node_modules", "*.gen.ts", ".agents", ".claude", "openspec", "design"],
 });

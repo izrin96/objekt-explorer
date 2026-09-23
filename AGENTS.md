@@ -129,7 +129,7 @@ Full list in `.env.example`.
 
 ## CI/CD
 
-`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs lint+typecheck, builds Docker images for affected services. The `web` image is built from `apps/web`; a change under `apps/website` only triggers lint and typecheck.
+`.github/workflows/docker-ci.yml` — on push/PR to main: detects changed apps, runs the format check, lint, typecheck and the web production build, then builds Docker images for affected services. The `web` image is built from `apps/web`; a change under `apps/website` only triggers lint and typecheck.
 
 ## Behavior
 
