@@ -23,6 +23,10 @@ import { DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
+    date: "2026-09-23",
+    items: ["Redesigned the whole site."],
+  },
+  {
     date: "2026-09-16",
     items: [
       "Added Japanese (日本語) language. Switch to it in Settings. Thanks to たろう (@iddnntt) from X.",
