@@ -28,7 +28,7 @@ type ObjektCardProps = {
   /** already formatted and localised by the caller */
   price?: string;
   priceMuted?: boolean;
-  /** makes the price caption a button; the owner's way to price an unpriced card */
+  /** makes the price caption a button: the owner's way to set or change a card's price */
   onPriceClick?: (objekt: ValidObjekt) => void;
   note?: string | null;
   /** overrides the hide-label setting; the drawer's big card always hides it */

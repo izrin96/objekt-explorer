@@ -185,9 +185,7 @@ function ListEntries() {
           hideSerial={list.hideSerial === true}
           price={isSale ? formatPrice(currency, objekt, canPrice) : undefined}
           priceMuted={isSale && unpriced}
-          onPriceClick={
-            canPrice && compare === null && unpriced ? () => openPrice(item) : undefined
-          }
+          onPriceClick={canPrice && compare === null ? () => openPrice(item) : undefined}
           note={isSale ? objekt.note : undefined}
           priority={rowIndex < 2}
         >
