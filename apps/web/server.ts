@@ -500,16 +500,9 @@ async function initializeServer() {
     async fetch(req, server) {
       const url = new URL(req.url);
 
-      // WebSocket upgrade for activity feed
+      // WebSocket upgrade for activity feed: a public, read-only broadcast with
+      // no session behind it, so any origin may subscribe
       if (url.pathname === "/ws") {
-        const origin = req.headers.get("origin");
-        const allowedOrigin = process.env.VITE_SITE_URL;
-        // Reject only a *present* origin that isn't ours. A missing Origin
-        // (non-browser / same-origin clients) is allowed; cross-site browser
-        // pages always send an Origin, so this blocks the cross-origin case.
-        if (origin && allowedOrigin && origin !== new URL(allowedOrigin).origin) {
-          return new Response("Forbidden origin", { status: 403 });
-        }
         const upgraded = server.upgrade(req);
         if (upgraded) return undefined;
         return new Response("Upgrade failed", { status: 500 });

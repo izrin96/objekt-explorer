@@ -67,7 +67,7 @@ export const auth = betterAuth({
       }),
     },
   },
-  baseURL: serverEnv.VITE_SITE_URL,
+  baseURL: serverEnv.BETTER_AUTH_URL,
   // a phone on the LAN reaches the dev server by IP, which is not the baseURL origin
   trustedOrigins:
     process.env.NODE_ENV === "production"
