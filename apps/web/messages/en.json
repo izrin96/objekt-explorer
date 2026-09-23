@@ -401,7 +401,7 @@
   "common_actions_export": "Export",
   "common_actions_remove": "Remove",
   "common_actions_undo": "Undo",
-  "common_form_none": "None",
+  "common_form_none": "(none)",
   "common_validation_required_email": "Email is required.",
   "common_validation_required_password": "Password is required.",
   "common_validation_required_name": "Name is required.",

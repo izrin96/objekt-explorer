@@ -401,7 +401,7 @@
   "common_actions_export": "エクスポート",
   "common_actions_remove": "削除",
   "common_actions_undo": "元に戻す",
-  "common_form_none": "なし",
+  "common_form_none": "（なし）",
   "common_validation_required_email": "メールアドレスは必須です。",
   "common_validation_required_password": "パスワードは必須です。",
   "common_validation_required_name": "名前は必須です。",

@@ -401,7 +401,7 @@
   "common_actions_export": "내보내기",
   "common_actions_remove": "제거",
   "common_actions_undo": "실행 취소",
-  "common_form_none": "없음",
+  "common_form_none": "(없음)",
   "common_validation_required_email": "이메일을 입력해주세요.",
   "common_validation_required_password": "비밀번호를 입력해주세요.",
   "common_validation_required_name": "이름을 입력해주세요.",
