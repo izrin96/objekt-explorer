@@ -45,7 +45,8 @@
  *   - Set to "false" to disable ETag support
  *
  * ASSET_PRELOAD_ENABLE_GZIP (boolean)
- *   - Enable Gzip compression for eligible assets
+ *   - Enable Gzip compression for eligible assets, and for dynamic responses
+ *     (SSR HTML, /api, /rpc), which also follow the size and MIME settings below
  *   - Default: true
  *   - Set to "false" to disable Gzip compression
  *
@@ -221,6 +222,34 @@ function compressDataIfAppropriate(data: Uint8Array, mimeType: string): Uint8Arr
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Gzip a dynamic response (SSR HTML, `/api` and `/rpc` JSON) on the way out,
+ * under the same switch, size floor and MIME list as the preloaded assets.
+ * Streamed, so an SSR page still arrives while it renders; a response of
+ * unknown length is compressed, one known to be under the floor is not.
+ */
+function compressResponse(req: Request, response: Response): Response {
+  if (!ENABLE_GZIP || response.body === null || req.method === "HEAD") return response;
+  if (response.headers.has("content-encoding")) return response;
+  if (!req.headers.get("accept-encoding")?.includes("gzip")) return response;
+
+  const mimeType = (response.headers.get("content-type") ?? "").split(";")[0]!.trim();
+  // an event stream has to reach the client event by event, which gzip buffers
+  if (mimeType === "text/event-stream" || !isMimeTypeCompressible(mimeType)) return response;
+  const length = response.headers.get("content-length");
+  if (length !== null && Number(length) < GZIP_MIN_BYTES) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("Content-Encoding", "gzip");
+  headers.delete("Content-Length");
+  headers.append("Vary", "Accept-Encoding");
+  return new Response(response.body.pipeThrough(new CompressionStream("gzip")), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 /**
@@ -519,7 +548,7 @@ async function initializeServer() {
         if (contentType.startsWith("text/html")) {
           response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
         }
-        return response;
+        return compressResponse(req, response);
       } catch (error) {
         log.error(`Server handler error: ${String(error)}`);
         return new Response("Internal Server Error", { status: 500 });
