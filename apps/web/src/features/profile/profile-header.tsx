@@ -44,7 +44,7 @@ export function ProfileHeader({ profile }: { profile: PublicProfile }) {
                 {nickname}
               </h1>
               {profile.verified === true && (
-                <Badge variant="success" size="sm" className="font-semibold tracking-wide">
+                <Badge variant="outline" size="sm" className="font-semibold tracking-wide">
                   {m.profile_header_verified()}
                 </Badge>
               )}

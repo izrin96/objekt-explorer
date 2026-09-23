@@ -3,6 +3,7 @@ import type { PublicList } from "@repo/api/schemas/list";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { m } from "@/paraglide/messages";
 
@@ -30,6 +31,11 @@ export function ListCard({ list }: { list: PublicList }) {
           >
             {list.name}
           </Link>
+          {list.isProfileBind ? (
+            <Badge variant="outline" size="sm">
+              {m.profile_header_verified()}
+            </Badge>
+          ) : null}
           <ListTypeBadge type={list.listTypeNew} />
           {list.listTypeNew === "sale" && list.currency ? (
             <span className="text-muted-foreground font-mono text-xs">({list.currency})</span>
