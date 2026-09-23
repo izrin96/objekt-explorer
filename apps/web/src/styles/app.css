@@ -1,9 +1,7 @@
 @import "tailwindcss";
 @import "@fontsource-variable/google-sans-flex/wght.css";
-@import "@fontsource-variable/space-grotesk/wght.css";
+@import "@fontsource-variable/instrument-sans/wght.css";
 @import "@fontsource-variable/fira-code/wght.css";
-@import "@fontsource-variable/noto-sans-kr/wght.css";
-@import "@fontsource-variable/noto-sans-sc/wght.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -25,7 +23,7 @@
   --font-sans:
     "Google Sans Flex Variable", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-display: "Space Grotesk Variable", var(--font-sans);
+  --font-display: "Instrument Sans Variable", var(--font-sans);
   --font-mono:
     "Fira Code Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     "Courier New", monospace;

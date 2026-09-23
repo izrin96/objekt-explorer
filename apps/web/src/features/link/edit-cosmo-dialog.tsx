@@ -5,10 +5,8 @@ import {
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { type ReactElement, useRef, useState } from "react";
-import { Cropper, type CropperRef } from "react-advanced-cropper";
-
-import "react-advanced-cropper/dist/style.css";
+import { lazy, type ReactElement, Suspense, useRef, useState } from "react";
+import type { CropperRef } from "react-advanced-cropper";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +26,6 @@ import { Switch } from "@/components/ui/switch";
 import { toastManager } from "@/components/ui/toast";
 import {
   BANNER_ACCEPT,
-  BANNER_ASPECT_RATIO,
   bannerFileError,
   cropToBanner,
   isCroppable,
@@ -72,6 +69,10 @@ const FLAGS: { key: FlagKey; label: () => string; description: () => string }[] 
     description: m.profile_edit_private_profile_desc,
   },
 ];
+
+const BannerCropper = lazy(() =>
+  import("@/features/link/banner-cropper").then((mod) => ({ default: mod.BannerCropper })),
+);
 
 /** Owns its data, so a trigger only has to know the address. */
 export function EditCosmoDialog({
@@ -345,9 +346,11 @@ function BannerPreview({
           playsInline
         />
       ) : isCroppable(file) ? (
-        <div className="h-52 w-full">
-          <Cropper ref={cropperRef} src={url} aspectRatio={() => BANNER_ASPECT_RATIO} />
-        </div>
+        // an unloaded cropper leaves the ref empty, and `cropToBanner` then
+        // uploads the picked file as it is
+        <Suspense fallback={<div className="h-52 w-full" />}>
+          <BannerCropper url={url} cropperRef={cropperRef} />
+        </Suspense>
       ) : (
         <img
           src={url}
