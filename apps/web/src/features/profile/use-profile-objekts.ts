@@ -63,8 +63,13 @@ function useOwnedPages(address: string, filters: OwnedBySchema) {
   const drain = !isSpinAddress(address);
   const { hasNextPage, isFetchingNextPage, isError, fetchNextPage } = query;
 
+  // the profile header and the open tab both observe this query, so both run
+  // this effect in the same commit; without `cancelRefetch: false` the second
+  // call aborts the first and every page is requested twice
   useEffect(() => {
-    if (drain && hasNextPage && !isFetchingNextPage && !isError) void fetchNextPage();
+    if (drain && hasNextPage && !isFetchingNextPage && !isError) {
+      void fetchNextPage({ cancelRefetch: false });
+    }
   }, [drain, hasNextPage, isFetchingNextPage, isError, fetchNextPage]);
 
   const objekts = useMemo(
