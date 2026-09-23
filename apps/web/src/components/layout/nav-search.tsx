@@ -238,10 +238,11 @@ export function NavSearch({
       <button
         type="button"
         onClick={() => onOpenChange(true)}
-        /* below `md` it takes the room the nav links leave; from `md` it is 240px
-           but gives way before the links do; a phone has no ⌘K, and a narrow
-           desktop row has no room for it */
-        className="bg-popover text-muted-foreground hover:border-foreground/30 flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 text-sm md:w-60 md:flex-initial"
+        /* never past 240px; below `md` it takes the room the nav links leave up
+           to that, and the margin keeps the account menu at the far end; from
+           `md` it gives way before the links do; a phone has no ⌘K, and a
+           narrow desktop row has no room for it */
+        className="bg-popover text-muted-foreground hover:border-foreground/30 flex h-8 max-w-60 min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 text-sm max-md:mr-auto md:w-60 md:flex-initial"
       >
         <MagnifyingGlassIcon className="size-4 shrink-0" />
         <span className="truncate">{m.nav_search_user_label()}</span>
