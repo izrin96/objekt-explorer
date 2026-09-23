@@ -22,7 +22,6 @@ import { useProfileColumns } from "../profile-provider";
 import { ProfileToolbar } from "../profile-toolbar";
 import { useProfileCatalogue } from "../use-profile-objekts";
 import { MemberProgressChart, useChartMembers } from "./member-progress-chart";
-import { useSetShowCount, useShowCount } from "./search-schema";
 import {
   catalogueTotals,
   memberProgress,
@@ -112,7 +111,6 @@ function ClassCard({
   onToggle,
   onOpen,
   ownedBySlug,
-  showCount,
 }: {
   group: ClassGroup;
   section: MemberSeason;
@@ -121,7 +119,6 @@ function ClassCard({
   onToggle: () => void;
   onOpen: (objekt: ValidObjekt) => void;
   ownedBySlug: ReadonlyMap<string, ValidObjekt[]>;
-  showCount: boolean;
 }) {
   const id = nodeId(section.key, group.class);
   const complete = group.pct >= 100;
@@ -186,7 +183,7 @@ function ClassCard({
               <ObjektCard
                 key={item.objekt.slug}
                 objekt={owned}
-                qty={showCount && copies.length > 1 ? copies.length : undefined}
+                qty={copies.length > 1 ? copies.length : undefined}
                 unobtainable={item.unobtainable}
                 onOpen={onOpen}
               />
@@ -215,8 +212,6 @@ export function ProgressView() {
   const columns = useProfileColumns();
   const setFilters = useSetFilters();
   const reset = useResetFilters();
-  const showCount = useShowCount();
-  const setShowCount = useSetShowCount();
   const [open, setOpen] = useState<readonly string[]>([]);
   const [active, setActive] = useState<ValidObjekt | null>(null);
 
@@ -265,21 +260,7 @@ export function ProgressView() {
       showSearch={false}
       showSort={false}
       hideEtcClasses
-      extra={
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            aria-pressed={showCount}
-            data-active={showCount || undefined}
-            className="data-active:border-foreground"
-            onClick={() => setShowCount(!showCount)}
-          >
-            {m.filter_show_count()}
-          </Button>
-          <CheckpointPopover />
-        </>
-      }
+      extra={<CheckpointPopover />}
     />
   );
 
@@ -390,7 +371,6 @@ export function ProgressView() {
                       }
                       onOpen={setActive}
                       ownedBySlug={ownedBySlug}
-                      showCount={showCount}
                     />
                   );
                 })}

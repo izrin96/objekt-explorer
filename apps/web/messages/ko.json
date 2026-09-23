@@ -608,7 +608,6 @@
   "filter_event_spin": "스핀",
   "filter_select_all": "모두 선택",
   "filter_selected_count": "{count}개 선택됨",
-  "filter_show_count": "개수 표시",
   "filter_search_help_intro": "이 빠른 검색에서는 다음을 지원합니다:",
   "filter_search_help_or_operation": "항목을 쉼표(,)로 구분하여 OR 검색",
   "filter_search_help_and_operation": "항목을 공백으로 구분하여 AND 검색",

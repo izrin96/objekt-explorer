@@ -608,7 +608,6 @@
   "filter_event_spin": "Spin",
   "filter_select_all": "Select all",
   "filter_selected_count": "{count} selected",
-  "filter_show_count": "Show Count",
   "filter_search_help_intro": "This quick search supports:",
   "filter_search_help_or_operation": "Separate terms with a comma for an OR search",
   "filter_search_help_and_operation": "Separate terms with a space for an AND search",

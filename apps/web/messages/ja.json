@@ -608,7 +608,6 @@
   "filter_event_spin": "Spin",
   "filter_select_all": "すべて選択",
   "filter_selected_count": "{count}件選択中",
-  "filter_show_count": "数量を表示",
   "filter_search_help_intro": "このクイック検索は次に対応しています:",
   "filter_search_help_or_operation": "カンマで区切るとOR検索",
   "filter_search_help_and_operation": "スペースで区切るとAND検索",
