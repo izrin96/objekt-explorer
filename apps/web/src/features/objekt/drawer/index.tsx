@@ -84,9 +84,9 @@ export function ObjektDrawer({
         if (!open) onClose();
       }}
     >
-      {/* the kit's right-hand drawer is `w-[calc(100%-48px)]`; on a phone that
-          gutter is width the header grid and the serial row cannot spare */}
-      <DrawerPopup showCloseButton className="max-sm:w-full sm:max-w-lg">
+      {/* the kit's 48px gutter is kept on a phone: full width leaves no backdrop
+          to tap, and the close button becomes the only way out */}
+      <DrawerPopup showCloseButton className="sm:max-w-lg">
         {objekt && (
           <DrawerBody
             key={objekt.id}
@@ -286,21 +286,35 @@ function DrawerBody({
         </div>
 
         <Tabs value={tab} onValueChange={(value) => onTabChange(value as DrawerTab)}>
-          <TabsList
-            variant="underline"
-            aria-label={m.objekt_tab_aria()}
-            className="bg-popover sticky top-0 z-10 w-full justify-start border-b"
+          {/* four tabs outrun a phone-width sheet, so the strip scrolls and the
+              sheet does not; `data-scroll-x` declares that to the dev guard */}
+          <div
+            data-scroll-x
+            // focus alone never scrolls the strip: a tab past the fold would
+            // stay clipped once reached by keyboard or by tap
+            onFocusCapture={(event) =>
+              event.target.scrollIntoView({ block: "nearest", inline: "nearest" })
+            }
+            className="bg-popover sticky top-0 z-10 [scrollbar-width:none] overflow-x-auto"
           >
-            {ownedCopies && (
-              <TabsTab value="owned">
-                {m.objekt_owned()}
-                {ownedCopies.length > 1 ? ` (${ownedCopies.length.toLocaleString()})` : ""}
-              </TabsTab>
-            )}
-            <TabsTab value="serials">{m.objekt_trades()}</TabsTab>
-            <TabsTab value="market">{m.objekt_market()}</TabsTab>
-            <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
-          </TabsList>
+            {/* `w-max min-w-full`, not `w-full`: `w-full` clamps the underline
+                rule to the scroller while the tabs spill past it */}
+            <TabsList
+              variant="underline"
+              aria-label={m.objekt_tab_aria()}
+              className="w-max min-w-full justify-start border-b"
+            >
+              {ownedCopies && (
+                <TabsTab value="owned">
+                  {m.objekt_owned()}
+                  {ownedCopies.length > 1 ? ` (${ownedCopies.length.toLocaleString()})` : ""}
+                </TabsTab>
+              )}
+              <TabsTab value="serials">{m.objekt_trades()}</TabsTab>
+              <TabsTab value="market">{m.objekt_market()}</TabsTab>
+              <TabsTab value="metadata">{m.objekt_metadata()}</TabsTab>
+            </TabsList>
+          </div>
           {ownedCopies && (
             <TabsPanel value="owned">
               <OwnedPanel
