@@ -170,7 +170,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           secrets: |
-            VITE_SITE_URL=${{ secrets.VITE_SITE_URL }}
             VITE_UMAMI_SCRIPT_URL=${{ secrets.VITE_UMAMI_SCRIPT_URL }}
             VITE_UMAMI_WEBSITE_ID=${{ secrets.VITE_UMAMI_WEBSITE_ID }}
             VITE_LIVE_API_KEY=${{ secrets.VITE_LIVE_API_KEY }}

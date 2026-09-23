@@ -24,7 +24,7 @@ export const serverEnv = createEnv({
     COSMO_KEY: z.string().min(1),
     // the public origin Better Auth signs in on and the only one it accepts;
     // required, or Better Auth would take it from the request's own Host
-    BETTER_AUTH_URL: z.url(),
+    SITE_URL: z.url(),
     // client
     VITE_UMAMI_SCRIPT_URL: z.string().min(1).optional(),
     VITE_UMAMI_WEBSITE_ID: z.string().min(1).optional(),

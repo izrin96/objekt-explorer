@@ -1,8 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
-import { clientEnv } from "./env/client";
-
 // `text-xxs` is a theme size tailwind-merge does not know; unregistered it is
 // read as a text colour and silently dropped in favour of a later `text-foreground`
 const twMerge = extendTailwindMerge({
@@ -27,9 +25,9 @@ export const THEME_COLORS = {
   dark: "#09090B",
 };
 
-/** Better Auth needs an absolute origin; the dev port differs from production. */
+/** The origin the user is on, for links they copy out; its callers only run in the browser. */
 export function getBaseURL(): string {
-  return clientEnv.VITE_SITE_URL;
+  return window.location.origin;
 }
 
 /** The objekt artwork's intrinsic pixel size; the band's SVG viewBox. */

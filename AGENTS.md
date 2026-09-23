@@ -118,8 +118,7 @@ A single root `.env`, copied from `.env.example`, is shared by every app — pac
 - `INDEXER_DATABASE_URL` — indexer PostgreSQL connection
 - `REDIS_URL` — Valkey (Redis-compatible) connection
 - `BETTER_AUTH_SECRET` — auth encryption key
-- `BETTER_AUTH_URL` — public origin, read at runtime: Better Auth's base URL and the only origin it accepts
-- `VITE_SITE_URL` — public site URL baked into the client at build time (share links, meta tags); login does not depend on it
+- `SITE_URL` — public origin, read at runtime: Better Auth's base URL and the only origin it accepts; the client uses the page's own origin, so no build bakes a domain in
 - `COSMO_KEY` — encrypted API key for Cosmo SDK
 
 Full list in `.env.example`.

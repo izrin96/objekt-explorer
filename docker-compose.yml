@@ -98,13 +98,12 @@ services:
       secrets:
         - VITE_UMAMI_SCRIPT_URL
         - VITE_UMAMI_WEBSITE_ID
-        - VITE_SITE_URL
         - VITE_LIVE_API_KEY
     environment:
       - VITE_UMAMI_SCRIPT_URL
       - VITE_UMAMI_WEBSITE_ID
       - BETTER_AUTH_SECRET
-      - BETTER_AUTH_URL
+      - SITE_URL
       - DISCORD_CLIENT_ID
       - DISCORD_CLIENT_SECRET
       - TWITTER_CLIENT_ID
@@ -180,8 +179,6 @@ volumes:
   postgres-indexer-data:
 
 secrets:
-  VITE_SITE_URL:
-    environment: VITE_SITE_URL
   VITE_UMAMI_SCRIPT_URL:
     environment: VITE_UMAMI_SCRIPT_URL
   VITE_UMAMI_WEBSITE_ID:

@@ -16,11 +16,9 @@ COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/patches ./patches
 RUN --mount=type=cache,target=/root/.bun/install/cache bun install --frozen-lockfile
 COPY --from=pruner /app/out/full/ .
-RUN --mount=type=secret,id=VITE_SITE_URL \
-    --mount=type=secret,id=VITE_UMAMI_SCRIPT_URL \
+RUN --mount=type=secret,id=VITE_UMAMI_SCRIPT_URL \
     --mount=type=secret,id=VITE_UMAMI_WEBSITE_ID \
     --mount=type=secret,id=VITE_LIVE_API_KEY \
-    export VITE_SITE_URL=$(cat /run/secrets/VITE_SITE_URL) && \
     export VITE_UMAMI_SCRIPT_URL=$(cat /run/secrets/VITE_UMAMI_SCRIPT_URL) && \
     export VITE_UMAMI_WEBSITE_ID=$(cat /run/secrets/VITE_UMAMI_WEBSITE_ID) && \
     export VITE_LIVE_API_KEY=$(cat /run/secrets/VITE_LIVE_API_KEY) && \
