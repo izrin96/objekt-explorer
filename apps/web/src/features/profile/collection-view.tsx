@@ -149,13 +149,73 @@ export function CollectionView() {
     filters.hidePin !== true &&
     pinnedIds.length > 1;
 
-  const renderCard = useCallback(
-    (objekt: ValidObjekt, qty?: number, priority = false) => {
+  const objektMenuItems = useCallback(
+    (objekt: ValidObjekt) => {
       const owned = isObjektOwned(objekt) ? objekt : null;
-      const canEdit = showActions && isProfileAuthed && owned !== null;
+      const canEdit = isProfileAuthed && owned !== null;
       // the pins lead the grid topmost-first, so "up" is one index earlier
       const pinIndex = owned?.isPin === true ? pinnedIds.indexOf(owned.id) : -1;
       const move = (to: number) => handleReorder(arrayMove(pinnedIds, pinIndex, to), true);
+      return (
+        <>
+          {canEdit && owned && (
+            <>
+              <MenuItem
+                onClick={() =>
+                  owned.isPin
+                    ? batchUnpin.mutate({ address, tokenIds: [Number(owned.id)] })
+                    : batchPin.mutate({ address, tokenIds: [Number(owned.id)] })
+                }
+              >
+                {owned.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
+                {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
+              </MenuItem>
+              {pinIndex !== -1 && (
+                <>
+                  <MenuItem disabled={pinIndex === 0} onClick={() => move(pinIndex - 1)}>
+                    <CaretUpIcon />
+                    {m.objekt_menu_move_up()}
+                  </MenuItem>
+                  <MenuItem
+                    disabled={pinIndex === pinnedIds.length - 1}
+                    onClick={() => move(pinIndex + 1)}
+                  >
+                    <CaretDownIcon />
+                    {m.objekt_menu_move_down()}
+                  </MenuItem>
+                </>
+              )}
+              <MenuItem
+                onClick={() =>
+                  owned.isLocked
+                    ? batchUnlock.mutate({ address, tokenIds: [Number(owned.id)] })
+                    : batchLock.mutate({ address, tokenIds: [Number(owned.id)] })
+                }
+              >
+                {owned.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
+                {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
+              </MenuItem>
+            </>
+          )}
+          <AddToListMenuItem objekts={[objekt]} />
+        </>
+      );
+    },
+    [
+      address,
+      batchLock,
+      batchPin,
+      batchUnlock,
+      batchUnpin,
+      handleReorder,
+      isProfileAuthed,
+      pinnedIds,
+    ],
+  );
+
+  const renderCard = useCallback(
+    (objekt: ValidObjekt, qty?: number, priority = false) => {
+      const owned = isObjektOwned(objekt) ? objekt : null;
       return (
         <ObjektCard
           objekt={objekt}
@@ -169,66 +229,11 @@ export function CollectionView() {
           qty={qty}
           priority={priority}
         >
-          {showActions && (
-            <ObjektCardMenu>
-              {canEdit && owned && (
-                <>
-                  <MenuItem
-                    onClick={() =>
-                      owned.isPin
-                        ? batchUnpin.mutate({ address, tokenIds: [Number(owned.id)] })
-                        : batchPin.mutate({ address, tokenIds: [Number(owned.id)] })
-                    }
-                  >
-                    {owned.isPin ? <PushPinSlashIcon /> : <PushPinIcon />}
-                    {owned.isPin ? m.objekt_menu_unpin() : m.objekt_menu_pin()}
-                  </MenuItem>
-                  {pinIndex !== -1 && (
-                    <>
-                      <MenuItem disabled={pinIndex === 0} onClick={() => move(pinIndex - 1)}>
-                        <CaretUpIcon />
-                        {m.objekt_menu_move_up()}
-                      </MenuItem>
-                      <MenuItem
-                        disabled={pinIndex === pinnedIds.length - 1}
-                        onClick={() => move(pinIndex + 1)}
-                      >
-                        <CaretDownIcon />
-                        {m.objekt_menu_move_down()}
-                      </MenuItem>
-                    </>
-                  )}
-                  <MenuItem
-                    onClick={() =>
-                      owned.isLocked
-                        ? batchUnlock.mutate({ address, tokenIds: [Number(owned.id)] })
-                        : batchLock.mutate({ address, tokenIds: [Number(owned.id)] })
-                    }
-                  >
-                    {owned.isLocked ? <LockSimpleOpenIcon /> : <LockSimpleIcon />}
-                    {owned.isLocked ? m.objekt_menu_unlock() : m.objekt_menu_lock()}
-                  </MenuItem>
-                </>
-              )}
-              <AddToListMenuItem objekts={[objekt]} />
-            </ObjektCardMenu>
-          )}
+          {showActions && <ObjektCardMenu>{objektMenuItems(objekt)}</ObjektCardMenu>}
         </ObjektCard>
       );
     },
-    [
-      address,
-      batchLock,
-      batchPin,
-      batchUnlock,
-      batchUnpin,
-      handleReorder,
-      isProfileAuthed,
-      pinnedIds,
-      selected,
-      showActions,
-      toggleSelect,
-    ],
+    [objektMenuItems, selected, showActions, toggleSelect],
   );
 
   const renderItem = useCallback(
@@ -407,6 +412,9 @@ export function CollectionView() {
         onClose={() => setActive(null)}
         owned={ownedCopies}
         ownedMenu={showActions ? ownedMenu : undefined}
+        selected={active !== null && selected.has(active.id)}
+        onToggleSelect={showActions ? (item) => toggleSelect(item.id) : undefined}
+        menu={showActions && active !== null ? objektMenuItems(active) : undefined}
         locked={active !== null && isObjektOwned(active) && active.isLocked === true}
         onToggleLock={
           showActions && isProfileAuthed && active !== null && isObjektOwned(active)
