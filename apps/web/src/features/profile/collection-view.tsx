@@ -231,13 +231,14 @@ export function CollectionView() {
           lock={owned?.isLocked === true}
           faded={owned === null}
           qty={qty}
+          hideSerial={grouped === true}
           priority={priority}
         >
           {showActions && <ObjektCardMenu>{objektMenuItems(objekt)}</ObjektCardMenu>}
         </ObjektCard>
       );
     },
-    [objektMenuItems, selected, showActions, toggleSelect],
+    [objektMenuItems, selected, showActions, toggleSelect, grouped],
   );
 
   const renderItem = useCallback(

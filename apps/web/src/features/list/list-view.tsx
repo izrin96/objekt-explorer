@@ -182,7 +182,7 @@ function ListEntries() {
           onToggleSelect={user ? (value) => toggle(value.id) : undefined}
           onOpen={() => setActiveGroup(item)}
           qty={item.length > 1 ? item.length : undefined}
-          hideSerial={list.hideSerial === true}
+          hideSerial={grouped || list.hideSerial === true}
           price={isSale ? formatPrice(currency, objekt, canPrice) : undefined}
           priceMuted={isSale && unpriced}
           onPriceClick={canPrice && compare === null ? () => openPrice(item) : undefined}
@@ -193,7 +193,19 @@ function ListEntries() {
         </ObjektCard>
       );
     },
-    [ids, toggle, user, currency, isSale, canPrice, compare, openPrice, list.hideSerial, menuItems],
+    [
+      ids,
+      toggle,
+      user,
+      currency,
+      isSale,
+      canPrice,
+      compare,
+      openPrice,
+      grouped,
+      list.hideSerial,
+      menuItems,
+    ],
   );
 
   const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
