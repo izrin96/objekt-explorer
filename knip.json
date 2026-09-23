@@ -6,83 +6,43 @@
       "project": []
     },
     "apps/website": {
-      "entry": [
-        "src/routes/**/*.{ts,tsx}"
-      ],
-      "project": [
-        "src/**/*.{ts,tsx,css}"
-      ]
+      "entry": ["src/routes/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx,css}"]
     },
     "apps/web": {
-      "entry": [
-        "src/routes/**/*.{ts,tsx}",
-        "src/{client,server,router}.tsx"
-      ],
-      "project": [
-        "src/**/*.{ts,tsx,css}"
-      ]
+      "entry": ["src/routes/**/*.{ts,tsx}", "src/{client,server,router}.tsx"],
+      "project": ["src/**/*.{ts,tsx,css}"]
     },
     "apps/lab": {
-      "entry": [
-        "scripts/*.ts"
-      ],
-      "project": [
-        "src/**/*.{ts,tsx,css}"
-      ]
+      "entry": ["scripts/*.ts"],
+      "project": ["src/**/*.{ts,tsx,css}"]
     },
     "apps/worker": {
-      "project": [
-        "src/**/*.ts"
-      ]
+      "project": ["src/**/*.ts"]
     },
     "apps/indexer": {
-      "entry": [
-        "src/**/*.ts"
-      ],
-      "project": [
-        "src/**/*.ts"
-      ]
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/api": {
-      "entry": [
-        "src/**/*.ts"
-      ],
-      "project": [
-        "src/**/*.ts"
-      ]
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/db": {
-      "entry": [
-        "src/**/*.ts",
-        "*.config.ts"
-      ],
-      "project": [
-        "src/**/*.ts"
-      ]
+      "entry": ["src/**/*.ts", "*.config.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/lib": {
-      "entry": [
-        "src/**/*.ts"
-      ],
-      "project": [
-        "src/**/*.ts"
-      ]
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/cosmo": {
-      "entry": [
-        "src/**/*.ts"
-      ],
-      "project": [
-        "src/**/*.ts"
-      ]
+      "entry": ["src/**/*.ts"],
+      "project": ["src/**/*.ts"]
     },
     "packages/lint": {
-      "entry": [
-        "*.ts"
-      ],
-      "project": [
-        "*.ts"
-      ]
+      "entry": ["*.ts"],
+      "project": ["*.ts"]
     },
     "packages/tsconfig": {
       "entry": [],
