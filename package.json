@@ -17,7 +17,7 @@
       "dev": {
         "drizzle-kit": "^1.0.0-rc.5-ab785fc",
         "@types/bun": "^1.4.2",
-        "turbo": "^2.10.13",
+        "turbo": "^2.11.3",
         "typescript": "^7.0.2",
         "@types/pg": "^8.23.1"
       }
@@ -36,11 +36,11 @@
     "check": "bun run lint && bun run typecheck"
   },
   "devDependencies": {
-    "@types/node": "^26.6.1",
+    "@types/node": "^26.6.2",
     "knip": "^6.37.0",
     "oxfmt": "^0.68.0",
-    "oxlint": "^1.83.0",
-    "oxlint-tsgolint": "^7.0.2001",
+    "oxlint": "^1.85.0",
+    "oxlint-tsgolint": "^7.0.2002",
     "turbo": "catalog:dev",
     "typescript": "catalog:dev"
   },
