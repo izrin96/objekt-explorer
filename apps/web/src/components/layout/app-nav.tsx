@@ -26,8 +26,6 @@ function useNavLinks() {
 export type NavLink = ReturnType<typeof useNavLinks>[number];
 
 export function AppNav() {
-  // the nav owns which of its two surfaces is open, so the mobile sheet can
-  // hand off to the search dialog without either one owning the other
   const [searchOpen, setSearchOpen] = useState(false);
   const { data: user } = useCurrentUser();
   const overall = useOverallStatus();
@@ -38,7 +36,7 @@ export function AppNav() {
   return (
     <header className="bg-background/88 sticky top-0 z-30 border-b backdrop-blur-lg">
       <div className={cn(containerClass, "flex h-13 items-center gap-3.5 px-5")}>
-        <MobileNav links={links} onSearch={() => setSearchOpen(true)} />
+        <MobileNav links={links} />
 
         {/* never wraps or squashes; the search field absorbs the shortfall */}
         <Link
@@ -53,7 +51,8 @@ export function AppNav() {
           >
             <CubeIcon weight="bold" className="size-3.5" />
           </span>
-          <span>{SITE_NAME}</span>
+          {/* on a phone the search field needs the room; the logo still reads as home */}
+          <span className="max-sm:sr-only">{SITE_NAME}</span>
         </Link>
 
         <nav className="ml-1.5 hidden shrink-0 gap-0.5 md:flex">
@@ -71,9 +70,10 @@ export function AppNav() {
 
         <SystemStatus className="max-md:hidden" />
 
-        <span className="flex-1" />
+        <span className="flex-1 max-md:hidden" />
 
-        <ChangelogButton />
+        {/* below `md` it moves into the sheet, so the search field keeps the room */}
+        <ChangelogButton className="max-md:hidden" />
 
         <NavSearch open={searchOpen} onOpenChange={setSearchOpen} />
 

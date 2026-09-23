@@ -110,7 +110,7 @@ export function ChangelogButton({ className }: { className?: string }) {
   );
 }
 
-function ChangelogDialog({
+export function ChangelogDialog({
   open,
   onOpenChange,
 }: {
