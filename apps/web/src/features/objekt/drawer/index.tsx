@@ -212,7 +212,9 @@ function DrawerBody({
           </div>
         )}
       </DrawerHeader>
-      <DrawerPanel className="flex flex-col gap-5">
+      {/* room under a short tab so the sheet still scrolls and a thumb can reach
+          the last row above a phone's bottom edge */}
+      <DrawerPanel className="flex flex-col gap-5 pb-24">
         {/* one column below `sm`: the card at its natural 11rem plus an
             attribute list whose labels alone are ~84px leaves the values under
             100px, which is what pushed the drawer into sideways scrolling */}
