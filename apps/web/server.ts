@@ -181,6 +181,21 @@ interface PreloadResult {
 }
 
 /**
+ * Vite names its build output `name-<8 char base64url hash>.ext` under
+ * `assets/`, but `public/` files are copied in under their own names, some into
+ * that same folder. Only a hashed name can be cached forever: a fixed name like
+ * `favicon.ico` would keep its old bytes for a year. A random hash almost always
+ * holds an uppercase letter, a digit, `_` or `-`, and a public file's plain
+ * lowercase word never does; a hash that happens to miss all four only costs
+ * that one file the long cache.
+ */
+const HASHED_ASSET = /^assets\/.+-(?=[A-Za-z0-9_-]{8}\.)(?![a-z]{8}\.)[A-Za-z0-9_-]{8}\.[a-z0-9]+$/;
+
+function isHashedAsset(relativePath: string): boolean {
+  return HASHED_ASSET.test(relativePath.split(path.sep).join(path.posix.sep));
+}
+
+/**
  * Check if a file is eligible for preloading based on configured patterns
  */
 function isFileEligibleForPreloading(relativePath: string): boolean {
@@ -358,7 +373,7 @@ async function initializeStaticRoutes(clientDirectory: string): Promise<PreloadR
             gz,
             etag,
             type: metadata.type,
-            immutable: true,
+            immutable: isHashedAsset(relativePath),
             size: bytes.byteLength,
           };
           routes[route] = createResponseHandler(asset);
