@@ -1,0 +1,12 @@
+node_modules
+
+.DS_Store
+.cache
+.env
+.output
+/dist/
+/build/
+.tanstack
+
+# compiled Paraglide messages; `typecheck` regenerates them
+src/paraglide

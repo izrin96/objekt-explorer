@@ -1,4 +1,4 @@
-import type { OwnedBySchema } from "@/lib/universal/owned-by";
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 
 import { useCosmoArtist } from "./use-cosmo-artist";
 import { useFilters } from "./use-filters";

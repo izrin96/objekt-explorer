@@ -1,4 +1,5 @@
-import type { ListTypeNew } from "@/lib/universal/list";
+import type { ListTypeNew } from "@repo/api/schemas/list";
+
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

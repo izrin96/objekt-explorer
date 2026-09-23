@@ -1,7 +1,7 @@
+import { type ValidType, validType } from "@repo/api/schemas/activity";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
 import type { Selection } from "react-aria-components";
 
-import { type ValidType, validType } from "@/lib/universal/activity";
 import { m } from "@/paraglide/messages";
 
 import { Button } from "../intentui/button";

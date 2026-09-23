@@ -1,9 +1,9 @@
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { useQuery } from "@tanstack/react-query";
 import { useDeferredValue, useMemo } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
-import type { OwnedBySchema } from "@/lib/universal/owned-by";
 
 import { useCollectionRarity } from "./use-collection-rarity";
 import { useCosmoArtist } from "./use-cosmo-artist";

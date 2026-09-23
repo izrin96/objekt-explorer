@@ -1,7 +1,6 @@
+import { artistSchema } from "@repo/api/schemas/artist";
 import { createFileRoute } from "@tanstack/react-router";
 import * as z from "zod";
-
-import { artistSchema } from "@/lib/universal/artist";
 
 const openAppSchema = z.object({
   artist: artistSchema,

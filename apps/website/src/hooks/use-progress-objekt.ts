@@ -1,10 +1,10 @@
+import type { OwnedBySchema } from "@repo/api/schemas/owned-by";
 import { useQuery } from "@tanstack/react-query";
 import { groupBy } from "es-toolkit/array";
 import { useDeferredValue, useMemo } from "react";
 
 import { filterObjekts } from "@/lib/filter-utils";
 import { collectionOptions } from "@/lib/query-options";
-import type { OwnedBySchema } from "@/lib/universal/owned-by";
 import { tradeableFilter } from "@/lib/utils";
 
 import { useCosmoArtist } from "./use-cosmo-artist";

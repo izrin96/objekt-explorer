@@ -1,0 +1,105 @@
+import { getSession } from "@repo/api/services/auth";
+import { db } from "@repo/db";
+import { indexer } from "@repo/db/indexer";
+import { collections, objekts, transfers } from "@repo/db/indexer/schema";
+import { Addresses } from "@repo/lib";
+import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
+import { createFileRoute } from "@tanstack/react-router";
+import { and, desc, eq } from "drizzle-orm";
+
+import { isSameAddress } from "@/lib/address";
+
+export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$serial")({
+  server: {
+    handlers: {
+      GET: async ({ params }) => {
+        const serial = parseInt(params.serial);
+        if (Number.isNaN(serial)) {
+          return Response.json({ message: "Invalid serial" }, { status: 422 });
+        }
+
+        if (serial < 1)
+          return Response.json({
+            transfers: [],
+          });
+
+        const [session, results] = await Promise.all([
+          getSession(),
+          indexer
+            .select({
+              tokenId: objekts.id,
+              id: transfers.id,
+              to: transfers.to,
+              timestamp: transfers.timestamp,
+              owner: objekts.owner,
+              transferable: objekts.transferable,
+            })
+            .from(transfers)
+            .innerJoin(objekts, eq(transfers.objektId, objekts.id))
+            .innerJoin(collections, eq(objekts.collectionId, collections.id))
+            .where(and(eq(collections.slug, params.collectionSlug), eq(objekts.serial, serial)))
+            .orderBy(desc(transfers.timestamp), desc(transfers.id)),
+        ]);
+
+        const [result] = results;
+        if (!result)
+          return Response.json({
+            transfers: [],
+          });
+
+        const owner = await db.query.userAddress.findFirst({
+          where: { address: result.owner },
+          columns: {
+            privateSerial: true,
+          },
+          orderBy: {
+            id: "desc",
+          },
+        });
+
+        const isPrivate = owner?.privateSerial ?? false;
+
+        if (!session && isPrivate)
+          return Response.json({
+            hide: true,
+            transfers: [],
+          });
+
+        if (session && isPrivate) {
+          const profiles = await fetchUserProfiles(session.user.id);
+
+          const isProfileAuthed = profiles.some((a) => isSameAddress(a.address, result.owner));
+
+          if (!isProfileAuthed)
+            return Response.json({
+              hide: true,
+              transfers: [],
+            });
+        }
+
+        const addresses = Array.from(new Set(results.map((r) => r.to)));
+
+        const knownAddresses = await fetchKnownAddresses(addresses);
+
+        const addressMap = new Map(knownAddresses.map((a) => [a.address.toLowerCase(), a]));
+
+        const isSpin = result.owner.toLowerCase() === Addresses.SPIN;
+
+        return Response.json({
+          tokenId: result.tokenId,
+          owner: result.owner,
+          transferable: isSpin ? false : result.transferable,
+          transfers: results.map((result) => {
+            const addr = addressMap.get(result.to.toLowerCase());
+            return {
+              id: result.id,
+              to: result.to,
+              timestamp: new Date(result.timestamp).toISOString(),
+              nickname: addr?.hideNickname ? undefined : (addr?.nickname ?? undefined),
+            };
+          }),
+        });
+      },
+    },
+  },
+});

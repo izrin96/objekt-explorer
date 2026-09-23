@@ -1,4 +1,5 @@
 import { ArrowsClockwiseIcon, LinkBreakIcon, LinkIcon } from "@phosphor-icons/react/dist/ssr";
+import { type Provider, type ProviderId, providersMap } from "@repo/api/schemas/user";
 import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,7 +15,6 @@ import {
 } from "@/components/intentui/modal";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
-import { type Provider, type ProviderId, providersMap } from "@/lib/universal/user";
 import { m } from "@/paraglide/messages";
 
 const providers = Object.values(providersMap);

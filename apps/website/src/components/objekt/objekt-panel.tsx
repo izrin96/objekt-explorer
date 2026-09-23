@@ -7,6 +7,7 @@ import {
   PushPinIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
+import { type CurrentUser } from "@repo/api/schemas/current-user";
 import { type OwnedObjekt, type ValidObjekt } from "@repo/lib/types/objekt";
 import { format } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
@@ -17,7 +18,6 @@ import { useObjektSelect } from "@/hooks/use-objekt-select";
 import { useProfileTarget } from "@/hooks/use-profile-target";
 import { useCurrentUser, useProfileAuthed } from "@/hooks/use-user";
 import { isObjektOwned } from "@/lib/objekt-utils";
-import { type CurrentUser } from "@/lib/universal/current-user";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";

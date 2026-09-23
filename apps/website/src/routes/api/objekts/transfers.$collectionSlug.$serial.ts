@@ -1,3 +1,4 @@
+import { getSession } from "@repo/api/services/auth";
 import { db } from "@repo/db";
 import { indexer } from "@repo/db/indexer";
 import { collections, objekts, transfers } from "@repo/db/indexer/schema";
@@ -5,8 +6,6 @@ import { Addresses } from "@repo/lib";
 import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, desc, eq } from "drizzle-orm";
-
-import { getSession } from "@/lib/server/auth.server";
 
 export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$serial")({
   server: {

@@ -23,12 +23,15 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
+  # a superseded PR push is wasted work; a main push is a deploy and finishes
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
       web: ${{ steps.filter.outputs.web }}
+      website: ${{ steps.filter.outputs.website }}
       worker: ${{ steps.filter.outputs.worker }}
       indexer: ${{ steps.filter.outputs.indexer }}
       packages: ${{ steps.filter.outputs.packages }}
@@ -42,25 +45,33 @@ jobs:
         with:
           filters: |
             web:
-              - 'apps/website/**'
+              - 'apps/web/**'
               - 'packages/**'
               - 'turbo.json'
               - 'package.json'
               - 'bun.lock'
+              - '.github/workflows/**'
+            # kept as the legacy reference until its removal; lint and typecheck only
+            website:
+              - 'apps/website/**'
+              - '.github/workflows/**'
             worker:
               - 'apps/worker/**'
               - 'packages/**'
               - 'turbo.json'
               - 'package.json'
               - 'bun.lock'
+              - '.github/workflows/**'
             indexer:
               - 'apps/indexer/**'
               - 'packages/**'
               - 'turbo.json'
               - 'package.json'
               - 'bun.lock'
+              - '.github/workflows/**'
             packages:
               - 'packages/**'
+              - '.github/workflows/**'
 
   validate:
     runs-on: ubuntu-latest
@@ -68,6 +79,7 @@ jobs:
     # Only run validation if there are code changes
     if: |
       needs.detect-changes.outputs.web == 'true' ||
+      needs.detect-changes.outputs.website == 'true' ||
       needs.detect-changes.outputs.worker == 'true' ||
       needs.detect-changes.outputs.indexer == 'true' ||
       needs.detect-changes.outputs.packages == 'true'
@@ -75,24 +87,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 25
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          # the same Bun the Dockerfiles run
+          bun-version-file: package.json
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+
+      - name: Check formatting
+        run: bunx oxfmt --check
 
       - name: Run linter
         run: bun run lint
 
       - name: Run type checking
         run: bun run typecheck
+
+      - name: Build web
+        run: bun run --filter web build:prod
 
   build:
     runs-on: ubuntu-latest
@@ -111,7 +125,7 @@ jobs:
       matrix:
         include:
           - app: web
-            dockerfile: ./apps/website/Dockerfile
+            dockerfile: ./apps/web/Dockerfile
           - app: worker
             dockerfile: ./apps/worker/Dockerfile
           - app: indexer

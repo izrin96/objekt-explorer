@@ -1,4 +1,5 @@
 import { ArrowCounterClockwiseIcon, TrashSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import type { User } from "@repo/api/services/auth";
 import { QueryErrorResetBoundary, useMutation } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { Form } from "react-aria-components/Form";
@@ -38,7 +39,6 @@ import ErrorFallbackRender from "@/components/router/error-boundary";
 import { useCurrentUser } from "@/hooks/use-user";
 import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/lib/orpc/client";
-import type { User } from "@/lib/server/auth.server";
 import { m } from "@/paraglide/messages";
 
 import { ListAccounts } from "./link-account";

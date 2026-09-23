@@ -1,0 +1,121 @@
+import type { ValidObjekt } from "@repo/lib/types/objekt";
+
+/**
+ * List of objekt slugs that are unobtainable.
+ */
+const unobtainables = [
+  // error in minting
+  "binary01-xinyu-120a",
+  "binary01-kotone-117a",
+  "binary01-yooyeon-118a",
+  "binary01-mayu-119a",
+  "binary01-nien-118a",
+  "binary01-hyerin-120a",
+  "binary01-sohyun-103a",
+  "binary01-nien-120a",
+  "binary01-kaede-120a",
+  "binary01-nakyoung-118a",
+  "binary01-yubin-118a",
+  "binary01-chaeyeon-120a",
+  "binary01-dahyun-117a",
+  "binary01-seoyeon-119a",
+  "atom01-heejin-111a",
+  "binary01-hyerin-118a",
+  // error in minting
+  "binary01-jiwoo-120a",
+  // test
+  "atom01-artmstest-100u",
+  // error in minting
+  "atom01-jinsoul-109a",
+  // artms 1st anniversary events
+  "atom01-heejin-346z",
+  "atom01-haseul-346z",
+  "atom01-kimlip-346z",
+  "atom01-jinsoul-346z",
+  "atom01-choerry-346z",
+  // chilsung event
+  "atom01-heejin-351z",
+  "atom01-haseul-351z",
+  "atom01-kimlip-351z",
+  "atom01-jinsoul-351z",
+  "atom01-choerry-351z",
+  // virtual angel events
+  "binary01-heejin-310z",
+  "binary01-haseul-310z",
+  "binary01-kimlip-310z",
+  "binary01-jinsoul-310z",
+  "binary01-choerry-310z",
+  // lunar theory events
+  "cream01-haseul-330z",
+  "cream01-heejin-330z",
+  "cream01-kimlip-330z",
+  "cream01-jinsoul-330z",
+  "cream01-choerry-330z",
+  // burn event
+  "cream01-heejin-333z",
+  "cream01-haseul-333z",
+  "cream01-kimlip-333z",
+  "cream01-jinsoul-333z",
+  "cream01-choerry-333z",
+  // zero class
+  "atom01-triples-000z",
+  "atom01-aaa-000z",
+  "atom01-kre-000z",
+  // error in minting
+  "binary01-mayu-101a",
+  "binary01-mayu-104a",
+  "binary01-mayu-105a",
+  "binary01-mayu-106a",
+  "binary01-mayu-107a",
+  "binary01-mayu-108a",
+  // self-made events
+  "divine01-seoyeon-312z",
+  "divine01-hyerin-312z",
+  "divine01-jiwoo-312z",
+  "divine01-chaeyeon-312z",
+  "divine01-yooyeon-312z",
+  "divine01-soomin-312z",
+  "divine01-nakyoung-312z",
+  "divine01-yubin-312z",
+  "divine01-kaede-312z",
+  "divine01-dahyun-312z",
+  "divine01-kotone-312z",
+  "divine01-yeonji-312z",
+  "divine01-nien-312z",
+  "divine01-sohyun-312z",
+  "divine01-xinyu-312z",
+  "divine01-mayu-312z",
+  "divine01-lynn-312z",
+  "divine01-joobin-312z",
+  "divine01-hayeon-312z",
+  "divine01-shion-312z",
+  "divine01-chaewon-312z",
+  "divine01-sullin-312z",
+  "divine01-seoah-312z",
+  "divine01-jiyeon-312z",
+  // love poison streaming event
+  "divine01-haseul-331z",
+  // can you entertain streaming event
+  "divine01-kimlip-337z",
+  // ring of chaos streaming event
+  "divine01-jinsoul-338z",
+  // pressure streaming event
+  "divine01-choerry-339z",
+  // savior streaming event
+  "divine01-heejin-340z",
+];
+
+export const unobtainableSlugs = new Set(unobtainables);
+
+/** Welcome and Zero are handed out rather than collected, so no total measures against them. */
+const excludedClasses = new Set(["Welcome", "Zero"]);
+
+/** Every class the progress breakdown lists; an unobtainable is listed but not counted. */
+export function isMeasuredClass(objekt: ValidObjekt) {
+  return !excludedClasses.has(objekt.class);
+}
+
+/** A collection a profile can still complete, and so the unit every total counts. */
+export function tradeableFilter(objekt: ValidObjekt) {
+  return isMeasuredClass(objekt) && !unobtainableSlugs.has(objekt.slug);
+}

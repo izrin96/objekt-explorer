@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Objekt Tracker Redesign</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&family=Google+Sans+Flex:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef0f4; --line: #e2e5eb; --line-strong: #cfd3dc;
+    --ink: #15171c; --ink-2: #4b5060; --muted: #7d8394; --faint: #a9aeba;
+    --accent: #4b57e0; --accent-ink: #ffffff; --accent-soft: rgba(75,87,224,.12);
+    --good: #2f9e5f; --warn: #c88a11; --bad: #d64545;
+    --review-bg: #e9ebf0; --review-ink: #15171c;
+    --shadow: 0 1px 2px rgba(20,22,30,.06), 0 8px 24px -12px rgba(20,22,30,.18);
+    --font-sans: "Google Sans Flex", "Noto Sans KR", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-display: "Space Grotesk", var(--font-sans);
+    --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --r: 10px; --r-sm: 6px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c0e12; --surface: #13161c; --surface-2: #1a1e26; --line: #23272f; --line-strong: #30353f;
+      --ink: #eceef2; --ink-2: #b6bac6; --muted: #8b91a1; --faint: #5c6270;
+      --accent: #7681f0; --accent-ink: #0c0e12; --accent-soft: rgba(118,129,240,.16);
+      --good: #5dd38f; --warn: #e8b545; --bad: #f06a6a;
+      --review-bg: #07080b; --review-ink: #eceef2;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.7);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c0e12; --surface: #13161c; --surface-2: #1a1e26; --line: #23272f; --line-strong: #30353f;
+    --ink: #eceef2; --ink-2: #b6bac6; --muted: #8b91a1; --faint: #5c6270;
+    --accent: #7681f0; --accent-ink: #0c0e12; --accent-soft: rgba(118,129,240,.16);
+    --good: #5dd38f; --warn: #e8b545; --bad: #f06a6a;
+    --review-bg: #07080b; --review-ink: #eceef2;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+  /* mock's own light/dark override via toolbar (applies to frame only) */
+  :root[data-mock="light"] .frame, :root[data-mock="light"] .notes {
+    --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef0f4; --line: #e2e5eb; --line-strong: #cfd3dc;
+    --ink: #15171c; --ink-2: #4b5060; --muted: #7d8394; --faint: #a9aeba;
+    --accent: #4b57e0; --accent-ink: #ffffff; --accent-soft: rgba(75,87,224,.12);
+    --good: #2f9e5f; --warn: #c88a11; --bad: #d64545;
+    --shadow: 0 1px 2px rgba(20,22,30,.06), 0 8px 24px -12px rgba(20,22,30,.18);
+    color-scheme: light;
+  }
+  :root[data-mock="dark"] .frame, :root[data-mock="dark"] .notes {
+    --bg: #0c0e12; --surface: #13161c; --surface-2: #1a1e26; --line: #23272f; --line-strong: #30353f;
+    --ink: #eceef2; --ink-2: #b6bac6; --muted: #8b91a1; --faint: #5c6270;
+    --accent: #7681f0; --accent-ink: #0c0e12; --accent-soft: rgba(118,129,240,.16);
+    --good: #5dd38f; --warn: #e8b545; --bad: #f06a6a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--review-bg); color: var(--review-ink); font-family: var(--font-sans); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+
+  /* ===== review chrome (the mockup's own toolbar) ===== */
+  .review-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 16px; background: var(--review-bg); border-bottom: 1px solid color-mix(in srgb, var(--review-ink) 12%, transparent); }
+  .review-bar .kicker { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .6; margin-right: 6px; }
+  .screens { display: flex; gap: 2px; flex-wrap: wrap; }
+  .screens button { padding: 6px 10px; border-radius: 6px; font-weight: 500; font-size: 13px; opacity: .65; }
+  .screens button[aria-current="true"] { opacity: 1; background: color-mix(in srgb, var(--review-ink) 10%, transparent); }
+  .review-bar .spacer { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid color-mix(in srgb, var(--review-ink) 18%, transparent); border-radius: 6px; overflow: hidden; }
+  .seg button { padding: 5px 10px; font-size: 12px; opacity: .65; }
+  .seg button[aria-pressed="true"] { opacity: 1; background: color-mix(in srgb, var(--review-ink) 10%, transparent); }
+
+  .stage { padding: 20px 16px 8px; display: flex; justify-content: center; }
+  .frame { width: min(100%, 1400px); background: var(--bg); color: var(--ink); border: 1px solid color-mix(in srgb, var(--review-ink) 14%, transparent); border-radius: 14px; overflow: hidden; container-type: inline-size; container-name: frame; box-shadow: 0 30px 80px -40px rgba(0,0,0,.6); transition: width .25s ease; }
+  :root[data-view="phone"] .frame { width: 400px; }
+
+  .notes { max-width: 1400px; margin: 0 auto; padding: 8px 16px 48px; color: var(--review-ink); }
+  .notes h3 { font-family: var(--font-display); font-size: 15px; margin: 18px 0 8px; }
+  .notes ul { margin: 0; padding-left: 18px; columns: 2; column-gap: 32px; }
+  .notes li { break-inside: avoid; margin-bottom: 6px; max-width: 60ch; }
+  .notes li b { font-weight: 600; }
+  @media (max-width: 720px) { .notes ul { columns: 1; } }
+
+  /* ===== app chrome ===== */
+  .nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; height: 52px; padding: 0 20px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 9px; font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+  .logo .cube { width: 24px; height: 24px; border-radius: 7px; background: var(--ink); color: var(--bg); display: grid; place-items: center; position: relative; }
+  .logo .cube::after { content: ""; position: absolute; right: -2px; bottom: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--good); border: 2px solid var(--bg); }
+  .nav-links { display: flex; gap: 2px; margin-left: 6px; }
+  .nav-links a { padding: 6px 10px; border-radius: 7px; font-size: 13.5px; font-weight: 500; color: var(--muted); text-decoration: none; }
+  .nav-links a[aria-current] { color: var(--ink); background: var(--surface-2); }
+  .nav .spacer { flex: 1; }
+  .cmdk { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px 0 12px; min-width: 240px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--muted); font-size: 13px; }
+  .cmdk kbd { margin-left: auto; font-family: var(--font-mono); font-size: 10.5px; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--faint); }
+  .artist-chips { display: flex; }
+  .artist-chips span { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -6px; display: grid; place-items: center; font-family: var(--font-mono); font-size: 9px; font-weight: 600; background: var(--surface-2); color: var(--ink-2); }
+  .artist-chips span.on { background: var(--ink); color: var(--bg); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #d8b4a0, #8c5a4a); flex: none; }
+  .avatar.lg { width: 44px; height: 44px; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
+  .icon-btn:hover { background: var(--surface-2); color: var(--ink); }
+  svg.i { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+  .page { padding: 20px 20px 40px; display: flex; flex-direction: column; gap: 18px; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  h1 { font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .count { font-family: var(--font-mono); font-size: 12.5px; color: var(--muted); }
+  .count b { color: var(--ink); font-weight: 600; }
+
+  /* buttons */
+  .btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1px solid var(--line); background: var(--surface); color: var(--ink); white-space: nowrap; }
+  .btn:hover { border-color: var(--line-strong); }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--ink-2); }
+  .btn.sm { height: 28px; padding: 0 10px; font-size: 12.5px; }
+  .btn .n { font-family: var(--font-mono); font-size: 11px; padding: 0 5px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); }
+  .btn .caret { opacity: .5; margin-left: -2px; }
+
+  /* filter bar */
+  .filterbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .filterbar .search { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 10px; min-width: 220px; overflow: hidden; white-space: nowrap; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--muted); font-size: 13px; }
+  .filterbar .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+  .filterbar .right { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 8px 0 10px; border-radius: 999px; font-size: 12.5px; background: var(--surface-2); color: var(--ink); }
+  .chip .k { color: var(--muted); }
+  .chip .x { opacity: .5; font-size: 14px; line-height: 1; }
+  .chip.clear { background: transparent; color: var(--muted); padding-left: 4px; }
+  .chip.member { padding-left: 4px; }
+  .chip .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--line-strong); }
+
+  /* member shelf (home front door) */
+  .members { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .members::-webkit-scrollbar { display: none; }
+  .members button { flex: none; display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px 0 5px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-size: 13px; font-weight: 500; }
+  .members button .dot { width: 22px; height: 22px; border-radius: 50%; }
+  .members button.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .shelf { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .shelf::-webkit-scrollbar { display: none; }
+  .shelf .card-wrap { flex: none; width: 120px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .section-head h2 { font-family: var(--font-display); font-size: 14px; font-weight: 600; margin: 0; }
+  .section-head a { font-size: 12.5px; color: var(--muted); text-decoration: none; }
+
+  /* ===== objekt card ===== */
+  .grid { display: grid; grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr)); gap: 14px 12px; }
+  .card-wrap { display: flex; flex-direction: column; gap: 6px; min-width: 0; container-type: inline-size; }
+  .card { position: relative; aspect-ratio: 1083 / 1673; width: 100%; max-width: 100%; border-radius: 5.4cqw; overflow: hidden; background: var(--surface-2); }
+  .card .art { position: absolute; inset: 0; background: var(--art, linear-gradient(160deg, #cbb8ad, #6f5a52)); }
+  .card .art::after { content: ""; position: absolute; inset: 0; background: radial-gradient(60% 45% at 50% 38%, rgba(255,255,255,.28), transparent 70%); }
+  .card .figure { position: absolute; left: 50%; bottom: -8%; width: 78%; height: 72%; transform: translateX(-50%); border-radius: 45% 45% 10% 10%; background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.22)); }
+  .card .figure::before { content: ""; position: absolute; left: 50%; top: -18%; width: 44%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%; background: rgba(0,0,0,.14); }
+  .card .stripe { position: absolute; top: 4cqw; right: 4cqw; bottom: 4cqw; width: 12cqw; border-radius: 2.5cqw; background: var(--stripe, #e63b3b); color: var(--stripe-ink, #fff); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6cqw 0; font-family: var(--font-mono); font-weight: 600; }
+  .card .stripe span { writing-mode: vertical-rl; font-size: 6.2cqw; letter-spacing: .02em; }
+  .card .stripe .member { font-family: var(--font-sans); font-weight: 600; }
+  .card .stripe .artist { font-family: var(--font-display); font-weight: 700; font-size: 5.2cqw; }
+  .card .badges { position: absolute; top: 4cqw; left: 4cqw; display: flex; gap: 3cqw; }
+  .card .badges span { display: grid; place-items: center; width: 14cqw; height: 14cqw; border-radius: 4cqw; background: rgba(10,12,16,.78); color: #fff; font-size: 7cqw; backdrop-filter: blur(6px); }
+  .card .qty { position: absolute; left: 4cqw; bottom: 4cqw; min-width: 16cqw; height: 14cqw; padding: 0 5cqw; border-radius: 999px; background: rgba(10,12,16,.82); color: #fff; font-family: var(--font-mono); font-size: 7.5cqw; font-weight: 600; display: grid; place-items: center; }
+  .card .check { position: absolute; inset: 0; border: 3cqw solid var(--accent); border-radius: inherit; display: none; }
+  .card .check::after { content: "✓"; position: absolute; right: 4cqw; bottom: 4cqw; width: 16cqw; height: 16cqw; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 9cqw; font-weight: 700; }
+  .card.selected .check { display: block; }
+  .card-wrap .label { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; font-size: 12px; line-height: 1.2; min-width: 0; }
+  .card-wrap .label .name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-wrap .label .code { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); flex: none; }
+  .card-wrap .label .code b { color: var(--ink); font-weight: 600; }
+  .card-wrap .price { display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-2); }
+  .card-wrap .price b { color: var(--ink); font-weight: 600; }
+  .card-wrap .price .from { color: var(--muted); }
+
+  /* floating select bar */
+  .selectbar { position: sticky; bottom: 16px; z-index: 5; margin: 6px auto 0; width: max-content; max-width: 100%; display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 14px; border-radius: 12px; background: var(--ink); color: var(--bg); box-shadow: var(--shadow); font-size: 13px; }
+  .selectbar .mono { font-weight: 600; }
+  .selectbar .btn { height: 28px; background: transparent; border-color: color-mix(in srgb, var(--bg) 25%, transparent); color: var(--bg); }
+  .selectbar .btn.fill { background: var(--bg); color: var(--ink); border-color: var(--bg); }
+  .selectbar .sep { width: 1px; height: 18px; background: color-mix(in srgb, var(--bg) 25%, transparent); margin: 0 4px; }
+
+  /* ===== profile ===== */
+  .banner { height: 120px; margin: -20px -20px 0; background: linear-gradient(120deg, #2b2f3a, #5d4a52 45%, #2a3d3a); position: relative; }
+  .banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, var(--bg)); }
+  .identity { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: -36px; position: relative; }
+  .identity .who { display: flex; align-items: flex-end; gap: 14px; min-width: 0; }
+  .identity .avatar.lg { width: 64px; height: 64px; border: 3px solid var(--bg); }
+  .identity .names { min-width: 0; }
+  .identity h1 { display: flex; align-items: center; gap: 8px; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 5px; font-size: 11px; font-weight: 600; letter-spacing: .02em; background: var(--surface-2); color: var(--ink-2); }
+  .tag.ok { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+  .tag.sale { background: var(--accent-soft); color: var(--accent); }
+  .tag.want { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+  .identity .addr { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .identity .addr .ellipsis { max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .socials { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .socials span { font-size: 12px; color: var(--ink-2); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .stats > div { background: var(--surface); padding: 12px 14px; }
+  .stats .v { font-family: var(--font-mono); font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+  .stats .k { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .stats .v small { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 4px; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+  .tabs a { padding: 8px 12px; font-size: 13.5px; font-weight: 500; color: var(--muted); text-decoration: none; position: relative; white-space: nowrap; }
+  .tabs a[aria-current] { color: var(--ink); }
+  .tabs a[aria-current]::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; background: var(--ink); border-radius: 2px; }
+  .tabs a .n { font-family: var(--font-mono); font-size: 11px; color: var(--faint); margin-left: 5px; }
+  .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .toolbar .left, .toolbar .right { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .pinned-head { display: flex; align-items: center; gap: 8px; }
+  .pinned-head h2 { font-family: var(--font-display); font-size: 14px; margin: 0; }
+  .pinned-head .hint { color: var(--muted); font-size: 12px; }
+
+  /* ===== progress ===== */
+  .prog-summary { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
+  .panel h2 { font-family: var(--font-display); font-size: 13px; font-weight: 600; margin: 0 0 10px; color: var(--ink-2); }
+  .big { font-family: var(--font-mono); font-size: 30px; font-weight: 600; letter-spacing: -.03em; line-height: 1; }
+  .big small { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+  .meter { height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
+  .meter i { display: block; height: 100%; background: var(--ink); border-radius: 3px; }
+  .closest { display: flex; flex-direction: column; gap: 8px; }
+  .closest .row { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .closest .row .dot { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .closest .row .name { font-weight: 500; }
+  .closest .row .togo { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+  .closest .row .togo b { color: var(--ink); }
+  .prog-list { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--surface); }
+  .prog-row { display: grid; grid-template-columns: 110px 1fr 128px 70px; align-items: center; gap: 14px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 13px; }
+  .prog-row:first-child { border-top: 0; }
+  .prog-row .name { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .prog-row .name .dot { width: 10px; height: 10px; border-radius: 3px; }
+  .prog-row .bar { height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .prog-row .bar i { display: block; height: 100%; border-radius: 4px; background: var(--dot); }
+  .prog-row .frac { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+  .prog-row .frac b { color: var(--ink); }
+  .prog-row .pct { font-family: var(--font-mono); font-size: 12.5px; font-weight: 600; text-align: right; }
+  .prog-row .togo { grid-column: 2; font-size: 11.5px; color: var(--faint); margin-top: -8px; }
+
+  /* ===== list ===== */
+  .list-hero { display: grid; grid-template-columns: 1fr auto; gap: 16px 24px; align-items: start; }
+  .list-hero .desc { color: var(--ink-2); font-size: 13.5px; max-width: 60ch; margin-top: 8px; white-space: pre-line; }
+  .list-hero .meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .owner { display: flex; align-items: center; gap: 10px; }
+  .owner .avatar { width: 34px; height: 34px; }
+  .owner .n { font-weight: 600; font-size: 13.5px; }
+  .owner .s { font-size: 12px; color: var(--muted); }
+  .list-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .pricebar { display: flex; align-items: center; gap: 22px; padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); flex-wrap: wrap; }
+  .pricebar .kv { display: flex; flex-direction: column; gap: 1px; }
+  .pricebar .kv .k { font-size: 11px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+  .pricebar .kv .v { font-family: var(--font-mono); font-size: 15px; font-weight: 600; }
+  .pricebar .push { margin-left: auto; display: flex; gap: 6px; }
+
+  /* ===== activity ===== */
+  .live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .live i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 25%, transparent); }
+  .table { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: var(--surface); }
+  .table .th, .table .tr { display: grid; grid-template-columns: 96px 1.5fr 1fr 1fr 150px; gap: 12px; align-items: center; padding: 0 14px; }
+  .table .th { height: 36px; font-size: 11.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); background: var(--surface-2); }
+  .table .tr { height: 44px; border-top: 1px solid var(--line); font-size: 13px; }
+  .table .tr:first-of-type { border-top: 0; }
+  .ev { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; }
+  .ev i { width: 6px; height: 6px; border-radius: 50%; background: var(--evc); }
+  .table .obj { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .table .obj .mini { width: 18px; height: 28px; border-radius: 3px; flex: none; background: var(--art); position: relative; overflow: hidden; }
+  .table .obj .mini::after { content: ""; position: absolute; top: 2px; right: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: var(--stripe); }
+  .table .obj .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .table .obj .t .mono { color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .table .who { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .table .who .av { width: 18px; height: 18px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line); flex: none; }
+  .table .who .cosmo { font-family: var(--font-mono); color: var(--muted); font-size: 12px; }
+  .table .time { font-family: var(--font-mono); font-size: 12px; color: var(--muted); text-align: right; }
+
+  /* ===== lists index ===== */
+  .list-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+  .list-card { display: grid; grid-template-columns: 1fr 96px; gap: 10px; padding: 14px 14px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); position: relative; overflow: hidden; }
+  .list-card .t { font-family: var(--font-display); font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .list-card .m { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .list-card .m .mono { color: var(--ink-2); }
+  .list-card .fan { display: flex; justify-content: flex-end; }
+  .list-card .fan .card { width: 44px; margin-left: -22px; box-shadow: -2px 0 6px rgba(0,0,0,.25); border-radius: 4px; }
+  .list-card .foot { grid-column: 1 / -1; display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+  .list-card .foot .btn { height: 26px; padding: 0 9px; font-size: 12px; }
+  .list-card .foot .push { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  /* ===== phone layout ===== */
+  .only-phone { display: none; }
+  @container frame (max-width: 640px) {
+    .nav { height: 48px; padding: 0 12px; gap: 8px; }
+    .nav-links, .cmdk, .artist-chips { display: none; }
+    .only-phone { display: inline-flex; }
+    .page { padding: 14px 12px 90px; gap: 14px; }
+    .grid { --cols: 3 !important; gap: 10px 8px; }
+    .card-wrap .label .code { display: none; }
+    .filterbar .search { min-width: 0; flex: 1; }
+    .filterbar .desk { display: none; }
+    .filterbar .right { margin-left: 0; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .prog-summary { grid-template-columns: 1fr; }
+    .prog-row { grid-template-columns: 84px 1fr 60px; }
+    .prog-row .frac { display: none; }
+    .list-hero { grid-template-columns: 1fr; }
+    .list-actions { justify-content: flex-start; }
+    .table .th, .table .tr { grid-template-columns: 80px 1fr 90px; }
+    .table .from, .table .to-col { display: none; }
+    .list-grid { grid-template-columns: 1fr; }
+    .selectbar { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); width: auto; justify-content: space-between; }
+    .banner { margin: -14px -12px 0; height: 90px; }
+    .identity .addr .ellipsis { max-width: 16ch; }
+    .shelf .card-wrap { width: 96px; }
+    .pricebar { gap: 14px; }
+    .tabnav { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 8; height: calc(56px + env(safe-area-inset-bottom, 0px)); padding: 0 8px env(safe-area-inset-bottom, 0px); background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
+  }
+  .tabnav { display: none; }
+  .tabnav a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; color: var(--muted); text-decoration: none; }
+  .tabnav a[aria-current] { color: var(--ink); }
+  /* phone frame needs its own positioning context for fixed bars */
+  :root[data-view="phone"] .frame { position: relative; transform: translateZ(0); height: 780px; overflow-y: auto; }
+</style>
+</head>
+<body class="dark">
+
+<div class="review-bar">
+  <span class="kicker">Objekt Tracker · redesign mockup</span>
+  <nav class="screens" id="screens" aria-label="Screens"></nav>
+  <span class="spacer"></span>
+  <span class="seg" role="group" aria-label="Theme">
+    <button id="mock-dark" aria-pressed="true">Dark</button><button id="mock-light" aria-pressed="false">Light</button>
+  </span>
+  <span class="seg" role="group" aria-label="Viewport">
+    <button id="view-desk" aria-pressed="true">Desktop</button><button id="view-phone" aria-pressed="false">Phone</button>
+  </span>
+</div>
+
+<div class="stage">
+  <div class="frame" id="frame">
+    <header class="nav" id="nav"></header>
+    <main id="screen"></main>
+    <nav class="tabnav" id="tabnav" aria-label="Mobile navigation"></nav>
+  </div>
+</div>
+
+<section class="notes" id="notes"></section>
+
+<script>
+/* ---------- data ---------- */
+const ARTS = [
+  "linear-gradient(165deg,#d9c7bd 0%,#8d7268 55%,#4a3a36 100%)",
+  "linear-gradient(165deg,#e8e4de 0%,#b8b3ad 50%,#5f5a55 100%)",
+  "linear-gradient(165deg,#9fb4d6 0%,#5a6f93 55%,#2b3752 100%)",
+  "linear-gradient(165deg,#f0d9d4 0%,#c39a92 55%,#6b4d47 100%)",
+  "linear-gradient(165deg,#c6d8c9 0%,#7f9c86 55%,#3c4f42 100%)",
+  "linear-gradient(165deg,#e4d6c2 0%,#a99274 55%,#54473a 100%)",
+  "linear-gradient(165deg,#d2cbe3 0%,#8a80a6 55%,#3f3852 100%)",
+  "linear-gradient(165deg,#2c2e33 0%,#5a5d66 55%,#1a1b1f 100%)",
+  "linear-gradient(165deg,#f2e6d0 0%,#c9b48f 55%,#6e6047 100%)",
+  "linear-gradient(165deg,#b9d3d8 0%,#6f9aa3 55%,#334a50 100%)",
+];
+const STRIPES = {
+  red: ["#e63b3b", "#fff"], yellow: ["#f5d933", "#1a1a1a"], blue: ["#3b6fe6", "#fff"],
+  purple: ["#9b5de5", "#fff"], mint: ["#5cd6a5", "#1a1a1a"], gold: ["#c9a24a", "#1a1a1a"],
+  pink: ["#f2a7c3", "#1a1a1a"], grey: ["#8a8f9c", "#fff"], white: ["#f4f4f6", "#1a1a1a"], sky: ["#7fb7e6", "#1a1a1a"],
+};
+const IDNTT = ["Towa","TaeIn","SeongJun","JuHo","JooHeon","JaeYoung","GyeongBeen","EunSoo","HwanHee","YeJoon","EunSung","GiWoong","NuRi","HeeJu","GyungHo","JiWoon"];
+const TRIPLES = ["SoHyun","JiWoo","JinSoul","Kaede","Nien","YooYeon","KimLip","Choerry","HeeJu","Xinyu","DaHyun","JooBin"];
+const MEMBER_COLORS = { JinSoul:"#2a3bd6", JiWoo:"#f5ed3b", Kaede:"#f7c948", Nien:"#f39a5a", YooYeon:"#e34d8c", KimLip:"#e6393f", Choerry:"#b23fd6", HeeJu:"#7fd4f2", SoHyun:"#2f45e0", Xinyu:"#e0332e", DaHyun:"#f7a1c9", JooBin:"#b7f03a", JiYeon:"#f7a35a", HaSeul:"#3fb15a", YuBin:"#f2f2f2", YeonJi:"#4c62e6" };
+
+function mkCard({ member, code, serial, stripe = "red", art = 0, artist = "tripleS", pin, lock, qty, price, selected, label = true }) {
+  const [sc, si] = STRIPES[stripe];
+  return `<div class="card-wrap">
+    <div class="card${selected ? " selected" : ""}" style="--art:${ARTS[art % ARTS.length]};--stripe:${sc};--stripe-ink:${si}">
+      <div class="art"></div><div class="figure"></div>
+      <div class="stripe"><span class="member">${member}</span><span class="code">${code}${serial ? " #" + serial : ""}</span><span class="artist">${artist}</span></div>
+      ${pin || lock ? `<div class="badges">${pin ? "<span>📌</span>" : ""}${lock ? "<span>🔒</span>" : ""}</div>` : ""}
+      ${qty ? `<div class="qty">${qty}</div>` : ""}
+      <div class="check"></div>
+    </div>
+    ${label ? `<div class="label"><span class="name">${member}</span><span class="code">${code}${serial ? ` <b>#${serial}</b>` : ""}</span></div>` : ""}
+    ${price ? `<div class="price"><span><span class="from">from</span> <b>${price}</b></span><span>${qty} listed</span></div>` : ""}
+  </div>`;
+}
+
+const I = {
+  search: '<svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  caret: '<svg class="i caret" viewBox="0 0 24 24" style="width:12px;height:12px"><path d="m6 9 6 6 6-6"/></svg>',
+  filter: '<svg class="i" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>',
+  cols: '<svg class="i" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="16" rx="1"/><rect x="14" y="4" width="6" height="16" rx="1"/></svg>',
+  share: '<svg class="i" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/></svg>',
+  pin: '<svg class="i" viewBox="0 0 24 24"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/></svg>',
+  clock: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg>',
+  cube: '<svg class="i" viewBox="0 0 24 24" style="width:13px;height:13px;stroke-width:2.2"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12 4 7.5M12 12v9"/></svg>',
+  bell: '<svg class="i" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></svg>',
+  plus: '<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  discord: '<svg class="i" viewBox="0 0 24 24"><path d="M8 17c-2 0-4-1-4-3 0-3 1-6 2-8 1-1 3-1.5 4-1.5l.5 1h3l.5-1c1 0 3 .5 4 1.5 1 2 2 5 2 8 0 2-2 3-4 3l-1-1.5M9 12h.01M15 12h.01"/></svg>',
+  spark: '<svg class="i" viewBox="0 0 24 24"><path d="M3 17l5-6 4 3 4-6 5 4"/></svg>',
+  home: '<svg class="i" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7v9H4z"/></svg>',
+  store: '<svg class="i" viewBox="0 0 24 24"><path d="M4 9h16l-1 11H5zM3 9l2-5h14l2 5"/></svg>',
+  list: '<svg class="i" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+  user: '<svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+};
+
+function fbtn(label, opts = {}) {
+  return `<button class="btn${opts.cls ? " " + opts.cls : ""}${opts.desk ? " desk" : ""}">${opts.icon || ""}${label}${opts.n ? `<span class="n">${opts.n}</span>` : ""}${opts.caret !== false ? I.caret : ""}</button>`;
+}
+
+function filterbar({ chips = [], extra = "", sortLabel = "Newest", cols = 8 }) {
+  return `<div class="filterbar">
+    <div class="search">${I.search}<span>Search member, Z-code, serial…</span></div>
+    ${fbtn("Artist",{desk:true})}${fbtn("Member",{desk:true})}${fbtn("Season",{desk:true})}${fbtn("Class",{desk:true})}
+    ${fbtn("Filters", { icon: I.filter, n: chips.length ? chips.length : "" })}
+    ${extra}
+    <div class="right">
+      ${fbtn(sortLabel, { icon: I.spark })}
+      ${fbtn(String(cols), { icon: I.cols, cls: "desk" })}
+    </div>
+  </div>
+  ${chips.length ? `<div class="chips">${chips.map(c => typeof c === "string" ? `<span class="chip">${c}<span class="x">×</span></span>` : `<span class="chip member"><span class="dot" style="background:${c.color}"></span>${c.name}<span class="x">×</span></span>`).join("")}<span class="chip clear">Clear all</span></div>` : ""}`;
+}
+
+function selectbar(actions, n = 3) {
+  return `<div class="selectbar"><span><span class="mono">${n}</span> selected</span><span class="sep"></span>${actions.map(a => `<button class="btn${a.fill ? " fill" : ""}">${a.icon || ""}${a.label}</button>`).join("")}<button class="btn" aria-label="Clear selection">×</button></div>`;
+}
+
+/* ---------- screens ---------- */
+const SCREENS = [
+  { id: "home", label: "Home", nav: "Objekts", render: home, notes: [
+    ["Front door before the grid", "member chips and a “new this season” shelf give a casual visitor something to grab before the 15k-card wall."],
+    ["Filter pill-wall collapsed", "12 pills + 2 rows became one bar: search, 4 primary dropdowns, “More” with a count badge, sort and columns pushed right."],
+    ["Active filters as chips", "what is applied is visible and individually removable; “Reset filter” is replaced by “Clear all” in the chip row."],
+    ["Select mode is a floating bar", "no permanent “Select mode / Select all / Add to list / Clear” row; the bar appears when a card is checked."],
+    ["Card label split", "member name left in sans, Z-code and serial right in mono; serial is emphasised because it is what traders read."],
+    ["Nav: search as command bar", "⌘K style user search sits centre-right; status dot is folded into the logo; artist toggle is an avatar stack."],
+  ]},
+  { id: "profile", label: "Profile", nav: "", render: profile, notes: [
+    ["Stat strip under identity", "total objekts, unique, pinned and completion give the story before the grid; “181 total” stops floating alone."],
+    ["Tabs carry counts", "Collection 181 · Lists 4 so the tabs read as a summary, not just navigation."],
+    ["Three filter rows became one", "Transferable, Lock, Show missing, Combine duplicate, Disable pin all live under “More”. Snapshot moves to the toolbar as a time control."],
+    ["Pinned shelf", "pins get their own horizontal shelf above the grid instead of being marked inside the grid only."],
+    ["Owner tools right-aligned", "Discord format, Share and Edit profile are the profile’s actions; filters are not."],
+  ]},
+  { id: "progress", label: "Progress", nav: "", render: progress, notes: [
+    ["Summary panels first", "overall completion, closest-to-complete, and the current season give the completionist a goal, not just bars."],
+    ["Rows are readable", "member colour as a small swatch, bar, fraction and % all on one row; “X to go” under the bar turns the number into a task."],
+    ["Bars scaled to 100%", "the old bars stretched across a 1900px row for 8%; here the track is a fixed column so proportions are honest."],
+    ["Sorted by completion", "default sort surfaces what is nearly done; the filter bar still allows season / class breakdown."],
+  ]},
+  { id: "list", label: "List", nav: "", render: list, notes: [
+    ["Loud context header", "list name, Sale · MYR, verified owner with socials and payment note read together as “can I trust this seller?”."],
+    ["Share is the primary action", "a list exists to be sent to someone; Share and Discord format are first, Edit is secondary."],
+    ["Price bar", "count, total value, floor and last-updated in one strip; “Set price” is a bulk action from the select bar, not a permanent button."],
+    ["Price on the card", "price sits under the label in mono; the memo icon becomes a small note badge only when a note exists."],
+    ["Compare and Export tucked away", "both live under a single overflow next to Share instead of a fourth row."],
+  ]},
+  { id: "market", label: "Market", nav: "Market", render: market, notes: [
+    ["Same bar as Home", "one filter component across pages; Market adds a “Priced only” toggle and a Floor-price sort."],
+    ["Listing count and floor on the card", "the “32” pill overlapping the photo moves into the footer as “from MYR 4.09 · 32 listed”."],
+    ["Totals in the header", "9,684 collections · 51,922 listings as the page sub-line, in mono."],
+  ]},
+  { id: "activity", label: "Activity", nav: "Activity", render: activity, notes: [
+    ["Live indicator with pause", "the feed says it is live and lets the reader stop it to copy something."],
+    ["Event as dot + word", "Mint / Transfer / Spin keep their semantic colour in a 6px dot only; the row stays monochrome."],
+    ["Thumbnail per objekt", "a tiny card with its real stripe colour makes rows scannable by collection at a glance."],
+    ["Addresses in mono", "0x… and COSMO in mono, nicknames in sans; relative time on the right."],
+  ]},
+  { id: "lists", label: "My Lists", nav: "Lists", render: lists, notes: [
+    ["Cards show the objekts", "a fanned stack of the first cards makes each list recognisable; type tags are the only colour."],
+    ["Counts and value", "19 objekts · MYR 190 · updated 2d, so the owner sees what needs attention."],
+    ["Share per card", "share and Discord format are on each card; Create list is the page’s single primary button."],
+  ]},
+];
+
+function nav(active) {
+  const links = [["Objekts", "home"], ["Market", "market"], ["Activity", "activity"], ["Lists", "lists"]];
+  document.getElementById("nav").innerHTML = `
+    <div class="logo"><span class="cube">${I.cube}</span><span>Objekt Tracker</span></div>
+    <div class="nav-links">${links.map(([l, id]) => `<a href="#" data-go="${id}" ${active === l ? 'aria-current="page"' : ""}>${l}</a>`).join("")}</div>
+    <span class="spacer"></span>
+    <div class="cmdk">${I.search}<span>Search user</span><kbd>⌘K</kbd></div>
+    <button class="icon-btn only-phone" aria-label="Search">${I.search}</button>
+    <div class="artist-chips" title="Artists"><span class="on">tS</span><span class="on">AR</span><span>id</span></div>
+    <button class="icon-btn" aria-label="Notifications">${I.bell}</button>
+    <span class="avatar"></span>`;
+  document.getElementById("tabnav").innerHTML = [["Objekts", I.home, "home"], ["Market", I.store, "market"], ["Activity", I.spark, "activity"], ["Lists", I.list, "lists"], ["Me", I.user, "profile"]]
+    .map(([l, ic, id]) => `<a href="#" data-go="${id}" ${active === l ? 'aria-current="page"' : ""}>${ic}${l}</a>`).join("");
+}
+
+function home() {
+  const shelf = ["SoHyun","JiWoo","YooYeon","Nien","Kaede","HeeJu","Xinyu","DaHyun","JooBin","JinSoul"].map((m, i) => mkCard({ member: m, code: "229Z", stripe: "red", art: i + 2, label: false })).join("");
+  const grid = IDNTT.map((m, i) => mkCard({ member: m, code: "229Z", stripe: "red", art: i, artist: "idntt", selected: i === 3 || i === 4 })).join("");
+  return `<div class="page">
+    <div class="page-head"><div><h1>Objekts</h1><div class="sub"><span class="mono">15,548</span> collections across tripleS, ARTMS and idntt</div></div>
+      <div class="count">Updated <b>2 min ago</b></div></div>
+    <div class="members">
+      <button class="on"><span class="dot" style="background:var(--ink)"></span>All</button>
+      ${TRIPLES.map(m => `<button><span class="dot" style="background:${MEMBER_COLORS[m] || "#999"}"></span>${m}</button>`).join("")}
+    </div>
+    <div class="section-head"><h2>New this season · Summer26</h2><a href="#">See all 96 →</a></div>
+    <div class="shelf">${shelf}</div>
+    ${filterbar({ chips: ["Season: Summer26", { name: "JiWoo", color: MEMBER_COLORS.JiWoo }, "Class: First", "Type: Physical"] })}
+    <div class="count"><b>1,248</b> results · grouped by collection</div>
+    <div class="grid" style="--cols:8">${grid}</div>
+    ${selectbar([{ label: "Add to list", icon: I.plus, fill: true }, { label: "Select all" }], 2)}
+  </div>`;
+}
+
+function profile() {
+  const cards = [
+    { member: "JiWoo", code: "D337Z", serial: "246", stripe: "blue", art: 0, pin: 1, lock: 1 },
+    { member: "JiWoo", code: "D326Z", serial: "112", stripe: "sky", art: 4, pin: 1 },
+    { member: "JiWoo", code: "E338Z", serial: "431", stripe: "sky", art: 1, pin: 1 },
+    { member: "JiWoo", code: "B2 357Z", serial: "1231", stripe: "red", art: 7, pin: 1 },
+    { member: "JiWoo", code: "D333Z", serial: "76", stripe: "blue", art: 2, lock: 1 },
+    { member: "JiWoo", code: "A102A", serial: "2740", stripe: "yellow", art: 1 },
+    { member: "JinSoul", code: "A203Z", serial: "178", stripe: "pink", art: 3, artist: "ARTMS" },
+    { member: "JinSoul", code: "A209A", serial: "2305", stripe: "white", art: 8, artist: "ARTMS" },
+    { member: "JinSoul", code: "206Z", serial: "130", stripe: "pink", art: 5, artist: "ARTMS" },
+    { member: "JinSoul", code: "204Z", serial: "163", stripe: "pink", art: 6, artist: "ARTMS" },
+    { member: "KimLip", code: "204Z", serial: "169", stripe: "gold", art: 9, artist: "ARTMS" },
+    { member: "Choerry", code: "353Z", serial: "8", stripe: "purple", art: 3, artist: "ARTMS" },
+    { member: "Nien", code: "355Z", serial: "20", stripe: "mint", art: 4 },
+    { member: "HeeJu", code: "311Z", serial: "1719", stripe: "sky", art: 2 },
+    { member: "JinSoul", code: "353Z", serial: "8", stripe: "grey", art: 7, artist: "ARTMS" },
+    { member: "JinSoul", code: "202Z", serial: "493", stripe: "white", art: 0, artist: "ARTMS" },
+  ];
+  const pinned = cards.filter(c => c.pin).map(c => mkCard({ ...c, label: false })).join("");
+  return `<div class="page">
+    <div class="banner"></div>
+    <div class="identity">
+      <div class="who"><span class="avatar lg"></span>
+        <div class="names"><h1>izrin96 <span class="tag ok">Verified</span></h1>
+          <div class="addr"><span class="ellipsis">0x0a697C3E3Eb83E17c96F74FB36c7c77829e8dd6a</span><button class="icon-btn" style="width:22px;height:22px" aria-label="Copy address">⧉</button></div>
+          <div class="socials"><span>shah</span><span>${I.discord} .ryusion</span><span>𝕏 shrdza_</span></div>
+        </div></div>
+      <div class="list-actions">
+        <button class="btn">${I.discord}Discord format</button>
+        <button class="btn">${I.share}Share</button>
+        <button class="btn primary">Edit profile</button>
+      </div>
+    </div>
+    <div class="stats">
+      <div><div class="v">181</div><div class="k">objekts owned</div></div>
+      <div><div class="v">164<small>unique</small></div><div class="k">collections</div></div>
+      <div><div class="v">12</div><div class="k">pinned · 3 locked</div></div>
+      <div><div class="v">2.1<small>%</small></div><div class="k">of all tripleS objekts</div></div>
+    </div>
+    <div class="tabs">
+      <a href="#" aria-current="page">Collection<span class="n">181</span></a><a href="#">Activity</a><a href="#" data-go="progress">Progress</a><a href="#">Statistics</a><a href="#">Lists<span class="n">4</span></a>
+    </div>
+    ${filterbar({ chips: ["Transferable only"], extra: fbtn("Snapshot", { icon: I.clock, cls: "desk" }), sortLabel: "Received" })}
+    <div class="pinned-head">${I.pin}<h2>Pinned</h2><span class="hint">drag to reorder</span></div>
+    <div class="shelf">${pinned}</div>
+    <div class="count"><b>181</b> objekts · <b>164</b> unique · duplicates combined</div>
+    <div class="grid" style="--cols:8">${cards.map(c => mkCard(c)).join("")}</div>
+    ${selectbar([{ label: "Add to list", icon: I.plus, fill: true }, { label: "Pin", icon: I.pin }, { label: "Lock" }], 3)}
+  </div>`;
+}
+
+function progress() {
+  const rows = [
+    ["JiWoo", 45, 548], ["JinSoul", 29, 351], ["Kaede", 8, 520], ["Nien", 6, 451], ["YooYeon", 7, 589], ["KimLip", 4, 351], ["Choerry", 4, 351], ["HeeJu", 2, 211], ["SoHyun", 3, 426], ["Xinyu", 3, 420], ["DaHyun", 3, 500], ["JooBin", 2, 352], ["JiYeon", 2, 354], ["HaSeul", 2, 332], ["YuBin", 3, 564], ["YeonJi", 2, 429],
+  ].sort((a, b) => b[1] / b[2] - a[1] / a[2]);
+  const closest = [["JiWoo · Summer26", "#f5ed3b", 3], ["JinSoul · Atom01", "#2a3bd6", 5], ["JiWoo · Divine01", "#f5ed3b", 9]];
+  return `<div class="page">
+    <div class="banner"></div>
+    <div class="identity">
+      <div class="who"><span class="avatar lg"></span><div class="names"><h1>izrin96 <span class="tag ok">Verified</span></h1><div class="addr"><span class="ellipsis">0x0a697C3E3Eb83E17c96F74FB36c7c77829e8dd6a</span></div></div></div>
+      <div class="list-actions"><button class="btn">${I.clock}Snapshot</button><button class="btn">${I.share}Share progress</button></div>
+    </div>
+    <div class="tabs">
+      <a href="#" data-go="profile">Collection<span class="n">181</span></a><a href="#">Activity</a><a href="#" aria-current="page">Progress</a><a href="#">Statistics</a><a href="#">Lists<span class="n">4</span></a>
+    </div>
+    <div class="prog-summary">
+      <div class="panel"><h2>Overall · tripleS</h2><div class="big">2.1<small>% · 181 / 8,548</small></div><div class="meter"><i style="width:2.1%"></i></div>
+        <div class="sub" style="margin-top:8px">Best season: <b class="mono">Summer26</b> at <b class="mono">31%</b></div></div>
+      <div class="panel"><h2>Closest to complete</h2><div class="closest">${closest.map(([n, c, t]) => `<div class="row"><span class="dot" style="background:${c}"></span><span class="name">${n}</span><span class="togo"><b>${t}</b> to go</span></div>`).join("")}</div></div>
+      <div class="panel"><h2>This season · Summer26</h2><div class="big">31<small>% · 30 / 96</small></div><div class="meter"><i style="width:31%"></i></div>
+        <div class="sub" style="margin-top:8px"><b class="mono">12</b> new since last visit</div></div>
+    </div>
+    ${filterbar({ chips: [], extra: fbtn("Season", { desk: true }) + fbtn("Show count", { caret: false, cls: "desk" }), sortLabel: "Completion" })}
+    <div class="prog-list">${rows.map(([n, a, b]) => { const p = (a / b * 100); return `<div class="prog-row" style="--dot:${MEMBER_COLORS[n] || "#999"}">
+      <div class="name"><span class="dot" style="background:var(--dot)"></span>${n}</div>
+      <div><div class="bar"><i style="width:${Math.max(p, 1.2)}%"></i></div></div>
+      <div class="frac"><b>${a}</b> / ${b}</div>
+      <div class="pct">${p.toFixed(1)}%</div>
+      <div class="togo">${b - a} to go</div></div>`; }).join("")}</div>
+  </div>`;
+}
+
+function list() {
+  const cards = [
+    { member: "DaHyun", code: "E338Z", serial: "537", stripe: "white", art: 0, price: "MYR 10" },
+    { member: "Kaede", code: "E338Z", serial: "720", stripe: "white", art: 7, price: "MYR 10" },
+    { member: "Choerry", code: "C355Z", serial: "754", stripe: "purple", art: 8, price: "MYR 10", artist: "ARTMS" },
+    { member: "KimLip", code: "C355Z", serial: "584", stripe: "red", art: 3, price: "MYR 10", artist: "ARTMS" },
+    { member: "KimLip", code: "C354Z", serial: "38", stripe: "mint", art: 9, price: "MYR 10", artist: "ARTMS" },
+    { member: "Choerry", code: "C354Z", serial: "42", stripe: "mint", art: 2, price: "MYR 10", artist: "ARTMS" },
+    { member: "Nien", code: "E334Z", serial: "134", stripe: "pink", art: 1, price: "MYR 10" },
+    { member: "Kaede", code: "E334Z", serial: "144", stripe: "pink", art: 5, price: "MYR 10" },
+    { member: "HaSeul", code: "303Z", serial: "71", stripe: "yellow", art: 4, price: "MYR 12", artist: "ARTMS" },
+    { member: "HaSeul", code: "302Z", serial: "64", stripe: "yellow", art: 6, price: "MYR 12", artist: "ARTMS" },
+    { member: "SooMin", code: "315Z", serial: "326", stripe: "purple", art: 1, price: "MYR 8" },
+    { member: "Kaede", code: "340Z", serial: "114", stripe: "red", art: 2, price: "MYR 8" },
+    { member: "Kaede", code: "341Z", serial: "178", stripe: "red", art: 9, price: "MYR 8" },
+    { member: "Kaede", code: "338Z", serial: "918", stripe: "red", art: 3, price: "MYR 8" },
+    { member: "Kaede", code: "316Z", serial: "187", stripe: "gold", art: 0, price: "MYR 8" },
+    { member: "SeoAh", code: "338Z", serial: "970", stripe: "gold", art: 8, price: "MYR 8" },
+  ];
+  return `<div class="page">
+    <div class="list-hero">
+      <div>
+        <h1>selling for real <span class="tag sale">Sale · MYR</span></h1>
+        <div class="meta"><div class="owner"><span class="avatar"></span><div><div class="n">shah <span class="tag ok" style="height:18px;font-size:10px">Verified owner</span></div><div class="s">izrin96 · ${I.discord} .ryusion · 𝕏 shrdza_</div></div></div></div>
+        <div class="desc">my real selling list.
+not a test list.
+tng / malaysia bank / wise</div>
+      </div>
+      <div class="list-actions">
+        <button class="btn primary">${I.share}Share list</button>
+        <button class="btn">${I.discord}Discord format</button>
+        <button class="btn">Edit</button>
+        <button class="btn" aria-label="More">⋯</button>
+      </div>
+    </div>
+    <div class="pricebar">
+      <div class="kv"><span class="k">Objekts</span><span class="v">19</span></div>
+      <div class="kv"><span class="k">Total</span><span class="v">MYR 190.00</span></div>
+      <div class="kv"><span class="k">From</span><span class="v">MYR 8.00</span></div>
+      <div class="kv"><span class="k">Unpriced</span><span class="v">0</span></div>
+      <div class="kv"><span class="k">Updated</span><span class="v">2 days ago</span></div>
+      <div class="push"><button class="btn sm">Compare</button><button class="btn sm">Export</button></div>
+    </div>
+    ${filterbar({ chips: [], sortLabel: "Price" })}
+    <div class="grid" style="--cols:8">${cards.map(c => mkCard({ ...c, qty: undefined })).map(h => h.replace(/<span>undefined listed<\/span>/, "")).join("")}</div>
+    ${selectbar([{ label: "Set price", fill: true }, { label: "Add to list", icon: I.plus }, { label: "Remove" }], 4)}
+  </div>`;
+}
+
+function market() {
+  const codes = ["118Z","120Z","117Z","115Z","113Z","110Z","116Z","111Z","109Z","114Z","112Z","328Z","327Z","323Z","342Z","334Z"];
+  const qty = [32,4,7,14,6,2,11,4,7,5,5,6,4,12,23,25];
+  const stripes = ["yellow","yellow","yellow","yellow","yellow","yellow","yellow","yellow","yellow","yellow","yellow","gold","gold","purple","mint","sky"];
+  const price = ["4.09","4.09","4.09","4.09","4.09","4.09","4.09","4.09","4.09","4.09","4.09","6.13","6.13","4.09","6.13","6.13"];
+  return `<div class="page">
+    <div class="page-head"><div><h1>Marketplace</h1><div class="sub"><span class="mono">9,684</span> collections · <span class="mono">51,922</span> listings · prices in MYR</div></div>
+      <div class="count">Synced <b>4 min ago</b></div></div>
+    ${filterbar({ chips: [{ name: "SoHyun", color: MEMBER_COLORS.SoHyun }, "Priced only"], extra: fbtn("Priced only", { caret: false, cls: "desk" }), sortLabel: "Floor price ↑" })}
+    <div class="grid" style="--cols:8">${codes.map((c, i) => mkCard({ member: "SoHyun", code: c, stripe: stripes[i], art: i, qty: qty[i], price: "MYR " + price[i] })).join("")}</div>
+  </div>`;
+}
+
+function activity() {
+  const rows = [
+    ["Mint", "Cream02 SeoYeon", "101Z", "#0", "COSMO", "VienVoiSam", "3s", "yellow", 2],
+    ["Mint", "Cream02 DaHyun", "102Z", "#0", "COSMO", "1jetVN274", "5s", "yellow", 3],
+    ["Mint", "Summer26 EunSung", "101Z", "#0", "COSMO", "ㅂㅂㅈ38", "5s", "red", 0],
+    ["Transfer", "Cream02 S3 X S23", "601A", "#22275", "부산1짱서다현", "빵시온6", "11s", "white", 7],
+    ["Mint", "Cream02 Kotone", "115Z", "#0", "COSMO", "HongSseulGwigon", "11s", "yellow", 5],
+    ["Mint", "Summer26 JaeYoung", "107Z", "#0", "COSMO", "0xeb03b3…", "12s", "red", 1],
+    ["Spin", "Cream02 HyeRin", "110Z", "#1068", "VienVoiSam", "COSMO Spin", "12s", "yellow", 4],
+    ["Spin", "Cream02 ShiOn", "116Z", "#0", "1jetVN274", "COSMO Spin", "14s", "yellow", 6],
+    ["Transfer", "Summer26 JuHo", "215A", "#0", "0x9ff836…", "ㅂㅂㅈ38", "14s", "red", 8],
+    ["Spin", "Summer26 JiWoon", "212Z", "#170", "sakura6", "COSMO Spin", "17s", "red", 9],
+    ["Transfer", "Binary02 YooYeon", "318Z", "#1094", "IGWT", "IGYB", "19s", "pink", 3],
+    ["Transfer", "Summer26 KyuHyuk", "103Z", "#0", "0x5696ce…", "0xd5b691…", "20s", "red", 2],
+    ["Spin", "Cream02 Xinyu", "111Z", "#0", "HongSseulGwigon", "COSMO Spin", "21s", "yellow", 0],
+    ["Mint", "Cream02 NaKyoung", "115Z", "#0", "COSMO", "VienVoiSam", "24s", "yellow", 1],
+    ["Transfer", "Cream02 S3 X S23", "601A", "#22200", "부산1짱서다현", "빵시온6", "29s", "white", 5],
+    ["Mint", "Atom02 KimLip", "103Z", "#0", "COSMO", "0x391f6b…", "30s", "blue", 7],
+    ["Spin", "Atom01 Choerry", "103Z", "#7152", "PeterMandalore", "COSMO Spin", "31s", "purple", 6],
+  ];
+  const evc = { Mint: "var(--good)", Transfer: "var(--accent)", Spin: "var(--warn)" };
+  const who = n => `<div class="who"><span class="av"></span><span class="${/^COSMO|^0x/.test(n) ? "cosmo" : ""}">${n}</span></div>`;
+  return `<div class="page">
+    <div class="page-head"><div><h1>Activity</h1><div class="sub">Every mint, transfer and spin as it lands on-chain</div></div>
+      <div style="display:flex;gap:8px;align-items:center"><span class="live"><i></i>Live · <span class="mono">142</span>/min</span><button class="btn sm">Pause</button></div></div>
+    <div class="filterbar">
+      ${fbtn("Event")}${fbtn("Artist")}${fbtn("Member")}${fbtn("Season")}${fbtn("Class")}${fbtn("Collection no.", { desk: true })}
+      <div class="right"><span class="chip">Mint<span class="x">×</span></span><span class="chip">Transfer<span class="x">×</span></span><span class="chip">Spin<span class="x">×</span></span></div>
+    </div>
+    <div class="table">
+      <div class="th"><span>Event</span><span>Objekt</span><span class="from">From</span><span class="to-col">To</span><span style="text-align:right">When</span></div>
+      ${rows.map(([e, n, c, s, f, t, w, st, a]) => `<div class="tr">
+        <span class="ev" style="--evc:${evc[e]}"><i></i>${e}</span>
+        <div class="obj"><span class="mini" style="--art:${ARTS[a]};--stripe:${STRIPES[st][0]}"></span><span class="t">${n}<span class="mono">${c} ${s}</span></span></div>
+        <span class="from">${who(f)}</span><span class="to-col">${who(t)}</span>
+        <span class="time">${w} ago</span></div>`).join("")}
+    </div>
+  </div>`;
+}
+
+function lists() {
+  const fan = (n, s) => `<div class="fan">${Array.from({ length: 3 }, (_, i) => mkCard({ member: "", code: "", stripe: s[i % s.length], art: n + i, label: false })).join("")}</div>`;
+  const L = [
+    ["selling for real", "sale", "Sale · MYR", "19 objekts · MYR 190 · updated 2d", 0, ["white","purple","red"]],
+    ["want 3", "want", "Want", "7 objekts · updated 1w", 3, ["blue","sky","yellow"]],
+    ["have 3", "ok", "Have", "12 objekts · updated 3d", 6, ["pink","gold","mint"]],
+    ["sale1", "sale", "Sale · MYR", "4 objekts · MYR 36 · updated 2w", 1, ["red","red","yellow"]],
+    ["want test 2", "want", "Want", "2 objekts · updated 3w", 8, ["grey","white","sky"]],
+    ["general", "", "General", "31 objekts · updated 1mo", 4, ["blue","purple","mint"]],
+  ];
+  return `<div class="page">
+    <div class="page-head"><div><h1>My lists</h1><div class="sub"><span class="mono">6</span> lists · <span class="mono">75</span> objekts across them</div></div>
+      <div style="display:flex;gap:6px"><button class="btn">${I.discord}Discord format</button><button class="btn primary">${I.plus}Create list</button></div></div>
+    <div class="list-grid">${L.map(([t, cls, tag, m, a, s]) => `<div class="list-card">
+      <div><div class="t">${t} <span class="tag ${cls}">${tag}</span></div><div class="m">${m.replace(/(\d[\d.]*|MYR \d+)/g, '<span class="mono">$1</span>')}</div></div>
+      ${fan(a, s)}
+      <div class="foot"><button class="btn">${I.share}Share</button><button class="btn">${I.discord}</button><span class="push">izrin96 · public</span></div>
+    </div>`).join("")}</div>
+  </div>`;
+}
+
+/* ---------- wiring ---------- */
+const root = document.documentElement;
+let current = "home";
+function go(id) {
+  current = id;
+  const s = SCREENS.find(x => x.id === id);
+  nav(s.nav || (id === "profile" || id === "progress" ? "" : s.label));
+  document.getElementById("screen").innerHTML = s.render();
+  document.getElementById("notes").innerHTML = `<h3>${s.label} — what changed</h3><ul>${s.notes.map(([b, t]) => `<li><b>${b}.</b> ${t}</li>`).join("")}</ul>`;
+  document.querySelectorAll("#screens button").forEach(b => b.setAttribute("aria-current", b.dataset.id === id));
+  document.getElementById("frame").scrollTop = 0;
+  try { localStorage.setItem("ot-screen", id); } catch {}
+}
+document.getElementById("screens").innerHTML = SCREENS.map(s => `<button data-id="${s.id}">${s.label}</button>`).join("");
+document.getElementById("screens").addEventListener("click", e => { const b = e.target.closest("button"); if (b) go(b.dataset.id); });
+document.getElementById("frame").addEventListener("click", e => { const a = e.target.closest("[data-go]"); if (a) { e.preventDefault(); go(a.dataset.go); } else if (e.target.closest("a")) e.preventDefault(); });
+function setSeg(attr, val, on, off) { root.setAttribute(attr, val); on.setAttribute("aria-pressed", "true"); off.setAttribute("aria-pressed", "false"); try { localStorage.setItem("ot-" + attr, val); } catch {} }
+const md = document.getElementById("mock-dark"), ml = document.getElementById("mock-light"), vd = document.getElementById("view-desk"), vp = document.getElementById("view-phone");
+md.onclick = () => setSeg("data-mock", "dark", md, ml); ml.onclick = () => setSeg("data-mock", "light", ml, md);
+vd.onclick = () => setSeg("data-view", "desktop", vd, vp); vp.onclick = () => setSeg("data-view", "phone", vp, vd);
+let init = "home";
+try { init = localStorage.getItem("ot-screen") || "home"; if (localStorage.getItem("ot-data-mock") === "light") setSeg("data-mock", "light", ml, md); else setSeg("data-mock", "dark", md, ml); if (localStorage.getItem("ot-data-view") === "phone") setSeg("data-view", "phone", vp, vd); } catch { setSeg("data-mock", "dark", md, ml); }
+go(SCREENS.some(s => s.id === init) ? init : "home");
+</script>
+</body>
+</html>

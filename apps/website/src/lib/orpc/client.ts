@@ -4,10 +4,11 @@ import { BatchLinkPlugin } from "@orpc/client/plugins";
 import type { RouterClient } from "@orpc/server";
 import { createRouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { router } from "@repo/api";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 
-import { router } from "../server/api/routers";
+import { apiMessages } from "../api-messages";
 
 const getORPCClient = createIsomorphicFn()
   .client((): RouterClient<typeof router> => {
@@ -32,6 +33,7 @@ const getORPCClient = createIsomorphicFn()
     createRouterClient(router, {
       context: async () => ({
         headers: getRequestHeaders(),
+        messages: apiMessages,
       }),
     }),
   );

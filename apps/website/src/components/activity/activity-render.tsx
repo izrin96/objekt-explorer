@@ -1,6 +1,7 @@
 import { useWebSocket } from "@custom-react-hooks/use-websocket";
 import type { IconProps } from "@phosphor-icons/react";
 import { ArrowsClockwiseIcon, LeafIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react/dist/ssr";
+import type { ActivityData, ActivityResponse } from "@repo/api/schemas/activity";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import {
   type InfiniteData,
@@ -19,7 +20,6 @@ import { useFilters } from "@/hooks/use-filters";
 import { ObjektModalProvider } from "@/hooks/use-objekt-modal";
 import { clientEnv } from "@/lib/env/client";
 import { mapObjektWithTag } from "@/lib/objekt-utils";
-import type { ActivityData, ActivityResponse } from "@/lib/universal/activity";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

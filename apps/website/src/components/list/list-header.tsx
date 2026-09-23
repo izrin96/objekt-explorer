@@ -1,10 +1,10 @@
 import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { CodeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import type { PublicList } from "@repo/api/schemas/list";
 import { useState } from "react";
 
 import { useListTarget } from "@/hooks/use-list-target";
 import { useListAuthed } from "@/hooks/use-user";
-import type { PublicList } from "@/lib/universal/list";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

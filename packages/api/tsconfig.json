@@ -1,0 +1,5 @@
+{
+  "extends": "@repo/tsconfig/tsconfig.bun.json",
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", ".turbo"]
+}

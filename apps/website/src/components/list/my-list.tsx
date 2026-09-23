@@ -6,12 +6,12 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { DiscordLogoIcon } from "@phosphor-icons/react/dist/ssr";
+import type { PublicList } from "@repo/api/schemas/list";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useUserLists } from "@/hooks/use-user";
-import type { PublicList } from "@/lib/universal/list";
 import { getListLinkOption, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 

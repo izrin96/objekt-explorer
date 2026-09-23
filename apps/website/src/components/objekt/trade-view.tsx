@@ -7,6 +7,7 @@ import {
   QuestionMarkIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useAsyncList } from "@react-stately/data";
+import type { ObjektTransferResult } from "@repo/api/schemas/objekt";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { QueryErrorResetBoundary, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -15,7 +16,6 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { NumberField as NumberFieldPrimitive } from "react-aria-components/NumberField";
 import { ErrorBoundary } from "react-error-boundary";
 
-import type { ObjektTransferResult } from "@/lib/universal/objekt";
 import { m } from "@/paraglide/messages";
 
 import { Badge } from "../intentui/badge";

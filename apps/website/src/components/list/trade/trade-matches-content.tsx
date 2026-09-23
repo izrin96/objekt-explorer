@@ -1,4 +1,5 @@
 import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
+import type { TradePartner } from "@repo/api/schemas/list";
 import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { Avatar } from "@/components/intentui/avatar-custom";
@@ -13,7 +14,6 @@ import {
 import { Link } from "@/components/intentui/link";
 import { SocialBadge } from "@/components/shared/social-badge";
 import { tradePartnersQuery } from "@/lib/queries/list";
-import type { TradePartner } from "@/lib/universal/list";
 import { cn, parseNickname } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
