@@ -583,6 +583,7 @@
   "filter_collection_no": "컬렉션 번호",
   "filter_column": "열",
   "filter_combine_dups": "중복 항목 병합",
+  "filter_combine": "병합",
   "filter_clear": "초기화",
   "filter_add_to_list": "목록에 추가",
   "filter_remove_from_list": "목록에서 제거",

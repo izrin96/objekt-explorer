@@ -4,7 +4,6 @@ import { validGroupBy } from "@repo/cosmo/types/common";
 import { type ReactNode, useMemo } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ScrollAreaPrimitive } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectItem,
@@ -330,7 +329,7 @@ export function FilterBar({
       <div className="flex flex-wrap items-center gap-2">
         {showSearch && <FilterSearchField />}
 
-        <QuickStrip>
+        <QuickFilters>
           <FilterSheet
             facets={facets}
             groups={groups}
@@ -358,7 +357,7 @@ export function FilterBar({
           {!extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
 
           <FilterPopover fields={longTail} className="max-md:hidden" />
-        </QuickStrip>
+        </QuickFilters>
 
         {extra}
 
@@ -380,24 +379,12 @@ export function FilterBar({
 }
 
 /**
- * Below `md` the Filters trigger and the quick controls share one line that
- * scrolls sideways, since a phone cannot fit them without wrapping into rows;
- * the edge that still has controls past it fades, the same fade as the kit
- * `ScrollArea`'s `scrollFade`. From `md` every wrapper dissolves and the
- * controls rejoin the toolbar row. The inset padding keeps focus rings clear
- * of the scroll clip.
+ * Below `md` the Filters trigger and the quick controls get lines of their own,
+ * wrapping rather than scrolling so none of them sits out of sight; from `md`
+ * the wrapper dissolves and the controls rejoin the toolbar row.
  */
-export function QuickStrip({ children }: { children: ReactNode }) {
+export function QuickFilters({ children }: { children: ReactNode }) {
   return (
-    <ScrollAreaPrimitive.Root className="max-md:w-full md:contents">
-      {/* every control is its own tab stop, so the viewport is not one too */}
-      <ScrollAreaPrimitive.Viewport
-        data-scroll-x
-        tabIndex={-1}
-        className="-m-1 mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))] p-1 outline-none [--fade-size:1.5rem] md:contents"
-      >
-        <div className="flex w-max items-center gap-2 md:contents">{children}</div>
-      </ScrollAreaPrimitive.Viewport>
-    </ScrollAreaPrimitive.Root>
+    <div className="flex flex-wrap items-center gap-2 max-md:w-full md:contents">{children}</div>
   );
 }

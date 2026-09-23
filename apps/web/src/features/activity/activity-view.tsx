@@ -23,7 +23,7 @@ import {
   type FacetKey,
 } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
-import { QuickStrip, ResetButton } from "@/features/filters/filter-bar";
+import { QuickFilters, ResetButton } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
 import { ONLINE_TYPE_LABEL } from "@/features/filters/labels";
 import { isFiltering } from "@/features/filters/search-schema";
@@ -276,7 +276,7 @@ export function ActivityView() {
       <PageHeader title={m.activity_title()} description={m.activity_description()} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <QuickStrip>
+        <QuickFilters>
           <FilterSheet
             facets={facets}
             groups={groups}
@@ -293,7 +293,7 @@ export function ActivityView() {
             values={values}
             onChange={setFacet}
           />
-        </QuickStrip>
+        </QuickFilters>
         <ResetButton
           onReset={reset}
           disabled={!isFiltering(filters) && type === "all"}

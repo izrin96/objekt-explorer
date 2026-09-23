@@ -58,7 +58,7 @@ export function CombineDupsToggle({ className }: { className?: string }) {
   return (
     <FilterToggle
       field="grouped"
-      label={m.filter_combine_dups()}
+      label={m.filter_combine()}
       icon={<StackSimpleIcon />}
       className={className}
     />

@@ -583,6 +583,7 @@
   "filter_collection_no": "Collection No.",
   "filter_column": "Columns",
   "filter_combine_dups": "Combine duplicate",
+  "filter_combine": "Combine",
   "filter_clear": "Clear",
   "filter_add_to_list": "Add to list",
   "filter_remove_from_list": "Remove from list",
