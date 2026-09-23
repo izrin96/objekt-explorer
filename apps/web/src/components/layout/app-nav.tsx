@@ -7,6 +7,7 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { NavSearch } from "@/components/layout/nav-search";
 import { SystemStatus, statusDotClass, useOverallStatus } from "@/components/layout/system-status";
 import { SignedOutNav, UserMenu } from "@/components/layout/user-menu";
+import { Group } from "@/components/ui/group";
 import { useCurrentUser } from "@/features/user/hooks";
 import { SITE_NAME, cn, containerClass } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -69,12 +70,14 @@ export function AppNav() {
           ))}
         </nav>
 
-        <SystemStatus className="max-md:hidden" />
-
         <span className="flex-1 max-md:hidden" />
 
-        {/* below `md` it moves into the sheet, so the search field keeps the room */}
-        <ChangelogButton className="max-md:hidden" />
+        {/* below `md` the changelog moves into the sheet and the logo's dot
+            carries the status, so the search field keeps the room */}
+        <Group className="max-md:hidden">
+          <SystemStatus />
+          <ChangelogButton />
+        </Group>
 
         <NavSearch open={searchOpen} onOpenChange={setSearchOpen} />
 

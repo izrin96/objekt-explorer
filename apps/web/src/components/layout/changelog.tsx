@@ -91,16 +91,15 @@ const CHANGELOG = [
 ] as const;
 
 /** The nav's entry point: an icon button that owns the dialog beside it. */
-export function ChangelogButton({ className }: { className?: string }) {
+export function ChangelogButton() {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button
-        variant="ghost"
-        size="icon"
+        variant="outline"
+        size="icon-sm"
         aria-label={m.common_changelog()}
-        className={className}
         onClick={() => setOpen(true)}
       >
         <NoteIcon />

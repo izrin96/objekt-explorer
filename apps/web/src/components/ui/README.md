@@ -1,6 +1,6 @@
 # Registry components
 
-Every file here except `chart.tsx` is a vendored copy of a shadcn-style registry item: 31 from
+Every file here except `chart.tsx` is a vendored copy of a shadcn-style registry item: 32 from
 cnippet (`https://ui.cnippet.dev/r/<name>.json`, configured as `@cnippet` in
 `apps/web/components.json`) and `color-picker.tsx` from Neon (`https://ui.neon.com/r/color-picker.json`).
 They are kept verbatim so an update is an overwrite, not a merge. Override styling at the usage
