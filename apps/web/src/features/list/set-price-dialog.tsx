@@ -144,7 +144,8 @@ function SetPriceForm({
             save(
               entryIds.map((entryId) => ({
                 entryId,
-                price: isQyop ? null : (price ?? null),
+                // 0 clears the price, as the field's hint says
+                price: isQyop || !price ? null : price,
                 isQyop,
                 note: note.trim() || null,
               })),

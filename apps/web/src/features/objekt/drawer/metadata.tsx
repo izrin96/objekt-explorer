@@ -6,7 +6,7 @@ import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
 import { absoluteTime } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
-import { isObjektOwned } from "../objekt-utils";
+import { isObjektOwned, memberNames } from "../objekt-utils";
 
 function MetaRow({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -52,7 +52,7 @@ export function MetadataPanel({
       <MetaRow label={m.objekt_artist()}>
         {getArtist(objekt.artist)?.title ?? objekt.artist}
       </MetaRow>
-      <MetaRow label={m.objekt_member()}>{objekt.member}</MetaRow>
+      <MetaRow label={m.objekt_member()}>{memberNames(objekt)}</MetaRow>
       <MetaRow label={m.objekt_season()}>{objekt.season}</MetaRow>
       <MetaRow label={m.objekt_class()}>{objekt.class}</MetaRow>
       <MetaRow label={m.objekt_collection_no()}>{objekt.collectionNo}</MetaRow>

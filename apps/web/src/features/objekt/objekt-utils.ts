@@ -84,6 +84,11 @@ export function mapObjektWithTag<T extends ValidObjekt>(objekt: T): T {
   };
 }
 
+/** a unit objekt carries every member it features; a solo one only has `member` */
+export function memberNames(objekt: ValidObjekt): string {
+  return (objekt.members.length > 0 ? objekt.members : [objekt.member]).join(", ");
+}
+
 export function isObjektOwned(objekt: ValidObjekt): objekt is OwnedObjekt {
   return "serial" in objekt;
 }

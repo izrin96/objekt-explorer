@@ -33,6 +33,8 @@ export function useMarketObjekts() {
     orpc.market.summary.queryOptions({
       staleTime: SUMMARY_STALE_TIME,
       refetchOnWindowFocus: false,
+      // an empty summary would read as an empty market
+      throwOnError: true,
     }),
   );
 

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -30,11 +31,15 @@ export function EditListDialog({
   slug,
   open,
   onOpenChange,
+  redirectOnSave = false,
 }: {
   slug: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** for the list's own page: a save can move its profile address, and `/list/$slug` redirects to wherever it now lives */
+  redirectOnSave?: boolean;
 }) {
+  const navigate = useNavigate();
   const { data, error } = useQuery(listFindOptions(slug, open));
 
   return (
@@ -42,7 +47,13 @@ export function EditListDialog({
       <DialogPopup className="max-w-md">
         {data ? (
           // mounted with the stored list in hand, so the draft is its initial state
-          <EditListForm list={data} onDone={() => onOpenChange(false)} />
+          <EditListForm
+            list={data}
+            onDone={() => {
+              onOpenChange(false);
+              if (redirectOnSave) void navigate({ to: "/list/$slug", params: { slug } });
+            }}
+          />
         ) : (
           <>
             <DialogHeader>

@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektFlip } from "../objekt-flip";
-import { getCollectionShortNo, isObjektOwned } from "../objekt-utils";
+import { getCollectionShortNo, isObjektOwned, memberNames } from "../objekt-utils";
 import { collectionMetadataOptions, serialListOptions, transfersOptions } from "../queries";
 import { MarketPanel } from "./market";
 import { MetadataPanel } from "./metadata";
@@ -148,7 +148,7 @@ function DrawerBody({
 
   const attributes: [string, string][] = [
     [m.objekt_artist(), artistName],
-    [m.objekt_member(), objekt.member],
+    [m.objekt_member(), memberNames(objekt)],
     [m.objekt_season(), objekt.season],
     [m.objekt_class(), objekt.class],
     [m.objekt_collection_no(), objekt.collectionNo],

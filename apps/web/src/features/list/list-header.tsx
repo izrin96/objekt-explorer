@@ -110,7 +110,12 @@ export function ListHeader() {
 
       {isOwner ? (
         <>
-          <EditListDialog slug={list.slug} open={editOpen} onOpenChange={setEditOpen} />
+          <EditListDialog
+            slug={list.slug}
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            redirectOnSave
+          />
           <DeleteListDialog
             slug={list.slug}
             name={list.name}

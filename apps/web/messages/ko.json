@@ -721,6 +721,7 @@
   "profile_reorder_returned": "고정 오브젝트가 {total}개 중 {position}번째로 되돌아갔습니다.",
   "profile_reorder_cancelled": "순서 변경이 취소되었습니다. 고정 오브젝트는 {total}개 중 {position}번째에 남습니다.",
   "profile_checkpoint_notice": "{date} 기준 컬렉션을 표시하고 있습니다",
+  "profile_spin_notice": "COSMO 스핀에서는 일부 필터를 사용할 수 없습니다. 폴리곤 체인에서 스핀한 오브젝트가 아직 병합되지 않았습니다.",
   "profile_checkpoint_date_label": "스냅샷 날짜",
   "profile_count_summary": "{shown}개 표시 · 보유 {owned}개 중 고유 {unique}개",
   "profile_empty_title": "아직 오브젝트가 없습니다",

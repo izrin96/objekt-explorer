@@ -36,6 +36,7 @@ import {
 } from "@/features/link/banner-upload";
 import { MessageMarkup } from "@/features/link/message-markup";
 import { PROFILE_QUERY_KEY, profileOptions } from "@/features/link/queries";
+import { PROFILE_PAGE_KEY } from "@/features/profile/queries";
 import { currentUserOptions } from "@/features/user/queries";
 import { client } from "@/lib/orpc";
 import { SITE_NAME } from "@/lib/utils";
@@ -193,6 +194,7 @@ function EditForm({
       toastManager.add({ type: "success", title: m.profile_edit_success() });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: PROFILE_PAGE_KEY }),
         queryClient.invalidateQueries({ queryKey: currentUserOptions.queryKey }),
       ]);
     },

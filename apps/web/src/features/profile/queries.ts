@@ -8,9 +8,12 @@ import { mapObjektWithTag } from "@/features/objekt/objekt-utils";
 import { getProfile, type profileInputSchema } from "@/lib/functions/profile";
 import { orpc } from "@/lib/orpc";
 
+/** the prefix of every profile page read, which the RPC's `orpc.profile.key()` does not cover */
+export const PROFILE_PAGE_KEY = ["profile"] as const;
+
 export const profileQuery = (data: z.infer<typeof profileInputSchema>) =>
   queryOptions({
-    queryKey: ["profile", data.nickname],
+    queryKey: [...PROFILE_PAGE_KEY, data.nickname],
     queryFn: () => getProfile({ data }),
     staleTime: 0,
   });

@@ -50,7 +50,7 @@ import { CheckpointPopover, checkpointDate } from "./checkpoint-popover";
 import { PinDnd, SortablePin } from "./pin-dnd";
 import { useProfileColumns, useProfileAuthed, useProfileTarget } from "./profile-provider";
 import { ProfileToolbar } from "./profile-toolbar";
-import { useProfileObjekts } from "./use-profile-objekts";
+import { isSpinAddress, useProfileObjekts } from "./use-profile-objekts";
 
 export function CollectionView() {
   const profile = useProfileTarget()!;
@@ -346,6 +346,10 @@ export function CollectionView() {
           </>
         }
       />
+
+      {isSpinAddress(address) && (
+        <p className="text-muted-foreground text-sm">{m.profile_spin_notice()}</p>
+      )}
 
       {at && (
         <p className="text-muted-foreground text-sm">

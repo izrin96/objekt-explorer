@@ -9,7 +9,7 @@ import { ProfileProvider } from "@/features/profile/profile-provider";
 import { ProfileStats } from "@/features/profile/profile-stats";
 import { ProfileTabs } from "@/features/profile/profile-tabs";
 import { profileQuery } from "@/features/profile/queries";
-import { useProfileSummary } from "@/features/profile/use-profile-objekts";
+import { isSpinAddress, useProfileSummary } from "@/features/profile/use-profile-objekts";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/@{$nickname}")({
@@ -31,7 +31,7 @@ function ProfileLayout() {
         <ProfileProvider profile={profile}>
           <ProfileHeader key={profile.address} profile={profile} />
           <ProfileSummary />
-          <ProfileTabs nickname={nickname} />
+          <ProfileTabs nickname={nickname} spin={isSpinAddress(profile.address)} />
           <Outlet />
         </ProfileProvider>
       )}
