@@ -4,7 +4,7 @@ import { Addresses } from "@repo/lib";
 import type { ValidObjekt } from "@repo/lib/types/objekt";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { DataTable, DataTableHead, DataTableRow } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -14,6 +14,7 @@ import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
 import { isFiltering } from "@/features/filters/search-schema";
 import { SingleSelect } from "@/features/filters/single-select";
@@ -114,13 +115,27 @@ function TradeRow({
   );
 }
 
+function TradesTypeFilter({ className }: { className?: string }) {
+  const type = useTradesType();
+  const setType = useSetTradesType();
+  return (
+    <SingleSelect
+      label={m.trades_filter_type_label()}
+      options={validType.map((value) => ({ value, label: TYPE_LABEL[value]() }))}
+      value={type}
+      defaultValue="all"
+      onChange={setType}
+      className={className}
+    />
+  );
+}
+
 export function TradesView() {
   const profile = useProfileTarget()!;
   const { selectedArtistIds } = useCosmoArtist();
   const filters = useCanonicalFilters();
   const reset = useResetTrades();
   const type = useTradesType();
-  const setType = useSetTradesType();
   const [active, setActive] = useState<ValidObjekt | null>(null);
 
   const query = useInfiniteQuery(
@@ -136,6 +151,12 @@ export function TradesView() {
     }),
   );
 
+  // a fresh array each render would re-run the facet parity effect forever
+  const extras = useMemo<ExtraFacet[]>(
+    () => [{ key: "type", active: type !== "all", quick: true, Control: TradesTypeFilter }],
+    [type],
+  );
+
   const rows = query.data?.pages.flatMap((page) => page.results) ?? [];
   const hidden = query.data?.pages[0]?.hide === true;
 
@@ -145,18 +166,9 @@ export function TradesView() {
       showSearch={false}
       showSort={false}
       showColumns={false}
-      extra={
-        <>
-          <SingleSelect
-            label={m.trades_filter_type_label()}
-            options={validType.map((value) => ({ value, label: TYPE_LABEL[value]() }))}
-            value={type}
-            defaultValue="all"
-            onChange={setType}
-          />
-          <CheckpointPopover />
-        </>
-      }
+      extras={extras}
+      extrasFirst
+      extra={<CheckpointPopover />}
     />
   );
 

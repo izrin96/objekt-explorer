@@ -18,7 +18,6 @@ import { m } from "@/paraglide/messages";
 
 import { useScopedFacets } from "./facets";
 import { useMemberColor } from "./member-colors";
-import { MultiSelect } from "./multi-select";
 import { useCanonicalFilters, useFilters, useSetFilters } from "./use-filters";
 
 /**
@@ -199,10 +198,9 @@ export function MemberChips() {
     setFilters({ member: next.length > 0 ? next : undefined });
   };
 
-  // below `md` the artist switch and the Member dropdown share a row a 320px
-  // phone cannot fit, so the dropdown drops under the switch there
+  // below `md` the toolbar's Artist and Member dropdowns stand in for both strips
   return (
-    <div className="flex min-w-0 items-center gap-2 max-md:flex-wrap">
+    <div className="flex min-w-0 items-center gap-2 max-md:hidden">
       <div
         role="group"
         aria-label={m.filter_artist()}
@@ -228,7 +226,7 @@ export function MemberChips() {
         ))}
       </div>
 
-      <div className="min-w-0 flex-1 max-md:hidden">
+      <div className="min-w-0 flex-1">
         <ScrollStrip label={m.filter_member()} onKeyDown={memberRoving.onKeyDown}>
           {shown.map((group) => (
             <Fragment key={group.artist.id}>
@@ -265,15 +263,6 @@ export function MemberChips() {
           ))}
         </ScrollStrip>
       </div>
-
-      <MultiSelect
-        label={m.filter_member()}
-        options={allMembers}
-        groups={shown}
-        value={selected}
-        onChange={(value) => setFilters({ member: value.length > 0 ? value : undefined })}
-        className="md:hidden"
-      />
     </div>
   );
 }

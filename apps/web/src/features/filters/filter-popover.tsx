@@ -52,10 +52,10 @@ export type LongTailField =
 export const LONG_TAIL = {
   home: ["edition", "color"],
   market: ["priced", "edition", "color"],
-  list: ["grouped", "edition", "color"],
+  list: ["edition", "color"],
   collection: ["hidePin", "locked", "missing", "edition", "color"],
   trades: [],
-  progress: ["transferable", "edition"],
+  progress: ["edition"],
   stats: ["edition"],
 } as const satisfies Record<string, readonly LongTailField[]>;
 

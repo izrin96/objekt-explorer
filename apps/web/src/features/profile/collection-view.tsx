@@ -86,8 +86,13 @@ export function CollectionView() {
   // a fresh array each render would re-run the facet parity effect forever
   const extras = useMemo<ExtraFacet[]>(
     () => [
-      { key: "transferable", active: transferable === true, Control: TransferableToggle },
-      { key: "grouped", active: grouped === true, Control: CombineDupsToggle },
+      {
+        key: "transferable",
+        active: transferable === true,
+        quick: true,
+        Control: TransferableToggle,
+      },
+      { key: "grouped", active: grouped === true, quick: true, Control: CombineDupsToggle },
     ],
     [transferable, grouped],
   );

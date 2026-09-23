@@ -21,6 +21,7 @@ import {
   FACET_KEYS,
   FacetControls,
   NO_EXTRAS,
+  QUICK_FACET_KEYS,
   useDeclaredFacets,
   type FacetKey,
   type FacetValues,
@@ -59,9 +60,13 @@ export function FilterSheet({
   const declaredKeys = useMemo(() => [...keys, ...extras.map((e) => e.key)], [keys, extras]);
   useDeclaredFacets("stacked", declaredKeys);
 
+  // the badge counts only what the toolbar hides below `md`
   const count =
-    keys.reduce((sum, key) => sum + (values[key].length > 0 ? 1 : 0), 0) +
-    extras.reduce((sum, extra) => sum + (extra.active ? 1 : 0), 0) +
+    keys.reduce(
+      (sum, key) => sum + (!QUICK_FACET_KEYS.includes(key) && values[key].length > 0 ? 1 : 0),
+      0,
+    ) +
+    extras.reduce((sum, extra) => sum + (!extra.quick && extra.active ? 1 : 0), 0) +
     extraCount;
 
   return (

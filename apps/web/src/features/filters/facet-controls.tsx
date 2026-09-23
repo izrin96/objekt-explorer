@@ -57,17 +57,21 @@ const FACETS: readonly FacetDef[] = [
 
 export const FACET_KEYS: readonly FacetKey[] = FACETS.map((facet) => facet.key);
 
+/** the facets a phone keeps on the toolbar; the rest live in the Filters sheet only */
+export const QUICK_FACET_KEYS: readonly FacetKey[] = ["artist", "member", "season", "class"];
+
 export type FacetSurface = "inline" | "stacked";
 
 /**
  * A toolbar control that is not one of the five facets but still has to be on
  * both surfaces. It goes through the same parity guard as `FACETS`, and
  * declares whether it holds a non-default value so the sheet trigger's badge
- * can count it.
+ * can count it. A `quick` extra stays on the toolbar below `md` as well.
  */
 export type ExtraFacet = {
   key: string;
   active: boolean;
+  quick?: boolean;
   Control: ComponentType<{ className?: string }>;
 };
 
@@ -81,16 +85,17 @@ export const NO_EXTRAS: readonly ExtraFacet[] = [];
 export function ExtraFacetControls({
   surface,
   extras,
-  controlClassName,
 }: {
   surface: FacetSurface;
   extras: readonly ExtraFacet[];
-  controlClassName?: string;
 }) {
-  return extras.map(({ key, Control }) => (
+  return extras.map(({ key, quick, Control }) => (
     <Control
       key={key}
-      className={cn(surface === "stacked" && "w-full justify-between", controlClassName)}
+      className={cn(
+        surface === "stacked" && "w-full justify-between",
+        surface === "inline" && !quick && "max-md:hidden",
+      )}
     />
   ));
 }
@@ -103,8 +108,6 @@ type FacetControlsProps = {
   onChange: (key: FacetKey, value: string[]) => void;
   /** defaults to every facet; a surface that narrows it trips the dev parity guard */
   keys?: readonly FacetKey[];
-  /** merged into every control, e.g. the inline row's `max-md:hidden` */
-  controlClassName?: string;
 };
 
 export function FacetControls({
@@ -114,7 +117,6 @@ export function FacetControls({
   values,
   onChange,
   keys = FACET_KEYS,
-  controlClassName,
 }: FacetControlsProps) {
   return FACETS.filter((def) => keys.includes(def.key)).map(
     ({ key, label, options, grouped, Control }) => (
@@ -125,7 +127,10 @@ export function FacetControls({
         groups={grouped ? groups : undefined}
         value={values[key]}
         onChange={(value) => onChange(key, value)}
-        className={cn(surface === "stacked" && "w-full justify-between", controlClassName)}
+        className={cn(
+          surface === "stacked" && "w-full justify-between",
+          surface === "inline" && !QUICK_FACET_KEYS.includes(key) && "max-md:hidden",
+        )}
       />
     ),
   );

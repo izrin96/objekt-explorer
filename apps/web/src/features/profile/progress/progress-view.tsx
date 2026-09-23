@@ -6,8 +6,10 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
 import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
+import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useFilterData } from "@/features/filters/filter-data-provider";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
+import { TransferableToggle } from "@/features/filters/filter-toggle";
 import { useMemberColor } from "@/features/filters/member-colors";
 import { useResetFilters, useSetFilters } from "@/features/filters/use-filters";
 import { AddToListProvider } from "@/features/list/add-to-list-dialog";
@@ -235,6 +237,13 @@ export function ProgressView() {
   const [open, setOpen] = useState<readonly string[]>([]);
   const [active, setActive] = useState<ValidObjekt | null>(null);
 
+  const transferable = filters.transferable === true;
+  // a fresh array each render would re-run the facet parity effect forever
+  const extras = useMemo<ExtraFacet[]>(
+    () => [{ key: "transferable", active: transferable, quick: true, Control: TransferableToggle }],
+    [transferable],
+  );
+
   const ownedSlugs = useMemo(() => new Set(owned.map((objekt) => objekt.slug)), [owned]);
   const ownedBySlug = useMemo(() => Map.groupBy(owned, (objekt) => objekt.slug), [owned]);
 
@@ -285,6 +294,7 @@ export function ProgressView() {
   const toolbar = (
     <ProfileToolbar
       longTail={LONG_TAIL.progress}
+      extras={extras}
       showSearch={false}
       showSort={false}
       hideEtcClasses

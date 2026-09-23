@@ -4,6 +4,7 @@ import { validGroupBy } from "@repo/cosmo/types/common";
 import { type ReactNode, useMemo } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ScrollAreaPrimitive } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectItem,
@@ -66,13 +67,7 @@ const HOME_SORTS: readonly ValidCustomSort[] = ["date", "season", "collectionNo"
 /** the absence of `group_by`, spelled as a value so the select has a "None" item */
 const NO_GROUP = "none";
 
-export function ColumnsSelect({
-  className,
-  stacked = false,
-}: {
-  className?: string;
-  stacked?: boolean;
-}) {
+function ColumnsSelect({ className, stacked = false }: { className?: string; stacked?: boolean }) {
   const columns = useColumns();
   const setColumns = useColumnStore((s) => s.setColumns);
 
@@ -96,7 +91,7 @@ export function ColumnsSelect({
   );
 }
 
-export function SortSelect({
+function SortSelect({
   sorts,
   className,
 }: {
@@ -168,13 +163,7 @@ export function SortSelect({
  * Grouping splits the grid into labelled sections; the direction button is only
  * meaningful once there are sections, so it joins the row with the grouping.
  */
-export function GroupBySelect({
-  className,
-  stacked = false,
-}: {
-  className?: string;
-  stacked?: boolean;
-}) {
+function GroupBySelect({ className, stacked = false }: { className?: string; stacked?: boolean }) {
   const groupBy = useFilters((f) => f.group_by);
   const groupDir = useFilters((f) => f.group_dir);
   const setFilters = useSetFilters();
@@ -258,7 +247,7 @@ export function ResetButton({
 }
 
 /** The sheet block for the toolbar controls the inline row hides below `md`. */
-export function StackedToolbarFields({
+function StackedToolbarFields({
   showGroupBy = false,
   showColumns = false,
 }: {
@@ -295,8 +284,14 @@ type FilterBarProps = {
   longTail?: readonly LongTailField[];
   /** toolbar controls this surface adds beside the five facets */
   extras?: readonly ExtraFacet[];
-  /** trailing controls this surface alone carries, as `ProfileToolbar` takes them */
+  /** the extras lead the facets, as the sheet always has them */
+  extrasFirst?: boolean;
+  /** trailing controls this surface alone carries, e.g. the checkpoint popover */
   extra?: ReactNode;
+  showSearch?: boolean;
+  /** sort and group-by together: a surface that orders nothing has neither */
+  showSort?: boolean;
+  showColumns?: boolean;
 };
 
 export function FilterBar({
@@ -305,7 +300,11 @@ export function FilterBar({
   sorts = HOME_SORTS,
   longTail = LONG_TAIL.home,
   extras = NO_EXTRAS,
+  extrasFirst = false,
   extra,
+  showSearch = true,
+  showSort = true,
+  showColumns = true,
 }: FilterBarProps) {
   const filters = useCanonicalFilters();
   const setFilters = useSetFilters();
@@ -322,58 +321,83 @@ export function FilterBar({
   const setFacet = (key: FacetKey, value: string[]) =>
     setFilters({ [key]: value.length > 0 ? value : undefined });
 
-  const inlineKeys = FACET_KEYS;
-  const declaredKeys = useMemo(
-    () => [...inlineKeys, ...extras.map((extra) => extra.key)],
-    [inlineKeys, extras],
-  );
+  const declaredKeys = useMemo(() => [...FACET_KEYS, ...extras.map((item) => item.key)], [extras]);
   useDeclaredFacets("inline", declaredKeys);
   useFacetParity();
 
   return (
     <>
       <div className="flex flex-wrap items-center gap-2">
-        <FilterSearchField />
+        {showSearch && <FilterSearchField />}
 
-        <FacetControls
-          surface="inline"
-          facets={facets}
-          groups={groups}
-          values={values}
-          onChange={setFacet}
-          keys={inlineKeys}
-          controlClassName="max-md:hidden"
-        />
+        <QuickStrip>
+          <FilterSheet
+            facets={facets}
+            groups={groups}
+            values={values}
+            onChange={setFacet}
+            extras={extras}
+            extraCount={longTailCount(filters, longTail)}
+            onReset={reset}
+          >
+            <div className="my-1 border-t" />
+            <LongTailFields fields={longTail} />
+            <StackedToolbarFields showGroupBy={showSort} showColumns={showColumns} />
+          </FilterSheet>
 
-        <ExtraFacetControls surface="inline" extras={extras} controlClassName="max-md:hidden" />
+          {extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
 
-        <FilterPopover fields={longTail} className="max-md:hidden" />
+          <FacetControls
+            surface="inline"
+            facets={facets}
+            groups={groups}
+            values={values}
+            onChange={setFacet}
+          />
 
-        <FilterSheet
-          facets={facets}
-          groups={groups}
-          values={values}
-          onChange={setFacet}
-          extras={extras}
-          extraCount={longTailCount(filters, longTail)}
-          onReset={reset}
-        >
-          <div className="my-1 border-t" />
-          <LongTailFields fields={longTail} />
-          <StackedToolbarFields showGroupBy showColumns />
-        </FilterSheet>
+          {!extrasFirst && <ExtraFacetControls surface="inline" extras={extras} />}
+
+          <FilterPopover fields={longTail} className="max-md:hidden" />
+        </QuickStrip>
 
         {extra}
 
         <div className="flex items-center gap-1.5 md:ml-auto">
-          <SortSelect sorts={sorts} />
-          <GroupBySelect className="max-md:hidden" />
-          <ColumnsSelect className="max-md:hidden" />
+          {showSort && (
+            <>
+              <SortSelect sorts={sorts} />
+              <GroupBySelect className="max-md:hidden" />
+            </>
+          )}
+          {showColumns && <ColumnsSelect className="max-md:hidden" />}
           <ResetButton onReset={reset} disabled={!isFiltering(filters)} className="max-md:hidden" />
         </div>
       </div>
 
       <ActiveChips chips={chips} onRemove={(chip) => setFilters(chip.remove)} onReset={reset} />
     </>
+  );
+}
+
+/**
+ * Below `md` the Filters trigger and the quick controls share one line that
+ * scrolls sideways, since a phone cannot fit them without wrapping into rows;
+ * the edge that still has controls past it fades, the same fade as the kit
+ * `ScrollArea`'s `scrollFade`. From `md` every wrapper dissolves and the
+ * controls rejoin the toolbar row. The inset padding keeps focus rings clear
+ * of the scroll clip.
+ */
+export function QuickStrip({ children }: { children: ReactNode }) {
+  return (
+    <ScrollAreaPrimitive.Root className="max-md:w-full md:contents">
+      {/* every control is its own tab stop, so the viewport is not one too */}
+      <ScrollAreaPrimitive.Viewport
+        data-scroll-x
+        tabIndex={-1}
+        className="-m-1 mask-r-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-end)))] mask-l-from-[calc(100%-min(var(--fade-size),var(--scroll-area-overflow-x-start)))] p-1 outline-none [--fade-size:1.5rem] md:contents"
+      >
+        <div className="flex w-max items-center gap-2 md:contents">{children}</div>
+      </ScrollAreaPrimitive.Viewport>
+    </ScrollAreaPrimitive.Root>
   );
 }

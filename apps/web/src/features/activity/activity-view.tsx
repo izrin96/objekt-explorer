@@ -23,7 +23,7 @@ import {
   type FacetKey,
 } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
-import { ResetButton } from "@/features/filters/filter-bar";
+import { QuickStrip, ResetButton } from "@/features/filters/filter-bar";
 import { FilterSheet } from "@/features/filters/filter-sheet";
 import { ONLINE_TYPE_LABEL } from "@/features/filters/labels";
 import { isFiltering } from "@/features/filters/search-schema";
@@ -256,7 +256,7 @@ export function ActivityView() {
 
   const extras = useMemo<ExtraFacet[]>(
     () => [
-      { key: "type", active: type !== "all", Control: EventFilter },
+      { key: "type", active: type !== "all", quick: true, Control: EventFilter },
       { key: "on_offline", active: (filters.on_offline?.length ?? 0) > 0, Control: OnlineFilter },
     ],
     [type, filters.on_offline],
@@ -276,23 +276,24 @@ export function ActivityView() {
       <PageHeader title={m.activity_title()} description={m.activity_description()} />
 
       <div className="flex flex-wrap items-center gap-2">
-        <ExtraFacetControls surface="inline" extras={extras} controlClassName="max-md:hidden" />
-        <FacetControls
-          surface="inline"
-          facets={facets}
-          groups={groups}
-          values={values}
-          onChange={setFacet}
-          controlClassName="max-md:hidden"
-        />
-        <FilterSheet
-          facets={facets}
-          groups={groups}
-          values={values}
-          onChange={setFacet}
-          extras={extras}
-          onReset={reset}
-        />
+        <QuickStrip>
+          <FilterSheet
+            facets={facets}
+            groups={groups}
+            values={values}
+            onChange={setFacet}
+            extras={extras}
+            onReset={reset}
+          />
+          <ExtraFacetControls surface="inline" extras={extras} />
+          <FacetControls
+            surface="inline"
+            facets={facets}
+            groups={groups}
+            values={values}
+            onChange={setFacet}
+          />
+        </QuickStrip>
         <ResetButton
           onReset={reset}
           disabled={!isFiltering(filters) && type === "all"}

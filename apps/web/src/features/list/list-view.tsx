@@ -17,9 +17,11 @@ import { CompareBanner } from "@/features/compare/compare-banner";
 import { isComparing } from "@/features/compare/search-schema";
 import { useCompareQuery, useCompareSearch, useSetCompare } from "@/features/compare/use-compare";
 import { GenerateDiscordButton } from "@/features/discord/generate-discord-button";
+import type { ExtraFacet } from "@/features/filters/facet-controls";
 import { useScopedFacets } from "@/features/filters/facets";
 import { FilterBar } from "@/features/filters/filter-bar";
 import { LONG_TAIL } from "@/features/filters/filter-popover";
+import { CombineDupsToggle } from "@/features/filters/filter-toggle";
 import { filterObjekts } from "@/features/filters/filter-utils";
 import { useCanonicalFilters, useResetFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
@@ -91,6 +93,13 @@ function ListEntries() {
   const filtered = useMemo(
     () => filterObjekts(deferredFilters, objekts),
     [deferredFilters, objekts],
+  );
+
+  const grouped = filters.grouped === true;
+  // a fresh array each render would re-run the facet parity effect forever
+  const extras = useMemo<ExtraFacet[]>(
+    () => [{ key: "grouped", active: grouped, quick: true, Control: CombineDupsToggle }],
+    [grouped],
   );
 
   const ids = useSelection((s) => s.ids);
@@ -237,6 +246,7 @@ function ListEntries() {
         groups={groups}
         sorts={sorts}
         longTail={LONG_TAIL.list}
+        extras={extras}
         extra={<GenerateDiscordButton objekts={filtered} />}
       />
 
