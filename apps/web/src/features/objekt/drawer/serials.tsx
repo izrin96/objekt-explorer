@@ -5,7 +5,6 @@ import {
   CaretLineLeftIcon,
   CaretLineRightIcon,
   CaretRightIcon,
-  CheckIcon,
   type Icon,
   ListMagnifyingGlassIcon,
   LockIcon,
@@ -50,8 +49,6 @@ const EVENT_BADGE: Record<EventKind, { label: () => string; icon: Icon }> = {
   transfer: { label: m.objekt_event_transferred, icon: ArrowsLeftRightIcon },
   spin: { label: m.objekt_event_spun, icon: ArrowsClockwiseIcon },
 };
-
-const CURRENT_BADGE = { label: m.objekt_event_current, icon: CheckIcon };
 
 export type TimelineEvent = {
   id: string;
@@ -413,16 +410,6 @@ type TimelineSortKey = "at";
 function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose: () => void }) {
   const [sort, setSort] = useState<SortState<TimelineSortKey>>({ key: "at", dir: "desc" });
 
-  // the newest event names the holder whichever way the column is sorted, so
-  // it is resolved before the rows are reordered rather than read off row one
-  const currentId = useMemo(() => {
-    let newest: TimelineEvent | undefined;
-    for (const event of events) {
-      if (newest === undefined || event.at > newest.at) newest = event;
-    }
-    return newest !== undefined && newest.kind !== "spin" ? newest.id : null;
-  }, [events]);
-
   const rows = useMemo(() => {
     const sign = sort.dir === "desc" ? -1 : 1;
     return events.toSorted((a, b) => sign * (a.at.getTime() - b.at.getTime()));
@@ -462,7 +449,6 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
         </thead>
         <tbody>
           {rows.map((event) => {
-            const current = event.id === currentId;
             return (
               <tr key={event.id} className="border-t">
                 <th scope="row" className="px-3 py-1.5 text-left font-normal">
@@ -478,7 +464,7 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
                         onClick={onClose}
                         className={cn(
                           "truncate underline-offset-2 hover:underline",
-                          event.mono ? "font-mono text-xs" : current && "font-semibold",
+                          event.mono && "font-mono text-xs",
                         )}
                       >
                         {event.mono ? truncateAddress(event.owner) : event.owner}
@@ -487,10 +473,7 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
                   </span>
                 </th>
                 <td className="px-3 py-1.5">
-                  <span className="flex flex-wrap items-center gap-1.5">
-                    <EventPill badge={EVENT_BADGE[event.kind]} />
-                    {current && <EventPill badge={CURRENT_BADGE} />}
-                  </span>
+                  <EventPill badge={EVENT_BADGE[event.kind]} />
                 </td>
                 <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap">
                   <TimeAgo date={event.at} />
