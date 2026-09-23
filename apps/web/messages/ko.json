@@ -660,6 +660,7 @@
   "nav_search_user_hint": "닉네임 또는 0x 주소로 검색하세요",
   "nav_search_user_empty": "일치하는 사용자가 없습니다",
   "nav_search_user_empty_hint": "“{query}”(으)로 등록된 사용자가 없습니다. 전체 0x 주소는 목록에 없어도 프로필로 열립니다.",
+  "nav_search_user_searching": "검색 중…",
   "nav_search_user_error": "검색할 수 없습니다",
   "nav_search_kbd_move": "이동",
   "nav_search_kbd_open": "열기",

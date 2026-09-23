@@ -660,6 +660,7 @@
   "nav_search_user_hint": "Search by nickname or 0x address",
   "nav_search_user_empty": "No users match",
   "nav_search_user_empty_hint": "Nothing is called “{query}”. A full 0x address opens as a profile even when it is not listed.",
+  "nav_search_user_searching": "Searching…",
   "nav_search_user_error": "Search unavailable",
   "nav_search_kbd_move": "to move",
   "nav_search_kbd_open": "open",

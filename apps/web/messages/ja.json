@@ -660,6 +660,7 @@
   "nav_search_user_hint": "ニックネームまたは0xアドレスで検索",
   "nav_search_user_empty": "一致するユーザーがいません",
   "nav_search_user_empty_hint": "“{query}” に一致するユーザーはいません。完全な0xアドレスは一覧になくてもプロフィールとして開けます。",
+  "nav_search_user_searching": "検索中…",
   "nav_search_user_error": "検索できません",
   "nav_search_kbd_move": "移動",
   "nav_search_kbd_open": "開く",
