@@ -18,7 +18,7 @@ import {
 import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { absoluteTime } from "@/lib/time";
+import { formatTimestamp } from "@/lib/time";
 import { unobtainableSlugs } from "@/lib/unobtainables";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
@@ -239,7 +239,7 @@ function DrawerBody({
                     </Badge>
                   </dd>
                   <dt className="text-muted-foreground">{m.objekt_received()}</dt>
-                  <dd className="font-mono">{absoluteTime(new Date(objekt.receivedAt))}</dd>
+                  <dd className="font-mono">{formatTimestamp(new Date(objekt.receivedAt))}</dd>
                 </>
               )}
             </dl>

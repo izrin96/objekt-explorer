@@ -2,7 +2,7 @@ import { PulseIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Shimmer } from "@/components/shared/shimmer";
-import { TimeAgo } from "@/components/shared/time-ago";
+import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
@@ -106,7 +106,7 @@ function StatusRows() {
         {data.database.latestTransferDate !== null && (
           <span className="text-muted-foreground text-xs">
             {m.status_database_last_transfer()}{" "}
-            <TimeAgo date={new Date(data.database.latestTransferDate)} />
+            <Timestamp date={new Date(data.database.latestTransferDate)} />
           </span>
         )}
       </div>

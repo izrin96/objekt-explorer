@@ -5,7 +5,7 @@ import { Link } from "@tanstack/react-router";
 import { memo } from "react";
 
 import { DataTableRow } from "@/components/shared/data-table";
-import { TimeAgo } from "@/components/shared/time-ago";
+import { Timestamp } from "@/components/shared/timestamp";
 import { EVENT_COLOR, type EventKind } from "@/features/objekt/drawer/serials";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
 import { truncateAddress } from "@/lib/address";
@@ -103,8 +103,8 @@ export const ActivityRow = memo(function ActivityRow({
         )}
       </span>
 
-      <span className="text-muted-foreground truncate text-right font-mono text-xs">
-        <TimeAgo date={new Date(item.transfer.timestamp)} />
+      <span className="text-muted-foreground text-right font-mono text-xs whitespace-nowrap">
+        <Timestamp date={new Date(item.transfer.timestamp)} />
       </span>
     </DataTableRow>
   );

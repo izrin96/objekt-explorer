@@ -13,7 +13,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuPopup, MenuTrigger } from "@/components/ui/menu";
-import { absoluteTime } from "@/lib/time";
+import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { SortableHeader, type SortState } from "./sortable-header";
@@ -117,7 +117,7 @@ export function OwnedPanel({
                 </th>
                 <td className="px-3 py-1.5 font-mono tabular-nums">{item.tokenId}</td>
                 <td className="px-3 py-1.5 font-mono whitespace-nowrap">
-                  {absoluteTime(new Date(item.receivedAt))}
+                  {formatTimestamp(new Date(item.receivedAt))}
                 </td>
                 <td className="px-3 py-1.5">
                   <Badge variant={item.transferable ? "success" : "warning"} size="sm">

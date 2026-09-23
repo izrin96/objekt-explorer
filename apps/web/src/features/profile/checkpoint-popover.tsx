@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverPopup, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { useFilters, useSetFilters } from "@/features/filters/use-filters";
+import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 /** the `at` parameter is an instant; a checkpoint defaults to "the end of that day" */
@@ -21,9 +22,7 @@ const END_OF_DAY_TIME = "23:59:59";
 
 /** the day alone for the default end-of-day instant, the time as well when one was picked */
 export function formatCheckpoint(date: Date): string {
-  return isEqual(date, endOfDay(date))
-    ? format(date, "d MMM yyyy")
-    : format(date, "d MMM yyyy, HH:mm:ss");
+  return isEqual(date, endOfDay(date)) ? format(date, "yy/MM/dd") : formatTimestamp(date);
 }
 
 function timeOf(date: Date | undefined): string {

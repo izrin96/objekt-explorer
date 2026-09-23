@@ -30,7 +30,7 @@ const SELECTED_PREVIEW_MAX = 50;
 export const selectBarFillClass =
   "bg-background text-foreground border-background hover:bg-background/90 dark:hover:bg-background/90 dark:data-pressed:bg-background/90 h-7";
 /** outlined action on the inverted bar */
-export const selectBarActionClass =
+const selectBarActionClass =
   "border-background/25 text-background hover:bg-background/10 hover:text-background data-pressed:bg-background/10 dark:hover:bg-background/10 dark:data-pressed:bg-background/10 h-7 bg-transparent dark:bg-transparent";
 
 /** Data rather than a node: the button copy and the menu-item copy are one description. */

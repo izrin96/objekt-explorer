@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
-import { absoluteTime } from "@/lib/time";
+import { formatTimestamp } from "@/lib/time";
 import { m } from "@/paraglide/messages";
 
 import { isObjektOwned, memberNames } from "../objekt-utils";
@@ -60,7 +60,7 @@ export function MetadataPanel({
         {objekt.onOffline === "offline" ? m.objekt_physical() : m.objekt_digital()}
       </MetaRow>
       <MetaRow label={m.objekt_edition()}>{objekt.edition ?? "—"}</MetaRow>
-      <MetaRow label={m.objekt_created_at()}>{absoluteTime(new Date(objekt.createdAt))}</MetaRow>
+      <MetaRow label={m.objekt_created_at()}>{formatTimestamp(new Date(objekt.createdAt))}</MetaRow>
 
       <MetaRow label={m.objekt_background_color()}>
         <span className="flex items-center gap-1.5">
@@ -107,9 +107,11 @@ export function MetadataPanel({
               {objekt.transferable ? m.objekt_yes() : m.objekt_no()}
             </Badge>
           </dd>
-          <MetaRow label={m.objekt_received()}>{absoluteTime(new Date(objekt.receivedAt))}</MetaRow>
+          <MetaRow label={m.objekt_received()}>
+            {formatTimestamp(new Date(objekt.receivedAt))}
+          </MetaRow>
           <MetaRow label={m.objekt_minted_at()}>
-            {mintedAt === null ? "—" : absoluteTime(mintedAt)}
+            {mintedAt === null ? "—" : formatTimestamp(mintedAt)}
           </MetaRow>
         </>
       )}

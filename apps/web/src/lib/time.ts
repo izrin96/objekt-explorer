@@ -1,16 +1,10 @@
-import { format, formatDistanceToNowStrict } from "date-fns";
+import { format } from "date-fns";
 
-const MONTH_MS = 30 * 86_400_000;
+/** The one way the app writes an instant: `26/09/23 06:36:12 PM`. */
+const TIMESTAMP_FORMAT = "yy/MM/dd hh:mm:ss a";
 
-/** A distance while the event is recent, a plain date once "11 months ago" stops answering. */
-export function relativeTime(date: Date): string {
-  return Date.now() - date.getTime() < MONTH_MS
-    ? `${formatDistanceToNowStrict(date)} ago`
-    : format(date, "yyyy/MM/dd");
-}
-
-export function absoluteTime(date: Date): string {
-  return format(date, "d MMM yyyy, HH:mm");
+export function formatTimestamp(date: Date): string {
+  return format(date, TIMESTAMP_FORMAT);
 }
 
 /** Elapsed seconds as `mm:ss`, growing to `h:mm:ss` and `d h:mm:ss`. */

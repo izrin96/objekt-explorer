@@ -21,7 +21,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { CopyButton } from "@/components/shared/copy-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
-import { TimeAgo } from "@/components/shared/time-ago";
+import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { NumberField, NumberFieldGroup, NumberFieldInput } from "@/components/ui/number-field";
@@ -484,7 +484,7 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
                   <EventPill badge={EVENT_BADGE[event.kind]} />
                 </td>
                 <td className="text-muted-foreground px-3 py-1.5 font-mono text-xs whitespace-nowrap">
-                  <TimeAgo date={event.at} />
+                  <Timestamp date={event.at} />
                 </td>
               </tr>
             );

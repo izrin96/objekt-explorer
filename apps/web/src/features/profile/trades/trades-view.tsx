@@ -10,7 +10,7 @@ import { DataTable, DataTableHead, DataTableRow } from "@/components/shared/data
 import { EmptyState } from "@/components/shared/empty-state";
 import { InfiniteSentinel } from "@/components/shared/infinite-sentinel";
 import { Shimmer } from "@/components/shared/shimmer";
-import { TimeAgo } from "@/components/shared/time-ago";
+import { Timestamp } from "@/components/shared/timestamp";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useCosmoArtist } from "@/features/artist/cosmo-artist-provider";
@@ -37,8 +37,8 @@ const TYPE_LABEL: Record<ValidType, () => string> = {
   spin: m.trades_filter_type_spin,
 };
 
-const COLUMNS = "grid-cols-[7rem_minmax(14rem,1.5fr)_7rem_minmax(0,1fr)]";
-const MIN_WIDTH = "min-w-160";
+const COLUMNS = "grid-cols-[9.5rem_minmax(14rem,1.5fr)_7rem_minmax(0,1fr)]";
+const MIN_WIDTH = "min-w-168";
 
 /** the two counterparties that are Cosmo itself rather than another collector */
 function Counterparty({ row, isReceiver }: { row: AggregatedTransfer; isReceiver: boolean }) {
@@ -80,14 +80,21 @@ function TradeRow({
 
   return (
     <DataTableRow className="hover:bg-secondary/50">
-      <span className="text-muted-foreground font-mono text-xs">
-        <TimeAgo date={new Date(row.transfer.timestamp)} />
+      <span className="text-muted-foreground font-mono text-xs whitespace-nowrap">
+        <Timestamp date={new Date(row.transfer.timestamp)} />
       </span>
       <button
         type="button"
         onClick={() => onOpen(row.objekt)}
-        className="focus-visible:ring-ring flex min-w-0 cursor-pointer items-center rounded-sm text-left outline-none focus-visible:ring-2"
+        className="focus-visible:ring-ring flex min-w-0 cursor-pointer items-center gap-2.5 rounded-sm text-left outline-none focus-visible:ring-2"
       >
+        <img
+          src={row.objekt.thumbnailImage}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="bg-secondary h-7 w-4.5 shrink-0 rounded-[3px] object-cover"
+        />
         <span className="truncate">
           {row.objekt.member}
           <span className="ml-1.5 font-mono text-xs">

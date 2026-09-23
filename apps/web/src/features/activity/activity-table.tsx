@@ -8,8 +8,8 @@ import { m } from "@/paraglide/messages";
 import { ActivityRow } from "./activity-row";
 
 /** the Objekt cell holds member + collection no. + serial, which needs ~14rem */
-const COLUMNS = "grid-cols-[6rem_minmax(14rem,1.5fr)_1fr_1fr_7rem]";
-const MIN_WIDTH = "min-w-160";
+const COLUMNS = "grid-cols-[6rem_minmax(14rem,1.5fr)_1fr_1fr_9.5rem]";
+const MIN_WIDTH = "min-w-168";
 
 export function ActivityTable({
   rows,
