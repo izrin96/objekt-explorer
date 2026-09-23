@@ -32,7 +32,9 @@ type TransferSendData = {
 export async function startActivityWebSocket(): Promise<void> {
   try {
     await pubsub.subscribe("transfers", async (message, channel) => {
-      if (channel === "transfers") {
+      if (channel !== "transfers") return;
+      // an async listener's rejection is unhandled and would take the process down
+      try {
         const transfers = JSON.parse(message) as TransferData[];
 
         const addresses = transfers.flatMap((a) => [a.from, a.to]);
@@ -78,6 +80,11 @@ export async function startActivityWebSocket(): Promise<void> {
             );
           }
         });
+      } catch (error) {
+        console.error(
+          "[ActivityWS] Failed to relay transfers:",
+          error instanceof Error ? error.message : String(error),
+        );
       }
     });
     console.log("[ActivityWS] Subscribed to transfers channel");
@@ -94,13 +101,15 @@ export const websocketHandlers = {
     clients.add(ws);
   },
   message(ws: ServerWebSocket, message: string | Buffer) {
-    let data: { type: string; data?: unknown };
+    let data: unknown;
     try {
-      data = JSON.parse(message as string) as { type: string; data?: unknown };
+      data = JSON.parse(message as string);
     } catch {
       return; // ignore malformed frames
     }
-    if (data.type === "request_history") {
+    // `null` parses fine, and reading `.type` off it would throw out of the handler
+    if (typeof data !== "object" || data === null) return;
+    if ((data as { type?: unknown }).type === "request_history") {
       if (transferHistory.length > 0) {
         ws.send(JSON.stringify({ type: "history", data: transferHistory }));
       }

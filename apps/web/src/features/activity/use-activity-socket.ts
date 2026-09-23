@@ -17,9 +17,15 @@ function isActivityMessage(value: unknown): value is ActivityMessage {
   return (message.type === "transfer" || message.type === "history") && Array.isArray(message.data);
 }
 
+function socketUrl(): string {
+  const configured = clientEnv.VITE_ACTIVITY_WEBSOCKET_URL;
+  if (configured) return configured;
+  return `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`;
+}
+
 /**
- * The feed's live half. Without `VITE_ACTIVITY_WEBSOCKET_URL` there is no
- * socket to open, so the hook is inert and the page stays a paged list.
+ * The feed's live half: `VITE_ACTIVITY_WEBSOCKET_URL` when set, else the
+ * same-origin `/ws` that `server.ts` serves.
  *
  * `onMessage` is held in a ref: it closes over the current filters and changes
  * on every navigation, and reopening the socket for that would lose the
@@ -39,8 +45,8 @@ export function useActivitySocket({
   }, [onMessage]);
 
   useEffect(() => {
-    const url = clientEnv.VITE_ACTIVITY_WEBSOCKET_URL;
-    if (!enabled || url === undefined || url === "") return;
+    if (!enabled) return;
+    const url = socketUrl();
 
     let socket: WebSocket | undefined;
     let retry: ReturnType<typeof setTimeout> | undefined;
