@@ -14,6 +14,8 @@ import { ObjektNote } from "./objekt-note";
 import { ObjektSidebar } from "./objekt-sidebar";
 import { getCollectionShortNo, isObjektOwned } from "./objekt-utils";
 
+const priceClass = "truncate font-mono text-xs font-semibold tabular-nums";
+
 type ObjektCardProps = {
   objekt: ValidObjekt;
   selected?: boolean;
@@ -26,6 +28,8 @@ type ObjektCardProps = {
   /** already formatted and localised by the caller */
   price?: string;
   priceMuted?: boolean;
+  /** makes the price caption a button; the owner's way to price an unpriced card */
+  onPriceClick?: (objekt: ValidObjekt) => void;
   note?: string | null;
   /** overrides the hide-label setting; the drawer's big card always hides it */
   hideLabel?: boolean;
@@ -82,6 +86,7 @@ export function ObjektCard({
   qty,
   price,
   priceMuted,
+  onPriceClick,
   note,
   hideLabel,
   unobtainable = false,
@@ -241,14 +246,28 @@ export function ObjektCard({
 
           {price !== undefined && (
             <div className="flex min-w-0 items-center gap-1">
-              <span
-                className={cn(
-                  "truncate font-mono text-xs font-semibold tabular-nums",
-                  priceMuted ? "text-muted-foreground" : "text-foreground",
-                )}
-              >
-                {price}
-              </span>
+              {onPriceClick ? (
+                <button
+                  type="button"
+                  onClick={() => onPriceClick(objekt)}
+                  className={cn(
+                    priceClass,
+                    "focus-visible:ring-ring cursor-pointer rounded-xs underline-offset-2 outline-none hover:underline focus-visible:ring-2",
+                    priceMuted ? "text-muted-foreground" : "text-foreground",
+                  )}
+                >
+                  {price}
+                </button>
+              ) : (
+                <span
+                  className={cn(
+                    priceClass,
+                    priceMuted ? "text-muted-foreground" : "text-foreground",
+                  )}
+                >
+                  {price}
+                </span>
+              )}
               {note ? <ObjektNote note={note} /> : null}
             </div>
           )}

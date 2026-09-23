@@ -164,6 +164,7 @@ function ListEntries() {
     ({ item, rowIndex }: { item: ValidObjekt[]; rowIndex: number }) => {
       const objekt = item[0];
       if (!objekt) return null;
+      const unpriced = (objekt.price ?? null) === null && objekt.isQyop !== true;
 
       return (
         <ObjektCard
@@ -174,7 +175,10 @@ function ListEntries() {
           qty={item.length > 1 ? item.length : undefined}
           hideSerial={list.hideSerial === true}
           price={isSale ? formatPrice(currency, objekt, canPrice) : undefined}
-          priceMuted={isSale && (objekt.price ?? null) === null && objekt.isQyop !== true}
+          priceMuted={isSale && unpriced}
+          onPriceClick={
+            canPrice && compare === null && unpriced ? () => openPrice(item) : undefined
+          }
           note={isSale ? objekt.note : undefined}
           priority={rowIndex < 2}
         >
@@ -182,7 +186,7 @@ function ListEntries() {
         </ObjektCard>
       );
     },
-    [ids, toggle, user, currency, isSale, list.hideSerial, menuItems],
+    [ids, toggle, user, currency, isSale, canPrice, compare, openPrice, list.hideSerial, menuItems],
   );
 
   const selected = useMemo(() => filtered.filter((objekt) => ids.has(objekt.id)), [filtered, ids]);
