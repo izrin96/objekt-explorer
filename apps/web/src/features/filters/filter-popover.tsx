@@ -12,7 +12,6 @@ import { useId, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ColorPicker } from "@/components/ui/color-picker";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
@@ -22,6 +21,7 @@ import { useDebouncedCallback } from "@/hooks/use-debounced-callback";
 import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
+import { ColorPicker } from "./color-picker";
 import { COLOR_SWATCHES } from "./facets";
 import { EDITION_LABEL, ONLINE_TYPE_LABEL } from "./labels";
 import {
@@ -124,7 +124,7 @@ function ColorField() {
         label={m.filter_color()}
         value={color ?? undefined}
         defaultValue={COLOR_SWATCHES[0]}
-        swatches={[...COLOR_SWATCHES]}
+        swatches={COLOR_SWATCHES}
         onValueChange={commitColor}
         className="w-full"
       />
