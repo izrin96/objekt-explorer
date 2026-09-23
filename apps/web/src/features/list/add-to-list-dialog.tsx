@@ -26,6 +26,7 @@ import {
 import { toastManager } from "@/components/ui/toast";
 import { isObjektOwned } from "@/features/objekt/objekt-utils";
 import { useUserLists } from "@/features/user/hooks";
+import { isSameAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { useAddObjektsToList } from "./actions";
@@ -99,9 +100,7 @@ function AddToListDialog({
   const available = useMemo(
     () =>
       lists.filter((list) =>
-        list.isProfileBind
-          ? address !== undefined && list.profileAddress === address.toLowerCase()
-          : true,
+        list.isProfileBind ? isSameAddress(list.profileAddress, address) : true,
       ),
     [lists, address],
   );

@@ -7,6 +7,8 @@ import { fetchKnownAddresses, fetchUserProfiles } from "@repo/lib/server/user";
 import { createFileRoute } from "@tanstack/react-router";
 import { and, desc, eq } from "drizzle-orm";
 
+import { isSameAddress } from "@/lib/address";
+
 export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$serial")({
   server: {
     handlers: {
@@ -66,9 +68,7 @@ export const Route = createFileRoute("/api/objekts/transfers/$collectionSlug/$se
         if (session && isPrivate) {
           const profiles = await fetchUserProfiles(session.user.id);
 
-          const isProfileAuthed = profiles.some(
-            (a) => a.address.toLowerCase() === result.owner.toLowerCase(),
-          );
+          const isProfileAuthed = profiles.some((a) => isSameAddress(a.address, result.owner));
 
           if (!isProfileAuthed)
             return Response.json({

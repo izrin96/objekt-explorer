@@ -20,7 +20,7 @@ import { SingleSelect } from "@/features/filters/single-select";
 import { useCanonicalFilters } from "@/features/filters/use-filters";
 import { ObjektDrawer } from "@/features/objekt/drawer";
 import { getCollectionShortNo } from "@/features/objekt/objekt-utils";
-import { truncateAddress } from "@/lib/address";
+import { isSameAddress, truncateAddress } from "@/lib/address";
 import { m } from "@/paraglide/messages";
 
 import { CheckpointPopover } from "../checkpoint-popover";
@@ -76,7 +76,7 @@ function TradeRow({
   address: string;
   onOpen: (objekt: ValidObjekt) => void;
 }) {
-  const isReceiver = row.transfer.to.toLowerCase() === address.toLowerCase();
+  const isReceiver = isSameAddress(row.transfer.to, address);
 
   return (
     <DataTableRow className="hover:bg-secondary/50">

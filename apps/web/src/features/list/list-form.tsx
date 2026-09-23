@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { isSameAddress } from "@/lib/address";
 import { SITE_NAME, getBaseURL, validColumns } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
@@ -261,6 +262,7 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
         <FieldLabel htmlFor={id("profile")}>{m.list_create_profile_label()}</FieldLabel>
         <Select
           value={value.profileAddress ?? NONE}
+          isItemEqualToValue={(item, next) => item === next || isSameAddress(item, next)}
           disabled={isEdit && value.isProfileBind}
           onValueChange={(next: string | null) => {
             const profileAddress = next === null || next === NONE ? null : next;
@@ -275,7 +277,8 @@ export function ListForm({ idPrefix, value, onChange, lists, profiles, mode, url
               {(next: string) =>
                 next === NONE
                   ? m.common_form_none()
-                  : (profiles.find((profile) => profile.address === next)?.nickname ?? next)
+                  : (profiles.find((profile) => isSameAddress(profile.address, next))?.nickname ??
+                    next)
               }
             </SelectValue>
           </SelectTrigger>
