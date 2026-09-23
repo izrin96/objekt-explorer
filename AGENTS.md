@@ -68,6 +68,8 @@ There is no test framework in this repo — `lint` + `typecheck` are the checks.
 
 ## Skills and specs
 
+`apps/web/src/components/ui/*` are vendored registry copies; `apps/web/src/components/ui/README.md` lists the only local edits and how to update them.
+
 Skills live once under `.agents/skills/<name>` (agent-neutral) with `.claude/skills/<name>` a relative symlink to them, pinned in `skills-lock.json`, all committed so a worktree or a Superset workspace carries them. Third-party skills are advice, not authority: where one contradicts this file or `design/lab-code-review.md`, the project document wins. Invoke the one for the layer being touched:
 
 | Layer or task                             | Skills                                                                                       |
