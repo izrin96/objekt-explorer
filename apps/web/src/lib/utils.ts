@@ -1,7 +1,13 @@
 import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 
 import { clientEnv } from "./env/client";
+
+// `text-xxs` is a theme size tailwind-merge does not know; unregistered it is
+// read as a text colour and silently dropped in favour of a later `text-foreground`
+const twMerge = extendTailwindMerge({
+  extend: { classGroups: { "font-size": [{ text: ["xxs"] }] } },
+});
 
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
