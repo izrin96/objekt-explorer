@@ -18,7 +18,6 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useMemo, useState } from "react";
 
-import { CopyButton } from "@/components/shared/copy-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Shimmer } from "@/components/shared/shimmer";
 import { Timestamp } from "@/components/shared/timestamp";
@@ -296,36 +295,26 @@ function OwnershipHead({
         <Fact label={m.objekt_owner()}>
           {found === null ? (
             <Shimmer className="h-4.5 w-28" />
-          ) : found.ownerIsAddress ? (
-            <span className="truncate font-mono text-xs">{truncateAddress(found.owner)}</span>
           ) : (
+            // a holder with no Cosmo nickname still has a profile, addressed by wallet
             <Link
               to="/@{$nickname}"
-              params={{ nickname: found.owner }}
+              params={{ nickname: found.ownerIsAddress ? found.owner.toLowerCase() : found.owner }}
               onClick={onClose}
-              className="truncate font-medium underline-offset-2 hover:underline"
+              className={cn(
+                "truncate underline-offset-2 hover:underline",
+                found.ownerIsAddress ? "font-mono text-xs" : "font-medium",
+              )}
             >
-              {found.owner}
+              {found.ownerIsAddress ? truncateAddress(found.owner) : found.owner}
             </Link>
           )}
         </Fact>
         <Fact label={m.objekt_token_id()}>
           {found === null ? (
-            <>
-              <Shimmer className="h-4.5 w-16" />
-              <Shimmer className="size-5.5" />
-            </>
+            <Shimmer className="h-4.5 w-16" />
           ) : (
-            <>
-              <span className="truncate font-mono text-xs">{found.tokenId ?? "—"}</span>
-              {found.tokenId !== null && (
-                <CopyButton
-                  text={found.tokenId}
-                  label={m.copy_token_id_aria()}
-                  toastTitle={m.objekt_token_id_copied()}
-                />
-              )}
-            </>
+            <span className="truncate font-mono text-xs">{found.tokenId ?? "—"}</span>
           )}
         </Fact>
         <Fact label={m.objekt_transferable()}>
@@ -468,7 +457,7 @@ function OwnershipTable({ events, onClose }: { events: TimelineEvent[]; onClose:
                     ) : (
                       <Link
                         to="/@{$nickname}"
-                        params={{ nickname: event.owner }}
+                        params={{ nickname: event.mono ? event.owner.toLowerCase() : event.owner }}
                         onClick={onClose}
                         className={cn(
                           "truncate underline-offset-2 hover:underline",

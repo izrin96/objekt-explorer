@@ -13,6 +13,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { getListLinkOption } from "@/features/list/list-link";
 import { formatCurrency, useCurrency } from "@/features/settings/use-currency";
 import { truncateAddress } from "@/lib/address";
+import { cn } from "@/lib/utils";
 import { m } from "@/paraglide/messages";
 
 import { ObjektNote } from "../objekt-note";
@@ -166,6 +167,8 @@ function MarketRow({
 }) {
   const nickname = item.list.profile?.nickname ?? null;
   const address = item.list.profile?.address ?? null;
+  // a seller with no Cosmo nickname still has a profile, addressed by wallet
+  const handle = nickname ?? address?.toLowerCase() ?? null;
   const { price, currency: listed, usdPrice } = item;
 
   return (
@@ -187,18 +190,19 @@ function MarketRow({
 
       <div className="flex min-w-0 flex-col">
         <span className="text-muted-foreground text-xs">{m.objekt_owner()}</span>
-        {nickname !== null ? (
+        {handle === null ? (
+          <span className="truncate font-mono text-xs">—</span>
+        ) : (
           <Link
             to="/@{$nickname}"
-            params={{ nickname }}
-            className="truncate underline-offset-2 hover:underline"
+            params={{ nickname: handle }}
+            className={cn(
+              "truncate underline-offset-2 hover:underline",
+              nickname === null && "font-mono text-xs",
+            )}
           >
-            {nickname}
+            {nickname ?? truncateAddress(handle)}
           </Link>
-        ) : (
-          <span className="truncate font-mono text-xs">
-            {address === null ? "—" : truncateAddress(address)}
-          </span>
         )}
       </div>
 
