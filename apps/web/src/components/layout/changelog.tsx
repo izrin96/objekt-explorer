@@ -23,7 +23,7 @@ import { DISCORD_INVITE } from "./about";
  */
 const CHANGELOG = [
   {
-    date: "2026-09-23",
+    date: "2026-09-24",
     items: ["Redesigned the whole site."],
   },
   {
